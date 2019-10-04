@@ -1,8 +1,8 @@
 ﻿
-MicroAI_0001="AI: Micro"
-MicroAI_0002="A balanced AI. Good for 20x20+ maps."
-MicroAI_0003="AIx: Micro"
-MicroAI_0004="A rush AI. Good for 10x10 or smaller maps."
+MicroAI_0001="AI: RNG"
+MicroAI_0002="A balanced AI. Good for 10x10 maps."
+MicroAI_0003="AIx: RNG"
+MicroAI_0004="A balanced AIx. Good for 10x10 maps."
 
 -- Translation strings for your AI lobby options.
 aisettings_0200="Option 1"
