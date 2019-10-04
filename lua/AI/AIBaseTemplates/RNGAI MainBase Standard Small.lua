@@ -10,15 +10,22 @@ BaseBuilderTemplate {
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
+
+        -- Economy Builder --
         'RNGAI Energy Builder',
         'RNGAI Mass Builder',
+
+        -- Land Unit Builders T1 --
         'RNGAI LandBuilder',
+        'RNGAI ScoutLandBuilder',
+        'RNGAI LabLandBuilder',
+        'RNGAI TankLandBuilder',
     },
     NonCheatBuilders = {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 6,
+            Tech1 = 9,
             Tech2 = 3,
             Tech3 = 3,
             SCU = 2,

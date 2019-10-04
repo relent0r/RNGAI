@@ -12,3 +12,10 @@ function ReturnFalse(aiBrain)
     LOG('** false')
     return false
 end
+
+function LessThanGameTimeSeconds(aiBrain, num)
+    if num > GetGameTimeSeconds() then
+        return true
+    end
+    return false
+end
