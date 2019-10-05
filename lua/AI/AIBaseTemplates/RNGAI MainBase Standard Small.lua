@@ -14,6 +14,7 @@ BaseBuilderTemplate {
         -- Economy Builder --
         'RNGAI Energy Builder',
         'RNGAI Mass Builder',
+        'RNGAI Hydro Builder',
 
         -- Land Unit Builders T1 --
         'RNGAI LandBuilder',
@@ -24,6 +25,18 @@ BaseBuilderTemplate {
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
         'RNGAI Land FormBuilders AntiMass',
+
+        -- Land Factory Builders --
+        'RNGAI Factory Builder Land',
+
+        -- Air Factory Builders --
+        'RNGAI Factory Builder Air',
+
+        -- Air Unit Builders T1 --
+        'RNGAI ScoutAirBuilder',
+
+        -- Air Unit Formers T1 --
+        'RNGAI ScoutAirFormer',
     },
     NonCheatBuilders = {
     },

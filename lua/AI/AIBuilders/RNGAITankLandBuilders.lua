@@ -25,7 +25,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Tank',
+        BuilderName = 'RNGAI Factory Tank 9',
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 80, -- After Second Engie Group
         BuilderConditions = {
@@ -35,16 +35,45 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Tank 24',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 75, -- After Second Engie Group
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 24, categories.LAND * categories.MOBILE - categories.ENGINEER }},
+        },
+        BuilderType = 'Land',
+    },
 }
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders AntiMass',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
-        BuilderName = 'RNGAI anti mass',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        BuilderName = 'RNGAI Anti Mass Small',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 90,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of plattons that will be formed.
+        BuilderType = 'Any',
+        BuilderData = {
+            SearchRadius = 10000,                                               -- Searchradius for new target.
+            GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
+            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
+            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            TargetSearchCategory = categories.MASSEXTRACTION + categories.ENGINEER, -- Only find targets matching these categories.
+            PrioritizedCategories = {                                           -- Attack these targets.
+                'MASSEXTRACTION',
+                'ENGINEER',
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 85,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 1,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = 10000,                                               -- Searchradius for new target.
@@ -58,5 +87,5 @@ BuilderGroup {
                 'ALLUNITS',
             },
         },
-    }
+    },
 }

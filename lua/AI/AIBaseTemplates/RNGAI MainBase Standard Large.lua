@@ -14,6 +14,7 @@ BaseBuilderTemplate {
         -- Economy Builder --
         'RNGAI Energy Builder',
         'RNGAI Mass Builder',
+        'RNGAI Hydro Builder',
 
         -- Land Unit Builders T1 --
         'RNGAI LandBuilder',

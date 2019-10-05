@@ -12,13 +12,23 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     -- Opening Scout Build --
     Builder {
-        BuilderName = 'RNGAI Factory Scout',
+        BuilderName = 'RNGAI Factory Scout Initial',
         PlatoonTemplate = 'T1LandScout',
         Priority = 95, -- Try to get out before second engie group
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT }},
             { UCBC, 'LessThanGameTimeSeconds', { 180 } }, -- don't build after 3 minutes
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Scout',
+        PlatoonTemplate = 'T1LandScout',
+        Priority = 85, -- Try to get out before second engie group
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT }},
         },
         BuilderType = 'Land',
     },

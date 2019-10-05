@@ -6,6 +6,7 @@
 ]]
 
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder',
@@ -15,7 +16,9 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 100,
         InstanceCount = 1,
-        BuilderConditions = { },
+        BuilderConditions = {
+            { UCBC, 'EnergyToMassRatioIncome', { 10.0, '<=', true} },
+        },
         BuilderType = 'Any',
         BuilderData = {
             NeedGuard = false,
@@ -23,6 +26,29 @@ BuilderGroup {
             Construction = {
                 BuildStructures = {
                     'T1EnergyProduction',
+                },
+            }
+        }
+
+    },
+
+}
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Hydro Builder',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1Engineer Hydro',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 95,
+        InstanceCount = 1,
+        BuilderConditions = { },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T1HydroCarbon',
                 },
             }
         }

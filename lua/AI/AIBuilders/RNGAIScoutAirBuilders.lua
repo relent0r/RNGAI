@@ -1,0 +1,39 @@
+--[[
+    File    :   /lua/AI/AIBaseTemplates/RNGAI MainBase Standard.lua
+    Author  :   relentless
+    Summary :
+        Land Builders
+]]
+
+local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI ScoutAirBuilder',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI Factory AirScout T1',
+        PlatoonTemplate = 'T1AirScout',
+        Priority = 100,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.AIR * categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI ScoutAirFormer',
+    BuildersType = 'PlatoonFormBuilder',
+    -- Opening Scout Form --
+    Builder {
+        BuilderName = 'RNGAI Former Scout T1',
+        PlatoonTemplate = 'T1AirScoutForm',
+        Priority = 90,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
+        },
+        LocationType = 'LocationType',
+        BuilderType = 'Any',
+    },
+}

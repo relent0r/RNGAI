@@ -11,16 +11,16 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI LandBuilder',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory Engineer',
+        BuilderName = 'RNGAI Factory Engineer Initial',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 100, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 4 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 3 of them.
         },
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Engineer Cap',
+        BuilderName = 'RNGAI Factory Engineer Small',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 85, -- Top factory priority
         BuilderConditions = {
