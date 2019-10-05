@@ -18,7 +18,6 @@ BaseBuilderTemplate {
         -- Land Unit Builders T1 --
         'RNGAI LandBuilder',
         'RNGAI ScoutLandBuilder',
-        'RNGAI LabLandBuilder',
         'RNGAI TankLandBuilder',
     },
     NonCheatBuilders = {

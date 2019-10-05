@@ -20,6 +20,10 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandBuilder',
         'RNGAI LabLandBuilder',
         'RNGAI TankLandBuilder',
+
+        -- Land Unit Formers T1 --
+        'RNGAI ScoutLandFormer',
+        'RNGAI Land FormBuilders AntiMass',
     },
     NonCheatBuilders = {
     },
