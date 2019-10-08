@@ -15,7 +15,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 30',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnMassLessThanLocationDistance', { 'LocationType', 30, -500, 0, 0, 'AntiSurface', 1, 'RNGAI T1Engineer Mass 30'}},
         },
@@ -35,7 +35,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 60',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnMassLessThanLocationDistance', { 'LocationType', 60, -500, 0, 0, 'AntiSurface', 1, 'RNGAI T1Engineer Mass 60'}},
         },
@@ -55,7 +55,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 120',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 900,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnMassLessThanLocationDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1, 'RNGAI T1Engineer Mass 120'}},
         },
