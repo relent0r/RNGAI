@@ -14,7 +14,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Scout Initial',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 95, -- Try to get out before second engie group
+        Priority = 950, -- Try to get out before second engie group
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT }},
@@ -25,10 +25,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Scout',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 85, -- Try to get out before second engie group
+        Priority = 750, -- Try to get out before second engie group
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT }},
+            { UCBC, 'LessThanGameTimeSeconds', { 1800 } }, -- don't build after 30 minutes *test this properly, expecting good radar by then.
         },
         BuilderType = 'Land',
     },
@@ -41,7 +42,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'T1LandScoutForm',
-        Priority = 90,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.LAND * categories.SCOUT } },
         },

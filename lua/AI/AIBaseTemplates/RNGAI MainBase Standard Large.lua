@@ -15,9 +15,10 @@ BaseBuilderTemplate {
         'RNGAI Energy Builder',
         'RNGAI Mass Builder',
         'RNGAI Hydro Builder',
+        'RNGAI ExtractorUpgrades',
 
         -- Land Unit Builders T1 --
-        'RNGAI LandBuilder',
+        'RNGAI Engineer Builder',
         'RNGAI ScoutLandBuilder',
         'RNGAI TankLandBuilder',
     },

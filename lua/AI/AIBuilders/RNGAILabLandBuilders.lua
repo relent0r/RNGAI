@@ -15,7 +15,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Lab',
         PlatoonTemplate = 'T1LandDFBot',
-        Priority = 90, -- Try to get out before second engie group
+        Priority = 900, -- Try to get out before second engie group
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.MOBILE - categories.ENGINEER }},
@@ -23,5 +23,34 @@ BuilderGroup {
             { UCBC, 'LessThanGameTimeSeconds', { 180 } }, -- don't build after 3 minutes
         },
         BuilderType = 'Land',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Hunter Labs FormBuilders',
+    BuildersType = 'PlatoonFormBuilder',
+    
+    Builder {
+        BuilderName = 'Mass Hunter Early Game',
+        PlatoonTemplate = 'T1MassHuntersCategory',
+        Priority = 900,
+        BuilderConditions = {  
+                { MIBC, 'LessThanGameTime', { 600 } },      	
+            },
+        BuilderData = {
+            MarkerType = 'Mass',            
+            MoveFirst = 'Random',
+            MoveNext = 'Threat',
+            ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
+            FindHighestThreat = false,			-- Don't find high threat targets
+            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
+            AvoidBases = true,
+            AvoidBasesRadius = 75,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,  
+        },    
+        InstanceCount = 1,
+        BuilderType = 'Any',
     },
 }

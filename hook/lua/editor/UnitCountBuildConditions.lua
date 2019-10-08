@@ -61,3 +61,31 @@ function EnergyToMassRatioIncome(aiBrain, ratio, compareType, DEBUG)
     end
     return CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)
 end
+
+##############################################################################################################
+# function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
+#
+# parameter 0: string   aiBrain		    = "default_brain"
+# parameter 1: bool   greater           = true          doc = "true = greater, false = less"
+# parameter 2: int    numReq     = 0					doc = "docs for param1"
+# parameter 3: expr   category        = categories.ALLUNITS		doc = "param2 docs"
+# parameter 4: expr   alliance       = false         doc = "docs for param3"
+#
+##############################################################################################################
+function HaveUnitsWithCategoryAndAlliance(aiBrain, greater, numReq, category, alliance)
+    local testCat = category
+    if type(category) == 'string' then
+        testCat = ParseEntityCategory(category)
+        LOG('HaveUnitsWithCategory Cat is :', testCat)
+    end
+    local numUnits = aiBrain:GetNumUnitsAroundPoint( testCat, Vector(0,0,0), 100000, alliance )
+    if numUnits > numReq and greater then
+        LOG('HaveUnitsWithCategory greater and true')
+        return true
+    elseif numUnits < numReq and not greater then
+        LOG('HaveUnitsWithCategory not greater and true')
+        return true
+    end
+    LOG('HaveUnitsWithCategory Cat is false')
+    return false
+end

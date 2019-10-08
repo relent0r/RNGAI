@@ -33,6 +33,7 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1LandFactory',
                     'T1EnergyProduction',
+                    'T1EnergyProduction',
                 },
             }
         }

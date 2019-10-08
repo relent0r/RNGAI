@@ -11,13 +11,17 @@ BaseBuilderTemplate {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
 
-        -- Economy Builder --
+        -- Intel Builders --
+        'RNGAI RadarBuilders',
+
+        -- Economy Builders --
         'RNGAI Energy Builder',
         'RNGAI Mass Builder',
         'RNGAI Hydro Builder',
+        'RNGAI ExtractorUpgrades',
 
         -- Land Unit Builders T1 --
-        'RNGAI LandBuilder',
+        'RNGAI Engineer Builder',
         'RNGAI ScoutLandBuilder',
         'RNGAI LabLandBuilder',
         'RNGAI TankLandBuilder',
@@ -25,6 +29,7 @@ BaseBuilderTemplate {
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
         'RNGAI Land FormBuilders AntiMass',
+        'RNGAI Mass Hunter Labs FormBuilders',
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land',
@@ -34,9 +39,16 @@ BaseBuilderTemplate {
 
         -- Air Unit Builders T1 --
         'RNGAI ScoutAirBuilder',
+        'RNGAI Air Builder',
 
         -- Air Unit Formers T1 --
         'RNGAI ScoutAirFormer',
+        'RNGAI Air Platoon Builder',
+
+        -- Defence Builders --
+        'RNGAI T1 Base Defenses',
+        'RNGAI T1 Perimeter Defenses',
+
     },
     NonCheatBuilders = {
     },
