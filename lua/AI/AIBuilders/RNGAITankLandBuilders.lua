@@ -9,6 +9,21 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
+
+function LandAttackCondition(aiBrain, locationType, targetNumber)
+    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+
+    local position = engineerManager:GetLocationCoords()
+    local radius = engineerManager:GetLocationRadius()
+    
+    local poolThreat = pool:GetPlatoonThreat( 'Surface', categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, radius )
+    if poolThreat > targetNumber then
+        return true
+    end
+    return false
+end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder',
@@ -102,7 +117,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Anti Mass Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 950,                                                          -- Priority. 1000 is normal.
+        Priority = 900,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
@@ -138,9 +153,25 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI Frequent Land Attack T1',
+        PlatoonTemplate = 'LandAttackMedium',
+        Priority = 100,
+        InstanceCount = 12,
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'AttackFormation',
+        },        
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
+            { LandAttackCondition, { 'LocationType', 10 } },
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI Unit Cap Default Land Attack',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
-        Priority = 1,
+        Priority = 100,
         InstanceCount = 10,
         BuilderType = 'Any',
         BuilderConditions = {
@@ -155,25 +186,9 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T1',
-        PlatoonTemplate = 'LandAttackMedium',
-        Priority = 1,
-        InstanceCount = 12,
-        BuilderType = 'Any',
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = true,
-            UseFormation = 'AttackFormation',
-        },        
-        BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
-            { LandAttackCondition, { 'LocationType', 10 } },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Start Location Attack',
         PlatoonTemplate = 'StartLocationAttack',
-        Priority = 900,
+        Priority = 850,
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 720 } },  	
             },
@@ -181,10 +196,10 @@ BuilderGroup {
             MarkerType = 'Start Location',            
             MoveFirst = 'Closest',
             MoveNext = 'Guard Base',
-            #ThreatType = '',
-            #SelfThreat = '',
-            #FindHighestThreat ='',
-            #ThreatThreshold = '',
+            --ThreatType = '',
+            --SelfThreat = '',
+            --FindHighestThreat ='',
+            --ThreatThreshold = '',
             AvoidBases = true,
             AvoidBasesRadius = 100,
             AggressiveMove = true,      

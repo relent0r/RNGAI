@@ -28,7 +28,6 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                     'T1GroundDefense',
-
                 },
                 Location = 'LocationType',
             }
@@ -58,8 +57,8 @@ BuilderGroup {
                 BuildClose = false,
                 NearBasePatrolPoints = true,
                 BuildStructures = {
-                    'T1AADefense',
                     'T1GroundDefense',
+                    'T1AADefense',
                 },
                 Location = 'LocationType',
             }
