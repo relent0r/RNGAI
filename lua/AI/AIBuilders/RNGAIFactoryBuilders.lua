@@ -18,7 +18,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconTrend', { 0.7, 2.0 }},
+            { EBC, 'GreaterThanEconTrend', { 0.8, 4.0 }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -47,7 +47,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconTrend', { 0.7, 8.0 }},
+            { EBC, 'GreaterThanEconTrend', { 0.8, 8.0 }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },

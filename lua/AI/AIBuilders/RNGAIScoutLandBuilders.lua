@@ -42,7 +42,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'T1LandScoutForm',
-        Priority = 900,
+        Priority = 950,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.LAND * categories.SCOUT } },
         },

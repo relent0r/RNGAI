@@ -60,19 +60,19 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 24, categories.LAND * categories.MOBILE - categories.ENGINEER }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
         },
         BuilderType = 'Land',
     },
     Builder {
         BuilderName = 'RNGAI T1 Mortar 9',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 700,
+        Priority = 750,
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
         },
         BuilderType = 'Land',
     },
@@ -86,7 +86,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 850,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 10 } },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 5 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
@@ -101,11 +101,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 600,
+        Priority = 750,
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
         },
         BuilderType = 'Land',
     },
@@ -121,7 +121,7 @@ BuilderGroup {
         InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
-            SearchRadius = 120,                                               -- Searchradius for new target.
+            SearchRadius = 160,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = false,                                              -- If true, the unit will attack everything while moving to the target.

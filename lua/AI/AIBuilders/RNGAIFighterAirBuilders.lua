@@ -17,6 +17,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
+            { EBC, 'GreaterThanEconTrend', { 0.7, 7.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
         },
         BuilderType = 'Air',
@@ -26,7 +27,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 850,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.05 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
@@ -52,7 +53,22 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 5,
         BuilderType = 'Any',     
-        BuilderConditions = { },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+         },
+    },
+    Builder {
+        BuilderName = 'RNGAI AntiAir Base Guard',
+        PlatoonTemplate = 'AntiAirBaseGuard',
+        Priority = 800,
+        InstanceCount = 2,
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardEngineers = true,
+        },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2) * categories.ANTIAIR } },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Air Attack',

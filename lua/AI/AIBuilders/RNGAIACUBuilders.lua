@@ -7,6 +7,8 @@
 
 local SAI = '/lua/ScenarioPlatoonAI.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
+local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small',
@@ -29,6 +31,7 @@ BuilderGroup {
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1Resource',
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1LandFactory',
@@ -70,5 +73,24 @@ BuilderGroup {
             }
         }
 
+    },
+    Builder {
+        BuilderName = 'CDR Assist T1 Power',
+        PlatoonTemplate = 'CommanderAssist',
+        Priority = 700,
+        BuilderConditions = {
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION TECH1'}},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.5 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssisteeType = 'Engineer',
+                AssistLocation = 'LocationType',
+                BeingBuiltCategories = {'ENERGYPRODUCTION TECH1'},
+                Time = 20,
+            },
+        }
     },
 }
