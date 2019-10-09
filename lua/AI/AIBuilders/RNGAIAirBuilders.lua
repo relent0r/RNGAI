@@ -25,7 +25,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'MicroAI Factory Intie',
         PlatoonTemplate = 'T1AirFighter',
-        Priority = 850,
+        Priority = 900,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.05 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.AIR * categories.ANTIAIR } },
