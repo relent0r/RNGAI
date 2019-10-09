@@ -44,6 +44,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 24, categories.LAND * categories.MOBILE - categories.ENGINEER }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
         },
         BuilderType = 'Land',
     },
@@ -62,12 +64,45 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Land FormBuilders AntiMass',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuilderGroupName = 'RNGAI T1 Reaction Tanks',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'T1 Tank Enemy Nearby',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 850,
+        BuilderConditions = {
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 10 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
+        },
+        BuilderType = 'Land',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Land AA 2',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Mobile AA',
+        PlatoonTemplate = 'T1LandAA',
+        Priority = 600,
+        BuilderConditions = {
+            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+        },
+        BuilderType = 'Land',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Anti Mass Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 900,                                                          -- Priority. 1000 is normal.
+        Priority = 950,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
@@ -101,5 +136,78 @@ BuilderGroup {
                 'ALLUNITS',
             },
         },
+    },
+    Builder {
+        BuilderName = 'RNGAI Unit Cap Default Land Attack',
+        PlatoonTemplate = 'RNGAI LandAttack Medium',
+        Priority = 1,
+        InstanceCount = 10,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'UnitCapCheckGreater', { .95 } },
+        },
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            ThreatWeights = {
+                IgnoreStrongerTargetsRatio = 100.0,
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Frequent Land Attack T1',
+        PlatoonTemplate = 'LandAttackMedium',
+        Priority = 1,
+        InstanceCount = 12,
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'AttackFormation',
+        },        
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
+            { LandAttackCondition, { 'LocationType', 10 } },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Start Location Attack',
+        PlatoonTemplate = 'StartLocationAttack',
+        Priority = 900,
+        BuilderConditions = {     
+        		{ MIBC, 'LessThanGameTime', { 720 } },  	
+            },
+        BuilderData = {
+            MarkerType = 'Start Location',            
+            MoveFirst = 'Closest',
+            MoveNext = 'Guard Base',
+            #ThreatType = '',
+            #SelfThreat = '',
+            #FindHighestThreat ='',
+            #ThreatThreshold = '',
+            AvoidBases = true,
+            AvoidBasesRadius = 100,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            GuardTimer = 30,              
+            UseFormation = 'AttackFormation',
+        },    
+        InstanceCount = 2,
+        BuilderType = 'Any',
+    }, 
+    Builder {
+        BuilderName = 'Base Location Guard Small',
+        PlatoonTemplate = 'BaseGuardSmall',
+        Priority = 800,
+        BuilderConditions = { 
+                #{ UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },     
+        		{ MIBC, 'LessThanGameTime', { 720 } },  	
+                #{ UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            },
+        BuilderData = {
+            LocationType = 'LocationType',
+        },    
+        InstanceCount = 2,
+        BuilderType = 'Any',
     },
 }

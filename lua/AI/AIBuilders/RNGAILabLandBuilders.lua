@@ -38,8 +38,8 @@ BuilderGroup {
                 { MIBC, 'LessThanGameTime', { 600 } },      	
             },
         BuilderData = {
-            MarkerType = 'Mass',            
-            MoveFirst = 'Random',
+            MarkerType = 'Mass',                -- Look at MarkerTemplates.lua for options.
+            MoveFirst = 'Random',               -- You can select get Random, Closest or Threat. Lives in platoon.lua
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets

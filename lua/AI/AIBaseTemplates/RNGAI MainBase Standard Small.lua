@@ -25,10 +25,12 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandBuilder',
         'RNGAI LabLandBuilder',
         'RNGAI TankLandBuilder',
+        'RNGAI Land AA',
+        'RNGAI T1 Reaction Tanks',
 
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
-        'RNGAI Land FormBuilders AntiMass',
+        'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
 
         -- Land Factory Builders --
