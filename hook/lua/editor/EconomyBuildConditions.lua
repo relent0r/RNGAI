@@ -33,14 +33,6 @@ function GreaterThanEconIncome(aiBrain, MassIncome, EnergyIncome)
     return false
 end
 
-##############################################################################################################
-# function: GreaterThanEconEfficiencyOverTime = BuildCondition	doc = "Please work function docs."
-# 
-# parameter 0: string	aiBrain		= "default_brain"				doc = "docs for param1"
-# parameter 1: int	MassEfficiency	= 1             doc = "docs for param1"
-# parameter 2: int	EnergyEfficiency	= 1             doc = "param2 docs"
-#
-##############################################################################################################
 function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEfficiency)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if (econ.MassEfficiencyOverTime >= MassEfficiency and econ.EnergyEfficiencyOverTime >= EnergyEfficiency) then

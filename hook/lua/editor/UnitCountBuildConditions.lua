@@ -53,6 +53,25 @@ function CanBuildOnMassLessThanLocationDistance(aiBrain, locationType, distance,
     return false
 end
 
+function CanBuildOnMassGreaterThanLocationDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum , builderName)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        WARN('*AI WARNING: Invalid location - ' .. locationType)
+        return false
+    end
+    local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
+    local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, locationPos)
+    if markerTable[1] and VDist3( markerTable[1], locationPos ) > distance then
+        LOG('Check is for :', builderName)
+        LOG('We can build in greater than '..VDist3( markerTable[1], locationPos ))
+        return true
+    else
+        LOG('Check is for :', builderName)
+        LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
+    end
+    return false
+end
+
 -- { UCBC, 'EnergyToMassRatioIncome', { 10.0, '>=',true } },  -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
 function EnergyToMassRatioIncome(aiBrain, ratio, compareType, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)

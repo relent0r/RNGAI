@@ -22,6 +22,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
             -- Respect UnitCap
          },
         BuilderType = 'Any',
@@ -51,6 +52,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 3, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
             -- disabled after using FactoryCapCheck { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.STRUCTURE * categories.FACTORY * categories.TECH1 * categories.AIR }},
             -- Respect UnitCap
@@ -65,5 +67,56 @@ BuilderGroup {
                 },
             }
         }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Air Staging Platform',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Air Staging 1',
+        PlatoonTemplate = 'EngineerBuilder', -- Air Staging has been moved to T1 so don't need T2 engineers now.
+        Priority = 900,
+        BuilderConditions = {
+            -- When do we want to build this ?
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
+            -- Do we need additional conditions to build it ?
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.ENERGYPRODUCTION } },
+            -- Have we the eco to build it ?
+            { EBC, 'GreaterThanEconTrend', { 0.8, 8.0 }}, -- relative income
+            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.99}}, -- Ratio from 0 to 1. (1=100%)
+            -- Don't build it if...
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 1,
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2AirStagingPlatform',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T1 Upgrade Builders',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'Balanced T1 Land Factory Upgrade Initial',
+        PlatoonTemplate = 'T1LandFactoryUpgrade',
+        Priority = 200,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 6, 'FACTORY TECH2, FACTORY TECH3'}},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY TECH2, FACTORY TECH3' } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'FACTORY TECH2, FACTORY TECH3' } },
+                { UCBC, 'GreaterThanGameTime', { 480 } },
+            },
+        BuilderType = 'Any',
     },
 }

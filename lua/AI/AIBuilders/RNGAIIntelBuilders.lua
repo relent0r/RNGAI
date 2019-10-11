@@ -7,6 +7,7 @@
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local IBC = '/lua/editor/InstantBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI RadarBuilders',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
@@ -32,5 +33,21 @@ BuilderGroup {
                 Location = 'LocationType',
             }
         }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI RadarUpgrade T1',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Radar Upgrade',
+        PlatoonTemplate = 'T1RadarUpgrade',
+        Priority = 200,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconIncome',  { 2, 100 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+        },
+        BuilderType = 'Any',
     },
 }

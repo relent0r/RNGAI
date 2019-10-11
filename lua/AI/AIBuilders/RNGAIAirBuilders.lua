@@ -12,7 +12,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'MicroAI Factory Bomber',
+        BuilderName = 'RNGAI Factory Bomber',
         PlatoonTemplate = 'T1AirBomber',
         Priority = 900,
         BuilderConditions = {
@@ -23,17 +23,27 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'MicroAI Factory Intie',
+        BuilderName = 'RNGAI Factory Intie',
         PlatoonTemplate = 'T1AirFighter',
-        Priority = 900,
+        Priority = 850,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.05 }},
+            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'MicroAI Factory Intie',
+        BuilderName = 'RNGAI Factory Intie',
+        PlatoonTemplate = 'T1AirFighter',
+        Priority = 500,
+        BuilderConditions = { 
+            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 18, categories.AIR * categories.ANTIAIR } },
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Intie Small',
         PlatoonTemplate = 'T1AirFighter',
         Priority = 950,
         BuilderConditions = { 
@@ -52,7 +62,10 @@ BuilderGroup {
         PlatoonTemplate = 'AntiAirHunt',
         Priority = 900,
         InstanceCount = 5,
-        BuilderType = 'Any',     
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardEngineers = true,
+        },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
          },
@@ -82,6 +95,7 @@ BuilderGroup {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'ALLUNITS',
             },
         },
     },

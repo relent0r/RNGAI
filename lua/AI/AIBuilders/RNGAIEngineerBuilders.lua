@@ -27,10 +27,15 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 850, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 8 of them.
         },
         BuilderType = 'All',
     },
+    
+}
+BuilderGroup {
+    BuilderGroupName = 'T1EngineerBuilders',
+    BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'T1EngineerReclaimer',

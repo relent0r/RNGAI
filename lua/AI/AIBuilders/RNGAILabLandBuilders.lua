@@ -31,24 +31,16 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     
     Builder {
-        BuilderName = 'Mass Hunter Early Game',
-        PlatoonTemplate = 'T1MassHuntersCategory',
+        BuilderName = 'Lab Early Game',
+        PlatoonTemplate = 'LandAttack',
         Priority = 900,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 600 } },      	
             },
         BuilderData = {
-            MarkerType = 'Mass',                -- Look at MarkerTemplates.lua for options.
-            MoveFirst = 'Random',               -- You can select get Random, Closest or Threat. Lives in platoon.lua
-            MoveNext = 'Threat',
-            ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
-            FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
-            AvoidBases = true,
-            AvoidBasesRadius = 75,
-            AggressiveMove = true,      
-            AvoidClosestRadius = 50,  
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'AttackFormation',  
         },    
         InstanceCount = 1,
         BuilderType = 'Any',

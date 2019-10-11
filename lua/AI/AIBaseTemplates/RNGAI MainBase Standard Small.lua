@@ -10,9 +10,11 @@ BaseBuilderTemplate {
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
+        'RNGAI ACU Build Assist',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
+        'RNGAI RadarUpgrade T1',
 
         -- Economy Builders --
         'RNGAI Energy Builder',
@@ -27,6 +29,7 @@ BaseBuilderTemplate {
         'RNGAI TankLandBuilder',
         'RNGAI Land AA 2',
         'RNGAI T1 Reaction Tanks',
+        'RNGAI T2 TankLandBuilder',
 
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
@@ -36,8 +39,12 @@ BaseBuilderTemplate {
         -- Land Factory Builders --
         'RNGAI Factory Builder Land',
 
+        -- Land Factory Formers --
+        'RNGAI T1 Upgrade Builders',
+
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
+        'RNGAI Air Staging Platform',
 
         -- Air Unit Builders T1 --
         'RNGAI ScoutAirBuilder',

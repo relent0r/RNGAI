@@ -72,25 +72,49 @@ BuilderGroup {
                 }
             }
         }
-
     },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI ACU Build Assist',
+    BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'CDR Assist T1 Power',
+        BuilderName = 'CDR Assist T1',
         PlatoonTemplate = 'CommanderAssist',
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION TECH1'}},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.5 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 } },
+            { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} },
         },
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
                 AssisteeType = 'Engineer',
+                AssistRange = 30,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'ENERGYPRODUCTION TECH1'},
-                Time = 20,
+                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY'},
+                Time = 30,
             },
+        }
+    },
+    Builder {
+        BuilderName = 'CDR T1 Land Factory Higher Pri',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 800,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
         }
     },
 }

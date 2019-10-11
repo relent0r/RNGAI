@@ -1,9 +1,14 @@
-
-
+--[[
+    File    :   /lua/AI/AIBuilders/RNGAIDefenceBuilders.lua
+    Author  :   relentless
+    Summary :
+        Defence Builders, for thos pesky units that slip past. Like bombers.
+]]
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 
 BuilderGroup {
@@ -15,6 +20,7 @@ BuilderGroup {
         Priority = 875,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'DEFENSE'}},
+            { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
@@ -26,8 +32,8 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 BuildStructures = {
-                    'T1AADefense',
                     'T1GroundDefense',
+                    'T1AADefense',
                 },
                 Location = 'LocationType',
             }
@@ -46,6 +52,7 @@ BuilderGroup {
         Priority = 910,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.DEFENSE * categories.TECH1}},
+            { MIBC, 'GreaterThanGameTime', { 420 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },

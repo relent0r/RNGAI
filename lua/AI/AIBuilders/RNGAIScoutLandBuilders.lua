@@ -6,6 +6,8 @@
 ]]
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+local IBC = '/lua/editor/InstantBuildConditions.lua'
+local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutLandBuilder',
@@ -25,11 +27,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Scout',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 750, -- Try to get out before second engie group
+        Priority = 750, -- After second engie group
+        InstanceCount = 3,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT }},
-            { UCBC, 'LessThanGameTimeSeconds', { 1800 } }, -- don't build after 30 minutes *test this properly, expecting good radar by then.
+            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.SCOUT, '<=', categories.LAND * categories.MOBILE - categories.ENGINEER }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.SCOUT * categories.LAND } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
         },
         BuilderType = 'Land',
     },
@@ -43,6 +47,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'T1LandScoutForm',
         Priority = 950,
+        InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.LAND * categories.SCOUT } },
         },
