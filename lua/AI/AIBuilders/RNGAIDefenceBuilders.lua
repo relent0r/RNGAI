@@ -20,7 +20,7 @@ BuilderGroup {
         Priority = 875,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'DEFENSE'}},
-            { MIBC, 'GreaterThanGameTime', { 480 } },
+            { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
@@ -52,7 +52,7 @@ BuilderGroup {
         Priority = 910,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.DEFENSE * categories.TECH1}},
-            { MIBC, 'GreaterThanGameTime', { 420 } },
+            { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },

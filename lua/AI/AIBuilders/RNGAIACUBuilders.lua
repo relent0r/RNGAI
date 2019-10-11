@@ -84,13 +84,13 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION TECH1'}},
-            { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
         },
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
                 AssisteeType = 'Engineer',
-                AssistRange = 30,
+                AssistRange = 60,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY'},
                 Time = 30,
@@ -103,7 +103,7 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
         },

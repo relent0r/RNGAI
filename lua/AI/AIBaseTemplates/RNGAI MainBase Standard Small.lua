@@ -58,6 +58,9 @@ BaseBuilderTemplate {
         'RNGAI T1 Base Defenses',
         'RNGAI T1 Perimeter Defenses',
 
+        -- Expansions --
+        'RNGAI Engineer Expansion Builders Small',
+
     },
     NonCheatBuilders = {
     },

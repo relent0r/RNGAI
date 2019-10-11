@@ -161,7 +161,7 @@ BuilderGroup {
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             BuilderConditions = {
                 { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 5 } },
             },
@@ -182,7 +182,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 850,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = 10000,                                               -- Searchradius for new target.
@@ -190,18 +190,19 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = false,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.MASSEXTRACTION + categories.ENGINEER, -- Only find targets matching these categories.
+            TargetSearchCategory = categories.MASSEXTRACTION * categories.ENGINEER * categories.MOBILE * categories.LAND, -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'MASSEXTRACTION',
                 'ALLUNITS',
             },
+            UseFormation = 'AttackFormation',
         },
     },
     Builder {
         BuilderName = 'RNGAI Anti Mass Markers',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed.
         Priority = 900,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 8,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             MarkerType = 'Mass',
@@ -211,7 +212,7 @@ BuilderGroup {
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
-            AvoidBases = true,
+            AvoidBases = false,
             AvoidBasesRadius = 75,
             AggressiveMove = false,
             AvoidClosestRadius = 50,
@@ -229,19 +230,20 @@ BuilderGroup {
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 10000,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
+            UseFormation = 'GrowthFormation',
         },
     },
     Builder {
         BuilderName = 'RNGAI Frequent Land Attack T1',
         PlatoonTemplate = 'LandAttackMedium',
         Priority = 100,
-        InstanceCount = 12,
+        InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardBases = true,
@@ -272,14 +274,14 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Start Location Attack Early',
-        PlatoonTemplate = 'StartLocationAttack',
+        PlatoonTemplate = 'RNGAI LandAttack Medium',
         Priority = 900,
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 420 } },  	
             },
         BuilderData = {
             MarkerType = 'Start Location',            
-            MoveFirst = 'Closest',
+            MoveFirst = 'Random',
             MoveNext = 'Guard Base',
             --ThreatType = '',
             --SelfThreat = '',
@@ -310,7 +312,7 @@ BuilderGroup {
             --SelfThreat = '',
             --FindHighestThreat ='',
             --ThreatThreshold = '',
-            AvoidBases = true,
+            AvoidBases = false,
             AvoidBasesRadius = 100,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,

@@ -41,7 +41,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 950,
+        Priority = 900,
         InstanceCount = 1,
         BuilderConditions = { },
         BuilderType = 'Any',

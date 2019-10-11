@@ -40,7 +40,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAI',
-        Priority = 950,
+        Priority = 500,
         InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
