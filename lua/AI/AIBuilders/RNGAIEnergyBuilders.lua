@@ -69,7 +69,6 @@ BuilderGroup {
             Construction = {
                 BuildStructures = {
                     'T1HydroCarbon',
-                    'T1LandFactory',
                 },
             }
         }
