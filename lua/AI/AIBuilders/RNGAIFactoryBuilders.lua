@@ -24,7 +24,8 @@ BuilderGroup {
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-            -- Respect UnitCap
+            -- Stop building T1 Factories after we have 6 T2
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH2' }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -88,6 +89,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.99}}, -- Ratio from 0 to 1. (1=100%)
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
+            { MIBC, 'GreaterThanGameTime', { 600 } },
         },
         BuilderType = 'Any',
         BuilderData = {

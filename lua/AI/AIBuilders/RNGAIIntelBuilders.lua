@@ -42,11 +42,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Radar Upgrade',
         PlatoonTemplate = 'T1RadarUpgrade',
-        Priority = 200,
+        Priority = 600,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 2, 100 }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.RADAR * categories.TECH1 * categories.STRUCTURE } },
         },
         BuilderType = 'Any',
     },

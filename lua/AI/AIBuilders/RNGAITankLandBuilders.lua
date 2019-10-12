@@ -125,6 +125,20 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
         },
     },
+    Builder {
+        BuilderName = 'RNGAI T2 MML',
+        PlatoonTemplate = 'T2LandArtillery',
+        Priority = 750,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.INDIRECTFIRE * categories.LAND } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'FACTORY TECH2' }},
+        },
+    },
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"

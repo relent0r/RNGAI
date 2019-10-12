@@ -33,9 +33,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'Lab Early Game',
         PlatoonTemplate = 'LandAttack',
-        Priority = 950,
+        Priority = 1000,
         BuilderConditions = {  
-                { MIBC, 'LessThanGameTime', { 600 } },      	
+                { MIBC, 'LessThanGameTime', { 600 } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MOBILE * categories.LAND * categories.BOT}},      	
             },
         BuilderData = {
             NeverGuardBases = true,
