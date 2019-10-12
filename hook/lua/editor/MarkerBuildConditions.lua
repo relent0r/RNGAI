@@ -8,7 +8,7 @@ function CanBuildOnMassLessThanDistance(aiBrain, locationType, distance, threatM
     local position = engineerManager:GetLocationCoords()
     
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
-    LOG('MarkerTable Entry 1 :', markerTable[1])
+    --LOG('MarkerTable Entry 1 :', markerTable[1])
     if markerTable[1] and VDist3( markerTable[1], position ) < distance then
         local dist = VDist3( markerTable[1], position )
         return true

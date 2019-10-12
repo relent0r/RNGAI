@@ -327,12 +327,11 @@ BuilderGroup {
         PlatoonTemplate = 'BaseGuardSmall',
         Priority = 850,
         BuilderConditions = { 
-                #{ UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },     
         		{ MIBC, 'LessThanGameTime', { 720 } },  	
-                #{ UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.MOBILE * categories.LAND - categories.ENGINEER } },
             },
         BuilderData = {
-            LocationType = 'LocationType',
+            LocationType = 'NOTMAIN',
+            GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },    
         InstanceCount = 2,
         BuilderType = 'Any',

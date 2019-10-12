@@ -7,7 +7,7 @@
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Small',
-    Plan = 'AttackForceAI', -- The platoon function to use.
+    Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           1, -- Min number of units.
@@ -19,7 +19,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Medium',
-    Plan = 'AttackForceAI', -- The platoon function to use.
+    Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           1, -- Min number of units.

@@ -59,7 +59,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder', -- A PlatoonFormBuilder is for builder groups of units.
     Builder {
         BuilderName = 'RNGAI Air Intercept',
-        PlatoonTemplate = 'AntiAirHunt',
+        PlatoonTemplate = 'RNGAI AntiAirHunt',
         Priority = 900,
         InstanceCount = 5,
         BuilderType = 'Any',
@@ -72,12 +72,13 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI AntiAir Base Guard',
-        PlatoonTemplate = 'AntiAirBaseGuard',
+        PlatoonTemplate = 'RNGAI AntiAirBaseGuard',
         Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
+            GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2) * categories.ANTIAIR } },
@@ -85,12 +86,13 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Air Attack',
-        PlatoonTemplate = 'BomberAttack',
+        PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 900,
         InstanceCount = 6,
         BuilderType = 'Any',        
         BuilderConditions = { },
         BuilderData = {
+            SearchRadius = 100,
             PrioritizedCategories = {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
@@ -101,7 +103,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Air Intercept Response',
-        PlatoonTemplate = 'AntiAirHunt',
+        PlatoonTemplate = 'RNGAI AntiAirHunt',
         Priority = 950,
         InstanceCount = 5,
         BuilderType = 'Any',     
