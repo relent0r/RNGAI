@@ -89,7 +89,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.99}}, -- Ratio from 0 to 1. (1=100%)
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
-            { MIBC, 'GreaterThanGameTime', { 600 } },
+            { MIBC, 'GreaterThanGameTime', { 480 } },
         },
         BuilderType = 'Any',
         BuilderData = {

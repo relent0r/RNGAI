@@ -8,6 +8,7 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI RadarBuilders',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
@@ -21,6 +22,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconTrend', { 0.7, 7.0 }},
+            { MIBC, 'GreaterThanGameTime', { 240 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -44,10 +46,10 @@ BuilderGroup {
         PlatoonTemplate = 'T1RadarUpgrade',
         Priority = 600,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconIncome',  { 2, 100 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.RADAR * categories.TECH1 * categories.STRUCTURE } },
+            { MIBC, 'GreaterThanGameTime', { 480 } },
         },
         BuilderType = 'Any',
     },

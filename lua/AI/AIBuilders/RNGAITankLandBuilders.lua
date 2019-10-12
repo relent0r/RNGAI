@@ -71,7 +71,7 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
         },
         BuilderType = 'Land',
     },
@@ -83,11 +83,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 850,
+        Priority = 1050,
         BuilderConditions = {
             { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 5 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
         },
         BuilderType = 'Land',
@@ -104,7 +104,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
         },
         BuilderType = 'Land',
     },
@@ -122,7 +122,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
         },
     },
     Builder {
@@ -132,11 +132,11 @@ BuilderGroup {
         BuilderType = 'Land',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
             { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.INDIRECTFIRE * categories.LAND } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'FACTORY TECH2' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.TECH2 * categories.FACTORY * categories.LAND }},
         },
     },
 }
@@ -190,6 +190,36 @@ BuilderGroup {
                 'ALLUNITS',
             },
             UseFormation = 'AttackFormation',
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 850,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 2,                                                      -- Number of plattons that will be formed.
+        BuilderType = 'Any',
+        BuilderData = {
+            SearchRadius = 10000,                                               -- Searchradius for new target.
+            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
+            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
+            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            BuilderConditions = {
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
+            },
+            TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE,         -- Only find targets matching these categories.
+            PrioritizedCategories = {                                           -- Attack these targets.
+                'STRUCTURE DEFENSE',
+                'MASSEXTRACTION',
+                'STRUCTURE ANTIAIR',
+                'ENERGYPRODUCTION',
+                'MASSFABRICATION',
+                'SHIELD',
+                'STRUCTURE',
+                'COMMAND',
+                'ALLUNITS',
+            },
+            UseFormation = 'GrowthFormation',
         },
     },
     Builder {

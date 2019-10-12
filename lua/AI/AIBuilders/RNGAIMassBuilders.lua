@@ -7,6 +7,8 @@
 
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
+local IBC = '/lua/editor/InstantBuildConditions.lua'
+local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Builder',
@@ -107,6 +109,37 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Resource',
                 },
+            }
+        }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI MassStorageBuilder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'T1 Mass Adjacency Engineer',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 925,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 100, -3, 0, 0}},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3', 100, 'ueb1106' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = 'MASSEXTRACTION TECH3, MASSEXTRACTION TECH2',
+                AdjacencyDistance = 100,
+                BuildClose = false,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'MassStorage',
+                }
             }
         }
     },

@@ -33,6 +33,24 @@ BuilderGroup {
         }
 
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Power Engineer',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 1000,
+        BuilderConditions = {
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildStructures = {
+                    'T2EnergyProduction',
+                },
+            }
+        }
+    },
 
 }
 BuilderGroup {

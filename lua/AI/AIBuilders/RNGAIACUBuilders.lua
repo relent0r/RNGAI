@@ -34,8 +34,8 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1LandFactory',
                     'T1EnergyProduction',
+                    'T1LandFactory',
                     'T1EnergyProduction',
                 },
             }
@@ -84,7 +84,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION TECH1'}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
         },
         BuilderType = 'Any',
         BuilderData = {
