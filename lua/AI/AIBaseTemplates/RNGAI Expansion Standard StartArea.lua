@@ -94,8 +94,9 @@ BaseBuilderTemplate {
 
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
         local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
+        LOG('Distance is ', distance)
         if not distance or distance > 1000 then
-            LOG('Expansion return is 1000')
+            LOG('Expansion return is 10')
             return 10
         elseif distance > 500 then
             LOG('Expansion return is 25')
