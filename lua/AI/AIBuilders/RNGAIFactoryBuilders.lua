@@ -13,10 +13,34 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Land',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNG Factory Builder Land T1',
+        BuilderName = 'RNG Factory Builder Land T1 MainBase',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
-        InstanceCount = 1,
+        BuilderConditions = {
+            -- When do we want to build this ?
+            { EBC, 'GreaterThanEconTrend', { 0.8, 4.0 }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            -- Don't build it if...
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            -- Stop building T1 Factories after we have 6 T2
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH2' }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T1',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 900,
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconTrend', { 0.8, 4.0 }},
@@ -47,7 +71,6 @@ BuilderGroup {
         BuilderName = 'RNG Factory Builder Air T1',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
-        InstanceCount = 1,
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconTrend', { 0.8, 8.0 }},

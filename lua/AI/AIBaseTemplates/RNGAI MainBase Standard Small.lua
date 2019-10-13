@@ -27,6 +27,7 @@ BaseBuilderTemplate {
         'RNGAI Engineer Builder',
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Assist Builders',
+        'RNGAI T2 Reclaim Assist Builders',
 
         -- Land Unit Builders T1 --
         'RNGAI Engineer Builder',
@@ -61,7 +62,7 @@ BaseBuilderTemplate {
         'RNGAI Air Platoon Builder',
 
         -- Defence Builders --
-        'RNGAI T1 Base Defenses',
+        'RNGAI Base Defenses',
         'RNGAI T1 Perimeter Defenses',
 
         -- Expansions --
@@ -72,13 +73,13 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 9,
-            Tech2 = 3,
-            Tech3 = 3,
-            SCU = 2,
+            Tech1 = 10,
+            Tech2 = 7,
+            Tech3 = 4,
+            SCU = 3,
         },
         FactoryCount = {
-            Land = 6,
+            Land = 9,
             Air = 3,
             Sea = 0,
             Gate = 1,

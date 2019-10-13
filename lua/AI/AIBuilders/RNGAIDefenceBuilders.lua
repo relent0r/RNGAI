@@ -12,14 +12,15 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T1 Base Defenses',
+    BuilderGroupName = 'RNGAI Base Defenses',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 875,
+        InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'DEFENSE'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
             { MIBC, 'GreaterThanGameTime', { 240 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
@@ -39,6 +40,33 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 825,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'DEFENSE TECH2'}},
+            { MIBC, 'GreaterThanGameTime', { 360 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.3 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2AADefense',
+                    'T2GroundDefense',
+                    'T2MissileDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
 }
 
 -- Defenses surrounding the base in patrol points
@@ -50,6 +78,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Defence - Perimeter',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 910,
+        InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.DEFENSE * categories.TECH1}},
             { MIBC, 'GreaterThanGameTime', { 300 } },

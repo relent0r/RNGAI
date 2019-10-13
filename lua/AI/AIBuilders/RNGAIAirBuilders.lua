@@ -14,7 +14,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Bomber',
         PlatoonTemplate = 'T1AirBomber',
-        Priority = 900,
+        Priority = 850,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
             { EBC, 'GreaterThanEconTrend', { 0.7, 7.0 }},
@@ -88,7 +88,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Attack',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 900,
-        InstanceCount = 6,
+        InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { },
         BuilderData = {
@@ -108,7 +108,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderType = 'Any',     
         BuilderConditions = { 
-            { UCBC, 'HaveUnitsWithCategoryAndAlliance', { true, 1, categories.AIR * categories.BOMBER, 'Enemy'}}, -- Check if enemy has one bomber or more
+            { UCBC, 'HaveUnitsWithCategoryAndAlliance', { true, 1, categories.AIR * categories.BOMBER * categories.ANTIAIR, 'Enemy'}}, -- Check if enemy has air units
         },
     },
 }

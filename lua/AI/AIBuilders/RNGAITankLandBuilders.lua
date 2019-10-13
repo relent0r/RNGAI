@@ -64,6 +64,19 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T1 Mortar 3',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 800,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE }},
+            { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Mortar 9',
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 750,
@@ -100,7 +113,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 750,
+        Priority = 700,
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },

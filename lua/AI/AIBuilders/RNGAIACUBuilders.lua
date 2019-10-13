@@ -14,7 +14,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'CDR Initial Land Standard Small',
+        BuilderName = 'RNGAI CDR Initial Land Standard Small',
         PlatoonAddBehaviors = {'CommanderBehavior',},
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1000,
@@ -48,7 +48,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Large',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'CDR Initial Land Standard Large',
+        BuilderName = 'RNGAI CDR Initial Land Standard Large',
         PlatoonAddBehaviors = {'CommanderBehavior',},
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1000,
@@ -79,11 +79,11 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Build Assist',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'CDR Assist T1',
+        BuilderName = 'RNGAI CDR Assist T1',
         PlatoonTemplate = 'CommanderAssist',
         Priority = 700,
         BuilderConditions = {
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION TECH1'}},
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
         },
         BuilderType = 'Any',
@@ -92,15 +92,15 @@ BuilderGroup {
                 AssisteeType = 'Engineer',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY'},
+                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
             },
         }
     },
     Builder {
-        BuilderName = 'CDR T1 Land Factory Higher Pri',
+        BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
+        Priority = 850,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -113,6 +113,26 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {    	
+        BuilderName = 'RNGAI CDR T1 Power',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 850,
+        BuilderConditions = {            
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.5 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = false,
+            Construction = {
+                AdjacencyCategory = 'FACTORY',
+                BuildStructures = {
+                    'T1EnergyProduction',
                 },
             }
         }

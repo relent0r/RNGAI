@@ -25,7 +25,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Small',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 850, -- Top factory priority
+        Priority = 850,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
@@ -34,9 +34,22 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Medium',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 700, -- Top factory priority
+        Priority = 700,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 8 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 8 of them.
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Large',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 400, -- low factory priority
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { IBC, 'BrainNotLowMassMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
     },
@@ -57,6 +70,19 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Large',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 400, -- low factory priority
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH2' } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { IBC, 'BrainNotLowMassMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
     },
@@ -82,7 +108,7 @@ BuilderGroup {
     Builder {
             BuilderName = 'RNGAI T1 Engineer Assist Engineer',
             PlatoonTemplate = 'EngineerAssist',
-            Priority = 500,
+            Priority = 600,
             InstanceCount = 20,
             BuilderConditions = {
                 { IBC, 'BrainNotLowPowerMode', {} },
@@ -107,7 +133,7 @@ BuilderGroup {
     Builder {
             BuilderName = 'RNGAI T2 Engineer Assist Engineer',
             PlatoonTemplate = 'T2EngineerAssist',
-            Priority = 500,
+            Priority = 600,
             InstanceCount = 20,
             BuilderConditions = {
                 { IBC, 'BrainNotLowPowerMode', {} },
