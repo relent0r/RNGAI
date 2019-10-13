@@ -42,3 +42,34 @@ function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEffici
     return false
 end
 
+function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
+    local econTime = aiBrain:GetEconomyOverTime()
+    
+    -- T1 Test
+    local testCat = categories.TECH1 * categories.FACTORY
+    local unitCount = aiBrain:GetCurrentUnits( testCat )
+    -- Find units of this type being built or about to be built
+    unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt(testCat)
+    
+    local massTotal = unitCount * t1Drain
+
+    -- T2 Test
+    testCat = categories.TECH2 * categories.FACTORY
+    unitCount = aiBrain:GetCurrentUnits( testCat )
+    
+    massTotal = massTotal + ( unitCount * t2Drain )
+    
+    -- T3 Test
+    testCat = categories.TECH3 * categories.FACTORY
+    unitCount = aiBrain:GetCurrentUnits( testCat )
+
+    massTotal = massTotal + ( unitCount * t3Drain )    
+    
+    if not CompareBody( (econTime.MassIncome * 10), massTotal, '>' ) then
+        LOG('Mass income to factory is false')
+        return false
+    end
+    LOG('Mass income to factory is true')
+    return true
+end
+

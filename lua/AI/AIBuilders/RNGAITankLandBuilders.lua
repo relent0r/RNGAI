@@ -94,14 +94,14 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reaction Tanks',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'T1 Tank Enemy Nearby',
+        BuilderName = 'RNGAI T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 1050,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 5 } },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 0, 'AntiSurface', 5 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'MAIN', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
         },
         BuilderType = 'Land',
     },
@@ -259,11 +259,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Anti Mass Markers',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed.
         Priority = 900,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             MarkerType = 'Mass',
-            MoveFirst = 'Closest',
+            MoveFirst = 'Random',
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets

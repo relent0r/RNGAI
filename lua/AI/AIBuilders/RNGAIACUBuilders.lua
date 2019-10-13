@@ -100,7 +100,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 850,
+        Priority = 875,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -120,7 +120,7 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI CDR T1 Power',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 850,
+        Priority = 875,
         BuilderConditions = {            
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.5 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},

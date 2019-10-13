@@ -36,7 +36,7 @@ BuilderGroup {
         Priority = 1000,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 600 } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MOBILE * categories.LAND * categories.BOT}},      	
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.LAND * categories.BOT}},      	
             },
         BuilderData = {
             MarkerType = 'Mass',            

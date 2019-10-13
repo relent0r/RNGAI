@@ -18,11 +18,12 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 2 T2 Pgens Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },
         BuilderType = 'Any',
         BuilderData = {
+            AdjacencyCategory = 'FACTORY',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -44,6 +45,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            AdjacencyCategory = 'FACTORY',
             Construction = {
                 BuildStructures = {
                     'T2EnergyProduction',

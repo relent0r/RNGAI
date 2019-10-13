@@ -81,16 +81,16 @@ function EnergyToMassRatioIncome(aiBrain, ratio, compareType, DEBUG)
     return CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)
 end
 
-##############################################################################################################
-# function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
-#
-# parameter 0: string   aiBrain		    = "default_brain"
-# parameter 1: bool   greater           = true          doc = "true = greater, false = less"
-# parameter 2: int    numReq     = 0					doc = "docs for param1"
-# parameter 3: expr   category        = categories.ALLUNITS		doc = "param2 docs"
-# parameter 4: expr   alliance       = false         doc = "docs for param3"
-#
-##############################################################################################################
+-- ##############################################################################################################
+-- # function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
+-- #
+-- # parameter 0: string   aiBrain		    = "default_brain"
+-- # parameter 1: bool   greater           = true          doc = "true = greater, false = less"
+-- # parameter 2: int    numReq     = 0					doc = "docs for param1"
+-- # parameter 3: expr   category        = categories.ALLUNITS		doc = "param2 docs"
+-- # parameter 4: expr   alliance       = false         doc = "docs for param3"
+-- #
+-- ##############################################################################################################
 function HaveUnitsWithCategoryAndAlliance(aiBrain, greater, numReq, category, alliance)
     local testCat = category
     if type(category) == 'string' then
@@ -121,5 +121,38 @@ function CanBuildOnHydroLessThanDistance(aiBrain, locationType, distance, threat
     if markerTable[1] and VDist3(markerTable[1], position) < distance then
         return true
     end
+    return false
+end
+
+-- # ==================================================== #
+-- #     Factory Manager Check Maximum Factory Number
+-- # ==================================================== #
+function FactoryCapCheck(aiBrain, locationType, factoryType)
+    local catCheck = false
+    if factoryType == 'Land' then
+        catCheck = categories.LAND * categories.FACTORY
+    elseif factoryType == 'Air' then
+        catCheck = categories.AIR * categories.FACTORY
+    elseif factoryType == 'Sea' then
+        catCheck = categories.NAVAL * categories.FACTORY
+    elseif factoryType == 'Gate' then
+        catCheck = categories.GATE
+    else
+        WARN('*AI WARNING: Invalid factorytype - ' .. factoryType)
+        return false
+    end
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
+        return false
+    end
+    local numUnits = factoryManager:GetNumCategoryFactories(catCheck)
+    numUnits = numUnits + aiBrain:GetEngineerManagerUnitsBeingBuilt(catCheck)
+    
+    if numUnits < aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType] then
+        LOG('Factory Cap Check is true')
+        return true
+    end
+    LOG('Factory Cap Check is false')
     return false
 end

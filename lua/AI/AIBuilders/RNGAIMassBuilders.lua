@@ -16,7 +16,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 30',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 950,
+        Priority = 900,
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 0, 0, 'AntiSurface', 1}},
@@ -35,7 +35,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 60',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 950,
+        Priority = 900,
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 60, -500, 0, 0, 'AntiSurface', 1}},

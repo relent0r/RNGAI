@@ -16,7 +16,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Expansion Area Engineer Small',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 900,
+        Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },
@@ -51,7 +51,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 900,
+        Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
