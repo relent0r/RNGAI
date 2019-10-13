@@ -61,7 +61,7 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = false,
-                -- BaseTemplate = ExBaseTmpl,
+                BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
                 LocationRadius = 1000,
@@ -74,8 +74,8 @@ BuilderGroup {
                     'T1LandFactory',
                     'T1GroundDefense',
                     'T1AADefense',
-                    'T1Radar',
                     'T1EnergyProduction',
+                    'T1Radar',
                 }               
             },
             NeedGuard = true,

@@ -35,8 +35,6 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1LandFactory',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -81,7 +79,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 700,
+        Priority = 850,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
@@ -100,7 +98,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 875,
+        Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -120,7 +118,7 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI CDR T1 Power',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 875,
+        Priority = 800,
         BuilderConditions = {            
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.5 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},

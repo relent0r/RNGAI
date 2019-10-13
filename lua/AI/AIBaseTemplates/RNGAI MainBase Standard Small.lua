@@ -100,7 +100,7 @@ BaseBuilderTemplate {
         if personality == 'RNGStandard' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardCheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('### M-FirstBaseFunction '..personality)
             LOG('Map size is small', mapSizeX, mapSizeZ)
-            return 1000, 'RNGStandardMainBaseTemplate Small'
+            return 1000, 'RNGStandard'
         end
         return -1
     end,
