@@ -109,13 +109,13 @@ BuilderGroup {
                 AssisteeType = 'Factory',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                BeingBuiltCategories = {'ALLUNITS'},
                 Time = 30,
             },
         }
     },
     Builder {
-        BuilderName = 'RNGAI CDR Assist T1',
+        BuilderName = 'RNGAI CDR Assist T1 Structure',
         PlatoonTemplate = 'CommanderAssist',
         Priority = 850,
         BuilderConditions = {

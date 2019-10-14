@@ -1,3 +1,10 @@
+--[[
+    File    :   /lua/AI/AIBaseTemplates/EconomyBuildConditions.lua
+    Author  :   relentless
+    Summary :
+        Economy Build Conditions
+]]
+
 function GreaterThanEconStorageRatio(aiBrain, mStorageRatio, eStorageRatio)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     -- If a paragon is present and we not stall mass or energy, return true

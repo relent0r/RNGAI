@@ -98,7 +98,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 1050,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 0, 'AntiSurface', 5 } },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'AntiSurface', 3 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'MAIN', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
@@ -180,7 +180,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 1050,                                                          -- Priority. 1000 is normal.
+        Priority = 700,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
@@ -190,7 +190,7 @@ BuilderGroup {
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             BuilderConditions = {
-                { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 0, 'AntiSurface', 5 } },
+                { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'AntiSurface', 3 } }, -- locationType, threatValue, threatType, rings
             },
             TargetSearchCategory = categories.MOBILE * categories.LAND,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
@@ -309,7 +309,7 @@ BuilderGroup {
         },        
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
-            { LandAttackCondition, { 'LocationType', 10 } },
+            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
     },
     Builder {
@@ -406,7 +406,7 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH3 - categories.ENGINEER} },
-            { LandAttackCondition, { 'LocationType', 50 } },
+            --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },
 }
