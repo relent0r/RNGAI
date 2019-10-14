@@ -15,7 +15,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist

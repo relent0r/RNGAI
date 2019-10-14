@@ -78,7 +78,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
+        Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -98,7 +98,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 900,
+        Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -121,7 +121,8 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 700,
         BuilderConditions = {            
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.5 }},
+            { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.5 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
         },
@@ -145,8 +146,8 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssist',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8} },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -162,9 +163,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 850,
+        Priority = 800,
         BuilderConditions = {
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
         },
         BuilderType = 'Any',

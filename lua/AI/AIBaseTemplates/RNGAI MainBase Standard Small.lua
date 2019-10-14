@@ -42,6 +42,7 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandFormer',
         'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
+        'RNGAI Land FormBuilders AntiMass',
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land',
@@ -73,7 +74,7 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 10,
+            Tech1 = 16,
             Tech2 = 7,
             Tech3 = 4,
             SCU = 3,

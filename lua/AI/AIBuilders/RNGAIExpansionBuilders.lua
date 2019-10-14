@@ -40,9 +40,7 @@ BuilderGroup {
                 BuildStructures = {                    
                     'T1LandFactory',
                     'T1GroundDefense',
-                    'T1AADefense',
                     'T1Radar',
-                    'T1EnergyProduction',
                 }
             },
             NeedGuard = true,
@@ -73,8 +71,6 @@ BuilderGroup {
                 BuildStructures = {                    
                     'T1LandFactory',
                     'T1GroundDefense',
-                    'T1AADefense',
-                    'T1EnergyProduction',
                     'T1Radar',
                 }
             },

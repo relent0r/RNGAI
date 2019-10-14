@@ -13,9 +13,9 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { 2.2, 20}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
-            { MIBC, 'GreaterThanGameTime', { 300 } },
+            { EBC, 'GreaterThanEconIncome',  { 2.2, 30}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.1, 1.4 }},
+            { MIBC, 'GreaterThanGameTime', { 480 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
         },
         FormRadius = 10000,

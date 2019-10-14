@@ -64,7 +64,7 @@ BuilderGroup {
         Priority = 600,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH2 * categories.RADAR }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.RADAR }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { MIBC, 'GreaterThanGameTime', { 480 } },
