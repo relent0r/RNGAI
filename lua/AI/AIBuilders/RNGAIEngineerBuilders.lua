@@ -146,7 +146,7 @@ BuilderGroup {
                     AssistLocation = 'LocationType',
                     PermanentAssist = true,
                     AssisteeType = 'Engineer',
-                    Time = 30,
+                    Time = 45,
                 },
             }
     },
@@ -169,7 +169,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = 'ENERGYPRODUCTION',
+                AdjacencyCategory = 'FACTORY',
                 BuildClose = true,
                 FactionIndex = 1,
                 BuildStructures = {
@@ -192,7 +192,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = 'ENERGYPRODUCTION',
+                AdjacencyCategory = 'FACTORY',
                 BuildClose = true,
                 FactionIndex = 3,
                 BuildStructures = {
