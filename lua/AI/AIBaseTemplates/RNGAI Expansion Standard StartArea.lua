@@ -10,10 +10,10 @@ BaseBuilderTemplate {
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders',
-                'RNGAI RadarUpgrade T1',
+                'RNGAI RadarUpgrade T1 Expansion',
         
                 -- Economy Builders --
-                'RNGAI Energy Builder',
+                'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder',
                 'RNGAI MassStorageBuilder',
         
@@ -38,7 +38,7 @@ BaseBuilderTemplate {
                 'RNGAI Factory Builder Land',
         
                 -- Land Factory Formers --
-                'RNGAI T1 Upgrade Builders',
+                'RNGAI T1 Upgrade Builders Expansion',
         
                 -- Air Factory Builders --
                 'RNGAI Factory Builder Air',

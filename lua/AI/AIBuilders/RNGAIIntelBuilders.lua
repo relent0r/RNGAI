@@ -54,3 +54,21 @@ BuilderGroup {
         BuilderType = 'Any',
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI RadarUpgrade T1 Expansion',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Radar Upgrade Expansion',
+        PlatoonTemplate = 'T1RadarUpgrade',
+        Priority = 600,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH2 * categories.RADAR }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { MIBC, 'GreaterThanGameTime', { 480 } },
+        },
+        BuilderType = 'Any',
+    },
+}
