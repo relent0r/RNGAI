@@ -180,7 +180,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 500,                                                          -- Priority. 1000 is normal.
+        Priority = 1050,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
@@ -190,7 +190,7 @@ BuilderGroup {
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             BuilderConditions = {
-                { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 0, 'AntiSurface', 5 } },
+                { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 0, 'AntiSurface', 5 } },
             },
             TargetSearchCategory = categories.MOBILE * categories.LAND,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.

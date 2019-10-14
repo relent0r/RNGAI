@@ -16,14 +16,14 @@ BaseBuilderTemplate {
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder',
                 'RNGAI MassStorageBuilder',
+                'RNGAI ExtractorUpgrades Expansion',
         
                 -- Engineer Builders --
-                'RNGAI Engineer Builder',
+                'RNGAI Engineer Builder Expansion',
                 'RNGAI T1 Reclaim Assist Builders',
                 'RNGAI T2 Reclaim Assist Builders',
         
                 -- Land Unit Builders T1 --
-                'RNGAI Engineer Builder',
                 'RNGAI ScoutLandBuilder',
                 'RNGAI TankLandBuilder',
                 'RNGAI T1 Reaction Tanks',

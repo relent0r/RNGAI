@@ -21,8 +21,14 @@ BuilderGroup {
         FormRadius = 10000,
         BuilderType = 'Any',
     },
+    
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI ExtractorUpgrades Expansion',
+    BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNG T1 Mass Extractor Upgrade Close',
+        BuilderName = 'RNG T1 Mass Extractor Upgrade Expansion',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,
         Priority = 400,

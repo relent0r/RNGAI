@@ -88,6 +88,39 @@ BuilderGroup {
     },
     
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Engineer Builder Expansion',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Expansion',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 300, -- low factory priority
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { IBC, 'BrainNotLowMassMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Expansion',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 300, -- low factory priority
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH2' } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { IBC, 'BrainNotLowMassMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    
+}
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reclaim Assist Builders',
     BuildersType = 'EngineerBuilder',

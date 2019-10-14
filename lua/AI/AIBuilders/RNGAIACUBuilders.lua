@@ -77,7 +77,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Build Assist',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI CDR Assist T1',
+        BuilderName = 'RNGAI CDR Assist T1 Engineer',
         PlatoonTemplate = 'CommanderAssist',
         Priority = 850,
         BuilderConditions = {
@@ -88,6 +88,44 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssisteeType = 'Engineer',
+                AssistRange = 60,
+                AssistLocation = 'LocationType',
+                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                Time = 30,
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Assist T1 Factory',
+        PlatoonTemplate = 'CommanderAssist',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssisteeType = 'Factory',
+                AssistRange = 60,
+                AssistLocation = 'LocationType',
+                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                Time = 30,
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Assist T1',
+        PlatoonTemplate = 'CommanderAssist',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssisteeType = 'Structure',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
