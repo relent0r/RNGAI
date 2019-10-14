@@ -11,6 +11,7 @@ BaseBuilderTemplate {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
         'RNGAI ACU Build Assist',
+        'RNGAI ACU Structure Builders',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',

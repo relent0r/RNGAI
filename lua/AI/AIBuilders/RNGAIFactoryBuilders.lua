@@ -18,7 +18,7 @@ BuilderGroup {
         Priority = 1000,
         BuilderConditions = {
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconTrend', { 0.7, 4.0 }},
+            { EBC, 'GreaterThanEconTrend', { 0.3, 4.0 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -64,7 +64,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Factory Builder Air',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuilderGroupName = 'RNGAI Factory Builder Air',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 High Pri',
@@ -72,15 +72,12 @@ BuilderGroup {
         Priority = 1000,
         BuilderConditions = {
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconTrend', { 0.7, 4.0 }},
+            { EBC, 'GreaterThanEconTrend', { 0.5, 4.0 }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 3, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
-            -- disabled after using FactoryCapCheck { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.STRUCTURE * categories.FACTORY * categories.TECH1 * categories.AIR }},
-            -- Respect UnitCap
          },
         BuilderType = 'Any',
         BuilderData = {

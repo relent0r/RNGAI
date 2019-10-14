@@ -7,7 +7,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ExtractorUpgrades',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNG T1 Mass Extractor Upgrade Close',
+        BuilderName = 'RNG T1 Mass Extractor Upgrade',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,
         Priority = 400,
@@ -21,7 +21,20 @@ BuilderGroup {
         FormRadius = 10000,
         BuilderType = 'Any',
     },
-    
+    Builder {
+        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Timeless Single',
+        PlatoonTemplate = 'T1MassExtractorUpgrade',
+        InstanceCount = 1,
+        Priority = 200,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconIncome',  { 2.2, 10}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.2 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
+        },
+        FormRadius = 10000,
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {

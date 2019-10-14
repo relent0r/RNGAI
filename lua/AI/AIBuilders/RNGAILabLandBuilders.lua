@@ -31,7 +31,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     
     Builder {
-        BuilderName = 'Lab Early Game',
+        BuilderName = 'RNGAI Lab Early Game',
         PlatoonTemplate = 'RNGAI T1 Mass Hunters Category',
         Priority = 1000,
         BuilderConditions = {  
@@ -51,7 +51,7 @@ BuilderGroup {
             AggressiveMove = true,      
             AvoidClosestRadius = 50,  
         },    
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderType = 'Any',
     },
 }

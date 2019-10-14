@@ -14,7 +14,6 @@ BaseBuilderTemplate {
         
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
-                'RNGAI Mass Builder',
                 'RNGAI MassStorageBuilder',
                 'RNGAI ExtractorUpgrades Expansion',
         

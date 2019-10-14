@@ -72,7 +72,71 @@ BuilderGroup {
         }
     },
 }
-
+BuilderGroup {
+    BuilderGroupName = 'RNGAI ACU Structure Builders',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 800,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR T1 Air Factory Higher Pri',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 900,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+    Builder {    	
+        BuilderName = 'RNGAI CDR T1 Power',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 700,
+        BuilderConditions = {            
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.5 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = false,
+            Construction = {
+                AdjacencyCategory = 'FACTORY',
+                BuildStructures = {
+                    'T1EnergyProduction',
+                },
+            }
+        }
+    },
+}
 BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Build Assist',
     BuildersType = 'EngineerBuilder',
@@ -131,46 +195,6 @@ BuilderGroup {
                 BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
             },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
-        PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = true,
-                BuildStructures = {
-                    'T1LandFactory',
-                },
-            }
-        }
-    },
-    Builder {    	
-        BuilderName = 'RNGAI CDR T1 Power',
-        PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
-        BuilderConditions = {            
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.5 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = false,
-            Construction = {
-                AdjacencyCategory = 'FACTORY',
-                BuildStructures = {
-                    'T1EnergyProduction',
-                },
-            }
         }
     },
 }
