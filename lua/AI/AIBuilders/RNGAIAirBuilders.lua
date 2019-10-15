@@ -7,6 +7,9 @@
 
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local IBC = '/lua/editor/InstantBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder',
@@ -29,6 +32,17 @@ BuilderGroup {
         BuilderConditions = { 
             { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.AIR * categories.ANTIAIR } },
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Intie Response',
+        PlatoonTemplate = 'T1AirFighter',
+        Priority = 950,
+        BuilderConditions = { 
+            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 3 , 'RNGAI Factory Intie Response'} },
         },
         BuilderType = 'Air',
     },
@@ -108,7 +122,26 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderType = 'Any',     
         BuilderConditions = { 
-            { UCBC, 'HaveUnitsWithCategoryAndAlliance', { true, 1, categories.AIR * categories.BOMBER * categories.ANTIAIR, 'Enemy'}}, -- Check if enemy has air units
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 3 , 'RNGAI Factory Intie Response'} },
         },
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI TransportFactoryBuilders',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Air Transport',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 550,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedsTransports', {} },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 25, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.05 }},
+        },
+        BuilderType = 'Air',
     },
 }

@@ -128,7 +128,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T2 TankLandBuilder',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'T2 Tank - Tech 2',
+        BuilderName = 'RNGAI T2 Tank - Tech 2',
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 750,
         BuilderType = 'Land',
@@ -159,18 +159,18 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 700,                                                          -- Priority. 1000 is normal.
+        Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
+        BuilderConditions = {
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'AntiSurface', 3 , 'RNGAI Response'} }, -- locationType, threatValue, threatType, rings
+        },
         BuilderData = {
             SearchRadius = 240,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            BuilderConditions = {
-                { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'AntiSurface', 3 } }, -- locationType, threatValue, threatType, rings
-            },
+            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MOBILE * categories.LAND,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
@@ -190,15 +190,15 @@ BuilderGroup {
         Priority = 850,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
+        },
         BuilderData = {
             SearchRadius = 10000,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            BuilderConditions = {
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
-            },
             TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'COMMAND',
@@ -221,15 +221,16 @@ BuilderGroup {
         Priority = 100,
         InstanceCount = 8,
         BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
+            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
+        },
         BuilderData = {
             NeverGuardBases = true,
             NeverGuardEngineers = true,
             UseFormation = 'AttackFormation',
         },        
-        BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
-            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
-        },
+        
     },
     Builder {
         BuilderName = 'RNGAI Unit Cap Default Land Attack',
@@ -283,15 +284,14 @@ BuilderGroup {
         BuilderData = {
             MarkerType = 'Start Location',            
             MoveFirst = 'Random',
-            MoveNext = 'Guard Base',
-            --ThreatType = '',
+            MoveNext = 'Threat',
+            --ThreatType = '', - defaults to AntiSurface
             --SelfThreat = '',
             --FindHighestThreat ='',
             --ThreatThreshold = '',
             AvoidBases = false,
-            AvoidBasesRadius = 100,
             AggressiveMove = true,      
-            AvoidClosestRadius = 50,
+            AvoidClosestRadius = 30,
             GuardTimer = 30,              
             UseFormation = 'AttackFormation',
         },    
@@ -314,7 +314,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'Frequent Land Attack T2',
-        PlatoonTemplate = 'LandAttackMedium',
+        PlatoonTemplate = 'RNGAI LandAttack Large',
         Priority = 500,
         InstanceCount = 13,
         BuilderType = 'Any',

@@ -46,6 +46,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             AdjacencyCategory = 'FACTORY',
+            DesiresAssist = true,
             Construction = {
                 BuildStructures = {
                     'T2EnergyProduction',

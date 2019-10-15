@@ -162,7 +162,7 @@ BuilderGroup {
             BuilderConditions = {
                 { IBC, 'BrainNotLowPowerMode', {} },
                 { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
             },
             BuilderType = 'Any',
             BuilderData = {
@@ -170,7 +170,7 @@ BuilderGroup {
                     AssistLocation = 'LocationType',
                     PermanentAssist = true,
                     AssisteeType = 'Engineer',
-                    Time = 30,
+                    Time = 45,
                 },
             }
     },
