@@ -95,6 +95,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 800,
+        --PlatoonAIPlan = 'ReclaimUnitsAI',
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 0, 0, 'AntiSurface', 1}},
@@ -103,6 +104,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            Categories = {categories.MOBILE * categories.LAND},
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -117,6 +119,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 1000',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 700,
+        --PlatoonAIPlan = 'ReclaimUnitsAI',
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 0, 0, 'AntiSurface', 1}},
@@ -125,6 +128,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            Categories = {categories.MOBILE * categories.LAND},
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {

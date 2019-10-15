@@ -49,17 +49,17 @@ BaseBuilderTemplate {
 
         -- Land Factory Formers --
         'RNGAI T1 Upgrade Builders',
-        'RNGAI T1 Speed Upgrade Builders',
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
         'RNGAI Air Staging Platform',
 
-        -- Air Unit Builders T1 --
+        -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
-        'RNGAI Air Builder',
+        'RNGAI Air Builder T1',
+        'RNGAI Air Builder T2',
 
-        -- Air Unit Formers T1 --
+        -- Air Unit Formers --
         'RNGAI ScoutAirFormer',
         'RNGAI Air Platoon Builder',
 

@@ -6,67 +6,23 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard StartArea',
+    BaseTemplateName = 'RNGAI Expansion Standard Small',
     Builders = {       
-                -- Intel Builders --
-                'RNGAI RadarBuilders',
-                'RNGAI RadarUpgrade T1 Expansion',
-        
-                -- Economy Builders --
-                'RNGAI Energy Builder Expansion',
-                'RNGAI Mass Builder Expansion',
-                'RNGAI MassStorageBuilder',
-                'RNGAI ExtractorUpgrades Expansion',
-        
-                -- Engineer Builders --
-                'RNGAI Engineer Builder Expansion',
-                'RNGAI Engineering Support Builder',
-                'RNGAI T1 Reclaim Assist Builders',
-                'RNGAI T2 Reclaim Assist Builders',
-        
-                -- Land Unit Builders T1 --
-                'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder',
-                'RNGAI T1 Reaction Tanks',
-                'RNGAI T2 TankLandBuilder',
-        
-                -- Land Unit Formers T1 --
-                'RNGAI ScoutLandFormer',
-                'RNGAI Land FormBuilders',
-        
-                -- Land Factory Builders --
-                'RNGAI Factory Builder Land',
-        
-                -- Land Factory Formers --
-                'RNGAI T1 Upgrade Builders Expansion',
-        
-                -- Air Factory Builders --
-                'RNGAI Factory Builder Air',
-        
-                -- Air Unit Builders T1 --
-                'RNGAI ScoutAirBuilder',
-                'RNGAI Air Builder T1',
-        
-                -- Air Unit Formers T1 --
-                'RNGAI ScoutAirFormer',
-                'RNGAI Air Platoon Builder',
-        
                 -- Defence Builders --
                 'RNGAI Base Defenses',
-                'RNGAI T1 Perimeter Defenses',
 		},
     NonCheatBuilders = { },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 8,
+            Tech1 = 6,
             Tech2 = 4,
             Tech3 = 2,
             SCU = 0,
         },
         
         FactoryCount = {
-            Land = 4,
-            Air = 1,
+            Land = 2,
+            Air = 0,
             Sea = 0,
             Gate = 0,
         },
@@ -79,7 +35,7 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        if markerType ~= 'Start Location' then
+        if markerType ~= 'Combat Zone' then
             LOG('Expansion MarkerType is', markerType)
             return 0
         end

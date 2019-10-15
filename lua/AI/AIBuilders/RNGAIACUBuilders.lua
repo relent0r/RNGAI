@@ -80,7 +80,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 900,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -100,7 +100,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 800,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.1} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -147,7 +147,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -165,7 +165,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssist',
         Priority = 800,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9}},
         },
         BuilderType = 'Any',
         BuilderData = {

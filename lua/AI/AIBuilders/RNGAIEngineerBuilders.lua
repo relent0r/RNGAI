@@ -36,7 +36,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 700,
         BuilderConditions = {
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 2, categories.ENGINEER - categories.COMMAND - categories.TECH1 } },
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, categories.ENGINEER - categories.COMMAND - categories.TECH1 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
         },
         BuilderType = 'All',
@@ -130,7 +130,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAI',
         Priority = 1000,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
                 { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
@@ -144,7 +144,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAI',
-        Priority = 600,
+        Priority = 700,
         InstanceCount = 10,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},

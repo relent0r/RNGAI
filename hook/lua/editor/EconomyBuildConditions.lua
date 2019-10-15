@@ -42,10 +42,12 @@ end
 
 function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEfficiency)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
+    LOG('Mass Wanted :'..MassEfficiency..'Actual :'..econ.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..econ.EnergyEfficiencyOverTime)
     if (econ.MassEfficiencyOverTime >= MassEfficiency and econ.EnergyEfficiencyOverTime >= EnergyEfficiency) then
-        LOG('EfficiencyOverTime, Mass : Energy', econ.MassEfficiencyOverTime, econ.EnergyEfficiencyOverTime)
+        LOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true
     end
+    LOG('GreaterThanEconEfficiencyOverTime Returned False')
     return false
 end
 
