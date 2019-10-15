@@ -6,7 +6,7 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard Small',
+    BaseTemplateName = 'RNGAI Expansion Standard Combat',
     Builders = {       
                 -- Defence Builders --
                 'RNGAI Base Defenses',
