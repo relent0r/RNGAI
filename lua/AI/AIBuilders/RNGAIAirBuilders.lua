@@ -22,6 +22,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
             { EBC, 'GreaterThanEconTrend', { 0.7, 7.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -31,7 +32,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.AIR * categories.ANTIAIR } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 30, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
     },

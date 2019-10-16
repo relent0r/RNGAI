@@ -39,6 +39,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 60, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -58,6 +59,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -78,6 +80,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -95,11 +98,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 800,
-        --PlatoonAIPlan = 'ReclaimUnitsAI',
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 0, 0, 'AntiSurface', 1}},
             { MIBC, 'GreaterThanGameTime', { 180 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },
         BuilderType = 'Any',
@@ -119,11 +122,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 1000',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 700,
-        --PlatoonAIPlan = 'ReclaimUnitsAI',
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 0, 0, 'AntiSurface', 1}},
             { MIBC, 'GreaterThanGameTime', { 180 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },
         BuilderType = 'Any',
@@ -154,7 +157,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
-            NeedGuard = true,
+            NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 BuildStructures = {
@@ -174,7 +177,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
-            NeedGuard = true,
+            NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 BuildStructures = {
@@ -194,7 +197,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
-            NeedGuard = false,
+            NeedGuard = true,
             DesiresAssist = false,
             Construction = {
                 BuildStructures = {
@@ -211,7 +214,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'T1 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 925,
+        Priority = 800,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 100, -3, 0, 0}},

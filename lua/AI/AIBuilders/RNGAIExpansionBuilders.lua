@@ -16,7 +16,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Expansion Area Engineer Small',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
+        Priority = 500,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },
@@ -31,7 +31,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Expansion Area',
-                LocationRadius = 350,
+                LocationRadius = 240, -- radius of platoon control
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 100,
@@ -49,7 +49,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
+        Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
@@ -62,7 +62,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
-                LocationRadius = 1000,
+                LocationRadius = 350, -- radius of platoon control
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,
@@ -80,7 +80,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Expansion Builders Combat',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
+        Priority = 500,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
@@ -93,7 +93,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Combat Zone',
-                LocationRadius = 1000,
+                LocationRadius = 180, -- radius of platoon control
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,

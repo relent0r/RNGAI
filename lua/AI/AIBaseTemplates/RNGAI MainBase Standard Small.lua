@@ -27,8 +27,9 @@ BaseBuilderTemplate {
         -- Engineer Builders --
         'RNGAI Engineer Builder',
         'RNGAI Engineering Support Builder',
-        'RNGAI T1 Reclaim Assist Builders',
-        'RNGAI T2 Reclaim Assist Builders',
+        'RNGAI T1 Reclaim Builders',
+        'RNGAI T1 Assist Builders',
+        'RNGAI T2 Assist Builders',
 
         -- Land Unit Builders T1 --
         'RNGAI ScoutLandBuilder',
@@ -87,9 +88,9 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 6,
-            T2Value = 15,
-            T3Value = 22.5,
+            T1Value = 5,
+            T2Value = 14,
+            T3Value = 21,
         },
 
     },

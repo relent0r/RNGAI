@@ -21,8 +21,9 @@ BaseBuilderTemplate {
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
                 'RNGAI Engineering Support Builder',
-                'RNGAI T1 Reclaim Assist Builders',
-                'RNGAI T2 Reclaim Assist Builders',
+                'RNGAI T1 Reclaim Builders',
+                'RNGAI T1 Assist Builders',
+                'RNGAI T2 Assist Builders',
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',

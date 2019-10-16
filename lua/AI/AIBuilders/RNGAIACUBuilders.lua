@@ -153,7 +153,7 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssisteeType = 'Engineer',
-                AssistRange = 60,
+                AssistRange = 40,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
@@ -192,7 +192,7 @@ BuilderGroup {
                 AssisteeType = 'Structure',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
             },
         }

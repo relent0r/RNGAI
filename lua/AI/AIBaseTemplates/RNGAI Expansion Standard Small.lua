@@ -20,14 +20,13 @@ BaseBuilderTemplate {
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
-                'RNGAI T1 Reclaim Assist Builders',
-                'RNGAI T2 Reclaim Assist Builders',
+                'RNGAI Engineering Support Builder',
+                'RNGAI T1 Reclaim Builders',
+                'RNGAI T1 Assist Builders',
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder',
-                'RNGAI T1 Reaction Tanks',
-                'RNGAI T2 TankLandBuilder',
+                'RNGAI TankLandBuilder Expansions',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
@@ -38,10 +37,7 @@ BaseBuilderTemplate {
         
                 -- Land Factory Formers --
                 'RNGAI T1 Upgrade Builders Expansion',
-        
-                -- Air Unit Formers T1 --
-                'RNGAI ScoutAirFormer',
-        
+               
                 -- Defence Builders --
                 'RNGAI Base Defenses',
                 'RNGAI T1 Perimeter Defenses',

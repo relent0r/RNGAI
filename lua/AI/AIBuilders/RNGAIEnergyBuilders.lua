@@ -35,12 +35,34 @@ BuilderGroup {
 
     },
     Builder {
-        BuilderName = 'RNGAI T2 Power Engineer',
+        BuilderName = 'RNGAI T2 Power Engineer 1st',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 1000,
         BuilderConditions = {
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = 'FACTORY',
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T2EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Power Engineer',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 900,
+        BuilderConditions = {
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.1 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
         },
         BuilderType = 'Any',

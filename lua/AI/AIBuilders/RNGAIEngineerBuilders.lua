@@ -123,7 +123,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T1 Reclaim Assist Builders',
+    BuilderGroupName = 'RNGAI T1 Reclaim Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1', -- Try to get that early reclaim
@@ -133,7 +133,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
-                { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
+                { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
             },
         BuilderData = {
             LocationType = 'LocationType',
@@ -154,50 +154,96 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+    
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T1 Assist Builders',
+    BuildersType = 'EngineerBuilder',
     Builder {
-            BuilderName = 'RNGAI T1 Engineer Assist Engineer',
-            PlatoonTemplate = 'EngineerAssist',
-            Priority = 600,
-            InstanceCount = 20,
-            BuilderConditions = {
-                { IBC, 'BrainNotLowPowerMode', {} },
-                { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+        BuilderName = 'RNGAI T1 Engineer Assist Engineer',
+        PlatoonTemplate = 'EngineerAssist',
+        Priority = 500,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                PermanentAssist = true,
+                AssisteeType = 'Engineer',
+                Time = 45,
             },
-            BuilderType = 'Any',
-            BuilderData = {
-                Assist = {
-                    AssistLocation = 'LocationType',
-                    PermanentAssist = true,
-                    AssisteeType = 'Engineer',
-                    Time = 45,
-                },
-            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Assist Factory',
+        PlatoonTemplate = 'EngineerAssist',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                PermanentAssist = true,
+                AssisteeType = 'Factory',
+                Time = 45,
+            },
+        }
     },
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T2 Reclaim Assist Builders',
+    BuilderGroupName = 'RNGAI T2 Assist Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-            BuilderName = 'RNGAI T2 Engineer Assist Engineer',
-            PlatoonTemplate = 'T2EngineerAssist',
-            Priority = 600,
-            InstanceCount = 20,
-            BuilderConditions = {
-                { IBC, 'BrainNotLowPowerMode', {} },
-                { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+        BuilderName = 'RNGAI T2 Engineer Assist Engineer',
+        PlatoonTemplate = 'T2EngineerAssist',
+        Priority = 500,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                PermanentAssist = true,
+                AssisteeType = 'Engineer',
+                Time = 45,
             },
-            BuilderType = 'Any',
-            BuilderData = {
-                Assist = {
-                    AssistLocation = 'LocationType',
-                    PermanentAssist = true,
-                    AssisteeType = 'Engineer',
-                    Time = 45,
-                },
-            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Engineer Assist Factory',
+        PlatoonTemplate = 'T2EngineerAssist',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                PermanentAssist = true,
+                AssisteeType = 'Factory',
+                Time = 45,
+            },
+        }
     },
 }
 

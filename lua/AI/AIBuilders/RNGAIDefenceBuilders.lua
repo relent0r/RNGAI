@@ -21,7 +21,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
-            { MIBC, 'GreaterThanGameTime', { 240 } },
+            { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
@@ -46,10 +46,10 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'DEFENSE TECH2'}},
-            { MIBC, 'GreaterThanGameTime', { 360 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, 'DEFENSE TECH2'}},
+            { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.3 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.5 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -81,7 +81,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.DEFENSE * categories.TECH1}},
-            { MIBC, 'GreaterThanGameTime', { 300 } },
+            { MIBC, 'GreaterThanGameTime', { 360 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
