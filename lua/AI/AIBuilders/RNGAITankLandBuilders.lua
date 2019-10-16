@@ -169,7 +169,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK}},
+            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK * categories.TECH2}},
             { MIBC, 'FactionIndex', { 1, 3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },

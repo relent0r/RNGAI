@@ -12,7 +12,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Pgen',
+        BuilderName = 'RNGAI T1Engineer Pgen Ratio',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
         InstanceCount = 1,
@@ -32,7 +32,28 @@ BuilderGroup {
                 },
             }
         }
-
+    },
+    Builder {
+        BuilderName = 'RNGAI T1Engineer Pgen Trend',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 1000,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = 'FACTORY',
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                BuildStructures = {
+                    'T1EnergyProduction',
+                },
+            }
+        }
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer 1st',
