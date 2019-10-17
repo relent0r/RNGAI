@@ -7,6 +7,7 @@
 
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder',
@@ -113,10 +114,10 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                BuildClose = false,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -168,5 +169,49 @@ BuilderGroup {
             }
         }
 
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Energy Storage Builder',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'T1 Energy Storage Builder OverCharge',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 800,
+        BuilderConditions = {
+            { UCBC, 'UnitCapCheckLess', { .7 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYSTORAGE' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BuildStructures = {
+                    'EnergyStorage',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'T1 Energy Storage Builder',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 500,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 480 } },
+            { UCBC, 'UnitCapCheckLess', { .7 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'ENERGYSTORAGE' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BuildStructures = {
+                    'EnergyStorage',
+                },
+            }
+        }
     },
 }

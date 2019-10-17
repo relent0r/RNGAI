@@ -121,8 +121,8 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 700,
         BuilderConditions = {            
-            { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.5 }},
+            { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.4 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
         },

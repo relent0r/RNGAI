@@ -10,6 +10,8 @@ BaseBuilderTemplate {
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
+
+        -- ACU Other Builders --
         'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
 
@@ -19,8 +21,9 @@ BaseBuilderTemplate {
 
         -- Economy Builders --
         'RNGAI Energy Builder',
+        'RNGAI Energy Storage Builder',
         'RNGAI Mass Builder',
-        'RNGAI MassStorageBuilder',
+        'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
         'RNGAI ExtractorUpgrades',
 

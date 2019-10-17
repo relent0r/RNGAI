@@ -129,7 +129,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Air Attack',
+        BuilderName = 'RNGAI Bomber Attack',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 900,
         InstanceCount = 3,
@@ -143,6 +143,25 @@ BuilderGroup {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'ALLUNITS',
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Energy Attack',
+        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
+        Priority = 900,
+        InstanceCount = 3,
+        BuilderType = 'Any',        
+        BuilderConditions = { 
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+        },
+        BuilderData = {
+            SearchRadius = 100,
+            PrioritizedCategories = {
+                'EnergyStorage',
+                'ENERGYPRODUCTION TECH2',
+                'ENERGYPRODUCTION TECH1',
                 'ALLUNITS',
             },
         },
@@ -163,6 +182,25 @@ BuilderGroup {
                 'DEFENSE STRUCTURE',
                 'STRUCTURE',
                 'MOBILE ANTIAIR',
+                'ALLUNITS',
+            },
+        },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH3' } },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Energy Bomber Attack T2',
+        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
+        Priority = 800,
+        InstanceCount = 3,
+        BuilderType = 'Any',
+        BuilderData = {
+            PrioritizedCategories = {
+                'EnergyStorage',
+                'ENERGYPRODUCTION TECH2',
+                'ENERGYPRODUCTION TECH1',
                 'ALLUNITS',
             },
         },
