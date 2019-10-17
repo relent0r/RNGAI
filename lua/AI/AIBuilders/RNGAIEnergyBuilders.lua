@@ -15,10 +15,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Ratio',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 1000,
+        Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EnergyToMassRatioIncome', { 14.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
+            { UCBC, 'EnergyToMassRatioIncome', { 10.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },
@@ -37,7 +37,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 1000,
+        Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives

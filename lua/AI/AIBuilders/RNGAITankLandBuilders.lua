@@ -69,7 +69,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mortar 3',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 800,
+        Priority = 790,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE }},
             { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
@@ -408,7 +408,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'Base Location Guard Small',
         PlatoonTemplate = 'BaseGuardSmall',
-        Priority = 850,
+        Priority = 700,
         BuilderConditions = { 
         		{ MIBC, 'LessThanGameTime', { 720 } },  	
             },

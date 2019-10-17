@@ -26,12 +26,13 @@ BuilderGroup {
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
         BuilderData = {
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
+                BaseTemplate = 'ACUBaseTemplate',
                 BuildStructures = {
                     'T1LandFactory',
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1Resource',
-                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
@@ -72,6 +73,76 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Test PD',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI CDR Test pd',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 1060,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'STRUCTURE DEFENSE TECH1' }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                --BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                --BaseTemplate = 'T1PDTemplate',
+                LocationType = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1GroundDefense', 
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Test wall',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 1050,
+        BuilderConditions = {
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                --BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                --BaseTemplate = 'T1PDTemplate',
+                LocationType = 'LocationType',
+                BuildClose = true,
+                Wall = true,
+                MarkerRadius = 50,
+                MarkerUnitCount = 1,
+                MarkerUnitCategory = 'STRUCTURE - WALL',
+                --MarkerUnitCategory = 'DEFENSE',
+                BuildStructures = {
+                    --'T1GroundDefense', 
+                    'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                    --'Wall',
+                },
+            }
+        }
+    },
+}
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Structure Builders',
     BuildersType = 'EngineerBuilder',

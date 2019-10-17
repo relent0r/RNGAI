@@ -20,7 +20,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
-            { EBC, 'GreaterThanEconTrend', { 0.7, 7.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.3 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -31,7 +31,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 850,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 30, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
@@ -41,7 +41,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 950,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
             { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 3 , 'RNGAI Factory Intie Response'} },
         },
@@ -52,7 +52,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 500,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 18, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
@@ -79,7 +79,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = { 
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconTrend', { 0.5, 7.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.6 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
     },
@@ -90,7 +90,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.6 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
         },
     },

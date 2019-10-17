@@ -73,7 +73,7 @@ BuilderGroup {
         Priority = 1000,
         BuilderConditions = {
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconTrend', { 0.5, 4.0 }},
+            { EBC, 'GreaterThanEconTrend', { 0.6, 4.0 }},
             { UCBC, 'FactoryLessAtLocation', { 'MAIN', 1, 'FACTORY AIR TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
