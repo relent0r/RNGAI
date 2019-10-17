@@ -11,10 +11,10 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Initial ACU Builder Small',
+    BuilderGroupName = 'RNGAI Initial ACU Builder Small Close',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small',
+        BuilderName = 'RNGAI CDR Initial Land Standard Small Close',
         PlatoonAddBehaviors = {'CommanderBehavior',},
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1000,
@@ -30,9 +30,40 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
                 BuildStructures = {
                     'T1LandFactory',
+                    'T1EnergyProduction',
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1Resource',
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                },
+            }
+        }
+
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Initial ACU Builder Small Distant',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI CDR Initial Land Standard Small Distant',
+        PlatoonAddBehaviors = {'CommanderBehavior',},
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 1000,
+        BuilderConditions = {
+            { IBC, 'NotPreBuilt', {}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
+                BaseTemplate = 'ACUBaseTemplate',
+                BuildStructures = {
+                    'T1LandFactory',
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
