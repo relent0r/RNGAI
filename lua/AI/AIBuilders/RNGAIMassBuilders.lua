@@ -100,8 +100,8 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 0, 0, 'AntiSurface', 1}},
             { MIBC, 'GreaterThanGameTime', { 180 } },
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 0, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },
@@ -124,8 +124,8 @@ BuilderGroup {
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = { 
+            { MIBC, 'GreaterThanGameTime', { 420 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 0, 0, 'AntiSurface', 1}},
-            { MIBC, 'GreaterThanGameTime', { 180 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },
@@ -193,6 +193,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 #{ UCBC, 'EngineerLessAtLocation', { 'LocationType', 4, 'ENGINEER TECH2, ENGINEER TECH3'}},
+                { MIBC, 'GreaterThanGameTime', { 420 } },
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',

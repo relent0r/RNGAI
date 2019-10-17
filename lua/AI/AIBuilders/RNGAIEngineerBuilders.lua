@@ -119,7 +119,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1', -- Try to get that early reclaim
         PlatoonTemplate = 'T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAI',
-        Priority = 900,
+        Priority = 800,
         InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
@@ -134,7 +134,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAI',
-        Priority = 700,
+        Priority = 600,
         InstanceCount = 10,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},

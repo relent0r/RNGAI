@@ -66,7 +66,6 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -224,7 +223,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {            
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.4 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.4 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
         },
