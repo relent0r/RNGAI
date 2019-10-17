@@ -31,7 +31,7 @@ BuilderGroup {
         BuilderData = {
             NumAssistees = 2,
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T1GroundDefense',
                     'T1AADefense',
@@ -49,7 +49,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, 'DEFENSE TECH2'}},
             { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.5 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },

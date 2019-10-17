@@ -31,8 +31,13 @@ PlatoonTemplate {
     Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          1, -- Min number of units.
+          2, -- Min number of units.
           4, -- Max number of units.
+          'attack', -- platoon types: 'support', 'attack', 'scout',
+          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+          1, -- Min number of units.
+          3, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },

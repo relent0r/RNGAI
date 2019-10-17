@@ -109,7 +109,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
                 },

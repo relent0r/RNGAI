@@ -71,6 +71,7 @@ BuilderGroup {
             AdjacencyCategory = 'FACTORY',
             DesiresAssist = true,
             Construction = {
+                NumAssistees = 2,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -180,6 +181,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 800,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 300 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYSTORAGE' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
@@ -187,7 +189,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = false,
+                BuildClose = true,
                 BuildStructures = {
                     'EnergyStorage',
                 },
@@ -199,7 +201,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 500,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTime', { 480 } },
+            { MIBC, 'GreaterThanGameTime', { 600 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'ENERGYSTORAGE' }},
@@ -207,7 +209,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = false,
+                BuildClose = true,
                 BuildStructures = {
                     'EnergyStorage',
                 },

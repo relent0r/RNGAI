@@ -22,7 +22,7 @@ PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
     Plan = 'StrikeForceAI',
     GlobalSquads = {
-        { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY, 2, 100, 'Attack', 'GrowthFormation' },
         #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
     }
 }
