@@ -360,6 +360,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack Early',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
         Priority = 900,
+        InstanceCount = 3,
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 420 } },  	
             },
@@ -385,6 +386,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack Mid',
         PlatoonTemplate = 'StartLocationAttack',
         Priority = 800,
+        InstanceCount = 3,
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 1200 } },  	
             },
@@ -485,7 +487,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Anti Mass Markers Attack Base',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed.
         Priority = 900,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             MarkerType = 'Mass',
@@ -505,7 +507,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Anti Mass Markers Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Large',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 900,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             MarkerType = 'Mass',            

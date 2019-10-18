@@ -20,7 +20,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.3 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
