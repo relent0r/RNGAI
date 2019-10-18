@@ -32,8 +32,8 @@ BuilderGroup {
                     'T1LandFactory',
                     'T1EnergyProduction',
                     'T1Resource',
-                    'T1EnergyProduction',
                     'T1Resource',
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -104,6 +104,7 @@ BuilderGroup {
     },
 }
 
+-- this builder group is a test for attempting a PD surounded by walls..not working :(
 BuilderGroup {
     BuilderGroupName = 'RNGAI Test PD',
     BuildersType = 'EngineerBuilder',
