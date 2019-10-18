@@ -28,7 +28,7 @@ BuilderGroup {
         BuilderData = {
             AdjacencyCategory = 'FACTORY',
             NeedGuard = false,
-            DesiresAssist = false,
+            DesiresAssist = true,
             Construction = {
                 BuildStructures = {
                     'T1EnergyProduction',
@@ -50,7 +50,7 @@ BuilderGroup {
         BuilderData = {
             AdjacencyCategory = 'FACTORY',
             NeedGuard = false,
-            DesiresAssist = false,
+            DesiresAssist = true,
             Construction = {
                 BuildStructures = {
                     'T1EnergyProduction',
@@ -191,7 +191,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'EnergyStorage',
                 },

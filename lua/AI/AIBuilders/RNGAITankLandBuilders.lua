@@ -295,7 +295,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 850,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 3,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
@@ -308,11 +308,11 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
-                'COMMAND',
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',
                 'STRUCTURE ANTIAIR',
                 'ENERGYPRODUCTION',
+                'COMMAND',
                 'MASSFABRICATION',
                 'SHIELD',
                 'STRUCTURE',
@@ -386,7 +386,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack Mid',
         PlatoonTemplate = 'StartLocationAttack',
         Priority = 800,
-        InstanceCount = 3,
+        InstanceCount = 4,
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 1200 } },  	
             },
@@ -423,7 +423,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'Frequent Land Attack T2',
-        PlatoonTemplate = 'RNGAI LandAttack Large',
+        PlatoonTemplate = 'RNGAI LandAttack Large T2',
         Priority = 500,
         InstanceCount = 13,
         BuilderType = 'Any',
@@ -507,7 +507,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Anti Mass Markers Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Large',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 900,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 8,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
             MarkerType = 'Mass',            

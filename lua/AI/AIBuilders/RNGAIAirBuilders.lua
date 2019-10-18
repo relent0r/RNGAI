@@ -15,10 +15,23 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory Bomber',
+        BuilderName = 'RNGAI Factory Bomber T1',
         PlatoonTemplate = 'T1AirBomber',
         Priority = 850,
         BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Gunship T1',
+        PlatoonTemplate = 'T1Gunship',
+        Priority = 850,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
