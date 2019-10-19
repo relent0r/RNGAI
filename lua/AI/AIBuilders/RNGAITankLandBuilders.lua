@@ -103,9 +103,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 1050,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'AntiSurface', 3 } },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 4, 'AntiSurface', 4 } }, -- threatRings value for 10km map should cover approx 100 radius
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'MAIN', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -153,11 +153,10 @@ BuilderGroup {
         BuilderType = 'Land',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
-            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.INDIRECTFIRE * categories.LAND } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.TECH2 * categories.FACTORY * categories.LAND }},
+            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
@@ -250,8 +249,8 @@ BuilderGroup {
         BuilderType = 'Land',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
             { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.INDIRECTFIRE * categories.LAND } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -270,10 +269,10 @@ BuilderGroup {
         InstanceCount = 2,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'AntiSurface', 3 , 'RNGAI Response'} }, -- locationType, threatValue, threatType, rings
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 5, 'AntiSurface', 4 , 'RNGAI Response'} }, -- locationType, threatValue, threatType, rings
         },
         BuilderData = {
-            SearchRadius = 240,                                               -- Searchradius for new target.
+            SearchRadius = 120,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -329,7 +328,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.TECH1 } },
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH1- categories.ENGINEER } },
             --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
         BuilderData = {
@@ -361,6 +360,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI LandAttack Medium',
         Priority = 900,
         InstanceCount = 3,
+        BuilderType = 'Any',
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 420 } },  	
             },
@@ -379,14 +379,13 @@ BuilderGroup {
             GuardTimer = 30,              
             UseFormation = 'AttackFormation',
         },    
-        InstanceCount = 2,
-        BuilderType = 'Any',
     }, 
     Builder {
         BuilderName = 'RNGAI Start Location Attack Mid',
         PlatoonTemplate = 'StartLocationAttack',
         Priority = 800,
         InstanceCount = 4,
+        BuilderType = 'Any',
         BuilderConditions = {     
         		{ MIBC, 'LessThanGameTime', { 1200 } },  	
             },
@@ -404,8 +403,6 @@ BuilderGroup {
             GuardTimer = 30,              
             UseFormation = 'AttackFormation',
         },    
-        InstanceCount = 2,
-        BuilderType = 'Any',
     }, 
     Builder {
         BuilderName = 'Base Location Guard Small',
@@ -449,6 +446,7 @@ BuilderGroup {
         InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
+            MaxPathDistance = 440, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',
@@ -462,6 +460,28 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             UseFormation = 'AttackFormation',
             },
+        },
+        Builder {
+            BuilderName = 'RNGAI Anti Mass Transport',                              -- This will be an attack squad with an engineer.
+            PlatoonTemplate = 'RNGAI T1 Mass Hunters Transport',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+            Priority = 850,                                                          -- Priority. 1000 is normal.
+            InstanceCount = 2,                                                      -- Number of plattons that will be formed.
+            BuilderType = 'Any',
+            BuilderData = {
+                MaxPathDistance = 120, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+                MarkerType = 'Mass',            
+                MoveFirst = 'Random',
+                MoveNext = 'Threat',
+                ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
+                FindHighestThreat = false,			-- Don't find high threat targets
+                MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+                MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+                AvoidBases = true,
+                AvoidBasesRadius = 75,
+                AggressiveMove = true,      
+                AvoidClosestRadius = 50,
+                UseFormation = 'AttackFormation',
+                },
         },
     Builder {
         BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.

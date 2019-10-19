@@ -54,9 +54,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 950,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 3 , 'RNGAI Factory Intie Response'} },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 4 , 'RNGAI Factory Intie Response'} },
         },
         BuilderType = 'Air',
     },
@@ -145,7 +145,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 900,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
@@ -161,10 +161,29 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI Bomber Attack Excess',
+        PlatoonTemplate = 'RNGAI BomberAttack',
+        Priority = 950,
+        InstanceCount = 6,
+        BuilderType = 'Any',        
+        BuilderConditions = { 
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 4, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+        },
+        BuilderData = {
+            SearchRadius = 100,
+            PrioritizedCategories = {
+                'MASSEXTRACTION',
+                'ENGINEER TECH1',
+                'MOBILE ANTIAIR',
+                'ALLUNITS',
+            },
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 900,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
@@ -240,7 +259,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderType = 'Any',     
         BuilderConditions = { 
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 3 , 'RNGAI Factory Intie Response'} },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 4 , 'RNGAI Factory Intie Response'} },
         },
     },
 }
@@ -251,14 +270,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 550,
+        Priority = 960,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, 'TRANSPORTFOCUS' } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 25, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.05 }},
         },
         BuilderType = 'Air',
     },

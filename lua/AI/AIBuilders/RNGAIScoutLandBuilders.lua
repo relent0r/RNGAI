@@ -19,7 +19,7 @@ BuilderGroup {
         Priority = 950, -- Try to get out before second engie group
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT } },
             { UCBC, 'LessThanGameTimeSeconds', { 180 } }, -- don't build after 3 minutes
         },
         BuilderType = 'Land',
@@ -30,8 +30,7 @@ BuilderGroup {
         Priority = 750, -- After second engie group
         InstanceCount = 3,
         BuilderConditions = {
-            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.SCOUT, '<=', categories.LAND * categories.MOBILE - categories.ENGINEER }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.SCOUT * categories.LAND } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
         },

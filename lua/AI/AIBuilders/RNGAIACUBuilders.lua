@@ -109,36 +109,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Test PD',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI CDR Test pd',
-        PlatoonTemplate = 'CommanderBuilder',
-        Priority = 1060,
-        BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'STRUCTURE DEFENSE TECH1' }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                --BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
-                --BaseTemplate = 'T1PDTemplate',
-                LocationType = 'LocationType',
-                BuildClose = true,
-                BuildStructures = {
-                    'T1GroundDefense', 
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI CDR Test wall',
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1050,
@@ -149,14 +119,14 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                --BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
-                --BaseTemplate = 'T1PDTemplate',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
                 LocationType = 'LocationType',
                 BuildClose = true,
-                Wall = true,
-                MarkerRadius = 50,
-                MarkerUnitCount = 1,
-                MarkerUnitCategory = 'STRUCTURE - WALL',
+                --Wall = true,
+                --MarkerRadius = 50,
+                --MarkerUnitCount = 1,
+                --MarkerUnitCategory = 'STRUCTURE - WALL',
                 --MarkerUnitCategory = 'DEFENSE',
                 BuildStructures = {
                     --'T1GroundDefense', 
@@ -249,7 +219,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.3}},
         },
         BuilderType = 'Any',
         BuilderData = {

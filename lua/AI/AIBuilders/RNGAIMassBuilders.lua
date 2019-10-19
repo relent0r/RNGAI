@@ -36,7 +36,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 60',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 60, -500, 0, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
@@ -56,7 +56,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 120',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
@@ -79,7 +79,7 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 2,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 1, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
         },
         BuilderType = 'Any',
@@ -101,7 +101,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 180 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 1, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },
@@ -125,7 +125,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 420 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 1, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 2, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },

@@ -19,8 +19,8 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },
-            { UCBC, 'StartLocationsFull', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
         },
@@ -49,14 +49,15 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 600,
+        Priority = 900,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 5, 2, 'StructuresNotMex' } },
+            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 10, 2, 'StructuresNotMex' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            RequireTransport = true,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -83,6 +84,7 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND } }, -- Make sure there is an engie available
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

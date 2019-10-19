@@ -15,7 +15,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 1000,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.AIR * categories.SCOUT }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.AIR * categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
@@ -28,7 +28,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout T1',
         PlatoonTemplate = 'T1AirScoutForm',
-        InstanceCount = 2,
+        InstanceCount = 1,
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
