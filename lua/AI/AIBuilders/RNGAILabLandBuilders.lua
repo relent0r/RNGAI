@@ -35,7 +35,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1 Mass Hunters Category',
         Priority = 1000,
         BuilderConditions = {  
-                { MIBC, 'LessThanGameTime', { 600 } },
+                { MIBC, 'LessThanGameTime', { 180 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.LAND * categories.BOT}},      	
             },
         BuilderData = {

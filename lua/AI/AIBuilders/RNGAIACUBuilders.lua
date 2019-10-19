@@ -104,46 +104,6 @@ BuilderGroup {
     },
 }
 
--- this builder group is a test for attempting a PD surounded by walls..not working :(
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Test PD',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI CDR Test wall',
-        PlatoonTemplate = 'CommanderBuilder',
-        Priority = 1050,
-        BuilderConditions = {
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
-                BaseTemplate = 'T1PDTemplate',
-                LocationType = 'LocationType',
-                BuildClose = true,
-                --Wall = true,
-                --MarkerRadius = 50,
-                --MarkerUnitCount = 1,
-                --MarkerUnitCategory = 'STRUCTURE - WALL',
-                --MarkerUnitCategory = 'DEFENSE',
-                BuildStructures = {
-                    --'T1GroundDefense', 
-                    'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                    --'Wall',
-                },
-            }
-        }
-    },
-}
-
 BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Structure Builders',
     BuildersType = 'EngineerBuilder',
@@ -155,7 +115,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -172,11 +132,11 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 800,
         BuilderConditions = {
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -189,7 +149,7 @@ BuilderGroup {
         }
     },
     Builder {    	
-        BuilderName = 'RNGAI CDR T1 Power',
+        BuilderName = 'RNGAI ACU T1 Power',
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 700,
         BuilderConditions = {            
@@ -210,6 +170,7 @@ BuilderGroup {
         }
     },
 }
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Build Assist',
     BuildersType = 'EngineerBuilder',
@@ -227,7 +188,7 @@ BuilderGroup {
                 AssisteeType = 'Engineer',
                 AssistRange = 40,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'MASSEXTRACTION', 'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
             },
         }
@@ -253,7 +214,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Structure',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 850,
+        Priority = 800,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
