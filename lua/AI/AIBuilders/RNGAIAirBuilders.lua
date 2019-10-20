@@ -167,7 +167,7 @@ BuilderGroup {
         InstanceCount = 6,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 4, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
             SearchRadius = 100,
