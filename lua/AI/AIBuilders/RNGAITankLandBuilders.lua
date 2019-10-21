@@ -209,9 +209,22 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 650,
         BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.TECH2 * categories.LAND * categories.MOBILE * categories.ANTIAIR }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mobile AA Expansion',
+        PlatoonTemplate = 'T2LandAA',
+        Priority = 660,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -224,7 +237,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
@@ -238,7 +251,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK}},
             { MIBC, 'FactionIndex', { 1, 3}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
@@ -250,7 +263,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.INDIRECTFIRE * categories.LAND } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -376,7 +389,7 @@ BuilderGroup {
             AvoidBasesRadius = 100,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
-            GuardTimer = 30,              
+            GuardTimer = 15,              
             UseFormation = 'AttackFormation',
         },    
     }, 
@@ -391,8 +404,8 @@ BuilderGroup {
             },
         BuilderData = {
             MarkerType = 'Start Location',            
-            MoveFirst = 'Random',
-            MoveNext = 'Threat',
+            MoveFirst = 'Threat',
+            MoveNext = 'Random',
             --ThreatType = '', - defaults to AntiSurface
             --SelfThreat = '',
             --FindHighestThreat ='',
@@ -400,7 +413,7 @@ BuilderGroup {
             AvoidBases = false,
             AggressiveMove = true,      
             AvoidClosestRadius = 30,
-            GuardTimer = 30,              
+            GuardTimer = 10,              
             UseFormation = 'AttackFormation',
         },    
     }, 
@@ -408,6 +421,8 @@ BuilderGroup {
         BuilderName = 'Base Location Guard Small',
         PlatoonTemplate = 'BaseGuardSmall',
         Priority = 700,
+        InstanceCount = 2,
+        BuilderType = 'Any',
         BuilderConditions = { 
         		{ MIBC, 'LessThanGameTime', { 720 } },  	
             },
@@ -415,8 +430,6 @@ BuilderGroup {
             LocationType = 'NOTMAIN',
             GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },    
-        InstanceCount = 2,
-        BuilderType = 'Any',
     },
     Builder {
         BuilderName = 'Frequent Land Attack T2',
@@ -486,7 +499,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 850,                                                          -- Priority. 1000 is normal.
+        Priority = 700,                                                          -- Priority. 1000 is normal.
         InstanceCount = 6,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
@@ -506,7 +519,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Anti Mass Markers Attack Base',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed.
-        Priority = 900,                                                          -- Priority. 1000 is normal.
+        Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 6,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {
@@ -526,7 +539,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Anti Mass Markers Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Large',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 900,                                                          -- Priority. 1000 is normal.
+        Priority = 700,                                                          -- Priority. 1000 is normal.
         InstanceCount = 8,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderData = {

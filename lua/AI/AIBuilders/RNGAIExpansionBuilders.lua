@@ -84,8 +84,8 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } }, -- Make sure there is an engie available
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } }, -- Make sure there is an engie available
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',

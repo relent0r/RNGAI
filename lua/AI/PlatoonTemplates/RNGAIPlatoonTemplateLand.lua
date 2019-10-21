@@ -28,8 +28,8 @@ PlatoonTemplate {
     Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          1, -- Min number of units.
-          3, -- Max number of units.
+          2, -- Min number of units.
+          4, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },
@@ -56,7 +56,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Medium',
     Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -86,6 +86,6 @@ PlatoonTemplate {
           20, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-        { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
     },
 }

@@ -123,8 +123,10 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 3,
         BuilderConditions = {
-                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
+                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
+                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.00}},
+                
             },
         BuilderData = {
             LocationType = 'LocationType',
@@ -139,6 +141,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
+                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.00}},
             },
         BuilderData = {
             LocationType = 'LocationType',

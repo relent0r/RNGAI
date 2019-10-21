@@ -15,6 +15,16 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory Intie',
+        PlatoonTemplate = 'T1AirFighter',
+        Priority = 850,
+        BuilderConditions = { 
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 6, categories.AIR * categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Bomber T1',
         PlatoonTemplate = 'T1AirBomber',
         Priority = 850,
@@ -40,16 +50,6 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Intie',
-        PlatoonTemplate = 'T1AirFighter',
-        Priority = 850,
-        BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 30, categories.AIR * categories.ANTIAIR } },
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory Intie Response',
         PlatoonTemplate = 'T1AirFighter',
         Priority = 950,
@@ -57,16 +57,6 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
             { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 4 , 'RNGAI Factory Intie Response'} },
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Intie',
-        PlatoonTemplate = 'T1AirFighter',
-        Priority = 500,
-        BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 18, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
     },
@@ -270,6 +260,19 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
+        Priority = 950,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedsTransports', {} },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.05 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Transport',
+        PlatoonTemplate = 'T2AirTransport',
         Priority = 960,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },

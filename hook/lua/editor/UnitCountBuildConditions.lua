@@ -156,3 +156,13 @@ function FactoryCapCheck(aiBrain, locationType, factoryType)
     LOG('Factory Cap Check is false')
     return false
 end
+
+function StartLocationNeedsEngineer( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
+    local pos, name = AIUtils.AIFindStartLocationNeedsEngineer( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        LOG('StartLocationNeedsEngineer is True')
+        return true
+    end
+    LOG('StartLocationNeedsEngineer is False')
+    return false
+end
