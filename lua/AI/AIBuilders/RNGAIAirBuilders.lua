@@ -17,20 +17,20 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie',
         PlatoonTemplate = 'T1AirFighter',
-        Priority = 850,
+        Priority = 750,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 6, categories.AIR * categories.SCOUT }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 6, categories.AIR * categories.ANTIAIR }},
         },
         BuilderType = 'Air',
     },
     Builder {
         BuilderName = 'RNGAI Factory Bomber T1',
         PlatoonTemplate = 'T1AirBomber',
-        Priority = 850,
+        Priority = 750,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -39,11 +39,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Gunship T1',
         PlatoonTemplate = 'T1Gunship',
-        Priority = 850,
+        Priority = 750,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -52,7 +52,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
         PlatoonTemplate = 'T1AirFighter',
-        Priority = 950,
+        Priority = 850,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
@@ -63,10 +63,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie Small',
         PlatoonTemplate = 'T1AirFighter',
-        Priority = 950,
+        Priority = 800,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.AIR * categories.ANTIAIR } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
     },
@@ -78,7 +78,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory FighterBomber',
         PlatoonTemplate = 'T2FighterBomber',
-        Priority = 500,
+        Priority = 800,
         BuilderType = 'Air',
         BuilderConditions = { 
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -89,7 +89,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'TNGAI T2 Air Gunship',
         PlatoonTemplate = 'T2AirGunship',
-        Priority = 400,
+        Priority = 700,
         BuilderType = 'Air',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -141,7 +141,7 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 100,
+            SearchRadius = 240,
             PrioritizedCategories = {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
@@ -160,7 +160,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 100,
+            SearchRadius = 1000,
             PrioritizedCategories = {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
@@ -179,7 +179,7 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 100,
+            SearchRadius = 1000,
             PrioritizedCategories = {
                 'EnergyStorage',
                 'ENERGYPRODUCTION TECH2',
@@ -260,7 +260,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 950,
+        Priority = 850,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },
@@ -273,7 +273,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Transport',
         PlatoonTemplate = 'T2AirTransport',
-        Priority = 960,
+        Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },

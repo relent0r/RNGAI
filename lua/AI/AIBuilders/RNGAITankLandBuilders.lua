@@ -119,7 +119,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 700,
+        Priority = 750,
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
@@ -173,6 +173,18 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mobile AA ',
+        PlatoonTemplate = 'T2LandAA',
+        Priority = 720,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
     },
 }
 
@@ -271,6 +283,63 @@ BuilderGroup {
     },
 
 }
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Land FormBuilders Expansion',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
+    Builder {
+        BuilderName = 'RNGAI Frequent Land Attack T1 Expansion',
+        PlatoonTemplate = 'RNGAI LandAttack Medium',
+        Priority = 100,
+        InstanceCount = 8,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH1- categories.ENGINEER } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
+            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
+        },
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'AttackFormation',
+        },        
+        
+    },
+    Builder {
+        BuilderName = 'RNGAI Unit Cap Default Land Attack Expansion',
+        PlatoonTemplate = 'RNGAI LandAttack Medium',
+        Priority = 100,
+        InstanceCount = 20,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND } },
+            { UCBC, 'UnitCapCheckGreater', { .95 } },
+        },
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            ThreatWeights = {
+                IgnoreStrongerTargetsRatio = 100.0,
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'Frequent Land Attack T2 Expansion',
+        PlatoonTemplate = 'RNGAI LandAttack Large T2',
+        Priority = 500,
+        InstanceCount = 30,
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'AttackFormation',
+        },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
+            --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
+        },
+    },
+}
+
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
@@ -310,7 +379,8 @@ BuilderGroup {
         InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
+            { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
         },
         BuilderData = {
             SearchRadius = 10000,                                               -- Searchradius for new target.
@@ -333,15 +403,45 @@ BuilderGroup {
             UseFormation = 'GrowthFormation',
         },
     },
-    
     Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T1',
-        PlatoonTemplate = 'LandAttackMedium',
-        Priority = 100,
-        InstanceCount = 8,
+        BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 850,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH1- categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
+        },
+        BuilderData = {
+            SearchRadius = 10000,                                               -- Searchradius for new target.
+            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
+            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
+            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE,         -- Only find targets matching these categories.
+            PrioritizedCategories = {                                           -- Attack these targets.
+                'STRUCTURE DEFENSE',
+                'MASSEXTRACTION',
+                'ENERGYPRODUCTION',
+                'STRUCTURE ANTIAIR',
+                'COMMAND',
+                'MASSFABRICATION',
+                'SHIELD',
+                'STRUCTURE',
+                'ALLUNITS',
+            },
+            UseFormation = 'GrowthFormation',
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Frequent Land Attack T1',
+        PlatoonTemplate = 'RNGAI LandAttack Medium',
+        Priority = 100,
+        InstanceCount = 12,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
+            { UCBC, 'FactoryLessAtLocation', { 'MAIN', 3, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
             --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
         BuilderData = {
@@ -355,9 +455,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Unit Cap Default Land Attack',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
         Priority = 100,
-        InstanceCount = 10,
+        InstanceCount = 20,
         BuilderType = 'Any',
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND - categories.ENGINEER } },
             { UCBC, 'UnitCapCheckGreater', { .95 } },
         },
         BuilderData = {
@@ -400,7 +501,8 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderType = 'Any',
         BuilderConditions = {     
-        		{ MIBC, 'LessThanGameTime', { 1200 } },  	
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        	{ MIBC, 'LessThanGameTime', { 1200 } },  	
             },
         BuilderData = {
             MarkerType = 'Start Location',            
@@ -434,8 +536,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'Frequent Land Attack T2',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',
-        Priority = 500,
-        InstanceCount = 13,
+        Priority = 700,
+        InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardBases = true,
@@ -443,7 +545,7 @@ BuilderGroup {
             UseFormation = 'AttackFormation',
         },
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
             --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },
@@ -458,6 +560,9 @@ BuilderGroup {
         Priority = 900,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
+        },
         BuilderData = {
             MaxPathDistance = 440, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             MarkerType = 'Mass',            
@@ -480,6 +585,9 @@ BuilderGroup {
             Priority = 850,                                                          -- Priority. 1000 is normal.
             InstanceCount = 2,                                                      -- Number of plattons that will be formed.
             BuilderType = 'Any',
+            BuilderConditions = {     
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            },
             BuilderData = {
                 MaxPathDistance = 120, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
                 MarkerType = 'Mass',            
@@ -500,8 +608,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 15,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        },
         BuilderData = {
             SearchRadius = 10000,                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
@@ -517,31 +628,14 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Anti Mass Markers Attack Base',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed.
-        Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 6,                                                      -- Number of plattons that will be formed.
-        BuilderType = 'Any',
-        BuilderData = {
-            MarkerType = 'Mass',
-            MoveFirst = 'Random',
-            MoveNext = 'Threat',
-            ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
-            FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
-            AvoidBases = false,
-            AvoidBasesRadius = 75,
-            AggressiveMove = false,
-            AvoidClosestRadius = 50,
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Anti Mass Markers Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Large',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of plattons that will be formed.
+        InstanceCount = 20,                                                      -- Number of plattons that will be formed.
         BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 6, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        },
         BuilderData = {
             MarkerType = 'Mass',            
             MoveFirst = 'Closest',

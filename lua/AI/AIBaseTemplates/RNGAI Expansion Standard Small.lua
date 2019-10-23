@@ -30,7 +30,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
-                'RNGAI Land FormBuilders',
+                'RNGAI Land FormBuilders Expansion',
         
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Land',
@@ -41,6 +41,7 @@ BaseBuilderTemplate {
                 -- Defence Builders --
                 'RNGAI Base Defenses',
                 'RNGAI T1 Perimeter Defenses',
+                'RNGAI T2 Expansion TML',
 		},
     NonCheatBuilders = { },
     BaseSettings = {

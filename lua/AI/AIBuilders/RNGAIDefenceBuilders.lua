@@ -20,6 +20,7 @@ BuilderGroup {
         Priority = 875,
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -46,7 +47,8 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, 'DEFENSE TECH2'}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE TECH2'}},
             { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.2, 1.5 }},
@@ -68,6 +70,35 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T2 Expansion TML',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'T2TMLEngineer',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 825,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 720 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
+            { EBC, 'GreaterThanEconEfficiency', { 1.1, 1.2}},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2StrategicMissile',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+}
+
 
 -- Defenses surrounding the base in patrol points
 
