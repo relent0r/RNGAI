@@ -495,31 +495,6 @@ BuilderGroup {
         },    
     }, 
     Builder {
-        BuilderName = 'RNGAI Start Location Attack Mid',
-        PlatoonTemplate = 'StartLocationAttack',
-        Priority = 800,
-        InstanceCount = 4,
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
-        	{ MIBC, 'LessThanGameTime', { 1200 } },  	
-            },
-        BuilderData = {
-            MarkerType = 'Start Location',            
-            MoveFirst = 'Threat',
-            MoveNext = 'Random',
-            --ThreatType = '', - defaults to AntiSurface
-            --SelfThreat = '',
-            --FindHighestThreat ='',
-            --ThreatThreshold = '',
-            AvoidBases = false,
-            AggressiveMove = true,      
-            AvoidClosestRadius = 30,
-            GuardTimer = 10,              
-            UseFormation = 'AttackFormation',
-        },    
-    }, 
-    Builder {
         BuilderName = 'Base Location Guard Small',
         PlatoonTemplate = 'BaseGuardSmall',
         Priority = 700,
@@ -575,9 +550,9 @@ BuilderGroup {
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
-            AggressiveMove = true,      
+            AggressiveMove = false,      
             AvoidClosestRadius = 50,
-            UseFormation = 'AttackFormation',
+            UseFormation = 'GrowthFormation',
             },
         },
         Builder {
@@ -619,7 +594,7 @@ BuilderGroup {
             SearchRadius = 10000,                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = false,                                              -- If true, the unit will attack everything while moving to the target.
+            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MASSEXTRACTION * categories.ENGINEER * categories.MOBILE * categories.LAND, -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
