@@ -1,3 +1,5 @@
+WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset platoon.lua' )
+
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
 
@@ -19,8 +21,8 @@ Platoon = Class(oldPlatoon) {
             WaitSeconds(17)
         end
     end,
-
-    GuardMarker = function(self)
+    
+    GuardMarkerRNG = function(self)
         local aiBrain = self:GetBrain()
 
         local platLoc = self:GetPlatoonPosition()
@@ -75,13 +77,28 @@ Platoon = Class(oldPlatoon) {
         local bAggroMove = self.PlatoonData.AggressiveMove or false
 
         local PlatoonFormation = self.PlatoonData.UseFormation or 'NoFormation'
-        -----------------------------------------------------------------------
+        
+        -- Ignore markers with friendly structure threatlevels
+        local IgnoreFriendlyBase = self.PlatoonData.IgnoreFriendlyBase or false
 
+        
+
+        -----------------------------------------------------------------------
+        local markerLocations
 
         AIAttackUtils.GetMostRestrictiveLayer(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
-        local markerLocations = AIUtils.AIGetMarkerLocations(aiBrain, markerType)
 
+        if IgnoreFriendlyBase then
+            LOG('ignore friendlybase true')
+            local markerPos = AIUtils.AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
+            markerLocations = markerPos
+        else
+            LOG('ignore friendlybase false')
+            local markerPos = AIUtils.AIGetMarkerLocations(aiBrain, markerType)
+            markerLocations = markerPos
+        end
+        
         local bestMarker = false
 
         if not self.LastMarker then
@@ -239,10 +256,8 @@ Platoon = Class(oldPlatoon) {
                 else
                     StuckCount = 0
                 end
-                if StuckCount > 12 then
-                    -- if units don't become unstuck disband the platoon
-                    self:PlatoonDisband()
-                    return
+                if StuckCount > 5 then
+                    return self:GuardMarker()
                 end
                 oldPlatPos = platLoc
             until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 64 or not aiBrain:PlatoonExists(self)

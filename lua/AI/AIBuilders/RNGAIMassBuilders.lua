@@ -213,7 +213,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Storage Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'T1 Mass Adjacency Engineer',
+        BuilderName = 'RNG T1 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 800,
         BuilderConditions = {

@@ -142,7 +142,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
@@ -155,7 +155,7 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.TECH2 * categories.FACTORY * categories.LAND }},
             { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -170,7 +170,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK * categories.TECH2}},
             { MIBC, 'FactionIndex', { 1, 3}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
@@ -564,6 +564,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
         },
         BuilderData = {
+            IgnoreFriendlyBase = true,
             MaxPathDistance = 440, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
@@ -589,6 +590,7 @@ BuilderGroup {
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
             },
             BuilderData = {
+                IgnoreFriendlyBase = true,
                 MaxPathDistance = 120, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
                 MarkerType = 'Mass',            
                 MoveFirst = 'Random',
@@ -637,18 +639,10 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 6, categories.MOBILE * categories.LAND - categories.ENGINEER } },
         },
         BuilderData = {
-            MarkerType = 'Mass',            
-            MoveFirst = 'Closest',
-            MoveNext = 'Threat',
-            ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
-            FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 10000,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
-            AvoidBases = true,
-            AvoidBasesRadius = 75,
-            AggressiveMove = true,      
-            AvoidClosestRadius = 50,
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
             UseFormation = 'GrowthFormation',
+            AggressiveMove = true,
         },
     },
 }

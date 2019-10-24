@@ -31,7 +31,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Expansion Area',
-                LocationRadius = 240, -- radius of platoon control
+                LocationRadius = 1000, -- radius of platoon control
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 100,
@@ -63,7 +63,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
-                LocationRadius = 350, -- radius of platoon control
+                LocationRadius = 1000, -- radius of platoon control
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,
@@ -95,7 +95,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Combat Zone',
-                LocationRadius = 180, -- radius of platoon control
+                LocationRadius = 1000, -- radius of platoon control
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,

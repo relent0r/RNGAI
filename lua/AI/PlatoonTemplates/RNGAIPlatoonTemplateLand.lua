@@ -7,7 +7,7 @@
 
 PlatoonTemplate {
     Name = 'RNGAI T1 Mass Hunters Category',
-    Plan = 'GuardMarker',    
+    Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 10, 'attack', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
@@ -16,7 +16,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI T1 Mass Hunters Transport',
-    Plan = 'GuardMarker',    
+    Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 5, 'attack', 'none' },
         { categories.LAND * categories.ENGINEER - categories.COMMAND, 1, 1, 'attack', 'none' },
