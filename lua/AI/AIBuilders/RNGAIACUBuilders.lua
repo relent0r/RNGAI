@@ -110,7 +110,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 900,
+        Priority = 950,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -130,7 +130,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 910,
+        Priority = 960,
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
@@ -151,11 +151,11 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 700,
+        Priority = 940,
         BuilderConditions = {            
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.4 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
         },
         BuilderType = 'Any',
@@ -177,7 +177,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Engineer',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 850,
+        Priority = 920,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.3}},
@@ -186,7 +186,7 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssisteeType = 'Engineer',
-                AssistRange = 40,
+                AssistRange = 60,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
@@ -196,7 +196,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 800,
+        Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9}},
         },
@@ -214,7 +214,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Structure',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 800,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },

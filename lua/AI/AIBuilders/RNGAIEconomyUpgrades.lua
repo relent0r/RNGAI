@@ -50,6 +50,36 @@ BuilderGroup {
         FormRadius = 1000,
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNG T2 Mass Extractor Upgrade Single 10000',
+        PlatoonTemplate = 'T2MassExtractorUpgrade',
+        InstanceCount = 1,
+        Priority = 400,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconIncome',  { 4.2, 80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.1, 1.4 }},
+            { MIBC, 'GreaterThanGameTime', { 960 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH3', 'MASSEXTRACTION' } },
+        },
+        FormRadius = 10000,
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mass Extractor Upgrade Single 120',
+        PlatoonTemplate = 'T2MassExtractorUpgrade',
+        InstanceCount = 1,
+        Priority = 200,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconIncome',  { 8.0, 120}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.5 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH3', 'MASSEXTRACTION' } },
+            { MIBC, 'GreaterThanGameTime', { 600 } },
+        },
+        FormRadius = 120,
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {

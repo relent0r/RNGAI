@@ -35,7 +35,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 500, -- low factory priority
+        Priority = 700, -- low factory priority
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
@@ -125,7 +125,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
-                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.00}},
+                { EBC, 'LessThanEconStorageRatio', { 0.50, 1.00}},
                 
             },
         BuilderData = {
@@ -141,7 +141,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = {
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
-                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.00}},
+                { EBC, 'LessThanEconStorageRatio', { 0.50, 1.00}},
             },
         BuilderData = {
             LocationType = 'LocationType',
