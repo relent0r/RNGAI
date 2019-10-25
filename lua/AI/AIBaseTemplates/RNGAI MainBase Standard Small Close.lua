@@ -36,6 +36,7 @@ BaseBuilderTemplate {
         'RNGAI T1 Reclaim Builders',
         'RNGAI T1 Assist Builders',
         'RNGAI T2 Assist Builders',
+        'RNGAI Engineering Reclaim Builder',
 
         -- Land Unit Builders T1 --
         'RNGAI ScoutLandBuilder',

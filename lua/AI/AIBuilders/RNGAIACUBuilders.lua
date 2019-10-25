@@ -130,7 +130,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
+        Priority = 910,
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },

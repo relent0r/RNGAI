@@ -307,7 +307,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Unit Cap Default Land Attack Expansion',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
-        Priority = 100,
+        Priority = 600,
         InstanceCount = 20,
         BuilderType = 'Any',
         BuilderConditions = {
@@ -325,7 +325,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'Frequent Land Attack T2 Expansion',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',
-        Priority = 500,
+        Priority = 700,
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {

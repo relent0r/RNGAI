@@ -261,6 +261,25 @@ BuilderGroup {
             },
         }
     },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
+        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
+        Priority = 980,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE}},
+            },
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {'STRUCTURE STRATEGIC, STRUCTURE ECONOMIC, STRUCTURE'},
+                Time = 20,
+            },
+        },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {
@@ -311,5 +330,26 @@ BuilderGroup {
                 },
             }
         }
+    },
+}
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Engineering Reclaim Builder',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Reclaim T1 Pgens',
+        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonAIPlan = 'ReclaimStructuresAI',
+        Priority = 900,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.1, 1.1 }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, categories.TECH2 * categories.ENERGYPRODUCTION}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION * categories.DRAGBUILD }},
+            },
+        BuilderData = {
+            Location = 'LocationType',
+            Reclaim = {'STRUCTURE ENERGYPRODUCTION TECH1 DRAGBUILD'},
+        },
+        BuilderType = 'Any',
     },
 }

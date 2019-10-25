@@ -1,6 +1,7 @@
 
 function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
+    LOG('Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
     if markerType == 'Start Location' then
         local tempMarkers = AIGetMarkerLocations(aiBrain, 'Blank Marker')
         for k, v in tempMarkers do
