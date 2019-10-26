@@ -119,8 +119,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1', -- Try to get that early reclaim
         PlatoonTemplate = 'T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAI',
-        Priority = 800,
+        PlatoonAIPlan = 'ReclaimAIRNG',
+        Priority = 980,
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
@@ -136,7 +136,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAI',
+        PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 600,
         InstanceCount = 5,
         BuilderConditions = {

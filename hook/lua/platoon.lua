@@ -323,6 +323,7 @@ Platoon = Class(oldPlatoon) {
             local needEnergy = brain:GetEconomyStoredRatio('ENERGY') < 0.5
 
             for k,v in ents do
+                
                 if not IsProp(v) or eng.BadReclaimables[v] then continue end
                 if not needEnergy or v.MaxEnergyReclaim then
                     local rpos = v:GetCachePosition()
@@ -332,7 +333,7 @@ Platoon = Class(oldPlatoon) {
 
             IssueClearCommands(units)
             table.sort(reclaim, function(a, b) return a.distance < b.distance end)
-
+            --LOG('Table Dump' .. repr(reclaim))
             local recPos = nil
             local closest = {}
             for i, r in reclaim do

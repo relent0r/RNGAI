@@ -289,11 +289,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Frequent Land Attack T1 Expansion',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
-        Priority = 100,
+        Priority = 600,
         InstanceCount = 8,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH1- categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
             --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },

@@ -35,7 +35,6 @@ BuilderGroup {
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -112,15 +111,15 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 950,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
+            --{ UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
                 },
@@ -132,8 +131,8 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 960,
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0} },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -154,7 +153,7 @@ BuilderGroup {
         Priority = 940,
         BuilderConditions = {            
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.4 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
         },
