@@ -68,7 +68,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Small',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 850,
+        Priority = 890,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
