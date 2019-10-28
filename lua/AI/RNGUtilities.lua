@@ -1,3 +1,5 @@
+local AIUtils = import('ai/aiutilities.lua')
+
 function ReclaimRNGAIThread(platoon,self,aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
     LOG('Start Reclaim Function')
