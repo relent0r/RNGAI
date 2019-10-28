@@ -79,10 +79,10 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         LOG('Base Location is : '..basePosition[1]..' '..basePosition[3])
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-        LOG('Random Location is :'..location)
+        LOG('Random Location is :'..location[1]..' '..location[3])
         IssueClearCommands({self})
         StartMoveDestination(self, location)
-        WaitSeconds(10)
+        WaitSeconds(5)
         platoon:PlatoonDisband()
     end
 end

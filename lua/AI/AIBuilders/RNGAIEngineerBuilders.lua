@@ -36,7 +36,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 600,
-        InstanceCount = 5,
+        InstanceCount = 4,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
@@ -295,7 +295,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
-            { EBC, 'GreaterThanEconIncome',  { 10, 100}},
+            { EBC, 'GreaterThanEconIncome',  { 1, 10}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.95, 1.4 }},
         },
@@ -318,7 +318,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
-            { EBC, 'GreaterThanEconIncome',  { 10, 100}},
+            { EBC, 'GreaterThanEconIncome',  { 1, 10}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.95, 1.4 }},
         },

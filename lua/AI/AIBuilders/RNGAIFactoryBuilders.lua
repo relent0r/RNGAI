@@ -189,7 +189,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 500,
+        Priority = 700,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 8, 'FACTORY TECH2, FACTORY TECH3'}},

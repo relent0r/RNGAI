@@ -82,3 +82,17 @@ function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
     return true
 end
 
+function GreaterThanEconIncome(aiBrain, MassIncome, EnergyIncome)
+    if HaveGreaterThanUnitsWithCategory(aiBrain, 0, 'ENERGYPRODUCTION EXPERIMENTAL STRUCTURE') then
+        --LOG('*AI DEBUG: Found Paragon')
+        return true
+    end
+    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
+    LOG('Current Econ Numbers, Current Mass : '..econ.MassIncome..'Desired Mass : '..MassIncome ..' Energy : '..econ.EnergyIncome..'Desired Energy :'..EnergyIncome)
+    if (econ.MassIncome >= MassIncome and econ.EnergyIncome >= EnergyIncome) then
+        LOG('GreaterThanEconIncome is True')
+        return true
+    end
+    LOG('GreaterThanEconIncome is False')
+    return false
+end

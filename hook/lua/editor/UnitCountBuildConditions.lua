@@ -166,3 +166,59 @@ function StartLocationNeedsEngineer( aiBrain, locationType, locationRadius, thre
     LOG('StartLocationNeedsEngineer is False')
     return false
 end
+
+function FactoryComparisonAtLocation(aiBrain, locationType, unitCount, unitCategory, compareType)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    local testCat = unitCategory
+    if type(unitCategory) == 'string' then
+        testCat = ParseEntityCategory(unitCategory)
+    end
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+        return false
+    end
+    local numUnits = factoryManager:GetNumCategoryFactories(testCat)
+    LOG('Factory Comparison Current Number : '..numUnits..'Desired Number : '..compareType..''..unitCount)
+    return CompareBody(numUnits, unitCount, compareType)
+end
+
+function FactoryCapCheck(aiBrain, locationType, factoryType)
+    local catCheck = false
+    if factoryType == 'Land' then
+        catCheck = categories.LAND * categories.FACTORY
+    elseif factoryType == 'Air' then
+        catCheck = categories.AIR * categories.FACTORY
+    elseif factoryType == 'Sea' then
+        catCheck = categories.NAVAL * categories.FACTORY
+    elseif factoryType == 'Gate' then
+        catCheck = categories.GATE
+    else
+        WARN('*AI WARNING: Invalid factorytype - ' .. factoryType)
+        return false
+    end
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
+        return false
+    end
+    local numUnits = factoryManager:GetNumCategoryFactories(catCheck)
+    numUnits = numUnits + aiBrain:GetEngineerManagerUnitsBeingBuilt(catCheck)
+    LOG('FactoryCapCheck, Location is : '..locationType..'Current Factories : '..numUnits..'Factory Cap : '..aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType])
+    if numUnits < aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType] then
+        LOG('FactoryCapCheck is True')
+        return true
+    end
+    LOG('FactoryCapCheck is False')
+    return false
+end
+
+function UnitCapCheckLess(aiBrain, percent)
+    local currentCount = GetArmyUnitCostTotal(aiBrain:GetArmyIndex())
+    local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
+    if (currentCount / cap) < percent then
+        LOG('UnitCapCheckLess is True')
+        return true
+    end
+    LOG('UnitCapCheckLess is False')
+    return false
+end
