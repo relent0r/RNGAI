@@ -38,6 +38,7 @@ BuilderGroup {
         Priority = 600,
         InstanceCount = 5,
         BuilderConditions = {
+                { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
                 { EBC, 'LessThanEconStorageRatio', { 0.50, 1.00}},
             },

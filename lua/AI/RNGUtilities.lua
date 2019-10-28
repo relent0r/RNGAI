@@ -35,14 +35,16 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
                 if not needEnergy or v.MaxEnergyReclaim then
-                    local rpos = v:GetCachePosition()
-                    local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
-                    if distance > furtherestReclaim then
-                        furtherestReclaim = rpos
-                    end
-                    if distance < closestReclaim then
-                        closestReclaim = rpos
-                        closestDistance = distance
+                    if not self.BadReclaimables[v.entity] then
+                        local rpos = v:GetCachePosition()
+                        local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
+                        if distance > furtherestReclaim then
+                            furtherestReclaim = rpos
+                        end
+                        if distance < closestReclaim then
+                            closestReclaim = rpos
+                            closestDistance = distance
+                        end
                     end
                 end
             end
