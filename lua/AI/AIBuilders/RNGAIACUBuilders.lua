@@ -111,6 +111,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 950,
         BuilderConditions = {
+            { EBC, 'GreaterThanEconIncome',  { 7.0, 60.0}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -131,6 +132,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 960,
         BuilderConditions = {
+            { EBC, 'GreaterThanEconIncome',  { 7.0, 60.0}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8} },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -176,7 +178,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Engineer',
         PlatoonTemplate = 'CommanderAssist',
-        Priority = 920,
+        Priority = 700,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.3}},

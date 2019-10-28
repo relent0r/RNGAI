@@ -6,6 +6,14 @@
 ]]
 
 PlatoonTemplate {
+    Name = 'RNGAI T1EngineerReclaimer',
+    Plan = 'ReclaimAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH1, 1, 1, 'attack', 'None' }
+    },
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1 Mass Hunters Category',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {

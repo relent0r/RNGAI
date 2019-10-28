@@ -1,5 +1,7 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset platoon.lua' )
 
+local UUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
 
@@ -293,76 +295,33 @@ Platoon = Class(oldPlatoon) {
             self:PlatoonDisband()
         end
     end,
-
+    
     ReclaimAIRNG = function(self)
-        self:Stop()
-        local brain = self:GetBrain()
-        local locationType = self.PlatoonData.LocationType
-        local createTick = GetGameTick()
-        local oldClosest
-        local units = self:GetPlatoonUnits()
-        local eng = units[1]
-        if not eng then
-            self:PlatoonDisband()
-            return
+        local aiBrain = self:GetBrain()
+        local platoonUnits = self:GetPlatoonUnits()
+        local eng
+        for k, v in platoonUnits do
+            if not v.Dead and EntityCategoryContains(categories.MOBILE * categories.ENGINEER, v) then
+                eng = v
+                break
+            end
         end
+        UUtils.ReclaimRNGAIThread(self,eng,aiBrain)
+        self:PlatoonDisband()
+    end,
 
-        eng.BadReclaimables = eng.BadReclaimables or {}
-
-        while brain:PlatoonExists(self) do
-            local ents = AIUtils.AIGetReclaimablesAroundLocation(brain, locationType) or {}
-            local pos = self:GetPlatoonPosition()
-
-            if not ents[1] or not pos then
-                WaitTicks(1)
-                self:PlatoonDisband()
-                return
-            end
-
-            local reclaim = {}
-            local needEnergy = brain:GetEconomyStoredRatio('ENERGY') < 0.5
-
-            for k,v in ents do
-                
-                if not IsProp(v) or eng.BadReclaimables[v] then continue end
-                if not needEnergy or v.MaxEnergyReclaim then
-                    local rpos = v:GetCachePosition()
-                    table.insert(reclaim, {entity=v, pos=rpos, distance=VDist2(pos[1], pos[3], rpos[1], rpos[3])})
-                end
-            end
-
-            IssueClearCommands(units)
-            table.sort(reclaim, function(a, b) return a.distance < b.distance end)
-            --LOG('Table Dump' .. repr(reclaim))
-            local recPos = nil
-            local closest = {}
-            for i, r in reclaim do
-                -- This is slowing down the whole sim when engineers start's reclaiming, and every engi is pathing with CanPathTo (r.pos)
-                -- even if the engineer will run into walls, it is only reclaimig and don't justifies the huge CPU cost. (Simspeed droping from +9 to +3 !!!!)
-                -- eng.BadReclaimables[r.entity] = r.distance > 10 and not eng:CanPathTo (r.pos)
-                eng.BadReclaimables[r.entity] = r.distance > 20
-                if not eng.BadReclaimables[r.entity] then
-                    IssueReclaim(units, r.entity)
-                    if i > 10 then break end
-                end
-            end
-
-            local reclaiming = not eng:IsIdleState()
-            local max_time = self.PlatoonData.ReclaimTime
-
-            while reclaiming do
-                WaitSeconds(5)
-
-                if eng:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                    reclaiming = false
-                end
-            end
-
-            local basePosition = brain.BuilderManagers[locationType].Position
-            local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-            self:MoveToLocation(location, false)
-            WaitSeconds(10)
-            self:PlatoonDisband()
+    SetupEngineerCallbacks = function(eng)
+        if eng and not eng.Dead and not eng.BuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.EngineerBuildDone, eng, categories.ALLUNITS)
+            eng.BuildDoneCallbackSet = true
+        end
+        if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDone, eng)
+            eng.CaptureDoneCallbackSet = true
+        end
+        if eng and not eng.Dead and not eng.FailedToBuildCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(eng.PlatoonHandle.EngineerFailedToBuild, eng)
+            eng.FailedToBuildCallbackSet = true
         end
     end,
 }
