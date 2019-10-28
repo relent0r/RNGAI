@@ -13,7 +13,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { .2, 6}},
+            { EBC, 'GreaterThanEconIncome',  { 1.0, 6}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { MIBC, 'GreaterThanGameTime', { 780 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
@@ -28,7 +28,7 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { .2, 6}},
+            { EBC, 'GreaterThanEconIncome',  { 1.0, 6}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH1', 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
         },
@@ -56,7 +56,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { .4, 8}},
+            { EBC, 'GreaterThanEconIncome',  { 1.4, 8}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { MIBC, 'GreaterThanGameTime', { 960 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH3', 'MASSEXTRACTION' } },
@@ -71,7 +71,7 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { .8, 12}},
+            { EBC, 'GreaterThanEconIncome',  { 1.4, 12}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH3', 'MASSEXTRACTION' } },
             { MIBC, 'GreaterThanGameTime', { 600 } },
@@ -91,7 +91,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { .2, 6}},
+            { EBC, 'GreaterThanEconIncome',  { 1.0, 6}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { MIBC, 'GreaterThanGameTime', { 960 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
