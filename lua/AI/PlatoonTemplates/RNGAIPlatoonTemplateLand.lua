@@ -1,5 +1,5 @@
 --[[
-    File    :   /lua/AI/PlattonTemplates/MicroAITemplates.lua
+    File    :   /lua/AI/PlatoonTemplates/MicroAITemplates.lua
     Author  :   SoftNoob
     Summary :
         Responsible for defining a mapping from AIBuilders keys -> Plans (Plans === platoon.lua functions)
@@ -9,7 +9,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1EngineerReclaimer',
     Plan = 'ReclaimAIRNG',
     GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'attack', 'None' }
+        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
     },
 }
 

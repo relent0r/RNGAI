@@ -111,8 +111,8 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 900,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconIncome',  { 0.7, 6.0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.5 }},
+            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -132,8 +132,8 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 900,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconIncome',  { 0.7, 6.0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.5 }},
+            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },

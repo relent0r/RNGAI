@@ -14,15 +14,15 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reclaim Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T1', -- Try to get that early reclaim
+        BuilderName = 'RNGAI Engineer Reclaim T1 Early', -- Try to get that early reclaim
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 975,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
-                { EBC, 'LessThanEconStorageRatio', { 0.50, 1.00}},
                 
             },
         BuilderData = {
@@ -32,7 +32,7 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T1',
+        BuilderName = 'RNGAI Engineer Reclaim T1 ',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 600,

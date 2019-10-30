@@ -229,7 +229,7 @@ BuilderGroup {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 6, 'FACTORY TECH2, FACTORY TECH3'}},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'FACTORY TECH2'}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY TECH2, FACTORY TECH3' } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2'}},
                 { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'FACTORY TECH2, FACTORY TECH3' } },
                 { MIBC, 'GreaterThanGameTime', { 420 } },
             },

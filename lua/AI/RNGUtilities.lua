@@ -24,7 +24,6 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
 
         if not engPos then
             WaitTicks(1)
-            PlatoonDisband(platoon)
             return
         end
 
@@ -71,8 +70,10 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
+            LOG('Engineer is reclaiming')
             WaitSeconds(5)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
+                LOG('Engineer no longer reclaiming')
                 reclaiming = false
             end
         end
@@ -83,7 +84,6 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitSeconds(5)
-        platoon:PlatoonDisband()
     end
 end
 

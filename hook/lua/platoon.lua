@@ -297,6 +297,7 @@ Platoon = Class(oldPlatoon) {
     end,
     
     ReclaimAIRNG = function(self)
+        LOG('ReclaimAIRNG has been started')
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
         local eng
@@ -306,22 +307,14 @@ Platoon = Class(oldPlatoon) {
                 break
             end
         end
-        UUtils.ReclaimRNGAIThread(self,eng,aiBrain)
+        if eng then
+            LOG('Engineer Condition is true')
+            eng.UnitBeingBuilt = eng -- this is important, per uveso (It's a build order fake, i assigned the engineer to itself so it will not produce errors because UnitBeingBuilt must be a unit and can not just be set to true)
+            UUtils.ReclaimRNGAIThread(self,eng,aiBrain)
+            eng.UnitBeingBuilt = nil
+        else
+            LOG('Engineer Condition is false')
+        end
         self:PlatoonDisband()
-    end,
-
-    SetupEngineerCallbacks = function(eng)
-        if eng and not eng.Dead and not eng.BuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.EngineerBuildDone, eng, categories.ALLUNITS)
-            eng.BuildDoneCallbackSet = true
-        end
-        if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDone, eng)
-            eng.CaptureDoneCallbackSet = true
-        end
-        if eng and not eng.Dead and not eng.FailedToBuildCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(eng.PlatoonHandle.EngineerFailedToBuild, eng)
-            eng.FailedToBuildCallbackSet = true
-        end
     end,
 }

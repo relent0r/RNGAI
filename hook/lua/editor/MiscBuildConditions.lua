@@ -9,10 +9,7 @@
 -- ##############################################################################################################
 function ReclaimablesInArea(aiBrain, locType)
     if aiBrain:GetEconomyStoredRatio('MASS') > .9 then
-        return false
-    end
-    
-    if aiBrain:GetEconomyStoredRatio('ENERGY') > .9 then
+        LOG('Mass Storage Ratio Returning False')
         return false
     end
     

@@ -16,8 +16,10 @@ end
 -- Check if less than num in seconds
 function LessThanGameTimeSeconds(aiBrain, num)
     if num > GetGameTimeSeconds() then
+        LOG('Less than game time is true'..num)
         return true
     end
+    LOG('Less than game time is false'..num)
     return false
 end
 
@@ -220,5 +222,24 @@ function UnitCapCheckLess(aiBrain, percent)
         return true
     end
     LOG('UnitCapCheckLess is False')
+    return false
+end
+
+function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
+    local numUnits
+    local testCat = category
+    if type(category) == 'string' then
+        testCat = ParseEntityCategory(category)
+    end
+    if not idleReq then
+        numUnits = aiBrain:GetCurrentUnits(testCat)
+    else
+        numUnits = table.getn(aiBrain:GetListOfUnits(testCat, true))
+    end
+    if numUnits > numReq then
+        LOG('Greater than units with category returned true')
+        return true
+    end
+    LOG('Greater than units with category returned false')
     return false
 end

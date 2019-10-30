@@ -19,7 +19,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 180 } }, -- so we dont crash the mass in the first few minutes cause thats what we do >_<
-            { UCBC, 'EnergyToMassRatioIncome', { 14.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
+            { UCBC, 'EnergyToMassRatioIncome', { 14.0, '<=', true} }, -- false if we have 14 times more Energy then Mass income ( 100 >= 10 = true )
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.0}},
@@ -41,9 +41,32 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Trend',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = 'FACTORY',
+            NeedGuard = false,
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T1EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1Engineer Pgen Efficiency',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 850,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }}, 
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },
