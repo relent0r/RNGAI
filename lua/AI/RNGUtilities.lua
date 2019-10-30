@@ -71,7 +71,7 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
             LOG('Engineer is reclaiming')
-            WaitSeconds(5)
+            WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
                 LOG('Engineer no longer reclaiming')
                 reclaiming = false

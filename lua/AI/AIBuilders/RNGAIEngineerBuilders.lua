@@ -27,7 +27,7 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 30
+            ReclaimTime = 60
         },
         BuilderType = 'Any',
     },
@@ -44,7 +44,7 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 30
+            ReclaimTime = 60
         },
         BuilderType = 'Any',
     },

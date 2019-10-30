@@ -494,20 +494,21 @@ BuilderGroup {
             UseFormation = 'AttackFormation',
         },    
     }, 
-    Builder {
-        BuilderName = 'Base Location Guard Small',
-        PlatoonTemplate = 'BaseGuardSmall',
-        Priority = 700,
-        InstanceCount = 2,
-        BuilderType = 'Any',
-        BuilderConditions = { 
-        		{ MIBC, 'LessThanGameTime', { 720 } },  	
-            },
-        BuilderData = {
-            LocationType = 'NOTMAIN',
-            GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
-        },    
-    },
+    -- Disabled this one as it just doesn't seem to help much. Need to improve the plan function as its got its use cases.
+    --Builder {
+    --    BuilderName = 'Base Location Guard Small',
+    --    PlatoonTemplate = 'BaseGuardSmall',
+    --    Priority = 700,
+    --    InstanceCount = 2,
+    --    BuilderType = 'Any',
+    --    BuilderConditions = { 
+    --    		{ MIBC, 'LessThanGameTime', { 720 } },  	
+    --        },
+    --    BuilderData = {
+    --        LocationType = 'NOTMAIN',
+    --        GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
+    --    },    
+    --},
     Builder {
         BuilderName = 'Frequent Land Attack T2',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',

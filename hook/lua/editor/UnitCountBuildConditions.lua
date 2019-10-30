@@ -16,10 +16,10 @@ end
 -- Check if less than num in seconds
 function LessThanGameTimeSeconds(aiBrain, num)
     if num > GetGameTimeSeconds() then
-        LOG('Less than game time is true'..num)
+        --LOG('Less than game time is true'..num)
         return true
     end
-    LOG('Less than game time is false'..num)
+    --LOG('Less than game time is false'..num)
     return false
 end
 
@@ -45,12 +45,12 @@ function CanBuildOnMassLessThanLocationDistance(aiBrain, locationType, distance,
     local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, locationPos)
     if markerTable[1] and VDist3( markerTable[1], locationPos ) < distance then
-        LOG('Check is for :', builderName)
-        LOG('We can build in less than '..VDist3( markerTable[1], locationPos ))
+        --LOG('Check is for :', builderName)
+        --LOG('We can build in less than '..VDist3( markerTable[1], locationPos ))
         return true
     else
-        LOG('Check is for :', builderName)
-        LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
+        --LOG('Check is for :', builderName)
+        --LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
     end
     return false
 end
@@ -64,12 +64,12 @@ function CanBuildOnMassGreaterThanLocationDistance(aiBrain, locationType, distan
     local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, locationPos)
     if markerTable[1] and VDist3( markerTable[1], locationPos ) > distance then
-        LOG('Check is for :', builderName)
-        LOG('We can build in greater than '..VDist3( markerTable[1], locationPos ))
+        --LOG('Check is for :', builderName)
+        --LOG('We can build in greater than '..VDist3( markerTable[1], locationPos ))
         return true
     else
-        LOG('Check is for :', builderName)
-        LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
+        --LOG('Check is for :', builderName)
+        --LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
     end
     return false
 end
@@ -97,17 +97,17 @@ function HaveUnitsWithCategoryAndAlliance(aiBrain, greater, numReq, category, al
     local testCat = category
     if type(category) == 'string' then
         testCat = ParseEntityCategory(category)
-        LOG('HaveUnitsWithCategory Cat is :', testCat)
+        --LOG('HaveUnitsWithCategory Cat is :', testCat)
     end
     local numUnits = aiBrain:GetNumUnitsAroundPoint( testCat, Vector(0,0,0), 100000, alliance )
     if numUnits > numReq and greater then
-        LOG('HaveUnitsWithCategory greater and true')
+        --LOG('HaveUnitsWithCategory greater and true')
         return true
     elseif numUnits < numReq and not greater then
-        LOG('HaveUnitsWithCategory not greater and true')
+        --LOG('HaveUnitsWithCategory not greater and true')
         return true
     end
-    LOG('HaveUnitsWithCategory Cat is false')
+    --LOG('HaveUnitsWithCategory Cat is false')
     return false
 end
 --    Uveso Function          { SBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 1000, -1000, 100, 1, 'AntiSurface', 1 }},
@@ -152,20 +152,20 @@ function FactoryCapCheck(aiBrain, locationType, factoryType)
     numUnits = numUnits + aiBrain:GetEngineerManagerUnitsBeingBuilt(catCheck)
     
     if numUnits < aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType] then
-        LOG('Factory Cap Check is true')
+        --LOG('Factory Cap Check is true')
         return true
     end
-    LOG('Factory Cap Check is false')
+    --LOG('Factory Cap Check is false')
     return false
 end
 
 function StartLocationNeedsEngineer( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = AIUtils.AIFindStartLocationNeedsEngineer( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        LOG('StartLocationNeedsEngineer is True')
+        --LOG('StartLocationNeedsEngineer is True')
         return true
     end
-    LOG('StartLocationNeedsEngineer is False')
+    --LOG('StartLocationNeedsEngineer is False')
     return false
 end
 
@@ -205,12 +205,12 @@ function FactoryCapCheck(aiBrain, locationType, factoryType)
     end
     local numUnits = factoryManager:GetNumCategoryFactories(catCheck)
     numUnits = numUnits + aiBrain:GetEngineerManagerUnitsBeingBuilt(catCheck)
-    LOG('FactoryCapCheck, Location is : '..locationType..'Current Factories : '..numUnits..'Factory Cap : '..aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType])
+    --LOG('FactoryCapCheck, Location is : '..locationType..'Current Factories : '..numUnits..'Factory Cap : '..aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType])
     if numUnits < aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType] then
-        LOG('FactoryCapCheck is True')
+        --LOG('FactoryCapCheck is True')
         return true
     end
-    LOG('FactoryCapCheck is False')
+    --LOG('FactoryCapCheck is False')
     return false
 end
 
@@ -218,10 +218,10 @@ function UnitCapCheckLess(aiBrain, percent)
     local currentCount = GetArmyUnitCostTotal(aiBrain:GetArmyIndex())
     local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
     if (currentCount / cap) < percent then
-        LOG('UnitCapCheckLess is True')
+        --LOG('UnitCapCheckLess is True')
         return true
     end
-    LOG('UnitCapCheckLess is False')
+    --LOG('UnitCapCheckLess is False')
     return false
 end
 
@@ -237,9 +237,9 @@ function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
         numUnits = table.getn(aiBrain:GetListOfUnits(testCat, true))
     end
     if numUnits > numReq then
-        LOG('Greater than units with category returned true')
+        --LOG('Greater than units with category returned true')
         return true
     end
-    LOG('Greater than units with category returned false')
+    --LOG('Greater than units with category returned false')
     return false
 end
