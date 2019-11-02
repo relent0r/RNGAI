@@ -10,46 +10,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
-BuilderGroup {
-    BuilderGroupName = 'RNGAI T1 Reclaim Builders',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T1 Early', -- Try to get that early reclaim
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 975,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
-                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
-                
-            },
-        BuilderData = {
-            LocationType = 'LocationType',
-            ReclaimTime = 60
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T1 ',
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 600,
-        InstanceCount = 4,
-        BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
-                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
-                { EBC, 'LessThanEconStorageRatio', { 0.50, 1.00}},
-            },
-        BuilderData = {
-            LocationType = 'LocationType',
-            ReclaimTime = 60
-        },
-        BuilderType = 'Any',
-    },
-    
-}
+
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
@@ -78,7 +39,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 700, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
@@ -336,14 +297,14 @@ BuilderGroup {
     },
 }
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Engineering Reclaim Builder',
+    BuilderGroupName = 'RNGAI Energy Production Reclaim',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Pgens',
         PlatoonTemplate = 'EngineerBuilder',
         PlatoonAIPlan = 'ReclaimStructuresAI',
         Priority = 900,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.1, 1.1 }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, categories.TECH2 * categories.ENERGYPRODUCTION}},
@@ -355,4 +316,45 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T1 Reclaim Builders',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T1 Early', -- Try to get that early reclaim
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonAIPlan = 'ReclaimAIRNG',
+        Priority = 975,
+        InstanceCount = 2,
+        BuilderConditions = {
+                { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
+                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
+                
+            },
+        BuilderData = {
+            LocationType = 'LocationType',
+            ReclaimTime = 60
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T1 ',
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonAIPlan = 'ReclaimAIRNG',
+        Priority = 600,
+        InstanceCount = 4,
+        BuilderConditions = {
+                { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
+                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
+                { EBC, 'LessThanEconStorageRatio', { 0.50, 1.00}},
+            },
+        BuilderData = {
+            LocationType = 'LocationType',
+            ReclaimTime = 60
+        },
+        BuilderType = 'Any',
+    },
+    
 }

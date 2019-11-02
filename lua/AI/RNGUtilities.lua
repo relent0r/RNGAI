@@ -6,9 +6,10 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
     local initialRange = 40
-    local furtherestReclaim = 0
-    local closestReclaim = 10000
-    local closestDistance = 0
+    local furtherestReclaim = nil
+    local closestReclaim = nil
+    local closestDistance = 10000
+    local furtherestDistance = 0
     local createTick = GetGameTick()
 
     self.BadReclaimables = self.BadReclaimables or {}
@@ -32,17 +33,19 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         LOG('Going through reclaim table')
         if reclaimRect and table.getn( reclaimRect ) > 0 then
             for k,v in reclaimRect do
+                --LOG(repr(v))
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
                 if not needEnergy or v.MaxEnergyReclaim then
-                    if not self.BadReclaimables[v.entity] then
+                    if not self.BadReclaimables[v] then
                         local rpos = v:GetCachePosition()
                         local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
-                        if distance > furtherestReclaim then
-                            furtherestReclaim = rpos
-                        end
-                        if distance < closestReclaim then
+                        if distance < closestDistance then
                             closestReclaim = rpos
                             closestDistance = distance
+                        end
+                        if distance > furtherestDistance then -- and distance < closestDistance + 20
+                            furtherestReclaim = rpos
+                            furtherestDistance = distance
                         end
                     end
                 end
@@ -51,6 +54,7 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         if self.Dead then 
             return
         end
+        LOG('Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
         -- Clear Commands first
         IssueClearCommands({self})
         LOG('Attempting move to closest reclaim')
@@ -58,10 +62,15 @@ function ReclaimRNGAIThread(platoon,self,aiBrain)
         LOG('Closest reclaim is '..closestReclaim[1]..' '..closestReclaim[3])
         local brokenDistance = closestDistance / 6
         LOG('One 6th of distance is '..brokenDistance)
+        local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
             LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
             WaitSeconds(2)
+            moveWait = moveWait + 1
             engPos = self:GetPosition()
+            if moveWait == 10 then
+                break
+            end
         end
         LOG('Attempting agressive move to furtherest reclaim')
         -- Clear Commands first

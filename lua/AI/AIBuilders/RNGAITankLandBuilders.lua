@@ -123,6 +123,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -180,7 +181,7 @@ BuilderGroup {
         Priority = 720,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
+            { UCBC, 'HaveUnitRatio', { 0.15, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -494,21 +495,6 @@ BuilderGroup {
             UseFormation = 'AttackFormation',
         },    
     }, 
-    -- Disabled this one as it just doesn't seem to help much. Need to improve the plan function as its got its use cases.
-    --Builder {
-    --    BuilderName = 'Base Location Guard Small',
-    --    PlatoonTemplate = 'BaseGuardSmall',
-    --    Priority = 700,
-    --    InstanceCount = 2,
-    --    BuilderType = 'Any',
-    --    BuilderConditions = { 
-    --    		{ MIBC, 'LessThanGameTime', { 720 } },  	
-    --        },
-    --    BuilderData = {
-    --        LocationType = 'NOTMAIN',
-    --        GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
-    --    },    
-    --},
     Builder {
         BuilderName = 'Frequent Land Attack T2',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',

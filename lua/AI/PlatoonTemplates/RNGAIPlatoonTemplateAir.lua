@@ -11,10 +11,18 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI AntiAirBaseGuard',
+    Name = 'RNGAI AntiAir BaseGuard',
     Plan = 'GuardBase',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 5, 100, 'attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 50, 'attack', 'none' },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAI Bomber BaseGuard',
+    Plan = 'GuardBase',
+    GlobalSquads = {
+        { categories.MOBILE * categories.AIR * categories.BOMBER * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 50, 'attack', 'none' },
     }
 }
 

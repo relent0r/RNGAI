@@ -36,7 +36,7 @@ BaseBuilderTemplate {
         'RNGAI T1 Reclaim Builders',
         'RNGAI T1 Assist Builders',
         'RNGAI T2 Assist Builders',
-        'RNGAI Engineering Reclaim Builder',
+        'RNGAI Energy Production Reclaim',
 
         -- Land Unit Builders T1 --
         'RNGAI ScoutLandBuilder',
@@ -91,8 +91,8 @@ BaseBuilderTemplate {
             SCU = 3,
         },
         FactoryCount = {
-            Land = 9,
-            Air = 3,
+            Land = 12,
+            Air = 4,
             Sea = 0,
             Gate = 1,
         },

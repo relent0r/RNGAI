@@ -17,7 +17,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Vacant Expansion Area Engineer Small',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 500,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'StructuresNotMex' } },
@@ -50,7 +50,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 850,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
@@ -82,7 +82,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Engineer Expansion Builders Combat',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 500,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } }, -- Make sure there is an engie available

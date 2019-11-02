@@ -33,7 +33,8 @@ BaseBuilderTemplate {
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
-                'RNGAI Land FormBuilders',
+                'RNGAI Land FormBuilders Expansion',
+                'RNGAI Land FormBuilders AntiMass',
         
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Land',

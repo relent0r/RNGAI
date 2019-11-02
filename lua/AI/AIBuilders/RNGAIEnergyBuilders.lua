@@ -17,6 +17,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 900,
         InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 180 } }, -- so we dont crash the mass in the first few minutes cause thats what we do >_<
             { UCBC, 'EnergyToMassRatioIncome', { 14.0, '<=', true} }, -- false if we have 14 times more Energy then Mass income ( 100 >= 10 = true )
@@ -27,7 +28,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            AdjacencyDistance = 50,
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -42,6 +44,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
         InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
@@ -49,7 +52,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            AdjacencyDistance = 50,
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -64,6 +68,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 850,
         InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }}, 
@@ -72,7 +77,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            AdjacencyDistance = 50,
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -86,6 +92,8 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Power Engineer 1st',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 1000,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
@@ -108,6 +116,8 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Power Engineer',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 900,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' }},
@@ -134,6 +144,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 800,
         InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
@@ -156,6 +167,8 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Power Engineer Expansion',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 800,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},

@@ -119,16 +119,35 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI AntiAir Base Guard',
-        PlatoonTemplate = 'RNGAI AntiAirBaseGuard',
-        Priority = 800,
+        PlatoonTemplate = 'RNGAI AntiAir BaseGuard',
+        Priority = 700,
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
-            GuardRadius = 200, -- this is in the guardBase function as self.PlatoonData.GuardRadius
+            GuardRadius = 120, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2) * categories.ANTIAIR } },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Bomber Base Guard',
+        PlatoonTemplate = 'RNGAI Bomber BaseGuard',
+        Priority = 700,
+        InstanceCount = 2,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+        },
+        BuilderData = {
+            SearchRadius = 240,
+            PrioritizedCategories = {
+                'MASSEXTRACTION',
+                'ENGINEER TECH1',
+                'MOBILE ANTIAIR',
+                'ALLUNITS',
+            },
         },
     },
     Builder {

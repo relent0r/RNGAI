@@ -17,6 +17,7 @@ BuilderGroup {
         BuilderName = 'RNG Factory Builder Land T1 MainBase',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
@@ -44,6 +45,7 @@ BuilderGroup {
         BuilderName = 'RNG Factory Builder Land T1',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 900,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
@@ -74,6 +76,7 @@ BuilderGroup {
         BuilderName = 'RNG Factory Builder Air T1 High Pri',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
@@ -98,6 +101,7 @@ BuilderGroup {
         BuilderName = 'RNG Factory Builder Air T1',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 910,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
@@ -125,6 +129,7 @@ BuilderGroup {
         BuilderName = 'RNG Factory Builder Air T1 Main',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
@@ -206,7 +211,7 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'FACTORY AIR TECH2, FACTORY AIR TECH3'}},
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 4, 'FACTORY AIR TECH2, FACTORY AIR TECH3'}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY TECH2, FACTORY TECH3' } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2'}},

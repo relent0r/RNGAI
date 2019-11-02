@@ -22,10 +22,10 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 120',
+        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 60',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,
-        Priority = 200,
+        Priority = 300,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -37,10 +37,25 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 1000',
+        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 120',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,
         Priority = 200,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 420 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconIncome',  { 1.0, 6}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'MASSEXTRACTION TECH1', 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
+        },
+        FormRadius = 120,
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 1000',
+        PlatoonTemplate = 'T1MassExtractorUpgrade',
+        InstanceCount = 1,
+        Priority = 100,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},

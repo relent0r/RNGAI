@@ -135,6 +135,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
