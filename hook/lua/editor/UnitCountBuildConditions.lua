@@ -301,8 +301,13 @@ function HaveLessThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
             LOG('Mass Extractor is in Building state')
             local upgradingUnit = unit.UnitBeingBuilt
             if upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains(category, upgradingUnit) then
+                LOG('upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains true')
                 numUpgrading = numUpgrading + 1
+            else
+                LOG('upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains false')
             end
+        else
+            LOG('not unit:BeenDestroyed() and unit:IsUnitState Building is false' )
         end
         if numunits <= numUpgrading then
             LOG('Unit Number to check : '..numunits..'Number of units Building : '..numUpgrading)
