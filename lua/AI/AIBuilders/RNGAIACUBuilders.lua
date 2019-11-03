@@ -112,8 +112,8 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY LAND TECH1' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -133,10 +133,9 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -158,13 +157,13 @@ BuilderGroup {
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
         },
         BuilderType = 'Any',
         BuilderData = {
             DesiresAssist = false,
             Construction = {
-                AdjacencyCategory = 'FACTORY',
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -179,13 +178,13 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, 'ENGINEER TECH2, ENGINEER TECH3' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
         },
         BuilderType = 'Any',
         BuilderData = {
             DesiresAssist = false,
             Construction = {
-                AdjacencyCategory = 'FACTORY',
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -203,7 +202,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.3}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.4}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -240,7 +239,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION, FACTORY, STRUCTURE DEFENSE'}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6} },
         },
         BuilderType = 'Any',
         BuilderData = {

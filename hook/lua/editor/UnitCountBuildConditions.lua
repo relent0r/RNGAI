@@ -243,3 +243,78 @@ function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
     --LOG('Greater than units with category returned false')
     return false
 end
+
+--[[
+    function: HaveLessThanUnitsInCategoryBeingBuilt = BuildCondition	doc = "Please work function docs."
+    parameter 0: string	aiBrain		= "default_brain"
+    parameter 1: int      numReq     	= 0					doc = "docs for param1"
+    parameter 2: expr   category        = categories.ALLUNITS			doc = "param2 docs"
+]]
+
+function HaveLessThanUnitsInCategoryBeingBuilt(aiBrain, numunits, category)
+
+    if type(category) == 'string' then
+        category = ParseEntityCategory(category)
+    end
+
+    local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+    local numBuilding = 0
+    for unitNum, unit in unitsBuilding do
+        if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
+            --LOG('Category is in upgrading state')
+        end
+        if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
+            --LOG('Unit is in building state')
+            local buildingUnit = unit.UnitBeingBuilt
+            if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+                numBuilding = numBuilding + 1
+            end
+        end
+        --DUNCAN - added to pick up engineers that havent started building yet... does it work?
+        if not unit:BeenDestroyed() and not unit:IsUnitState('Building') then
+            local buildingUnit = unit.UnitBeingBuilt
+            if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+                --LOG('Engi building but not in building state...')
+                numBuilding = numBuilding + 1
+            end
+        end
+        if numunits <= numBuilding then
+            return false
+        end
+    end
+    if numunits > numBuilding then
+        return true
+    end
+    return false
+end
+
+function HaveLessThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
+
+    if type(category) == 'string' then
+        category = ParseEntityCategory(category)
+    end
+
+    local unitsUpgrading = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+    local numUpgrading = 0
+    for unitNum, unit in unitsUpgrading do
+        if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
+            LOG('Mass Extractor is in Building state')
+            local upgradingUnit = unit.UnitBeingBuilt
+            if upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains(category, upgradingUnit) then
+                numUpgrading = numUpgrading + 1
+            end
+        end
+        if numunits <= numUpgrading then
+            LOG('Unit Number to check : '..numunits..'Number of units Building : '..numUpgrading)
+            LOG('HaveLessThanUnitsInCategoryBeingUpgraded is false')
+            return false
+        end
+    end
+    if numunits > numUpgrading then
+        LOG('Unit Number to check : '..numunits..'Number of units building : '..numUpgrading)
+        LOG('HaveLessThanUnitsInCategoryBeingUpgraded is true')
+        return true
+    end
+    LOG('HaveLessThanUnitsInCategoryBeingUpgraded is false')
+    return false
+end

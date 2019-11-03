@@ -72,6 +72,7 @@ BuilderGroup {
                 BuildStructures = {                    
                     'T1LandFactory',
                     'T1GroundDefense',
+                    'T1AADefense',
                     'T1Radar',
                 }
             },

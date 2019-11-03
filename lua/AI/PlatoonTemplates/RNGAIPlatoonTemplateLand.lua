@@ -17,7 +17,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Mass Hunters Category',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 10, 'attack', 'none' },
+        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 30, 'attack', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
     }
 }
@@ -62,10 +62,10 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Medium',
-    Plan = 'StrikeForceAI', -- The platoon function to use.
+    Plan = 'AttackForceAI', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
-          6, -- Min number of units.
+          4, -- Min number of units.
           18, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',

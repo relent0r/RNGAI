@@ -67,7 +67,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Efficiency',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 850,
-        InstanceCount = 1,
+        InstanceCount = 3,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
@@ -119,6 +119,7 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
+            { UCBC, 'LessThanEnergyTrend', { 0.0 } },
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.1 }},
