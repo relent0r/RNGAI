@@ -13,7 +13,6 @@ BuilderGroup {
         Priority = 100,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { 1.4, 6}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { MIBC, 'GreaterThanGameTime', { 1200 } },
             { UCBC, 'HaveLessThanMassExtractorsBeingUpgraded', { 2, 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
@@ -44,7 +43,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { 1.2, 6}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanMassExtractorsBeingUpgraded', { 1, 'MASSEXTRACTION TECH2', 'MASSEXTRACTION' } },
         },
@@ -72,7 +70,7 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { 5.4, 60}},
+            { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { MIBC, 'GreaterThanGameTime', { 1500 } },
             { UCBC, 'HaveLessThanMassExtractorsBeingUpgraded', { 1, 'MASSEXTRACTION TECH3', 'MASSEXTRACTION' } },
