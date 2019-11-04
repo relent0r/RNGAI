@@ -108,3 +108,25 @@ function StartMoveDestination(self,destination)
         WaitTicks(10)
     end
 end
+-- Get the military operational areas of the map
+function GetMOARadii(bool)
+    -- Military area is slightly less than half the map size (10x10map) or maximal 200.
+    local BaseMilitaryArea = math.max( ScenarioInfo.size[1]-50, ScenarioInfo.size[2]-50 ) / 2.2
+    BaseMilitaryArea = math.max( 180, BaseMilitaryArea )
+    local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
+    -- Panic Zone is half the BaseMilitaryZone. That's a little less than 1/4 of a 10x10 map
+    local BasePanicArea = BaseMilitaryArea / 2
+    -- Make sure the Panic Area is not smaller than 50 or greater than 100
+    BaseRestrictedArea = math.max( 50, BaseRestrictedArea )
+    BaseRestrictedArea = math.min( 100, BaseRestrictedArea )
+    -- The rest of the map is enemy zone
+    local BaseEnemyArea = math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) * 1.5
+    -- "bool" is only true if called from "AIBuilders/Mobile Land.lua", so we only print this once.
+    if bool then
+        LOG('* RNGAI: BaseRestrictedArea= '..math.floor( BaseRestrictedArea * 0.01953125 ) ..' Km - ('..BaseRestrictedArea..' units)' )
+        LOG('* RNGAI: BaseMilitaryArea= '..math.floor( BaseMilitaryArea * 0.01953125 )..' Km - ('..BaseMilitaryArea..' units)' )
+        LOG('* RNGAI: BaseDMZArea= '..math.floor( BaseDMZArea * 0.01953125 )..' Km - ('..BaseDMZArea..' units)' )
+        LOG('* RNGAI: BaseEnemyArea= '..math.floor( BaseEnemyArea * 0.01953125 )..' Km - ('..BaseEnemyArea..' units)' )
+    end
+    return BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea
+end
