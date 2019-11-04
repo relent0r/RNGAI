@@ -103,7 +103,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 1050,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 40, 'AntiSurface', 4 } }, -- threatRings value for 10km map should cover approx 100 radius
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 30, 'AntiSurface', 4 } }, -- threatRings value for 10km map should cover approx 100 radius
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'MAIN', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
@@ -352,7 +352,7 @@ BuilderGroup {
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 40, 'AntiSurface', 4 , 'RNGAI Response'} }, -- locationType, threatValue, threatType, rings
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 30, 'AntiSurface', 4 , 'RNGAI Response'} }, -- locationType, threatValue, threatType, rings
         },
         BuilderData = {
             SearchRadius = 80,                                               -- Searchradius for new target.

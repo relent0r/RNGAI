@@ -288,17 +288,17 @@ function HaveLessThanUnitsInCategoryBeingBuilt(aiBrain, numunits, category)
     return false
 end
 
-function HaveLessThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
+function HaveLessThanMassExtractorsBeingUpgraded(aiBrain, numunits, category)
 
     if type(category) == 'string' then
         category = ParseEntityCategory(category)
     end
 
-    local unitsUpgrading = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+    local unitsUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION, false)
     local numUpgrading = 0
     for unitNum, unit in unitsUpgrading do
-        if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
-            LOG('Mass Extractor is in Building state')
+        if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
+            LOG('Mass Extractor is in Upgrading state')
             local upgradingUnit = unit.UnitBeingBuilt
             if upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains(category, upgradingUnit) then
                 LOG('upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains true')
@@ -307,19 +307,22 @@ function HaveLessThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
                 LOG('upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains false')
             end
         else
-            LOG('not unit:BeenDestroyed() and unit:IsUnitState Building is false' )
+            if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
+                LOG('Category is in upgrading state but still false')
+            end
+            LOG('not unit:BeenDestroyed() and unit:IsUnitState Upgrading is false' )
         end
         if numunits <= numUpgrading then
-            LOG('Unit Number to check : '..numunits..'Number of units Building : '..numUpgrading)
-            LOG('HaveLessThanUnitsInCategoryBeingUpgraded is false')
+            LOG('Unit Number to check : '..numunits..'Number of units Upgrading : '..numUpgrading)
+            LOG('HaveLessThanMassExtractorsBeingUpgraded is false')
             return false
         end
     end
     if numunits > numUpgrading then
-        LOG('Unit Number to check : '..numunits..'Number of units building : '..numUpgrading)
-        LOG('HaveLessThanUnitsInCategoryBeingUpgraded is true')
+        LOG('Unit Number to check : '..numunits..'Number of units Upgrading : '..numUpgrading)
+        LOG('HaveLessThanMassExtractorsBeingUpgraded is true')
         return true
     end
-    LOG('HaveLessThanUnitsInCategoryBeingUpgraded is false')
+    LOG('HaveLessThanMassExtractorsBeingUpgraded is false')
     return false
 end

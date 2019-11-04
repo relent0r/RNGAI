@@ -31,7 +31,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 600 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 9, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
         BuilderType = 'All',
     },
@@ -40,7 +40,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 700, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
