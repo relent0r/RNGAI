@@ -115,7 +115,7 @@ function GetMOARadii(bool)
     BaseMilitaryArea = math.max( 180, BaseMilitaryArea )
     local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
     -- Panic Zone is half the BaseMilitaryZone. That's a little less than 1/4 of a 10x10 map
-    local BasePanicArea = BaseMilitaryArea / 2
+    local BaseRestrictedArea = BaseMilitaryArea / 2
     -- Make sure the Panic Area is not smaller than 50 or greater than 100
     BaseRestrictedArea = math.max( 50, BaseRestrictedArea )
     BaseRestrictedArea = math.min( 100, BaseRestrictedArea )
