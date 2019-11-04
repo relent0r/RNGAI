@@ -288,41 +288,24 @@ function HaveLessThanUnitsInCategoryBeingBuilt(aiBrain, numunits, category)
     return false
 end
 
-function HaveLessThanMassExtractorsBeingUpgraded(aiBrain, numunits, category)
-
-    if type(category) == 'string' then
-        category = ParseEntityCategory(category)
-    end
-
-    local unitsUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION, false)
-    local numUpgrading = 0
-    for unitNum, unit in unitsUpgrading do
-        if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
-            LOG('Mass Extractor is in Upgrading state')
-            local upgradingUnit = unit.UnitBeingBuilt
-            if upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains(category, upgradingUnit) then
-                LOG('upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains true')
-                numUpgrading = numUpgrading + 1
-            else
-                LOG('upgradingUnit and not upgradingUnit.Dead and EntityCategoryContains false')
-            end
-        else
-            if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
-                LOG('Category is in upgrading state but still false')
-            end
-            LOG('not unit:BeenDestroyed() and unit:IsUnitState Upgrading is false' )
-        end
-        if numunits <= numUpgrading then
-            LOG('Unit Number to check : '..numunits..'Number of units Upgrading : '..numUpgrading)
-            LOG('HaveLessThanMassExtractorsBeingUpgraded is false')
-            return false
+function HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, compareType)
+    -- get all units matching 'category'
+    local unitsBuilding = aiBrain:GetListOfUnits(category, false)
+    local numBuilding = 0
+    -- own armyIndex
+    local armyIndex = aiBrain:GetArmyIndex()
+    -- loop over all units and search for upgrading units
+    for unitNum, unit in unitsBuilding do
+        if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+            numBuilding = numBuilding + 1
         end
     end
-    if numunits > numUpgrading then
-        LOG('Unit Number to check : '..numunits..'Number of units Upgrading : '..numUpgrading)
-        LOG('HaveLessThanMassExtractorsBeingUpgraded is true')
-        return true
-    end
-    LOG('HaveLessThanMassExtractorsBeingUpgraded is false')
-    return false
+    --LOG(aiBrain:GetArmyIndex()..' HaveUnitsInCategoryBeingUpgrade ( '..numBuilding..' '..compareType..' '..numunits..' ) --  return '..repr(CompareBody(numBuilding, numunits, compareType))..' ')
+    return CompareBody(numBuilding, numunits, compareType)
+end
+function HaveLessThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
+    return HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, '<')
+end
+function HaveGreaterThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
+    return HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, '>')
 end
