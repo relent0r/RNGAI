@@ -108,15 +108,16 @@ function StartMoveDestination(self,destination)
         WaitTicks(10)
     end
 end
--- Get the military operational areas of the map
+-- Get the military operational areas of the map. Credit to Uveso, this is based on his zones but a little more for small map sizes.
 function GetMOARadii(bool)
     -- Military area is slightly less than half the map size (10x10map) or maximal 200.
     local BaseMilitaryArea = math.max( ScenarioInfo.size[1]-50, ScenarioInfo.size[2]-50 ) / 2.2
     BaseMilitaryArea = math.max( 180, BaseMilitaryArea )
+    -- DMZ is half the map. Mainly used for air formers
     local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
     -- Restricted Area is half the BaseMilitaryArea. That's a little less than 1/4 of a 10x10 map
     local BaseRestrictedArea = BaseMilitaryArea / 2
-    -- Make sure the Panic Area is not smaller than 50 or greater than 100
+    -- Make sure the Restricted Area is not smaller than 50 or greater than 100
     BaseRestrictedArea = math.max( 50, BaseRestrictedArea )
     BaseRestrictedArea = math.min( 100, BaseRestrictedArea )
     -- The rest of the map is enemy area
