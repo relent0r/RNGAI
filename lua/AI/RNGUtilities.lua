@@ -114,12 +114,12 @@ function GetMOARadii(bool)
     local BaseMilitaryArea = math.max( ScenarioInfo.size[1]-50, ScenarioInfo.size[2]-50 ) / 2.2
     BaseMilitaryArea = math.max( 180, BaseMilitaryArea )
     local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
-    -- Panic Zone is half the BaseMilitaryZone. That's a little less than 1/4 of a 10x10 map
+    -- Restricted Area is half the BaseMilitaryArea. That's a little less than 1/4 of a 10x10 map
     local BaseRestrictedArea = BaseMilitaryArea / 2
     -- Make sure the Panic Area is not smaller than 50 or greater than 100
     BaseRestrictedArea = math.max( 50, BaseRestrictedArea )
     BaseRestrictedArea = math.min( 100, BaseRestrictedArea )
-    -- The rest of the map is enemy zone
+    -- The rest of the map is enemy area
     local BaseEnemyArea = math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) * 1.5
     -- "bool" is only true if called from "AIBuilders/Mobile Land.lua", so we only print this once.
     if bool then
