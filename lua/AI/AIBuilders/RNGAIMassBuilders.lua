@@ -55,7 +55,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 900,
+        Priority = 800,
         InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
@@ -72,11 +72,30 @@ BuilderGroup {
             }
         }
     },
-
+    Builder {
+        BuilderName = 'RNGAI T2Engineer Mass 120',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 800,
+        InstanceCount = 3,
+        BuilderConditions = { 
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                BuildStructures = {
+                    'T1Resource',
+                },
+            }
+        }
+    },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
+        Priority = 700,
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
@@ -97,7 +116,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 800,
+        Priority = 600,
         InstanceCount = 2,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 180 } },
@@ -121,7 +140,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 1000',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 700,
+        Priority = 500,
         InstanceCount = 2,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 420 } },
@@ -149,7 +168,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'T1ResourceEngineer 150 Low',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 1000,
+        Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
                 #{ UCBC, 'EngineerLessAtLocation', { 'LocationType', 4, 'ENGINEER TECH2, ENGINEER TECH3'}},
@@ -169,7 +188,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'T1ResourceEngineer 350 Low',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 700,
+        Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
                 #{ UCBC, 'EngineerLessAtLocation', { 'LocationType', 4, 'ENGINEER TECH2, ENGINEER TECH3'}},

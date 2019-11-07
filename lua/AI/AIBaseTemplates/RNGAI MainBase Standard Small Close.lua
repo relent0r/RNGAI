@@ -51,6 +51,7 @@ BaseBuilderTemplate {
         'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land FormBuilders AntiMass',
+        'RNGAI Land Response Formers',
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land',

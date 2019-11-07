@@ -21,7 +21,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 180 } }, -- so we dont crash the mass in the first few minutes cause thats what we do >_<
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'EnergyToMassRatioIncome', { 14.0, '<=', true} }, -- false if we have 14 times more Energy then Mass income ( 100 >= 10 = true )
+            { UCBC, 'EnergyToMassRatioIncome', { 10.0, '<=', true} }, -- false if we have 14 times more Energy then Mass income ( 100 >= 10 = true )
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.0}},
@@ -68,13 +68,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Efficiency',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
-        InstanceCount = 3,
+        Priority = 750,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }}, 
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }}, 
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },

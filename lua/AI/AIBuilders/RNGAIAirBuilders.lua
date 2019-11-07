@@ -11,6 +11,9 @@ local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 
+local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
@@ -99,7 +102,36 @@ BuilderGroup {
     },
 }
 
-    
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Air Response Formers T1',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI Air Intercept Response BaseRestrictedArea',
+        PlatoonTemplate = 'RNGAI AntiAirHunt',
+        Priority = 950,
+        InstanceCount = 5,
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardEngineers = true,
+        },
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Air Intercept Response BaseMilitaryArea',
+        PlatoonTemplate = 'RNGAI AntiAirHunt',
+        Priority = 900,
+        InstanceCount = 5,
+        BuilderType = 'Any',
+        BuilderData = {
+            NeverGuardEngineers = true,
+        },
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+    },
+}
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Platoon Builder',
@@ -107,7 +139,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
-        Priority = 900,
+        Priority = 800,
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderData = {
@@ -125,7 +157,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
-            GuardRadius = 120, -- this is in the guardBase function as self.PlatoonData.GuardRadius
+            GuardRadius = BaseMilitaryArea, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2) * categories.ANTIAIR } },
@@ -141,11 +173,12 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 240,
+            SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
-                'MASSEXTRACTION',
+                'MOBILE LAND',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'MASSEXTRACTION',
                 'ALLUNITS',
             },
         },
@@ -160,11 +193,12 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 240,
+            SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
-                'MASSEXTRACTION',
+                'MOBILE LAND',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'MASSEXTRACTION',
                 'ALLUNITS',
             },
         },
@@ -179,7 +213,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 1000,
+            SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
@@ -198,7 +232,7 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
         },
         BuilderData = {
-            SearchRadius = 1000,
+            SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 'EnergyStorage',
                 'ENERGYPRODUCTION TECH2',
@@ -259,16 +293,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE GROUNDATTACK' } },
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH3' } },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Air Intercept Response',
-        PlatoonTemplate = 'RNGAI AntiAirHunt',
-        Priority = 950,
-        InstanceCount = 5,
-        BuilderType = 'Any',     
-        BuilderConditions = { 
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 4 , 'RNGAI Factory Intie Response'} },
         },
     },
 }

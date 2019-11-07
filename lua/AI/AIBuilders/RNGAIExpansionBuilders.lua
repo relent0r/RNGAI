@@ -49,7 +49,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
+        Priority = 750,
         InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
@@ -73,37 +73,6 @@ BuilderGroup {
                     'T1LandFactory',
                     'T1GroundDefense',
                     'T1AADefense',
-                    'T1Radar',
-                }
-            },
-            NeedGuard = true,
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Engineer Expansion Builders Combat',
-        PlatoonTemplate = 'EngineerBuilder',
-        Priority = 500,
-        InstanceCount = 3,
-        BuilderConditions = {
-            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } }, -- Make sure there is an engie available
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                ExpansionBase = true,
-                NearMarkerType = 'Combat Zone',
-                LocationRadius = 1000, -- radius of platoon control
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 5,
-                ThreatRings = 0,
-                ThreatType = 'StructuresNotMex',
-                BuildStructures = {                    
-                    'T1GroundDefense',
                     'T1Radar',
                 }
             },

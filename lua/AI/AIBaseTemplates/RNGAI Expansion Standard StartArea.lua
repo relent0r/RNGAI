@@ -35,6 +35,7 @@ BaseBuilderTemplate {
                 'RNGAI ScoutLandFormer',
                 'RNGAI Land FormBuilders Expansion',
                 'RNGAI Land FormBuilders AntiMass',
+                'RNGAI Land Response Formers',
         
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Land',

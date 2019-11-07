@@ -4,6 +4,7 @@
     Summary :
         Land Builders
 ]]
+local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
@@ -101,9 +102,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 1050,
+        Priority = 1000,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 30, 'AntiSurface', 4 } }, -- threatRings value for 10km map should cover approx 100 radius
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 1, categories.MOBILE * categories.LAND - categories.SCOUT }}, -- threatRings value for 10km map should cover approx 100 radius
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'MAIN', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
@@ -341,21 +342,20 @@ BuilderGroup {
     },
 }
 
-
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuilderGroupName = 'RNGAI Land Response Formers',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
-        BuilderName = 'RNGAI Response',                              -- Random Builder Name.
+        BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 1000,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'LocationType', 30, 'AntiSurface', 4 , 'RNGAI Response'} }, -- locationType, threatValue, threatType, rings
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
         },
         BuilderData = {
-            SearchRadius = 80,                                               -- Searchradius for new target.
+            SearchRadius = BaseRestrictedArea,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -371,6 +371,71 @@ BuilderGroup {
                 'ALLUNITS',
             },
             UseFormation = 'AttackFormation',
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Response BaseMilitaryArea',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 900,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        },
+        BuilderData = {
+            SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
+            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
+            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
+            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            TargetSearchCategory = categories.MOBILE * categories.LAND,         -- Only find targets matching these categories.
+            PrioritizedCategories = {                                           -- Attack these targets.
+                'EXPERIMENTAL',
+                'MOBILE LAND INDIRECTFIRE',
+                'MOBILE LAND DIRECTFIRE',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'STRUCTURE ANTIAIR',
+                'ALLUNITS',
+            },
+            UseFormation = 'AttackFormation',
+        },
+    },
+}
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
+    Builder {
+        BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 700,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        },
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'GrowthFormation',
+            AggressiveMove = true,
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Anti Mass Markers Large',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Large',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 700,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        },
+        BuilderData = {
+            NeverGuardBases = true,
+            NeverGuardEngineers = true,
+            UseFormation = 'GrowthFormation',
+            AggressiveMove = true,
         },
     },
     Builder {
@@ -473,7 +538,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Start Location Attack Early',
         PlatoonTemplate = 'RNGAI T1 Mass Hunters Category',
-        Priority = 900,
+        Priority = 800,
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -519,7 +584,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Anti Mass Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Hunters Category',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 900,                                                          -- Priority. 1000 is normal.
+        Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -545,7 +610,7 @@ BuilderGroup {
         Builder {
             BuilderName = 'RNGAI Anti Mass Transport',                              -- This will be an attack squad with an engineer.
             PlatoonTemplate = 'RNGAI T1 Mass Hunters Transport',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-            Priority = 850,                                                          -- Priority. 1000 is normal.
+            Priority = 750,                                                          -- Priority. 1000 is normal.
             InstanceCount = 2,                                                      -- Number of platoons that will be formed.
             BuilderType = 'Any',
             BuilderConditions = {     
@@ -568,43 +633,4 @@ BuilderGroup {
                 UseFormation = 'AttackFormation',
                 },
         },
-    Builder {
-        BuilderName = 'RNGAI Anti Mass Medium',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 700,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
-        },
-        BuilderData = {
-            SearchRadius = 10000,                                               -- Searchradius for new target.
-            GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.MASSEXTRACTION * categories.ENGINEER * categories.MOBILE * categories.LAND, -- Only find targets matching these categories.
-            PrioritizedCategories = {                                           -- Attack these targets.
-                'MASSEXTRACTION',
-                'ALLUNITS',
-            },
-            UseFormation = 'AttackFormation',
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Anti Mass Markers Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Large',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 700,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
-        },
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = true,
-            UseFormation = 'GrowthFormation',
-            AggressiveMove = true,
-        },
-    },
 }

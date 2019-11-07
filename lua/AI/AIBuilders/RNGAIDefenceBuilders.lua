@@ -22,6 +22,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
@@ -49,6 +50,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE TECH2'}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
             { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
@@ -82,6 +84,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 1.0, 1.0}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -113,6 +116,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.DEFENSE * categories.TECH1}},
             { MIBC, 'GreaterThanGameTime', { 360 } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },

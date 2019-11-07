@@ -9,6 +9,7 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local MABC = '/lua/editor/MarkerBuildConditions.lua'
 
 
 
@@ -36,11 +37,34 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Mass',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 850,
+        BuilderConditions = {
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 60, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 9, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 500, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { IBC, 'BrainNotLowMassMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 700, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
+            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
@@ -63,7 +87,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
         },
         BuilderType = 'All',
@@ -74,7 +98,7 @@ BuilderGroup {
         Priority = 400, -- low factory priority
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8} },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH2' } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
             { UCBC, 'UnitCapCheckLess', { .8 } },

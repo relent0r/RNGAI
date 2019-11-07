@@ -21,14 +21,43 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.15}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
             -- Stop building T1 Factories after we have 6 T2
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH2' }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY LAND TECH1' }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T1 MainBase T2',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 900,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            -- When do we want to build this ?
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            -- Don't build it if...
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            -- Stop building T1 Factories after we have 6 T2
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH2' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY LAND TECH1' }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -50,7 +79,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -132,6 +161,35 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main',
         PlatoonTemplate = 'EngineerBuilder',
+        Priority = 950,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            -- When do we want to build this ?
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            -- Don't build it if...
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
+            -- disabled after using FactoryCapCheck { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.STRUCTURE * categories.FACTORY * categories.TECH1 * categories.AIR }},
+            -- Respect UnitCap
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T1 Main T2',
+        PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 950,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
