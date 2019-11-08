@@ -105,6 +105,16 @@ BuilderGroup {
         },
         BuilderType = 'All',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Small',
+        PlatoonTemplate = 'T3BuildEngineer',
+        Priority = 750, -- Top factory priority
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
+        },
+        BuilderType = 'All',
+    },
     
 }
 

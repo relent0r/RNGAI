@@ -111,10 +111,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence - Perimeter',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 910,
+        Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.DEFENSE * categories.TECH1}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { MIBC, 'GreaterThanGameTime', { 360 } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
             { IBC, 'BrainNotLowPowerMode', {} },

@@ -72,7 +72,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 790,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 2 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
@@ -192,10 +192,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Mobile AA ',
         PlatoonTemplate = 'T2LandAA',
-        Priority = 720,
+        Priority = 750,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveUnitRatio', { 0.15, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
+            { UCBC, 'HaveUnitRatio', { 0.15, categories.LAND * categories.ANTIAIR * categories.TECH2, '<=', categories.LAND * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -488,7 +488,7 @@ BuilderGroup {
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 2 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
             { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
         },
@@ -597,10 +597,10 @@ BuilderGroup {
             --FindHighestThreat ='',
             --ThreatThreshold = '',
             AvoidBases = true,
-            AvoidBasesRadius = 100,
+            AvoidBasesRadius = 30,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
-            GuardTimer = 15,              
+            GuardTimer = 10,              
             UseFormation = 'AttackFormation',
         },    
     }, 

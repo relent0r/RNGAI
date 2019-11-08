@@ -142,6 +142,30 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T3 Power Engineer 1st',
+        PlatoonTemplate = 'T3EngineerBuilder',
+        Priority = 900,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 9},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = 'FACTORY',
+            DesiresAssist = true,
+            Construction = {
+                NumAssistees = 2,
+                BuildStructures = {
+                    'T3EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Power Engineer',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 900,

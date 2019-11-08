@@ -254,6 +254,35 @@ BuilderGroup {
             },
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Land Factory Upgrade',
+        PlatoonTemplate = 'T2LandFactoryUpgrade',
+        Priority = 700,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 8, 'FACTORY TECH3'}},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY TECH3' } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH3'}},
+                { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'FACTORY TECH3' } },
+                { MIBC, 'GreaterThanGameTime', { 900 } },
+            },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Factory Upgrade',
+        PlatoonTemplate = 'T2AirFactoryUpgrade',
+        Priority = 600,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 4, 'FACTORY AIR TECH3'}},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY TECH2, FACTORY TECH3' } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3'}},
+                { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'FACTORY TECH3' } },
+                { MIBC, 'GreaterThanGameTime', { 900 } },
+            },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {

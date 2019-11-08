@@ -245,13 +245,13 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack T2',
         PlatoonTemplate = 'BomberAttack',
         Priority = 800,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
             PrioritizedCategories = {
-                'COMMAND',
                 'MASSEXTRACTION',
                 'ENERGYPRODUCTION',
+                'COMMAND',
                 'MASSFABRICATION',
                 'ANTIAIR STRUCTURE',
                 'DEFENSE STRUCTURE',
@@ -269,7 +269,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Energy Bomber Attack T2',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 800,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
             PrioritizedCategories = {
