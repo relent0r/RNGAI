@@ -228,4 +228,4 @@ function AirScoutPatrolRNGAIThread(self, aiBrain)
         end
         WaitTicks(1)
     end
-end,
+end

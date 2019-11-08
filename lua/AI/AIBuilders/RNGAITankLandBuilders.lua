@@ -72,7 +72,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 790,
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'DEFENSE STRUCTURE DIRECTFIRE ANTIAIR', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
@@ -489,7 +489,7 @@ BuilderGroup {
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'DEFENSE STRUCTURE DIRECTFIRE ANTIAIR', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
             { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
         },

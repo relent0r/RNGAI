@@ -271,7 +271,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Factory Upgrade',
         PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 500,
+        Priority = 600,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 4, 'FACTORY AIR TECH2, FACTORY AIR TECH3'}},

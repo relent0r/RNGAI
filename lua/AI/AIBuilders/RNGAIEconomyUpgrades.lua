@@ -26,7 +26,7 @@ BuilderGroup {
         InstanceCount = 1,
         Priority = 400,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTime', { 240 } },
+            { MIBC, 'GreaterThanGameTime', { 360 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconIncome',  { 1.0, 6}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
