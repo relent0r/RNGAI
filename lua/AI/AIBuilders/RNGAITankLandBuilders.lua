@@ -68,6 +68,19 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T1 Mortar Defense Response',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 790,
+        BuilderConditions = {
+            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'DEFENSE STRUCTURE DIRECTFIRE ANTIAIR', 4 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Mortar 3',
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 790,
