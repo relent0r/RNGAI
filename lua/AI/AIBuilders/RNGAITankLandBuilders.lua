@@ -592,7 +592,7 @@ BuilderGroup {
         },
         BuilderData = {
             IgnoreFriendlyBase = true,
-            MaxPathDistance = 440, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            MaxPathDistance = 1000, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',
@@ -618,7 +618,7 @@ BuilderGroup {
             },
             BuilderData = {
                 IgnoreFriendlyBase = true,
-                MaxPathDistance = 120, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+                MaxPathDistance = BaseDMZArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
                 MarkerType = 'Mass',            
                 MoveFirst = 'Random',
                 MoveNext = 'Threat',

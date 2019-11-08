@@ -83,7 +83,7 @@ Platoon = Class(oldPlatoon) {
         -- Ignore markers with friendly structure threatlevels
         local IgnoreFriendlyBase = self.PlatoonData.IgnoreFriendlyBase or false
 
-        
+        local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
 
         -----------------------------------------------------------------------
         local markerLocations
@@ -197,7 +197,7 @@ Platoon = Class(oldPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG("GuardMarker: Attacking " .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, 200)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(self:GetPlatoonUnits())
             if path then
