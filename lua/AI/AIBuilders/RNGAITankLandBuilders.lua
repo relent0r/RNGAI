@@ -60,7 +60,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 750, -- After Second Engie Group
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 4, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
