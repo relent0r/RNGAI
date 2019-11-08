@@ -501,8 +501,8 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.STRUCTURE * categories.DEFENSE,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
-                'STRUCTURE DEFENSE',
-                'STRUCTURE ANTIAIR',
+                'DEFENSE STRUCTURE',
+                'ANTIAIR STRUCTURE',
                 'MASSEXTRACTION',
                 'STRUCTURE',
                 'ENERGYPRODUCTION',

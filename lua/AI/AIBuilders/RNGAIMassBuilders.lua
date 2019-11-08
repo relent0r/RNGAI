@@ -166,7 +166,27 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Builder Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'T1ResourceEngineer 150 Low',
+        BuilderName = 'T1ResourceEngineer 30 Expansion',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 850,
+        InstanceCount = 2,
+        BuilderConditions = {
+                #{ UCBC, 'EngineerLessAtLocation', { 'LocationType', 4, 'ENGINEER TECH2, ENGINEER TECH3'}},
+                { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 1, 0, 'AntiSurface', 1 }},
+            },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'T1ResourceEngineer 150 Expansion',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 700,
         InstanceCount = 2,
@@ -186,7 +206,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'T1ResourceEngineer 350 Low',
+        BuilderName = 'T1ResourceEngineer 350 Expansion',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 600,
         InstanceCount = 2,
@@ -206,7 +226,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'T1ResourceEngineer 1000 Low',
+        BuilderName = 'T1ResourceEngineer 1000 Expansion',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 650,
         InstanceCount = 2,

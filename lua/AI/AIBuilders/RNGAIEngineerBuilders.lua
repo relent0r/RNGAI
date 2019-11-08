@@ -112,6 +112,20 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder Expansion',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Expansion Mass',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 700, -- low factory priority
+        BuilderConditions = {
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 1, 0, 'AntiSurface', 1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6} },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { IBC, 'BrainNotLowMassMode', {} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 600, -- low factory priority
