@@ -472,7 +472,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Defense Attack BaseDMZArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 850,                                                          -- Priority. 1000 is normal.
+        Priority = 900,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
