@@ -22,7 +22,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -51,7 +51,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -80,7 +80,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -112,7 +112,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'MAIN', 2, 'FACTORY AIR TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -130,44 +130,15 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Air T1',
-        PlatoonTemplate = 'EngineerBuilder',
-        Priority = 910,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
-            -- When do we want to build this ?
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 8.0 }},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
-            -- Don't build it if...
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
-            -- disabled after using FactoryCapCheck { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.STRUCTURE * categories.FACTORY * categories.TECH1 * categories.AIR }},
-            -- Respect UnitCap
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                Location = 'LocationType',
-                BuildClose = false,
-                BuildStructures = {
-                    'T1AirFactory',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 950,
+        Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -190,13 +161,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main T2',
         PlatoonTemplate = 'T2EngineerBuilder',
-        Priority = 950,
+        Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.15}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrend', { 0.2, 6.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },

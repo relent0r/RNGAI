@@ -117,6 +117,31 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Power Engineer 2nd',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 900,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 9},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH2' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = 'FACTORY',
+            DesiresAssist = true,
+            Construction = {
+                NumAssistees = 2,
+                BuildStructures = {
+                    'T2EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Power Engineer',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 900,
