@@ -125,6 +125,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
@@ -248,9 +249,29 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Hydro Builder',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Hydro',
+        BuilderName = 'RNGAI T1Engineer Hydro 30',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 900,
+        InstanceCount = 1,
+        BuilderConditions = { 
+            { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 30, -1000, 100, 1, 'AntiSurface', 1 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T1HydroCarbon',
+                },
+            }
+        }
+
+    },
+    Builder {
+        BuilderName = 'RNGAI T1Engineer Hydro 250',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 600,
         InstanceCount = 1,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 256, -1000, 100, 1, 'AntiSurface', 1 }},
@@ -258,7 +279,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             NeedGuard = false,
-            DesiresAssist = true,
+            DesiresAssist = false,
             Construction = {
                 BuildStructures = {
                     'T1HydroCarbon',

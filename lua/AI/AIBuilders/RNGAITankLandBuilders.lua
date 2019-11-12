@@ -62,7 +62,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 4, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -117,10 +117,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 1000,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 1, categories.MOBILE * categories.LAND - categories.SCOUT }}, -- threatRings value for 10km map should cover approx 100 radius
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 1, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'MAIN', 2, categories.DIRECTFIRE * categories.LAND * categories.MOBILE } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -160,6 +159,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
+        BuilderType = 'Land',
     },
     Builder {
         BuilderName = 'RNGAI T2 MML',
@@ -174,6 +174,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
+        BuilderType = 'Land',
     },
     Builder {
         BuilderName = 'RNGAI T2 Attack Tank - Tech 2',
@@ -188,6 +189,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
+        BuilderType = 'Land',
     },
     Builder {
         BuilderName = 'RNGAI T2 Mobile AA ',
