@@ -329,7 +329,9 @@ Platoon = Class(oldPlatoon) {
     end,
 
     AirScoutingAIRNG = function(self)
-
+        
+        local patrol = self.PlatoonData.Patrol or false
+        
         local scout = self:GetPlatoonUnits()[1]
         if not scout then
             return
