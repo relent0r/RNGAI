@@ -36,4 +36,20 @@ BuilderGroup {
         LocationType = 'LocationType',
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI Former Scout Patrol DMZ T1',
+        PlatoonTemplate = 'RNGAI T1AirScoutForm',
+        InstanceCount = 1,
+        Priority = 900,
+        BuilderData = {
+            Patrol = true,
+            PatrolTime = 60,
+            MilitaryArea = 'BaseDMZArea',
+        },
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
+        },
+        LocationType = 'LocationType',
+        BuilderType = 'Any',
+    },
 }
