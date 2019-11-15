@@ -330,12 +330,12 @@ Platoon = Class(oldPlatoon) {
     end,
 
     AirScoutingAIRNG = function(self)
-        
+        local patrol = self.PlatoonData.Patrol or false
         local scout = self:GetPlatoonUnits()[1]
         if not scout then
             return
         end
-
+        LOG('Patrol function is :'..tostring(patrol))
         local aiBrain = self:GetBrain()
 
         -- build scoutlocations if not already done.
@@ -348,7 +348,7 @@ Platoon = Class(oldPlatoon) {
             scout:EnableUnitIntel('Toggle', 'Cloak')
         end
         if patrol == true then
-            local patrol = self.PlatoonData.Patrol or false
+            LOG('Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
             local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
             local estartX = nil
@@ -358,32 +358,39 @@ Platoon = Class(oldPlatoon) {
             local patrolPositionX = nil
             local patrolPositionZ = nil
             while not scout.Dead do
+                LOG('scout not dead doing stuff')
                 if aiBrain:GetCurrentEnemy() then
                     estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
-                    LOG('Enemy Position X, Z :'..estartX..estartZ)
+                    LOG('Enemy Position X, Z :'..estartX..' '..estartZ)
                 end
+                LOG('past get current enemy')
                 startX, startZ = aiBrain:GetArmyStartPos()
+                LOG('Start Location X Z :'..startX..startZ)
                 if baseArea == 'BaseMilitaryArea' then
-                    patrolPositionX = estartX + startX / 2.2
-                    patrolPositionZ = estartZ + startZ / 2.2
+                    patrolPositionX = (estartX + startX) / 2.2
+                    patrolPositionZ = (estartZ + startZ) / 2.2
                 elseif baseArea == 'BaseRestrictedArea' then
-                    patrolPositionX = estartX + startX / 4
-                    patrolPositionZ = estartZ + startZ / 4
+                    patrolPositionX = (estartX + startX) / 4
+                    patrolPositionZ = (estartZ + startZ) / 4
                 elseif baseArea == 'BaseDMZArea' then
-                    patrolPositionX = estartX + startX / 2
-                    patrolPositionZ = estartZ + startZ / 2
+                    patrolPositionX = (estartX + startX) / 2
+                    patrolPositionZ = (estartZ + startZ) / 2
                 end
-                LOG('Patrol Location X, Z :'..patrolPositionX..patrolPositionZ)
+                LOG('Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
                 patrolLocation1 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
                 patrolLocation2 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
-                LOG('Moving to Patrol Location')
+                LOG('Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
                 self:MoveToLocation({patrolPositionX, 0, patrolPositionZ}, false)
-                LOG('Patroling positions')
-                IssuePatrol(self, patrolLocation1)
-                IssuePatrol(self, patrolLocation2)
+                LOG('Issuing Patrol Commands')
+                IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
+                IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
+                IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
+                IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 WaitSeconds(patrolTime)
                 LOG('Returning to base')
-                return self:ReturnToBaseAI()
+                self:MoveToLocation({startX, 0, startZ}, false)
+                self:PlatoonDisband()
+                return
             end
         else
             while not scout.Dead do
