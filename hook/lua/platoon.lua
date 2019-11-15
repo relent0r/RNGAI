@@ -331,15 +331,6 @@ Platoon = Class(oldPlatoon) {
 
     AirScoutingAIRNG = function(self)
         
-        local patrol = self.PlatoonData.Patrol or false
-        local patrolTime = self.PlatoonData.PatrolTime or 30
-        local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
-        local estartX = nil
-        local estartZ = nil
-        local startX = nil
-        local startZ = nil
-        local patrolPositionX = nil
-        local patrolPositionZ = nil
         local scout = self:GetPlatoonUnits()[1]
         if not scout then
             return
@@ -357,6 +348,15 @@ Platoon = Class(oldPlatoon) {
             scout:EnableUnitIntel('Toggle', 'Cloak')
         end
         if patrol == true then
+            local patrol = self.PlatoonData.Patrol or false
+            local patrolTime = self.PlatoonData.PatrolTime or 30
+            local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
+            local estartX = nil
+            local estartZ = nil
+            local startX = nil
+            local startZ = nil
+            local patrolPositionX = nil
+            local patrolPositionZ = nil
             while not scout.Dead do
                 if aiBrain:GetCurrentEnemy() then
                     estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
