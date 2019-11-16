@@ -34,8 +34,21 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH3, FACTORY AIR TECH3' }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Bomber T1',
+        PlatoonTemplate = 'T1AirBomber',
+        Priority = 850,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
+            { UCBC, 'EnemyUnitsLessAtLocationRadius', {  1000, 'LocationType', 1, categories.AIR * categories.ANTIAIR }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH3, FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -47,7 +60,6 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.7}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
@@ -139,7 +151,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
-        Priority = 800,
+        Priority = 700,
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderData = {
@@ -152,7 +164,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI AntiAir Base Guard',
         PlatoonTemplate = 'RNGAI AntiAir BaseGuard',
-        Priority = 700,
+        Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
@@ -170,7 +182,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
@@ -190,7 +202,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
@@ -210,7 +222,7 @@ BuilderGroup {
         InstanceCount = 6,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -306,7 +318,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
@@ -319,7 +331,7 @@ BuilderGroup {
         Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},

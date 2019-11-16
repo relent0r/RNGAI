@@ -49,7 +49,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 500, -- low factory priority
+        Priority = 600, -- low factory priority
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
@@ -62,7 +62,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 700, -- low factory priority
+        Priority = 750, -- low factory priority
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },

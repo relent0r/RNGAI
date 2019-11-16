@@ -77,6 +77,7 @@ BaseBuilderTemplate {
         -- Defence Builders --
         'RNGAI Base Defenses',
         'RNGAI T1 Perimeter Defenses',
+        'RNGAI T2 Defense FormBuilders',
 
         -- Expansions --
         'RNGAI Engineer Expansion Builders Small',

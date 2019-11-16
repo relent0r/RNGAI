@@ -164,3 +164,24 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T2 Defense FormBuilders',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T2 TML Silo',
+        PlatoonTemplate = 'T2TacticalLauncher',
+        Priority = 1,
+        InstanceCount = 1000,
+        FormRadius = 10000,
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Artillery',
+        PlatoonTemplate = 'T2ArtilleryStructure',
+        Priority = 1,
+        InstanceCount = 1000,
+        FormRadius = 10000,
+        BuilderType = 'Any',
+    },
+}

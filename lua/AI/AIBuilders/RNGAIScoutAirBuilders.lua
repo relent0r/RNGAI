@@ -13,9 +13,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory AirScout T1',
         PlatoonTemplate = 'T1AirScout',
-        Priority = 1000,
+        Priority = 900,
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.AIR * categories.SCOUT }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.SCOUT * categories.AIR}},
         },
         BuilderType = 'Air',
     },
