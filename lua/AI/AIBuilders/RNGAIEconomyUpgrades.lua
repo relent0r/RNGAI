@@ -88,7 +88,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION } },
-            { MIBC, 'GreaterThanGameTime', { 840 } },
+            { MIBC, 'GreaterThanGameTime', { 960 } },
         },
         FormRadius = 120,
         BuilderType = 'Any',

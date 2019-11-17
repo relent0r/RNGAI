@@ -28,6 +28,16 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Intie Response',
+        PlatoonTemplate = 'T1AirFighter',
+        Priority = 850,
+        BuilderConditions = { 
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 1, categories.AIR - categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Bomber T1',
         PlatoonTemplate = 'T1AirBomber',
         Priority = 750,
