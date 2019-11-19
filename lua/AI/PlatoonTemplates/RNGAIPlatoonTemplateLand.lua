@@ -73,10 +73,15 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Medium',
     Plan = 'AttackForceAI', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
+        { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
           4, -- Min number of units.
           18, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
+          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
+          1, -- Min number of units.
+          3, -- Max number of units.
+          'support', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },
 }
@@ -85,12 +90,18 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Large',
     Plan = 'AttackForceAI', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
+        { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
           8, -- Min number of units.
           20, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
+          2, -- Min number of units.
+          4, -- Max number of units.
+          'support', -- platoon types: 'support', 'attack', 'scout',
+          'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     },
 }
 
@@ -103,6 +114,6 @@ PlatoonTemplate {
           20, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     },
 }

@@ -35,9 +35,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 900, -- After First Engie Group and scout
         BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSeconds', { 240 } }, -- don't build after 4 minutes
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.MOBILE - categories.ENGINEER }},
-            { UCBC, 'LessThanGameTimeSeconds', { 240 } }, -- don't build after 4 minutes
             { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -48,9 +48,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 800, -- After Second Engie Group
         BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 9, categories.LAND * categories.MOBILE - categories.ENGINEER }},
-            { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -135,6 +135,19 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { UCBC, 'HaveUnitRatio', { 0.3, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Mobile AA Response',
+        PlatoonTemplate = 'T1LandAA',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 1, categories.AIR - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
@@ -644,7 +657,7 @@ BuilderGroup {
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
@@ -671,9 +684,9 @@ BuilderGroup {
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
-            AvoidBases = true,
+            AvoidBases = false,
             AvoidBasesRadius = 75,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
@@ -698,7 +711,7 @@ BuilderGroup {
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
@@ -725,7 +738,7 @@ BuilderGroup {
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 4200,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = false,
             AvoidBasesRadius = 75,

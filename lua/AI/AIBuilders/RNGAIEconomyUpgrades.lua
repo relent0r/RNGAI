@@ -50,6 +50,21 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
+        BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 120 excess',
+        PlatoonTemplate = 'T1MassExtractorUpgrade',
+        InstanceCount = 1,
+        Priority = 300,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 480 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },
+        },
+        FormRadius = 120,
+        BuilderType = 'Any',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 1000',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,

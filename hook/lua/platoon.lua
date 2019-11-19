@@ -385,9 +385,8 @@ Platoon = Class(oldPlatoon) {
                 IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
-                IssuePatrol(self, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 WaitSeconds(patrolTime)
-                LOG('Returning to base')
+                LOG('Scout Returning to base')
                 self:MoveToLocation({startX, 0, startZ}, false)
                 self:PlatoonDisband()
                 return

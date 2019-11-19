@@ -43,7 +43,7 @@ BuilderGroup {
         Priority = 905,
         BuilderData = {
             Patrol = true,
-            PatrolTime = 60,
+            PatrolTime = 10,
             MilitaryArea = 'BaseDMZArea',
         },
         BuilderConditions = {
@@ -59,7 +59,7 @@ BuilderGroup {
         Priority = 905,
         BuilderData = {
             Patrol = true,
-            PatrolTime = 60,
+            PatrolCount = 10,
             MilitaryArea = 'BaseRestrictedArea',
         },
         BuilderConditions = {
