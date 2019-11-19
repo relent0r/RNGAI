@@ -228,7 +228,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        Priority = 950,
+        Priority = 700,
         InstanceCount = 6,
         BuilderType = 'Any',        
         BuilderConditions = { 
@@ -325,7 +325,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 850,
+        Priority = 790,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
@@ -338,7 +338,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Transport',
         PlatoonTemplate = 'T2AirTransport',
-        Priority = 860,
+        Priority = 800,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },

@@ -46,7 +46,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Tank 9',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 800, -- After Second Engie Group
+        Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
@@ -56,8 +56,8 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Tank 24',
-        PlatoonTemplate = 'T1LandDFTank',
+        BuilderName = 'RNGAI Factory Land Attack',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 4, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
@@ -164,7 +164,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Tank - Tech 2',
         PlatoonTemplate = 'T2LandDFTank',
-        Priority = 750,
+        Priority = 760,
         BuilderType = 'Land',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -190,8 +190,8 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T2 Attack Tank - Tech 2',
-        PlatoonTemplate = 'T2AttackTank',
+        BuilderName = 'RNGAI T2 Attack - Tech 2',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
         Priority = 750,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -212,6 +212,23 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'HaveUnitRatio', { 0.15, categories.LAND * categories.ANTIAIR * categories.TECH2, '<=', categories.LAND * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T3 AttackLandBuilder',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T3 Attack - Tech 3',
+        PlatoonTemplate = 'RNGAIT3LandAttackQueue',
+        Priority = 750,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
