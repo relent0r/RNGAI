@@ -370,8 +370,10 @@ Platoon = Class(oldPlatoon) {
                     patrolPositionX = (estartX + startX) / 2.2
                     patrolPositionZ = (estartZ + startZ) / 2.2
                 elseif baseArea == 'BaseRestrictedArea' then
-                    patrolPositionX = (estartX + startX) / 4
-                    patrolPositionZ = (estartZ + startZ) / 4
+                    patrolPositionX = (estartX + startX) / 2
+                    patrolPositionZ = (estartZ + startZ) / 2
+                    patrolPositionX = (patrolPositionX + startX) / 2
+                    patrolPositionZ = (patrolPositionZ + startZ) / 2
                 elseif baseArea == 'BaseDMZArea' then
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
