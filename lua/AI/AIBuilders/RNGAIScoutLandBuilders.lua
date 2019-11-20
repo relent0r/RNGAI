@@ -27,7 +27,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Scout',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 750, -- After second engie group
+        Priority = 700, -- After second engie group
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},

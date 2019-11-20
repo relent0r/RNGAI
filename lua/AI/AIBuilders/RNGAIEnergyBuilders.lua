@@ -13,38 +13,10 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Pgen Ratio',
-        PlatoonTemplate = 'EngineerBuilder',
-        Priority = 900,
-        InstanceCount = 1,
-        DelayEqualBuildPlattons = {'Energy', 3},
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTime', { 180 } }, -- so we dont crash the mass in the first few minutes cause thats what we do >_<
-            { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'EnergyToMassRatioIncome', { 10.0, '<=', true} }, -- false if we have 14 times more Energy then Mass income ( 100 >= 10 = true )
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.0}},
-
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-            AdjacencyDistance = 50,
-            NeedGuard = false,
-            DesiresAssist = true,
-            Construction = {
-                BuildStructures = {
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 950,
-        InstanceCount = 1,
+        Priority = 900,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
@@ -69,7 +41,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Efficiency',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 750,
-        InstanceCount = 2,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
@@ -196,29 +168,30 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Pgen Expansion',
+        BuilderName = 'RNGAI T1Engineer Pgen Efficiency Expansion',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 800,
+        Priority = 750,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'EnergyToMassRatioIncome', { 15.0, '<=', true} }, -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
+            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }}, 
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },
         BuilderType = 'Any',
         BuilderData = {
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            AdjacencyDistance = 50,
             NeedGuard = false,
-            DesiresAssist = false,
+            DesiresAssist = true,
             Construction = {
-                BuildClose = false,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
             }
         }
-
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Expansion',

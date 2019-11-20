@@ -80,33 +80,6 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
-        BuilderName = 'RNGAI T1 Mortar 3',
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 790,
-        BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE }},
-            { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Mortar 9',
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 750,
-        BuilderConditions = {
-            { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
 }
 
 BuilderGroup {
@@ -130,19 +103,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land AA 2',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Mobile AA',
-        PlatoonTemplate = 'T1LandAA',
-        Priority = 750,
-        BuilderConditions = {
-            { UCBC, 'HaveUnitRatio', { 0.3, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Mobile AA Response',
         PlatoonTemplate = 'T1LandAA',
         Priority = 850,
@@ -157,38 +117,9 @@ BuilderGroup {
     },
 }
 -- Tech 2 Units
-
 BuilderGroup {
     BuilderGroupName = 'RNGAI T2 TankLandBuilder',
     BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI T2 Tank - Tech 2',
-        PlatoonTemplate = 'T2LandDFTank',
-        Priority = 760,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 MML',
-        PlatoonTemplate = 'T2LandArtillery',
-        Priority = 750,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.TECH2 * categories.FACTORY * categories.LAND }},
-            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
     Builder {
         BuilderName = 'RNGAI T2 Attack - Tech 2',
         PlatoonTemplate = 'RNGAIT2LandAttackQueue',
@@ -200,18 +131,6 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatio', { 0.3, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK * categories.TECH2}},
             { MIBC, 'FactionIndex', { 1, 3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Mobile AA ',
-        PlatoonTemplate = 'T2LandAA',
-        Priority = 750,
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveUnitRatio', { 0.15, categories.LAND * categories.ANTIAIR * categories.TECH2, '<=', categories.LAND * categories.DIRECTFIRE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -239,8 +158,8 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Expansions',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory Tank 24 Expansion',
-        PlatoonTemplate = 'T1LandDFTank',
+        BuilderName = 'RNGAI Factory Land Expansion',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
@@ -251,46 +170,8 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Mortar 9 Expansion',
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 650,
-        BuilderConditions = {
-            { UCBC, 'HaveUnitRatio', { 0.25, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Mobile AA Expansion',
-        PlatoonTemplate = 'T1LandAA',
-        Priority = 650,
-        BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.TECH2 * categories.LAND * categories.MOBILE * categories.ANTIAIR }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Mobile AA Expansion',
-        PlatoonTemplate = 'T2LandAA',
-        Priority = 660,
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveUnitRatio', { 0.1, categories.LAND * categories.ANTIAIR, '<=', categories.LAND * categories.DIRECTFIRE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 DF Tank - Tech 2 Expansion',
-        PlatoonTemplate = 'T2LandDFTank',
+        BuilderName = 'RNGAI T2 Land Expansion',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -300,36 +181,10 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
-    Builder {
-        BuilderName = 'RNGAI T2 Attack Tank - Tech 2 Expansion',
-        PlatoonTemplate = 'T2AttackTank',
-        Priority = 700,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK}},
-            { MIBC, 'FactionIndex', { 1, 3}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 MML Expansion',
-        PlatoonTemplate = 'T2LandArtillery',
-        Priority = 750,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'HaveUnitRatio', { 0.30, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE, '<=', categories.LAND * categories.DIRECTFIRE * categories.MOBILE}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.INDIRECTFIRE * categories.LAND } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-    },
-
 }
+
+-- Land Formers
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders Expansion',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
