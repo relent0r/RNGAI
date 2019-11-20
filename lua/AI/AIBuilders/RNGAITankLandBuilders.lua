@@ -123,12 +123,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Attack - Tech 2',
         PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 750,
+        Priority = 760,
         BuilderType = 'Land',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { UCBC, 'HaveUnitRatio', { 0.3, categories.LAND * categories.TECH2 * categories.BOT, '<=', categories.LAND * categories.DIRECTFIRE * categories.TANK * categories.TECH2}},
             { MIBC, 'FactionIndex', { 1, 3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -143,7 +142,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Attack - Tech 3',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
-        Priority = 750,
+        Priority = 770,
         BuilderType = 'Land',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },

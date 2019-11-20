@@ -30,7 +30,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
         PlatoonTemplate = 'T1AirFighter',
-        Priority = 875,
+        Priority = 950,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 1, categories.AIR - categories.SCOUT }},
