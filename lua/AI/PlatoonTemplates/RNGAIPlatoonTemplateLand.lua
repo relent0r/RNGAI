@@ -57,7 +57,7 @@ PlatoonTemplate {
     Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          2, -- Min number of units.
+          3, -- Min number of units.
           8, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
@@ -122,22 +122,22 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0201', 1, 6, 'Attack', 'none' },		-- Striker Medium Tank
-			{ 'uel0103', 1, 2, 'Artillery', 'none' },	-- artillery
+			{ 'uel0103', 1, 3, 'Artillery', 'none' },	-- artillery
             { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
          },
         Aeon = {
             { 'ual0201', 1, 6, 'Attack', 'none' },		-- Light Hover tank
-			{ 'ual0103', 1, 2, 'Artillery', 'none' },	-- artillery
+			{ 'ual0103', 1, 3, 'Artillery', 'none' },	-- artillery
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
         },
         Cybran = {
             { 'url0107', 1, 6, 'Attack', 'none' },		-- Mantis
-			{ 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+			{ 'url0103', 1, 3, 'Artillery', 'none' },	-- arty
             { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
         },
         Seraphim = {
             { 'xsl0201', 1, 6, 'Attack', 'none' },		-- Medium Tank
-			{ 'xsl0103', 1, 2, 'Artillery', 'none' },	-- artillery
+			{ 'xsl0103', 1, 3, 'Artillery', 'none' },	-- artillery
             { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
         },
     }
@@ -146,7 +146,7 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'uel0202', 1, 5, 'Guard', 'none' },       -- Heavy Tank
+            { 'uel0202', 1, 5, 'Attack', 'none' },       -- Heavy Tank
             { 'del0204', 1, 3, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0111', 1, 1, 'Artillery', 'none' },   -- MML
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
