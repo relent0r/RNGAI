@@ -63,7 +63,7 @@ PlatoonTemplate {
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           1, -- Min number of units.
-          6, -- Max number of units.
+          5, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },
@@ -146,28 +146,28 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'uel0202', 1, 5, 'Attack', 'none' },       -- Heavy Tank
+            { 'uel0202', 2, 6, 'Attack', 'none' },       -- Heavy Tank
             { 'del0204', 1, 3, 'Attack', 'none' },      -- Gatling Bot
-            { 'uel0111', 1, 1, 'Artillery', 'none' },   -- MML
+            { 'uel0111', 1, 3, 'Artillery', 'none' },   -- MML
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'uel0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield
          },
         Aeon = {
-            { 'ual0202', 1, 6, 'Attack', 'none' },      -- Heavy Tank
-            { 'ual0111', 1, 2, 'Artillery', 'none' },   -- MML
+            { 'ual0202', 2, 6, 'Attack', 'none' },      -- Heavy Tank
+            { 'ual0111', 1, 3, 'Artillery', 'none' },   -- MML
             { 'ual0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'ual0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield
         },
         Cybran = {
             { 'drl0204', 1, 3, 'Attack', 'none' },      -- Rocket Bot
-            { 'url0202', 1, 5, 'Attack', 'none' },      -- Heavy Tank
-            { 'url0111', 1, 2, 'Artillery', 'none' },   -- MML
+            { 'url0202', 2, 6, 'Attack', 'none' },      -- Heavy Tank
+            { 'url0111', 1, 3, 'Artillery', 'none' },   -- MML
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'url0306', 1, 1, 'Guard', 'none' },       -- Mobile Stealth
         },
         Seraphim = {
-            { 'xsl0202', 1, 7, 'Attack', 'none' },      -- Assault Bot
-            { 'xsl0111', 1, 2, 'Artillery', 'none' },   -- MML
+            { 'xsl0202', 2, 7, 'Attack', 'none' },      -- Assault Bot
+            { 'xsl0111', 1, 3, 'Artillery', 'none' },   -- MML
             { 'xsl0205', 1, 1, 'Guard', 'none' },       -- AA
         },
     }
@@ -176,27 +176,27 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'xel0305', 1, 8, 'Attack', 'none' },      -- Armored Assault Bot
+            { 'xel0305', 2, 8, 'Attack', 'none' },      -- Armored Assault Bot
             { 'uel0303', 1, 4, 'Attack', 'none' },      -- Heavy Assault Bot
             { 'uel0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'xel0306', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'delk002', 1, 1, 'Guard', 'none' },       -- AA
          },
         Aeon = {
-            { 'ual0303', 1, 8, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'ual0303', 2, 8, 'Attack', 'none' },      -- Heavy Assault Bot
             { 'xal0305', 1, 2, 'Attack', 'none' },      -- Sniper Bot
             { 'ual0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'dal0310', 1, 1, 'Artillery', 'none' },   -- artillery
             { 'dalk003', 1, 1, 'Guard', 'none' },       -- AA
         },
         Cybran = {
-            { 'xrl0305', 1, 7, 'Attack', 'none' },      -- Armored Assault Bot
+            { 'xrl0305', 2, 7, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0303', 1, 3, 'Attack', 'none' },      -- Siege Assault Bot
             { 'url0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
         },
         Seraphim = {
-            { 'xsl0303', 1, 8, 'Attack', 'none' },       -- Siege Tank
+            { 'xsl0303', 2, 8, 'Attack', 'none' },       -- Siege Tank
             { 'xsl0305', 1, 2, 'Attack', 'none' },       -- Sniper Bot
             { 'xsl0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'xsl0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield

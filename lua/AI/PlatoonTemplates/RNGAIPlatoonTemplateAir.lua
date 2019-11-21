@@ -4,7 +4,7 @@
 
 PlatoonTemplate {
     Name = 'RNGAI AntiAirHunt',
-    Plan = 'AirHuntAI',
+    Plan = 'AirHuntAIRNG',
     GlobalSquads = {
         { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 100, 'attack', 'none' },
     }

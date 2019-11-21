@@ -75,7 +75,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T2 Small',
         PlatoonTemplate = 'T2BuildEngineer',
-        Priority = 750, -- Top factory priority
+        Priority = 800, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
@@ -108,7 +108,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Small',
         PlatoonTemplate = 'T3BuildEngineer',
-        Priority = 750, -- Top factory priority
+        Priority = 850, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},

@@ -90,7 +90,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 1000,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 1, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -107,7 +107,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 1, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
@@ -128,7 +128,6 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
-            { MIBC, 'FactionIndex', { 1, 3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -375,7 +374,6 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 5, 'Structures', 2 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
-            { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
         },
         BuilderData = {

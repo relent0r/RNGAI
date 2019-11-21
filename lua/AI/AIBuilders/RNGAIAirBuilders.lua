@@ -33,7 +33,7 @@ BuilderGroup {
         Priority = 950,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 1, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
