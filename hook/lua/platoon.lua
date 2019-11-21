@@ -6,12 +6,15 @@ local AIUtils = import('/lua/ai/aiutilities.lua')
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
 
-    AirHuntAI = function(self)
+    AirHuntAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local blip
+        local startX = nil
+        local StartZ = nil
+        startX, startZ = aiBrain:GetArmyStartPos()
         while aiBrain:PlatoonExists(self) do
             if self:IsOpponentAIRunning() then
                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.AIR - categories.WALL)
@@ -22,6 +25,7 @@ Platoon = Class(oldPlatoon) {
                 end
             end
             WaitSeconds(17)
+            self:MoveToLocation({startX, 0, startZ}, false)
         end
     end,
     
