@@ -15,7 +15,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Vacant Expansion Area Engineer Small',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 500,
         InstanceCount = 2,
         BuilderConditions = {
@@ -48,7 +48,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer 250',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 850,
         InstanceCount = 1,
         BuilderConditions = {
@@ -81,7 +81,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 750,
         InstanceCount = 2,
         BuilderConditions = {

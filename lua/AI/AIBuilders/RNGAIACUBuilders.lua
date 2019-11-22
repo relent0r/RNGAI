@@ -157,8 +157,6 @@ BuilderGroup {
         Priority = 975,
         BuilderConditions = {            
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
         },
         BuilderType = 'Any',

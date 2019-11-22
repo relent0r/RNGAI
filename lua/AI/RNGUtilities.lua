@@ -229,3 +229,111 @@ function AirScoutPatrolRNGAIThread(self, aiBrain)
         WaitTicks(1)
     end
 end
+
+function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
+    if not pos then
+        return false
+    end
+    local Reclaiming = false
+    -- Check if enemy units are at location
+    local checkUnits = aiBrain:GetUnitsAroundPoint( (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 10, 'Enemy')
+    -- reclaim units near our building place.
+    if checkUnits and table.getn(checkUnits) > 0 then
+        for num, unit in checkUnits do
+            if unit.Dead or unit:BeenDestroyed() then
+                continue
+            end
+            if not IsEnemy( aiBrain:GetArmyIndex(), unit:GetAIBrain():GetArmyIndex() ) then
+                continue
+            end
+            if unit:IsCapturable() and not EntityCategoryContains(categories.ENGINEER, unit) then 
+                LOG('Unit no is capturable and not category engineer')
+                -- if we can capture the unit/building then do so
+                unit.CaptureInProgress = true
+                IssueCapture({eng}, unit)
+            else
+                -- if we can't capture then reclaim
+                unit.ReclaimInProgress = true
+                IssueReclaim({eng}, unit)
+            end
+        end
+        Reclaiming = true
+    end
+    -- reclaim rocks etc or we can't build mexes or hydros
+    local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
+    if Reclaimables and table.getn( Reclaimables ) > 0 then
+        for k,v in Reclaimables do
+            if v.MaxMassReclaim and v.MaxMassReclaim > 0 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 0 then
+                IssueReclaim({eng}, v)
+            end
+        end
+    end
+    return Reclaiming
+end
+
+function EngineerMoveWithSafePath(aiBrain, unit, destination)
+    if not destination then
+        return false
+    end
+    local pos = unit:GetPosition()
+    -- don't check a path if we are in build range
+    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 14 then
+        return true
+    end
+    local result, bestPos = unit:CanPathTo(destination)
+    local bUsedTransports = false
+    -- Increase check to 300 for transports
+    if not result or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300
+    and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
+        -- If we can't path to our destination, we need, rather than want, transports
+        local needTransports = not result
+        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300 then
+            needTransports = true
+        end
+
+        -- Skip the last move... we want to return and do a build
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, unit.PlatoonHandle, destination, needTransports, true, false)
+
+        if bUsedTransports then
+            return true
+        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 512 * 512 then
+            -- If over 512 and no transports dont try and walk!
+            return false
+        end
+    end
+
+    -- If we're here, we haven't used transports and we can path to the destination
+    if result then
+        local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Amphibious', pos, destination)
+        if path then
+            local pathSize = table.getn(path)
+            -- Move to way points (but not to destination... leave that for the final command)
+            for widx, waypointPath in path do
+                if pathSize ~= widx then
+                    IssueMove({unit}, waypointPath)
+                end
+            end
+        end
+        -- If there wasn't a *safe* path (but dest was pathable), then the last move would have been to go there directly
+        -- so don't bother... the build/capture/reclaim command will take care of that after we return
+        return true
+    end
+    return false
+end
+
+function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
+    if not pos then
+        return false
+    end
+
+    local structureCat = ParseEntityCategory(whatToBuild)
+    local checkUnits = aiBrain:GetUnitsAroundPoint(structureCat, pos, 1, 'Ally')
+    if checkUnits and table.getn(checkUnits) > 0 then
+        for num, unit in checkUnits do
+            IssueRepair({eng}, unit)
+        end
+        return true
+    end
+
+    return false
+end
