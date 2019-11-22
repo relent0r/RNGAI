@@ -96,7 +96,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
@@ -122,7 +121,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
         },

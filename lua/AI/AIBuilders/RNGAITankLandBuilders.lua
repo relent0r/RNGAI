@@ -343,10 +343,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE}},
         },
         BuilderData = {
-            SearchRadius = 10000,                                               -- Searchradius for new target.
+            SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -401,13 +401,13 @@ BuilderGroup {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 875,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 6,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 10,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
-            SearchRadius = 10000,                                               -- Searchradius for new target.
+            SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -481,6 +481,31 @@ BuilderGroup {
             --FindHighestThreat ='',
             --ThreatThreshold = '',
             AvoidBases = true,
+            AvoidBasesRadius = 30,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            GuardTimer = 10,              
+            UseFormation = 'AttackFormation',
+        },    
+    }, 
+    Builder {
+        BuilderName = 'RNGAI Start Location Attack Mid',
+        PlatoonTemplate = 'RNGAI T1 Mass Hunters Medium',
+        Priority = 700,
+        InstanceCount = 3,
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
+            },
+        BuilderData = {
+            MarkerType = 'Start Location',            
+            MoveFirst = 'Random',
+            MoveNext = 'Threat',
+            --ThreatType = '',
+            --SelfThreat = '',
+            --FindHighestThreat ='',
+            --ThreatThreshold = '',
+            AvoidBases = false,
             AvoidBasesRadius = 30,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
@@ -581,7 +606,7 @@ BuilderGroup {
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
             AggressiveMove = false,      
@@ -608,7 +633,7 @@ BuilderGroup {
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = false,
             AvoidBasesRadius = 75,
             AggressiveMove = false,      

@@ -41,7 +41,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 800,
         BuilderConditions = {
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 250, -500, 0, 0, 'AntiSurface', 1}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
         BuilderType = 'All',
@@ -126,7 +126,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 850,
         BuilderConditions = {
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 1, 0, 'AntiSurface', 1 }},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 5, 0, 'AntiSurface', 1 }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },

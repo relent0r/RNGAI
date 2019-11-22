@@ -60,9 +60,9 @@ BaseBuilderTemplate {
         },
         
         MassToFactoryValues = {
-            T1Value = 8,
-            T2Value = 20,
-            T3Value = 30,
+            T1Value = 6,
+            T2Value = 15,
+            T3Value = 22.5,
         },
         NoGuards = true,
     },

@@ -69,16 +69,16 @@ BaseBuilderTemplate {
         },
         
         FactoryCount = {
-            Land = 4,
-            Air = 1,
+            Land = 5,
+            Air = 2,
             Sea = 0,
             Gate = 0,
         },
         
         MassToFactoryValues = {
-            T1Value = 8,
-            T2Value = 20,
-            T3Value = 30,
+            T1Value = 6,
+            T2Value = 15,
+            T3Value = 22.5,
         },
         NoGuards = true,
     },

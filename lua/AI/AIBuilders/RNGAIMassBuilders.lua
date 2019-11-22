@@ -15,7 +15,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 30',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 1000,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -34,7 +34,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 60',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -54,7 +54,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         InstanceCount = 3,
         BuilderConditions = { 
@@ -94,7 +94,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -115,7 +115,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -139,7 +139,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 1000',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 500,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -167,7 +167,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'T1ResourceEngineer 30 Expansion',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
@@ -187,7 +187,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -207,7 +207,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'T1ResourceEngineer 350 Expansion',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
@@ -227,7 +227,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'T1ResourceEngineer 1000 Expansion',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
         InstanceCount = 2,
         BuilderConditions = {
@@ -253,7 +253,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
