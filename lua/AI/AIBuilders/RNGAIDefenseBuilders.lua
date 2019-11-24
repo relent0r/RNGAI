@@ -4,6 +4,7 @@
     Summary :
         Defence Builders, for thos pesky units that slip past. Like bombers.
 ]]
+local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
@@ -34,6 +35,34 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
+                BuildStructures = {
+                    'T1GroundDefense',
+                    'T1AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 950,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { MIBC, 'GreaterThanGameTime', { 300 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
                 BuildStructures = {
                     'T1GroundDefense',
                     'T1AADefense',

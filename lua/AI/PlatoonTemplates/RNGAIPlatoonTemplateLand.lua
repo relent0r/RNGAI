@@ -176,30 +176,30 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'xel0305', 2, 8, 'Attack', 'none' },      -- Armored Assault Bot
-            { 'uel0303', 1, 4, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'uel0303', 2, 6, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'xel0305', 1, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'uel0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'xel0306', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'delk002', 1, 1, 'Guard', 'none' },       -- AA
          },
         Aeon = {
-            { 'ual0303', 2, 8, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'ual0303', 2, 6, 'Attack', 'none' },      -- Heavy Assault Bot
             { 'xal0305', 1, 2, 'Attack', 'none' },      -- Sniper Bot
             { 'ual0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'dal0310', 1, 1, 'Artillery', 'none' },   -- artillery
             { 'dalk003', 1, 1, 'Guard', 'none' },       -- AA
         },
         Cybran = {
-            { 'xrl0305', 2, 7, 'Attack', 'none' },      -- Armored Assault Bot
-            { 'url0303', 1, 3, 'Attack', 'none' },      -- Siege Assault Bot
+            { 'url0303', 1, 6, 'Attack', 'none' },      -- Siege Assault Bot
+            { 'xrl0305', 2, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
         },
         Seraphim = {
-            { 'xsl0303', 2, 8, 'Attack', 'none' },       -- Siege Tank
+            { 'xsl0303', 2, 6, 'Attack', 'none' },       -- Siege Tank
             { 'xsl0305', 1, 2, 'Attack', 'none' },       -- Sniper Bot
             { 'xsl0304', 1, 2, 'Artillery', 'none' },   -- artillery
-            { 'xsl0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield
+            { 'xsl0307', 0, 1, 'Guard', 'none' },       -- Mobile Shield
             { 'dslk004', 1, 1, 'Guard', 'none' },       -- AA
         },
     }

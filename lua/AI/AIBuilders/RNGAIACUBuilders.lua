@@ -9,6 +9,7 @@ local SAI = '/lua/ScenarioPlatoonAI.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small Close',
@@ -109,9 +110,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 900,
+        Priority = 930,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
@@ -134,6 +136,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
@@ -154,10 +157,12 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 975,
+        Priority = 950,
         BuilderConditions = {            
+            { MIBC, 'GreaterThanGameTime', { 90 } },
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -173,11 +178,12 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Storage',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 975,
+        Priority = 945,
         BuilderConditions = {            
             { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Storage'}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
         },
         BuilderType = 'Any',
@@ -215,24 +221,24 @@ BuilderGroup {
             },
         }
     },
-    Builder {
-        BuilderName = 'RNGAI CDR Assist T1 Factory',
-        PlatoonTemplate = 'CommanderAssist',
-        Priority = 700,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssisteeType = 'Factory',
-                AssistRange = 60,
-                AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'ALLUNITS'},
-                Time = 30,
-            },
-        }
-    },
+    --Builder {
+    --    BuilderName = 'RNGAI CDR Assist T1 Factory',
+    --    PlatoonTemplate = 'CommanderAssist',
+    --    Priority = 700,
+    --    BuilderConditions = {
+    --        { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8}},
+    --    },
+    --    BuilderType = 'Any',
+    --    BuilderData = {
+    --        Assist = {
+    --            AssisteeType = 'Factory',
+    --            AssistRange = 60,
+    --            AssistLocation = 'LocationType',
+    --            BeingBuiltCategories = {'ALLUNITS'},
+    --            Time = 30,
+    --        },
+    --    }
+    --},
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Structure',
         PlatoonTemplate = 'CommanderAssist',

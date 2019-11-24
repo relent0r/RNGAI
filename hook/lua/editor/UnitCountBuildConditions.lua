@@ -30,8 +30,10 @@ function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
         LOG('Current Energy Trend is : ', econ.EnergyTrend)
     end
     if econ.EnergyTrend < eTrend then
+        LOG('Energy Trend Returning True')
         return true
     else
+        LOG('Energy Trend Returning False')
         return false
     end
 end
@@ -326,4 +328,13 @@ end
 --            { UCBC, 'EnemyUnitsLessAtLocationRadius', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
 function EnemyUnitsLessAtLocationRadius(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocation(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
+end
+
+function IsAcuBuilder(aiBrain, builderName)
+    if builderName then
+        LOG('ACU Builder name : '..builderName)
+        return true
+    else
+        return false
+    end
 end
