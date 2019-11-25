@@ -60,3 +60,20 @@ PlatoonTemplate {
         #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
     }
 }
+
+PlatoonTemplate {
+    Name = 'RNGAI MercyAttack',
+    Plan = 'MercyAIRNG',
+    GlobalSquads = {
+        { categories.TECH2 * categories.AIR * categories.BOMBER * categories.AEON - categories.EXPERIMENTAL , 2, 3, 'Attack', 'none' },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'T2AirMissile',
+    FactionSquads = {
+        Aeon = {
+            { 'daa0206', 1, 2, 'attack', 'none' },
+        },
+    }
+}

@@ -45,7 +45,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH3, FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -58,7 +58,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'EnemyUnitsLessAtLocationRadius', {  1000, 'LocationType', 1, categories.AIR * categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH3, FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -112,7 +112,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'TNGAI T2 Air Gunship',
+        BuilderName = 'RNGAI T2 Air Gunship',
         PlatoonTemplate = 'T2AirGunship',
         Priority = 700,
         BuilderType = 'Air',
@@ -120,6 +120,18 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Mercy',
+        PlatoonTemplate = 'T2AirMissile',
+        Priority = 720,
+        BuilderType = 'Air',
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
     },
 }
@@ -151,6 +163,24 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Air Mercy BaseMilitaryArea',
+        PlatoonTemplate = 'RNGAI MercyAttack',
+        Priority = 960,
+        InstanceCount = 1,
+        BuilderType = 'Any',
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+            },
+        },
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.COMMAND * categories.EXPERIMENTAL }},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH2 * categories.AIR * categories.BOMBER * categories.AEON - categories.EXPERIMENTAL } },
         },
     },
 }

@@ -29,6 +29,29 @@ Platoon = Class(oldPlatoon) {
         end
     end,
     
+    MercyAIRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local target
+        local blip
+        local startX = nil
+        local StartZ = nil
+        startX, startZ = aiBrain:GetArmyStartPos()
+        while aiBrain:PlatoonExists(self) do
+            if self:IsOpponentAIRunning() then
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+                if target then
+                    blip = target:GetBlip(armyIndex)
+                    self:Stop()
+                    self:AttackTarget(target)
+                end
+            end
+            WaitSeconds(17)
+            self:MoveToLocation({startX, 0, startZ}, false)
+        end
+    end,
+
     GuardMarkerRNG = function(self)
         local aiBrain = self:GetBrain()
 
@@ -264,7 +287,7 @@ Platoon = Class(oldPlatoon) {
                     StuckCount = 0
                 end
                 if StuckCount > 5 then
-                    return self:GuardMarker()
+                    return self:GuardMarkerRNG()
                 end
                 oldPlatPos = platLoc
             until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 64 or not aiBrain:PlatoonExists(self)
@@ -294,7 +317,7 @@ Platoon = Class(oldPlatoon) {
 
             -- set our MoveFirst to our MoveNext
             self.PlatoonData.MoveFirst = moveNext
-            return self:GuardMarker()
+            return self:GuardMarkerRNG()
         else
             -- no marker found, disband!
             self:PlatoonDisband()

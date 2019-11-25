@@ -110,11 +110,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 930,
+        Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.05}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -133,11 +133,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 900,
+        Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.05}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
@@ -157,7 +157,7 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 950,
+        Priority = 800,
         BuilderConditions = {            
             { MIBC, 'GreaterThanGameTime', { 90 } },
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
@@ -178,7 +178,7 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Storage',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 945,
+        Priority = 800,
         BuilderConditions = {            
             { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
@@ -221,24 +221,24 @@ BuilderGroup {
             },
         }
     },
-    --Builder {
-    --    BuilderName = 'RNGAI CDR Assist T1 Factory',
-    --    PlatoonTemplate = 'CommanderAssist',
-    --    Priority = 700,
-    --    BuilderConditions = {
-    --        { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8}},
-    --    },
-    --    BuilderType = 'Any',
-    --    BuilderData = {
-    --        Assist = {
-    --            AssisteeType = 'Factory',
-    --            AssistRange = 60,
-    --            AssistLocation = 'LocationType',
-    --            BeingBuiltCategories = {'ALLUNITS'},
-    --            Time = 30,
-    --        },
-    --    }
-    --},
+    Builder {
+        BuilderName = 'RNGAI CDR Assist T1 Factory',
+        PlatoonTemplate = 'CommanderAssist',
+        Priority = 700,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssisteeType = 'Factory',
+                AssistRange = 60,
+                AssistLocation = 'LocationType',
+                BeingBuiltCategories = {'ALLUNITS'},
+                Time = 30,
+            },
+        }
+    },
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Structure',
         PlatoonTemplate = 'CommanderAssist',
