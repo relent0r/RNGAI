@@ -159,8 +159,8 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
             { 'ual0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield
         },
         Cybran = {
-            { 'drl0204', 1, 3, 'Attack', 'none' },      -- Rocket Bot
             { 'url0202', 2, 6, 'Attack', 'none' },      -- Heavy Tank
+            { 'drl0204', 1, 3, 'Attack', 'none' },      -- Rocket Bot
             { 'url0111', 1, 3, 'Artillery', 'none' },   -- MML
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'url0306', 1, 1, 'Guard', 'none' },       -- Mobile Stealth

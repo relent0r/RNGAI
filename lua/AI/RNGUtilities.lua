@@ -337,3 +337,35 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
 
     return false
 end
+
+function AIFindBrainTargetInRangeRNG(aiBrain, platoon, category ,squad, maxRange, atkPri, enemyBrain)
+    local position = platoon:GetPlatoonPosition()
+    if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
+        return false
+    end
+
+    local enemyIndex = enemyBrain:GetArmyIndex()
+    local targetUnits = aiBrain:GetUnitsAroundPoint(category, position, maxRange, 'Enemy')
+    for _, v in atkPri do
+        local category = v
+        if type(category) == 'string' then
+            category = ParseEntityCategory(category)
+        end
+        local retUnit = false
+        local distance = false
+        for num, unit in targetUnits do
+            if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
+                local unitPos = unit:GetPosition()
+                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                    retUnit = unit
+                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                end
+            end
+        end
+        if retUnit then
+            return retUnit
+        end
+    end
+
+    return false
+end
