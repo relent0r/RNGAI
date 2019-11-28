@@ -115,7 +115,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.05}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -138,7 +138,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.05}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -157,7 +157,7 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
+        Priority = 850,
         BuilderConditions = {            
             { MIBC, 'GreaterThanGameTime', { 90 } },
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
@@ -178,7 +178,7 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Storage',
         PlatoonTemplate = 'CommanderBuilder',
-        Priority = 800,
+        Priority = 850,
         BuilderConditions = {            
             { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},

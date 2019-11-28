@@ -73,7 +73,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 660 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 1000,
         BuilderType = 'Any',

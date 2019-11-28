@@ -203,7 +203,6 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.ENERGYPRODUCTION } },
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrend', { 0.4, 8.0 }}, -- relative income
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.99}}, -- Ratio from 0 to 1. (1=100%)
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             { MIBC, 'GreaterThanGameTime', { 480 } },
