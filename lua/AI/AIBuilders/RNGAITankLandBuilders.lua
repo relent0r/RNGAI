@@ -60,7 +60,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 4, 'FACTORY TECH2' }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },

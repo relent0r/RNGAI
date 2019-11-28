@@ -81,7 +81,7 @@ BuilderGroup {
             AdjacencyCategory = 'FACTORY',
             DesiresAssist = true,
             Construction = {
-                NumAssistees = 2,
+                NumAssistees = 3,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -106,7 +106,7 @@ BuilderGroup {
             AdjacencyCategory = 'FACTORY',
             DesiresAssist = true,
             Construction = {
-                NumAssistees = 2,
+                NumAssistees = 3,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
