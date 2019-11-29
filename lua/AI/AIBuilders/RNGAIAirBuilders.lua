@@ -354,7 +354,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Bomber Attack T2',
-        PlatoonTemplate = 'BomberAttack',
+        PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
@@ -397,7 +397,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Gunship Attack T2',
-        PlatoonTemplate = 'GunshipAttack',
+        PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 400,
         InstanceCount = 5,
         BuilderType = 'Any',

@@ -721,11 +721,13 @@ Platoon = Class(oldPlatoon) {
                     self:PlatoonDisband()
                     return
                 end
-            elseif cons.NearMarkerType == 'Large Expansion Marker' then
-                referece, refName = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
+            elseif cons.NearMarkerType == 'Large Expansion Area' then
+                reference, refName = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
+                LOG('refName is : '..refName)
                 if not reference or not refName then
+                    LOG('Large Expansion Builder reference or refName missing')
                     self:PlatoonDisband()
                     return
                 end

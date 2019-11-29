@@ -114,7 +114,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.05}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -137,7 +137,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.05}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
