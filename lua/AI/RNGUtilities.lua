@@ -369,3 +369,49 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, category ,squad, maxRange
 
     return false
 end
+
+function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
+    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    if not pos then
+        return false
+    end
+
+    local validPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Large Expansion Area', pos, radius, tMin, tMax, tRings, tType)
+
+    local retPos, retName
+    if eng then
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+    else
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+    end
+
+    return retPos, retName
+end
+
+function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
+    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    if not pos then
+        return false
+    end
+
+    local validPos = {}
+
+    local positions = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Blank Marker', pos, radius, tMin, tMax, tRings, tType)
+    local startX, startZ = aiBrain:GetArmyStartPos()
+    for _, v in positions do
+        if string.sub(v.Name, 1, 5) == 'ARMY_' then
+            if startX ~= v.Position[1] and startZ ~= v.Position[3] then
+                table.insert(validPos, v)
+            end
+        end
+    end
+
+    local retPos, retName
+    if eng then
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+    else
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+    end
+
+    return retPos, retName
+end

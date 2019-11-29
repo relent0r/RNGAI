@@ -49,11 +49,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer 250',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 850,
-        InstanceCount = 1,
+        Priority = 900,
+        InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
-            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 250, -1000, 0, 2, 'StructuresNotMex' } },
+            { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 250, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
@@ -80,13 +80,46 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Large Expansion Area Engineer 250',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 800,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'LargeExpansionNeedsEngineerRNG', { 'LocationType', 250, -1000, 0, 2, 'StructuresNotMex' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                NearMarkerType = 'Large Expansion Area',
+                LocationRadius = 1000, -- radius of platoon control
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 5,
+                ThreatRings = 0,
+                ThreatType = 'StructuresNotMex',
+                BuildStructures = {                    
+                    'T1LandFactory',
+                    'T1GroundDefense',
+                    'T1AADefense',
+                    'T1Radar',
+                }
+            },
+            NeedGuard = true,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area Engineer',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 750,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
-            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
+            { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',

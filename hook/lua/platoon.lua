@@ -1,6 +1,6 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset platoon.lua' )
 
-local UUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 
 oldPlatoon = Platoon
@@ -338,7 +338,7 @@ Platoon = Class(oldPlatoon) {
         if eng then
             LOG('Engineer Condition is true')
             eng.UnitBeingBuilt = eng -- this is important, per uveso (It's a build order fake, i assigned the engineer to itself so it will not produce errors because UnitBeingBuilt must be a unit and can not just be set to true)
-            UUtils.ReclaimRNGAIThread(self,eng,aiBrain)
+            RUtils.ReclaimRNGAIThread(self,eng,aiBrain)
             eng.UnitBeingBuilt = nil
         else
             LOG('Engineer Condition is false')
@@ -721,6 +721,14 @@ Platoon = Class(oldPlatoon) {
                     self:PlatoonDisband()
                     return
                 end
+            elseif cons.NearMarkerType == 'Large Expansion Marker' then
+                referece, refName = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
+                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
+                -- didn't find a location to build at
+                if not reference or not refName then
+                    self:PlatoonDisband()
+                    return
+                end
             else
                 --DUNCAN - use my alternative expansion finder on large maps below a certain time
                 local mapSizeX, mapSizeZ = GetMapSize()
@@ -728,11 +736,11 @@ Platoon = Class(oldPlatoon) {
                     reference, refName = AIUtils.AIFindFurthestStartLocationNeedsEngineer(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                     if not reference or not refName then
-                        reference, refName = AIUtils.AIFindStartLocationNeedsEngineer(aiBrain, cons.LocationType,
+                        reference, refName = RUtils.AIFindStartLocationNeedsEngineerRNG(aiBrain, cons.LocationType,
                             (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                     end
                 else
-                    reference, refName = AIUtils.AIFindStartLocationNeedsEngineer(aiBrain, cons.LocationType,
+                    reference, refName = RUtils.AIFindStartLocationNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 end
                 -- didn't find a location to build at
@@ -1007,7 +1015,7 @@ Platoon = Class(oldPlatoon) {
                 end
 
                 -- check to see if we need to reclaim or capture...
-                if not UUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation) then
+                if not RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation) then
                     -- check to see if we can repair
                     if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
                         -- otherwise, go ahead and build the next structure there

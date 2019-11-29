@@ -1,3 +1,4 @@
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 -- hook for additional build conditions used from AIBuilders
 
@@ -161,13 +162,23 @@ function FactoryCapCheck(aiBrain, locationType, factoryType)
     return false
 end
 
-function StartLocationNeedsEngineer( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
-    local pos, name = AIUtils.AIFindStartLocationNeedsEngineer( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
+    local pos, name = RUtils.AIFindStartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
         --LOG('StartLocationNeedsEngineer is True')
         return true
     end
     --LOG('StartLocationNeedsEngineer is False')
+    return false
+end
+
+function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
+    local pos, name = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        --LOG('LargeExpansionNeedsEngineer is True')
+        return true
+    end
+    --LOG('LargeExpansionNeedsEngineer is False')
     return false
 end
 
