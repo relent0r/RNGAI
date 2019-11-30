@@ -122,6 +122,15 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder Expansion',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Expansion Count',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 920,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion Mass',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 850,

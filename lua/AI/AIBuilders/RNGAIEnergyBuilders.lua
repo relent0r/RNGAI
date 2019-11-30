@@ -222,7 +222,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 30',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 900,
+        Priority = 920,
         InstanceCount = 1,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 30, -1000, 100, 1, 'AntiSurface', 1 }},

@@ -16,7 +16,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close',
-        PlatoonAddBehaviors = {'CommanderBehavior',},
+        PlatoonAddBehaviors = {'CommanderBehaviorImproved',},
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1000,
         BuilderConditions = {
@@ -48,7 +48,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Distant',
-        PlatoonAddBehaviors = {'CommanderBehavior',},
+        PlatoonAddBehaviors = {'CommanderBehaviorImproved',},
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1000,
         BuilderConditions = {
@@ -78,7 +78,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
-        PlatoonAddBehaviors = {'CommanderBehavior',},
+        PlatoonAddBehaviors = {'CommanderBehaviorImproved',},
         PlatoonTemplate = 'CommanderBuilder',
         Priority = 1000,
         BuilderConditions = {
