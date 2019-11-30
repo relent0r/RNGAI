@@ -1,4 +1,5 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
+local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
@@ -414,4 +415,29 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
     end
 
     return retPos, retName
+end
+
+function AIGetMassMarkerLocations(aiBrain, includeWater)
+    local markerList = {}
+        local markers = ScenarioUtils.GetMarkers()
+        if markers then
+            for k, v in markers do
+                if v.type == 'Mass' then
+                    if includeWater then
+                        LOG('include water set to true, inserting position')
+                        table.insert(markerList, {Position = v.position, Name = k})
+                    else
+                        if not PositionInWater(v.position) then
+                            LOG('include water set to false, inserting position')
+                            table.insert(markerList, {Position = v.position, Name = k})
+                        end
+                    end
+                end
+            end
+        end
+    return markerList
+end
+
+function PositionInWater(pos)
+	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end

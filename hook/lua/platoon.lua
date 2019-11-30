@@ -136,6 +136,10 @@ Platoon = Class(oldPlatoon) {
         end
 
         -- look for a random marker
+        --[[Marker table examples for better understanding what is happening below 
+        info: Marker Current{ Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
+        info: Marker Last{ { 374.5, 20.650400161743, 154.5, type="VECTOR3" } }
+        ]] 
         if moveFirst == 'Random' then
             if table.getn(markerLocations) <= 2 then
                 self.LastMarker[1] = nil
@@ -147,6 +151,8 @@ Platoon = Class(oldPlatoon) {
                     self.LastMarker[2] = nil
                 end
                 if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) then
+                    LOG('Marker Current'..repr(marker))
+                    LOG('Marker Last'..repr(self.LastMarker))
                     if self.LastMarker[1] and marker.Position[1] == self.LastMarker[1][1] and marker.Position[3] == self.LastMarker[1][3] then
                         continue
                     end
