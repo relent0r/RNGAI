@@ -245,10 +245,10 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 4, 'FACTORY AIR TECH2, FACTORY AIR TECH3'}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY TECH2, FACTORY TECH3' } },
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY AIR TECH2, FACTORY AIR TECH3' } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2'}},
-                { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'FACTORY TECH2, FACTORY TECH3' } },
+                { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'FACTORY AIR TECH2, FACTORY AIR TECH3' } },
                 { MIBC, 'GreaterThanGameTime', { 420 } },
             },
         BuilderType = 'Any',
