@@ -165,20 +165,20 @@ end
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindStartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('StartLocationNeedsEngineer is True')
+        LOG('StartLocationNeedsEngineer is True')
         return true
     end
-    --LOG('StartLocationNeedsEngineer is False')
+    LOG('StartLocationNeedsEngineer is False')
     return false
 end
 
 function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('LargeExpansionNeedsEngineer is True')
+        LOG('LargeExpansionNeedsEngineer is True')
         return true
     end
-    --LOG('LargeExpansionNeedsEngineer is False')
+    LOG('LargeExpansionNeedsEngineer is False')
     return false
 end
 
