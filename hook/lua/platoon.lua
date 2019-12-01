@@ -349,6 +349,7 @@ Platoon = Class(oldPlatoon) {
         else
             LOG('Engineer Condition is false')
         end
+        LOG('Ending ReclaimAIRNG..Disbanding')
         self:PlatoonDisband()
     end,
 
@@ -1050,5 +1051,181 @@ Platoon = Class(oldPlatoon) {
             return
         end
         if eng then eng.ProcessBuild = nil end
+    end,
+
+    MassRaidRNG = function(self)
+        local aiBrain = self:GetBrain()
+
+        local platLoc = self:GetPlatoonPosition()
+
+        if not aiBrain:PlatoonExists(self) or not platLoc then
+            return
+        end
+
+        -----------------------------------------------------------------------
+        -- Platoon Data
+        -----------------------------------------------------------------------
+        -- Include mass markers that are under water
+        local includeWater = self.PlatoonData.IncludeWater or false
+
+        -- Minimum distance when looking for closest
+        local avoidClosestRadius = self.PlatoonData.AvoidClosestRadius or 0
+
+        -- if true, look to guard highest threat, otherwise,
+        -- guard the lowest threat specified
+        local bFindHighestThreat = self.PlatoonData.FindHighestThreat or false
+
+        -- minimum threat to look for
+        local minThreatThreshold = self.PlatoonData.MinThreatThreshold or -1
+        -- maximum threat to look for
+        local maxThreatThreshold = self.PlatoonData.MaxThreatThreshold  or 99999999
+
+        -- Avoid bases (true or false)
+        local bAvoidBases = self.PlatoonData.AvoidBases or false
+
+        -- Radius around which to avoid the main base
+        local avoidBasesRadius = self.PlatoonData.AvoidBasesRadius or 0
+
+        -- Use Aggresive Moves Only
+        local bAggroMove = self.PlatoonData.AggressiveMove or false
+
+        local PlatoonFormation = self.PlatoonData.UseFormation or 'NoFormation'
+
+        local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
+
+        -----------------------------------------------------------------------
+        local markerLocations
+
+        AIAttackUtils.GetMostRestrictiveLayer(self)
+        self:SetPlatoonFormationOverride(PlatoonFormation)
+        
+        markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater)
+        
+        local bestMarker = false
+
+        if not self.LastMarker then
+            self.LastMarker = {nil,nil}
+        end
+
+        -- look for a random marker
+        --[[Marker table examples for better understanding what is happening below 
+        info: Marker Current{ Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
+        info: Marker Last{ { 374.5, 20.650400161743, 154.5, type="VECTOR3" } }
+        ]] 
+
+        local bestMarkerThreat = 0
+        if not bFindHighestThreat then
+            bestMarkerThreat = 99999999
+        end
+
+        local bestDistSq = 99999999
+
+
+        -- find best threat at the closest distance
+        for _,marker in markerLocations do
+            local markerThreat
+            markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, 'Economy')
+
+            local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
+
+            if markerThreat >= minThreatThreshold and markerThreat <= maxThreatThreshold then
+                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) then
+                    if self.IsBetterThreat(bFindHighestThreat, markerThreat, bestMarkerThreat) then
+                        bestDistSq = distSq
+                        bestMarker = marker
+                        bestMarkerThreat = markerThreat
+                    elseif markerThreat == bestMarkerThreat then
+                        if distSq < bestDistSq then
+                            bestDistSq = distSq
+                            bestMarker = marker
+                            bestMarkerThreat = markerThreat
+                        end
+                    end
+                end
+            end
+        end
+
+        -- did we find a threat?
+        local usedTransports = false
+        if bestMarker then
+            self.LastMarker[2] = self.LastMarker[1]
+            self.LastMarker[1] = bestMarker.Position
+            --LOG("GuardMarker: Attacking " .. bestMarker.Name)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, maxPathDistance)
+            local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
+            IssueClearCommands(self:GetPlatoonUnits())
+            if path then
+                local position = self:GetPlatoonPosition()
+                if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, false)
+                end
+                if not usedTransports then
+                    local pathLength = table.getn(path)
+                    for i=1, pathLength-1 do
+                        if bAggroMove then
+                            self:AggressiveMoveToLocation(path[i])
+                        else
+                            self:MoveToLocation(path[i], false)
+                        end
+                    end
+                end
+            elseif (not path and reason == 'NoPath') then
+                --LOG('Guardmarker requesting transports')
+                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                --DUNCAN - if we need a transport and we cant get one the disband
+                if not foundTransport then
+                    --LOG('Guardmarker no transports')
+                    self:PlatoonDisband()
+                    return
+                end
+                --LOG('Guardmarker found transports')
+            else
+                self:PlatoonDisband()
+                return
+            end
+
+            if (not path or not success) and not usedTransports then
+                self:PlatoonDisband()
+                return
+            end
+
+            self:AggressiveMoveToLocation(bestMarker.Position)
+
+            -- wait till we get there
+            local oldPlatPos = self:GetPlatoonPosition()
+            local StuckCount = 0
+            repeat
+                WaitSeconds(5)
+                platLoc = self:GetPlatoonPosition()
+                if VDist3(oldPlatPos, platLoc) < 1 then
+                    StuckCount = StuckCount + 1
+                else
+                    StuckCount = 0
+                end
+                if StuckCount > 5 then
+                    return self:MassRaidRNG()
+                end
+                oldPlatPos = platLoc
+            until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 64 or not aiBrain:PlatoonExists(self)
+
+            -- we're there... wait here until we're done
+            local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            while numGround > 0 and aiBrain:PlatoonExists(self) do
+                WaitSeconds(Random(5,10))
+                LOG('Still enemy stuff around marker position')
+                numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            end
+
+            if not aiBrain:PlatoonExists(self) then
+                return
+            end
+
+            return self:MassRaidRNG()
+        else
+            -- no marker found, disband!
+            self:PlatoonDisband()
+        end
     end,
 }

@@ -678,3 +678,31 @@ BuilderGroup {
             },
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Land Mass Raid',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
+    Builder {
+        BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 900,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+        },
+        BuilderData = {
+            IncludeWater = false,
+            IgnoreFriendlyBase = true,
+            MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            FindHighestThreat = true,			-- Don't find high threat targets
+            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            AvoidBases = false,
+            AvoidBasesRadius = 75,
+            AggressiveMove = false,      
+            AvoidClosestRadius = 100,
+            UseFormation = 'AttackFormation',
+            },
+    },
+}
