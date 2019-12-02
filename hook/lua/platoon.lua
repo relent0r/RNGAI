@@ -1205,6 +1205,7 @@ Platoon = Class(oldPlatoon) {
                     StuckCount = 0
                 end
                 if StuckCount > 5 then
+                    LOG('MassRaidAI stuck count over 5, restarting')
                     return self:MassRaidRNG()
                 end
                 oldPlatPos = platLoc
@@ -1221,7 +1222,7 @@ Platoon = Class(oldPlatoon) {
             if not aiBrain:PlatoonExists(self) then
                 return
             end
-
+            LOG('MassRaidAI restarting')
             return self:MassRaidRNG()
         else
             -- no marker found, disband!

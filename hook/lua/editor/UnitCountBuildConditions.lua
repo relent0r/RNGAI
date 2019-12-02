@@ -31,10 +31,24 @@ function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
         LOG('Current Energy Trend is : ', econ.EnergyTrend)
     end
     if econ.EnergyTrend < eTrend then
-        LOG('Energy Trend Returning True')
+        LOG('Less Than Energy Trend Returning True')
         return true
     else
-        LOG('Energy Trend Returning False')
+        LOG('Less Than Energy Trend Returning False')
+        return false
+    end
+end
+
+function GreaterThanEnergyTrend(aiBrain, eTrend, DEBUG)
+    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
+    if DEBUG then
+        LOG('Current Energy Trend is : ', econ.EnergyTrend)
+    end
+    if econ.EnergyTrend > eTrend then
+        LOG('Greater than Energy Trend Returning True')
+        return true
+    else
+        LOG('Greater than Energy Trend Returning False')
         return false
     end
 end

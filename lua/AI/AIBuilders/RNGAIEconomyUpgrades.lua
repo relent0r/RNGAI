@@ -57,7 +57,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 180 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 0.50}},
+            { EBC, 'GreaterThanEconStorageCurrent', { 1000, 0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 120,
@@ -105,6 +105,19 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 960 } },
         },
         FormRadius = 120,
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mass Extractor Upgrade Single 120 excess',
+        PlatoonTemplate = 'T2MassExtractorUpgrade',
+        InstanceCount = 1,
+        Priority = 300,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageCurrent', { 3000, 0 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH3 } },
+        },
+        FormRadius = 512,
         BuilderType = 'Any',
     },
 }

@@ -97,7 +97,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH2' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'ENERGYPRODUCTION TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
         },
@@ -109,29 +109,6 @@ BuilderGroup {
                 NumAssistees = 3,
                 BuildStructures = {
                     'T2EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T3 Power Engineer 1st',
-        PlatoonTemplate = 'T3EngineerBuilder',
-        Priority = 900,
-        InstanceCount = 1,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            AdjacencyCategory = 'FACTORY',
-            DesiresAssist = true,
-            Construction = {
-                NumAssistees = 2,
-                BuildStructures = {
-                    'T3EnergyProduction',
                 },
             }
         }
@@ -157,6 +134,29 @@ BuilderGroup {
             Construction = {
                 BuildStructures = {
                     'T2EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Power Engineer 1st',
+        PlatoonTemplate = 'T3EngineerBuilder',
+        Priority = 900,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 9},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = 'FACTORY',
+            DesiresAssist = true,
+            Construction = {
+                NumAssistees = 2,
+                BuildStructures = {
+                    'T3EnergyProduction',
                 },
             }
         }

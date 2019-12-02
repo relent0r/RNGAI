@@ -26,7 +26,18 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Mass Raiders Small',
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 10, 'attack', 'none' },
+        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 8, 'attack', 'none' },
+        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'artillery', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAI T1 Mass Raiders Medium',
+    Plan = 'MassRaidRNG',    
+    GlobalSquads = {
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 4, 15, 'attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 5, 'artillery', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     }
 }

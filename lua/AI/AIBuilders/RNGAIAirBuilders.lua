@@ -51,13 +51,13 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Bomber T1',
+        BuilderName = 'RNGAI Factory Bomber T1 Response',
         PlatoonTemplate = 'T1AirBomber',
         Priority = 850,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
-            { UCBC, 'EnemyUnitsLessAtLocationRadius', {  250, 'LocationType', 1, categories.ANTIAIR }},
+            { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
@@ -102,7 +102,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory FighterBomber',
+        BuilderName = 'RNGAI Factory T2 FighterBomber',
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 800,
         BuilderType = 'Air',
@@ -111,6 +111,20 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory T2 FighterBomber Response',
+        PlatoonTemplate = 'T2FighterBomber',
+        Priority = 850,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.BOMBER * categories.TECH3} },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
+        },
+        BuilderType = 'Air',
     },
     Builder {
         BuilderName = 'RNGAI T2 Air Gunship',
@@ -143,7 +157,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Air Attack',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
-        Priority = 750,
+        Priority = 850,
         BuilderType = 'Air',
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
@@ -197,8 +211,8 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.COMMAND * categories.EXPERIMENTAL }},
-            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH2 * categories.AIR * categories.BOMBER * categories.AEON - categories.EXPERIMENTAL } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.COMMAND - categories.EXPERIMENTAL }},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, categories.daa0206 } },
         },
     },
 }
