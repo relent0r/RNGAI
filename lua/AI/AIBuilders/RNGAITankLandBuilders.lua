@@ -152,7 +152,8 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseEnemyArea, 'LocationType', 0, categories.DEFENSE }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.LAND * categories.MOBILE * categories.TECH2 * categories.INDIRECTFIRE }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

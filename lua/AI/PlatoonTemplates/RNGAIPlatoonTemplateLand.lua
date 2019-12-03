@@ -95,7 +95,7 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
           4, -- Min number of units.
-          18, -- Max number of units.
+          12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
@@ -112,7 +112,7 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
           8, -- Min number of units.
-          20, -- Max number of units.
+          14, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
@@ -131,7 +131,7 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.TECH2 - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
           6, -- Min number of units.
-          20, -- Max number of units.
+          14, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },

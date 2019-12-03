@@ -149,7 +149,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Vacant Starting Area 1000',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
