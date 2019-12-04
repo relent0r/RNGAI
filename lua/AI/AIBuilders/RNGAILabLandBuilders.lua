@@ -32,7 +32,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNGAI Lab Early Game',
-        PlatoonTemplate = 'RNGAI T1 Mass Hunters Category',
+        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',
         Priority = 1000,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 180 } },
@@ -43,7 +43,7 @@ BuilderGroup {
             MoveFirst = 'Random',
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
-            FindHighestThreat = false,			-- Don't find high threat targets
+            FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
             AvoidBases = false,
