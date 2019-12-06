@@ -225,7 +225,7 @@ BuilderGroup {
         Priority = 920,
         InstanceCount = 1,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 30, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 50, -1000, 100, 1, 'AntiSurface', 1 }},
         },
         BuilderType = 'Any',
         BuilderData = {

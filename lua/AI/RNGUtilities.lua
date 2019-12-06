@@ -442,11 +442,13 @@ function PositionInWater(pos)
 	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end
 
-BuildMassScoutLocations = function(aiBrain, includeWater)
+function BuildMassScoutLocations(aiBrain, includeWater)
+    LOG('Starting Build Mass Scout Locations')
     local aiBrain = self
     local opponentStarts = {}
     local allyStarts = {}
     local startLocations = {}
+    local startPosMarkers = {}
 
     if not aiBrain.InterestList then
         aiBrain.InterestList = {}
@@ -487,8 +489,31 @@ BuildMassScoutLocations = function(aiBrain, includeWater)
                     end
                 end
             end
+        end
         -- From here on we must do. See RNGAI wiki for implementation details
         local massLocations = AIGetMassMarkerLocations(aiBrain, includeWater)
+        
+        for _, start in startLocations do
+            markersStartPos = AIGetMarkersAroundLocation(aiBrain, mass, armyStart, 30)
+            for _, marker in markersStartPos do
+                table.insert(startPosMarkers, marker)
+            end
+        end
+        for _, massMarker in massLocations do
+            for _, startMarker in startPosMarkers do
+                if massMarker.Position == startMarker.Position then
+                    LOG('Start position mass marker present')
+                else
+                    LOG('Inserting Mass Marker Position : '..massMarker.Position)
+                    table.insert(aiBrain.InterestList.HighPriority,
+                            {
+                                Position = massMarker,
+                                LastScouted = 0,
+                            }
+                        )
+                end
+            end
+        end
         aiBrain:ForkThread(self.ParseIntelThread)
     end
-end,
+end
