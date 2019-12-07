@@ -37,25 +37,10 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI Former Scout T1 Mass',
-        PlatoonTemplate = 'RNGAI T1AirScoutForm',
-        InstanceCount = 1,
-        Priority = 950,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
-        },
-        BuilderData = {
-            MarkerType = 'Mass',
-            IncludeWater = false,
-        },
-        LocationType = 'LocationType',
-        BuilderType = 'Any',
-    },
-    Builder {
     BuilderName = 'RNGAI Former Scout T3',
         PlatoonTemplate = 'RNGAI T3AirScoutForm',
         InstanceCount = 1,
-        Priority = 900,
+        Priority = 910,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
         },
@@ -82,7 +67,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Patrol DMZ T3',
         PlatoonTemplate = 'RNGAI T3AirScoutForm',
         InstanceCount = 1,
-        Priority = 905,
+        Priority = 915,
         BuilderData = {
             Patrol = true,
             PatrolTime = 120,

@@ -364,33 +364,16 @@ Platoon = Class(oldPlatoon) {
     AirScoutingAIRNG = function(self)
         LOG('Starting AirScoutAIRNG')
         local patrol = self.PlatoonData.Patrol or false
-        local markerType = self.PlatoonData.MarkerType or 'Start Location'
-        local includeWater = self.PlatoonData.IncludeWater or false
         local scout = self:GetPlatoonUnits()[1]
         if not scout then
             return
         end
         LOG('Patrol function is :'..tostring(patrol))
-        LOG('Marker Type is : '..markerType)
-        LOG('Include Water is : '..tostring(includeWater))
         local aiBrain = self:GetBrain()
 
         -- build scoutlocations if not already done.
         if not aiBrain.InterestList then
-            if markerType == 'Mass' then
-                if includeWater == true then
-                    LOG('Generating Mass Locations including water')
-                    RUtils.BuildMassScoutLocations(aiBrain, true)
-                else
-                    LOG('Generating Mass Locations excluding water')
-                    RUtils.BuildMassScoutLocations(aiBrain, false)
-                end
-            else
-                LOG('Generating Standard Scout locations')
-                aiBrain:BuildScoutLocations()
-            end
-        else
-            LOG('Interest List Already Exist')
+            aiBrain:BuildScoutLocations()
         end
 
         --If we have Stealth (are cybran), then turn on our Stealth
@@ -1188,7 +1171,7 @@ Platoon = Class(oldPlatoon) {
         end
 
         local usedTransports = false
-        
+
         if bestMarker then
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
