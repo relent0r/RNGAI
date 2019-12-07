@@ -33,6 +33,7 @@ AIBrain = Class(OldAIBrainClass) {
                     local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
                     local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
                     if army and startPos then
+                        table.insert(startLocations, startPos)
                         if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
                         -- Add the army start location to the list of interesting spots.
                         opponentStarts['ARMY_' .. i] = startPos
@@ -43,7 +44,6 @@ AIBrain = Class(OldAIBrainClass) {
                                 LastScouted = 0,
                             }
                         )
-                        table.insert(startLocations, startPos)
                         else
                             allyStarts['ARMY_' .. i] = startPos
                         end
