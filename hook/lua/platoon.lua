@@ -1160,9 +1160,35 @@ Platoon = Class(oldPlatoon) {
                 end
             end
         end
+
         LOG('Best Marker Selected is at position'..repr(bestMarker.Position))
-        -- did we find a threat?
+        
+        if bestMarker.Position == nil then
+            LOG('Best Marker position was nill, select random')
+            if table.getn(markerLocations) <= 2 then
+                self.LastMarker[1] = nil
+                self.LastMarker[2] = nil
+            end
+            for _,marker in RandomIter(markerLocations) do
+                if table.getn(markerLocations) <= 2 then
+                    self.LastMarker[1] = nil
+                     self.LastMarker[2] = nil
+                end
+                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) then
+                    if self.LastMarker[1] and marker.Position[1] == self.LastMarker[1][1] and marker.Position[3] == self.LastMarker[1][3] then
+                        continue
+                    end
+                    if self.LastMarker[2] and marker.Position[1] == self.LastMarker[2][1] and marker.Position[3] == self.LastMarker[2][3] then
+                        continue
+                    end
+                    bestMarker = marker
+                    break
+                end
+            end
+        end
+
         local usedTransports = false
+        
         if bestMarker then
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position

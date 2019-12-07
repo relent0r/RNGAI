@@ -32,7 +32,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 600 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
         BuilderType = 'All',
     },
