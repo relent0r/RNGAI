@@ -114,9 +114,31 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH1' }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 750,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -137,6 +159,30 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI ACU T1 Air Factory Lower Pri',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 750,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
