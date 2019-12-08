@@ -127,14 +127,13 @@ AIBrain = Class(OldAIBrainClass) {
             for _, start in startLocations do
                 markersStartPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Mass', start, 30)
                 for _, marker in markersStartPos do
+                    LOG('Start Mass Marker ..'..repr(marker))
                     table.insert(startPosMarkers, marker)
                 end
             end
             for _, massMarker in massLocations do
                 for _, startMarker in startPosMarkers do
-                    if massMarker.Position == startMarker.Position then
-                        LOG('Start position mass marker present')
-                    else
+                    if massMarker.Position ~= startMarker.Position then
                         LOG('Inserting Mass Marker Position : '..repr(massMarker.Position))
                         table.insert(aiBrain.InterestList.LowPriority,
                                 {
@@ -142,6 +141,9 @@ AIBrain = Class(OldAIBrainClass) {
                                     LastScouted = 0,
                                 }
                             )
+                        break
+                    else
+                        LOG('Start position mass marker present')
                     end
                 end
             end
