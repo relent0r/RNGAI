@@ -2,8 +2,8 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
-XYZAIBrainClass = AIBrain
-AIBrain = Class(XYZAIBrainClass) {
+RNGAIBrainClass = AIBrain
+AIBrain = Class(RNGAIBrainClass) {
 
     BuildScoutLocations = function(self)
         local aiBrain = self
