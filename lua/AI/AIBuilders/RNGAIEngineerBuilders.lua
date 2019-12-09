@@ -403,7 +403,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 600,
-        InstanceCount = 4,
+        InstanceCount = 6,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
                 { MIBC, 'ReclaimablesInArea', { 'LocationType', }},

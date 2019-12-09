@@ -31,7 +31,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.LAND * categories.SCOUT } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.SCOUT } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
         },
@@ -45,7 +45,7 @@ BuilderGroup {
     -- Opening Scout Form --
     Builder {
         BuilderName = 'RNGAI Former Scout',
-        PlatoonTemplate = 'T1LandScoutForm',
+        PlatoonTemplate = 'RNGAI T1LandScoutForm',
         Priority = 1000,
         InstanceCount = 3,
         BuilderConditions = {

@@ -23,7 +23,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local z2 = engPos[3] + initialRange
         local rect = Rect(x1, z1, x2, z2)
         local reclaimRect = GetReclaimablesInRect(rect)
-
+        local reclaimLoop = 0
         if not engPos then
             WaitTicks(1)
             return
@@ -94,6 +94,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitSeconds(5)
+        reclaimLoop = reclaimLoop + 1
+        if reclaimLoop == 5 then
+            return
+        end
     end
 end
 
