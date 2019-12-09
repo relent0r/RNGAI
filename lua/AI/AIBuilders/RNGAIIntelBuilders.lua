@@ -21,7 +21,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
-            { EBC, 'GreaterThanEconTrend', { 0.2, 5.0 }},
+            { EBC, 'GreaterThanEconTrend', { 0.0, 5.0 }},
             { MIBC, 'GreaterThanGameTime', { 240 } },
         },
         BuilderType = 'Any',

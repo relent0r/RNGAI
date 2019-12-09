@@ -300,6 +300,73 @@ BuilderGroup {
             },
         BuilderType = 'Any',
     },
+    Builder { 
+        BuilderName = 'RNGAI T2 Land Factory Upgrade Support UEF',
+        PlatoonTemplate = 'T2LandSupFactoryUpgrade1',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
+        BuilderData = {
+            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
+        },
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder { 
+        BuilderName = 'RNGAI T2 Land Factory Upgrade Support AEON',
+        PlatoonTemplate = 'T2LandSupFactoryUpgrade2',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
+        BuilderData = {
+            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
+        },
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder { 
+        BuilderName = 'RNGAI T2 Land Factory Upgrade Support Cybran',
+        PlatoonTemplate = 'T2LandSupFactoryUpgrade3',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
+        BuilderData = {
+            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
+        },
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder { BuilderName = 'RNGAI T2 Land Factory Upgrade Support Sera',
+        PlatoonTemplate = 'T2LandSupFactoryUpgrade4',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
+        BuilderData = {
+            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
+        },
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
+        },
+        BuilderType = 'Any',
+    },
     Builder {
         BuilderName = 'RNGAI T2 Air Factory Upgrade',
         PlatoonTemplate = 'T2AirFactoryUpgrade',
