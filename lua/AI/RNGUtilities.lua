@@ -424,11 +424,9 @@ function AIGetMassMarkerLocations(aiBrain, includeWater)
             for k, v in markers do
                 if v.type == 'Mass' then
                     if includeWater then
-                        LOG('include water set to true, inserting position')
                         table.insert(markerList, {Position = v.position, Name = k})
                     else
                         if not PositionInWater(v.position) then
-                            LOG('include water set to false, inserting position')
                             table.insert(markerList, {Position = v.position, Name = k})
                         end
                     end

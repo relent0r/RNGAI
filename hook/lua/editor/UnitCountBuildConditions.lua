@@ -363,3 +363,10 @@ function IsAcuBuilder(aiBrain, builderName)
         return false
     end
 end
+
+function GreaterThanGameTimeSeconds(aiBrain, num)
+    if num < GetGameTimeSeconds() then
+        return true
+    end
+    return false
+end
