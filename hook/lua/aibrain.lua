@@ -131,21 +131,22 @@ AIBrain = Class(OldAIBrainClass) {
                     table.insert(startPosMarkers, marker)
                 end
             end
-            for _, massMarker in massLocations do
-                for _, startMarker in startPosMarkers do
-                    if massMarker.Position ~= startMarker.Position then
-                        LOG('Inserting Mass Marker Position : '..repr(massMarker.Position))
-                        table.insert(aiBrain.InterestList.LowPriority,
-                                {
-                                    Position = massMarker.Position,
-                                    LastScouted = 0,
-                                }
-                            )
-                        break
-                    else
-                        LOG('Start position mass marker present')
+            for k, massMarker in massLocations do
+                for c, startMarker in startPosMarkers do
+                    if massMarker.Position == startMarker.Position then
+                        LOG('Removing Mass Marker Position : '..repr(massMarker.Position))
+                        table.remove(massLocations, k)
                     end
                 end
+            end
+            for k, massMarker in massLocations do
+                LOG('Inserting Mass Marker Position : '..repr(massMarker.Position))
+                table.insert(aiBrain.InterestList.LowPriority,
+                        {
+                            Position = massMarker.Position,
+                            LastScouted = 0,
+                        }
+                    )
             end
             aiBrain:ForkThread(self.ParseIntelThread)
         end
