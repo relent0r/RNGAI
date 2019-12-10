@@ -5,7 +5,7 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
-    BuildScoutLocations = function(self)
+    BuildScoutLocationsRNG = function(self)
         local aiBrain = self
         local opponentStarts = {}
         local startLocations = {}
