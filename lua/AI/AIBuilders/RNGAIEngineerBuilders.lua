@@ -371,7 +371,7 @@ BuilderGroup {
             },
         BuilderData = {
             Location = 'LocationType',
-            Reclaim = {'STRUCTURE ENERGYPRODUCTION TECH1'},
+            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
         BuilderType = 'Any',
     },
