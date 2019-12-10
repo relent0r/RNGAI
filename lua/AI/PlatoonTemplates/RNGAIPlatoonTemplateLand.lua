@@ -149,22 +149,30 @@ PlatoonTemplate {
 PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
     FactionSquads = {
         UEF = {
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0201', 1, 4, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
 			{ 'uel0103', 1, 2, 'Artillery', 'none' },	-- artillery
             { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
          },
         Aeon = {
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
 			{ 'ual0103', 1, 2, 'Artillery', 'none' },	-- artillery
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
         },
         Cybran = {
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
 			{ 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
             { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
         },
         Seraphim = {
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
 			{ 'xsl0103', 1, 2, 'Artillery', 'none' },	-- artillery
             { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
         },
@@ -175,27 +183,35 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0202', 2, 6, 'Attack', 'none' },       -- Heavy Tank
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'del0204', 1, 3, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0111', 1, 3, 'Artillery', 'none' },   -- MML
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'uel0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield
          },
         Aeon = {
             { 'ual0202', 2, 6, 'Attack', 'none' },      -- Heavy Tank
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0111', 1, 3, 'Artillery', 'none' },   -- MML
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'ual0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield
         },
         Cybran = {
             { 'url0202', 2, 6, 'Attack', 'none' },      -- Heavy Tank
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'drl0204', 1, 3, 'Attack', 'none' },      -- Rocket Bot
             { 'url0111', 1, 3, 'Artillery', 'none' },   -- MML
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'url0306', 1, 1, 'Guard', 'none' },       -- Mobile Stealth
         },
         Seraphim = {
             { 'xsl0202', 2, 7, 'Attack', 'none' },      -- Assault Bot
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0111', 1, 3, 'Artillery', 'none' },   -- MML
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0205', 1, 1, 'Guard', 'none' },       -- AA
         },
     }
@@ -205,28 +221,36 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0303', 2, 6, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xel0305', 1, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'uel0304', 1, 2, 'Artillery', 'none' },   -- artillery
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xel0306', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'delk002', 1, 1, 'Guard', 'none' },       -- AA
          },
         Aeon = {
             { 'ual0303', 2, 6, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xal0305', 1, 2, 'Attack', 'none' },      -- Sniper Bot
             { 'ual0304', 1, 2, 'Artillery', 'none' },   -- artillery
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'dal0310', 1, 1, 'Artillery', 'none' },   -- artillery
             { 'dalk003', 1, 1, 'Guard', 'none' },       -- AA
         },
         Cybran = {
             { 'url0303', 1, 6, 'Attack', 'none' },      -- Siege Assault Bot
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xrl0305', 2, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0304', 1, 2, 'Artillery', 'none' },   -- artillery
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
         },
         Seraphim = {
             { 'xsl0303', 2, 6, 'Attack', 'none' },       -- Siege Tank
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0305', 1, 2, 'Attack', 'none' },       -- Sniper Bot
             { 'xsl0304', 1, 2, 'Artillery', 'none' },   -- artillery
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0307', 0, 1, 'Guard', 'none' },       -- Mobile Shield
             { 'dslk004', 1, 1, 'Guard', 'none' },       -- AA
         },
