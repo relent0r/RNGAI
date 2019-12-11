@@ -24,7 +24,7 @@ BuilderGroup {
         BuilderConditions = { 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.ANTIAIR * categories.TECH3} },
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 6, categories.AIR * categories.ANTIAIR }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
         },
         BuilderType = 'Air',
     },
@@ -33,7 +33,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 950,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.6 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',

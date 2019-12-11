@@ -22,7 +22,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local z1 = engPos[3] - initialRange
         local z2 = engPos[3] + initialRange
         local rect = Rect(x1, z1, x2, z2)
-        local reclaimRect = GetReclaimablesInRect(rect)
+        local reclaimRect = {}
+        reclaimRect = GetReclaimablesInRect(rect)
         local reclaimLoop = 0
         if not engPos then
             WaitTicks(1)
@@ -34,19 +35,23 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         LOG('Going through reclaim table')
         if reclaimRect and table.getn( reclaimRect ) > 0 then
             for k,v in reclaimRect do
-                --LOG(repr(v))
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
                 if not needEnergy or v.MaxEnergyReclaim then
-                    if not self.BadReclaimables[v] then
-                        local rpos = v:GetCachePosition()
-                        local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
-                        if distance < closestDistance then
-                            closestReclaim = rpos
-                            closestDistance = distance
-                        end
-                        if distance > furtherestDistance then -- and distance < closestDistance + 20
-                            furtherestReclaim = rpos
-                            furtherestDistance = distance
+                    if v.MaxMassReclaim and v.MaxMassReclaim > 1 then
+                        if not self.BadReclaimables[v] then
+                            local rpos = v:GetCachePosition()
+                            local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
+                            if distance < closestDistance then
+                                closestReclaim = rpos
+                                closestDistance = distance
+                            end
+                            if distance > furtherestDistance then -- and distance < closestDistance + 20
+                                furtherestReclaim = rpos
+                                furtherestDistance = distance
+                            end
+                            if furtherestDistance - closestDistance > 20 then
+                                break
+                            end
                         end
                     end
                 end

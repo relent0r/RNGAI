@@ -590,7 +590,7 @@ BuilderGroup {
             AvoidBasesRadius = 75,
             AggressiveMove = false,      
             AvoidClosestRadius = 100,
-            UseFormation = 'AttackFormation',
+            UseFormation = 'NoFormation',
             },
     },
     Builder {
@@ -613,7 +613,7 @@ BuilderGroup {
             AvoidBasesRadius = 75,
             AggressiveMove = false,      
             AvoidClosestRadius = 50,
-            UseFormation = 'AttackFormation',
+            UseFormation = 'NoFormation',
             },
     },
 }
