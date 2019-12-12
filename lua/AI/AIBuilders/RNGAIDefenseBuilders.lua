@@ -60,6 +60,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,

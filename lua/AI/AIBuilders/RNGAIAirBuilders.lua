@@ -429,7 +429,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 790,
+        Priority = 850,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
@@ -442,7 +442,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Transport',
         PlatoonTemplate = 'T2AirTransport',
-        Priority = 800,
+        Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },

@@ -10,6 +10,8 @@ local IBC = '/lua/editor/InstantBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local MABC = '/lua/editor/MarkerBuildConditions.lua'
+local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small Close',
@@ -114,7 +116,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.08, 0.10}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -200,6 +202,24 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI ACU Mass 20',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 850,
+        BuilderConditions = { 
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 20, -500, 0, 0, 'AntiSurface', 1}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                BuildStructures = {
+                    'T1Resource',
+                },
+            }
+        }
+    },
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
         PlatoonTemplate = 'CommanderBuilder',
@@ -240,6 +260,31 @@ BuilderGroup {
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach',
+        PlatoonTemplate = 'CommanderBuilder',
+        Priority = 950,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { MIBC, 'GreaterThanGameTime', { 300 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T1GroundDefense',
+                    'T1AADefense',
+                },
+                Location = 'LocationType',
             }
         }
     },

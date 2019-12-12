@@ -22,7 +22,7 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI T1 Mass Hunters Category',
+    Name = 'RNGAI T1 Guard Marker Small',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 10, 'attack', 'none' },
@@ -51,11 +51,11 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI T1 Mass Hunters Medium',
+    Name = 'RNGAI T1 Guard Marker Medium',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 5, 30, 'attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'attack', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     }
 }
 
@@ -64,7 +64,7 @@ PlatoonTemplate {
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 5, 'attack', 'none' },
-        { categories.LAND * categories.ENGINEER - categories.COMMAND, 1, 1, 'attack', 'none' },
+        { categories.LAND * categories.ENGINEER - categories.COMMAND, 1, 1, 'support', 'none' },
     }
 }
 
@@ -72,11 +72,12 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Small',
     Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           2, -- Min number of units.
           8, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     },
 }
 
@@ -84,16 +85,17 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Small Ranged',
     Plan = 'StrikeForceAI', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           3, -- Min number of units.
           8, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.MOBILE * categories.LAND - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+          { categories.MOBILE * categories.LAND - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           1, -- Min number of units.
           5, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     },
 }
 
@@ -111,6 +113,7 @@ PlatoonTemplate {
           3, -- Max number of units.
           'support', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     },
 }
 

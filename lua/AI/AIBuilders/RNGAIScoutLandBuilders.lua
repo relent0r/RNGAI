@@ -47,7 +47,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'RNGAI T1LandScoutForm',
         Priority = 1000,
-        InstanceCount = 3,
+        InstanceCount = 6,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.LAND * categories.SCOUT } },
         },

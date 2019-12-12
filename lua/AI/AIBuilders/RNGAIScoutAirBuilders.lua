@@ -16,6 +16,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.SCOUT * categories.AIR}},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -50,15 +51,15 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Patrol DMZ T1',
         PlatoonTemplate = 'RNGAI T1AirScoutForm',
-        InstanceCount = 1,
-        Priority = 905,
+        InstanceCount = 2,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
             Patrol = true,
             PatrolTime = 120,
-            MilitaryArea = 'BaseDMZArea',
+            --MilitaryArea = 'BaseDMZArea',
         },
         LocationType = 'LocationType',
         BuilderType = 'Any',
@@ -67,43 +68,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Patrol DMZ T3',
         PlatoonTemplate = 'RNGAI T3AirScoutForm',
         InstanceCount = 1,
-        Priority = 915,
+        Priority = 900,
         BuilderData = {
             Patrol = true,
             PatrolTime = 120,
-            MilitaryArea = 'BaseDMZArea',
-        },
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
-        },
-        LocationType = 'LocationType',
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI Former Scout Patrol Military T1',
-        PlatoonTemplate = 'RNGAI T1AirScoutForm',
-        InstanceCount = 1,
-        Priority = 905,
-        BuilderData = {
-            Patrol = true,
-            PatrolCount = 10,
-            MilitaryArea = 'BaseRestrictedArea',
-        },
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
-        },
-        LocationType = 'LocationType',
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI Former Scout Patrol Military T3',
-        PlatoonTemplate = 'RNGAI T3AirScoutForm',
-        InstanceCount = 1,
-        Priority = 905,
-        BuilderData = {
-            Patrol = true,
-            PatrolCount = 10,
-            MilitaryArea = 'BaseRestrictedArea',
+            --MilitaryArea = 'BaseDMZArea',
         },
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },

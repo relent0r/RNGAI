@@ -15,8 +15,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 900,
-        InstanceCount = 2,
+        Priority = 960,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
@@ -38,15 +38,15 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Pgen Efficiency',
+        BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 750,
-        InstanceCount = 1,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 360 } },
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.4 }}, 
+            { UCBC, 'LessThanEnergyTrend', { 50.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },

@@ -325,7 +325,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT,         -- Only find targets matching these categories.
+            TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
                 'MOBILE LAND INDIRECTFIRE',
@@ -354,7 +354,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT,         -- Only find targets matching these categories.
+            TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
                 'MOBILE LAND INDIRECTFIRE',
@@ -372,6 +372,56 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
+        BuilderName = 'RNGAI Start Location Attack Early',
+        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        Priority = 800,
+        InstanceCount = 3,
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
+            },
+        BuilderData = {
+            MarkerType = 'Start Location',            
+            MoveFirst = 'Random',
+            MoveNext = 'Threat',
+            --ThreatType = '',
+            --SelfThreat = '',
+            --FindHighestThreat ='',
+            --ThreatThreshold = '',
+            AvoidBases = true,
+            AvoidBasesRadius = 30,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            GuardTimer = 10,              
+            UseFormation = 'AttackFormation',
+        },    
+    }, 
+    Builder {
+        BuilderName = 'RNGAI Start Location Attack Mid',
+        PlatoonTemplate = 'RNGAI T1 Guard Marker Medium',
+        Priority = 700,
+        InstanceCount = 3,
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
+            },
+        BuilderData = {
+            MarkerType = 'Start Location',            
+            MoveFirst = 'Random',
+            MoveNext = 'Threat',
+            --ThreatType = '',
+            --SelfThreat = '',
+            --FindHighestThreat ='',
+            --ThreatThreshold = '',
+            AvoidBases = false,
+            AvoidBasesRadius = 30,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            GuardTimer = 10,              
+            UseFormation = 'AttackFormation',
+        },    
+    }, 
+    Builder {
         BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 875,                                                          -- Priority. 1000 is normal.
@@ -387,7 +437,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE - categories.SCOUT,         -- Only find targets matching these categories.
+            TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE - categories.SCOUT - categories.WALL,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',
@@ -499,56 +549,7 @@ BuilderGroup {
             },
         },
     },
-    Builder {
-        BuilderName = 'RNGAI Start Location Attack Early',
-        PlatoonTemplate = 'RNGAI T1 Mass Hunters Category',
-        Priority = 800,
-        InstanceCount = 3,
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
-            },
-        BuilderData = {
-            MarkerType = 'Start Location',            
-            MoveFirst = 'Random',
-            MoveNext = 'Threat',
-            --ThreatType = '',
-            --SelfThreat = '',
-            --FindHighestThreat ='',
-            --ThreatThreshold = '',
-            AvoidBases = true,
-            AvoidBasesRadius = 30,
-            AggressiveMove = true,      
-            AvoidClosestRadius = 50,
-            GuardTimer = 10,              
-            UseFormation = 'AttackFormation',
-        },    
-    }, 
-    Builder {
-        BuilderName = 'RNGAI Start Location Attack Mid',
-        PlatoonTemplate = 'RNGAI T1 Mass Hunters Medium',
-        Priority = 700,
-        InstanceCount = 3,
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
-            },
-        BuilderData = {
-            MarkerType = 'Start Location',            
-            MoveFirst = 'Random',
-            MoveNext = 'Threat',
-            --ThreatType = '',
-            --SelfThreat = '',
-            --FindHighestThreat ='',
-            --ThreatThreshold = '',
-            AvoidBases = false,
-            AvoidBasesRadius = 30,
-            AggressiveMove = true,      
-            AvoidClosestRadius = 50,
-            GuardTimer = 10,              
-            UseFormation = 'AttackFormation',
-        },    
-    }, 
+    
     Builder {
         BuilderName = 'Frequent Land Attack T2',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',

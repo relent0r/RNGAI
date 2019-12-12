@@ -39,7 +39,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI RadarUpgrade T1',
+    BuilderGroupName = 'RNGAI RadarUpgrade',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Radar Upgrade',
@@ -51,6 +51,19 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { MIBC, 'GreaterThanGameTime', { 600 } },
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Radar Upgrade',
+        PlatoonTemplate = 'T2RadarUpgrade',
+        Priority = 600,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.50}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { MIBC, 'GreaterThanGameTime', { 900 } },
         },
         BuilderType = 'Any',
     },

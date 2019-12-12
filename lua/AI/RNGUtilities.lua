@@ -60,14 +60,14 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if self.Dead then 
             return
         end
-        LOG('Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
+        --LOG('Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
         -- Clear Commands first
         IssueClearCommands({self})
-        LOG('Attempting move to closest reclaim')
+        --LOG('Attempting move to closest reclaim')
         StartMoveDestination(self, closestReclaim)
-        LOG('Closest reclaim is '..closestReclaim[1]..' '..closestReclaim[3])
+        --LOG('Closest reclaim is '..closestReclaim[1]..' '..closestReclaim[3])
         local brokenDistance = closestDistance / 6
-        LOG('One 6th of distance is '..brokenDistance)
+        --LOG('One 6th of distance is '..brokenDistance)
         local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
             LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
@@ -78,14 +78,14 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 break
             end
         end
-        LOG('Attempting agressive move to furtherest reclaim')
+        --LOG('Attempting agressive move to furtherest reclaim')
         -- Clear Commands first
         IssueClearCommands({self})
         IssueAggressiveMove({self}, furtherestReclaim)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
-            LOG('Engineer is reclaiming')
+            --LOG('Engineer is reclaiming')
             WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
                 LOG('Engineer no longer reclaiming')
@@ -93,9 +93,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
-        LOG('Base Location is : '..basePosition[1]..' '..basePosition[3])
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-        LOG('Random Location is :'..location[1]..' '..location[3])
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitSeconds(5)

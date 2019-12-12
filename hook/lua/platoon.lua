@@ -329,7 +329,7 @@ Platoon = Class(oldPlatoon) {
     end,
     
     ReclaimAIRNG = function(self)
-        LOG('ReclaimAIRNG has been started')
+        --LOG('ReclaimAIRNG has been started')
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
         local eng
@@ -340,14 +340,14 @@ Platoon = Class(oldPlatoon) {
             end
         end
         if eng then
-            LOG('Engineer Condition is true')
+            --LOG('Engineer Condition is true')
             eng.UnitBeingBuilt = eng -- this is important, per uveso (It's a build order fake, i assigned the engineer to itself so it will not produce errors because UnitBeingBuilt must be a unit and can not just be set to true)
             RUtils.ReclaimRNGAIThread(self,eng,aiBrain)
             eng.UnitBeingBuilt = nil
         else
-            LOG('Engineer Condition is false')
+            --LOG('Engineer Condition is false')
         end
-        LOG('Ending ReclaimAIRNG..Disbanding')
+        --LOG('Ending ReclaimAIRNG..Disbanding')
         self:PlatoonDisband()
     end,
 
@@ -362,13 +362,13 @@ Platoon = Class(oldPlatoon) {
     end,
 
     AirScoutingAIRNG = function(self)
-        LOG('Starting AirScoutAIRNG')
+        --LOG('Starting AirScoutAIRNG')
         local patrol = self.PlatoonData.Patrol or false
         local scout = self:GetPlatoonUnits()[1]
         if not scout then
             return
         end
-        LOG('Patrol function is :'..tostring(patrol))
+        --LOG('Patrol function is :'..tostring(patrol))
         local aiBrain = self:GetBrain()
 
         -- build scoutlocations if not already done.
@@ -383,7 +383,7 @@ Platoon = Class(oldPlatoon) {
         if patrol == true then
             LOG('Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
-            local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
+            --local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
             local estartX = nil
             local estartZ = nil
             local startX = nil
@@ -399,30 +399,34 @@ Platoon = Class(oldPlatoon) {
                 LOG('past get current enemy')
                 startX, startZ = aiBrain:GetArmyStartPos()
                 LOG('Start Location X Z :'..startX..startZ)
-                if baseArea == 'BaseMilitaryArea' then
+                local rng = math.random(1,3)
+                if rng == 1 then
+                    LOG('Patroling BaseMilitaryArea')
                     patrolPositionX = (estartX + startX) / 2.2
                     patrolPositionZ = (estartZ + startZ) / 2.2
-                elseif baseArea == 'BaseRestrictedArea' then
+                elseif rng == 2 then
+                    LOG('Patroling BaseRestrictedArea')
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
                     patrolPositionX = (patrolPositionX + startX) / 2
                     patrolPositionZ = (patrolPositionZ + startZ) / 2
-                elseif baseArea == 'BaseDMZArea' then
+                elseif rng == 3 then
+                    LOG('Patroling BaseDMZArea')
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
                 end
-                LOG('Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
+                --LOG('Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
                 patrolLocation1 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
                 patrolLocation2 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
-                LOG('Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
+                --LOG('Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
                 self:MoveToLocation({patrolPositionX, 0, patrolPositionZ}, false)
-                LOG('Issuing Patrol Commands')
+                --LOG('Issuing Patrol Commands')
                 local patrolunits = self:GetPlatoonUnits()
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 WaitSeconds(patrolTime)
-                LOG('Scout Returning to base')
+                --LOG('Scout Returning to base')
                 self:MoveToLocation({startX, 0, startZ}, false)
                 self:PlatoonDisband()
                 return
