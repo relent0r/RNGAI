@@ -279,7 +279,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
     return Reclaiming
 end
 
-function EngineerMoveWithSafePath(aiBrain, unit, destination)
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     if not destination then
         return false
     end
