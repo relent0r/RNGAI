@@ -29,7 +29,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout T1',
         PlatoonTemplate = 'RNGAI T1AirScoutForm',
-        InstanceCount = 3,
+        InstanceCount = 2,
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
