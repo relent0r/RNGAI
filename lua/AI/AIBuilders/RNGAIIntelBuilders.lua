@@ -59,11 +59,11 @@ BuilderGroup {
         PlatoonTemplate = 'T2RadarUpgrade',
         Priority = 600,
         BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.90}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { MIBC, 'GreaterThanGameTime', { 900 } },
         },
         BuilderType = 'Any',
     },
