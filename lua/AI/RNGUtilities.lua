@@ -285,7 +285,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     end
     local pos = unit:GetPosition()
     -- don't check a path if we are in build range
-    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 14 then
+    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 25 then
         return true
     end
     local result, bestPos = unit:CanPathTo(destination)
