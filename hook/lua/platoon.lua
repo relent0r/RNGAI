@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {

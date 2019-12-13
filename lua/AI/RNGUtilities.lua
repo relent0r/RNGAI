@@ -1,5 +1,6 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
