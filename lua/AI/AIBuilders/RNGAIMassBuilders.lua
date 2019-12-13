@@ -106,7 +106,6 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            Categories = {categories.MOBILE * categories.LAND},
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -130,7 +129,6 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            Categories = {categories.MOBILE * categories.LAND},
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {

@@ -67,7 +67,6 @@ BuilderGroup {
                     'T1LandFactory',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -114,7 +113,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { EBC, 'GreaterThanEconIncome',  { 0.7, 5.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.08, 0.10}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
@@ -164,7 +163,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.TECH1 * categories.ENERGYPRODUCTION } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.TECH1 * categories.ENERGYPRODUCTION } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -207,7 +206,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 20, -500, 0, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 25, -500, 0, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {

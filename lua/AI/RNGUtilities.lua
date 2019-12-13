@@ -245,7 +245,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
     end
     local Reclaiming = false
     -- Check if enemy units are at location
-    local checkUnits = aiBrain:GetUnitsAroundPoint( (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 10, 'Enemy')
+    local checkUnits = aiBrain:GetUnitsAroundPoint( (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 15, 'Enemy')
     -- reclaim units near our building place.
     if checkUnits and table.getn(checkUnits) > 0 then
         for num, unit in checkUnits do
@@ -256,11 +256,12 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
                 continue
             end
             if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * categories.MOBILE, unit) then 
-                LOG('Unit no is capturable and not category engineer')
+                LOG('Unit is capturable and not category t1 mobile'..unit.ID)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
                 IssueCapture({eng}, unit)
             else
+                LOG('We are going to reclaim the unit'..unit.ID)
                 -- if we can't capture then reclaim
                 unit.ReclaimInProgress = true
                 IssueReclaim({eng}, unit)
