@@ -19,7 +19,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close',
         PlatoonAddBehaviors = {'CommanderBehavior',},
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
         BuilderConditions = {
             { IBC, 'NotPreBuilt', {}},
@@ -51,7 +51,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Distant',
         PlatoonAddBehaviors = {'CommanderBehavior',},
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
         BuilderConditions = {
             { IBC, 'NotPreBuilt', {}},
@@ -81,7 +81,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
         PlatoonAddBehaviors = {'CommanderBehavior',},
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
         BuilderConditions = {
             { IBC, 'NotPreBuilt', {}},
@@ -111,7 +111,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
@@ -134,7 +134,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
@@ -156,7 +156,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
@@ -180,7 +180,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Lower Pri',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
@@ -204,7 +204,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU Mass 20',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 20, -500, 0, 0, 'AntiSurface', 1}},
@@ -222,7 +222,7 @@ BuilderGroup {
     },
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = {            
             { MIBC, 'GreaterThanGameTime', { 90 } },
@@ -243,7 +243,7 @@ BuilderGroup {
     },
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Storage',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = {            
             { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
@@ -265,7 +265,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence ACU Restricted Breach',
-        PlatoonTemplate = 'CommanderBuilder',
+        PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 950,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},

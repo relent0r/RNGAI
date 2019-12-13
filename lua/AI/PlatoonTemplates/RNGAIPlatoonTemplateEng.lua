@@ -7,3 +7,12 @@ PlatoonTemplate {
         { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
     },
 }
+
+PlatoonTemplate {
+    Name = 'CommanderBuilderRNG',
+    Plan = 'EngineerBuildAIRNG',
+    GlobalSquads = {
+        { categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
