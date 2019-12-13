@@ -60,7 +60,7 @@ BuilderGroup {
         Priority = 600,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.90}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { MIBC, 'GreaterThanGameTime', { 900 } },

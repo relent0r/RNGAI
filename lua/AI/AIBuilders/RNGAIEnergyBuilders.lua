@@ -46,7 +46,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 360 } },
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
-            { UCBC, 'LessThanEnergyTrend', { 50.0 } }, -- If our energy is trending into negatives
+            { UCBC, 'LessThanEnergyTrend', { 50.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },

@@ -44,10 +44,10 @@ function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEffici
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     LOG('Mass Wanted :'..MassEfficiency..'Actual :'..econ.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..econ.EnergyEfficiencyOverTime)
     if (econ.MassEfficiencyOverTime >= MassEfficiency and econ.EnergyEfficiencyOverTime >= EnergyEfficiency) then
-        LOG('GreaterThanEconEfficiencyOverTime Returned True')
+        --LOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true
     end
-    LOG('GreaterThanEconEfficiencyOverTime Returned False')
+    --LOG('GreaterThanEconEfficiencyOverTime Returned False')
     return false
 end
 
@@ -75,10 +75,10 @@ function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
     massTotal = massTotal + ( unitCount * t3Drain )    
     
     if not CompareBody( (econTime.MassIncome * 10), massTotal, '>' ) then
-        LOG('Mass income to factory is false')
+        --LOG('Mass income to factory is false')
         return false
     end
-    LOG('Mass income to factory is true')
+    --LOG('Mass income to factory is true')
     return true
 end
 
@@ -88,11 +88,11 @@ function GreaterThanEconIncome(aiBrain, MassIncome, EnergyIncome)
         return true
     end
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    LOG('Current Econ Numbers, Current Mass : '..econ.MassIncome..'Desired Mass : '..MassIncome ..' Energy : '..econ.EnergyIncome..'Desired Energy :'..EnergyIncome)
+    --LOG('Current Econ Numbers, Current Mass : '..econ.MassIncome..'Desired Mass : '..MassIncome ..' Energy : '..econ.EnergyIncome..'Desired Energy :'..EnergyIncome)
     if (econ.MassIncome >= MassIncome and econ.EnergyIncome >= EnergyIncome) then
-        LOG('GreaterThanEconIncome is True')
+        --LOG('GreaterThanEconIncome is True')
         return true
     end
-    LOG('GreaterThanEconIncome is False')
+    --LOG('GreaterThanEconIncome is False')
     return false
 end

@@ -33,7 +33,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
         local reclaim = {}
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
-        LOG('Going through reclaim table')
+        --LOG('Going through reclaim table')
         if reclaimRect and table.getn( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
@@ -61,7 +61,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if self.Dead then 
             return
         end
-        --LOG('Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
+        LOG('Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
         -- Clear Commands first
         IssueClearCommands({self})
         --LOG('Attempting move to closest reclaim')
@@ -89,7 +89,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --LOG('Engineer is reclaiming')
             WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                LOG('Engineer no longer reclaiming')
+                --LOG('Engineer no longer reclaiming')
                 reclaiming = false
             end
         end
@@ -244,11 +244,15 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
         return false
     end
     local Reclaiming = false
+    --Temporary for troubleshooting
+    local GetBlueprint = moho.entity_methods.GetBlueprint
     -- Check if enemy units are at location
     local checkUnits = aiBrain:GetUnitsAroundPoint( (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 15, 'Enemy')
     -- reclaim units near our building place.
     if checkUnits and table.getn(checkUnits) > 0 then
         for num, unit in checkUnits do
+            --temporary for troubleshooting
+            unitdesc = GetBlueprint(unit).Description
             if unit.Dead or unit:BeenDestroyed() then
                 continue
             end
@@ -256,12 +260,12 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
                 continue
             end
             if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * categories.MOBILE, unit) then 
-                LOG('Unit is capturable and not category t1 mobile'..unit.ID)
+                LOG('Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
                 IssueCapture({eng}, unit)
             else
-                LOG('We are going to reclaim the unit'..unit.ID)
+                LOG('We are going to reclaim the unit'..unitdesc)
                 -- if we can't capture then reclaim
                 unit.ReclaimInProgress = true
                 IssueReclaim({eng}, unit)
@@ -509,9 +513,9 @@ function BuildMassScoutLocations(aiBrain, includeWater)
         for _, massMarker in massLocations do
             for _, startMarker in startPosMarkers do
                 if massMarker.Position == startMarker.Position then
-                    LOG('Start position mass marker present')
+                    --LOG('Start position mass marker present')
                 else
-                    LOG('Inserting Mass Marker Position : '..massMarker.Position)
+                    --LOG('Inserting Mass Marker Position : '..massMarker.Position)
                     table.insert(aiBrain.InterestList.HighPriority,
                             {
                                 Position = massMarker,

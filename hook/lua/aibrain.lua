@@ -127,20 +127,20 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, start in startLocations do
                 markersStartPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Mass', start, 30)
                 for _, marker in markersStartPos do
-                    LOG('Start Mass Marker ..'..repr(marker))
+                    --LOG('Start Mass Marker ..'..repr(marker))
                     table.insert(startPosMarkers, marker)
                 end
             end
             for k, massMarker in massLocations do
                 for c, startMarker in startPosMarkers do
                     if massMarker.Position == startMarker.Position then
-                        LOG('Removing Mass Marker Position : '..repr(massMarker.Position))
+                        --LOG('Removing Mass Marker Position : '..repr(massMarker.Position))
                         table.remove(massLocations, k)
                     end
                 end
             end
             for k, massMarker in massLocations do
-                LOG('Inserting Mass Marker Position : '..repr(massMarker.Position))
+                --LOG('Inserting Mass Marker Position : '..repr(massMarker.Position))
                 table.insert(aiBrain.InterestList.LowPriority,
                         {
                             Position = massMarker.Position,
