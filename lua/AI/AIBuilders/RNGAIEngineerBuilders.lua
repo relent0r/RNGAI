@@ -402,7 +402,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 ',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 600,
+        Priority = 700,
         InstanceCount = 6,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },

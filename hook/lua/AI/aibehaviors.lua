@@ -1,3 +1,5 @@
+--local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+
 
 RNGCommanderBehavior = CommanderBehavior
 function CommanderBehavior(platoon)
@@ -98,7 +100,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'defense'
         and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'rushnaval'
         then
-        maxRadius = 256
+        maxRadius = 220
     end
 
     -- Take away engineers too

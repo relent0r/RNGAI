@@ -39,6 +39,20 @@ function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
     end
 end
 
+function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
+    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
+    if DEBUG then
+        LOG('Current Energy Trend is : ', econ.MassTrend)
+    end
+    if econ.MassTrend < mTrend then
+        LOG('Less Than Mass Trend Returning True')
+        return true
+    else
+        LOG('Less Than Mass Trend Returning False')
+        return false
+    end
+end
+
 function GreaterThanEnergyTrend(aiBrain, eTrend, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then

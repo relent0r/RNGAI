@@ -1131,8 +1131,15 @@ Platoon = Class(oldPlatoon) {
         -- find best threat at the closest distance
         for _,marker in markerLocations do
             local markerThreat
+            local enemyThreat
             markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, 'Economy', enemyIndex)
-            LOG('Best marker threat is'..markerThreat..'at position'..repr(marker.Position))
+            enemyThreat = aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'AntiSurface', enemyIndex)
+            LOG('Best pre calculation marker threat is '..markerThreat..' at position'..repr(marker.Position))
+            LOG('Surface Threat at marker is '..enemyThreat..' at position'..repr(marker.Position))
+            if enemyThreat > 1 and markerThreat then
+                markerThreat = markerThreat / enemyThreat
+            end
+            LOG('Best marker threat is '..markerThreat..' at position'..repr(marker.Position))
             local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
 
             if markerThreat >= minThreatThreshold and markerThreat <= maxThreatThreshold then

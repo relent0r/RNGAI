@@ -47,6 +47,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 360 } },
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 50.0 } },
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
         },
@@ -78,7 +79,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
                 NumAssistees = 3,
@@ -103,7 +104,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
                 NumAssistees = 3,
@@ -130,7 +131,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
                 BuildStructures = {
@@ -148,15 +149,14 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 100.0 } },
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.1 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
                 BuildStructures = {
@@ -178,7 +178,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
                 NumAssistees = 2,
@@ -197,13 +197,12 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 100.0 } },
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.1 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
                 BuildStructures = {
@@ -257,7 +256,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = 'FACTORY',
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             Construction = {
                 BuildStructures = {
                     'T2EnergyProduction',

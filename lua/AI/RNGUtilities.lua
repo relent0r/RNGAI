@@ -453,78 +453,39 @@ function PositionInWater(pos)
 	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end
 
-function BuildMassScoutLocations(aiBrain, includeWater)
-    LOG('Starting Build Mass Scout Locations')
-    local aiBrain = self
-    local opponentStarts = {}
-    local allyStarts = {}
-    local startLocations = {}
-    local startPosMarkers = {}
 
-    if not aiBrain.InterestList then
-        aiBrain.InterestList = {}
-        aiBrain.IntelData.HiPriScouts = 0
-        aiBrain.IntelData.AirHiPriScouts = 0
-        aiBrain.IntelData.AirLowPriScouts = 0
 
-        -- Add each enemy's start location to the InterestList as a new sub table
-        aiBrain.InterestList.HighPriority = {}
-        aiBrain.InterestList.LowPriority = {}
-        aiBrain.InterestList.MustScout = {}
 
-        local myArmy = ScenarioInfo.ArmySetup[self.Name]
+function GetStartLocationMassMarkers(aiBrain, massLocations)
+    local startLocations
 
-        if ScenarioInfo.Options.TeamSpawn == 'fixed' then
-            -- Spawn locations were fixed. We know exactly where our opponents are.
-            -- Don't scout areas owned by us or our allies.
-            local numOpponents = 0
-            for i = 1, 16 do
-                local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-                local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-                if army and startPos then
-                    table.insert(startLocations, startPos)
-                end
-            end
+    for i = 1, 16 do
+        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
+        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
 
-        else -- Spawn locations were random. We don't know where our opponents are. Add all non-ally start locations to the scout list
-            local numOpponents = 0
-            for i = 1, 16 do
-                local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-                local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-
-                if army and startPos then
-                    if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
-                        table.insert(startLocations, startPos)
-                    else
-                        LOG('No Army Detected at start location')
-                    end
-                end
+        if army and startPos then
+            if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
+                allyStarts['ARMY_' .. i] = startPos
+            else
+                numOpponents = numOpponents + 1
             end
         end
-        -- From here on we must do. See RNGAI wiki for implementation details
-        local massLocations = AIGetMassMarkerLocations(aiBrain, includeWater)
-        
-        for _, start in startLocations do
-            markersStartPos = AIGetMarkersAroundLocation(aiBrain, mass, armyStart, 30)
-            for _, marker in markersStartPos do
-                table.insert(startPosMarkers, marker)
-            end
+    end
+
+    aiBrain.NumOpponents = numOpponents
+
+    -- If the start location is not ours or an ally's, it is suspicious
+    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    for _, loc in starts do
+        -- If vacant
+        if not allyStarts[loc.Name] then
+            table.insert(aiBrain.InterestList.LowPriority,
+                {
+                    Position = loc.Position,
+                    LastScouted = 0,
+                }
+            )
+            table.insert(startLocations, startPos)
         end
-        for _, massMarker in massLocations do
-            for _, startMarker in startPosMarkers do
-                if massMarker.Position == startMarker.Position then
-                    --LOG('Start position mass marker present')
-                else
-                    --LOG('Inserting Mass Marker Position : '..massMarker.Position)
-                    table.insert(aiBrain.InterestList.HighPriority,
-                            {
-                                Position = massMarker,
-                                LastScouted = 0,
-                            }
-                        )
-                end
-            end
-        end
-        aiBrain:ForkThread(self.ParseIntelThread)
     end
 end
