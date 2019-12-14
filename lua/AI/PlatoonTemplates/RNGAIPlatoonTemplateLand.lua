@@ -145,13 +145,14 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Large T2',
     Plan = 'AttackForceAI', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * categories.TECH2 - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
+        { categories.MOBILE * categories.LAND * categories.TECH2 - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT - categories.STEALTHFIELD, -- Type of units.
           6, -- Min number of units.
           14, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
           { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.MOBILE * categories.LAND * categories.TECH2 * categories.STEALTHFIELD, 0, 1, 'guard', 'none'},
     },
 }
 
