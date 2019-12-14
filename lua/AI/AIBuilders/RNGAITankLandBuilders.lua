@@ -413,7 +413,7 @@ BuilderGroup {
             --SelfThreat = '',
             --FindHighestThreat ='',
             --ThreatThreshold = '',
-            AvoidBases = false,
+            AvoidBases = true,
             AvoidBasesRadius = 30,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
