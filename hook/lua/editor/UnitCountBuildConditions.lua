@@ -70,7 +70,7 @@ end
 function CanBuildOnMassLessThanLocationDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum , builderName)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
-        WARN('*AI WARNING: Invalid location - ' .. locationType)
+        --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
     local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
@@ -89,7 +89,7 @@ end
 function CanBuildOnMassGreaterThanLocationDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum , builderName)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
-        WARN('*AI WARNING: Invalid location - ' .. locationType)
+        --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
     local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
@@ -145,7 +145,7 @@ end
 function CanBuildOnHydroLessThanDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
-        WARN('*AI WARNING: Invalid location - ' .. locationType)
+        --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
     local position = engineerManager:GetLocationCoords()

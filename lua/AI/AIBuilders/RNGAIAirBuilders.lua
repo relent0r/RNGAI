@@ -202,7 +202,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Air Mercy BaseMilitaryArea',
+        BuilderName = 'RNGAI Air Mercy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI MercyAttack',
         Priority = 960,
         InstanceCount = 1,
@@ -215,8 +215,8 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.COMMAND - categories.EXPERIMENTAL }},
-            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, categories.daa0206 } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseEnemyArea, 'LocationType', 0, categories.COMMAND - categories.EXPERIMENTAL }},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.daa0206 } },
         },
     },
 }

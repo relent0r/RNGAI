@@ -928,6 +928,7 @@ ACUBaseTemplate =
             {
             'T1LandFactory',
             'T1EnergyProduction',
+            'T1AirFactory',
             'T1Resource',
             },
             { -29, -30, 0 },
@@ -1848,6 +1849,7 @@ ACUBaseTemplate =
             {
             'T1LandFactory',
             'T1EnergyProduction',
+            'T1AirFactory',
             'T1Resource',
             },
             { -29, -30, 0 },
@@ -2768,6 +2770,7 @@ ACUBaseTemplate =
             {
             'T1LandFactory',
             'T1EnergyProduction',
+            'T1AirFactory',
             'T1Resource',
             },
             { -29, -30, 0 },
