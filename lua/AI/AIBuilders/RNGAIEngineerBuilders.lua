@@ -288,7 +288,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilder',
         PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 980,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = {
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE}},
             },

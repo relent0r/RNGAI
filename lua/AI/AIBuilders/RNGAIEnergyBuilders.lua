@@ -156,7 +156,7 @@ BuilderGroup {
             AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             DesiresAssist = true,
             Construction = {
-                NumAssistees = 2,
+                NumAssistees = 5,
                 BuildStructures = {
                     'T3EnergyProduction',
                 },

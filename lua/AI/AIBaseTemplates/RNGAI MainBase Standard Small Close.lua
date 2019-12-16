@@ -58,11 +58,14 @@ BaseBuilderTemplate {
         'RNGAI Factory Builder Land',
 
         -- Land Factory Formers --
-        'RNGAI T1 Upgrade Builders',
+        'RNGAI Land Upgrade Builders',
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
         'RNGAI Air Staging Platform',
+
+        -- Air Factory Formers --
+        'RNGAI Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
