@@ -162,26 +162,30 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'uel0201', 1, 4, 'Attack', 'none' },		-- Striker Medium Tank
-			{ 'uel0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
          },
         Aeon = {
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
-			{ 'ual0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
         },
         Cybran = {
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
-			{ 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+            { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
+            { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
+            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
         },
         Seraphim = {
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
-			{ 'xsl0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
         },
     }
