@@ -113,7 +113,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconIncome',  { 0.7, 5.0}},
+            { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.08, 0.10}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
@@ -224,7 +224,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = {            
-            { MIBC, 'GreaterThanGameTime', { 90 } },
+            { MIBC, 'GreaterThanGameTime', { 70 } },
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},

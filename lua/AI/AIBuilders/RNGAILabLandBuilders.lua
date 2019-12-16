@@ -32,7 +32,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNGAI Lab Early Game',
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',
+        PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
         Priority = 1000,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 180 } },

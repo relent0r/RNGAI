@@ -31,6 +31,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI T1 Mass Raiders Mini',
+    Plan = 'MassRaidRNG',    
+    GlobalSquads = {
+        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 2, 'attack', 'none' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1 Mass Raiders Small',
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
