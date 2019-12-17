@@ -338,7 +338,7 @@ BuilderGroup {
     },
 }
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Land Upgrade Builders',
+    BuilderGroupName = 'RNGAI Air Upgrade Builders',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Air Factory Upgrade',
