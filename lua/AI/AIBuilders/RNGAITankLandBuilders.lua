@@ -100,7 +100,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 1000,
+        Priority = 950,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
@@ -113,7 +113,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Tank Enemy Nearby',
         PlatoonTemplate = 'T2LandDFTank',
-        Priority = 1000,
+        Priority = 950,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
