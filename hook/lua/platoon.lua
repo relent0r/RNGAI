@@ -927,6 +927,7 @@ Platoon = Class(oldPlatoon) {
                                 buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                             end
                         else
+                            LOG('Executing buildFunction')
                             buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                         end
                     else
@@ -1007,6 +1008,7 @@ Platoon = Class(oldPlatoon) {
         eng.ProcessBuildDone = false
         IssueClearCommands({eng})
         local commandDone = false
+
         while not eng.Dead and not commandDone and table.getn(eng.EngineerBuildQueue) > 0  do
             local whatToBuild = eng.EngineerBuildQueue[1][1]
             local buildLocation = BuildToNormalLocation(eng.EngineerBuildQueue[1][2])
@@ -1032,12 +1034,14 @@ Platoon = Class(oldPlatoon) {
                     -- check to see if we can repair
                     if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
                         -- otherwise, go ahead and build the next structure there
+                        LOG('BuildStructure Triggered')
                         aiBrain:BuildStructure(eng, whatToBuild, NormalToBuildLocation(buildLocation), buildRelative)
                         if not eng.NotBuildingThread then
                             eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                         end
                     end
                 end
+                LOG('Build commandDone set true')
                 commandDone = true
             else
                 -- we can't move there, so remove it from our build queue

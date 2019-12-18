@@ -83,16 +83,28 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T1 Reaction Tanks',
+    BuilderGroupName = 'RNGAI Reaction Tanks',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 1000,
+        Priority = 950,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.2, 0.4 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Tank Enemy Nearby',
+        PlatoonTemplate = 'T2LandDFTank',
+        Priority = 950,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -328,8 +340,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND INDIRECTFIRE',
                 'MOBILE LAND DIRECTFIRE',
+                'MOBILE LAND INDIRECTFIRE',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',
@@ -357,8 +369,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND INDIRECTFIRE',
                 'MOBILE LAND DIRECTFIRE',
+                'MOBILE LAND INDIRECTFIRE',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',
