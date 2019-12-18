@@ -1019,7 +1019,7 @@ Platoon = Class(oldPlatoon) {
                 end
 
                 if not eng.NotBuildingThread then
-                    eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuilding)
+                    eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
 
                 local engpos = eng:GetPosition()
@@ -1034,7 +1034,7 @@ Platoon = Class(oldPlatoon) {
                         -- otherwise, go ahead and build the next structure there
                         aiBrain:BuildStructure(eng, whatToBuild, NormalToBuildLocation(buildLocation), buildRelative)
                         if not eng.NotBuildingThread then
-                            eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuilding)
+                            eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                         end
                     end
                 end
@@ -1044,7 +1044,26 @@ Platoon = Class(oldPlatoon) {
                 table.remove(eng.EngineerBuildQueue, 1)
             end
         end
-
+        LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
+        if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 then
+            LOG('Starting RepeatBuild')
+            local distance = platoon.PlatoonData.Construction.Distance
+            local type = platoon.PlatoonData.Construction.Type
+            if platoon.PlatoonData.Construction.RepeatBuild and platoon.PlanName then
+                LOG('Repeat Build is set')
+                if type == 'Mass' and distance then
+                    LOG('Type is Mass, setting ai plan')
+                    massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
+                    LOG('Mass Marker Returned is'..repr(massMarker))
+                    if massMarker[1] and VDist3( massMarker[1], position ) < distance then
+                        platoon:SetAIPlan( platoon.PlanName, aiBrain)
+                        return
+                    end
+                else
+                    WARN('Invalid Construction Type or Distance, Expected : Mass, number')
+                end
+            end
+        end
         -- final check for if we should disband
         if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
@@ -1055,6 +1074,46 @@ Platoon = Class(oldPlatoon) {
             return
         end
         if eng then eng.ProcessBuild = nil end
+    end,
+
+    WatchForNotBuildingRNG = function(eng)
+        WaitTicks(5)
+        local aiBrain = eng:GetAIBrain()
+
+        --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
+        while not eng.Dead and (eng.GoingHome or eng:IsUnitState("Building") or
+                  eng:IsUnitState("Attacking") or eng:IsUnitState("Repairing") or eng:IsUnitState("Guarding") or
+                  eng:IsUnitState("Reclaiming") or eng:IsUnitState("Capturing") or eng.ProcessBuild != nil
+                  or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Moving") or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing")
+                 ) do
+            LOG('Engineer is doing stuff, wait 3 seconds')
+            WaitSeconds(3)
+
+            --if eng.CDRHome then
+            --  LOG('*AI DEBUG: Commander waiting for building.')
+            --  eng:PrintCommandQueue()
+            --end
+            --if eng.GoingHome then
+            --  LOG('*AI DEBUG: Commander waiting for building: return home.')
+            --end
+            --if eng.UnitBeingBuiltBehavior then
+            --  LOG('*AI DEBUG: Commander waiting for building: unit being built.')
+            --end
+        end
+
+        --if not eng.CDRHome and not eng:IsIdleState() then LOG('Error in idlestate...' .. eng.Sync.id) end
+        --if eng.CDRHome then
+        --  LOG('*AI DEBUG: After Commander wait for building.')
+        --end
+
+        eng.NotBuildingThread = nil
+        if not eng.Dead and eng:IsIdleState() and table.getn(eng.EngineerBuildQueue) != 0 and eng.PlatoonHandle then
+            eng.PlatoonHandle.SetupEngineerCallbacks(eng)
+            if not eng.ProcessBuild then
+                LOG('Forking Process Build Command with table remove')
+                eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommand, true)
+            end
+        end
     end,
 
     MassRaidRNG = function(self)
