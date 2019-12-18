@@ -1090,7 +1090,6 @@ Platoon = Class(oldPlatoon) {
                   eng:IsUnitState("Reclaiming") or eng:IsUnitState("Capturing") or eng.ProcessBuild != nil
                   or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Moving") or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing")
                  ) do
-            LOG('Engineer is doing stuff, wait 3 seconds')
             WaitSeconds(3)
 
             --if eng.CDRHome then
