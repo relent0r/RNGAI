@@ -202,7 +202,7 @@ BuilderGroup {
             -- Do we need additional conditions to build it ?
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.ENERGYPRODUCTION } },
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconTrend', { 0.4, 8.0 }}, -- relative income
+            { EBC, 'GreaterThanEconTrend', { 0.4, 50.0 }}, -- relative income
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             { MIBC, 'GreaterThanGameTime', { 480 } },
