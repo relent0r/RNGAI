@@ -43,7 +43,7 @@ BaseBuilderTemplate {
         'RNGAI LabLandBuilder',
         'RNGAI TankLandBuilder',
         'RNGAI Land AA 2',
-        'RNGAI T1 Reaction Tanks',
+        'RNGAI Reaction Tanks',
         'RNGAI T2 TankLandBuilder',
         'RNGAI T3 AttackLandBuilder',
 
