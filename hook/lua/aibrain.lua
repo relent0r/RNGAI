@@ -152,10 +152,21 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    PickEnemy = function(self)
+        per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
+        while true do
+            if per == 'RNGStandard' or per == 'RNGStandardCheat' then
+                self:PickEnemyLogicRNG()
+            else
+                self:PickEnemyLogic()
+            end
+            WaitSeconds(120)
+        end
+    end,
+
     PickEnemyLogicRNG = function(self)
         local armyStrengthTable = {}
         local selfIndex = self:GetArmyIndex()
-        local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
 
         for _, v in ArmyBrains do
             local insertTable = {
@@ -172,24 +183,22 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
                 insertTable.Enemy = false
             end
-            local ecoThreat = 0
+            
             local acuPos = {}
             -- Gather economy information of army to guage economy value of the target
-            if massLocations then
-                for _,marker in massLocations do
-                    local markerThreat
-                
-                    markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, 'Economy', enemyIndex)
-                    if markerThreat then
-                        ecoThreat = economicThreat + markerThreat
-                    else
-                        ecoThreat = economicThreat + 1
-                    end
-                end
+            local enemyIndex = v:GetArmyIndex()
+            local startX, startZ = self:GetArmyStartPos()
+            local ecoThreat = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Economy', enemyIndex)
+            LOG('Economy Threat for army :'..enemyIndex..' is '..ecoThreat)
+            if not ecoThreat then
+                ecoThreat = EconomicThreat + 1
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
-            if aiBrain:GetLastACUPosition(enemyIndex) then
-                acuPos = aiBrain:GetLastACUPosition(enemyIndex)
+            if RUtils.GetLastACUPosition(self, enemyIndex) then
+                acuPos = RUtils.GetLastACUPosition(enemyIndex)
+                LOG('ACU Position is has data')
+            else
+                LOG('GetLastACUPosition is false')
             end
             
             insertTable.EconomicThreat = ecoThreat
@@ -235,13 +244,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     local distanceWeight = 0.1
                     local distance = VDist3(self:GetStartVector3f(), v.Position)
                     local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
-
+                    LOG('Strength is :'..v.Strength)
+                    LOG('Threat Weight is :'..threatWeight)
                     if not enemy or threatWeight > enemyStrength then
                         enemy = v.Brain
+                        enemyStrength = threatWeight
+                        LOG('Enemy Strength is'..enemyStrength)
                     end
                 end
 
                 if enemy then
+                    LOG('Enemy is :'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 end
             end
@@ -252,8 +265,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.InterestList or not self.InterestList.MustScout then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
-        aiBrain.EnemyIntel = {}
-        aiBrain.EnemyIntel.ACU = {}
+        self.EnemyIntel = {}
+        self.EnemyIntel.ACU = {}
         
         while true do
             local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
@@ -304,4 +317,6 @@ AIBrain = Class(RNGAIBrainClass) {
             WaitSeconds(5)
         end
     end,
+
+    
 }
