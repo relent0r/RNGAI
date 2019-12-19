@@ -152,4 +152,156 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    PickEnemyLogicRNG = function(self)
+        local armyStrengthTable = {}
+        local selfIndex = self:GetArmyIndex()
+        local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
+
+        for _, v in ArmyBrains do
+            local insertTable = {
+                Enemy = true,
+                Strength = 0,
+                Position = false,
+                EconomicThreat = 0,
+                Brain = v,
+            }
+            -- Share resources with friends but don't regard their strength
+            if IsAlly(selfIndex, v:GetArmyIndex()) then
+                self:SetResourceSharing(true)
+                insertTable.Enemy = false
+            elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
+                insertTable.Enemy = false
+            end
+            local ecoThreat = 0
+            local acuPos = {}
+            -- Gather economy information of army to guage economy value of the target
+            if massLocations then
+                for _,marker in massLocations do
+                    local markerThreat
+                
+                    markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, 'Economy', enemyIndex)
+                    if markerThreat then
+                        ecoThreat = economicThreat + markerThreat
+                    else
+                        ecoThreat = economicThreat + 1
+                    end
+                end
+            end
+            -- Doesn't exist yet!!. Check if the ACU's last position is known.
+            if aiBrain:GetLastACUPosition(enemyIndex) then
+                acuPos = aiBrain:GetLastACUPosition(enemyIndex)
+            end
+            
+            insertTable.EconomicThreat = ecoThreat
+            insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(2, true, 'Structures', v:GetArmyIndex())
+            armyStrengthTable[v:GetArmyIndex()] = insertTable
+        end
+
+        local allyEnemy = self:GetAllianceEnemy(armyStrengthTable)
+        if allyEnemy  then
+            self:SetCurrentEnemy(allyEnemy)
+        else
+            local findEnemy = false
+            if not self:GetCurrentEnemy() then
+                findEnemy = true
+            else
+                local cIndex = self:GetCurrentEnemy():GetArmyIndex()
+                -- If our enemy has been defeated or has less than 20 strength, we need a new enemy
+                if self:GetCurrentEnemy():IsDefeated() or armyStrengthTable[cIndex].Strength < 20 then
+                    findEnemy = true
+                end
+            end
+            if findEnemy then
+                local enemyStrength = false
+                local enemy = false
+
+                for k, v in armyStrengthTable do
+                    -- Dont' target self
+                    if k == selfIndex then
+                        continue
+                    end
+
+                    -- Ignore allies
+                    if not v.Enemy then
+                        continue
+                    end
+
+                    -- If we have a better candidate; ignore really weak enemies
+                    if enemy and v.Strength < 20 then
+                        continue
+                    end
+
+                    -- The closer targets are worth more because then we get their mass spots
+                    local distanceWeight = 0.1
+                    local distance = VDist3(self:GetStartVector3f(), v.Position)
+                    local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
+
+                    if not enemy or threatWeight > enemyStrength then
+                        enemy = v.Brain
+                    end
+                end
+
+                if enemy then
+                    self:SetCurrentEnemy(enemy)
+                end
+            end
+        end
+    end,
+
+    ParseIntelThreadRNG = function(self)
+        if not self.InterestList or not self.InterestList.MustScout then
+            error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
+        end
+        aiBrain.EnemyIntel = {}
+        aiBrain.EnemyIntel.ACU = {}
+        
+        while true do
+            local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            for _, struct in structures do
+                local dupe = false
+                local newPos = {struct[1], 0, struct[2]}
+
+                for _, loc in self.InterestList.HighPriority do
+                    if VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < 10000 then
+                        dupe = true
+                        break
+                    end
+                end
+
+                if not dupe then
+                    -- Is it in the low priority list?
+                    for i = 1, table.getn(self.InterestList.LowPriority) do
+                        local loc = self.InterestList.LowPriority[i]
+                        if VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < 10000 then
+                            -- Found it in the low pri list. Remove it so we can add it to the high priority list.
+                            table.remove(self.InterestList.LowPriority, i)
+                            break
+                        end
+                    end
+
+                    table.insert(self.InterestList.HighPriority,
+                        {
+                            Position = newPos,
+                            LastScouted = GetGameTimeSeconds(),
+                        }
+                    )
+
+                    -- Sort the list based on low long it has been since it was scouted
+                    table.sort(self.InterestList.HighPriority, function(a, b)
+                        if a.LastScouted == b.LastScouted then
+                            local MainPos = self.BuilderManagers.MAIN.Position
+                            local distA = VDist2(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
+                            local distB = VDist2(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
+
+                            return distA < distB
+                        else
+                            return a.LastScouted < b.LastScouted
+                        end
+                    end)
+                end
+            end
+
+            WaitSeconds(5)
+        end
+    end,
 }
