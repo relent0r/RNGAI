@@ -5,6 +5,14 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
+    OnCreateAI = function(self, planName)
+        RNGAIBrainClass.OnCreateAI(self, planName)
+        local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
+        if string.find(per, 'RNG') then
+            self.RNG = true
+        end
+    end,
+
     BuildScoutLocationsRNG = function(self)
         local aiBrain = self
         local opponentStarts = {}
@@ -153,9 +161,9 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     PickEnemy = function(self)
-        per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
+        RNGAIBrainClass.PickEnemy(self)
         while true do
-            if per == 'RNGStandard' or per == 'RNGStandardCheat' then
+            if self.RNG then
                 self:PickEnemyLogicRNG()
             else
                 self:PickEnemyLogic()
