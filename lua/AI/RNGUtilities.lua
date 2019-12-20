@@ -489,3 +489,19 @@ function GetStartLocationMassMarkers(aiBrain, massLocations)
         end
     end
 end
+
+function GetLastACUPosition(aiBrain, enemyIndex)
+    local acuPos = nil
+    if aiBrain.EnemyIntel.ACU then
+        for _, v in aiBrain.EnemyIntel.ACU do
+            if v.ArmyIndex == enemyIndex then
+                acuPos = v.Position
+            else
+                acuPos = false
+            end
+        end
+    else
+        acuPos = false
+    end
+    return acuPos
+end

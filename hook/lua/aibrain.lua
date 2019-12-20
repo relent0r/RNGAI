@@ -2,8 +2,18 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
-RNGAIBrainClass = AIBrain
+local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
+
+    OnCreateAI = function(self, planName)
+        RNGAIBrainClass.OnCreateAI(self, planName)
+        local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
+        LOG('Oncreate')
+        if string.find(per, 'RNG') then
+            LOG('This is RNG')
+            self.RNG = true
+        end
+    end,
 
     BuildScoutLocationsRNG = function(self)
         local aiBrain = self
@@ -152,4 +162,226 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    PickEnemy = function(self)
+        LOG('Pick enemy')
+        RNGAIBrainClass.OnCreateAI(self)
+        --RNGAIBrainClass.PickEnemy(self)
+        LOG('Pre True'..repr(self.RNG))
+        while true do
+            LOG('self.rng is'..repr(self.RNG))
+            if self.RNG then
+                LOG('Selecting RNG')
+                self:PickEnemyLogicRNG()
+            else
+                self:PickEnemyLogic()
+            end
+            WaitSeconds(120)
+        end
+    end,
+
+    PickEnemyLogicRNG = function(self)
+        local armyStrengthTable = {}
+        local selfIndex = self:GetArmyIndex()
+
+        for _, v in ArmyBrains do
+            local insertTable = {
+                Enemy = true,
+                Strength = 0,
+                Position = false,
+                EconomicThreat = 0,
+                Brain = v,
+            }
+            -- Share resources with friends but don't regard their strength
+            if IsAlly(selfIndex, v:GetArmyIndex()) then
+                self:SetResourceSharing(true)
+                insertTable.Enemy = false
+            elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
+                insertTable.Enemy = false
+            end
+            
+            local acuPos = {}
+            -- Gather economy information of army to guage economy value of the target
+            local enemyIndex = v:GetArmyIndex()
+            local startX, startZ = self:GetArmyStartPos()
+            local ecoThreat = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Economy', enemyIndex)
+            LOG('Economy Threat for army :'..enemyIndex..' is '..ecoThreat)
+            if not ecoThreat then
+                ecoThreat = EconomicThreat + 1
+            end
+            -- Doesn't exist yet!!. Check if the ACU's last position is known.
+            if RUtils.GetLastACUPosition(self, enemyIndex) then
+                acuPos = RUtils.GetLastACUPosition(enemyIndex)
+                LOG('ACU Position is has data')
+            else
+                LOG('GetLastACUPosition is false')
+            end
+            
+            insertTable.EconomicThreat = ecoThreat
+            if insertTable.Enemy then
+                insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
+            else
+                insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
+                insertTable.Strength = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Structures', v:GetArmyIndex())
+            end
+            LOG('First Pass Strength is :'..insertTable.Strength)
+            armyStrengthTable[v:GetArmyIndex()] = insertTable
+        end
+
+        local allyEnemy = self:GetAllianceEnemy(armyStrengthTable)
+        if allyEnemy  then
+            self:SetCurrentEnemy(allyEnemy)
+        else
+            local findEnemy = false
+            if not self:GetCurrentEnemy() then
+                findEnemy = true
+            else
+                local cIndex = self:GetCurrentEnemy():GetArmyIndex()
+                -- If our enemy has been defeated or has less than 20 strength, we need a new enemy
+                if self:GetCurrentEnemy():IsDefeated() or armyStrengthTable[cIndex].Strength < 20 then
+                    findEnemy = true
+                end
+            end
+            local enemyTable = {}
+            if findEnemy then
+                local enemyStrength = false
+                local enemy = false
+
+                for k, v in armyStrengthTable do
+                    -- Dont' target self
+                    if k == selfIndex then
+                        continue
+                    end
+
+                    -- Ignore allies
+                    if not v.Enemy then
+                        continue
+                    end
+
+                    -- If we have a better candidate; ignore really weak enemies
+                    if enemy and v.Strength < 20 then
+                        continue
+                    end
+
+                    if v.Strength == 0 then
+                        name = v.Brain.Nickname
+                        LOG('Name is'..name)
+                        LOG('v.strenth is 0')
+                        if name ~= 'civilian' then
+                            LOG('Inserted Name is '..name)
+                            table.insert(enemyTable, v.Brain)
+                        end
+                        continue
+                    end
+
+                    -- The closer targets are worth more because then we get their mass spots
+                    local distanceWeight = 0.1
+                    local distance = VDist3(self:GetStartVector3f(), v.Position)
+                    local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
+                    LOG('armyStrengthTable Strength is :'..v.Strength)
+                    LOG('Threat Weight is :'..threatWeight)
+                    if not enemy or threatWeight > enemyStrength then
+                        enemy = v.Brain
+                        enemyStrength = threatWeight
+                        LOG('Enemy Strength is'..enemyStrength)
+                    end
+                end
+
+                if enemy then
+                    LOG('Enemy is :'..enemy.Name)
+                    self:SetCurrentEnemy(enemy)
+                else
+                    local num = table.getn(enemyTable)
+                    LOG('Table number is'..num)
+                    local ran = math.random(num)
+                    LOG('Random Number is'..ran)
+                    enemy = enemyTable[ran]
+                    LOG('Random Enemy is'..enemy.Name)
+                    self:SetCurrentEnemy(enemy)
+                end
+            end
+        end
+    end,
+
+    ParseIntelThreadRNG = function(self)
+        if not self.InterestList or not self.InterestList.MustScout then
+            error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
+        end
+        self.EnemyIntel = {}
+        self.EnemyIntel.ACU = {}
+        
+        while true do
+            local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            for _, struct in structures do
+                local dupe = false
+                local newPos = {struct[1], 0, struct[2]}
+
+                for _, loc in self.InterestList.HighPriority do
+                    if VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < 10000 then
+                        dupe = true
+                        break
+                    end
+                end
+
+                if not dupe then
+                    -- Is it in the low priority list?
+                    for i = 1, table.getn(self.InterestList.LowPriority) do
+                        local loc = self.InterestList.LowPriority[i]
+                        if VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < 10000 then
+                            -- Found it in the low pri list. Remove it so we can add it to the high priority list.
+                            table.remove(self.InterestList.LowPriority, i)
+                            break
+                        end
+                    end
+
+                    table.insert(self.InterestList.HighPriority,
+                        {
+                            Position = newPos,
+                            LastScouted = GetGameTimeSeconds(),
+                        }
+                    )
+
+                    -- Sort the list based on low long it has been since it was scouted
+                    table.sort(self.InterestList.HighPriority, function(a, b)
+                        if a.LastScouted == b.LastScouted then
+                            local MainPos = self.BuilderManagers.MAIN.Position
+                            local distA = VDist2(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
+                            local distB = VDist2(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
+
+                            return distA < distB
+                        else
+                            return a.LastScouted < b.LastScouted
+                        end
+                    end)
+                end
+            end
+
+            WaitSeconds(5)
+        end
+    end,
+
+    GetAllianceEnemyRNG = function(self, strengthTable)
+        local returnEnemy = false
+        local startX, startZ = self:GetArmyStartPos()
+        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 2, true, 'Structures', self:GetArmyIndex())
+        for _, v in strengthTable do
+            -- It's an enemy, ignore
+            if v.Enemy then
+                continue
+            end
+
+            -- Ally too weak
+            if v.Strength < highStrength then
+                continue
+            end
+
+            -- If the brain has an enemy, it's our new enemy
+            local enemy = v.Brain:GetCurrentEnemy()
+            if enemy and not enemy:IsDefeated() then
+                highStrength = v.Strength
+                returnEnemy = v.Brain:GetCurrentEnemy()
+            end
+        end
+
+        return returnEnemy
+    end,
 }

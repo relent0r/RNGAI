@@ -116,7 +116,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Medium',
-    Plan = 'AttackForceAI', -- The platoon function to use.
+    Plan = 'AttackForceAIRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
           4, -- Min number of units.
@@ -134,7 +134,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Large',
-    Plan = 'AttackForceAI', -- The platoon function to use.
+    Plan = 'AttackForceAIRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
           8, -- Min number of units.
@@ -153,7 +153,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Large T2',
-    Plan = 'AttackForceAI', -- The platoon function to use.
+    Plan = 'AttackForceAIRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.TECH2 - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT - categories.STEALTHFIELD, -- Type of units.
           6, -- Min number of units.

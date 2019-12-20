@@ -73,19 +73,7 @@ BuilderGroup {
         Priority = 790,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 MML Defense Response',
-        PlatoonTemplate = 'T2LandArtillery',
-        Priority = 790,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY LAND TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -95,29 +83,16 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Reaction Tanks',
+    BuilderGroupName = 'RNGAI T1 Reaction Tanks',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 950,
+        Priority = 1000,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.2, 0.4 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Tank Enemy Nearby',
-        PlatoonTemplate = 'T2LandDFTank',
-        Priority = 950,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -353,8 +328,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND DIRECTFIRE',
                 'MOBILE LAND INDIRECTFIRE',
+                'MOBILE LAND DIRECTFIRE',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',
@@ -382,8 +357,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND DIRECTFIRE',
                 'MOBILE LAND INDIRECTFIRE',
+                'MOBILE LAND DIRECTFIRE',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',

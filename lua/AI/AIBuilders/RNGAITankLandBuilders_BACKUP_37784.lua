@@ -117,7 +117,11 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
+<<<<<<< HEAD
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
+=======
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.8 }},
+>>>>>>> experimental
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

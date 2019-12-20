@@ -117,7 +117,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -353,8 +353,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND DIRECTFIRE',
                 'MOBILE LAND INDIRECTFIRE',
+                'MOBILE LAND DIRECTFIRE',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',
@@ -382,8 +382,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND DIRECTFIRE',
                 'MOBILE LAND INDIRECTFIRE',
+                'MOBILE LAND DIRECTFIRE',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',
