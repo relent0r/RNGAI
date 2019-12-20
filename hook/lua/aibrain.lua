@@ -210,7 +210,13 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             
             insertTable.EconomicThreat = ecoThreat
-            insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(2, true, 'Structures', v:GetArmyIndex())
+            if insertTable.Enemy then
+                insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
+            else
+                insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
+                insertTable.Strength = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Structures', v:GetArmyIndex())
+            end
+            LOG('First Pass Strength is :'..insertTable.Strength)
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
 
@@ -252,7 +258,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local distanceWeight = 0.1
                     local distance = VDist3(self:GetStartVector3f(), v.Position)
                     local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
-                    LOG('Strength is :'..v.Strength)
+                    LOG('armyStrengthTable Strength is :'..v.Strength)
                     LOG('Threat Weight is :'..threatWeight)
                     if not enemy or threatWeight > enemyStrength then
                         enemy = v.Brain
@@ -326,5 +332,29 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    
+    GetAllianceEnemyRNG = function(self, strengthTable)
+        local returnEnemy = false
+        local startX, startZ = self:GetArmyStartPos()
+        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 2, true, 'Structures', self:GetArmyIndex())
+        for _, v in strengthTable do
+            -- It's an enemy, ignore
+            if v.Enemy then
+                continue
+            end
+
+            -- Ally too weak
+            if v.Strength < highStrength then
+                continue
+            end
+
+            -- If the brain has an enemy, it's our new enemy
+            local enemy = v.Brain:GetCurrentEnemy()
+            if enemy and not enemy:IsDefeated() then
+                highStrength = v.Strength
+                returnEnemy = v.Brain:GetCurrentEnemy()
+            end
+        end
+
+        return returnEnemy
+    end,
 }
