@@ -98,15 +98,15 @@ BaseBuilderTemplate {
             SCU = 3,
         },
         FactoryCount = {
-            Land = 12,
+            Land = 15,
             Air = 4,
             Sea = 0,
             Gate = 1,
         },
         MassToFactoryValues = {
             T1Value = 5,
-            T2Value = 14,
-            T3Value = 21,
+            T2Value = 11,
+            T3Value = 19,
         },
 
     },

@@ -1513,7 +1513,7 @@ Platoon = Class(oldPlatoon) {
         if self.UsingTransport then
             return
         end
-        local platUnits = self:GetPlatoonUnits(self)
+        local platUnits = self:GetPlatoonUnits()
         local platCount = 0
 
         for _, u in platUnits do
@@ -1522,7 +1522,7 @@ Platoon = Class(oldPlatoon) {
             end
         end
 
-        if (maxMergeNumber and platcount > maxMergeNumber) or platCount < 1 then
+        if (maxMergeNumber and platCount > maxMergeNumber) or platCount < 1 then
             return
         end 
 

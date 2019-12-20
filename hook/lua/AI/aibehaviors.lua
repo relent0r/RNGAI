@@ -100,7 +100,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'defense'
         and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'rushnaval'
         then
-        maxRadius = 220
+        maxRadius = 160
     end
 
     -- Take away engineers too
