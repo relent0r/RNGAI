@@ -2,13 +2,15 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
-RNGAIBrainClass = AIBrain
+local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
     OnCreateAI = function(self, planName)
         RNGAIBrainClass.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
+        LOG('Oncreate')
         if string.find(per, 'RNG') then
+            LOG('This is RNG')
             self.RNG = true
         end
     end,
@@ -161,9 +163,14 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     PickEnemy = function(self)
-        RNGAIBrainClass.PickEnemy(self)
+        LOG('Pick enemy')
+        RNGAIBrainClass.OnCreateAI(self)
+        --RNGAIBrainClass.PickEnemy(self)
+        LOG('Pre True'..repr(self.RNG))
         while true do
+            LOG('self.rng is'..repr(self.RNG))
             if self.RNG then
+                LOG('Selecting RNG')
                 self:PickEnemyLogicRNG()
             else
                 self:PickEnemyLogic()
@@ -234,6 +241,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     findEnemy = true
                 end
             end
+            local enemyTable = {}
             if findEnemy then
                 local enemyStrength = false
                 local enemy = false
@@ -254,6 +262,17 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
 
+                    if v.Strength == 0 then
+                        name = v.Brain.Nickname
+                        LOG('Name is'..name)
+                        LOG('v.strenth is 0')
+                        if name ~= 'civilian' then
+                            LOG('Inserted Name is '..name)
+                            table.insert(enemyTable, v.Brain)
+                        end
+                        continue
+                    end
+
                     -- The closer targets are worth more because then we get their mass spots
                     local distanceWeight = 0.1
                     local distance = VDist3(self:GetStartVector3f(), v.Position)
@@ -269,6 +288,14 @@ AIBrain = Class(RNGAIBrainClass) {
 
                 if enemy then
                     LOG('Enemy is :'..enemy.Name)
+                    self:SetCurrentEnemy(enemy)
+                else
+                    local num = table.getn(enemyTable)
+                    LOG('Table number is'..num)
+                    local ran = math.random(num)
+                    LOG('Random Number is'..ran)
+                    enemy = enemyTable[ran]
+                    LOG('Random Enemy is'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 end
             end
