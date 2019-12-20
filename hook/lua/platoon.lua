@@ -1513,7 +1513,7 @@ Platoon = Class(oldPlatoon) {
         if self.UsingTransport then
             return
         end
-        local platUnits = GetPlatoonUnits(self)
+        local platUnits = self:GetPlatoonUnits(self)
         local platCount = 0
 
         for _, u in platUnits do

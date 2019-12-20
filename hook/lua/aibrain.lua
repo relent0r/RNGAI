@@ -202,7 +202,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local acuPos = {}
             -- Gather economy information of army to guage economy value of the target
             local enemyIndex = v:GetArmyIndex()
-            local startX, startZ = self:GetArmyStartPos()
+            local startX, startZ = v:GetArmyStartPos()
             local ecoThreat = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Economy', enemyIndex)
             --LOG('Economy Threat for army :'..enemyIndex..' is '..ecoThreat)
             if not ecoThreat then
@@ -219,11 +219,12 @@ AIBrain = Class(RNGAIBrainClass) {
             insertTable.EconomicThreat = ecoThreat
             if insertTable.Enemy then
                 insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
+                LOG('First Enemy Pass Strength is :'..insertTable.Strength)
             else
                 insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
-                insertTable.Strength = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Structures', v:GetArmyIndex())
+                insertTable.Strength = self:GetThreatAtPosition({startX, 0 ,startZ}, 1, true, 'Structures', v:GetArmyIndex())
+                LOG('First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..startX..':'..startZ)
             end
-            --LOG('First Pass Strength is :'..insertTable.Strength)
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
 
@@ -363,7 +364,7 @@ AIBrain = Class(RNGAIBrainClass) {
     GetAllianceEnemyRNG = function(self, strengthTable)
         local returnEnemy = false
         local startX, startZ = self:GetArmyStartPos()
-        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Structures', self:GetArmyIndex())
+        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 1, true, 'Structures', self:GetArmyIndex())
         LOG('High Ally Strength is'..highStrength)
         for _, v in strengthTable do
             -- It's an enemy, ignore
