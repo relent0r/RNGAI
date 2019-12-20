@@ -204,7 +204,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local enemyIndex = v:GetArmyIndex()
             local startX, startZ = self:GetArmyStartPos()
             local ecoThreat = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Economy', enemyIndex)
-            LOG('Economy Threat for army :'..enemyIndex..' is '..ecoThreat)
+            --LOG('Economy Threat for army :'..enemyIndex..' is '..ecoThreat)
             if not ecoThreat then
                 ecoThreat = EconomicThreat + 1
             end
@@ -223,12 +223,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
                 insertTable.Strength = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Structures', v:GetArmyIndex())
             end
-            LOG('First Pass Strength is :'..insertTable.Strength)
+            --LOG('First Pass Strength is :'..insertTable.Strength)
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
 
-        local allyEnemy = self:GetAllianceEnemy(armyStrengthTable)
+        local allyEnemy = self:GetAllianceEnemyRNG(armyStrengthTable)
         if allyEnemy  then
+            LOG('Ally Enemy is true')
             self:SetCurrentEnemy(allyEnemy)
         else
             local findEnemy = false
@@ -362,7 +363,8 @@ AIBrain = Class(RNGAIBrainClass) {
     GetAllianceEnemyRNG = function(self, strengthTable)
         local returnEnemy = false
         local startX, startZ = self:GetArmyStartPos()
-        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 2, true, 'Structures', self:GetArmyIndex())
+        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Structures', self:GetArmyIndex())
+        LOG('High Ally Strength is'..highStrength)
         for _, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
@@ -381,7 +383,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 returnEnemy = v.Brain:GetCurrentEnemy()
             end
         end
-
+        if returnEnemy then
+            LOG('Ally Enemy Returned is : '..returnEnemy.Nickname)
+        else
+            LOG('returnEnemy is false')
+        end
         return returnEnemy
     end,
 }
