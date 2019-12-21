@@ -44,7 +44,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach',
+        BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
         InstanceCount = 2,
@@ -66,6 +66,33 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T1GroundDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air',
+        PlatoonTemplate = 'EngineerBuilder',
+        Priority = 950,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { MIBC, 'GreaterThanGameTime', { 300 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
                     'T1AADefense',
                 },
                 Location = 'LocationType',

@@ -70,7 +70,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mortar Defense Response',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 790,
+        Priority = 750,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
@@ -83,7 +83,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 MML Defense Response',
         PlatoonTemplate = 'T2LandArtillery',
-        Priority = 790,
+        Priority = 750,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE }},
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -100,7 +100,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Tank Enemy Nearby',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 950,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
@@ -113,7 +113,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Tank Enemy Nearby',
         PlatoonTemplate = 'T2LandDFTank',
-        Priority = 950,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -130,7 +130,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA Response',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 900,
+        Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.ANTIAIR } },
@@ -143,7 +143,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Mobile AA Response',
         PlatoonTemplate = 'T2LandAA',
-        Priority = 920,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.ANTIAIR } },
