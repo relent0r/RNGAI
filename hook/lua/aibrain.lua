@@ -182,6 +182,7 @@ AIBrain = Class(RNGAIBrainClass) {
     PickEnemyLogicRNG = function(self)
         local armyStrengthTable = {}
         local selfIndex = self:GetArmyIndex()
+        local enemyBrains = {}
 
         for _, v in ArmyBrains do
             local insertTable = {
@@ -198,15 +199,26 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
                 insertTable.Enemy = false
             end
-            
+            if insertTable.Enemy == true then
+                table.insert(enemyBrains, v)
+            end
             local acuPos = {}
             -- Gather economy information of army to guage economy value of the target
             local enemyIndex = v:GetArmyIndex()
             local startX, startZ = v:GetArmyStartPos()
-            local ecoThreat = self:GetThreatAtPosition({startX, 0 ,startZ}, 16, true, 'Economy', enemyIndex)
-            --LOG('Economy Threat for army :'..enemyIndex..' is '..ecoThreat)
-            if not ecoThreat then
-                ecoThreat = EconomicThreat + 1
+            local ecoThreat = 0
+
+            if insertTable.Enemy == false then
+                local ecoStructures = self:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
+                local GetBlueprint = moho.entity_methods.GetBlueprint
+                for _, v in ecoStructures do
+                    local bp = v:GetBlueprint()
+                    local ecoStructThreat = bp.Defense.EconomyThreatLevel
+                    LOG('Eco Structure'..ecoStructThreat)
+                    ecoThreat = ecoThreat + ecoStructThreat
+                end
+            else
+                ecoThreat = 1
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
             if RUtils.GetLastACUPosition(self, enemyIndex) then
@@ -221,9 +233,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
                 LOG('First Enemy Pass Strength is :'..insertTable.Strength)
             else
-                insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
-                insertTable.Strength = self:GetThreatAtPosition({startX, 0 ,startZ}, 1, true, 'Structures', v:GetArmyIndex())
-                LOG('First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..startX..':'..startZ)
+                insertTable.Position = {startX, 0 ,startZ}
+                insertTable.Strength = ecoThreat
+                LOG('First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
             end
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
@@ -363,9 +375,11 @@ AIBrain = Class(RNGAIBrainClass) {
 
     GetAllianceEnemyRNG = function(self, strengthTable)
         local returnEnemy = false
+        local myIndex = self:GetArmyIndex()
+        local highStrength = strengthTable[myIndex].Strength
         local startX, startZ = self:GetArmyStartPos()
-        local highStrength = self:GetThreatAtPosition({startX, 0 ,startZ}, 1, true, 'Structures', self:GetArmyIndex())
-        LOG('High Ally Strength is'..highStrength)
+        
+        LOG('My Own Strength is'..highStrength)
         for _, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
