@@ -422,29 +422,17 @@ BuilderGroup {
         },    
     }, 
     Builder {
-        BuilderName = 'RNGAI Start Location Attack Mid',
-        PlatoonTemplate = 'RNGAI T1 Guard Marker Medium',
-        Priority = 700,
-        InstanceCount = 3,
+        BuilderName = 'RNGAI Spam',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 400,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 12,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
-            },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
+        },
         BuilderData = {
-            MarkerType = 'Start Location',            
-            MoveFirst = 'Random',
-            MoveNext = 'Threat',
-            --ThreatType = '',
-            --SelfThreat = '',
-            --FindHighestThreat ='',
-            --ThreatThreshold = '',
-            AvoidBases = true,
-            AvoidBasesRadius = 30,
-            AggressiveMove = true,      
-            AvoidClosestRadius = 50,
-            GuardTimer = 10,              
-            UseFormation = 'AttackFormation',
-        },    
+            UseFormation = 'None',
+            },
     }, 
     Builder {
         BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
@@ -600,7 +588,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
@@ -623,7 +611,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND - categories.ENGINEER } },

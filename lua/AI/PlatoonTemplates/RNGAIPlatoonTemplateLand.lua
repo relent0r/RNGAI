@@ -90,8 +90,22 @@ PlatoonTemplate {
           8, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
+        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+    },
+}
+
+PlatoonTemplate {
+    Name = 'RNGAI LandAttack Spam',
+    Plan = 'HuntAIRNG', -- The platoon function to use.
+    GlobalSquads = {
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2)- categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+          2, -- Min number of units.
+          8, -- Max number of units.
+          'attack', -- platoon types: 'support', 'attack', 'scout',
+          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.ANTIAIR, 0, 1, 'attack', 'none' },
     },
 }
 

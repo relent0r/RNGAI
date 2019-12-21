@@ -49,7 +49,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 250',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 900,
+        Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
@@ -72,7 +72,7 @@ BuilderGroup {
                 BuildStructures = {                    
                     'T1LandFactory',
                     'T1GroundDefense',
-                    'T1AADefense',
+                    --'T1AADefense',
                     'T1Radar',
                 }
             },
@@ -105,7 +105,7 @@ BuilderGroup {
                 BuildStructures = {                    
                     'T1LandFactory',
                     'T1GroundDefense',
-                    'T1AADefense',
+                    --'T1AADefense',
                     'T1Radar',
                 }
             },

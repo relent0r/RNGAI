@@ -295,7 +295,7 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatio', { 10.0, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYSTORAGE' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},

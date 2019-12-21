@@ -283,10 +283,10 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
+                'MASSEXTRACTION',
                 'MOBILE LAND',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
-                'MASSEXTRACTION',
                 'ALLUNITS',
             },
         },
@@ -363,6 +363,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
+                'RADAR STRUCTURE',
                 'EnergyStorage',
                 'ENERGYPRODUCTION TECH2',
                 'ENERGYPRODUCTION TECH1',

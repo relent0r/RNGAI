@@ -139,7 +139,6 @@ BuilderGroup {
         BuilderConditions = {
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 5, 0, 'AntiSurface', 1 }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.6} },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
