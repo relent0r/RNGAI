@@ -15,7 +15,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses',
     BuildersType = 'EngineerBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T1 Defence Engineer',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 875,
@@ -42,7 +42,7 @@ BuilderGroup {
                 Location = 'LocationType',
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
         PlatoonTemplate = 'EngineerBuilder',
