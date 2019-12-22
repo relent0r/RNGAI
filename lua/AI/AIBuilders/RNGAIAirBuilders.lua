@@ -77,7 +77,7 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Intie Response',
+        BuilderName = 'RNGAI Factory Intie Maintain',
         PlatoonTemplate = 'T1AirFighter',
         Priority = 850,
         BuilderConditions = { 
@@ -292,7 +292,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Gunsip Attack',
+        BuilderName = 'RNGAI Gunship Attack',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 900,
         InstanceCount = 2,

@@ -146,7 +146,7 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Engineer T1 Expansion',
+        BuilderName = 'RNGAI Factory Engineer T1 Maintain',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 400, -- low factory priority
         BuilderConditions = {
