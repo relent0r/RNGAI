@@ -284,7 +284,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'Frequent Land Attack T2 Expansion',
+        BuilderName = 'RNGAI Frequent Land Attack T2 Expansion',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',
         Priority = 700,
         InstanceCount = 30,
@@ -564,7 +564,7 @@ BuilderGroup {
     },
     
     Builder {
-        BuilderName = 'Frequent Land Attack T2',
+        BuilderName = 'RNGAI Frequent Land Attack T2',
         PlatoonTemplate = 'RNGAI LandAttack Large T2',
         Priority = 700,
         InstanceCount = 30,

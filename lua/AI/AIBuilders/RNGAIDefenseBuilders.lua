@@ -162,7 +162,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T2 Expansion TML',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'T2TMLEngineer',
+        BuilderName = 'RNGAI T2TMLEngineer',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 825,
         BuilderConditions = {
