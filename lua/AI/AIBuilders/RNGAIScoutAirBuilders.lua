@@ -29,6 +29,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout T1',
         PlatoonTemplate = 'RNGAI T1AirScoutForm',
+        PlatoonAddBehaviors = {'ACUDetection',},
         InstanceCount = 2,
         Priority = 900,
         BuilderConditions = {

@@ -257,3 +257,42 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         IssueClearCommands({cdr})
     end
 end
+
+function ACUDetection(platoon)
+    local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+    local aiBrain = platoon:GetBrain()
+    local ACUTable = aiBrain.EnemyIntel.ACU
+    local unit = platoon:GetPlatoonUnits()[1]
+    LOG('ACU Detection Behavior Running')
+    LOG('Current ACU Table'..repr(ACUTable))
+    if ACUTable then 
+        while not unit.Dead do
+            local currentGameTime = GetGameTimeSeconds()
+            local acuUnits = aiBrain:GetUnitsAroundPoint(categories.COMMAND, unit:GetPosition(), 40, 'Enemy')
+            if acuUnits[1] then
+                LOG('ACU Detected')
+                for _, v in acuUnits do
+                    unitDesc = GetBlueprint(v).Description
+                    LOG('Units is'..unitDesc)
+                    enemyIndex = v:GetAIBrain():GetArmyIndex()
+                    acuPos = v.Position
+                    for _, c in ACUTable do
+                        if not c.LastSpoted then
+                            c.LastSpoted = 0
+                        end
+                        LOG('Comparing position')
+                        if currentGameTime - 60 > c.LastSpoted and ACUTable[enemyIndex] == enemyIndex then
+                            for _, v in acuUnits do
+                                acuPos = v.Position
+                                table.insert(ACUTable[enemyIndex], { Position = acuPos, LastSpoted = currentGameTime })
+                            end
+                        end
+                    end
+                end
+            end
+            WaitTicks(20)
+        end
+    else
+            WARN('No EnemyIntel ACU Table found')
+    end
+end

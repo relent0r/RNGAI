@@ -381,6 +381,7 @@ Platoon = Class(oldPlatoon) {
         if scout:TestToggleCaps('RULEUTC_CloakToggle') then
             scout:EnableUnitIntel('Toggle', 'Cloak')
         end
+
         if patrol == true then
             LOG('Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
@@ -588,13 +589,7 @@ Platoon = Class(oldPlatoon) {
         local target
         local blip
         while aiBrain:PlatoonExists(self) do
-            if self:GetSquadUnits('Attack') then
-                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
-            end
-            if self:GetSquadUnits('Guard') then
-                target = self:FindClosestUnit('Guard', 'Enemy', true, categories.ALLUNITS - categories.SCOUT - categories.WALL)
-            end
-            
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
             if target then
                 blip = target:GetBlip(armyIndex)
                 self:Stop()

@@ -158,7 +158,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         }
                     )
             end
-            aiBrain:ForkThread(self.ParseIntelThread)
+            aiBrain:ForkThread(self.ParseIntelThreadRNG)
         end
     end,
 
@@ -222,8 +222,10 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
             if RUtils.GetLastACUPosition(self, enemyIndex) then
-                acuPos = RUtils.GetLastACUPosition(enemyIndex)
-                LOG('ACU Position is has data')
+                acuPos, lastSpoted = RUtils.GetLastACUPosition(enemyIndex)
+                LOG('ACU Position is has data'..repr(acuPos))
+                LOG('Last Spotted'..lastSpoted)
+                LOG(repr(aiBrain.EnemyIntel.ACU))
             else
                 LOG('GetLastACUPosition is false')
             end
