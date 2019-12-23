@@ -12,7 +12,7 @@ AI = {
     -- key names must have the word "cheat" included, or we won't get omniview
     CheatAIList = {
         {
-            key = 'RNGStandardcheat',
+            key = 'RNGStandardCheat',
             name = "<LOC RNG_0003>AIx: RNG Standard",
         },
     },

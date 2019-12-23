@@ -931,7 +931,7 @@ Platoon = Class(oldPlatoon) {
         end
 
         --LOG("*AI DEBUG: Setting up Callbacks for " .. eng.Sync.id)
-        self.SetupEngineerCallbacks(eng)
+        self.SetupEngineerCallbacksRNG(eng)
 
         -------- BUILD BUILDINGS HERE --------
         for baseNum, baseListData in baseTmplList do
@@ -972,6 +972,35 @@ Platoon = Class(oldPlatoon) {
 
         if not eng:IsUnitState('Building') then
             return self.ProcessBuildCommandRNG(eng, false)
+        end
+    end,
+
+    SetupEngineerCallbacksRNG = function(eng)
+        if eng and not eng.Dead and not eng.BuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.EngineerBuildDoneRNG, eng, categories.ALLUNITS)
+            eng.BuildDoneCallbackSet = true
+        end
+        if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDone, eng)
+            eng.CaptureDoneCallbackSet = true
+        end
+        if eng and not eng.Dead and not eng.ReclaimDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopReclaimTrigger(eng.PlatoonHandle.EngineerReclaimDone, eng)
+            eng.ReclaimDoneCallbackSet = true
+        end
+        if eng and not eng.Dead and not eng.FailedToBuildCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(eng.PlatoonHandle.EngineerFailedToBuild, eng)
+            eng.FailedToBuildCallbackSet = true
+        end
+    end,
+
+    EngineerBuildDoneRNG = function(unit, params)
+        if not unit.PlatoonHandle then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        --LOG("*AI DEBUG: Build done " .. unit.Sync.id)
+        if not unit.ProcessBuild then
+            unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)
+            unit.ProcessBuildDone = true
         end
     end,
 
@@ -1054,33 +1083,34 @@ Platoon = Class(oldPlatoon) {
                     -- check to see if we can repair
                     if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
                         -- otherwise, go ahead and build the next structure there
-                        LOG('BuildStructure Triggered')
+                        --LOG('BuildStructure Triggered')
                         aiBrain:BuildStructure(eng, whatToBuild, NormalToBuildLocation(buildLocation), buildRelative)
                         if not eng.NotBuildingThread then
                             eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                         end
                     end
                 end
-                LOG('Build commandDone set true')
+                --LOG('Build commandDone set true')
                 commandDone = true
             else
                 -- we can't move there, so remove it from our build queue
                 table.remove(eng.EngineerBuildQueue, 1)
             end
         end
-        LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
-        if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 then
-            LOG('Starting RepeatBuild')
-            local distance = platoon.PlatoonData.Construction.Distance
-            local type = platoon.PlatoonData.Construction.Type
-            if platoon.PlatoonData.Construction.RepeatBuild and platoon.PlanName then
-                LOG('Repeat Build is set')
+        --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
+        if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
+            --LOG('Starting RepeatBuild')
+            local distance = eng.PlatoonHandle.PlatoonData.Construction.Distance
+            local type = eng.PlatoonHandle.PlatoonData.Construction.Type
+            local engpos = eng:GetPosition()
+            if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
+                --LOG('Repeat Build is set')
                 if type == 'Mass' and distance then
-                    LOG('Type is Mass, setting ai plan')
+                    --LOG('Type is Mass, setting ai plan')
                     massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
-                    LOG('Mass Marker Returned is'..repr(massMarker))
-                    if massMarker[1] and VDist3( massMarker[1], position ) < distance then
-                        platoon:SetAIPlan( platoon.PlanName, aiBrain)
+                    --LOG('Mass Marker Returned is'..repr(massMarker))
+                    if massMarker[1] and VDist3( massMarker, engpos ) < distance then
+                        eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
                         return
                     end
                 else

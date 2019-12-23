@@ -221,7 +221,7 @@ function FactoryComparisonAtLocation(aiBrain, locationType, unitCount, unitCateg
         return false
     end
     local numUnits = factoryManager:GetNumCategoryFactories(testCat)
-    LOG('Factory Comparison Current Number : '..numUnits..'Desired Number : '..compareType..''..unitCount)
+    --LOG('Factory Comparison Current Number : '..numUnits..'Desired Number : '..compareType..''..unitCount)
     return CompareBody(numUnits, unitCount, compareType)
 end
 

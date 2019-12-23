@@ -453,7 +453,34 @@ function PositionInWater(pos)
 	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end
 
+function GetClosestMassMarker(aiBrain, unit)
+    local markerList = {}
+    local markers = ScenarioUtils.GetMarkers()
+    if markers then
+        for k, v in markers do
+            if v.type == 'Mass' then
+                table.insert(markerList, {Position = v.position, Name = k})
+            end
+        end
+    end
 
+    engPos = unit:GetPosition()
+    local loc, distance, lowest, name = nil
+
+    for _, v in markerList do
+        local x = v.Position[1]
+        local y = v.Position[2]
+        local z = v.Position[3]
+        distance = VDist2(engPos[1], engPos[3], x, z)
+        if not lowest or distance < lowest then
+            loc = v.Position
+            name = v.Name
+            lowest = distance
+        end
+    end
+
+    return loc, name
+end
 
 
 function GetStartLocationMassMarkers(aiBrain, massLocations)

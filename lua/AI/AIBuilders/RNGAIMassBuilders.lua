@@ -66,6 +66,9 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                RepeatBuild = true,
+                Distance = 30,
+                Type = 'Mass',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -86,6 +89,9 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                RepeatBuild = true,
+                Distance = 30,
+                Type = 'Mass',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -109,6 +115,9 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                RepeatBuild = true,
+                Distance = 30,
+                Type = 'Mass',
                 BuildStructures = {
                     'T1Resource',
                 },
