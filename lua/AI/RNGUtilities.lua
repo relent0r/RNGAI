@@ -72,7 +72,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
             LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
-            WaitSeconds(2)
+            WaitTicks(20)
             moveWait = moveWait + 1
             engPos = self:GetPosition()
             if moveWait == 10 then
@@ -97,7 +97,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
         IssueClearCommands({self})
         StartMoveDestination(self, location)
-        WaitSeconds(5)
+        WaitTicks(50)
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
             return
@@ -230,12 +230,12 @@ function AirScoutPatrolRNGAIThread(self, aiBrain)
                     break
                 end
 
-                WaitSeconds(5)
+                WaitTicks(50)
             end
         else
-            WaitSeconds(1)
+            WaitTicks(10)
         end
-        WaitTicks(1)
+        WaitTicks(5)
     end
 end
 

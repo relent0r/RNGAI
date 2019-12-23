@@ -34,7 +34,7 @@ Unit = Class(RNGUnitClass) {
                             end
                         end
                     end
-                    WaitSeconds(2)
+                    WaitTicks(20)
                 end
             end
         else

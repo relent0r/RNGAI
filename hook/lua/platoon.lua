@@ -25,7 +25,7 @@ Platoon = Class(oldPlatoon) {
                     self:AggressiveMoveToLocation( table.copy(target:GetPosition()) )
                 end
             end
-            WaitSeconds(17)
+            WaitTicks(170)
             self:MoveToLocation({startX, 0, startZ}, false)
         end
     end,
@@ -48,7 +48,7 @@ Platoon = Class(oldPlatoon) {
                     self:AttackTarget(target)
                 end
             end
-            WaitSeconds(17)
+            WaitTicks(170)
             self:MoveToLocation({startX, 0, startZ}, false)
         end
     end,
@@ -284,7 +284,7 @@ Platoon = Class(oldPlatoon) {
             local oldPlatPos = self:GetPlatoonPosition()
             local StuckCount = 0
             repeat
-                WaitSeconds(5)
+                WaitTicks(50)
                 platLoc = self:GetPlatoonPosition()
                 if VDist3(oldPlatPos, platLoc) < 1 then
                     StuckCount = StuckCount + 1
@@ -505,10 +505,10 @@ Platoon = Class(oldPlatoon) {
                             break
                         end
 
-                        WaitSeconds(5)
+                        WaitTicks(50)
                     end
                 else
-                    WaitSeconds(1)
+                    WaitTicks(10)
                 end
                 WaitTicks(1)
             end
@@ -573,11 +573,11 @@ Platoon = Class(oldPlatoon) {
 
                 --Scout until we reach our destination
                 while not scout.Dead and not scout:IsIdleState() do
-                    WaitSeconds(2.5)
+                    WaitTicks(25)
                 end
             end
 
-            WaitSeconds(1)
+            WaitTicks(10)
         end
     end,
 
@@ -588,7 +588,13 @@ Platoon = Class(oldPlatoon) {
         local target
         local blip
         while aiBrain:PlatoonExists(self) do
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS -categories.SCOUT - categories.WALL)
+            if self:GetSquadUnits('Attack') then
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
+            end
+            if self:GetSquadUnits('Guard') then
+                target = self:FindClosestUnit('Guard', 'Enemy', true, categories.ALLUNITS - categories.SCOUT - categories.WALL)
+            end
+            
             if target then
                 blip = target:GetBlip(armyIndex)
                 self:Stop()
@@ -597,7 +603,7 @@ Platoon = Class(oldPlatoon) {
                 local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
                 self:MoveToLocation(position, false)
             end
-            WaitSeconds(17)
+            WaitTicks(170)
         end
     end,
 
@@ -965,7 +971,7 @@ Platoon = Class(oldPlatoon) {
         if not eng.Dead then
             local count = 0
             while eng:IsUnitState('Attached') and count < 2 do
-                WaitSeconds(6)
+                WaitTicks(60)
                 count = count + 1
             end
         end
@@ -1075,7 +1081,7 @@ Platoon = Class(oldPlatoon) {
 
                 local engpos = eng:GetPosition()
                 while not eng.Dead and eng:IsUnitState("Moving") and VDist2(engpos[1], engpos[3], buildLocation[1], buildLocation[3]) > 15 do
-                    WaitSeconds(2)
+                    WaitTicks(20)
                 end
 
                 -- check to see if we need to reclaim or capture...
@@ -1140,7 +1146,7 @@ Platoon = Class(oldPlatoon) {
                   eng:IsUnitState("Reclaiming") or eng:IsUnitState("Capturing") or eng.ProcessBuild != nil
                   or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Moving") or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing")
                  ) do
-            WaitSeconds(3)
+            WaitTicks(30)
 
             --if eng.CDRHome then
             --  LOG('*AI DEBUG: Commander waiting for building.')
@@ -1349,7 +1355,7 @@ Platoon = Class(oldPlatoon) {
             local oldPlatPos = self:GetPlatoonPosition()
             local StuckCount = 0
             repeat
-                WaitSeconds(5)
+                WaitTicks(50)
                 platLoc = self:GetPlatoonPosition()
                 if VDist3(oldPlatPos, platLoc) < 1 then
                     StuckCount = StuckCount + 1
@@ -1418,7 +1424,7 @@ Platoon = Class(oldPlatoon) {
 
             -- if we're using a transport, wait for a while
             if self.UsingTransport then
-                WaitSeconds(10)
+                WaitTicks(100)
                 continue
             end
 
@@ -1452,7 +1458,7 @@ Platoon = Class(oldPlatoon) {
                 dropPoint[1] = dropPoint[1] + Random(-3, 3)
                 dropPoint[3] = dropPoint[3] + Random(-3, 3)
                 IssueTransportUnload(strayTransports, dropPoint)
-                WaitSeconds(10)
+                WaitTicks(100)
                 local strayTransports = {}
                 for k,v in platoonUnits do
                     local parent = v:GetParent()
@@ -1466,7 +1472,7 @@ Platoon = Class(oldPlatoon) {
                     if MAIN then
                         dropPoint = MAIN.Position
                         IssueTransportUnload(strayTransports, dropPoint)
-                        WaitSeconds(30)
+                        WaitTicks(300)
                     end
                 end
                 self.UsingTransport = false
@@ -1545,7 +1551,7 @@ Platoon = Class(oldPlatoon) {
                 if not self.PlatoonData.NeverMerge then
                     return self:ReturnToBaseAI()
                 end
-                WaitSeconds(5)
+                WaitTicks(50)
             else
                 -- wait a little longer if we're stuck so that we have a better chance to move
                 WaitSeconds(Random(5,11) + 2 * stuckCount)

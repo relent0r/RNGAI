@@ -201,11 +201,11 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if overCharging then
                 while target and not target.Dead and not cdr.Dead and counter <= 5 do
-                    WaitSeconds(0.5)
+                    WaitTicks(5)
                     counter = counter + 0.5
                 end
             else
-                WaitSeconds(5)
+                WaitTicks(50)
                 counter = counter + 5
             end
 
@@ -250,7 +250,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueStop({cdr})
             IssueMove({cdr}, loc)
             cdr.GoingHome = true
-            WaitSeconds(7)
+            WaitTicks(70)
         until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
 
         cdr.GoingHome = false

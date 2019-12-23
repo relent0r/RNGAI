@@ -175,7 +175,7 @@ AIBrain = Class(RNGAIBrainClass) {
             else
                 self:PickEnemyLogic()
             end
-            WaitSeconds(120)
+            WaitTicks(1200)
         end
     end,
 
@@ -369,7 +369,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
 
-            WaitSeconds(5)
+            WaitTicks(50)
         end
     end,
 
