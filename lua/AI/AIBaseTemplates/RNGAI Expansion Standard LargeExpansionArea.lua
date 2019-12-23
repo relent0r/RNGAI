@@ -89,7 +89,7 @@ BaseBuilderTemplate {
         end
         
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
-        if not( personality == 'RNGStandard' or personality == 'RNGStandardCheat' ) then
+        if not( personality == 'RNGStandard' or personality == 'RNGStandardcheat' ) then
             LOG('Expansion personality is', personality)
             return 0
         end

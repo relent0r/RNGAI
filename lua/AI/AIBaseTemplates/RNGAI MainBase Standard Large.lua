@@ -50,7 +50,7 @@ BaseBuilderTemplate {
     FirstBaseFunction = function(aiBrain)
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if personality == 'RNGStandard' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardCheat' and mapSizeX > 1000 and mapSizeZ > 1000 then
+        if personality == 'RNGStandard' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardcheat' and mapSizeX > 1000 and mapSizeZ > 1000 then
             --LOG('### M-FirstBaseFunction '..personality)
             LOG('Map size is large', mapSizeX, mapSizeZ)
             return 1000, 'RNGStandardMainBaseTemplate Large'

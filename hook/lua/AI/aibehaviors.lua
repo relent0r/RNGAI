@@ -7,7 +7,7 @@ function CommanderBehavior(platoon)
     per = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
     for _, v in platoon:GetPlatoonUnits() do
         if not v.Dead and not v.CommanderThread then
-            if per == 'RNGStandard' or per == 'RNGStandardCheat' then
+            if per == 'RNGStandard' or per == 'RNGStandardcheat' then
                 LOG('Correct ai brain name')
                 v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
             else
