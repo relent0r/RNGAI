@@ -520,7 +520,7 @@ end
 function GetLastACUPosition(aiBrain, enemyIndex)
     local acuPos = nil
     local lastSpotted = nil
-    LOG('ACU Table Dump'..repr(aiBrain.EnemyIntel.ACU))
+    --LOG('ACU Table Dump'..repr(aiBrain.EnemyIntel.ACU))
     if aiBrain.EnemyIntel.ACU then
         for _, v in aiBrain.EnemyIntel.ACU do
             if v.ArmyIndex == enemyIndex then

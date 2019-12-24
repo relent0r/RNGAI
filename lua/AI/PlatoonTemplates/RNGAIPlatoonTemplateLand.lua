@@ -251,6 +251,23 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     }
 }
 
+PlatoonTemplate { Name = 'RNGAIT3LandResponse',
+    FactionSquads = {
+        UEF = {
+            { 'uel0303', 1, 1, 'Attack', 'none' },      -- Heavy Assault Bot
+        },
+        Aeon = {
+            { 'ual0303', 1, 1, 'Attack', 'none' },      -- Heavy Assault Bot
+        },
+        Cybran = {
+            { 'url0303', 1, 1, 'Attack', 'none' },      -- Siege Assault Bot
+        },
+        Seraphim = {
+            { 'xsl0303', 1, 1, 'Attack', 'none' },       -- Siege Tank
+        },
+    }
+}
+
 PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
     FactionSquads = {
         UEF = {

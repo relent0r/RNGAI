@@ -8,7 +8,7 @@ AIBrain = Class(RNGAIBrainClass) {
     OnCreateAI = function(self, planName)
         RNGAIBrainClass.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
-        LOG('Oncreate')
+        --LOG('Oncreate')
         if string.find(per, 'RNG') then
             LOG('This is RNG')
             self.RNG = true
@@ -166,9 +166,9 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Pick enemy')
         RNGAIBrainClass.OnCreateAI(self)
         --RNGAIBrainClass.PickEnemy(self)
-        LOG('Pre True'..repr(self.RNG))
+        --LOG('Pre True'..repr(self.RNG))
         while true do
-            LOG('self.rng is'..repr(self.RNG))
+            --LOG('self.rng is'..repr(self.RNG))
             if self.RNG then
                 LOG('Selecting RNG')
                 self:PickEnemyLogicRNG()
@@ -224,8 +224,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if RUtils.GetLastACUPosition(self, enemyIndex) then
                 acuPos, lastSpotted = RUtils.GetLastACUPosition(enemyIndex)
                 LOG('ACU Position is has data'..repr(acuPos))
-                LOG('Last Spotted'..lastSpotted)
-                LOG(repr(aiBrain.EnemyIntel.ACU))
+                --LOG(repr(aiBrain.EnemyIntel.ACU))
             else
                 LOG('GetLastACUPosition is false')
             end
