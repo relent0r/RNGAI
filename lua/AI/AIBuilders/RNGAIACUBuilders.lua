@@ -37,6 +37,7 @@ BuilderGroup {
                     'T1Resource',
                     'T1Resource',
                     'T1EnergyProduction',
+                    'T1EnergyProduction',
                 },
             }
         }

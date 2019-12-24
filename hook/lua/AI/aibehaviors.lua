@@ -264,28 +264,27 @@ function ACUDetection(platoon)
     local ACUTable = aiBrain.EnemyIntel.ACU
     local unit = platoon:GetPlatoonUnits()[1]
     LOG('ACU Detection Behavior Running')
-    LOG('Current ACU Table'..repr(ACUTable))
     if ACUTable then 
         while not unit.Dead do
             local currentGameTime = GetGameTimeSeconds()
-            local acuUnits = aiBrain:GetUnitsAroundPoint(categories.COMMAND, unit:GetPosition(), 40, 'Enemy')
+            local acuUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, unit:GetPosition(), 40, 'Enemy')
             if acuUnits[1] then
                 LOG('ACU Detected')
                 for _, v in acuUnits do
-                    unitDesc = GetBlueprint(v).Description
-                    LOG('Units is'..unitDesc)
+                    --unitDesc = GetBlueprint(v).Description
+                    --LOG('Units is'..unitDesc)
                     enemyIndex = v:GetAIBrain():GetArmyIndex()
-                    acuPos = v.Position
-                    for _, c in ACUTable do
-                        if not c.LastSpoted then
-                            c.LastSpoted = 0
-                        end
-                        LOG('Comparing position')
-                        if currentGameTime - 60 > c.LastSpoted and ACUTable[enemyIndex] == enemyIndex then
-                            for _, v in acuUnits do
-                                acuPos = v.Position
-                                table.insert(ACUTable[enemyIndex], { Position = acuPos, LastSpoted = currentGameTime })
-                            end
+                    --LOG('EnemyIndex :'..enemyIndex)
+                    --LOG('Curent Game Time : '..currentGameTime)
+                    --LOG('Iterating ACUTable')
+                    for k, c in ACUTable do
+                        --LOG('Table Index is : '..k)
+                        --LOG(c.LastSpotted)
+                        --LOG(repr(c.Position))
+                        if currentGameTime - 60 > c.LastSpotted and k == enemyIndex then
+                            --LOG('CurrentGameTime IF is true updating tables')
+                            c.Position = v:GetPosition()
+                            c.LastSpotted = currentGameTime
                         end
                     end
                 end

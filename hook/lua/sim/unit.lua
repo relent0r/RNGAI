@@ -20,22 +20,19 @@ Unit = Class(RNGUnitClass) {
             while not self.Dead do
                 local currentGameTime = GetGameTimeSeconds()
                 local acuUnits = aiBrain:GetUnitsAroundPoint(categories.COMMAND, self:GetPosition(), 40, Enemy)
-                for _, v in ACUTable do
-                    if not v.LastSpoted then
-                        v.LastSpoted = 0
-                    end
-                    
-                    if currentGameTime - 60 > v.LastSpoted and ACUTable[enemyIndex] == enemyIndex then
-                        if acuUnits then
-                            for _, v in acuUnits do
-                                enemyIndex = v:GetArmyIndex()
-                                acuPos = v.Position
-                                ACUTable[enemyIndex] = { acuPos, LastSpoted = currentGameTime }
+                if acuUnits[1] then
+                    LOG('ACU Detected')
+                    for _, v in acuUnits do
+                        enemyIndex = v:GetArmyIndex()
+                        for _, c in ACUTable do
+                            if currentGameTime - 60 > c.LastSpotted and ACUTable[enemyIndex] == enemyIndex then
+                                ACUTable[enemyIndex].Position = v.Position
+                                ACUTable[enemyIndex].LastSpotted = currentGameTime
                             end
                         end
                     end
-                    WaitTicks(20)
                 end
+                WaitTicks(20)
             end
         else
                 WARN('No EnemyIntel ACU Table found')

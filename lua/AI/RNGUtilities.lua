@@ -519,13 +519,13 @@ end
 
 function GetLastACUPosition(aiBrain, enemyIndex)
     local acuPos = nil
-    local lastSpoted = nil
+    local lastSpotted = nil
     LOG('ACU Table Dump'..repr(aiBrain.EnemyIntel.ACU))
     if aiBrain.EnemyIntel.ACU then
         for _, v in aiBrain.EnemyIntel.ACU do
             if v.ArmyIndex == enemyIndex then
                 acuPos = v.Position
-                lastSpoted = v.LastSpoted
+                lastSpotted = v.LastSpotted
             else
                 acuPos = false
             end
@@ -533,7 +533,7 @@ function GetLastACUPosition(aiBrain, enemyIndex)
     else
         acuPos = false
     end
-    return acuPos, lastSpoted
+    return acuPos, lastSpotted
 end
 
 

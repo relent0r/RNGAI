@@ -425,7 +425,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 400,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 12,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },

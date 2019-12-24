@@ -222,9 +222,9 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
             if RUtils.GetLastACUPosition(self, enemyIndex) then
-                acuPos, lastSpoted = RUtils.GetLastACUPosition(enemyIndex)
+                acuPos, lastSpotted = RUtils.GetLastACUPosition(enemyIndex)
                 LOG('ACU Position is has data'..repr(acuPos))
-                LOG('Last Spotted'..lastSpoted)
+                LOG('Last Spotted'..lastSpotted)
                 LOG(repr(aiBrain.EnemyIntel.ACU))
             else
                 LOG('GetLastACUPosition is false')
@@ -324,7 +324,12 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.EnemyIntel = {}
         self.EnemyIntel.ACU = {}
-        
+        for _, v in ArmyBrains do
+            self.EnemyIntel.ACU[v:GetArmyIndex()] = {
+                Position = {},
+                LastSpotted = 0,
+            }
+        end
         while true do
             local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             for _, struct in structures do
