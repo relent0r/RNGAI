@@ -948,7 +948,7 @@ Platoon = Class(oldPlatoon) {
                                 buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                             end
                         else
-                            LOG('Executing buildFunction')
+                            --LOG('Executing buildFunction')
                             buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                         end
                     else
