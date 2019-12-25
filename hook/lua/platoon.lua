@@ -603,7 +603,7 @@ Platoon = Class(oldPlatoon) {
     end,
 
     -------------------------------------------------------
-    --   Function: EngineerBuildAI
+    --   Function: EngineerBuildAIRNG
     --   Args:
     --       self - the single-engineer platoon to run the AI on
     --   Description:
@@ -627,7 +627,7 @@ Platoon = Class(oldPlatoon) {
         -- (This is also the wrong place to do it. Should be called from Buildermanager BEFORE the builder is selected)
         if cons.T4 then
             if not aiBrain.T4Building then
-                --LOG('EngineerBuildAI'..repr(cons))
+                --LOG('EngineerBuildAIRNG'..repr(cons))
                 aiBrain.T4Building = true
                 ForkThread(SUtils.T4Timeout, aiBrain)
                 --LOG('Building T4 uinit, delaytime started')
@@ -997,7 +997,7 @@ Platoon = Class(oldPlatoon) {
 
     EngineerBuildDoneRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         --LOG("*AI DEBUG: Build done " .. unit.Sync.id)
         if not unit.ProcessBuild then
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)
@@ -1008,12 +1008,12 @@ Platoon = Class(oldPlatoon) {
     -------------------------------------------------------
     --   Function: ProcessBuildCommand
     --   Args:
-    --       eng - the engineer that's gone through EngineerBuildAI
+    --       eng - the engineer that's gone through EngineerBuildAIRNG
     --   Description:
     --       Run after every build order is complete/fails.  Sets up the next
     --       build order in queue, and if the engineer has nothing left to do
     --       will return the engineer back to the army pool by disbanding the
-    --       the platoon.  Support function for EngineerBuildAI
+    --       the platoon.  Support function for EngineerBuildAIRNG
     --   Returns:
     --       nil (tail calls into a behavior function)
     -------------------------------------------------------

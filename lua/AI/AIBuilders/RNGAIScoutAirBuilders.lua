@@ -35,6 +35,9 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
         },
+        BuilderData = {
+            ScanWait = 20,
+        },
         LocationType = 'LocationType',
         BuilderType = 'Any',
     },

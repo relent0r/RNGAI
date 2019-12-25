@@ -235,6 +235,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemy', { true } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
@@ -248,6 +249,7 @@ BuilderGroup {
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemy', { true } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},

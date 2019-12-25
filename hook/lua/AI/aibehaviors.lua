@@ -262,6 +262,7 @@ function ACUDetection(platoon)
     local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
     local aiBrain = platoon:GetBrain()
     local ACUTable = aiBrain.EnemyIntel.ACU
+    local scanWait = platoon.PlatoonData.ScanWait
     local unit = platoon:GetPlatoonUnits()[1]
     LOG('ACU Detection Behavior Running')
     if ACUTable then 
@@ -289,7 +290,7 @@ function ACUDetection(platoon)
                     end
                 end
             end
-            WaitTicks(20)
+            WaitTicks(scanWait)
         end
     else
             WARN('No EnemyIntel ACU Table found')

@@ -399,7 +399,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
                     if ACUDist < 160 then
                         LOG('Enemy ACU is close switching Enemies')
-                        returnEnemy = v.Brain:GetCurrentEnemy()
+                        acuThreat = GetThreatAtPosition(v.ACUPosition, 0, true, 'Overall', v.Brain:GetArmyIndex())
+                        LOG('Threat at ACU location is :'..acuThreat)
+                        returnEnemy = v.Brain
                         return returnEnemy
                     end
                 end

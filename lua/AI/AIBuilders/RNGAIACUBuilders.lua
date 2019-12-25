@@ -28,6 +28,7 @@ BuilderGroup {
         BuilderType = 'Any',
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
         BuilderData = {
+            ScanWait = 40,
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
@@ -60,6 +61,7 @@ BuilderGroup {
         BuilderType = 'Any',
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
         BuilderData = {
+            ScanWait = 40,
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
@@ -89,6 +91,7 @@ BuilderGroup {
         BuilderType = 'Any',
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
         BuilderData = {
+            ScanWait = 40,
             Construction = {
                 BuildStructures = {
                     'T1LandFactory',
