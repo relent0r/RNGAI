@@ -190,6 +190,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 Strength = 0,
                 Position = false,
                 EconomicThreat = 0,
+                ACUPosition = nil,
+                ACULastSpotted = 0,
                 Brain = v,
             }
             -- Share resources with friends but don't regard their strength
@@ -224,6 +226,8 @@ AIBrain = Class(RNGAIBrainClass) {
             if RUtils.GetLastACUPosition(self, enemyIndex) then
                 acuPos, lastSpotted = RUtils.GetLastACUPosition(enemyIndex)
                 LOG('ACU Position is has data'..repr(acuPos))
+                insertTable.ACUPosition = acuPos
+                insertTable.ACULastSpotted = lastSpotted
                 --LOG(repr(aiBrain.EnemyIntel.ACU))
             else
                 LOG('GetLastACUPosition is false')
@@ -242,8 +246,9 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         local allyEnemy = self:GetAllianceEnemyRNG(armyStrengthTable)
+        
         if allyEnemy  then
-            LOG('Ally Enemy is true')
+            LOG('Ally Enemy is true or ACU is close')
             self:SetCurrentEnemy(allyEnemy)
         else
             local findEnemy = false
@@ -389,6 +394,15 @@ AIBrain = Class(RNGAIBrainClass) {
         for _, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
+                if v.ACUPosition then
+                    ACUDist = VDist2Sq(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
+                    LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
+                    if ACUDist < 160 then
+                        LOG('Enemy ACU is close switching Enemies')
+                        returnEnemy = v.Brain:GetCurrentEnemy()
+                        return returnEnemy
+                    end
+                end
                 continue
             end
 
@@ -398,6 +412,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             -- If the brain has an enemy, it's our new enemy
+            
             local enemy = v.Brain:GetCurrentEnemy()
             if enemy and not enemy:IsDefeated() then
                 highStrength = v.Strength

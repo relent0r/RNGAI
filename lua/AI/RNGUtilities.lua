@@ -57,6 +57,12 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     end
                 end
             end
+        else
+            initialRange = initialRange + 30
+            if initialRange > 200 then
+                LOG('Reclaim range > 200')
+            end
+            continue
         end
         if self.Dead then 
             return

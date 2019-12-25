@@ -102,6 +102,7 @@ BuilderGroup {
         InstanceCount = 1,
         Priority = 400,
         BuilderConditions = {
+            {UCBC, 'HaveUnitRatio', {0.80, categories.MASSEXTRACTION * categories.TECH1, '<=', categories.MASSEXTRACTION * categories.TECH2}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
