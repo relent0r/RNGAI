@@ -183,14 +183,13 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyStrengthTable = {}
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
-
         for _, v in ArmyBrains do
             local insertTable = {
                 Enemy = true,
                 Strength = 0,
                 Position = false,
                 EconomicThreat = 0,
-                ACUPosition = nil,
+                ACUPosition = {},
                 ACULastSpotted = 0,
                 Brain = v,
             }
@@ -216,22 +215,18 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, v in ecoStructures do
                     local bp = v:GetBlueprint()
                     local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                    LOG('Eco Structure'..ecoStructThreat)
+                    --LOG('Eco Structure'..ecoStructThreat)
                     ecoThreat = ecoThreat + ecoStructThreat
                 end
             else
                 ecoThreat = 1
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
-            if RUtils.GetLastACUPosition(self, enemyIndex) then
-                acuPos, lastSpotted = RUtils.GetLastACUPosition(enemyIndex)
-                LOG('ACU Position is has data'..repr(acuPos))
-                insertTable.ACUPosition = acuPos
-                insertTable.ACULastSpotted = lastSpotted
-                --LOG(repr(aiBrain.EnemyIntel.ACU))
-            else
-                LOG('GetLastACUPosition is false')
-            end
+            LOG('Enemy Index is :'..enemyIndex)
+            local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
+            LOG('ACU Position is has data'..repr(acuPos))
+            insertTable.ACUPosition = acuPos
+            insertTable.ACULastSpotted = lastSpotted
             
             insertTable.EconomicThreat = ecoThreat
             if insertTable.Enemy then
@@ -394,12 +389,13 @@ AIBrain = Class(RNGAIBrainClass) {
         for _, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
-                if v.ACUPosition then
-                    ACUDist = VDist2Sq(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
+                LOG('ACU Position is :'..repr(v.ACUPosition))
+                if v.ACUPosition[1] then
+                    ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
                     LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
-                    if ACUDist < 160 then
-                        LOG('Enemy ACU is close switching Enemies')
-                        acuThreat = GetThreatAtPosition(v.ACUPosition, 0, true, 'Overall', v.Brain:GetArmyIndex())
+                    if ACUDist < 180 then
+                        LOG('Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
+                        acuThreat = self:GetThreatAtPosition(v.ACUPosition, 0, true, 'Overall')
                         LOG('Threat at ACU location is :'..acuThreat)
                         returnEnemy = v.Brain
                         return returnEnemy
@@ -416,7 +412,7 @@ AIBrain = Class(RNGAIBrainClass) {
             -- If the brain has an enemy, it's our new enemy
             
             local enemy = v.Brain:GetCurrentEnemy()
-            if enemy and not enemy:IsDefeated() then
+            if enemy and not enemy:IsDefeated() and v.Strength > 0 then
                 highStrength = v.Strength
                 returnEnemy = v.Brain:GetCurrentEnemy()
             end

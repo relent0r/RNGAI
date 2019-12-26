@@ -524,20 +524,25 @@ function GetStartLocationMassMarkers(aiBrain, massLocations)
 end
 
 function GetLastACUPosition(aiBrain, enemyIndex)
-    local acuPos = nil
-    local lastSpotted = nil
-    --LOG('ACU Table Dump'..repr(aiBrain.EnemyIntel.ACU))
+    local acuPos = {}
+    local lastSpotted = 0
     if aiBrain.EnemyIntel.ACU then
-        for _, v in aiBrain.EnemyIntel.ACU do
-            if v.ArmyIndex == enemyIndex then
+        for k, v in aiBrain.EnemyIntel.ACU do
+            if k == enemyIndex then
                 acuPos = v.Position
                 lastSpotted = v.LastSpotted
+                LOG('acuPos has data')
             else
-                acuPos = false
+                --LOG('acuPos is currently false')
             end
+        --[[if aiBrain.EnemyIntel.ACU[enemyIndex] == enemyIndex then
+            acuPos = aiBrain.EnemyIntel.ACU[enemyIndex].ACUPosition
+            lastSpotted = aiBrain.EnemyIntel.ACU[enemyIndex].LastSpotted
+            LOG('acuPos has data')
+        else
+            LOG('acuPos is currently false')
+        end]]
         end
-    else
-        acuPos = false
     end
     return acuPos, lastSpotted
 end
