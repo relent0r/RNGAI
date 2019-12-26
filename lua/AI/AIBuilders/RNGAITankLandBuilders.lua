@@ -426,6 +426,7 @@ BuilderGroup {
             MarkerType = 'Start Location',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',
+            IgnoreFriendlyBase = true,
             --ThreatType = '',
             --SelfThreat = '',
             --FindHighestThreat ='',
