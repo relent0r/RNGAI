@@ -6,7 +6,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
         local tempMarkers = AIGetMarkerLocations(aiBrain, 'Blank Marker')
         for k, v in tempMarkers do
             if string.sub(v.Name, 1, 5) == 'ARMY_' then
-                local myThreat = aiBrain:GetThreatAtPosition(v.position, 0, true, 'StructuresNotMex', self:GetArmyIndex())
+                local myThreat = aiBrain:GetThreatAtPosition(v.position, 0, true, 'StructuresNotMex', aiBrain:GetArmyIndex())
                 --LOG('Friendly threat at '..v.position..' has value of '..myThreat)
                 if myThreat < 10 then
                     table.insert(markerList, {Position = v.Position, Name = v.Name})

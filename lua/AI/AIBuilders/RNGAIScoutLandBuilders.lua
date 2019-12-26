@@ -30,6 +30,7 @@ BuilderGroup {
         Priority = 700, -- After second engie group
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.5}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.SCOUT } },
             { IBC, 'BrainNotLowPowerMode', {} },

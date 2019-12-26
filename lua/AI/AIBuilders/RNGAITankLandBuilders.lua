@@ -60,6 +60,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
         BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -179,7 +180,7 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.00 }},
-            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -209,7 +210,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -238,6 +239,7 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemy', { true } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -253,7 +255,7 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },

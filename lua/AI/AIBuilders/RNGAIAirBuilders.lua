@@ -22,6 +22,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 750,
         BuilderConditions = { 
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.ANTIAIR * categories.TECH3} },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
@@ -44,7 +45,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirBomber',
         Priority = 750,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
@@ -70,7 +71,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.7}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.7}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -81,7 +82,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 850,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
             { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 4 , 'RNGAI Factory Intie Response'} },
         },
@@ -92,7 +93,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirFighter',
         Priority = 700,
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.7}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.7}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
@@ -109,6 +110,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = { 
             { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
@@ -119,7 +121,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.00, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.BOMBER * categories.TECH3} },
@@ -134,7 +136,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
         },
@@ -147,7 +149,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
@@ -165,7 +167,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
