@@ -8,10 +8,10 @@ function CommanderBehavior(platoon)
     for _, v in platoon:GetPlatoonUnits() do
         if not v.Dead and not v.CommanderThread then
             if per == 'RNGStandard' or per == 'RNGStandardcheat' then
-                LOG('Correct ai brain name')
+                --LOG('Correct ai brain name')
                 v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
             else
-                LOG('Incorrect ai brain name')
+                --LOG('Incorrect ai brain name')
                 v.CommanderThread = v:ForkThread(CommanderThread, platoon)
             end
         end
@@ -19,7 +19,7 @@ function CommanderBehavior(platoon)
 end
 
 function CommanderThreadRNG(cdr, platoon)
-    LOG('Starting CommanderThreadRNG')
+    --LOG('Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
     aiBrain:BuildScoutLocationsRNG()
     -- Added to ensure we know the start locations (thanks to Sorian).
@@ -264,7 +264,7 @@ function ACUDetection(platoon)
     local ACUTable = aiBrain.EnemyIntel.ACU
     local scanWait = platoon.PlatoonData.ScanWait
     local unit = platoon:GetPlatoonUnits()[1]
-    LOG('ACU Detection Behavior Running')
+    --LOG('ACU Detection Behavior Running')
     if ACUTable then 
         while not unit.Dead do
             local currentGameTime = GetGameTimeSeconds()

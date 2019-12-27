@@ -383,7 +383,7 @@ Platoon = Class(oldPlatoon) {
         end
 
         if patrol == true then
-            LOG('Patrol function is true, starting patrol function')
+            --LOG('Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
             --local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
             local estartX = nil
@@ -393,27 +393,24 @@ Platoon = Class(oldPlatoon) {
             local patrolPositionX = nil
             local patrolPositionZ = nil
             while not scout.Dead do
-                LOG('scout not dead doing stuff')
                 if aiBrain:GetCurrentEnemy() then
                     estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
-                    LOG('Enemy Position X, Z :'..estartX..' '..estartZ)
                 end
-                LOG('past get current enemy')
                 startX, startZ = aiBrain:GetArmyStartPos()
-                LOG('Start Location X Z :'..startX..startZ)
+                --LOG('Start Location X Z :'..startX..startZ)
                 local rng = math.random(1,3)
                 if rng == 1 then
-                    LOG('Patroling BaseMilitaryArea')
+                    --LOG('Patroling BaseMilitaryArea')
                     patrolPositionX = (estartX + startX) / 2.2
                     patrolPositionZ = (estartZ + startZ) / 2.2
                 elseif rng == 2 then
-                    LOG('Patroling BaseRestrictedArea')
+                    --LOG('Patroling BaseRestrictedArea')
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
                     patrolPositionX = (patrolPositionX + startX) / 2
                     patrolPositionZ = (patrolPositionZ + startZ) / 2
                 elseif rng == 3 then
-                    LOG('Patroling BaseDMZArea')
+                    --LOG('Patroling BaseDMZArea')
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
                 end

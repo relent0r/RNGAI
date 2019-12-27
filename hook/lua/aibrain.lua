@@ -10,7 +10,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         --LOG('Oncreate')
         if string.find(per, 'RNG') then
-            LOG('This is RNG')
+            --LOG('This is RNG')
             self.RNG = true
         end
     end,
@@ -163,14 +163,14 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     PickEnemy = function(self)
-        LOG('Pick enemy')
+        --LOG('Pick enemy')
         RNGAIBrainClass.OnCreateAI(self)
         --RNGAIBrainClass.PickEnemy(self)
         --LOG('Pre True'..repr(self.RNG))
         while true do
             --LOG('self.rng is'..repr(self.RNG))
             if self.RNG then
-                LOG('Selecting RNG')
+                --LOG('Selecting RNG')
                 self:PickEnemyLogicRNG()
             else
                 self:PickEnemyLogic()
@@ -222,20 +222,20 @@ AIBrain = Class(RNGAIBrainClass) {
                 ecoThreat = 1
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
-            LOG('Enemy Index is :'..enemyIndex)
+            --LOG('Enemy Index is :'..enemyIndex)
             local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
-            LOG('ACU Position is has data'..repr(acuPos))
+            --LOG('ACU Position is has data'..repr(acuPos))
             insertTable.ACUPosition = acuPos
             insertTable.ACULastSpotted = lastSpotted
             
             insertTable.EconomicThreat = ecoThreat
             if insertTable.Enemy then
                 insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
-                LOG('First Enemy Pass Strength is :'..insertTable.Strength)
+                --LOG('First Enemy Pass Strength is :'..insertTable.Strength)
             else
                 insertTable.Position = {startX, 0 ,startZ}
                 insertTable.Strength = ecoThreat
-                LOG('First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
+                --LOG('First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
             end
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
@@ -243,7 +243,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyEnemy = self:GetAllianceEnemyRNG(armyStrengthTable)
         
         if allyEnemy  then
-            LOG('Ally Enemy is true or ACU is close')
+            --LOG('Ally Enemy is true or ACU is close')
             self:SetCurrentEnemy(allyEnemy)
         else
             local findEnemy = false
@@ -279,10 +279,10 @@ AIBrain = Class(RNGAIBrainClass) {
 
                     if v.Strength == 0 then
                         name = v.Brain.Nickname
-                        LOG('Name is'..name)
-                        LOG('v.strenth is 0')
+                        --LOG('Name is'..name)
+                        --LOG('v.strenth is 0')
                         if name ~= 'civilian' then
-                            LOG('Inserted Name is '..name)
+                            --LOG('Inserted Name is '..name)
                             table.insert(enemyTable, v.Brain)
                         end
                         continue
@@ -292,12 +292,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     local distanceWeight = 0.1
                     local distance = VDist3(self:GetStartVector3f(), v.Position)
                     local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
-                    LOG('armyStrengthTable Strength is :'..v.Strength)
-                    LOG('Threat Weight is :'..threatWeight)
+                    --LOG('armyStrengthTable Strength is :'..v.Strength)
+                    --LOG('Threat Weight is :'..threatWeight)
                     if not enemy or threatWeight > enemyStrength then
                         enemy = v.Brain
                         enemyStrength = threatWeight
-                        LOG('Enemy Strength is'..enemyStrength)
+                        --LOG('Enemy Strength is'..enemyStrength)
                     end
                 end
 
@@ -306,9 +306,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     self:SetCurrentEnemy(enemy)
                 else
                     local num = table.getn(enemyTable)
-                    LOG('Table number is'..num)
+                    --LOG('Table number is'..num)
                     local ran = math.random(num)
-                    LOG('Random Number is'..ran)
+                    --LOG('Random Number is'..ran)
                     enemy = enemyTable[ran]
                     LOG('Random Enemy is'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
@@ -385,14 +385,14 @@ AIBrain = Class(RNGAIBrainClass) {
         local highStrength = strengthTable[myIndex].Strength
         local startX, startZ = self:GetArmyStartPos()
         
-        LOG('My Own Strength is'..highStrength)
+        --LOG('My Own Strength is'..highStrength)
         for _, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
-                LOG('ACU Position is :'..repr(v.ACUPosition))
+                --LOG('ACU Position is :'..repr(v.ACUPosition))
                 if v.ACUPosition[1] then
                     ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
-                    LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
+                    --LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
                     if ACUDist < 180 then
                         LOG('Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         acuThreat = self:GetThreatAtPosition(v.ACUPosition, 0, true, 'Overall')

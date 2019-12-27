@@ -19,7 +19,7 @@ BuilderGroup {
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.9 }},
@@ -48,7 +48,7 @@ BuilderGroup {
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.0 }},
@@ -77,7 +77,7 @@ BuilderGroup {
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
@@ -109,7 +109,7 @@ BuilderGroup {
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.9 }},
@@ -135,7 +135,7 @@ BuilderGroup {
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.70}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
@@ -164,7 +164,7 @@ BuilderGroup {
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.70}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
@@ -281,7 +281,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -298,7 +298,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -315,7 +315,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -331,7 +331,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -398,7 +398,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -415,7 +415,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -432,7 +432,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -449,7 +449,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
         },
         BuilderType = 'Any',
