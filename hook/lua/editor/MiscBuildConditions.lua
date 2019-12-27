@@ -21,10 +21,11 @@ function ReclaimablesInArea(aiBrain, locType)
     
     return false
 end
-
-function CanPathToCurrentEnemy(aiBrain, bool) -- Uveso's function
+local CanPathToEnemyRNG = {}
+function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's function modified to work with expansions
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-    local startX, startZ = aiBrain:GetArmyStartPos()
+    --We are getting the current base position rather than the start position so we can use this for expansions.
+    local locPos = aiBrain.BuilderManagers[locationType].Position
     local enemyX, enemyZ
     if aiBrain:GetCurrentEnemy() then
         enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
@@ -42,46 +43,47 @@ function CanPathToCurrentEnemy(aiBrain, bool) -- Uveso's function
     local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
 
     -- create a table for the enemy index in case it's nil
-    CanPathToEnemy[OwnIndex] = CanPathToEnemy[OwnIndex] or {} 
+    CanPathToEnemyRNG[OwnIndex] = CanPathToEnemyRNG[OwnIndex] or {}
+    CanPathToEnemyRNG[OwnIndex][EnemyIndex] = CanPathToEnemyRNG[OwnIndex][EnemyIndex] or {}
     -- Check if we have already done a path search to the current enemy
-    if CanPathToEnemy[OwnIndex][EnemyIndex] == 'LAND' then
+    if CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'LAND' then
         return true == bool
-    elseif CanPathToEnemy[OwnIndex][EnemyIndex] == 'WATER' then
+    elseif CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'WATER' then
         return false == bool
     end
 
     -- path wit AI markers from our base to the enemy base
-    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {startX,0,startZ}, {enemyX,0,enemyZ}, 1000)
+    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
     -- if we have a path generated with AI path markers then....
     if path then
-        LOG('* AI-Uveso: CanPathToCurrentEnemy: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..'')
-        CanPathToEnemy[OwnIndex][EnemyIndex] = 'LAND'
+        LOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
+        CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
     -- if we not have a path
     else
         -- "NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
         if reason == 'NoPath' then
-            LOG('* AI-Uveso: CanPathToCurrentEnemy: No land path to the enemy found! WATER map! - '..OwnIndex..' vs '..EnemyIndex..'')
-            CanPathToEnemy[OwnIndex][EnemyIndex] = 'WATER'
+            LOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
+            CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
         -- "NoGraph" means we have no AI markers and cant graph to the enemy. We can't search for a path - No markers
         elseif reason == 'NoGraph' then
-            LOG('* AI-Uveso: CanPathToCurrentEnemy: No AI markers found! Using land/water ratio instead')
+            LOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
             -- Check if we have less then 50% water on the map
             if aiBrain:GetMapWaterRatio() < 0.50 then
                 --lets asume we can move on land to the enemy
-                LOG(string.format('* AI-Uveso: CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..'',aiBrain:GetMapWaterRatio()*100 ))
-                CanPathToEnemy[OwnIndex][EnemyIndex] = 'LAND'
+                LOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
             else
                 -- we have more then 50% water on this map. Ity maybe a water map..
-                LOG(string.format('* AI-Uveso: CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..'',aiBrain:GetMapWaterRatio()*100 ))
-                CanPathToEnemy[OwnIndex][EnemyIndex] = 'WATER'
+                LOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
             end
         end
     end
-    if CanPathToEnemy[OwnIndex][EnemyIndex] == 'LAND' then
+    if CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'LAND' then
         return true == bool
-    elseif CanPathToEnemy[OwnIndex][EnemyIndex] == 'WATER' then
+    elseif CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'WATER' then
         return false == bool
     end
-    CanPathToEnemy[OwnIndex][EnemyIndex] = 'WATER'
+    CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
     return false == bool
 end
