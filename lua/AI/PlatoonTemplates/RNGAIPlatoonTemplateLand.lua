@@ -46,7 +46,7 @@ PlatoonTemplate {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 8, 'attack', 'none' },
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'artillery', 'none' },
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
-        --{ categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
 
@@ -57,7 +57,7 @@ PlatoonTemplate {
         { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 4, 15, 'attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'artillery', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-        --{ categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
 
@@ -68,7 +68,7 @@ PlatoonTemplate {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 5, 30, 'attack', 'none' },
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 8, 'attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
 
@@ -79,7 +79,7 @@ PlatoonTemplate {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 5, 'attack', 'none' },
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'attack', 'none' },
         { categories.LAND * categories.ENGINEER - categories.COMMAND, 1, 1, 'support', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
 
@@ -103,11 +103,11 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           4, -- Min number of units.
-          8, -- Max number of units.
+          12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
-          { categories.LAND * categories.ANTIAIR, 0, 1, 'guard', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 2, 'scout', 'none' },
+          { categories.LAND * categories.ANTIAIR, 0, 2, 'guard', 'none' },
     },
 }
 
@@ -117,11 +117,11 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           4, -- Min number of units.
-          8, -- Max number of units.
+          12, -- Max number of units.
           'Attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 1, 1, 'Scout', 'none' },
-          { categories.LAND * categories.ANTIAIR, 0, 1, 'Guard', 'none' },
+          { categories.LAND * categories.SCOUT, 1, 2, 'Scout', 'none' },
+          { categories.LAND * categories.ANTIAIR, 0, 2, 'Guard', 'none' },
     },
 }
 
