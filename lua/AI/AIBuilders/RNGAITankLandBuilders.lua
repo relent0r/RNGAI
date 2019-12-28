@@ -5,7 +5,7 @@
         Land Builders
 ]]
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-
+LOG('BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
@@ -184,7 +184,7 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.00 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -215,7 +215,7 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -260,7 +260,7 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
@@ -447,12 +447,26 @@ BuilderGroup {
         },    
     }, 
     Builder {
-        BuilderName = 'RNGAI Spam',                              -- Random Builder Name.
+        BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 400,                                                          -- Priority. 1000 is normal.
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            },
+    },
+    Builder {
+        BuilderName = 'RNGAI Spam Aeon',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        Priority = 450,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {

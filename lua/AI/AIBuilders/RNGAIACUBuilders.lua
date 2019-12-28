@@ -323,7 +323,6 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssist',
         Priority = 700,
         BuilderConditions = {
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS'}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.4}},
         },
         BuilderType = 'Any',

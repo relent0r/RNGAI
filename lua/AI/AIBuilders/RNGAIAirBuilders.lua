@@ -19,7 +19,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory Intie T1',
-        PlatoonTemplate = 'T1AirFighter',
+        PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 750,
         BuilderConditions = { 
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.3}},
@@ -78,22 +78,11 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Intie Maintain',
-        PlatoonTemplate = 'T1AirFighter',
-        Priority = 850,
-        BuilderConditions = { 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10, categories.AIR * categories.ANTIAIR } },
-            { TBC, 'EnemyThreatGreaterThanValueAtBase', { 'MAIN', 10, 'Air', 4 , 'RNGAI Factory Intie Response'} },
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory Intie Small',
-        PlatoonTemplate = 'T1AirFighter',
+        PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 700,
         BuilderConditions = { 
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.ANTIAIR } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
         BuilderType = 'Air',
     },
@@ -168,7 +157,6 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
     },
 }
@@ -235,7 +223,7 @@ BuilderGroup {
             NeverGuardEngineers = true,
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
          },
     },
     Builder {
@@ -249,7 +237,7 @@ BuilderGroup {
             GuardRadius = BaseMilitaryArea, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
         },
     },
     Builder {

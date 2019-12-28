@@ -6,9 +6,16 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
         local tempMarkers = AIGetMarkerLocations(aiBrain, 'Blank Marker')
         for k, v in tempMarkers do
             if string.sub(v.Name, 1, 5) == 'ARMY_' then
-                local myThreat = aiBrain:GetThreatAtPosition(v.Position, 0, true, 'StructuresNotMex', aiBrain:GetArmyIndex())
-                --LOG('Friendly threat at '..v.position..' has value of '..myThreat)
-                if myThreat < 10 then
+                local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
+                local GetBlueprint = moho.entity_methods.GetBlueprint
+                local ecoThreat = 0
+                for _, v in ecoStructures do
+                    local bp = v:GetBlueprint()
+                    local ecoStructThreat = bp.Defense.EconomyThreatLevel
+                    --LOG('Eco Structure'..ecoStructThreat)
+                    ecoThreat = ecoThreat + ecoStructThreat
+                end
+                if ecoThreat < 10 then
                     table.insert(markerList, {Position = v.Position, Name = v.Name})
                 end
             end

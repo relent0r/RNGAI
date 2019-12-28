@@ -588,12 +588,23 @@ Platoon = Class(oldPlatoon) {
         while aiBrain:PlatoonExists(self) do
             target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
             if target then
+                if self:GetSquadUnits('Scout') then
+                    local assistUnits = self:GetSquadUnits('Scout')
+                    local attackUnits =  self:GetSquadUnits('Attack')
+                    local guardedUnit = 1
+                    while attackUnits[guardedUnit].Dead do
+                        guardedUnit = guardedUnit + 1
+                    end
+                    IssueGuard(assistUnits, attackUnits[guardedUnit])
+                    --self:GuardTarget(attackUnits[guardedUnit], 'Scout')
+                end
                 blip = target:GetBlip(armyIndex)
-                self:Stop()
-                self:AggressiveMoveToLocation(table.copy(target:GetPosition()))
-                --DUNCAN - added to try and stop AI getting stuck.
-                local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
-                self:MoveToLocation(position, false)
+                if self:GetSquadUnits('Attack') then
+                    self:Stop('Attack')
+                    self:AggressiveMoveToLocation(table.copy(target:GetPosition()), 'Attack')
+                    local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
+                    self:MoveToLocation(position, false, 'Attack')
+                end
             end
             WaitTicks(170)
         end
@@ -1301,7 +1312,7 @@ Platoon = Class(oldPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG("GuardMarker: Attacking " .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, maxPathDistance)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, 100 , maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(self:GetPlatoonUnits())
             if path then

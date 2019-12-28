@@ -85,6 +85,23 @@ PlatoonTemplate {
         },
     }
 }
+PlatoonTemplate {
+    Name = 'RNGAIFighterGroup',
+    FactionSquads = {
+        UEF = {
+            { 'uea0102', 1, 3, 'attack', 'GrowthFormation' }
+        },
+        Aeon = {
+            { 'uaa0102', 1, 3, 'attack', 'GrowthFormation' }
+        },
+        Cybran = {
+            { 'ura0102', 1, 3, 'attack', 'GrowthFormation' }
+        },
+        Seraphim = {
+            { 'xsa0102', 1, 3, 'attack', 'GrowthFormation' }
+        },
+    }
+}
 
 PlatoonTemplate { Name = 'RNGAIT3AirAttackQueue',
     FactionSquads = {

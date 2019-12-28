@@ -32,7 +32,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 600 } },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
         BuilderType = 'All',
@@ -43,7 +43,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 180, -500, 0, 0, 'AntiSurface', 1}},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
         BuilderType = 'All',
@@ -54,7 +54,7 @@ BuilderGroup {
         Priority = 600, -- low factory priority
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -67,7 +67,7 @@ BuilderGroup {
         Priority = 750, -- low factory priority
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH1' } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, 'ENGINEER TECH1' } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { IBC, 'BrainNotLowMassMode', {} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -184,7 +184,6 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
         },
         BuilderType = 'Any',
@@ -204,7 +203,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ENERGYPRODUCTION TECH2' } },
+            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 }},
         },
@@ -226,7 +225,6 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
         },
         BuilderType = 'Any',
@@ -251,7 +249,6 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
@@ -271,7 +268,6 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'LocationEngineersBuildingAssistanceGreater', { 'LocationType', 0, 'ALLUNITS' } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
@@ -288,16 +284,39 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
         PlatoonTemplate = 'EngineerBuilder',
         PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
-        Priority = 980,
-        InstanceCount = 2,
+        Priority = 950,
+        InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             },
         BuilderData = {
             Assist = {
+                AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = 'Engineer',
                 BeingBuiltCategories = {'STRUCTURE STRATEGIC, STRUCTURE ECONOMIC, STRUCTURE'},
+                Time = 20,
+            },
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
+        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
+        Priority = 950,
+        InstanceCount = 3,
+        BuilderConditions = {
+                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
+                { UCBC, 'LessThanEnergyTrend', { 10.0 } },
+            },
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
                 Time = 20,
             },
         },
@@ -313,7 +332,7 @@ BuilderGroup {
         PlatoonTemplate = 'UEFT2EngineerBuilder',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'ENGINEERSTATION' }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -336,7 +355,7 @@ BuilderGroup {
         PlatoonTemplate = 'CybranT2EngineerBuilder',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'ENGINEERSTATION' }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -353,6 +372,20 @@ BuilderGroup {
                 },
             }
         }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Repair',
+        PlatoonTemplate = 'EngineerRepairRNG',
+        PlatoonAIPlan = 'RepairAI',
+        Priority = 900,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { MIBC, 'DamagedStructuresInAreaRNG', { 'LocationType', }},
+            },
+        BuilderData = {
+            LocationType = 'LocationType',
+        },
+        BuilderType = 'Any',
     },
 }
 BuilderGroup {
@@ -390,12 +423,11 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
-                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
                 
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 60
+            ReclaimTime = 80
         },
         BuilderType = 'Any',
     },
@@ -407,12 +439,11 @@ BuilderGroup {
         InstanceCount = 6,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
-                { MIBC, 'ReclaimablesInArea', { 'LocationType', }},
                 { EBC, 'LessThanEconStorageRatio', { 0.50, 0.0}},
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 60
+            ReclaimTime = 80
         },
         BuilderType = 'Any',
     },

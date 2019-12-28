@@ -87,3 +87,19 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
     return false == bool
 end
+
+function DamagedStructuresInAreaRNG(aiBrain, locationtype)
+    local engineerManager = aiBrain.BuilderManagers[locationtype].EngineerManager
+    if not engineerManager then
+        return false
+    end
+    local Structures = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.STRUCTURE - (categories.TECH1 - categories.FACTORY), engineerManager:GetLocationCoords(), engineerManager.Radius)
+    for k,v in Structures do
+        if not v.Dead and v:GetHealthPercent() < .8 then
+        --LOG('*AI DEBUG: DamagedStructuresInArea return true')
+            return true
+        end
+    end
+    --LOG('*AI DEBUG: DamagedStructuresInArea return false')
+    return false
+end
