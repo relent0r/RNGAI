@@ -588,15 +588,20 @@ Platoon = Class(oldPlatoon) {
         while aiBrain:PlatoonExists(self) do
             target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
             if target then
+                local attackUnits =  self:GetSquadUnits('Attack')
                 if self:GetSquadUnits('Scout') then
-                    local assistUnits = self:GetSquadUnits('Scout')
-                    local attackUnits =  self:GetSquadUnits('Attack')
                     local guardedUnit = 1
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
                     end
-                    IssueGuard(assistUnits, attackUnits[guardedUnit])
-                    --self:GuardTarget(attackUnits[guardedUnit], 'Scout')
+                    IssueGuard(self:GetSquadUnits('Scout'), attackUnits[guardedUnit])
+                end
+                if self:GetSquadUnits('Guard') then
+                    local guardedUnit = 1
+                    while attackUnits[guardedUnit].Dead do
+                        guardedUnit = guardedUnit + 1
+                    end
+                    IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
                 end
                 blip = target:GetBlip(armyIndex)
                 if self:GetSquadUnits('Attack') then

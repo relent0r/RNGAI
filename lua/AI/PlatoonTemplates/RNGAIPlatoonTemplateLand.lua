@@ -300,6 +300,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'delk002', 1, 1, 'Guard', 'none' },       -- AA
             { 'xel0305', 1, 3, 'Attack', 'none' },      -- Armored Assault Bot
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xel0306', 1, 2, 'Artillery', 'none' },   -- artillery
@@ -310,6 +311,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'dalk003', 1, 1, 'Guard', 'none' },       -- AA
             { 'xal0305', 1, 2, 'Attack', 'none' },      -- Sniper Bot
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'dal0310', 1, 1, 'Artillery', 'none' },   -- artillery
@@ -320,6 +322,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
             { 'xrl0305', 2, 3, 'Attack', 'none' },      -- Armored Assault Bot
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
@@ -329,6 +332,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'dslk004', 1, 1, 'Guard', 'none' },       -- AA
             { 'xsl0305', 1, 2, 'Attack', 'none' },       -- Sniper Bot
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0304', 1, 2, 'Artillery', 'none' },   -- artillery
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0307', 0, 1, 'Guard', 'none' },       -- Mobile Shield
