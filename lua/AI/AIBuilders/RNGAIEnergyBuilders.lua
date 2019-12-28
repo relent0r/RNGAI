@@ -41,7 +41,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 750,
+        Priority = 800,
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
