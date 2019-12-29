@@ -230,7 +230,7 @@ Platoon = Class(oldPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG("GuardMarker: Attacking " .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, maxPathDistance)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, 10, maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(self:GetPlatoonUnits())
             if path then
@@ -348,7 +348,7 @@ Platoon = Class(oldPlatoon) {
         else
             --LOG('Engineer Condition is false')
         end
-        --LOG('Ending ReclaimAIRNG..Disbanding')
+        LOG('Ending ReclaimAIRNG..Disbanding')
         self:PlatoonDisband()
     end,
 

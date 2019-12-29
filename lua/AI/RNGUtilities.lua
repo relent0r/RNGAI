@@ -92,21 +92,21 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
-            --LOG('Engineer is reclaiming')
+            LOG('Engineer is reclaiming')
             WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                --LOG('Engineer no longer reclaiming')
+                LOG('Engineer no longer reclaiming')
                 reclaiming = false
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
+        LOG('basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitTicks(50)
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
-            reclaimRect = nil
             LOG('reclaimLopp = 5 returning')
             return
         end

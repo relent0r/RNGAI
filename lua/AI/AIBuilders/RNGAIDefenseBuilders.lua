@@ -283,6 +283,7 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { MIBC, 'GreaterThanGameTime', { 360 } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
