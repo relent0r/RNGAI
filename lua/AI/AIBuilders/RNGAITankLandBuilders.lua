@@ -242,7 +242,7 @@ BuilderGroup {
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY TECH2' }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},

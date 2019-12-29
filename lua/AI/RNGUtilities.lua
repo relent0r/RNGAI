@@ -8,8 +8,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
     local initialRange = 40
-    local closestDistance = 10000
-    local furtherestDistance = 0
     local createTick = GetGameTick()
     local reclaimLoop = 0
 
@@ -18,6 +16,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local furtherestReclaim = nil
         local closestReclaim = nil
+        local closestDistance = 10000
+        local furtherestDistance = 0
         local engPos = self:GetPosition()
         local x1 = engPos[1] - initialRange
         local x2 = engPos[1] + initialRange
