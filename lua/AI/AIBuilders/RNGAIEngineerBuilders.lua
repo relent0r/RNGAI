@@ -436,10 +436,27 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 700,
-        InstanceCount = 6,
+        InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
-                { EBC, 'LessThanEconStorageRatio', { 0.50, 0.0}},
+                { UCBC, 'LessThanGameTimeSeconds', { 600 } },
+                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
+            },
+        BuilderData = {
+            LocationType = 'LocationType',
+            ReclaimTime = 80
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T1 Excess',
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonAIPlan = 'ReclaimAIRNG',
+        Priority = 700,
+        InstanceCount = 6,
+        BuilderConditions = {
+                { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
             LocationType = 'LocationType',

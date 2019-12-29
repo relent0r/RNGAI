@@ -163,8 +163,8 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.30}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.TECH1 * categories.ENERGYPRODUCTION } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },

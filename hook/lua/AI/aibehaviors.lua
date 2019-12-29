@@ -293,6 +293,6 @@ function ACUDetection(platoon)
             WaitTicks(scanWait)
         end
     else
-            WARN('No EnemyIntel ACU Table found')
+            WARN('No EnemyIntel ACU Table found, is the game still initializing?')
     end
 end
