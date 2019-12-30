@@ -25,7 +25,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Guard Marker Small',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 10, 'attack', 'none' },
+        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 5, 10, 'attack', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     }
 }
@@ -59,6 +59,16 @@ PlatoonTemplate {
         { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'artillery', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
+    }
+}
+
+
+PlatoonTemplate {
+    Name = 'RNGAI Antiair Small',
+    Plan = 'StrikeForceAI',    
+    GlobalSquads = {
+        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 2, 'attack', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
     }
 }
 
