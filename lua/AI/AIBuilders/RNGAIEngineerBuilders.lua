@@ -466,3 +466,25 @@ BuilderGroup {
     },
     
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI T1 Reclaim Builders Expansion',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonAIPlan = 'ReclaimAIRNG',
+        Priority = 700,
+        InstanceCount = 2,
+        BuilderConditions = {
+                { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+                { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
+            },
+        BuilderData = {
+            LocationType = 'LocationType',
+            ReclaimTime = 80
+        },
+        BuilderType = 'Any',
+    },
+
+}

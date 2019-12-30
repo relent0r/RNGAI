@@ -87,7 +87,7 @@ BaseBuilderTemplate {
 
         -- Expansions --
         'RNGAI Engineer Expansion Builders Small',
-        
+
         -- SACU Builders --
         'RNGAI Gate Builders',
         'RNGAI SACU Builder',

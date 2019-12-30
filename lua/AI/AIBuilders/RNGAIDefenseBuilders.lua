@@ -15,34 +15,6 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses',
     BuildersType = 'EngineerBuilder',
-    --[[Builder {
-        BuilderName = 'RNGAI T1 Defence Engineer',
-        PlatoonTemplate = 'EngineerBuilder',
-        Priority = 875,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
-            { MIBC, 'GreaterThanGameTime', { 300 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NumAssistees = 2,
-            Construction = {
-                BuildClose = false,
-                BuildStructures = {
-                    'T1GroundDefense',
-                    'T1AADefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },]]
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
         PlatoonTemplate = 'EngineerBuilder',
@@ -253,7 +225,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 1.0, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -286,7 +258,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { MIBC, 'GreaterThanGameTime', { 360 } },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },

@@ -71,8 +71,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         -- Clear Commands first
         IssueClearCommands({self})
         --LOG('Attempting move to closest reclaim')
+        LOG('Closest reclaim is '..repr(closestReclaim))
+        if not closestReclaim then
+            return
+        end
         StartMoveDestination(self, closestReclaim)
-        --LOG('Closest reclaim is '..closestReclaim[1]..' '..closestReclaim[3])
         local brokenDistance = closestDistance / 6
         --LOG('One 6th of distance is '..brokenDistance)
         local moveWait = 0

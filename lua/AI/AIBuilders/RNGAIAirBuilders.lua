@@ -83,6 +83,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = { 
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.3}},
         },
         BuilderType = 'Air',
     },
@@ -243,18 +244,18 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Base Guard',
         PlatoonTemplate = 'RNGAI Bomber BaseGuard',
-        Priority = 700,
+        Priority = 950,
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
                 'MOBILE LAND',
                 'ENGINEER TECH1',
-                'MOBILE ANTIAIR',
                 'MASSEXTRACTION',
                 'ALLUNITS',
             },
@@ -267,7 +268,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
@@ -287,7 +288,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE GROUNDATTACK' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE GROUNDATTACK' } },
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
@@ -307,7 +308,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -328,7 +329,7 @@ BuilderGroup {
         InstanceCount = 6,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE BOMBER' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -347,7 +348,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH2, AIR MOBILE TECH3' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -425,6 +426,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
+            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -438,6 +440,7 @@ BuilderGroup {
         Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
+            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
             { IBC, 'BrainNotLowPowerMode', {} },
