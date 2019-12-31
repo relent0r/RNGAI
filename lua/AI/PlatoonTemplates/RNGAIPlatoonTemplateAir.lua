@@ -44,7 +44,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
-    Plan = 'StrikeForceAI',
+    Plan = 'StrikeForceAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY - categories.daa0206, 1, 100, 'Attack', 'GrowthFormation' },
         #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
@@ -53,7 +53,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI GunShipAttack',
-    Plan = 'StrikeForceAI',
+    Plan = 'StrikeForceAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.GROUNDATTACK - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'GrowthFormation' },
         #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
@@ -62,7 +62,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI BomberEnergyAttack',
-    Plan = 'StrikeForceAI',
+    Plan = 'StrikeForceAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY - categories.daa0206, 1, 5, 'Attack', 'GrowthFormation' },
         #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },

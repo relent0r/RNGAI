@@ -9,6 +9,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Builder',
@@ -106,7 +107,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 180 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             
         },
@@ -143,6 +144,82 @@ BuilderGroup {
             Construction = {
                 BuildStructures = {
                     'T1Resource',
+                },
+            }
+        }
+    },
+}
+
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Fab',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Mass Fab',
+        PlatoonTemplate = 'T3EngineerBuilderNoSUB',
+        Priority = 300,
+        BuilderConditions = {
+            -- When do we want to build this ?
+            -- Do we need additional conditions to build it ?
+            { UCBC, 'HasNotParagon', {} },
+            { UCBC, 'HaveUnitRatioUveso', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
+            -- Have we the eco to build it ?
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatio', { 0.40, 1.00}}, -- Ratio from 0 to 1. (1=100%)
+            -- Don't build it if...
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
+            -- Respect UnitCap
+            { UCBC, 'HaveUnitRatioVersusCap', { 0.10 , '<', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSFABRICATION) } },
+    
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 4,
+                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyDistance = 50,
+                AvoidCategory = categories.MASSFABRICATION,
+                maxUnits = 1,
+                maxRadius = 15,
+                BuildClose = true,
+                BuildStructures = {
+                    'T3MassCreation',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI Mass Fab Adja',
+        PlatoonTemplate = 'T3EngineerBuilderNoSUB',
+        Priority = 300,
+        BuilderConditions = {
+            -- When do we want to build this ?
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
+            -- Do we need additional conditions to build it ?
+            { UCBC, 'HaveUnitRatioUveso', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
+            { UCBC, 'HasNotParagon', {} },
+            -- Have we the eco to build it ?
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.95}}, -- Ratio from 0 to 1. (1=100%)
+            -- Don't build it if...
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
+            -- Respect UnitCap
+            { UCBC, 'HaveUnitRatioVersusCap', { 0.10 , '<', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSFABRICATION) } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 4,
+                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyDistance = 50,
+                AvoidCategory = categories.MASSFABRICATION,
+                maxUnits = 1,
+                maxRadius = 15,
+                BuildClose = true,
+                BuildStructures = {
+                    'T3MassCreation',
                 },
             }
         }

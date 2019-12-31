@@ -69,33 +69,6 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
-        BuilderName = 'RNGAI T1 Mortar Defense Response',
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 750,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 MML Defense Response',
-        PlatoonTemplate = 'T2LandArtillery',
-        Priority = 750,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE }},
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
 }
 
 BuilderGroup {
@@ -189,18 +162,6 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
-        BuilderName = 'RNGAI T2 Mobile MML Response',
-        PlatoonTemplate = 'T2LandArtillery',
-        Priority = 750,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseEnemyArea, 'LocationType', 0, categories.DEFENSE }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.LAND * categories.MOBILE * categories.TECH2 * categories.INDIRECTFIRE }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
 }
 
 BuilderGroup {
@@ -216,17 +177,6 @@ BuilderGroup {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.1}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T3 Mobile Arty Response',
-        PlatoonTemplate = 'T3LandArtillery',
-        Priority = 760,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseEnemyArea, 'LocationType', 0, categories.DEFENSE }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -405,7 +355,7 @@ BuilderGroup {
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
@@ -503,7 +453,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 875,                                                          -- Priority. 1000 is normal.
+        Priority = 750,                                                          -- Priority. 1000 is normal.
         InstanceCount = 6,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -516,7 +466,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE - categories.SCOUT - categories.WALL,         -- Only find targets matching these categories.
+            TargetSearchCategory = (categories.STRUCTURE + categories.MOBILE ) * categories.LAND - categories.SCOUT - categories.WALL,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',
@@ -534,7 +484,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Defense Attack BaseDMZArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 900,                                                          -- Priority. 1000 is normal.
+        Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -547,7 +497,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.STRUCTURE * categories.DEFENSE,         -- Only find targets matching these categories.
+            TargetSearchCategory = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * categories.LAND),         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'DEFENSE STRUCTURE',
                 'ANTIAIR STRUCTURE',
@@ -565,7 +515,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 875,                                                          -- Priority. 1000 is normal.
+        Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 10,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -577,7 +527,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.STRUCTURE * categories.LAND * categories.MOBILE - categories.SCOUT,         -- Only find targets matching these categories.
+            TargetSearchCategory = (categories.STRUCTURE + categories.MOBILE ) * categories.LAND - categories.SCOUT,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',

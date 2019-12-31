@@ -58,7 +58,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 120 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconStorageCurrent', { 1000, 0 } },
+            { EBC, 'GreaterThanEconStorageCurrent', { 800, 0 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },
         },
@@ -136,11 +136,11 @@ BuilderGroup {
         BuilderName = 'RNAIG T1 Mass Extractor Upgrade Expansion',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,
-        Priority = 400,
+        Priority = 200,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
-            { MIBC, 'GreaterThanGameTime', { 420 } },
+            { MIBC, 'GreaterThanGameTime', { 800 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
@@ -151,7 +151,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Mass Extractor Upgrade Single 120 excess Expansion',
         PlatoonTemplate = 'T1MassExtractorUpgrade',
         InstanceCount = 1,
-        Priority = 450,
+        Priority = 200,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 120 } },
             { IBC, 'BrainNotLowPowerMode', {} },

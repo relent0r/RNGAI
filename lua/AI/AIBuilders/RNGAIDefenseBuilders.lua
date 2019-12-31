@@ -131,7 +131,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Defence Engineer Restricted Breach Air',
         PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH3)} },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
@@ -185,6 +185,29 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2TMLEngineer',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 825,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 720 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
+            { EBC, 'GreaterThanEconEfficiency', { 1.0, 1.0}},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2StrategicMissile',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Base D Engineer AA',
         PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 900,
@@ -193,6 +216,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.1 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.2}},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH3 ANTIAIR STRUCTURE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -218,7 +242,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T2 Expansion TML',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T2TMLEngineer',
+        BuilderName = 'RNGAI T2TMLEngineer Expansion',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 825,
         BuilderConditions = {

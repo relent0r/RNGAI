@@ -48,6 +48,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 360 } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 50.0 } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.0}},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
@@ -126,6 +127,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 100.0 } },
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.0}},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH2, ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
@@ -174,6 +176,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 80.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.02, 0.0}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'ENERGYPRODUCTION TECH3' }},
         },

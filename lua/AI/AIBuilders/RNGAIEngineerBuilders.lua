@@ -197,28 +197,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Assist T2 PGEN',
-        PlatoonTemplate = 'EngineerAssist',
-        Priority = 800,
-        InstanceCount = 3,
-        BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssistLocation = 'LocationType',
-                PermanentAssist = false,
-                AssisteeType = 'Engineer',
-                BeingBuiltCategories = {'ENERGYPRODUCTION TECH2'},
-                Time = 60,
-            },
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Engineer Assist Factory',
         PlatoonTemplate = 'EngineerAssist',
         Priority = 500,
@@ -322,6 +300,46 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
+        PlatoonTemplate = 'T2EngineerAssist',
+        Priority = 950,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
+            { UCBC, 'LessThanEnergyTrend', { 10.0 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
+                Time = 20,
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Engineer Unfinished PGEN',
+        PlatoonTemplate = 'T3EngineerAssist',
+        Priority = 950,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
+            { UCBC, 'LessThanEnergyTrend', { 10.0 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
+                Time = 20,
+            },
+        }
+    },
 }
 
 BuilderGroup {
@@ -418,7 +436,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Early', -- Try to get that early reclaim
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 850,
+        Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
@@ -435,7 +453,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 ',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 700,
+        Priority = 900,
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
@@ -474,10 +492,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 700,
+        Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+                { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {

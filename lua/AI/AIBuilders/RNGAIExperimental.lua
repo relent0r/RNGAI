@@ -8,14 +8,14 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Experimental Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI Experimental Monkeylord 1st',
+        BuilderName = 'RNGAI Experimental 1st',
         PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.20, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.50}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
         },

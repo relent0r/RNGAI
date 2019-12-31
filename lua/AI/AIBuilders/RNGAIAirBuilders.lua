@@ -45,10 +45,11 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirBomber',
         Priority = 750,
         BuilderConditions = {
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -57,11 +58,12 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirBomber',
         Priority = 850,
         BuilderConditions = {
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -248,7 +250,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
         },
         BuilderData = {
@@ -265,7 +267,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
@@ -274,8 +276,8 @@ BuilderGroup {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
                 'MASSEXTRACTION',
-                'MOBILE LAND',
                 'ENGINEER TECH1',
+                'MOBILE LAND',
                 'MOBILE ANTIAIR',
                 'ALLUNITS',
             },
@@ -355,8 +357,8 @@ BuilderGroup {
             PrioritizedCategories = {
                 'RADAR STRUCTURE',
                 'EnergyStorage',
-                'ENERGYPRODUCTION TECH2',
                 'ENERGYPRODUCTION TECH1',
+                'ENERGYPRODUCTION TECH2',
                 'ALLUNITS',
             },
         },

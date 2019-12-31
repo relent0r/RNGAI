@@ -29,6 +29,7 @@ BaseBuilderTemplate {
         'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
         'RNGAI ExtractorUpgrades',
+        'RNGAI Mass Fab',
 
         -- Engineer Builders --
         'RNGAI Engineer Builder',

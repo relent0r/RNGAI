@@ -270,7 +270,7 @@ BuilderGroup {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
                 { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
             },
         BuilderType = 'Any',
     },
@@ -352,7 +352,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Factory Upgrade',
         PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 600,
+        Priority = 700,
         InstanceCount = 1,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTime', { 420 } },
