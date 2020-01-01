@@ -327,6 +327,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EnemyIntel.ACU[v:GetArmyIndex()] = {
                 Position = {},
                 LastSpotted = 0,
+                Threat = 0,
             }
         end
         while true do
@@ -384,6 +385,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local myIndex = self:GetArmyIndex()
         local highStrength = strengthTable[myIndex].Strength
         local startX, startZ = self:GetArmyStartPos()
+        local ACUDist = nil
         
         --LOG('My Own Strength is'..highStrength)
         for _, v in strengthTable do
@@ -395,8 +397,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
                     if ACUDist < 180 then
                         LOG('Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
-                        acuThreat = self:GetThreatAtPosition(v.ACUPosition, 0, true, 'Overall')
-                        LOG('Threat at ACU location is :'..acuThreat)
+                        returnEnemy = v.Brain
+                        return returnEnemy
+                    elseif v.Threat < 200 and ACUDist < 240 then
+                        LOG('Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     end

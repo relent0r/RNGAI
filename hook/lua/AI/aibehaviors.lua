@@ -264,6 +264,7 @@ function ACUDetection(platoon)
     local ACUTable = aiBrain.EnemyIntel.ACU
     local scanWait = platoon.PlatoonData.ScanWait
     local unit = platoon:GetPlatoonUnits()[1]
+
     --LOG('ACU Detection Behavior Running')
     if ACUTable then 
         while not unit.Dead do
@@ -285,6 +286,9 @@ function ACUDetection(platoon)
                         if currentGameTime - 60 > c.LastSpotted and k == enemyIndex then
                             --LOG('CurrentGameTime IF is true updating tables')
                             c.Position = v:GetPosition()
+                            acuThreat = aiBrain:GetThreatAtPosition(c.Position, 0, true, 'Overall')
+                            LOG('Threat at ACU location is :'..acuThreat)
+                            c.Threat = acuThreat
                             c.LastSpotted = currentGameTime
                         end
                     end
