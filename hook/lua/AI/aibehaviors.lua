@@ -1,5 +1,5 @@
 --local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 RNGCommanderBehavior = CommanderBehavior
 function CommanderBehavior(platoon)
@@ -67,13 +67,21 @@ end
 
 function CDROverChargeRNG(aiBrain, cdr)
     local weapBPs = cdr:GetBlueprint().Weapon
-    local weapon
+    local overCharge
+    local weapon = {}
 
     for k, v in weapBPs do
-        if v.Label == 'OverCharge' then
+        if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             weapon = v
+            weapon.Range = v.MaxRadius - 2
+            --LOG('ACU Weapon Range is :'..weaponRange)
             break
         end
+        if v.Label == 'OverCharge' then
+            overCharge = v
+            break
+        end
+
     end
 
     cdr.UnitBeingBuiltBehavior = false
@@ -164,6 +172,9 @@ function CDROverChargeRNG(aiBrain, cdr)
 
                 if target then
                     local targetPos = target:GetPosition()
+                    local cdrPos = cdr:GetPosition()
+                    local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                    
 
                     -- If inside base dont check threat, just shoot!
                     if Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 45 then
@@ -175,14 +186,29 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     end
 
-                    if aiBrain:GetEconomyStored('ENERGY') >= weapon.EnergyRequired and target and not target.Dead then
+                    if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         overCharging = true
                         IssueClearCommands({cdr})
-                        IssueOverCharge({cdr}, target)
-                    elseif target and not target.Dead then -- Commander attacks even if not enough energy for overcharge
+                        LOG('Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
+                        local movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        LOG('Move Position is'..repr(movePos))
+                        LOG('Moving to movePos to overcharge')
+                        cdr.PlatoonHandle:MoveToLocation(movePos, false)
+                        LOG('Checking if target is not dead')
+                        if target and not target.Dead and not target:BeenDestroyed() then
+                            IssueOverCharge({cdr}, target)
+                        end
+                    elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
-                        IssueMove({cdr}, targetPos)
-                        IssueMove({cdr}, cdr.CDRHome)
+                        local movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        local cdrNewPos = {}
+                        LOG('Move Position is'..repr(movePos))
+                        LOG('Moving to movePos to attack')
+                        cdr.PlatoonHandle:MoveToLocation(movePos, false)
+                        cdrNewPos[1] = movePos[1] + Random(-3, 3)
+                        cdrNewPos[2] = movePos[2]
+                        cdrNewPos[3] = movePos[3] + Random(-3, 3)
+                        cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
                 elseif distressLoc then
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
@@ -193,8 +219,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if distressLoc and (Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
                         IssueClearCommands({cdr})
-                        IssueMove({cdr}, distressLoc)
-                        IssueMove({cdr}, cdr.CDRHome)
+                        LOG('Moving to distress location')
+                        cdr.PlatoonHandle:MoveToLocation(distressLoc, false)
+                        cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                     end
                 end
             end
