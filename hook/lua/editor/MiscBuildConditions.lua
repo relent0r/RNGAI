@@ -25,7 +25,11 @@ local CanPathToEnemyRNG = {}
 function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's function modified to work with expansions
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     --We are getting the current base position rather than the start position so we can use this for expansions.
-    local locPos = aiBrain.BuilderManagers[locationType].Position
+    local locPos = aiBrain.BuilderManagers[locationType].Position 
+    -- added this incase the position came back nil
+    if not locPos then
+        locPos = aiBrain.BuilderManagers['MAIN'].Position
+    end
     local enemyX, enemyZ
     if aiBrain:GetCurrentEnemy() then
         enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
@@ -53,6 +57,7 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     end
 
     -- path wit AI markers from our base to the enemy base
+    LOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
     -- if we have a path generated with AI path markers then....
     if path then
