@@ -15,7 +15,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.50}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
         },
@@ -32,5 +32,28 @@ BuilderGroup {
                 Location = 'LocationType',
             }
         }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Experimental Formers',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T4 Exp Land',
+        PlatoonTemplate = 'T4ExperimentalLand',
+        Priority = 1000,
+        FormRadius = 10000,
+        InstanceCount = 50,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            ThreatWeights = {
+                TargetThreatType = 'Commander',
+            },
+            UseMoveOrder = true,
+            PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY LAND', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' }, # list in order
+        },
     },
 }

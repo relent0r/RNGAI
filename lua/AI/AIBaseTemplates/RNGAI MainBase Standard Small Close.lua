@@ -85,6 +85,7 @@ BaseBuilderTemplate {
         'RNGAI T1 Perimeter Defenses',
         'RNGAI T2 Defense FormBuilders',
         'RNGAI Shield Builder',
+        'RNGAI SMD Builders',
 
         -- Expansions --
         'RNGAI Engineer Expansion Builders Small',
@@ -95,6 +96,7 @@ BaseBuilderTemplate {
 
         --Experimentals --
         'RNGAI Experimental Builders',
+        'RNGAI Experimental Formers',
     },
     NonCheatBuilders = {
     },

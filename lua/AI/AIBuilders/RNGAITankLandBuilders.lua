@@ -175,8 +175,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.1}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.00 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.02, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

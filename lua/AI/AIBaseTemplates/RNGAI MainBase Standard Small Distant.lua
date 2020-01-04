@@ -85,6 +85,7 @@ BaseBuilderTemplate {
         'RNGAI T1 Perimeter Defenses',
         'RNGAI T2 Defense FormBuilders',
         'RNGAI Shield Builder',
+        'RNGAI SMD Builders',
 
         -- Expansions --
         'RNGAI Engineer Expansion Builders Small',
@@ -92,6 +93,10 @@ BaseBuilderTemplate {
         -- SACU Builders --
         'RNGAI Gate Builders',
         'RNGAI SACU Builder',
+
+        --Experimentals --
+        'RNGAI Experimental Builders',
+        'RNGAI Experimental Formers',
 
 
     },

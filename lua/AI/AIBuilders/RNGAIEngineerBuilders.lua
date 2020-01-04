@@ -185,6 +185,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -204,6 +205,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -228,6 +230,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -247,6 +250,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -301,8 +305,30 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
+        BuilderName = 'RNGAI T1 Engineer Unfinished Experimental',
+        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
+        Priority = 950,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
+                Time = 60,
+            },
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T2EngineerAssist',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -321,8 +347,30 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Engineer Unfinished Experimental',
+        PlatoonTemplate = 'T2EngineerAssist',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
+        Priority = 950,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
+                Time = 60,
+            },
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T3EngineerAssist',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -337,6 +385,27 @@ BuilderGroup {
                 AssisteeType = 'Engineer',
                 BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
                 Time = 20,
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Engineer Unfinished Experimental',
+        PlatoonTemplate = 'T3EngineerAssist',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
+        Priority = 950,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
+                BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
+                Time = 60,
             },
         }
     },

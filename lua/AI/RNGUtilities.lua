@@ -2,6 +2,7 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 
+local PropBlacklist = {}
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
     LOG('Start Reclaim Function')
@@ -37,10 +38,20 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if reclaimRect and table.getn( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
+                local rpos = v:GetCachePosition()
+                -- Start Blacklisted Props
+                local blacklisted = false
+                for _, BlackPos in PropBlacklist do
+                    if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
+                        blacklisted = true
+                        break
+                    end
+                end
+                if blacklisted then continue end
+                -- End Blacklisted Props
                 if not needEnergy or v.MaxEnergyReclaim then
                     if v.MaxMassReclaim and v.MaxMassReclaim > 1 then
                         if not self.BadReclaimables[v] then
-                            local rpos = v:GetCachePosition()
                             local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
                             if distance < closestDistance then
                                 closestReclaim = rpos
@@ -61,6 +72,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             initialRange = initialRange + 100
             if initialRange > 200 then
                 LOG('Reclaim range > 200')
+                PropBlacklist = {}
             end
             continue
         end
@@ -75,8 +87,21 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if not closestReclaim then
             return
         end
-        StartMoveDestination(self, closestReclaim)
-        local brokenDistance = closestDistance / 6
+        if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
+            self.blocked = self.blocked + 1
+            LOG('Reclaim Blocked + 1'..self.blocked)
+            if self.blocked > 3 then
+                self.blocked = 0
+                table.insert (PropBlacklist, closestReclaim)
+                LOG('Reclaim Added to blacklist')
+            end
+        else
+            self.blocked = 0
+            self.lastXtarget = closestReclaim[1]
+            self.lastYtarget = closestReclaim[3]
+            StartMoveDestination(self, closestReclaim)
+        end
+        local brokenDistance = closestDistance / 8
         --LOG('One 6th of distance is '..brokenDistance)
         local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
