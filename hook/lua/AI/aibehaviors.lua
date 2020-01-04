@@ -67,7 +67,7 @@ end
 
 function CDROverChargeRNG(aiBrain, cdr)
     local weapBPs = cdr:GetBlueprint().Weapon
-    local overCharge
+    local overCharge = {}
     local weapon = {}
 
     for k, v in weapBPs do
@@ -75,7 +75,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             weapon = v
             weapon.Range = v.MaxRadius - 2
             --LOG('ACU Weapon Range is :'..weaponRange)
-            break
+            continue
         end
         if v.Label == 'OverCharge' then
             overCharge = v
@@ -108,7 +108,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'defense'
         and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'rushnaval'
         then
-        maxRadius = 160
+        maxRadius = 200
     end
 
     -- Take away engineers too
@@ -187,14 +187,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
 
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
+                        --LOG('Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
                         overCharging = true
                         IssueClearCommands({cdr})
-                        LOG('Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
+                        --LOG('Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
                         local movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
-                        LOG('Move Position is'..repr(movePos))
-                        LOG('Moving to movePos to overcharge')
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        LOG('Checking if target is not dead')
                         if target and not target.Dead and not target:BeenDestroyed() then
                             IssueOverCharge({cdr}, target)
                         end
@@ -202,12 +200,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                         IssueClearCommands({cdr})
                         local movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         local cdrNewPos = {}
-                        LOG('Move Position is'..repr(movePos))
-                        LOG('Moving to movePos to attack')
+                        --LOG('Move Position is'..repr(movePos))
+                        --LOG('Moving to movePos to attack')
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        cdrNewPos[1] = movePos[1] + Random(-3, 3)
+                        cdrNewPos[1] = movePos[1] + Random(-5, 5)
                         cdrNewPos[2] = movePos[2]
-                        cdrNewPos[3] = movePos[3] + Random(-3, 3)
+                        cdrNewPos[3] = movePos[3] + Random(-5, 5)
                         cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
                 elseif distressLoc then
