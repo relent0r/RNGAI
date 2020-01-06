@@ -86,7 +86,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     if factionIndex = 1 then
-        if cdr:HasEnhancement('HeavyAntiMatterCannon') or  then
+        if cdr:HasEnhancement('HeavyAntiMatterCannon') then
             weapon.Range = 30 - 2
         end
     elseif factionIndex = 2 then
@@ -102,7 +102,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             weapon.Range = 30 - 2
         end
     end
-    
+
     cdr.UnitBeingBuiltBehavior = false
 
     -- Added for ACUs starting near each other
