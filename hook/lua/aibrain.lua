@@ -15,6 +15,65 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    OnSpawnPreBuiltUnits = function(self)
+        if not self.Brain.RNG then
+            return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)
+        end
+        local factionIndex = self:GetFactionIndex()
+        local resourceStructures = nil
+        local initialUnits = nil
+        local posX, posY = self:GetArmyStartPos()
+
+        if factionIndex == 1 then
+            resourceStructures = {'UEB1103', 'UEB1103', 'UEB1103', 'UEB1103'}
+            initialUnits = {'UEB0101', 'UEB1101', 'UEB1101', 'UEB1101', 'UEB1101'}
+        elseif factionIndex == 2 then
+            resourceStructures = {'UAB1103', 'UAB1103', 'UAB1103', 'UAB1103'}
+            initialUnits = {'UAB0101', 'UAB1101', 'UAB1101', 'UAB1101', 'UAB1101'}
+        elseif factionIndex == 3 then
+            resourceStructures = {'URB1103', 'URB1103', 'URB1103', 'URB1103'}
+            initialUnits = {'URB0101', 'URB1101', 'URB1101', 'URB1101', 'URB1101'}
+        elseif factionIndex == 4 then
+            resourceStructures = {'XSB1103', 'XSB1103', 'XSB1103', 'XSB1103'}
+            initialUnits = {'XSB0101', 'XSB1101', 'XSB1101', 'XSB1101', 'XSB1101'}
+        end
+
+        if resourceStructures then
+            -- Place resource structures down
+            for k, v in resourceStructures do
+                local unit = self:CreateResourceBuildingNearest(v, posX, posY)
+                if unit ~= nil then
+                    if not self.StructurePool then
+                        RUtils.CheckCustomPlatoons(self)
+                    end
+                    AssignUnitsToPlatoon( self, StructurePool, {unit}, 'Support', 'none' )
+                    local upgradeID = __blueprints[unit.BlueprintID].General.UpgradesTo or false
+                    if upgradeID and __blueprints[upgradeID] then
+                        LOG('UpgradeID')
+                        --finishedUnit:LaunchUpgradeThread( aiBrain )
+                    end
+                    LOG('StructurePool now has :'..table.getn(self.StructurePool))
+                end
+                if unit ~= nil and unit:GetBlueprint().Physics.FlattenSkirt then
+                    unit:CreateTarmac(true, true, true, false, false)
+                end
+
+            end
+        end
+
+        if initialUnits then
+            -- Place initial units down
+            for k, v in initialUnits do
+                local unit = self:CreateUnitNearSpot(v, posX, posY)
+                if unit ~= nil and unit:GetBlueprint().Physics.FlattenSkirt then
+                    unit:CreateTarmac(true, true, true, false, false)
+                end
+            end
+        end
+
+        self.PreBuilt = true
+    end,
+
     BuildScoutLocationsRNG = function(self)
         local aiBrain = self
         local opponentStarts = {}

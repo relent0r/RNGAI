@@ -1,6 +1,5 @@
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
-
---[[
 RNGEngineerManager = EngineerManager
 EngineerManager = Class(RNGEngineerManager) {
 
@@ -12,12 +11,17 @@ EngineerManager = Class(RNGEngineerManager) {
             self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
         end
         if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
+            if not self.Brain.StructurePool then
+                RUtils.CheckCustomPlatoons(self.Brain)
+            end
+            LOG('Assigning built extractor to StructurePool')
             AssignUnitsToPlatoon( aiBrain, StructurePool, {finishedUnit}, 'Support', 'none' )
             local upgradeID = __blueprints[finishedUnit.BlueprintID].General.UpgradesTo or false
 			if upgradeID and __blueprints[upgradeID] then
 				LOG('UpgradeID')
 				--finishedUnit:LaunchUpgradeThread( aiBrain )
-			end
+            end
+            LOG('StructurePool now has :'..table.getn(self.Brain.StructurePool))
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
             self:AddUnit(finishedUnit)
@@ -36,7 +40,4 @@ EngineerManager = Class(RNGEngineerManager) {
         end
         self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
-
-
 }
-]]

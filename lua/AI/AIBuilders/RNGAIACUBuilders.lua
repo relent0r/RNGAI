@@ -373,3 +373,91 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup { 
+    BuilderGroupName = 'RNGAI ACU Enhancements Gun',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'UEF CDR Enhancement HeavyAntiMatter',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'HeavyAntiMatterCannon', false }},
+                { MIBC, 'FactionIndex', {1}},
+            },
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            Enhancement = { 'HeavyAntiMatterCannon' },
+        },
+
+    },
+    # Aeon
+    Builder {
+        BuilderName = 'Aeon CDR Enhancement Crysalis',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'CrysalisBeam', false }},
+                { MIBC, 'FactionIndex', {2}},
+            },
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            TimeBetweenEnhancements = 20,
+            Enhancement = { 'HeatSink', 'CrysalisBeam'},
+        },
+    },
+    # Cybran
+    Builder {
+        BuilderName = 'Cybran CDR Enhancement CoolingUpgrade',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'CoolingUpgrade', false }},
+                { MIBC, 'FactionIndex', {3}},
+            },
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            Enhancement = { 'CoolingUpgrade'},
+        },
+
+    },
+    # Seraphim
+    Builder {
+        BuilderName = 'Seraphim CDR Enhancement RateOfFire',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'RateOfFire', false }},
+                { MIBC, 'FactionIndex', {4}},
+            },
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderType = 'Any',
+        BuilderData = {
+            Enhancement = { 'RateOfFire' },
+        },
+
+    },
+}

@@ -585,3 +585,12 @@ function lerpy(vec1, vec2, distance)
     z = vec1[3] * (1 - distanceFrac) + vec2[3] * distanceFrac
     return {x,y,z}
 end
+
+function CheckCustomPlatoons(aiBrain)
+    if not aiBrain.StructurePool then
+        LOG('Creating Structure Pool Platoon')
+        local structurepool = aiBrain:MakePlatoon('StructurePool', 'none')
+        structurepool:UniquelyNamePlatoon('StructurePool')
+        structurepool:BuilderName = 'Structure Pool'
+    end
+end

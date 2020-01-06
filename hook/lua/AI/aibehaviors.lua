@@ -69,7 +69,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     local weapBPs = cdr:GetBlueprint().Weapon
     local overCharge = {}
     local weapon = {}
-
+    local factionIndex = aiBrain:GetFactionIndex()
+    
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             weapon = v
@@ -83,7 +84,25 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
 
     end
-
+    -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+    if factionIndex = 1 then
+        if cdr:HasEnhancement('HeavyAntiMatterCannon') or  then
+            weapon.Range = 30 - 2
+        end
+    elseif factionIndex = 2 then
+        if cdr:HasEnhancement('CrysalisBeam') then
+            weapon.Range = 35 - 2
+        end
+    elseif factionIndex = 3 then
+        if cdr:HasEnhancement('CoolingUpgrade') then
+            weapon.Range = 30 - 2
+        end
+    elseif factionIndex = 4 then
+        if cdr:HasEnhancement('RateOfFire') then
+            weapon.Range = 30 - 2
+        end
+    end
+    
     cdr.UnitBeingBuiltBehavior = false
 
     -- Added for ACUs starting near each other
