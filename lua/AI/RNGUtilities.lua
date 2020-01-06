@@ -1,6 +1,7 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local Utils = import('/lua/utilities.lua')
 
 local PropBlacklist = {}
 function ReclaimRNGAIThread(platoon, self, aiBrain)
@@ -591,6 +592,39 @@ function CheckCustomPlatoons(aiBrain)
         LOG('Creating Structure Pool Platoon')
         local structurepool = aiBrain:MakePlatoon('StructurePool', 'none')
         structurepool:UniquelyNamePlatoon('StructurePool')
-        structurepool:BuilderName = 'Structure Pool'
+        structurepool.BuilderName = 'Structure Pool'
+        aiBrain.StructurePool = structurepool
     end
+end
+
+function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, enemyBrain)
+    local position = platoon:GetPlatoonPosition()
+    if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
+        return false
+    end
+
+    local enemyIndex = enemyBrain:GetArmyIndex()
+    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+    for _, v in atkPri do
+        local category = v
+        if type(category) == 'string' then
+            category = ParseEntityCategory(category)
+        end
+        local retUnit = false
+        local distance = false
+        for num, unit in targetUnits do
+            if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
+                local unitPos = unit:GetPosition()
+                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                    retUnit = unit
+                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                end
+            end
+        end
+        if retUnit then
+            return retUnit
+        end
+    end
+
+    return false
 end

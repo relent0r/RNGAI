@@ -355,6 +355,8 @@ BuilderGroup {
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            LocationType = 'LocationType',
+            Defensive = true,
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
@@ -384,6 +386,8 @@ BuilderGroup {
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            LocationType = 'LocationType',
+            Defensive = true,
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.

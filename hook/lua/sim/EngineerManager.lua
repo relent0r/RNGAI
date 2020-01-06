@@ -10,19 +10,23 @@ EngineerManager = Class(RNGEngineerManager) {
         if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
             self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
         end
+        --[[
         if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
             if not self.Brain.StructurePool then
                 RUtils.CheckCustomPlatoons(self.Brain)
             end
+            local StructurePool = self.Brain.StructurePool
             LOG('Assigning built extractor to StructurePool')
-            AssignUnitsToPlatoon( aiBrain, StructurePool, {finishedUnit}, 'Support', 'none' )
+            self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
+            --Debug log
+            local platoonUnits = StructurePool:GetPlatoonUnits()
+            LOG('StructurePool now has :'..table.getn(platoonUnits))
             local upgradeID = __blueprints[finishedUnit.BlueprintID].General.UpgradesTo or false
 			if upgradeID and __blueprints[upgradeID] then
 				LOG('UpgradeID')
 				--finishedUnit:LaunchUpgradeThread( aiBrain )
             end
-            LOG('StructurePool now has :'..table.getn(self.Brain.StructurePool))
-        end
+        end]]
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
             self:AddUnit(finishedUnit)
         end

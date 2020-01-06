@@ -651,6 +651,14 @@ Platoon = Class(oldPlatoon) {
         local blip = false
         local maxRadius = data.SearchRadius or 50
         local movingToScout = false
+        if data.LocationType and data.LocationType != 'NOTMAIN' then
+            basePosition = aiBrain.BuilderManagers[data.LocationType].Position
+        else
+            local platoonPosition = self:GetPlatoonPosition()
+            if platoonPosition then
+                basePosition = aiBrain:FindClosestBuilderManagerPosition(self:GetPlatoonPosition())
+            end
+        end
         while aiBrain:PlatoonExists(self) do
             if not target or target.Dead then
                 if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
@@ -658,7 +666,11 @@ Platoon = Class(oldPlatoon) {
                 end
                 local mult = { 1,10,25 }
                 for _,i in mult do
-                    target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
+                    if data.Defensive then
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePosition, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
+                    else
+                        target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
+                    end
                     if target then
                         break
                     end
@@ -690,6 +702,10 @@ Platoon = Class(oldPlatoon) {
                     end
                     movingToScout = false
                 elseif not movingToScout then
+                    if data.Defensive then
+                        LOG('Defensive Platoon')
+                        return self:ReturnToBaseAIRNG()
+                    end
                     movingToScout = true
                     self:Stop()
                     for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, self:GetPlatoonPosition()) do
@@ -1743,5 +1759,60 @@ Platoon = Class(oldPlatoon) {
             self:StopAttack()
         end
 
+    end,
+
+    ReturnToBaseAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+
+        if not aiBrain:PlatoonExists(self) or not self:GetPlatoonPosition() then
+            return
+        end
+
+        local bestBase = false
+        local bestBaseName = ""
+        local bestDistSq = 999999999
+        local platPos = self:GetPlatoonPosition()
+
+        for baseName, base in aiBrain.BuilderManagers do
+            local distSq = VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3])
+
+            if distSq < bestDistSq then
+                bestBase = base
+                bestBaseName = baseName
+                bestDistSq = distSq
+            end
+        end
+
+        if bestBase then
+            AIAttackUtils.GetMostRestrictiveLayer(self)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestBase.Position, 200)
+            IssueClearCommands(self)
+
+            if path then
+                local pathLength = table.getn(path)
+                for i=1, pathLength-1 do
+                    self:MoveToLocation(path[i], false)
+                end
+            end
+            self:MoveToLocation(bestBase.Position, false)
+
+            local oldDistSq = 0
+            while aiBrain:PlatoonExists(self) do
+                WaitSeconds(10)
+                platPos = self:GetPlatoonPosition()
+                local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
+                if distSq < 10 then
+                    self:PlatoonDisband()
+                    return
+                end
+                -- if we haven't moved in 10 seconds... go back to attacking
+                if (distSq - oldDistSq) < 5 then
+                    break
+                end
+                oldDistSq = distSq
+            end
+        end
+        -- return 
+        return self:StrikeForceAIRNG()
     end,
 }

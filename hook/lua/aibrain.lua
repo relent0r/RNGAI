@@ -42,11 +42,15 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Place resource structures down
             for k, v in resourceStructures do
                 local unit = self:CreateResourceBuildingNearest(v, posX, posY)
+                if unit ~= nil and unit:GetBlueprint().Physics.FlattenSkirt then
+                    unit:CreateTarmac(true, true, true, false, false)
+                end
                 if unit ~= nil then
                     if not self.StructurePool then
                         RUtils.CheckCustomPlatoons(self)
                     end
-                    AssignUnitsToPlatoon( self, StructurePool, {unit}, 'Support', 'none' )
+                    local StructurePool = self.Brain.StructurePool
+                    self:AssignUnitsToPlatoon(StructurePool, {unit}, 'Support', 'none' )
                     local upgradeID = __blueprints[unit.BlueprintID].General.UpgradesTo or false
                     if upgradeID and __blueprints[upgradeID] then
                         LOG('UpgradeID')
@@ -54,10 +58,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     LOG('StructurePool now has :'..table.getn(self.StructurePool))
                 end
-                if unit ~= nil and unit:GetBlueprint().Physics.FlattenSkirt then
-                    unit:CreateTarmac(true, true, true, false, false)
-                end
-
             end
         end
 
