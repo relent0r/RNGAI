@@ -29,7 +29,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { 1.2, 6}},
+            { EBC, 'GreaterThanEconStorageCurrent', { 200, 0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },

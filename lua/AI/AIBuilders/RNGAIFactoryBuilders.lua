@@ -234,7 +234,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 1,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTime', { 420 } },
+                { MIBC, 'GreaterThanGameTime', { 450 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
@@ -251,7 +251,7 @@ BuilderGroup {
             OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
         },
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTime', { 420 } },
+                { MIBC, 'GreaterThanGameTime', { 450 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
@@ -266,7 +266,22 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 1,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTime', { 960 } },
+                { MIBC, 'GreaterThanGameTime', { 1020 } },
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
+                { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
+            },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Land Factory Upgrade Excess',
+        PlatoonTemplate = 'T2LandFactoryUpgrade',
+        Priority = 800,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { MIBC, 'GreaterThanGameTime', { 720 } },
+                { EBC, 'GreaterThanEconStorageCurrent', { 1200, 8000 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
                 { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
