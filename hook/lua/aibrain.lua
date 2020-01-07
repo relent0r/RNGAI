@@ -15,6 +15,71 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    InitializeSkirmishSystems = function(self)
+        -- Make sure we don't do anything for the human player!!!
+        if self.BrainType == 'Human' then
+            return
+        end
+        if not self.Brain.RNG then
+            return RNGAIBrainClass.InitializeSkirmishSystems(self)
+        end
+        -- TURNING OFF AI POOL PLATOON, I MAY JUST REMOVE THAT PLATOON FUNCTIONALITY LATER
+        local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
+        if poolPlatoon then
+            poolPlatoon:TurnOffPoolAI()
+        end
+
+        -- Stores handles to all builders for quick iteration and updates to all
+        self.BuilderHandles = {}
+
+        -- Condition monitor for the whole brain
+        self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
+
+        -- Economy monitor for new skirmish - stores out econ over time to get trend over 10 seconds
+        self.EconomyData = {}
+        self.EconomyTicksMonitor = 50
+        self.EconomyCurrentTick = 1
+        self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitor)
+        self.LowEnergyMode = false
+
+        -- Structure Upgrade properties
+        self.UpgradeIssued = 0
+		self.UpgradeIssuedLimit = 1
+        self.UpgradeIssuedPeriod = 225
+        
+        -- Add default main location and setup the builder managers
+        self.NumBases = 0 -- AddBuilderManagers will increase the number
+
+        self.BuilderManagers = {}
+        SUtils.AddCustomUnitSupport(self)
+        self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
+
+        -- Begin the base monitor process
+        if self.Sorian then
+            local spec = {
+                DefaultDistressRange = 200,
+                AlertLevel = 8,
+            }
+            self:BaseMonitorInitializationSorian(spec)
+        else
+            self:BaseMonitorInitialization()
+        end
+
+        local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
+        if self.Sorian then
+            plat:ForkThread(plat.BaseManagersDistressAISorian)
+        else
+            plat:ForkThread(plat.BaseManagersDistressAI)
+        end
+
+        self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
+        if self.Sorian then
+            self.EnemyPickerThread = self:ForkThread(self.PickEnemySorian)
+        else
+            self.EnemyPickerThread = self:ForkThread(self.PickEnemy)
+        end
+    end,
+
     OnSpawnPreBuiltUnits = function(self)
         if not self.Brain.RNG then
             return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)

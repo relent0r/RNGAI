@@ -628,3 +628,82 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
 
     return false
 end
+
+function StructureUpgradeInitialize(finishedUnit, aiBrain)
+    local structurePool = aiBrain.StructurePool
+    local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
+
+    if EntityCategoryContains(categories.MASSEXTRACTION, finishedUnit) then
+        local extractorPlatoon = aiBrain:MakePlatoon('ExtractorPlatoon'..tostring(finishedUnit.Sync.id), 'none')
+        extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(finishedUnit.Sync.id)
+        extractorPlatoon.MovementLayer = 'Land'
+
+        AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
+
+        if not finishedUnit.UpgradeThread then
+            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread)
+        end
+    end
+    
+    if finishedUnit.UpgradeThread then
+        finishedUnit.Trash:Add(finishedUnit.UpgradeThread)
+    end
+end
+
+function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit) 
+    local upgradeID = __blueprints[unit.BlueprintID].General.UpgradesTo or false
+    local upgradebp = false
+
+    if upgradeID then
+        upgradebp = aiBrain:GetUnitBlueprint(upgradeID) or false
+    end
+
+    if not (upgradeID and upgradebp) then
+        unit.UpgradeThread = nil
+        unit.UpgradesComplete = true
+        return
+    end
+
+    local upgradeable = true
+    local upgradeIssued = false
+
+    if not bypasseco then
+        local bypasseco = false
+    end
+    -- Eco requirements
+    local MassNeeded = upgradebp.Economy.BuildCostMass
+	local EnergyNeeded = upgradebp.Economy.BuildCostEnergy
+    local buildtime = upgradebp.Economy.BuildTime
+    
+    -- build rate
+    local buildrate = __blueprints[unit.BlueprintID].Economy.BuildRate
+
+    -- production while upgrading
+    local massmade = __blueprints[unit.BlueprintID].Economy.ProductionPerSecondMass or 0
+    local enermade = __blueprints[unit.BlueprintID].Economy.ProductionPerSecondEnergy or 0
+    
+    -- Define Economic Data
+    local eco = aiBraun.EcoData.OverTime
+    local massStorage
+    local energyStorage
+    local massStorageRatio
+    local energyStorageRatio
+    
+    local initial_delay = 0
+    
+    -- Main Upgrade Loop
+    while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
+        
+        WaitTicks(upgradeCheckWait * 10)
+
+        if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
+
+            massStorage = GetEconomyStored( aiBrain, 'MASS')
+            energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
+            massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
+            energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
+            
+            
+        end
+    end
+end
