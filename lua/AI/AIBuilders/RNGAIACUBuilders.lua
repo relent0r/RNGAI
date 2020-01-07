@@ -397,7 +397,6 @@ BuilderGroup {
         },
 
     },
-    # Aeon
     Builder {
         BuilderName = 'Aeon CDR Enhancement Crysalis',
         PlatoonTemplate = 'CommanderEnhance',
@@ -418,7 +417,6 @@ BuilderGroup {
             Enhancement = { 'HeatSink', 'CrysalisBeam'},
         },
     },
-    # Cybran
     Builder {
         BuilderName = 'Cybran CDR Enhancement CoolingUpgrade',
         PlatoonTemplate = 'CommanderEnhance',
@@ -439,7 +437,6 @@ BuilderGroup {
         },
 
     },
-    # Seraphim
     Builder {
         BuilderName = 'Seraphim CDR Enhancement RateOfFire',
         PlatoonTemplate = 'CommanderEnhance',
