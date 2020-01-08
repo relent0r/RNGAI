@@ -710,19 +710,17 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
             energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
             
             if (econ.MassEfficiency >= masslowtrigger and econ.EnergyEfficiency >= energylowtrigger)
-				or ((massStorageRatio > .80 and energyStorageRatio > .80))
-				or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
-				
-				--low_trigger_good = true
-			else
-				continue
-			end
+                or ((massStorageRatio > .80 and energyStorageRatio > .80))
+                or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
+                --low_trigger_good = true
+            else
+                continue
+            end
             
             if (econ.MassEfficiency <= masshightrigger and econ.EnergyEfficiency <= energyhightrigger) then
-				
-				--hi_trigger_good = true
-			else
-				continue
+                --hi_trigger_good = true
+            else
+                continue
             end
             
             if ( econ.MassTrend >= massTrendNeeded and econ.EnergyTrend >= energyTrendNeeded and econ.EnergyTrend >= energyMaintenance )
@@ -736,24 +734,24 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
 						if not unit.Dead then
 					
 							-- if upgrade issued and not completely full --
-							if GetEconomyStoredRatio(aiBrain, 'MASS') < 1 or GetEconomyStoredRatio(aiBrain, 'ENERGY') < 1 then
-								ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
-							else
+                            if GetEconomyStoredRatio(aiBrain, 'MASS') < 1 or GetEconomyStoredRatio(aiBrain, 'ENERGY') < 1 then
+                                ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
+                            else
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod * .5)     -- otherwise halve the delay period
                             end
 
-							upgradeIssued = true
+                            upgradeIssued = true
 
-							IssueUpgrade({unit}, upgradeID)
+                            IssueUpgrade({unit}, upgradeID)
 
-							if ScenarioInfo.StructureUpgradeDialog then
-								LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(__blueprints[upgradeID].Description).." at "..GetGameTimeSeconds() )
-							end
-						
-							repeat
-								WaitTicks(20)
-							until unit.Dead or (unit.UnitBeingBuilt.BlueprintID == upgradeID)
-						end
+                            if ScenarioInfo.StructureUpgradeDialog then
+                                LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(__blueprints[upgradeID].Description).." at "..GetGameTimeSeconds() )
+                            end
+
+                            repeat
+                               WaitTicks(20)
+                            until unit.Dead or (unit.UnitBeingBuilt.BlueprintID == upgradeID)
+                        end
 
                         if unit.Dead then
                             LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." to "..upgradeID.." failed.  Dead is "..repr(unit.Dead))
@@ -787,7 +785,7 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
                         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER storage trigger "..energyStorage.." needed "..(energyNeeded*.4) )
                     end
                 end
-			end
+            end
         end
     end
 end
