@@ -43,6 +43,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.LowEnergyMode = false
 
         -- Structure Upgrade properties
+        self.UpgradeMode = 'Normal'
         self.UpgradeIssued = 0
 		self.UpgradeIssuedLimit = 1
         self.UpgradeIssuedPeriod = 225
@@ -551,5 +552,40 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('returnEnemy is false')
         end
         return returnEnemy
+    end,
+
+    GetUpgradeSpec = function(self, unit)
+        local upgradeSpec = {}
+        if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
+            if self.UpgradeMode == 'Aggressive' then
+                upgradeSpec.MassLowTrigger = 0
+                upgradeSpec.EnergyLowTrigger = 0
+                upgradeSpec.MassHighTrigger = 0
+                upgradeSpec.EnergyHighTrigger = 0
+                upgradeSpec.UpgradeCheckWait = 240
+                upgradeSpec.InitialDelay = 0
+                return upgradeSpec
+            elseif self.UpgradeMode == 'Normal' then
+                upgradeSpec.MassLowTrigger = 0
+                upgradeSpec.EnergyLowTrigger = 0
+                upgradeSpec.MassHighTrigger = 0
+                upgradeSpec.EnergyHighTrigger = 0
+                upgradeSpec.UpgradeCheckWait = 240
+                upgradeSpec.InitialDelay = 0
+                return upgradeSpec
+            elseif self.UpgradeMode == 'Caution' then
+                upgradeSpec.MassLowTrigger = 0
+                upgradeSpec.EnergyLowTrigger = 0
+                upgradeSpec.MassHighTrigger = 0
+                upgradeSpec.EnergyHighTrigger = 0
+                upgradeSpec.UpgradeCheckWait = 240
+                upgradeSpec.InitialDelay = 0
+                return upgradeSpec
+            end
+        else
+            LOG('Unit is not Mass Extractor')
+            upgradeSpec = false
+            return upgradeSpec
+        end
     end,
 }
