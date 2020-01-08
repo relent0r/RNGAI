@@ -24,6 +24,7 @@ AIBrain = Class(RNGAIBrainClass) {
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
         -- TURNING OFF AI POOL PLATOON, I MAY JUST REMOVE THAT PLATOON FUNCTIONALITY LATER
+        LOG('Initializing Skirmish System for RNGAI')
         local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
         if poolPlatoon then
             poolPlatoon:TurnOffPoolAI()
