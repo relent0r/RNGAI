@@ -117,19 +117,20 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
 
     -- Increase attack range for a few mins on small maps
-    local maxRadius = weapon.MaxRadius + 10
+    local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() < 660
         and GetGameTimeSeconds() > 243
         and mapSizeX <= 512 and mapSizeZ <= 512
-        and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'turtle'
-        and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'defense'
-        and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'rushnaval'
         then
-        maxRadius = 200
+        maxRadius = 240 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        if maxRadius < 60 then 
+            maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
+        end
     end
-
+    
+    
+    LOG('Max ACU Radius is'..maxRadius)
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
     local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
