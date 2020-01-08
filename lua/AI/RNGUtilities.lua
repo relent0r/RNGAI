@@ -799,11 +799,9 @@ function StructureUpgradeDelay( aiBrain, delay )
     end
 
     WaitTicks( delay )
-	
     aiBrain.UpgradeIssued = aiBrain.UpgradeIssued - 1
     
     if ScenarioInfo.StructureUpgradeDialog then
         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
     end
-    
 end
