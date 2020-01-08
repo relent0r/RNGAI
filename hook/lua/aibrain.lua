@@ -567,12 +567,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.InitialDelay = 0
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0
-                upgradeSpec.EnergyLowTrigger = 0
-                upgradeSpec.MassHighTrigger = 0
-                upgradeSpec.EnergyHighTrigger = 0
-                upgradeSpec.UpgradeCheckWait = 240
-                upgradeSpec.InitialDelay = 0
+                upgradeSpec.MassLowTrigger = 0.72
+                upgradeSpec.EnergyLowTrigger = 1.01
+                upgradeSpec.MassHighTrigger = 1.5
+                upgradeSpec.EnergyHighTrigger = 9999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 90
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
                 upgradeSpec.MassLowTrigger = 0
