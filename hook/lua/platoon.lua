@@ -21,7 +21,7 @@ Platoon = Class(oldPlatoon) {
         }
         self.PartOfAttackForce = false
         self.CreationTime = GetGameTimeSeconds()
-        self.PlatoonUID = Random(00000000,99999999))
+        self:UniquelyNamePlatoon = 'Platoon-'..Random(000000,999999))
     end,
 
     AirHuntAIRNG = function(self)
