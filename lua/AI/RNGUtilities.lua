@@ -4,6 +4,7 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local Utils = import('/lua/utilities.lua')
 
 local PropBlacklist = {}
+-- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
     LOG('Start Reclaim Function')
@@ -389,38 +390,6 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     return false
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, platoon, category ,squad, maxRange, atkPri, enemyBrain)
-    local position = platoon:GetPlatoonPosition()
-    if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
-        return false
-    end
-
-    local enemyIndex = enemyBrain:GetArmyIndex()
-    local targetUnits = aiBrain:GetUnitsAroundPoint(category, position, maxRange, 'Enemy')
-    for _, v in atkPri do
-        local category = v
-        if type(category) == 'string' then
-            category = ParseEntityCategory(category)
-        end
-        local retUnit = false
-        local distance = false
-        for num, unit in targetUnits do
-            if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
-                local unitPos = unit:GetPosition()
-                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
-                    retUnit = unit
-                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
-                end
-            end
-        end
-        if retUnit then
-            return retUnit
-        end
-    end
-
-    return false
-end
-
 function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
     local pos = aiBrain:PBMGetLocationCoords(locationType)
     if not pos then
@@ -486,6 +455,7 @@ function AIGetMassMarkerLocations(aiBrain, includeWater)
     return markerList
 end
 
+-- This is Sproutos function 
 function PositionInWater(pos)
 	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end
@@ -656,6 +626,7 @@ end
 
 -- 99% of the below was Sprouto's work
 function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit) 
+    LOG('Starting structure thread upgrade')
     local unitBp = unit:GetBlueprint()
     local upgradeID = unitBp.General.UpgradesTo or false
     local upgradebp = false
@@ -702,6 +673,16 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
     
     local initial_delay = 0
     
+    while init_delay < initialdelay do
+		if GetEconomyStored( aiBrain, 'MASS') >= 200 and GetEconomyStored( aiBrain, 'ENERGY') >= 2500 and unit:GetFractionComplete() == 1 then
+			init_delay = init_delay + 10
+		end
+		WaitTicks(100)
+    end
+
+    local upgradeable = true
+    local upgradeIssued = false
+    
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         
@@ -730,14 +711,10 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
             
             if ( econ.MassTrend >= massTrendNeeded and econ.EnergyTrend >= energyTrendNeeded and econ.EnergyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .8) and energyStorage > (energyNeeded * .4) )  then
-
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
 				if (massStorage > ( massNeeded * .15 * masslowtrigger) and energyStorage > ( energyNeeded * .15 * energylowtrigger)) or bypassecon then
-                    
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
-
 						if not unit.Dead then
-					
 							-- if upgrade issued and not completely full --
                             if massStorageRatio < 1 or energyStorageRatio < 1 then
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
@@ -746,7 +723,6 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
                             end
 
                             upgradeIssued = true
-
                             IssueUpgrade({unit}, upgradeID)
 
                             if ScenarioInfo.StructureUpgradeDialog then
