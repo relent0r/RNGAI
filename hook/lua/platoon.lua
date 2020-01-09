@@ -7,6 +7,23 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
 
+    OnCreate = function(self, plan)
+        if not self.Brain.RNG then
+            return oldPlatoon.OnCreate(self, plan)
+        end
+        self.Trash = TrashBag()
+        if self[plan] then
+            self.AIThread = self:ForkThread(self[plan])
+        end
+        self.PlatoonData = {}
+        self.EventCallbacks = {
+            OnDestroyed = {},
+        }
+        self.PartOfAttackForce = false
+        self.CreationTime = GetGameTimeSeconds()
+        self.PlatoonUID = Random(00000000,99999999))
+    end,
+
     AirHuntAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
@@ -1290,7 +1307,7 @@ Platoon = Class(oldPlatoon) {
 
     MassRaidRNG = function(self)
         local aiBrain = self:GetBrain()
-
+        LOG('Platoon ID is'..self.PlatoonUID)
         local platLoc = self:GetPlatoonPosition()
 
         if not aiBrain:PlatoonExists(self) or not platLoc then
