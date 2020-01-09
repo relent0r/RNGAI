@@ -656,7 +656,8 @@ end
 
 -- 99% of the below was Sprouto's work
 function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit) 
-    local upgradeID = __blueprints[unit.BlueprintID].General.UpgradesTo or false
+    local unitBp = unit:GetBlueprint()
+    local upgradeID = unitBp.General.UpgradesTo or false
     local upgradebp = false
 
     if upgradeID then
@@ -666,6 +667,7 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
     if not (upgradeID and upgradebp) then
         unit.UpgradeThread = nil
         unit.UpgradesComplete = true
+        LOG('upgradeID or upgradebp is false, returning')
         return
     end
 
@@ -681,15 +683,15 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
     local buildtime = upgradebp.Economy.BuildTime
     
     -- build rate
-    local buildrate = __blueprints[unit.BlueprintID].Economy.BuildRate
+    local buildrate = unitBp.Economy.BuildRate
 
     -- production while upgrading
-    local massProduction = __blueprints[unit.BlueprintID].Economy.ProductionPerSecondMass or 0
-    local energyProduction = __blueprints[unit.BlueprintID].Economy.ProductionPerSecondEnergy or 0
+    local massProduction = unitBp.Economy.ProductionPerSecondMass or 0
+    local energyProduction = unitBp.Economy.ProductionPerSecondEnergy or 0
     
     local massTrendNeeded = ( math.min( 0,(massNeeded / buildtime) * buildrate) - massProduction) * .1
     local energyTrendNeeded = ( math.min( 0,(energyNeeded / buildtime) * buildrate) - energyProduction) * .1
-    local energyMaintenance = (aiBrain:GetUnitBlueprint(upgradeID).Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
+    local energyMaintenance = (upgradebp.Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
 
     -- Define Economic Data
     local eco = aiBraun.EcoData.OverTime
@@ -737,7 +739,7 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
 						if not unit.Dead then
 					
 							-- if upgrade issued and not completely full --
-                            if GetEconomyStoredRatio(aiBrain, 'MASS') < 1 or GetEconomyStoredRatio(aiBrain, 'ENERGY') < 1 then
+                            if massStorageRatio < 1 or energyStorageRatio < 1 then
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
                             else
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod * .5)     -- otherwise halve the delay period
