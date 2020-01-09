@@ -1307,7 +1307,7 @@ Platoon = Class(oldPlatoon) {
 
     MassRaidRNG = function(self)
         local aiBrain = self:GetBrain()
-        LOG('Platoon ID is'..self.PlatoonUID)
+        LOG('Platoon ID is : '..self:GetPlatoonUniqueName())
         local platLoc = self:GetPlatoonPosition()
 
         if not aiBrain:PlatoonExists(self) or not platLoc then
