@@ -129,8 +129,6 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
     end
     
-    
-    LOG('Max ACU Radius is'..maxRadius)
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
     local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')

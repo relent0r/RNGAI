@@ -28,7 +28,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     OnSpawnPreBuiltUnits = function(self)
-        if not self.Brain.RNG then
+        if not self.RNG then
             return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)
         end
         local factionIndex = self:GetFactionIndex()
@@ -54,21 +54,23 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Place resource structures down
             for k, v in resourceStructures do
                 local unit = self:CreateResourceBuildingNearest(v, posX, posY)
-                if unit ~= nil and unit:GetBlueprint().Physics.FlattenSkirt then
+                local unitBp = unit:GetBlueprint()
+                if unit ~= nil and unitBp.Physics.FlattenSkirt then
                     unit:CreateTarmac(true, true, true, false, false)
                 end
                 if unit ~= nil then
                     if not self.StructurePool then
                         RUtils.CheckCustomPlatoons(self)
                     end
-                    local StructurePool = self.Brain.StructurePool
+                    local StructurePool = self.StructurePool
                     self:AssignUnitsToPlatoon(StructurePool, {unit}, 'Support', 'none' )
-                    local upgradeID = __blueprints[unit.BlueprintID].General.UpgradesTo or false
+                    local upgradeID = unitBp.General.UpgradesTo or false
+                    LOG('BlueprintID to upgrade to is : '..unitBp.General.UpgradesTo)
                     if upgradeID and __blueprints[upgradeID] then
-                        LOG('UpgradeID')
-                        --finishedUnit:LaunchUpgradeThread( aiBrain )
+                        RUtils.StructureUpgradeInitialize(unit, self)
                     end
-                    LOG('StructurePool now has :'..table.getn(self.StructurePool))
+                    local unitTable = StructurePool:GetPlatoonUnits()
+                    LOG('StructurePool now has :'..table.getn(unitTable))
                 end
             end
         end

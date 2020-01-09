@@ -8,7 +8,8 @@ oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
 
     OnCreate = function(self, plan)
-        if not self.Brain.RNG then
+        local aiBrain = self:GetBrain()
+        if not aiBrain.RNG then
             return oldPlatoon.OnCreate(self, plan)
         end
         self.Trash = TrashBag()
@@ -21,7 +22,7 @@ Platoon = Class(oldPlatoon) {
         }
         self.PartOfAttackForce = false
         self.CreationTime = GetGameTimeSeconds()
-        self:UniquelyNamePlatoon = 'Platoon-'..Random(000000,999999))
+        self:UniquelyNamePlatoon('Platoon-'..Random(000000,999999))
     end,
 
     AirHuntAIRNG = function(self)

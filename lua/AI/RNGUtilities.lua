@@ -633,16 +633,19 @@ end
 function StructureUpgradeInitialize(finishedUnit, aiBrain)
     local structurePool = aiBrain.StructurePool
     local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
-
+    LOG('Structure Upgrade Initializing')
     if EntityCategoryContains(categories.MASSEXTRACTION, finishedUnit) then
         local extractorPlatoon = aiBrain:MakePlatoon('ExtractorPlatoon'..tostring(finishedUnit.Sync.id), 'none')
         extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(finishedUnit.Sync.id)
         extractorPlatoon.MovementLayer = 'Land'
-
+        LOG('Assigning Extractor to new platoon')
         AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
 
         if not finishedUnit.UpgradeThread then
-            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread)
+            LOG('Forking Upgrade Thread')
+            upgradeSpec = aiBrain:GetUpgradeSpec(finishedUnit)
+            LOG('UpgradeSpec'..repr(upgradeSpec))
+            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread(aiBrain, upgradeSpec, false, finishedUnit))
         end
     end
     
