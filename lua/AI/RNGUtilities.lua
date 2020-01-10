@@ -673,20 +673,18 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
     
     local initial_delay = 0
     
-    while init_delay < initialdelay do
+    while init_delay < upgradeSpec.InitialDelay do
 		if GetEconomyStored( aiBrain, 'MASS') >= 200 and GetEconomyStored( aiBrain, 'ENERGY') >= 2500 and unit:GetFractionComplete() == 1 then
 			init_delay = init_delay + 10
-		end
+        end
+        LOG('Initial Delay loop trigger')
 		WaitTicks(100)
     end
-
-    local upgradeable = true
-    local upgradeIssued = false
     
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         
-        WaitTicks(upgradeCheckWait * 10)
+        WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
 
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 
@@ -695,7 +693,7 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
             massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
             energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
             
-            if (econ.MassEfficiency >= masslowtrigger and econ.EnergyEfficiency >= energylowtrigger)
+            if (econ.MassEfficiency >= upgradeSpec.MassLowTrigger and econ.EnergyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .80 and energyStorageRatio > .80))
                 or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
                 --low_trigger_good = true
@@ -703,7 +701,7 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
                 continue
             end
             
-            if (econ.MassEfficiency <= masshightrigger and econ.EnergyEfficiency <= energyhightrigger) then
+            if (econ.MassEfficiency <= upgradeSpec.MassHighTrigger and econ.EnergyEfficiency <= upgradeSpec.EnergyHighTrigger) then
                 --hi_trigger_good = true
             else
                 continue
@@ -712,7 +710,7 @@ function StructureUpgradeThread(aiBrain, upgradeSpec, bypasseco, unit)
             if ( econ.MassTrend >= massTrendNeeded and econ.EnergyTrend >= energyTrendNeeded and econ.EnergyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .8) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
-				if (massStorage > ( massNeeded * .15 * masslowtrigger) and energyStorage > ( energyNeeded * .15 * energylowtrigger)) or bypassecon then
+				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypassecon then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 						if not unit.Dead then
 							-- if upgrade issued and not completely full --
