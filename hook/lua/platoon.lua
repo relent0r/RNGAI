@@ -22,7 +22,7 @@ Platoon = Class(oldPlatoon) {
         }
         self.PartOfAttackForce = false
         self.CreationTime = GetGameTimeSeconds()
-        self:UniquelyNamePlatoon('Platoon-'..Random(000000,999999))
+        --self:UniquelyNamePlatoon('Platoon-'..Random(000000,999999))
     end,
 
     AirHuntAIRNG = function(self)
@@ -1308,7 +1308,7 @@ Platoon = Class(oldPlatoon) {
 
     MassRaidRNG = function(self)
         local aiBrain = self:GetBrain()
-        LOG('Platoon ID is : '..self:GetPlatoonUniqueName())
+        --LOG('Platoon ID is : '..self:GetPlatoonUniqueName())
         local platLoc = self:GetPlatoonPosition()
 
         if not aiBrain:PlatoonExists(self) or not platLoc then

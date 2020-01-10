@@ -2,6 +2,7 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
+
 local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
@@ -10,7 +11,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         --LOG('Oncreate')
         if string.find(per, 'RNG') then
-            --LOG('This is RNG')
+            LOG('This is RNG')
             self.RNG = true
 
             -- Structure Upgrade properties
