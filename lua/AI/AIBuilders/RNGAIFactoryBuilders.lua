@@ -28,7 +28,7 @@ BuilderGroup {
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
             -- Stop building T1 Factories after we have 6 T2
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH2' }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY LAND TECH1' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH1' }},
          },
         BuilderType = 'Any',
         BuilderData = {

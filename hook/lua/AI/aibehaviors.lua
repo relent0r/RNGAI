@@ -3,6 +3,8 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local MakePlatoon = moho.aibrain_methods.MakePlatoon
+local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 
 -- Don't delete this yet.
 --[[RNGCommanderBehavior = CommanderBehavior
@@ -68,7 +70,7 @@ function CommanderThreadRNG(cdr, platoon)
                 -- get the global armypool platoon
                 local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
                 -- assing the CDR to the armypool
-                aiBrain:AssignUnitsToPlatoon(pool, {cdr}, 'Unassigned', 'None')
+                AssignUnitsToPlatoon(aiBrain, pool, {cdr}, 'Unassigned', 'None')
             -- if we have a BuildQueue then continue building
             elseif cdr.EngineerBuildQueue and table.getn(cdr.EngineerBuildQueue) ~= 0 then
                 if not cdr.NotBuildingThread then
@@ -465,8 +467,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                             end
 
                             repeat
-                               WaitTicks(20)
-                            until unit.Dead or (unit.UnitBeingBuilt.BlueprintID == upgradeID)
+                               WaitTicks(50)
+                            until unit.Dead or (unit.UnitBeingBuilt:GetBlueprint().BlueprintId == upgradeID) -- Fix this!
                         end
 
                         if unit.Dead then
@@ -505,7 +507,12 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         end
     end
     if upgradeIssued then
-		
+        LOG('upgradeIssued is true')
+    else
+        LOG('upgradeIssued is false')
+    end
+    if upgradeIssued then
+		LOG('upgradeIssued is true')
 		unit.Upgrading = true
         unit.DesiresAssist = true
         local unitbeingbuiltbp = false
@@ -513,12 +520,14 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 		local unitbeingbuilt = unit.UnitBeingBuilt
         unitbeingbuiltbp = unitbeingbuilt:GetBlueprint()
         upgradeID = unitbeingbuiltbp.General.UpgradesTo or false
+        LOG('T1 extractor upgrading to T2 then upgrades to :'..upgradeID)
 		
 		-- if the upgrade has a follow on upgrade - start an upgrade thread for it --
         if upgradeID and not unitbeingbuilt.Dead then
 			upgradeSpec.InitialDelay = upgradeSpec.InitialDelay + 60			-- increase delay before first check for next upgrade
-			unitbeingbuilt.DesiresAssist = true			-- let engineers know they can assist this upgrade
-			unitbeingbuilt.UpgradeThread = unitbeingbuilt:ForkThread( SelfUpgradeThread, aiBrain, upgradeSpec, bypasseco )
+            unitbeingbuilt.DesiresAssist = true			-- let engineers know they can assist this upgrade
+            LOG('Forking another instance of StructureUpgradeThread')
+			unitbeingbuilt.UpgradeThread = unitbeingbuilt:ForkThread( StructureUpgradeThread, aiBrain, upgradeSpec, bypasseco )
         end
 		-- assign mass extractors to their own platoon 
 		if (not unitbeingbuilt.Dead) and EntityCategoryContains( categories.MASSEXTRACTION, unitbeingbuilt) then
