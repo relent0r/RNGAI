@@ -409,18 +409,18 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyStorageRatio
     
     local initial_delay = 0
-    LOG('Initial Variables set')
+    --LOG('Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
 		if GetEconomyStored( aiBrain, 'MASS') >= 200 and GetEconomyStored( aiBrain, 'ENERGY') >= 2500 and unit:GetFractionComplete() == 1 then
 			initial_delay = initial_delay + 10
         end
-        LOG('Initial Delay loop trigger')
+        --LOG('Initial Delay loop trigger')
 		WaitTicks(100)
     end
     
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
-        LOG('Upgrade main loop starting')
+        --LOG('Upgrade main loop starting')
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
 
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
@@ -504,6 +504,35 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             end
         end
     end
+    if upgradeIssued then
+		
+		unit.Upgrading = true
+        unit.DesiresAssist = true
+        local unitbeingbuiltbp = false
+		
+		local unitbeingbuilt = unit.UnitBeingBuilt
+        unitbeingbuiltbp = unitbeingbuilt:GetBlueprint()
+        upgradeID = unitbeingbuiltbp.General.UpgradesTo or false
+		
+		-- if the upgrade has a follow on upgrade - start an upgrade thread for it --
+        if upgradeID and not unitbeingbuilt.Dead then
+			upgradeSpec.InitialDelay = upgradeSpec.InitialDelay + 60			-- increase delay before first check for next upgrade
+			unitbeingbuilt.DesiresAssist = true			-- let engineers know they can assist this upgrade
+			unitbeingbuilt.UpgradeThread = unitbeingbuilt:ForkThread( SelfUpgradeThread, aiBrain, upgradeSpec, bypasseco )
+        end
+		-- assign mass extractors to their own platoon 
+		if (not unitbeingbuilt.Dead) and EntityCategoryContains( categories.MASSEXTRACTION, unitbeingbuilt) then
+			local Mexplatoon = MakePlatoon( aiBrain,'MEXPlatoon'..tostring(unitbeingbuilt.Sync.id), 'none')
+			Mexplatoon.BuilderName = 'MEXPlatoon'..tostring(unitbeingbuilt.Sync.id)
+            Mexplatoon.MovementLayer = 'Land'
+            LOG('Extractor Platoon name is '..Mexplatoon.BuilderName)
+			AssignUnitsToPlatoon( aiBrain, Mexplatoon, {unitbeingbuilt}, 'Support', 'none' )
+			Mexplatoon:ForkThread( Mexplatoon.PlatoonCallForHelpAI, aiBrain )
+		elseif (not unitbeingbuilt.Dead) then
+            AssignUnitsToPlatoon( aiBrain, aiBrain.StructurePool, {unitbeingbuilt}, 'Support', 'none' )
+		end
+        unit.UpgradeThread = nil
+	end
 end
 
 function StructureUpgradeDelay( aiBrain, delay )

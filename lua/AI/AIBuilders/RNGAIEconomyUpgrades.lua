@@ -1,3 +1,4 @@
+--[[ Disabling all economy upgrade builders post mex platoon implementation
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
@@ -163,3 +164,4 @@ BuilderGroup {
         BuilderType = 'Any',
     },
 }
+]]

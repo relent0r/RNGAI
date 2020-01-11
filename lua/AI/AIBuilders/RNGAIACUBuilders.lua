@@ -44,6 +44,28 @@ BuilderGroup {
         }
 
     },
+    Builder {
+        BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Close',
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1000,
+        BuilderConditions = {
+            { IBC, 'PreBuiltBase', {}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            ScanWait = 40,
+            Construction = {
+                BuildStructures = {
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                },
+            }
+        }
+
+    },
 }
 
 BuilderGroup {
@@ -72,7 +94,27 @@ BuilderGroup {
                 },
             }
         }
-
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Distant',
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1000,
+        BuilderConditions = {
+            { IBC, 'PreBuiltBase', {}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            ScanWait = 40,
+            Construction = {
+                BuildStructures = {
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                },
+            }
+        }
     },
 }
 

@@ -73,8 +73,19 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     end
                 end
             end
+        
         else
             initialRange = initialRange + 100
+            LOG('initialRange is'..initialRange)
+            if initialRange > 200 then
+                LOG('Reclaim range > 200')
+                PropBlacklist = {}
+            end
+            continue
+        end
+        if closestDistance == 10000 then
+            initialRange = initialRange + 100
+            LOG('initialRange is'..initialRange)
             if initialRange > 200 then
                 LOG('Reclaim range > 200')
                 PropBlacklist = {}
@@ -88,13 +99,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         -- Clear Commands first
         IssueClearCommands({self})
         --LOG('Attempting move to closest reclaim')
-        LOG('Closest reclaim is '..repr(closestReclaim))
+        --LOG('Closest reclaim is '..repr(closestReclaim))
         if not closestReclaim then
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
             self.blocked = self.blocked + 1
-            LOG('Reclaim Blocked + 1'..self.blocked)
+            LOG('Reclaim Blocked + 1 :'..self.blocked)
             if self.blocked > 3 then
                 self.blocked = 0
                 table.insert (PropBlacklist, closestReclaim)
@@ -110,7 +121,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('One 6th of distance is '..brokenDistance)
         local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
-            LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
+            --LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
             WaitTicks(20)
             moveWait = moveWait + 1
             engPos = self:GetPosition()
@@ -125,16 +136,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
-            LOG('Engineer is reclaiming')
+            --LOG('Engineer is reclaiming')
             WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                LOG('Engineer no longer reclaiming')
+                --LOG('Engineer no longer reclaiming')
                 reclaiming = false
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-        LOG('basePosition random location :'..repr(location))
+        --LOG('basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitTicks(50)
@@ -607,22 +618,21 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
     local StructureUpgradeThread = import('/lua/ai/aibehaviors.lua').StructureUpgradeThread
     local structurePool = aiBrain.StructurePool
     local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
-    LOG('Structure Upgrade Initializing')
+    --LOG('Structure Upgrade Initializing')
     if EntityCategoryContains(categories.MASSEXTRACTION, finishedUnit) then
         local extractorPlatoon = aiBrain:MakePlatoon('ExtractorPlatoon'..tostring(finishedUnit.Sync.id), 'none')
         extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(finishedUnit.Sync.id)
         extractorPlatoon.MovementLayer = 'Land'
-        LOG('Assigning Extractor to new platoon')
+        --LOG('Assigning Extractor to new platoon')
         AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
 
         if not finishedUnit.UpgradeThread then
-            LOG('Forking Upgrade Thread')
+            --LOG('Forking Upgrade Thread')
             upgradeSpec = aiBrain:GetUpgradeSpec(finishedUnit)
-            LOG('UpgradeSpec'..repr(upgradeSpec))
+            --LOG('UpgradeSpec'..repr(upgradeSpec))
             finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread, aiBrain, upgradeSpec, false)
         end
     end
-    LOG('Moved Past Entity Cat If')
     if finishedUnit.UpgradeThread then
         finishedUnit.Trash:Add(finishedUnit.UpgradeThread)
     end

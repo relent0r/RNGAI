@@ -15,7 +15,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.RNG = true
 
             -- Structure Upgrade properties
-            self.UpgradeMode = 'Normal'
+            self.UpgradeMode = 'Aggressive'
             self.UpgradeIssued = 0
 		    self.UpgradeIssuedLimit = 1
             self.UpgradeIssuedPeriod = 225
@@ -25,6 +25,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.ACUSupport.Supported = false
             self.ACUSupport.PlatoonCount = 0
             self.ACUSupport.Position = {}
+            -- Intel Data
+            self.EnemyIntel = {}
+            self.EnemyIntel.ACU = {}
         end
     end,
 
@@ -395,8 +398,6 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.InterestList or not self.InterestList.MustScout then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
-        self.EnemyIntel = {}
-        self.EnemyIntel.ACU = {}
         for _, v in ArmyBrains do
             self.EnemyIntel.ACU[v:GetArmyIndex()] = {
                 Position = {},
@@ -507,12 +508,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0
-                upgradeSpec.EnergyLowTrigger = 0
-                upgradeSpec.MassHighTrigger = 0
-                upgradeSpec.EnergyHighTrigger = 0
-                upgradeSpec.UpgradeCheckWait = 240
-                upgradeSpec.InitialDelay = 0
+                upgradeSpec.MassLowTrigger = 0.6
+                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.MassHighTrigger = 1.5
+                upgradeSpec.EnergyHighTrigger = 9999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 90
                 upgradeSpec.EnemyThreatLimit = 100
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
@@ -525,12 +526,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 5
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 0
-                upgradeSpec.EnergyLowTrigger = 0
-                upgradeSpec.MassHighTrigger = 0
-                upgradeSpec.EnergyHighTrigger = 0
-                upgradeSpec.UpgradeCheckWait = 240
-                upgradeSpec.InitialDelay = 0
+                upgradeSpec.MassLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 1.2
+                upgradeSpec.MassHighTrigger = 1.6
+                upgradeSpec.EnergyHighTrigger = 9999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 90
                 upgradeSpec.EnemyThreatLimit = 0
                 return upgradeSpec
             end
