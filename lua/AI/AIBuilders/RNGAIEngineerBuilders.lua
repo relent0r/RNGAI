@@ -183,6 +183,7 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 12,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
