@@ -17,6 +17,7 @@ BaseBuilderTemplate {
        -- 'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
         --'RNGAI Test PD',
+        'RNGAI ACU Enhancements Gun',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
@@ -28,7 +29,7 @@ BaseBuilderTemplate {
         'RNGAI Mass Builder',
         'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
-        'RNGAI ExtractorUpgrades',
+        --'RNGAI ExtractorUpgrades',
         'RNGAI Mass Fab',
 
         -- Engineer Builders --
@@ -128,12 +129,12 @@ BaseBuilderTemplate {
         local mapSizeX, mapSizeZ = GetMapSize()
         if personality == 'RNGStandard' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('### M-FirstBaseFunction '..personality)
-            LOG('Map size is small', mapSizeX, mapSizeZ)
+            --LOG('Map size is small', mapSizeX, mapSizeZ)
             if MABC.CanBuildOnMassLessThanDistance(aiBrain, 'MAIN', 10, -500, 0, 0, 'AntiSurface', 1) then
-                LOG('ACU has close mexes')
+                --LOG('ACU has close mexes')
                 return 1000, 'RNGStandard'
             else 
-                LOG('ACU has distant mexes')
+                --LOG('ACU has distant mexes')
                 return -1
             end
         end

@@ -18,7 +18,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close',
-        PlatoonAddBehaviors = {'CommanderBehavior', 'ACUDetection'},
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
         BuilderConditions = {
@@ -37,6 +37,28 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1Resource',
                     'T1Resource',
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                },
+            }
+        }
+
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Close',
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1000,
+        BuilderConditions = {
+            { IBC, 'PreBuiltBase', {}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            ScanWait = 40,
+            Construction = {
+                BuildStructures = {
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -51,7 +73,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Distant',
-        PlatoonAddBehaviors = {'CommanderBehavior', 'ACUDetection'},
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
         BuilderConditions = {
@@ -72,7 +94,27 @@ BuilderGroup {
                 },
             }
         }
-
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Distant',
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1000,
+        BuilderConditions = {
+            { IBC, 'PreBuiltBase', {}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            ScanWait = 40,
+            Construction = {
+                BuildStructures = {
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                },
+            }
+        }
     },
 }
 
@@ -81,7 +123,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
-        PlatoonAddBehaviors = {'CommanderBehavior','ACUDetection'},
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG','ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
         BuilderConditions = {
@@ -371,5 +413,90 @@ BuilderGroup {
                 Time = 30,
             },
         }
+    },
+}
+
+BuilderGroup { 
+    BuilderGroupName = 'RNGAI ACU Enhancements Gun',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'UEF CDR Enhancement HeavyAntiMatter',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'HeavyAntiMatterCannon', false }},
+                { MIBC, 'FactionIndex', {1}},
+            },
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            Enhancement = { 'HeavyAntiMatterCannon' },
+        },
+
+    },
+    Builder {
+        BuilderName = 'Aeon CDR Enhancement Crysalis',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'CrysalisBeam', false }},
+                { MIBC, 'FactionIndex', {2}},
+            },
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            TimeBetweenEnhancements = 20,
+            Enhancement = { 'HeatSink', 'CrysalisBeam'},
+        },
+    },
+    Builder {
+        BuilderName = 'Cybran CDR Enhancement CoolingUpgrade',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'CoolingUpgrade', false }},
+                { MIBC, 'FactionIndex', {3}},
+            },
+        BuilderType = 'Any',
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            Enhancement = { 'CoolingUpgrade'},
+        },
+
+    },
+    Builder {
+        BuilderName = 'Seraphim CDR Enhancement RateOfFire',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'IsIsland', { false } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
+                { EBC, 'GreaterThanEconIncome',  { 0.5, 50.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'CmdrHasUpgrade', { 'RateOfFire', false }},
+                { MIBC, 'FactionIndex', {4}},
+            },
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderType = 'Any',
+        BuilderData = {
+            Enhancement = { 'RateOfFire' },
+        },
+
     },
 }

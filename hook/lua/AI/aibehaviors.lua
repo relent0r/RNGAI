@@ -1,25 +1,44 @@
 --local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
+local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
+local MakePlatoon = moho.aibrain_methods.MakePlatoon
+local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 
-RNGCommanderBehavior = CommanderBehavior
-function CommanderBehavior(platoon)
+-- Don't delete this yet.
+--[[RNGCommanderBehavior = CommanderBehavior
+function CommanderBehaviorRNG(platoon)
     local aiBrain = platoon:GetBrain()
+    if not aiBrain.RNG then
+        return RNGCommanderBehavior(platoon)
+    end
     per = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
     for _, v in platoon:GetPlatoonUnits() do
         if not v.Dead and not v.CommanderThread then
             if per == 'RNGStandard' or per == 'RNGStandardcheat' then
-                --LOG('Correct ai brain name')
+                LOG('Correct ai brain name')
                 v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
             else
-                --LOG('Incorrect ai brain name')
+                LOG('Incorrect ai brain name')
                 v.CommanderThread = v:ForkThread(CommanderThread, platoon)
             end
+        end
+    end
+end]]
+
+function CommanderBehaviorRNG(platoon)
+    for _, v in platoon:GetPlatoonUnits() do
+        if not v.Dead and not v.CommanderThread then
+            v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
         end
     end
 end
 
 function CommanderThreadRNG(cdr, platoon)
-    --LOG('Starting CommanderThreadRNG')
+    LOG('Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
     aiBrain:BuildScoutLocationsRNG()
     -- Added to ensure we know the start locations (thanks to Sorian).
@@ -53,7 +72,7 @@ function CommanderThreadRNG(cdr, platoon)
                 -- get the global armypool platoon
                 local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
                 -- assing the CDR to the armypool
-                aiBrain:AssignUnitsToPlatoon(pool, {cdr}, 'Unassigned', 'None')
+                AssignUnitsToPlatoon(aiBrain, pool, {cdr}, 'Unassigned', 'None')
             -- if we have a BuildQueue then continue building
             elseif cdr.EngineerBuildQueue and table.getn(cdr.EngineerBuildQueue) ~= 0 then
                 if not cdr.NotBuildingThread then
@@ -69,7 +88,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     local weapBPs = cdr:GetBlueprint().Weapon
     local overCharge = {}
     local weapon = {}
-
+    local factionIndex = aiBrain:GetFactionIndex()
+    
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             weapon = v
@@ -82,6 +102,24 @@ function CDROverChargeRNG(aiBrain, cdr)
             break
         end
 
+    end
+    -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+    if factionIndex == 1 then
+        if cdr:HasEnhancement('HeavyAntiMatterCannon') then
+            weapon.Range = 30 - 2
+        end
+    elseif factionIndex == 2 then
+        if cdr:HasEnhancement('CrysalisBeam') then
+            weapon.Range = 35 - 2
+        end
+    elseif factionIndex == 3 then
+        if cdr:HasEnhancement('CoolingUpgrade') then
+            weapon.Range = 30 - 2
+        end
+    elseif factionIndex == 4 then
+        if cdr:HasEnhancement('RateOfFire') then
+            weapon.Range = 30 - 2
+        end
     end
 
     cdr.UnitBeingBuiltBehavior = false
@@ -98,19 +136,18 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
 
     -- Increase attack range for a few mins on small maps
-    local maxRadius = weapon.MaxRadius + 10
+    local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() < 660
         and GetGameTimeSeconds() > 243
         and mapSizeX <= 512 and mapSizeZ <= 512
-        and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'turtle'
-        and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'defense'
-        and ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality ~= 'rushnaval'
         then
-        maxRadius = 200
+        maxRadius = 240 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        if maxRadius < 60 then 
+            maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
+        end
     end
-
+    
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
     local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
@@ -323,5 +360,230 @@ function ACUDetection(platoon)
         end
     else
             WARN('No EnemyIntel ACU Table found, is the game still initializing?')
+    end
+end
+
+-- 99% of the below was Sprouto's work
+function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
+    --LOG('Starting structure thread upgrade for'..aiBrain.Nickname)
+
+    local unitBp = unit:GetBlueprint()
+    local upgradeID = unitBp.General.UpgradesTo or false
+    local upgradebp = false
+
+
+    if upgradeID then
+        upgradebp = aiBrain:GetUnitBlueprint(upgradeID) or false
+    end
+
+    if not (upgradeID and upgradebp) then
+        unit.UpgradeThread = nil
+        unit.UpgradesComplete = true
+        --LOG('upgradeID or upgradebp is false, returning')
+        return
+    end
+
+    local upgradeable = true
+    local upgradeIssued = false
+
+    if not bypasseco then
+        local bypasseco = false
+    end
+    -- Eco requirements
+    local massNeeded = upgradebp.Economy.BuildCostMass
+	local energyNeeded = upgradebp.Economy.BuildCostEnergy
+    local buildtime = upgradebp.Economy.BuildTime
+    
+    -- build rate
+    local buildrate = unitBp.Economy.BuildRate
+
+    -- production while upgrading
+    local massProduction = unitBp.Economy.ProductionPerSecondMass or 0
+    local energyProduction = unitBp.Economy.ProductionPerSecondEnergy or 0
+    
+    local massTrendNeeded = ( math.min( 0,(massNeeded / buildtime) * buildrate) - massProduction) * .1
+    local energyTrendNeeded = ( math.min( 0,(energyNeeded / buildtime) * buildrate) - energyProduction) * .1
+    local energyMaintenance = (upgradebp.Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
+
+    -- Define Economic Data
+    local eco = aiBrain.EcoData.OverTime -- mother of god I'm stupid this is another bit of Sprouto genius.
+    local massStorage
+    local energyStorage
+    local massStorageRatio
+    local energyStorageRatio
+    local massIncome
+    local massRequested
+    local energyIncome
+    local energyRequested
+    local massTrend
+    local energyTrend
+    local massEfficiency
+    local energyEfficiency
+    
+    local initial_delay = 0
+    --LOG('Initial Variables set')
+    while initial_delay < upgradeSpec.InitialDelay do
+		if GetEconomyStored( aiBrain, 'MASS') >= 100 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
+			initial_delay = initial_delay + 10
+        end
+        --LOG('Initial Delay loop trigger for'..aiBrain.Nickname)
+		WaitTicks(100)
+    end
+    
+    -- Main Upgrade Loop
+    while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
+        --LOG('Upgrade main loop starting for'..aiBrain.Nickname)
+        WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
+
+        if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
+            --LOG(aiBrain.Nickname)
+            --LOG('UpgradeIssues and UpgradeIssuedLimit are set')
+            massStorage = GetEconomyStored( aiBrain, 'MASS')
+            --LOG('massStorage'..massStorage)
+            energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
+            --LOG('energyStorage'..energyStorage)
+            massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
+            --LOG('massStorageRatio'..massStorageRatio)
+            energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
+            --LOG('energyStorageRatio'..energyStorageRatio)
+            massIncome = GetEconomyIncome(aiBrain, 'MASS')
+            --LOG('massIncome'..massIncome)
+            massRequested = GetEconomyRequested(aiBrain, 'MASS')
+            --LOG('massRequested'..massRequested)
+            energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
+            --LOG('energyIncome'..energyIncome)
+            energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
+            --LOG('energyRequested'..energyRequested)
+            massTrend = GetEconomyTrend(aiBrain, 'MASS')
+            --LOG('massTrend'..massTrend)
+            energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+            --LOG('energyTrend'..energyTrend)
+            massEfficiency = math.min(massIncome / massRequested, 2)
+            --LOG('massEfficiency'..massEfficiency)
+            energyEfficiency = math.min(energyIncome / energyRequested, 2)
+            --LOG('energyEfficiency'..energyEfficiency)
+
+            
+            if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
+                or ((massStorageRatio > .80 and energyStorageRatio > .80))
+                or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
+                --LOG('low_trigger_good = true')
+            else
+                continue
+            end
+            
+            if (massEfficiency <= upgradeSpec.MassHighTrigger and energyEfficiency <= upgradeSpec.EnergyHighTrigger) then
+                --LOG('hi_trigger_good = true')
+            else
+                continue
+            end
+            
+            if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
+				or ( massStorage >= (massNeeded * .8) and energyStorage > (energyNeeded * .4) )  then
+				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
+				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
+                    if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
+						if not unit.Dead then
+							-- if upgrade issued and not completely full --
+                            if massStorageRatio < 1 or energyStorageRatio < 1 then
+                                ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
+                            else
+                                ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod * .5)     -- otherwise halve the delay period
+                            end
+
+                            upgradeIssued = true
+                            IssueUpgrade({unit}, upgradeID)
+
+                            if ScenarioInfo.StructureUpgradeDialog then
+                                LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(__blueprints[upgradeID].Description).." at "..GetGameTimeSeconds() )
+                            end
+
+                            repeat
+                               WaitTicks(50)
+                            until unit.Dead or (unit.UnitBeingBuilt:GetBlueprint().BlueprintId == upgradeID) -- Fix this!
+                        end
+
+                        if unit.Dead then
+                            LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." to "..upgradeID.." failed.  Dead is "..repr(unit.Dead))
+                            upgradeIssued = false
+                        end
+
+                        if upgradeIssued then
+                            continue
+                        end
+                    end
+                end
+            else
+                if ScenarioInfo.StructureUpgradeDialog then
+                    if not ( massTrend >= massTrendNeeded ) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..massTrend.." needed "..massTrendNeeded)
+                    end
+                    
+                    if not ( energyTrend >= energyTrendNeeded ) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..energyTrend.." needed "..energyTrendNeeded)
+                    end
+                    
+                    if not (energyTrend >= energyMaintenance) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..energyTrend.." "..energyMaintenance)  
+                    end
+                    
+                    if not ( massStorage >= (massNeeded * .8)) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS storage trigger "..massStorage.." needed "..(massNeeded*.8) )
+                    end
+                    
+                    if not (energyStorage > (energyNeeded * .4)) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER storage trigger "..energyStorage.." needed "..(energyNeeded*.4) )
+                    end
+                end
+            end
+        end
+    end
+
+    if upgradeIssued then
+		--LOG('upgradeIssued is true')
+		unit.Upgrading = true
+        unit.DesiresAssist = true
+        local unitbeingbuiltbp = false
+		
+		local unitbeingbuilt = unit.UnitBeingBuilt
+        unitbeingbuiltbp = unitbeingbuilt:GetBlueprint()
+        upgradeID = unitbeingbuiltbp.General.UpgradesTo or false
+        LOG('T1 extractor upgrading to T2 then upgrades to :'..upgradeID)
+		
+		-- if the upgrade has a follow on upgrade - start an upgrade thread for it --
+        if upgradeID and not unitbeingbuilt.Dead then
+			upgradeSpec.InitialDelay = upgradeSpec.InitialDelay + 60			-- increase delay before first check for next upgrade
+            unitbeingbuilt.DesiresAssist = true			-- let engineers know they can assist this upgrade
+            --LOG('Forking another instance of StructureUpgradeThread')
+			unitbeingbuilt.UpgradeThread = unitbeingbuilt:ForkThread( StructureUpgradeThread, aiBrain, upgradeSpec, bypasseco )
+        end
+		-- assign mass extractors to their own platoon 
+		if (not unitbeingbuilt.Dead) and EntityCategoryContains( categories.MASSEXTRACTION, unitbeingbuilt) then
+			local Mexplatoon = MakePlatoon( aiBrain,'MEXPlatoon'..tostring(unitbeingbuilt.Sync.id), 'none')
+			Mexplatoon.BuilderName = 'MEXPlatoon'..tostring(unitbeingbuilt.Sync.id)
+            Mexplatoon.MovementLayer = 'Land'
+            LOG('Extractor Platoon name is '..Mexplatoon.BuilderName)
+			AssignUnitsToPlatoon( aiBrain, Mexplatoon, {unitbeingbuilt}, 'Support', 'none' )
+			Mexplatoon:ForkThread( Mexplatoon.PlatoonCallForHelpAI, aiBrain )
+		elseif (not unitbeingbuilt.Dead) then
+            AssignUnitsToPlatoon( aiBrain, aiBrain.StructurePool, {unitbeingbuilt}, 'Support', 'none' )
+		end
+        unit.UpgradeThread = nil
+	end
+end
+
+function StructureUpgradeDelay( aiBrain, delay )
+
+    aiBrain.UpgradeIssued = aiBrain.UpgradeIssued + 1
+    
+    if ScenarioInfo.StructureUpgradeDialog then
+        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter up to "..aiBrain.UpgradeIssued.." period is "..delay)
+    end
+
+    WaitTicks( delay )
+    aiBrain.UpgradeIssued = aiBrain.UpgradeIssued - 1
+    
+    if ScenarioInfo.StructureUpgradeDialog then
+        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
     end
 end

@@ -355,6 +355,8 @@ BuilderGroup {
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            LocationType = 'LocationType',
+            Defensive = true,
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
@@ -384,6 +386,8 @@ BuilderGroup {
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            LocationType = 'LocationType',
+            Defensive = true,
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
@@ -603,6 +607,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -626,6 +631,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Medium',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

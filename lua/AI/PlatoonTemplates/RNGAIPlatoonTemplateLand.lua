@@ -26,7 +26,7 @@ PlatoonTemplate {
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 5, 10, 'attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
 
@@ -35,7 +35,7 @@ PlatoonTemplate {
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 2, 2, 'attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
 
@@ -206,7 +206,6 @@ PlatoonTemplate {
           14, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
           { categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
           2, -- Min number of units.
           4, -- Max number of units.

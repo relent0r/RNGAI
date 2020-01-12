@@ -1,8 +1,13 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local Utils = import('/lua/utilities.lua')
+
+
+
 
 local PropBlacklist = {}
+-- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
     LOG('Start Reclaim Function')
@@ -68,8 +73,19 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     end
                 end
             end
+        
         else
             initialRange = initialRange + 100
+            LOG('initialRange is'..initialRange)
+            if initialRange > 200 then
+                LOG('Reclaim range > 200')
+                PropBlacklist = {}
+            end
+            continue
+        end
+        if closestDistance == 10000 then
+            initialRange = initialRange + 100
+            LOG('initialRange is'..initialRange)
             if initialRange > 200 then
                 LOG('Reclaim range > 200')
                 PropBlacklist = {}
@@ -83,13 +99,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         -- Clear Commands first
         IssueClearCommands({self})
         --LOG('Attempting move to closest reclaim')
-        LOG('Closest reclaim is '..repr(closestReclaim))
+        --LOG('Closest reclaim is '..repr(closestReclaim))
         if not closestReclaim then
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
             self.blocked = self.blocked + 1
-            LOG('Reclaim Blocked + 1'..self.blocked)
+            LOG('Reclaim Blocked + 1 :'..self.blocked)
             if self.blocked > 3 then
                 self.blocked = 0
                 table.insert (PropBlacklist, closestReclaim)
@@ -105,7 +121,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('One 6th of distance is '..brokenDistance)
         local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
-            LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
+            --LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
             WaitTicks(20)
             moveWait = moveWait + 1
             engPos = self:GetPosition()
@@ -120,16 +136,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
-            LOG('Engineer is reclaiming')
+            --LOG('Engineer is reclaiming')
             WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                LOG('Engineer no longer reclaiming')
+                --LOG('Engineer no longer reclaiming')
                 reclaiming = false
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-        LOG('basePosition random location :'..repr(location))
+        --LOG('basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitTicks(50)
@@ -388,38 +404,6 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     return false
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, platoon, category ,squad, maxRange, atkPri, enemyBrain)
-    local position = platoon:GetPlatoonPosition()
-    if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
-        return false
-    end
-
-    local enemyIndex = enemyBrain:GetArmyIndex()
-    local targetUnits = aiBrain:GetUnitsAroundPoint(category, position, maxRange, 'Enemy')
-    for _, v in atkPri do
-        local category = v
-        if type(category) == 'string' then
-            category = ParseEntityCategory(category)
-        end
-        local retUnit = false
-        local distance = false
-        for num, unit in targetUnits do
-            if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
-                local unitPos = unit:GetPosition()
-                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
-                    retUnit = unit
-                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
-                end
-            end
-        end
-        if retUnit then
-            return retUnit
-        end
-    end
-
-    return false
-end
-
 function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
     local pos = aiBrain:PBMGetLocationCoords(locationType)
     if not pos then
@@ -485,6 +469,7 @@ function AIGetMassMarkerLocations(aiBrain, includeWater)
     return markerList
 end
 
+-- This is Sproutos function 
 function PositionInWater(pos)
 	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end
@@ -585,3 +570,74 @@ function lerpy(vec1, vec2, distance)
     z = vec1[3] * (1 - distanceFrac) + vec2[3] * distanceFrac
     return {x,y,z}
 end
+
+function CheckCustomPlatoons(aiBrain)
+    if not aiBrain.StructurePool then
+        LOG('Creating Structure Pool Platoon')
+        local structurepool = aiBrain:MakePlatoon('StructurePool', 'none')
+        structurepool:UniquelyNamePlatoon('StructurePool')
+        structurepool.BuilderName = 'Structure Pool'
+        aiBrain.StructurePool = structurepool
+    end
+end
+
+function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, enemyBrain)
+    local position = platoon:GetPlatoonPosition()
+    if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
+        return false
+    end
+
+    local enemyIndex = enemyBrain:GetArmyIndex()
+    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+    for _, v in atkPri do
+        local category = v
+        if type(category) == 'string' then
+            category = ParseEntityCategory(category)
+        end
+        local retUnit = false
+        local distance = false
+        for num, unit in targetUnits do
+            if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
+                local unitPos = unit:GetPosition()
+                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                    retUnit = unit
+                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                end
+            end
+        end
+        if retUnit then
+            return retUnit
+        end
+    end
+
+    return false
+end
+
+-- 99% of the below was Sprouto's work
+function StructureUpgradeInitialize(finishedUnit, aiBrain)
+    local StructureUpgradeThread = import('/lua/ai/aibehaviors.lua').StructureUpgradeThread
+    local structurePool = aiBrain.StructurePool
+    local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
+    --LOG('Structure Upgrade Initializing')
+    if EntityCategoryContains(categories.MASSEXTRACTION, finishedUnit) then
+        local extractorPlatoon = aiBrain:MakePlatoon('ExtractorPlatoon'..tostring(finishedUnit.Sync.id), 'none')
+        extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(finishedUnit.Sync.id)
+        extractorPlatoon.MovementLayer = 'Land'
+        --LOG('Assigning Extractor to new platoon')
+        AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
+
+        if not finishedUnit.UpgradeThread then
+            --LOG('Forking Upgrade Thread')
+            upgradeSpec = aiBrain:GetUpgradeSpec(finishedUnit)
+            --LOG('UpgradeSpec'..repr(upgradeSpec))
+            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread, aiBrain, upgradeSpec, false)
+        end
+    end
+    if finishedUnit.UpgradeThread then
+        finishedUnit.Trash:Add(finishedUnit.UpgradeThread)
+    end
+end
+
+
+
+

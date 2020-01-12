@@ -2,6 +2,7 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
+
 local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
@@ -10,9 +11,85 @@ AIBrain = Class(RNGAIBrainClass) {
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         --LOG('Oncreate')
         if string.find(per, 'RNG') then
-            --LOG('This is RNG')
+            LOG('This is RNG')
             self.RNG = true
+
+            -- Structure Upgrade properties
+            self.UpgradeMode = 'Normal'
+            self.UpgradeIssued = 0
+		    self.UpgradeIssuedLimit = 1
+            self.UpgradeIssuedPeriod = 225
+
+            -- ACU Support Data
+            self.ACUSupport = {}
+            self.ACUSupport.Supported = false
+            self.ACUSupport.PlatoonCount = 0
+            self.ACUSupport.Position = {}
+            -- Intel Data
+            self.EnemyIntel = {}
+            self.EnemyIntel.ACU = {}
         end
+    end,
+
+    OnSpawnPreBuiltUnits = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)
+        end
+        local factionIndex = self:GetFactionIndex()
+        local resourceStructures = nil
+        local initialUnits = nil
+        local posX, posY = self:GetArmyStartPos()
+
+        if factionIndex == 1 then
+            resourceStructures = {'UEB1103', 'UEB1103', 'UEB1103', 'UEB1103'}
+            initialUnits = {'UEB0101', 'UEB1101', 'UEB1101', 'UEB1101', 'UEB1101'}
+        elseif factionIndex == 2 then
+            resourceStructures = {'UAB1103', 'UAB1103', 'UAB1103', 'UAB1103'}
+            initialUnits = {'UAB0101', 'UAB1101', 'UAB1101', 'UAB1101', 'UAB1101'}
+        elseif factionIndex == 3 then
+            resourceStructures = {'URB1103', 'URB1103', 'URB1103', 'URB1103'}
+            initialUnits = {'URB0101', 'URB1101', 'URB1101', 'URB1101', 'URB1101'}
+        elseif factionIndex == 4 then
+            resourceStructures = {'XSB1103', 'XSB1103', 'XSB1103', 'XSB1103'}
+            initialUnits = {'XSB0101', 'XSB1101', 'XSB1101', 'XSB1101', 'XSB1101'}
+        end
+
+        if resourceStructures then
+            -- Place resource structures down
+            for k, v in resourceStructures do
+                local unit = self:CreateResourceBuildingNearest(v, posX, posY)
+                local unitBp = unit:GetBlueprint()
+                if unit ~= nil and unitBp.Physics.FlattenSkirt then
+                    unit:CreateTarmac(true, true, true, false, false)
+                end
+                if unit ~= nil then
+                    if not self.StructurePool then
+                        RUtils.CheckCustomPlatoons(self)
+                    end
+                    local StructurePool = self.StructurePool
+                    self:AssignUnitsToPlatoon(StructurePool, {unit}, 'Support', 'none' )
+                    local upgradeID = unitBp.General.UpgradesTo or false
+                    LOG('BlueprintID to upgrade to is : '..unitBp.General.UpgradesTo)
+                    if upgradeID and __blueprints[upgradeID] then
+                        RUtils.StructureUpgradeInitialize(unit, self)
+                    end
+                    local unitTable = StructurePool:GetPlatoonUnits()
+                    LOG('StructurePool now has :'..table.getn(unitTable))
+                end
+            end
+        end
+
+        if initialUnits then
+            -- Place initial units down
+            for k, v in initialUnits do
+                local unit = self:CreateUnitNearSpot(v, posX, posY)
+                if unit ~= nil and unit:GetBlueprint().Physics.FlattenSkirt then
+                    unit:CreateTarmac(true, true, true, false, false)
+                end
+            end
+        end
+
+        self.PreBuilt = true
     end,
 
     BuildScoutLocationsRNG = function(self)
@@ -321,8 +398,6 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.InterestList or not self.InterestList.MustScout then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
-        self.EnemyIntel = {}
-        self.EnemyIntel.ACU = {}
         for _, v in ArmyBrains do
             self.EnemyIntel.ACU[v:GetArmyIndex()] = {
                 Position = {},
@@ -427,5 +502,43 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('returnEnemy is false')
         end
         return returnEnemy
+    end,
+
+    GetUpgradeSpec = function(self, unit)
+        local upgradeSpec = {}
+        if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
+            if self.UpgradeMode == 'Aggressive' then
+                upgradeSpec.MassLowTrigger = 0.6
+                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.MassHighTrigger = 1.5
+                upgradeSpec.EnergyHighTrigger = 9999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 90
+                upgradeSpec.EnemyThreatLimit = 100
+                return upgradeSpec
+            elseif self.UpgradeMode == 'Normal' then
+                upgradeSpec.MassLowTrigger = 0.72
+                upgradeSpec.EnergyLowTrigger = 1.01
+                upgradeSpec.MassHighTrigger = 1.5
+                upgradeSpec.EnergyHighTrigger = 9999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 90
+                upgradeSpec.EnemyThreatLimit = 5
+                return upgradeSpec
+            elseif self.UpgradeMode == 'Caution' then
+                upgradeSpec.MassLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 1.2
+                upgradeSpec.MassHighTrigger = 1.6
+                upgradeSpec.EnergyHighTrigger = 9999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 90
+                upgradeSpec.EnemyThreatLimit = 0
+                return upgradeSpec
+            end
+        else
+            LOG('Unit is not Mass Extractor')
+            upgradeSpec = false
+            return upgradeSpec
+        end
     end,
 }

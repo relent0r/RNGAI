@@ -1,3 +1,4 @@
+--[[ Disabling all economy upgrade builders post mex platoon implementation
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local IBC = '/lua/editor/InstantBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
@@ -29,7 +30,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconIncome',  { 1.2, 6}},
+            { EBC, 'GreaterThanEconStorageCurrent', { 200, 0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
@@ -163,3 +164,4 @@ BuilderGroup {
         BuilderType = 'Any',
     },
 }
+]]

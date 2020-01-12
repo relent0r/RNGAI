@@ -16,7 +16,7 @@ BaseBuilderTemplate {
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder Expansion',
                 'RNGAI Mass Storage Builder',
-                'RNGAI ExtractorUpgrades Expansion',
+                --'RNGAI ExtractorUpgrades Expansion',
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
