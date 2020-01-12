@@ -318,6 +318,11 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             newLoc[3] = loc[3] + Random(-10, 10)
             IssueMove({cdr}, newLoc)
             WaitTicks(40)
+            if (cdr:GetHealthPercent() > 0.75) then
+                if (GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY')) then
+                    return
+                end
+            end
         until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
 
         cdr.GoingHome = false
