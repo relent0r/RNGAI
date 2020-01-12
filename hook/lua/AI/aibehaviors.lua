@@ -320,7 +320,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             WaitTicks(40)
             if (cdr:GetHealthPercent() > 0.75) then
                 if (plat:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY')) then
-                    return
+                    return CDROverChargeRNG(aiBrain, cdr)
                 end
             end
         until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
