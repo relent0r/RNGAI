@@ -312,7 +312,12 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueStop({cdr})
             IssueMove({cdr}, loc)
             cdr.GoingHome = true
-            WaitTicks(70)
+            WaitTicks(40)
+            newLoc[1] = loc[1] + Random(-10, 10)
+            newloc[2] = loc[2]
+            newLoc[3] = loc[3] + Random(-10, 10)
+            IssueMove({cdr}, newLoc)
+            WaitTicks(40)
         until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
 
         cdr.GoingHome = false
