@@ -465,8 +465,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
-                or ((massStorageRatio > .80 and energyStorageRatio > .80))
-                or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
+                or ((massStorageRatio > .60 and energyStorageRatio > .70))
+                or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .4 ) ) then
                 --LOG('low_trigger_good = true')
             else
                 continue
@@ -479,7 +479,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             end
             
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
-				or ( massStorage >= (massNeeded * .8) and energyStorage > (energyNeeded * .4) )  then
+				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
 				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then

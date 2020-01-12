@@ -82,7 +82,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.2, 0.4 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.3, 0.5 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -106,7 +106,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -195,7 +195,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.1}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
