@@ -715,6 +715,8 @@ Platoon = Class(oldPlatoon) {
                     self:Stop()
                     if not data.UseMoveOrder then
                         self:AttackTarget(target)
+                    elseif data.AggressiveMove then
+                        self.AggressiveMoveToLocation(target:GetPosition())
                     else
                         self:MoveToLocation(table.copy(target:GetPosition()), false)
                     end
