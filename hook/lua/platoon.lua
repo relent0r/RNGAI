@@ -680,7 +680,7 @@ Platoon = Class(oldPlatoon) {
         while aiBrain:PlatoonExists(self) do
             if not target or target.Dead then
                 if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
-                    aiBrain:PickEnemyLogic()
+                    aiBrain:PickEnemyLogicRNG()
                 end
                 local mult = { 1,10,25 }
                 for _,i in mult do
@@ -1561,7 +1561,7 @@ Platoon = Class(oldPlatoon) {
 
             -- pick out the enemy
             if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
-                aiBrain:PickEnemyLogic()
+                aiBrain:PickEnemyLogicRNG()
             end
 
             -- merge with nearby platoons
