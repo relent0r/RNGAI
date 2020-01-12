@@ -3,6 +3,8 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
+local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local MakePlatoon = moho.aibrain_methods.MakePlatoon
 local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 
@@ -363,7 +365,7 @@ end
 
 -- 99% of the below was Sprouto's work
 function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
-    LOG('Starting structure thread upgrade')
+    LOG('Starting structure thread upgrade for'..aiBrain.Nickname)
 
     local unitBp = unit:GetBlueprint()
     local upgradeID = unitBp.General.UpgradesTo or false
@@ -404,11 +406,19 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyMaintenance = (upgradebp.Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
 
     -- Define Economic Data
-    local eco = aiBrain.EcoData.OverTime
+    local eco = aiBrain.EcoData.OverTime -- mother of god I'm stupid this is another bit of Sprouto genius.
     local massStorage
     local energyStorage
     local massStorageRatio
     local energyStorageRatio
+    local massIncome
+    local massRequested
+    local energyIncome
+    local energyRequested
+    local massTrend
+    local energyTrend
+    local massEfficiency
+    local energyEfficiency
     
     local initial_delay = 0
     --LOG('Initial Variables set')
@@ -422,17 +432,39 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
-        --LOG('Upgrade main loop starting')
+        LOG('Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
 
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
+            LOG(aiBrain.Nickname)
             LOG('UpgradeIssues and UpgradeIssuedLimit are set')
             massStorage = GetEconomyStored( aiBrain, 'MASS')
+            LOG('massStorage'..massStorage)
             energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
+            LOG('energyStorage'..energyStorage)
             massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
+            LOG('massStorageRatio'..massStorageRatio)
             energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
+            LOG('energyStorageRatio'..energyStorageRatio)
+            massIncome = GetEconomyIncome(aiBrain, 'MASS')
+            LOG('massIncome'..massIncome)
+            massRequested = GetEconomyRequested(aiBrain, 'MASS')
+            LOG('massRequested'..massRequested)
+            energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
+            LOG('energyIncome'..energyIncome)
+            energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
+            LOG('energyRequested'..energyRequested)
+            massTrend = GetEconomyTrend(aiBrain, 'MASS')
+            LOG('massTrend'..massTrend)
+            energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+            LOG('energyTrend'..energyTrend)
+            massEfficiency = math.min(massIncome / massRequested, 2)
+            LOG('massEfficiency'..massEfficiency)
+            energyEfficiency = math.min(energyIncome / energyRequested, 2)
+            LOG('energyEfficiency'..energyEfficiency)
+
             
-            if (eco.MassEfficiency >= upgradeSpec.MassLowTrigger and eco.EnergyEfficiency >= upgradeSpec.EnergyLowTrigger)
+            if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .80 and energyStorageRatio > .80))
                 or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
                 LOG('low_trigger_good = true')
@@ -440,16 +472,16 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 continue
             end
             
-            if (eco.MassEfficiency <= upgradeSpec.MassHighTrigger and eco.EnergyEfficiency <= upgradeSpec.EnergyHighTrigger) then
+            if (massEfficiency <= upgradeSpec.MassHighTrigger and energyEfficiency <= upgradeSpec.EnergyHighTrigger) then
                 LOG('hi_trigger_good = true')
             else
                 continue
             end
             
-            if ( eco.MassTrend >= massTrendNeeded and eco.EnergyTrend >= energyTrendNeeded and eco.EnergyTrend >= energyMaintenance )
+            if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .8) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
-				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypassecon then
+				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 						if not unit.Dead then
 							-- if upgrade issued and not completely full --
@@ -483,16 +515,16 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 end
             else
                 if ScenarioInfo.StructureUpgradeDialog then
-                    if not ( econ.MassTrend >= massTrendNeeded ) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..econ.MassTrend.." needed "..massTrendNeeded)
+                    if not ( massTrend >= massTrendNeeded ) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..massTrend.." needed "..massTrendNeeded)
                     end
                     
-                    if not ( econ.EnergyTrend >= energyTrendNeeded ) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..econ.EnergyTrend.." needed "..energyTrendNeeded)
+                    if not ( energyTrend >= energyTrendNeeded ) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..energyTrend.." needed "..energyTrendNeeded)
                     end
                     
-                    if not (econ.EnergyTrend >= energyMaintenance) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..econ.EnergyTrend.." "..energyMaintenance)  
+                    if not (energyTrend >= energyMaintenance) then
+                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..energyTrend.." "..energyMaintenance)  
                     end
                     
                     if not ( massStorage >= (massNeeded * .8)) then

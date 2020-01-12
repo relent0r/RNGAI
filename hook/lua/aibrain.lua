@@ -15,7 +15,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.RNG = true
 
             -- Structure Upgrade properties
-            self.UpgradeMode = 'Aggressive'
+            self.UpgradeMode = 'Normal'
             self.UpgradeIssued = 0
 		    self.UpgradeIssuedLimit = 1
             self.UpgradeIssuedPeriod = 225
