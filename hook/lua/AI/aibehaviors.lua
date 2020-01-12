@@ -365,7 +365,7 @@ end
 
 -- 99% of the below was Sprouto's work
 function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
-    LOG('Starting structure thread upgrade for'..aiBrain.Nickname)
+    --LOG('Starting structure thread upgrade for'..aiBrain.Nickname)
 
     local unitBp = unit:GetBlueprint()
     local upgradeID = unitBp.General.UpgradesTo or false
@@ -379,7 +379,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if not (upgradeID and upgradebp) then
         unit.UpgradeThread = nil
         unit.UpgradesComplete = true
-        LOG('upgradeID or upgradebp is false, returning')
+        --LOG('upgradeID or upgradebp is false, returning')
         return
     end
 
@@ -423,57 +423,57 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local initial_delay = 0
     --LOG('Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
-		if GetEconomyStored( aiBrain, 'MASS') >= 200 and GetEconomyStored( aiBrain, 'ENERGY') >= 2500 and unit:GetFractionComplete() == 1 then
+		if GetEconomyStored( aiBrain, 'MASS') >= 100 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
 			initial_delay = initial_delay + 10
         end
-        --LOG('Initial Delay loop trigger')
+        --LOG('Initial Delay loop trigger for'..aiBrain.Nickname)
 		WaitTicks(100)
     end
     
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
-        LOG('Upgrade main loop starting for'..aiBrain.Nickname)
+        --LOG('Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
 
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
-            LOG(aiBrain.Nickname)
-            LOG('UpgradeIssues and UpgradeIssuedLimit are set')
+            --LOG(aiBrain.Nickname)
+            --LOG('UpgradeIssues and UpgradeIssuedLimit are set')
             massStorage = GetEconomyStored( aiBrain, 'MASS')
-            LOG('massStorage'..massStorage)
+            --LOG('massStorage'..massStorage)
             energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
-            LOG('energyStorage'..energyStorage)
+            --LOG('energyStorage'..energyStorage)
             massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
-            LOG('massStorageRatio'..massStorageRatio)
+            --LOG('massStorageRatio'..massStorageRatio)
             energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
-            LOG('energyStorageRatio'..energyStorageRatio)
+            --LOG('energyStorageRatio'..energyStorageRatio)
             massIncome = GetEconomyIncome(aiBrain, 'MASS')
-            LOG('massIncome'..massIncome)
+            --LOG('massIncome'..massIncome)
             massRequested = GetEconomyRequested(aiBrain, 'MASS')
-            LOG('massRequested'..massRequested)
+            --LOG('massRequested'..massRequested)
             energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
-            LOG('energyIncome'..energyIncome)
+            --LOG('energyIncome'..energyIncome)
             energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
-            LOG('energyRequested'..energyRequested)
+            --LOG('energyRequested'..energyRequested)
             massTrend = GetEconomyTrend(aiBrain, 'MASS')
-            LOG('massTrend'..massTrend)
+            --LOG('massTrend'..massTrend)
             energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
-            LOG('energyTrend'..energyTrend)
+            --LOG('energyTrend'..energyTrend)
             massEfficiency = math.min(massIncome / massRequested, 2)
-            LOG('massEfficiency'..massEfficiency)
+            --LOG('massEfficiency'..massEfficiency)
             energyEfficiency = math.min(energyIncome / energyRequested, 2)
-            LOG('energyEfficiency'..energyEfficiency)
+            --LOG('energyEfficiency'..energyEfficiency)
 
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .80 and energyStorageRatio > .80))
                 or (massStorage > (massNeeded * .8) and energyStorage > (energyNeeded * .4 ) ) then
-                LOG('low_trigger_good = true')
+                --LOG('low_trigger_good = true')
             else
                 continue
             end
             
             if (massEfficiency <= upgradeSpec.MassHighTrigger and energyEfficiency <= upgradeSpec.EnergyHighTrigger) then
-                LOG('hi_trigger_good = true')
+                --LOG('hi_trigger_good = true')
             else
                 continue
             end
@@ -538,13 +538,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             end
         end
     end
+
     if upgradeIssued then
-        LOG('upgradeIssued is true')
-    else
-        LOG('upgradeIssued is false')
-    end
-    if upgradeIssued then
-		LOG('upgradeIssued is true')
+		--LOG('upgradeIssued is true')
 		unit.Upgrading = true
         unit.DesiresAssist = true
         local unitbeingbuiltbp = false
@@ -558,7 +554,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         if upgradeID and not unitbeingbuilt.Dead then
 			upgradeSpec.InitialDelay = upgradeSpec.InitialDelay + 60			-- increase delay before first check for next upgrade
             unitbeingbuilt.DesiresAssist = true			-- let engineers know they can assist this upgrade
-            LOG('Forking another instance of StructureUpgradeThread')
+            --LOG('Forking another instance of StructureUpgradeThread')
 			unitbeingbuilt.UpgradeThread = unitbeingbuilt:ForkThread( StructureUpgradeThread, aiBrain, upgradeSpec, bypasseco )
         end
 		-- assign mass extractors to their own platoon 
