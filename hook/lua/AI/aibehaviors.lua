@@ -319,7 +319,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueMove({cdr}, newLoc)
             WaitTicks(40)
             if (cdr:GetHealthPercent() > 0.75) then
-                if (plat:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY')) then
+                if (plat:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
                     return CDROverChargeRNG(aiBrain, cdr)
                 end
             end
