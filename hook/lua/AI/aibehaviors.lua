@@ -569,12 +569,12 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         end
 		-- assign mass extractors to their own platoon 
 		if (not unitbeingbuilt.Dead) and EntityCategoryContains( categories.MASSEXTRACTION, unitbeingbuilt) then
-			local Mexplatoon = MakePlatoon( aiBrain,'MEXPlatoon'..tostring(unitbeingbuilt.Sync.id), 'none')
-			Mexplatoon.BuilderName = 'MEXPlatoon'..tostring(unitbeingbuilt.Sync.id)
-            Mexplatoon.MovementLayer = 'Land'
-            LOG('Extractor Platoon name is '..Mexplatoon.BuilderName)
-			AssignUnitsToPlatoon( aiBrain, Mexplatoon, {unitbeingbuilt}, 'Support', 'none' )
-			Mexplatoon:ForkThread( Mexplatoon.PlatoonCallForHelpAI, aiBrain )
+			local extractorPlatoon = MakePlatoon( aiBrain,'ExtractorPlatoon'..tostring(unitbeingbuilt.Sync.id), 'none')
+			extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(unitbeingbuilt.Sync.id)
+            extractorPlatoon.MovementLayer = 'Land'
+            LOG('Extractor Platoon name is '..extractorPlatoon.BuilderName)
+			AssignUnitsToPlatoon( aiBrain, extractorPlatoon, {unitbeingbuilt}, 'Support', 'none' )
+			extractorPlatoon:ForkThread( extractorPlatoon.PlatoonCallForHelpAI, aiBrain )
 		elseif (not unitbeingbuilt.Dead) then
             AssignUnitsToPlatoon( aiBrain, aiBrain.StructurePool, {unitbeingbuilt}, 'Support', 'none' )
 		end
