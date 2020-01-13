@@ -270,15 +270,15 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE}},
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             },
         BuilderData = {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = 'Engineer',
-                BeingBuiltCategories = {'STRUCTURE STRATEGIC, STRUCTURE ECONOMIC, STRUCTURE'},
+                BeingBuiltCategories = {'STRUCTURE FACTORY, STRUCTURE'},
                 Time = 20,
             },
         },

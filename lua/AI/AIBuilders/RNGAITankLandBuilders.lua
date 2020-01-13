@@ -627,6 +627,9 @@ BuilderGroup {
             AvoidClosestRadius = 100,
             UseFormation = 'NoFormation',
             },
+            DistressRange = 200,
+            DistressReactionTime = 8,
+            ThreatSupport = 1,
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.

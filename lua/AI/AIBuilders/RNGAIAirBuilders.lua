@@ -246,6 +246,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Base Guard',
         PlatoonTemplate = 'RNGAI Bomber BaseGuard',
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 950,
         InstanceCount = 2,
         BuilderType = 'Any',
@@ -266,6 +267,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack',
         PlatoonTemplate = 'RNGAI BomberAttack',
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 900,
         InstanceCount = 1,
         BuilderType = 'Any',        
@@ -327,6 +329,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
         InstanceCount = 6,
         BuilderType = 'Any',        

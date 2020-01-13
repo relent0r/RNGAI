@@ -16,7 +16,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Trend',
         PlatoonTemplate = 'EngineerBuilder',
         Priority = 950,
-        InstanceCount = 1,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 90 } },

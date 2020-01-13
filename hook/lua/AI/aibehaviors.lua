@@ -301,8 +301,10 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local cdrPos = cdr:GetPosition()
     local distSqAway = 1600
     local loc = cdr.CDRHome
+    local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         local plat = aiBrain:MakePlatoon('', '')
+        
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
         repeat
             CDRRevertPriorityChange(aiBrain, cdr)
@@ -314,12 +316,12 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             cdr.GoingHome = true
             WaitTicks(40)
             newLoc[1] = loc[1] + Random(-10, 10)
-            newloc[2] = loc[2]
+            newLoc[2] = loc[2]
             newLoc[3] = loc[3] + Random(-10, 10)
             IssueMove({cdr}, newLoc)
             WaitTicks(40)
             if (cdr:GetHealthPercent() > 0.75) then
-                if (plat:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
+                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
                     return CDROverChargeRNG(aiBrain, cdr)
                 end
             end
@@ -433,10 +435,10 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local initial_delay = 0
     --LOG('Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
-		if GetEconomyStored( aiBrain, 'MASS') >= 100 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
+		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
 			initial_delay = initial_delay + 10
         end
-        --LOG('Initial Delay loop trigger for'..aiBrain.Nickname)
+        LOG('Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
 		WaitTicks(100)
     end
     
@@ -574,7 +576,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             extractorPlatoon.MovementLayer = 'Land'
             LOG('Extractor Platoon name is '..extractorPlatoon.BuilderName)
 			AssignUnitsToPlatoon( aiBrain, extractorPlatoon, {unitbeingbuilt}, 'Support', 'none' )
-			extractorPlatoon:ForkThread( extractorPlatoon.PlatoonCallForHelpAI, aiBrain )
+			extractorPlatoon:ForkThread( extractorPlatoon.ExtractorCallForHelpAIRNG, aiBrain )
 		elseif (not unitbeingbuilt.Dead) then
             AssignUnitsToPlatoon( aiBrain, aiBrain.StructurePool, {unitbeingbuilt}, 'Support', 'none' )
 		end

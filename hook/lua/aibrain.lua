@@ -517,9 +517,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 100
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.7
-                upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 1.5
+                upgradeSpec.MassLowTrigger = 0.72
+                upgradeSpec.EnergyLowTrigger = 1.01
+                upgradeSpec.MassHighTrigger = 1.6
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18
                 upgradeSpec.InitialDelay = 90

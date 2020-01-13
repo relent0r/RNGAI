@@ -1863,6 +1863,7 @@ Platoon = Class(oldPlatoon) {
                     repeat
                         moveLocation = distressLocation
                         self:Stop()
+                        LOG('Aggressive Move to :'..repr(distressLocation))
                         local cmd = self:AggressiveMoveToLocation(distressLocation)
                         repeat
                             WaitSeconds(reactionTime)
@@ -1870,7 +1871,7 @@ Platoon = Class(oldPlatoon) {
                                 return
                             end
                         until not self:IsCommandsActive(cmd) or aiBrain:GetThreatAtPosition(moveLocation, 0, true, 'Overall') <= threatThreshold
-
+                        LOG('Initial Distress Response Loop finished')
 
                         platoonPos = self:GetPlatoonPosition()
                         if platoonPos then
@@ -1888,6 +1889,23 @@ Platoon = Class(oldPlatoon) {
                 end
             end
             WaitTicks(110)
+        end
+    end,
+
+    ExtractorCallForHelpAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+        local checkTime = self.PlatoonData.DistressCheckTime or 4
+        local pos = self:GetPlatoonPosition()
+        while aiBrain:PlatoonExists(self) and pos do
+            if not self.DistressCall then
+                local threat = aiBrain:GetThreatAtPosition(pos, 0, true, 'AntiSurface')
+                if threat and threat > 1 then
+                    --LOG('*AI DEBUG: Platoon Calling for help')
+                    aiBrain:BaseMonitorPlatoonDistress(self, threat)
+                    self.DistressCall = true
+                end
+            end
+            WaitSeconds(checkTime)
         end
     end,
 }
