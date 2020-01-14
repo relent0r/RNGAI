@@ -703,7 +703,7 @@ Platoon = Class(oldPlatoon) {
                 -- Set to mass extraction, can't make experimentals without mass
                 local newtarget
                 if AIAttackUtils.GetSurfaceThreatOfUnits(self) > 0 then
-                    newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.MASSEXTRACTION + categories.MASSFABRICATION )
+                    newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * (categories.LAND + categories.NAVAL + categories.STRUCTURE))
                 elseif AIAttackUtils.GetAirThreatOfUnits(self) > 0 then
                     newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR)
                 end
