@@ -439,7 +439,6 @@ AIBrain = Class(RNGAIBrainClass) {
                             LastScouted = GetGameTimeSeconds(),
                         }
                     )
-
                     -- Sort the list based on low long it has been since it was scouted
                     table.sort(self.InterestList.HighPriority, function(a, b)
                         if a.LastScouted == b.LastScouted then
@@ -454,8 +453,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end)
                 end
             end
-
-            WaitTicks(50)
+            WaitTicks(70)
         end
     end,
 

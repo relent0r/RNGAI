@@ -123,3 +123,11 @@ function CheckIfReclaimEnabled(aiBrain)
         return true
     end
 end
+
+function CheckMustScoutAreas(aiBrain)
+    if table.getn(aiBrain.InterestList.MustScout) > 0 then
+        return true
+    else
+        return false
+    end
+end

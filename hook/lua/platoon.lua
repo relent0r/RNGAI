@@ -1903,6 +1903,7 @@ Platoon = Class(oldPlatoon) {
                     --LOG('*AI DEBUG: Platoon Calling for help')
                     aiBrain:BaseMonitorPlatoonDistress(self, threat)
                     self.DistressCall = true
+                    aiBrain:AddScoutArea(pos)
                 end
             end
             WaitSeconds(checkTime)
