@@ -312,16 +312,18 @@ function CDRReturnHomeRNG(aiBrain, cdr)
                 return
             end
             IssueStop({cdr})
-            IssueMove({cdr}, loc)
+            cdr.PlatoonHandle:MoveToLocation(loc, false)
             cdr.GoingHome = true
             WaitTicks(40)
             newLoc[1] = loc[1] + Random(-10, 10)
             newLoc[2] = loc[2]
             newLoc[3] = loc[3] + Random(-10, 10)
-            IssueMove({cdr}, newLoc)
+            IssueClearCommands({cdr})
+            cdr.PlatoonHandle:MoveToLocation(newLoc, false)
             WaitTicks(40)
             if (cdr:GetHealthPercent() > 0.75) then
                 if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
+                    cdr.GoingHome = false
                     return CDROverChargeRNG(aiBrain, cdr)
                 end
             end

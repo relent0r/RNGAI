@@ -158,7 +158,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
         },
     },
