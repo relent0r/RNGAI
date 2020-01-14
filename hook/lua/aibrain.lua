@@ -28,6 +28,10 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Intel Data
             self.EnemyIntel = {}
             self.EnemyIntel.ACU = {}
+
+            -- Misc
+            self.ReclaimEnabled = true
+            self.ReclaimLastCheck = 0
         end
     end,
 

@@ -73,13 +73,15 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     end
                 end
             end
-        
         else
             initialRange = initialRange + 100
             LOG('initialRange is'..initialRange)
             if initialRange > 200 then
-                LOG('Reclaim range > 200')
+                LOG('Reclaim range > 200, Disabling Reclaim.')
                 PropBlacklist = {}
+                aiBrain.ReclaimEnabled = false
+                aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
+                return
             end
             continue
         end
@@ -87,8 +89,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             initialRange = initialRange + 100
             LOG('initialRange is'..initialRange)
             if initialRange > 200 then
-                LOG('Reclaim range > 200')
+                LOG('Reclaim range > 200, Disabling Reclaim.')
                 PropBlacklist = {}
+                aiBrain.ReclaimEnabled = false
+                aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
+                return
             end
             continue
         end

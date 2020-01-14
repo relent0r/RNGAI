@@ -510,6 +510,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
+                { MIBC, 'CheckIfReclaimEnabled', {}},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
                 
             },
@@ -527,6 +528,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
+                { MIBC, 'CheckIfReclaimEnabled', {}}
                 { UCBC, 'LessThanGameTimeSeconds', { 600 } },
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
@@ -544,6 +546,7 @@ BuilderGroup {
         InstanceCount = 6,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+                { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -566,6 +569,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
+                { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {

@@ -108,3 +108,18 @@ function DamagedStructuresInAreaRNG(aiBrain, locationtype)
     --LOG('*AI DEBUG: DamagedStructuresInArea return false')
     return false
 end
+
+function CheckIfReclaimEnabled(aiBrain)
+    if aiBrain.ReclaimEnabled == false then
+        LOG('Reclaim Currently Disabled..validate last check time.')
+        if (GetGameTimeSeconds() - aiBrain.ReclaimLastCheck) > 300 then
+            LOG('Last check time older than 5 minutes, re-enabling')
+            aiBrain.ReclaimEnabled = true
+            return true
+        else
+            return false
+        end
+    else
+        return true
+    end
+end
