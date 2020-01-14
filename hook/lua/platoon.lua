@@ -682,22 +682,22 @@ Platoon = Class(oldPlatoon) {
                 if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
                     aiBrain:PickEnemyLogicRNG()
                 end
-                local mult = { 1,10,25 }
-                for _,i in mult do
-                    if data.Defensive then
-                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePosition, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
-                    else
+                if data.Defensive then
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
+                else
+                    local mult = { 1,10,25 }
+                    for _,i in mult do
                         target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
-                    end
-                    if target then
-                        break
-                    end
-                    WaitSeconds(1) --DUNCAN - was 3
-                    if not aiBrain:PlatoonExists(self) then
-                        return
+                        if target then
+                            break
+                        end
+                        WaitSeconds(1) --DUNCAN - was 3
+                        if not aiBrain:PlatoonExists(self) then
+                            return
+                        end
                     end
                 end
-
+                
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, self:GetPlatoonPosition(), maxRadius)
 
                 -- Set to mass extraction, can't make experimentals without mass
