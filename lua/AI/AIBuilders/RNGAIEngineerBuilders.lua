@@ -528,7 +528,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
-                { MIBC, 'CheckIfReclaimEnabled', {}}
+                { MIBC, 'CheckIfReclaimEnabled', {}},
                 { UCBC, 'LessThanGameTimeSeconds', { 600 } },
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
