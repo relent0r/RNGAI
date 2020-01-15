@@ -156,7 +156,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Mass Fab',
-        PlatoonTemplate = 'T3EngineerBuilderNoSUB',
+        PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 300,
         BuilderConditions = {
             -- When do we want to build this ?
@@ -191,7 +191,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Fab Adja',
-        PlatoonTemplate = 'T3EngineerBuilderNoSUB',
+        PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 300,
         BuilderConditions = {
             -- When do we want to build this ?

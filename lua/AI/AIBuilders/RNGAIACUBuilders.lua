@@ -231,7 +231,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 3, 'FACTORY AIR TECH1' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY AIR TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
