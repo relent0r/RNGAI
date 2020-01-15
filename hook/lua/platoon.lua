@@ -1853,6 +1853,9 @@ Platoon = Class(oldPlatoon) {
                 if distressLocation then
                     --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
                     LOG('Distress response activated')
+                    LOG('PlatoonDistressTable'..repr(aiBrain.BaseMonitor.PlatoonDistressTable))
+                    LOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
+                    LOG('ACUAlertTable'..repr(aiBrain.BaseMonitor.CDRDistress))
                     -- Backups old ai plan
                     local oldPlan = self:GetPlan()
                     if self.AiThread then

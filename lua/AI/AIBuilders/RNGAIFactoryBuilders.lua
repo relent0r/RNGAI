@@ -284,6 +284,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconStorageCurrent', { 1200, 8000 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
+                { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.3}},
                 { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
             },
@@ -300,7 +301,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.3}},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH1 }},
@@ -422,6 +422,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.3}},
             { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
@@ -440,6 +441,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AEON * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.3}},
             { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
@@ -458,6 +460,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.CYBRAN * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.3}},
             { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},
@@ -476,6 +479,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.SERAPHIM * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.3}},
             { UCBC, 'CheckBuildPlatoonDelay', { 'FactoryUpgrade' }},

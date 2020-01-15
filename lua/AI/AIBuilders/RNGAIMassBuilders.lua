@@ -101,6 +101,30 @@ BuilderGroup {
     },
 
     Builder {
+        BuilderName = 'RNGAI T2Engineer Mass 240',
+        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        Priority = 800,
+        InstanceCount = 4,
+        BuilderConditions = { 
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH2' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                RepeatBuild = true,
+                Distance = 30,
+                Type = 'Mass',
+                BuildStructures = {
+                    'T2Resource',
+                },
+            }
+        }
+    },
+
+    Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,

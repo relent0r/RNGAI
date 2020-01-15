@@ -151,7 +151,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.1 }},
         },
         BuilderType = 'Any',

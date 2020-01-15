@@ -232,6 +232,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI AntiAir Base Guard',
         PlatoonTemplate = 'RNGAI AntiAir BaseGuard',
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
@@ -257,8 +258,8 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
-                'MOBILE LAND',
                 'ENGINEER TECH1',
+                'MOBILE LAND',
                 'MASSEXTRACTION',
                 'ALLUNITS',
             },

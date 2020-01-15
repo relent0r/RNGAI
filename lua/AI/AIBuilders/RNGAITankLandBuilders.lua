@@ -549,6 +549,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Frequent Land Attack T1',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 400,
         InstanceCount = 12,
         BuilderType = 'Any',
