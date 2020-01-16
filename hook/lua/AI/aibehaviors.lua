@@ -151,7 +151,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
     local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
-    local distressLoc = aiBrain:BaseMonitorDistressLocation(cdrPos)
+    local distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdrPos)
     local overCharging = false
 
     -- Don't move if upgrading
@@ -271,7 +271,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 counter = counter + 5
             end
 
-            distressLoc = aiBrain:BaseMonitorDistressLocation(cdrPos)
+            distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdrPos)
             if cdr.Dead then
                 return
             end

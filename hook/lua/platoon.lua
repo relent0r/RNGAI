@@ -1846,7 +1846,7 @@ Platoon = Class(oldPlatoon) {
             local platoonPos = self:GetPlatoonPosition()
             if platoonPos and not self.DistressCall then
                 -- Find a distress location within the platoons range
-                local distressLocation = aiBrain:BaseMonitorDistressLocation(platoonPos, distressRange, threatThreshold)
+                local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold)
                 local moveLocation
 
                 -- We found a location within our range! Activate!
@@ -1879,7 +1879,7 @@ Platoon = Class(oldPlatoon) {
                         platoonPos = self:GetPlatoonPosition()
                         if platoonPos then
                             -- Now that we have helped the first location, see if any other location needs the help
-                            distressLocation = aiBrain:BaseMonitorDistressLocation(platoonPos, distressRange)
+                            distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange)
                             if distressLocation then
                                 self:AggressiveMoveToLocation(distressLocation)
                             end

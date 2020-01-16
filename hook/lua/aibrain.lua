@@ -603,4 +603,75 @@ AIBrain = Class(RNGAIBrainClass) {
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
+
+    BaseMonitorDistressLocationRNG = function(self, position, radius, threshold)
+        local returnPos = false
+        local highThreat = false
+        local distance
+        if self.BaseMonitor.CDRDistress
+                and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
+                and self.BaseMonitor.CDRThreatLevel > threshold then
+            -- Commander scared and nearby; help it
+            return self.BaseMonitor.CDRDistress
+        end
+        if self.BaseMonitor.AlertSounded then
+            for k, v in self.BaseMonitor.AlertsTable do
+                local tempDist = Utilities.XZDistanceTwoVectors(position, v.Position)
+
+                -- Too far away
+                if tempDist > radius then
+                    continue
+                end
+
+                -- Not enough threat in location
+                if v.Threat < threshold then
+                    continue
+                end
+
+                -- Threat lower than or equal to a threat we already have
+                if v.Threat <= highThreat then
+                    continue
+                end
+
+                -- Get real height
+                local height = GetTerrainHeight(v.Position[1], v.Position[3])
+                local surfHeight = GetSurfaceHeight(v.Position[1], v.Position[3])
+                if surfHeight > height then
+                    height = surfHeight
+                end
+
+                -- currently our winner in high threat
+                returnPos = {v.Position[1], height, v.Position[3]}
+                distance = tempDist
+            end
+        end
+        if self.BaseMonitor.PlatoonAlertSounded then
+            for k, v in self.BaseMonitor.PlatoonDistressTable do
+                if self:PlatoonExists(v.Platoon) then
+                    local platPos = v.Platoon:GetPlatoonPosition()
+                    local tempDist = Utilities.XZDistanceTwoVectors(position, platPos)
+
+                    -- Platoon too far away to help
+                    if tempDist > radius then
+                        continue
+                    end
+
+                    -- Area not scary enough
+                    if v.Threat < theshold then
+                        continue
+                    end
+
+                    -- Further away than another call for help
+                    if tempDist > distance then
+                        continue
+                    end
+
+                    -- Our current winners
+                    returnPos = platPos
+                    distance = tempDist
+                end
+            end
+        end
+        return returnPos
+    end,
 }
