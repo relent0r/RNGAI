@@ -1895,16 +1895,16 @@ Platoon = Class(oldPlatoon) {
         end
     end,
 
-    ExtractorCallForHelpAIRNG = function(self)
-        local aiBrain = self:GetBrain()
+    ExtractorCallForHelpAIRNG = function(self, aiBrain)
         local checkTime = self.PlatoonData.DistressCheckTime or 4
         local pos = self:GetPlatoonPosition()
         while aiBrain:PlatoonExists(self) and pos do
             if not self.DistressCall then
                 local threat = aiBrain:GetThreatAtPosition(pos, 0, true, 'AntiSurface')
+                LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
-                    --LOG('*AI DEBUG: Platoon Calling for help')
-                    aiBrain:BaseMonitorPlatoonDistress(self, threat)
+                    LOG('*AI DEBUG: Platoon Calling for help')
+                    aiBrain:BaseMonitorPlatoonDistressRNG(self, threat)
                     self.DistressCall = true
                     aiBrain:AddScoutArea(pos)
                 end

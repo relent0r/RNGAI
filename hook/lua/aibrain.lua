@@ -543,4 +543,64 @@ AIBrain = Class(RNGAIBrainClass) {
             return upgradeSpec
         end
     end,
+
+    BaseMonitorPlatoonDistressRNG = function(self, platoon, threat)
+        if not self.BaseMonitor then
+            return
+        end
+
+        local found = false
+        if self.BaseMonitor.PlatoonAlertSounded == false then
+            table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
+        else
+            for k, v in self.BaseMonitor.PlatoonDistressTable do
+                -- If already calling for help, don't add another distress call
+                if v.Platoon == platoon then
+                    continue
+                end
+                -- Add platoon to list desiring aid
+                table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
+            end
+        end
+        LOG('New Entry Added to platoon distress'..repr(self.BaseMonitor.PlatoonDistressTable))
+        -- Create the distress call if it doesn't exist
+        if not self.BaseMonitor.PlatoonDistressThread then
+            self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
+        end
+    end,
+
+    BaseMonitorPlatoonDistressThreadRNG = function(self)
+        self.BaseMonitor.PlatoonAlertSounded = true
+        while true do
+            local numPlatoons = 0
+            for k, v in self.BaseMonitor.PlatoonDistressTable do
+                if self:PlatoonExists(v.Platoon) then
+                    local threat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
+                    local myThreat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
+                    LOG('Threat of attacker'..threat)
+                    LOG('Threat of platoon'..myThreat)
+                    -- Platoons still threatened
+                if threat and threat > (myThreat * 1.5) then
+                    LOG('Created Threat Alert')
+                        v.Threat = threat
+                        numPlatoons = numPlatoons + 1
+                    -- Platoon not threatened
+                    else
+                        self.BaseMonitor.PlatoonDistressTable[k] = nil
+                        v.Platoon.DistressCall = false
+                    end
+                else
+                    self.BaseMonitor.PlatoonDistressTable[k] = nil
+                end
+            end
+
+            -- If any platoons still want help; continue sounding
+            if numPlatoons > 0 then
+                self.BaseMonitor.PlatoonAlertSounded = true
+            else
+                self.BaseMonitor.PlatoonAlertSounded = false
+            end
+            WaitSeconds(self.BaseMonitor.BaseMonitorTime)
+        end
+    end,
 }
