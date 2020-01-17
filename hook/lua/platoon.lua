@@ -1900,7 +1900,7 @@ Platoon = Class(oldPlatoon) {
         local pos = self:GetPlatoonPosition()
         while aiBrain:PlatoonExists(self) and pos do
             if not self.DistressCall then
-                local threat = aiBrain:GetThreatAtPosition(pos, 0, true, 'AntiSurface')
+                local threat = aiBrain:GetThreatAtPosition(pos, 1, true, 'AntiSurface')
                 LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
                     LOG('*AI DEBUG: Platoon Calling for help')

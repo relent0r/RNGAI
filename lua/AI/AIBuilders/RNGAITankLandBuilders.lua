@@ -305,14 +305,14 @@ BuilderGroup {
             AvoidBasesRadius = 75,
             AggressiveMove = false,      
             AvoidClosestRadius = 100,
-            UseFormation = 'NoFormation',
+            UseFormation = 'AttackFormation',
             },
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Expansion',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 600,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
@@ -325,7 +325,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Aeon Expansion',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 650,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -344,7 +344,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 1000,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 6,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
@@ -363,6 +363,7 @@ BuilderGroup {
                 'EXPERIMENTAL',
                 'MOBILE LAND DIRECTFIRE',
                 'MOBILE LAND INDIRECTFIRE',
+                'ENGINEER',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'STRUCTURE ANTIAIR',
@@ -626,7 +627,7 @@ BuilderGroup {
             AvoidBasesRadius = 75,
             AggressiveMove = false,      
             AvoidClosestRadius = 100,
-            UseFormation = 'NoFormation',
+            UseFormation = 'AttackFormation',
             },
             DistressRange = 200,
             DistressReactionTime = 8,
