@@ -1912,4 +1912,45 @@ Platoon = Class(oldPlatoon) {
             WaitSeconds(checkTime)
         end
     end,
+
+    BaseManagersDistressAI = function(self)
+        local aiBrain = self:GetBrain()
+        if not aiBrain.RNG then
+            return oldPlatoon.BaseManagersDistressAI(self)
+        end
+        while aiBrain:PlatoonExists(self) do
+            local distressRange = aiBrain.BaseMonitor.PoolDistressRange
+            local reactionTime = aiBrain.BaseMonitor.PoolReactionTime
+
+            local platoonUnits = self:GetPlatoonUnits()
+
+            for locName, locData in aiBrain.BuilderManagers do
+                if not locData.DistressCall then
+                    local position = locData.EngineerManager:GetLocationCoords()
+                    local radius = locData.EngineerManager.Radius
+                    local distressRange = locData.BaseSettings.DistressRange or aiBrain.BaseMonitor.PoolDistressRange
+                    local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(position, distressRange, aiBrain.BaseMonitor.PoolDistressThreshold)
+
+                    -- Distress !
+                    if distressLocation then
+                        --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- POOL DISTRESS RESPONSE ---')
+
+                        -- Grab the units at the location
+                        local group = self:GetPlatoonUnitsAroundPoint(categories.MOBILE, position, radius)
+
+                        -- Move the group to the distress location and then back to the location of the base
+                        IssueClearCommands(group)
+                        IssueAggressiveMove(group, distressLocation)
+                        IssueMove(group, position)
+
+                        -- Set distress active for duration
+                        locData.DistressCall = true
+                        self:ForkThread(self.UnlockBaseManagerDistressLocation, locData)
+                    end
+                end
+            end
+            WaitSeconds(aiBrain.BaseMonitor.PoolReactionTime)
+        end
+    end,
+
 }
