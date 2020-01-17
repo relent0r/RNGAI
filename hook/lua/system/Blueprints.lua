@@ -69,7 +69,7 @@ function HandleUnitWithBuildPresets(bps, all_bps)
             tempBp.Description = preset.Description or tempBp.Description
             tempBp.CategoriesHash['ISPREENHANCEDUNIT'] = true
             -- Add SACU preset names to categories for AI platoon templates
-            tempBp.CategoriesHash[string.upper(name)] = true
+            tempBp.CategoriesHash[string.upper('P'..name)] = true
             -- clean up some data that's not needed anymore
             tempBp.CategoriesHash['USEBUILDPRESETS'] = false
             tempBp.EnhancementPresets = nil
