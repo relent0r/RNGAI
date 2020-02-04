@@ -46,13 +46,21 @@ function CommanderThreadRNG(cdr, platoon)
 
     while not cdr.Dead do
         -- Overcharge
-        if not cdr.Dead then CDROverChargeRNG(aiBrain, cdr) end
+        if not cdr.Dead then 
+            CDROverChargeRNG(aiBrain, cdr) 
+        end
         WaitTicks(1)
 
         -- Go back to base
-        if not cdr.Dead and aiBrain.ACUSupport.ReturnHome then CDRReturnHomeRNG(aiBrain, cdr) end
+        if not cdr.Dead and aiBrain.ACUSupport.ReturnHome then 
+            CDRReturnHomeRNG(aiBrain, cdr) 
+        end
         WaitTicks(1)
-
+        
+        if not cdr.Dead then 
+            CDRUnitCompletion(aiBrain, cdr) 
+        end
+        WaitTicks(1)
         -- Call platoon resume building deal...
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
@@ -287,13 +295,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
 
-        IssueClearCommands({cdr})
-
-        -- Finish the unit
-        if cdr.UnitBeingBuiltBehavior and not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
-            IssueRepair({cdr}, cdr.UnitBeingBuiltBehavior)
-        end
-        cdr.UnitBeingBuiltBehavior = false
+        
     end
 end
 
@@ -335,6 +337,17 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     end
 end
 
+function CDRUnitCompletion(aiBrain, cdr)
+    if cdr.UnitBeingBuiltBehavior then
+        if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
+            IssueClearCommands( {cdr} )
+            IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
+        end
+    end
+    if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
+        cdr.UnitBeingBuiltBehavior = false
+    end
+end
 function ACUDetection(platoon)
     local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
     local aiBrain = platoon:GetBrain()
