@@ -25,6 +25,8 @@ AIBrain = Class(RNGAIBrainClass) {
             self.ACUSupport.Supported = false
             self.ACUSupport.PlatoonCount = 0
             self.ACUSupport.Position = {}
+            self.ACUSupport.ReturnHome = true
+            
             -- Intel Data
             self.EnemyIntel = {}
             self.EnemyIntel.ACU = {}

@@ -50,7 +50,7 @@ function CommanderThreadRNG(cdr, platoon)
         WaitTicks(1)
 
         -- Go back to base
-        if not cdr.Dead then CDRReturnHomeRNG(aiBrain, cdr) end
+        if not cdr.Dead and aiBrain.ACUSupport.ReturnHome then CDRReturnHomeRNG(aiBrain, cdr) end
         WaitTicks(1)
 
         -- Call platoon resume building deal...
@@ -142,7 +142,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         and GetGameTimeSeconds() > 243
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
-        maxRadius = 240 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        maxRadius = 280 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
@@ -282,6 +282,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
             -- If com is down to yellow then dont keep fighting
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+                aiBrain.ACUSupport.ReturnHome = true
                 continueFighting = false
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
