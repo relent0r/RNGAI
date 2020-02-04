@@ -1,4 +1,4 @@
--- This is hooked purely for adding the SACU preset names to cateogories so the AI can use them.
+-- For AI Patch V8 adding categories for preset SACUs
 function HandleUnitWithBuildPresets(bps, all_bps)
 
     -- hashing sort categories for quick lookup
@@ -68,8 +68,8 @@ function HandleUnitWithBuildPresets(bps, all_bps)
             tempBp.Interface.HelpText = preset.HelpText or tempBp.Interface.HelpText
             tempBp.Description = preset.Description or tempBp.Description
             tempBp.CategoriesHash['ISPREENHANCEDUNIT'] = true
-            -- Add SACU preset names to categories for AI platoon templates
-            tempBp.CategoriesHash[string.upper('P'..name)] = true
+            tempBp.CategoriesHash[string.upper(name..'PRESET')] = true
+            --SPEW('BlueprintID '..tempBp.BlueprintId..' added category.'..string.upper(name..'PRESET'))
             -- clean up some data that's not needed anymore
             tempBp.CategoriesHash['USEBUILDPRESETS'] = false
             tempBp.EnhancementPresets = nil
