@@ -1412,8 +1412,11 @@ Platoon = Class(oldPlatoon) {
 
         LOG('Best Marker Selected is at position'..repr(bestMarker.Position))
         
-        if bestMarker.Position == nil then
-            LOG('Best Marker position was nill, select random')
+        if bestMarker.Position == nil and GetGameTimeSeconds() > 900 then
+            LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
+            return self:HuntAIRNG()
+        elseif bestMarker.Position == nil then
+            LOG('Best Marker position was nil, select random')
             if table.getn(markerLocations) <= 2 then
                 self.LastMarker[1] = nil
                 self.LastMarker[2] = nil
