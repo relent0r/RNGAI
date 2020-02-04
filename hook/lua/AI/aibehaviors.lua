@@ -294,7 +294,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                 continueFighting = false
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
-
         
     end
 end
@@ -338,13 +337,16 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 end
 
 function CDRUnitCompletion(aiBrain, cdr)
+    LOG('Check unit Completion')
     if cdr.UnitBeingBuiltBehavior then
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
+            LOG('Attempt unit Completion')
             IssueClearCommands( {cdr} )
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
         end
     end
     if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
+        LOG('Unit is completed set UnitBeingBuiltBehavior to false')
         cdr.UnitBeingBuiltBehavior = false
     end
 end
