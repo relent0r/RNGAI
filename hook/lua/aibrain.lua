@@ -98,6 +98,116 @@ AIBrain = Class(RNGAIBrainClass) {
         self.PreBuilt = true
     end,
 
+    InitializeSkirmishSystems = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.InitializeSkirmishSystems(self)
+        end
+        LOG('Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
+        -- Make sure we don't do anything for the human player!!!
+        if self.BrainType == 'Human' then
+            return
+        end
+
+        -- TURNING OFF AI POOL PLATOON, I MAY JUST REMOVE THAT PLATOON FUNCTIONALITY LATER
+        local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
+        if poolPlatoon then
+            poolPlatoon:TurnOffPoolAI()
+        end
+
+        -- Stores handles to all builders for quick iteration and updates to all
+        self.BuilderHandles = {}
+
+        -- Condition monitor for the whole brain
+        self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
+
+        -- Economy monitor for new skirmish - stores out econ over time to get trend over 10 seconds
+        self.EconomyData = {}
+        self.EconomyTicksMonitor = 50
+        self.EconomyCurrentTick = 1
+        self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitor)
+        self.LowEnergyMode = false
+
+        -- Add default main location and setup the builder managers
+        self.NumBases = 0 -- AddBuilderManagers will increase the number
+
+        self.BuilderManagers = {}
+        SUtils.AddCustomUnitSupport(self)
+        self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
+
+        -- Begin the base monitor process
+        if self.Sorian then
+            local spec = {
+                DefaultDistressRange = 200,
+                AlertLevel = 8,
+            }
+            self:BaseMonitorInitializationSorian(spec)
+        else
+            self:BaseMonitorInitializationRNG()
+        end
+
+        local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
+        if self.Sorian then
+            plat:ForkThread(plat.BaseManagersDistressAISorian)
+        else
+            plat:ForkThread(plat.BaseManagersDistressAI)
+        end
+
+        self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
+        if self.Sorian then
+            self.EnemyPickerThread = self:ForkThread(self.PickEnemySorian)
+        else
+            self.EnemyPickerThread = self:ForkThread(self.PickEnemy)
+        end
+    end,
+    
+    BaseMonitorThreadRNG = function(self)
+        while true do
+            if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
+                self:BaseMonitorCheck()
+            end
+            WaitSeconds(self.BaseMonitor.BaseMonitorTime)
+        end
+    end,
+
+    BaseMonitorInitializationRNG = function(self, spec)
+        self.BaseMonitor = {
+            BaseMonitorStatus = 'ACTIVE',
+            BaseMonitorPoints = {},
+            AlertSounded = false,
+            AlertsTable = {},
+            AlertLocation = false,
+            AlertSoundedThreat = 0,
+            ActiveAlerts = 0,
+
+            PoolDistressRange = 75,
+            PoolReactionTime = 7,
+
+            -- Variables for checking a radius for enemy units
+            UnitRadiusThreshold = spec.UnitRadiusThreshold or 3,
+            UnitCategoryCheck = spec.UnitCategoryCheck or (categories.MOBILE - (categories.SCOUT + categories.ENGINEER)),
+            UnitCheckRadius = spec.UnitCheckRadius or 40,
+
+            -- Threat level must be greater than this number to sound a base alert
+            AlertLevel = spec.AlertLevel or 0,
+            -- Delay time for checking base
+            BaseMonitorTime = spec.BaseMonitorTime or 11,
+            -- Default distance a platoon will travel to help around the base
+            DefaultDistressRange = spec.DefaultDistressRange or 75,
+            -- Default how often platoons will check if the base is under duress
+            PlatoonDefaultReactionTime = spec.PlatoonDefaultReactionTime or 5,
+            -- Default duration for an alert to time out
+            DefaultAlertTimeout = spec.DefaultAlertTimeout or 10,
+
+            PoolDistressThreshold = 1,
+
+            -- Monitor platoons for help
+            PlatoonDistressTable = {},
+            PlatoonDistressThread = false,
+            PlatoonAlertSounded = false,
+        }
+        self:ForkThread(self.BaseMonitorThreadRNG)
+    end,
+
     BuildScoutLocationsRNG = function(self)
         local aiBrain = self
         local opponentStarts = {}
@@ -676,4 +786,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         return returnPos
     end,
+
+    
 }

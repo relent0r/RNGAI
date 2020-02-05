@@ -41,6 +41,7 @@ function CommanderThreadRNG(cdr, platoon)
     LOG('Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
     aiBrain:BuildScoutLocationsRNG()
+    cdr.UnitBeingBuiltBehavior = false
     -- Added to ensure we know the start locations (thanks to Sorian).
     SetCDRHome(cdr, platoon)
 
@@ -130,7 +131,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
     end
 
-    cdr.UnitBeingBuiltBehavior = false
+    --cdr.UnitBeingBuiltBehavior = false
 
     -- Added for ACUs starting near each other
     if GetGameTimeSeconds() < 60 then
@@ -337,17 +338,23 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 end
 
 function CDRUnitCompletion(aiBrain, cdr)
-    LOG('Check unit Completion')
     if cdr.UnitBeingBuiltBehavior then
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
             LOG('Attempt unit Completion')
             IssueClearCommands( {cdr} )
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
+            WaitTicks(30)
         end
-    end
-    if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
-        LOG('Unit is completed set UnitBeingBuiltBehavior to false')
-        cdr.UnitBeingBuiltBehavior = false
+        if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
+            LOG('Unit Completion is :'..cdr.UnitBeingBuiltBehavior:GetFractionComplete())
+            if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
+                LOG('Unit is completed set UnitBeingBuiltBehavior to false')
+                cdr.UnitBeingBuiltBehavior = false
+            end
+        elseif cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
+            LOG('Unit was destroyed set UnitBeingBuiltBehavior to false')
+            cdr.UnitBeingBuiltBehavior = false
+        end
     end
 end
 
