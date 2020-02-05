@@ -345,11 +345,12 @@ function CDRUnitCompletion(aiBrain, cdr)
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
         end
     end
-    if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
+    if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
         LOG('Unit is completed set UnitBeingBuiltBehavior to false')
         cdr.UnitBeingBuiltBehavior = false
     end
 end
+
 function ACUDetection(platoon)
     local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
     local aiBrain = platoon:GetBrain()
