@@ -769,7 +769,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
 
                     -- Area not scary enough
-                    if v.Threat < theshold then
+                    if v.Threat < threshold then
                         continue
                     end
 

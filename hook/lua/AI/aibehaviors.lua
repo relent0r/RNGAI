@@ -464,7 +464,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
 			initial_delay = initial_delay + 10
         end
-        LOG('Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
+        --LOG('Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
 		WaitTicks(100)
     end
     

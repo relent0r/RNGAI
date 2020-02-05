@@ -1,5 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-
+local BASEPOSTITIONS = {}
 -- hook for additional build conditions used from AIBuilders
 
 --{ UCBC, 'ReturnTrue', {} },
@@ -392,3 +392,49 @@ function CheckBuildPlatoonDelay(aiBrain, PlatoonName)
     end
     return true
 end
+
+function HaveUnitRatioAtLocation(aiBrain, locType, ratio, categoryNeed, compareType, categoryHave)
+    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationCoords()
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    elseif aiBrain:PBMHasPlatoonList() then
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == locType then
+                baseposition = v.Location
+                radius = v.Radius
+                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
+                break
+            end
+        end
+    end
+    if not baseposition then
+        return false
+    end
+    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryNeed, baseposition, radius , 'Ally')
+    local numHaveUnits = aiBrain:GetNumUnitsAroundPoint(categoryHave, baseposition, radius , 'Ally')
+    --LOG(aiBrain:GetArmyIndex()..' CompareBody {'..locType..'} ( '..numNeedUnits..' '..compareType..' '..numHaveUnits..' ) -- ['..ratio..'] -- '..categoryNeed..' '..compareType..' '..categoryHave..' return '..repr(CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)))
+    return CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)
+end
+
+function BuildOnlyOnLocation(aiBrain, LocationType, AllowedLocationType)
+    --LOG('* BuildOnlyOnLocation: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
+    if string.find(LocationType, AllowedLocationType) then
+        return true
+    end
+    return false
+end
+
+--function HasNotParagon(aiBrain)
+--    if not aiBrain.HasParagon then
+--        return true
+--    end
+--    return false
+--end
