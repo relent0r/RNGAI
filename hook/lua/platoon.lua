@@ -1916,11 +1916,8 @@ Platoon = Class(oldPlatoon) {
         end
     end,
 
-    BaseManagersDistressAI = function(self)
+    BaseManagersDistressAIRNG = function(self)
         local aiBrain = self:GetBrain()
-        if not aiBrain.RNG then
-            return oldPlatoon.BaseManagersDistressAI(self)
-        end
         while aiBrain:PlatoonExists(self) do
             local distressRange = aiBrain.BaseMonitor.PoolDistressRange
             local reactionTime = aiBrain.BaseMonitor.PoolReactionTime

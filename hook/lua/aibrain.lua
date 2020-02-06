@@ -146,18 +146,10 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
-        if self.Sorian then
-            plat:ForkThread(plat.BaseManagersDistressAISorian)
-        else
-            plat:ForkThread(plat.BaseManagersDistressAI)
-        end
+        plat:ForkThread(plat.BaseManagersDistressAIRNG)
 
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
-        if self.Sorian then
-            self.EnemyPickerThread = self:ForkThread(self.PickEnemySorian)
-        else
-            self.EnemyPickerThread = self:ForkThread(self.PickEnemy)
-        end
+        self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
     end,
     
     BaseMonitorThreadRNG = function(self)
@@ -355,19 +347,9 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    PickEnemy = function(self)
-        --LOG('Pick enemy')
-        RNGAIBrainClass.OnCreateAI(self)
-        --RNGAIBrainClass.PickEnemy(self)
-        --LOG('Pre True'..repr(self.RNG))
+    PickEnemyRNG = function(self)
         while true do
-            --LOG('self.rng is'..repr(self.RNG))
-            if self.RNG then
-                --LOG('Selecting RNG')
-                self:PickEnemyLogicRNG()
-            else
-                self:PickEnemyLogic()
-            end
+            self:PickEnemyLogicRNG()
             WaitTicks(1200)
         end
     end,

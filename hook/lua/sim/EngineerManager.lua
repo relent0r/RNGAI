@@ -33,9 +33,7 @@ EngineerManager = Class(RNGEngineerManager) {
         local guards = unit:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
-                if self.Brain.Sorian and self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.SorianEconAssistBody)
-                elseif self.Brain:PlatoonExists(v.AssistPlatoon) then
+                if self.Brain:PlatoonExists(v.AssistPlatoon) then
                     v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBody)
                 else
                     v.AssistPlatoon = nil
