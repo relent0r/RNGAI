@@ -136,7 +136,8 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
                     -- get distance from new node to destination node
                     dist = VDist2(newNode.position[1], newNode.position[3], lastNode.position[1], lastNode.position[3])
                     -- get threat from current node to adjacent node
-                    threat = Scenario.MasterChain._MASTERCHAIN_.Markers[newNode.name][armyIndex] or 0
+                    -- threat = Scenario.MasterChain._MASTERCHAIN_.Markers[newNode.name][armyIndex] or 0
+                    local threat = aiBrain:GetThreatBetweenPositions(newNode.position, lastNode.position, nil, threatType)
                     -- add as cost for the path the path distance and threat to the overall cost from the whole path
                     fork.cost = fork.cost + dist + (threat * 1) * threatWeight
                     -- add the newNode at the end of the path
