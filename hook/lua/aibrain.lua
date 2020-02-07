@@ -769,5 +769,40 @@ AIBrain = Class(RNGAIBrainClass) {
         return returnPos
     end,
 
-    
+    TacticalMonitorInitializationRNG = function(self, spec)
+
+        self.TacticalMonitor = {
+            TacticalMonitorStatus = 'ACTIVE',
+            TacticalLocationFound = false,
+            TacticalLocations = {}
+            TacticalMonitorTime = 12
+        }
+        self:ForkThread(self.TacticalMonitorThreadRNG)
+    end,
+
+    TacticalMonitorThreadRNG = function(self)
+        while true do
+            if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
+                self:TacticalMonitorRNG()
+            end
+            WaitSeconds(self.TacticalMonitor.TacticalMonitorTime)
+        end
+    end,
+
+    TacticalMonitorRNG = function(self)
+    -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
+        local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, threatType)
+        for _, threat in threats do
+            local dupe = false
+            local newPos = {threat[1], 0, threat[2]}
+            numchecks = numchecks + 1
+            for _, loc in self.TacticalMonitor.TacticalLocations do
+                if loc.Type == threatType and VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < v[1] * v[1] then
+                    dupe = true
+                    loc.LastUpdate = GetGameTimeSeconds()
+                    break
+                end
+            end
+        end
+    end,
 }
