@@ -198,6 +198,7 @@ AIBrain = Class(RNGAIBrainClass) {
             PlatoonAlertSounded = false,
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
+        self:ForkThread(self.TacticalMonitorInitializationRNG)
     end,
 
     BuildScoutLocationsRNG = function(self)
@@ -206,12 +207,14 @@ AIBrain = Class(RNGAIBrainClass) {
         local startLocations = {}
         local startPosMarkers = {}
         local allyStarts = {}
+        aiBrain.EnemyIntel.EnemyStartLocations = {}
 
         if not aiBrain.InterestList then
             aiBrain.InterestList = {}
             aiBrain.IntelData.HiPriScouts = 0
             aiBrain.IntelData.AirHiPriScouts = 0
             aiBrain.IntelData.AirLowPriScouts = 0
+            
 
             -- Add each enemy's start location to the InterestList as a new sub table
             aiBrain.InterestList.HighPriority = {}
@@ -224,6 +227,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 -- Spawn locations were fixed. We know exactly where our opponents are.
                 -- Don't scout areas owned by us or our allies.
                 local numOpponents = 0
+                local enemyStarts = {}
                 for i = 1, 16 do
                     local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
                     local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
@@ -233,6 +237,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         -- Add the army start location to the list of interesting spots.
                         opponentStarts['ARMY_' .. i] = startPos
                         numOpponents = numOpponents + 1
+                        table.insert(enemyStarts, startPos)
                         table.insert(aiBrain.InterestList.HighPriority,
                             {
                                 Position = startPos,
@@ -284,7 +289,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-
+                aiBrain.EnemyIntel.EnemyStartLocations = enemyStarts
             else -- Spawn locations were random. We don't know where our opponents are. Add all non-ally start locations to the scout list
                 local numOpponents = 0
                 for i = 1, 16 do
@@ -316,7 +321,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         table.insert(startLocations, startPos)
                     end
                 end
+                -- Set Start Locations for brain to reference
+                aiBrain.EnemyIntel.EnemyStartLocations = startLocations
             end
+            
+            
+            LOG('EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
             local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
         
             for _, start in startLocations do
@@ -770,12 +780,12 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     TacticalMonitorInitializationRNG = function(self, spec)
-
+        LOG('Tactical Monitor Is Initializing')
         self.TacticalMonitor = {
             TacticalMonitorStatus = 'ACTIVE',
             TacticalLocationFound = false,
-            TacticalLocations = {}
-            TacticalMonitorTime = 12
+            TacticalLocations = {},
+            TacticalMonitorTime = 120,
         }
         self:ForkThread(self.TacticalMonitorThreadRNG)
     end,
@@ -783,26 +793,69 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorThreadRNG = function(self)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
+                LOG('Tactical Monitor Is Active')
                 self:TacticalMonitorRNG()
             end
-            WaitSeconds(self.TacticalMonitor.TacticalMonitorTime)
+            WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
 
     TacticalMonitorRNG = function(self)
-    -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
-        local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, threatType)
-        for _, threat in threats do
-            local dupe = false
-            local newPos = {threat[1], 0, threat[2]}
-            numchecks = numchecks + 1
-            for _, loc in self.TacticalMonitor.TacticalLocations do
-                if loc.Type == threatType and VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < v[1] * v[1] then
-                    dupe = true
-                    loc.LastUpdate = GetGameTimeSeconds()
-                    break
+        -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
+        LOG('Tactical Monitor Threat Pass')
+        local enemyBrains = {}
+        local enemyStarts = self.EnemyIntel.EnemyStartLocations
+        if enemyStarts then
+            LOG('Enemy Start Locations :'..repr(enemyStarts))
+        end
+        local selfIndex = self:GetArmyIndex()
+        local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'AntiSurface')
+        local potentialThreats = {}
+        if threats then
+            local threatLocation = {}
+            for _, threat in threats do
+                LOG('Threat is'..repr(threat))
+                if threat[3] > 5 then
+                    for _, pos in enemyStarts do
+                        LOG('Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
+                        if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
+                            LOG('Tactical Potential Interest Location Found at :'..repr(threat))
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true}
+                            table.insert(potentialThreats, threatLocation)
+                        else
+                            LOG('Tactical Potential Interest Location Found at :'..repr(threat))
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false}
+                            table.insert(potentialThreats, threatLocation)
+                        end
+                    end
                 end
             end
         end
+        LOG('Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
+        for Index_1, value_1 in potentialThreats do
+            for Index_2, value_2 in potentialThreats do
+                -- no need to check against self
+                if Index_1 == Index_2 then 
+                    continue
+                end
+                -- check if we have the same position
+                LOG('checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
+                    LOG('eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                    if value_1.EnemyBaseRadius == false then
+                        LOG('deleating '..repr(value_1))
+                        potentialThreats[Index_1] = nil
+                        break
+                    elseif value_2.EnemyBaseRadius == false then
+                        LOG('deleating '..repr(value_2))
+                        potentialThreats[Index_2] = nil
+                        break
+                    else
+                        LOG('Both entires have true, deleting nothing')
+                    end
+                end
+            end
+        end
+    LOG('Valid Threat Table :'..repr(potentialThreats))
     end,
 }
