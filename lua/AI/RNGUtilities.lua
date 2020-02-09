@@ -569,10 +569,22 @@ end
 
 
 function lerpy(vec1, vec2, distance)
+    -- note the distance param is {distance, distance - weapon range}
+    -- vec1 is friendly unit, vec2 is enemy unit
     distanceFrac = distance[2] / distance[1]
     x = vec1[1] * (1 - distanceFrac) + vec2[1] * distanceFrac
     y = vec1[2] * (1 - distanceFrac) + vec2[2] * distanceFrac
     z = vec1[3] * (1 - distanceFrac) + vec2[3] * distanceFrac
+    return {x,y,z}
+end
+
+function LerpyRotate(vec1, vec2, distance)
+    -- note the distance param is {distance, weapon range}
+    -- vec1 is friendly unit, vec2 is enemy unit
+    distanceFrac = distance[2] / distance[1]
+    z = vec2[3] + distanceFrac * (vec2[1] - vec1[1])
+    y = vec2[2] - distanceFrac * (vec2[2] - vec1[2])
+    x = vec2[1] - distanceFrac * (vec2[3] - vec1[3])
     return {x,y,z}
 end
 
