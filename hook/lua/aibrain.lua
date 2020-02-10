@@ -223,7 +223,17 @@ AIBrain = Class(RNGAIBrainClass) {
             aiBrain.InterestList.MustScout = {}
 
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
-
+            if aiBrain.EnemyIntel.EnemyThreatLocations then
+                for _, v in aiBrain.EnemyIntel.EnemyThreatLocations do
+                    -- Add any threat locations found in the must scout table
+                    table.insert(aiBrain.InterestList.MustScout, 
+                        {
+                            Position = v.Position,
+                            LastScouted = 0,
+                        }
+                    )
+                end
+            end
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
                 -- Spawn locations were fixed. We know exactly where our opponents are.
                 -- Don't scout areas owned by us or our allies.
