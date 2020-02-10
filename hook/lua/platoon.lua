@@ -1824,12 +1824,12 @@ Platoon = Class(oldPlatoon) {
                 WaitSeconds(10)
                 platPos = self:GetPlatoonPosition()
                 local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
-                if distSq < 10 then
+                if distSq < 400 then
                     self:PlatoonDisband()
                     return
                 end
                 -- if we haven't moved in 10 seconds... go back to attacking
-                if (distSq - oldDistSq) < 5 then
+                if (distSq - oldDistSq) < 25 then
                     break
                 end
                 oldDistSq = distSq
