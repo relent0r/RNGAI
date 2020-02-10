@@ -208,6 +208,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local startPosMarkers = {}
         local allyStarts = {}
         aiBrain.EnemyIntel.EnemyStartLocations = {}
+        aiBrain.EnemyIntel.EnemyThreatLocations = {}
 
         if not aiBrain.InterestList then
             aiBrain.InterestList = {}
@@ -805,12 +806,14 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
+        local enemyThreats = self.EnemyIntel.EnemyThreatLocations
         if enemyStarts then
             LOG('Enemy Start Locations :'..repr(enemyStarts))
         end
         local selfIndex = self:GetArmyIndex()
         local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'AntiSurface')
         local potentialThreats = {}
+        local validThreats = {}
         if threats then
             local threatLocation = {}
             for _, threat in threats do
@@ -830,32 +833,41 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-        end
-        LOG('Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
-        for Index_1, value_1 in potentialThreats do
-            for Index_2, value_2 in potentialThreats do
-                -- no need to check against self
-                if Index_1 == Index_2 then 
-                    continue
-                end
-                -- check if we have the same position
-                LOG('checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
-                if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
-                    LOG('eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
-                    if value_1.EnemyBaseRadius == false then
-                        LOG('deleating '..repr(value_1))
-                        potentialThreats[Index_1] = nil
-                        break
-                    elseif value_2.EnemyBaseRadius == false then
-                        LOG('deleating '..repr(value_2))
-                        potentialThreats[Index_2] = nil
-                        break
-                    else
-                        LOG('Both entires have true, deleting nothing')
+            LOG('Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
+            for Index_1, value_1 in potentialThreats do
+                for Index_2, value_2 in potentialThreats do
+                    -- no need to check against self
+                    if Index_1 == Index_2 then 
+                        continue
+                    end
+                    -- check if we have the same position
+                    LOG('checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                    if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
+                        LOG('eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                        if value_1.EnemyBaseRadius == false then
+                            LOG('deleating '..repr(value_1))
+                            potentialThreats[Index_1] = nil
+                            break
+                        elseif value_2.EnemyBaseRadius == false then
+                            LOG('deleating '..repr(value_2))
+                            potentialThreats[Index_2] = nil
+                            break
+                        else
+                            LOG('Both entires have true, deleting nothing')
+                        end
                     end
                 end
             end
+            LOG('second table pass :'..repr(potentialThreats))
+            for _, threat in potentialThreats do
+                if threat.EnemyBaseRadius == false then
+                    table.insert(validThreats, threat)
+                else
+                    LOG('Removing Threat within Enemy Base Radius')
+                end
+            end
+            LOG('Final Valid Threat Locations :'..repr(validThreats))
+            enemyThreats = validThreats
         end
-    LOG('Valid Threat Table :'..repr(potentialThreats))
     end,
 }
