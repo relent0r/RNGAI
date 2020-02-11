@@ -833,11 +833,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         LOG('Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
                         if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
                             LOG('Tactical Potential Interest Location Found at :'..repr(threat))
-                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true}
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3]}
                             table.insert(potentialThreats, threatLocation)
                         else
                             LOG('Tactical Potential Interest Location Found at :'..repr(threat))
-                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false}
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3]}
                             table.insert(potentialThreats, threatLocation)
                         end
                     end
