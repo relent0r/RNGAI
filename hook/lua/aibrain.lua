@@ -816,7 +816,7 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
-        local enemyThreats = self.EnemyIntel.EnemyThreatLocations
+
         if enemyStarts then
             LOG('Enemy Start Locations :'..repr(enemyStarts))
         end
@@ -871,13 +871,14 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('second table pass :'..repr(potentialThreats))
             for _, threat in potentialThreats do
                 if threat.EnemyBaseRadius == false then
+                    threat.InsertTime = GetGameTimeSeconds()
                     table.insert(validThreats, threat)
                 else
                     LOG('Removing Threat within Enemy Base Radius')
                 end
             end
             LOG('Final Valid Threat Locations :'..repr(validThreats))
-            enemyThreats = validThreats
+            self.EnemyIntel.EnemyThreatLocations = validThreats
         end
     end,
 }
