@@ -625,3 +625,24 @@ function StructureUpgradeDelay( aiBrain, delay )
         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
     end
 end
+
+function TacticalResponse(platoon)
+    local aiBrain = self:GetBrain()
+    while aiBrain:PlatoonExists(self) do
+        tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
+        acuSupport = aiBrain.ACUSupport.Supported
+        if acuSupport and tacticalThreat then
+            LOG('TacticalResponse Cycle')
+            local threat = 0
+            for _, v in tacticalThreat do
+                if v.threat > threat then
+                    threat = v.threat
+                end
+            end
+            if threat > 0 then
+                self:SetAIPlan(TacticalResponseAIRNG)
+            end
+        end
+    WaitTicks(100)
+    end
+end

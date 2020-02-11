@@ -1841,6 +1841,28 @@ Platoon = Class(oldPlatoon) {
     
     TacticalResponseAIRNG function(self)
         local aiBrain = self:GetBrain()
+        local platoonUnits = self:GetPlatoonUnits()
+        if platoonUnits and PlatoonStrength > 0 then
+            for k, v in platoonUnits do
+                if not v.Dead then
+                    if IsDestroyed(v) then
+                        WARN('Unit is not Dead but DESTROYED')
+                    end
+                    if v:BeenDestroyed() then
+                        WARN('Unit is not Dead but DESTROYED')
+                    end
+                    if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                        v:SetScriptBit('RULEUTC_StealthToggle', false)
+                    end
+                    if v:TestToggleCaps('RULEUTC_CloakToggle') then
+                        v:SetScriptBit('RULEUTC_CloakToggle', false)
+                    end
+                    -- prevent units from reclaiming while attack moving
+                    v:RemoveCommandCap('RULEUCC_Reclaim')
+                    v:RemoveCommandCap('RULEUCC_Repair')
+                end
+            end
+        end
         while aiBrain:PlatoonExists(self) do
             tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
             if tacticalThreat then
@@ -1848,6 +1870,7 @@ Platoon = Class(oldPlatoon) {
                 local threatPos = {}
                 local threat = 0
                 local platoonPos = self:GetPlatoonPosition()
+                local oldPlan = self:GetPlan()
                 for _, v in tacticalThreat do
                     if v.threat > threat then
                         threat = v.threat
@@ -1873,7 +1896,8 @@ Platoon = Class(oldPlatoon) {
                                 local dist
                                 local Stuck = 0
                                 while aiBrain:PlatoonExists(self) do
-                                    PlatoonPosition = self:GetPlatoonPosition()
+                                    PlatoonPosition = self:GetPlatoonPosition() or nil
+                                    if not PlatoonPosition then break end
                                     dist = VDist2sq( path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3] )
                                     -- are we closer then 15 units from the next marker ? Then break and move to the next marker
                                     if dist < 400 then
@@ -1910,10 +1934,12 @@ Platoon = Class(oldPlatoon) {
                             end
                             if reason == 'NoPath' then
                                 LOG('* AI-RNG: CanPathToCurrentEnemy: No land path to the threat location found!')
+                                return self:ReturnToBaseAIRNG()
                             end
                         end
                     end
                 end
+                self:SetAIPlan(HuntAIRNG)
             end
             WaitTicks(100)
         end
