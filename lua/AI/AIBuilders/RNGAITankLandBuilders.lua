@@ -343,6 +343,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 6,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -376,7 +377,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI Antiair Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 1000,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.SCOUT }},
@@ -432,6 +433,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 500,                                                          -- Priority. 1000 is normal.
+        PlatoonAddBehaviors = { 'TacticalResponse' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -652,7 +654,7 @@ BuilderGroup {
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
-            AggressiveMove = false,      
+            AggressiveMove = true,      
             AvoidClosestRadius = 50,
             UseFormation = 'NoFormation',
             },

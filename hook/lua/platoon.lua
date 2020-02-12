@@ -1839,7 +1839,7 @@ Platoon = Class(oldPlatoon) {
         return self:StrikeForceAIRNG()
     end,
     
-    TacticalResponseAIRNG function(self)
+    TacticalResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
         if platoonUnits and PlatoonStrength > 0 then
@@ -1939,7 +1939,7 @@ Platoon = Class(oldPlatoon) {
                         end
                     end
                 end
-                self:SetAIPlan(HuntAIRNG)
+                self:SetAIPlan('HuntAIRNG')
             end
             WaitTicks(100)
         end
