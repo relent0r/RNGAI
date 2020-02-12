@@ -10,7 +10,7 @@ local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
-    LOG('Start Reclaim Function')
+    LOG('* AI-RNG: Start Reclaim Function')
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
     local initialRange = 40
@@ -39,7 +39,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
         local reclaim = {}
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
-        --LOG('Going through reclaim table')
+        --LOG('* AI-RNG: Going through reclaim table')
         if reclaimRect and table.getn( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
@@ -75,9 +75,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             end
         else
             initialRange = initialRange + 100
-            LOG('initialRange is'..initialRange)
+            LOG('* AI-RNG: initialRange is'..initialRange)
             if initialRange > 200 then
-                LOG('Reclaim range > 200, Disabling Reclaim.')
+                LOG('* AI-RNG: Reclaim range > 200, Disabling Reclaim.')
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
@@ -87,9 +87,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         end
         if closestDistance == 10000 then
             initialRange = initialRange + 100
-            LOG('initialRange is'..initialRange)
+            LOG('* AI-RNG: initialRange is'..initialRange)
             if initialRange > 200 then
-                LOG('Reclaim range > 200, Disabling Reclaim.')
+                LOG('* AI-RNG: Reclaim range > 200, Disabling Reclaim.')
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
@@ -100,21 +100,21 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if self.Dead then 
             return
         end
-        LOG('Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
+        LOG('* AI-RNG: Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
         -- Clear Commands first
         IssueClearCommands({self})
-        --LOG('Attempting move to closest reclaim')
-        --LOG('Closest reclaim is '..repr(closestReclaim))
+        --LOG('* AI-RNG: Attempting move to closest reclaim')
+        --LOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
         if not closestReclaim then
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
             self.blocked = self.blocked + 1
-            LOG('Reclaim Blocked + 1 :'..self.blocked)
+            LOG('* AI-RNG: Reclaim Blocked + 1 :'..self.blocked)
             if self.blocked > 3 then
                 self.blocked = 0
                 table.insert (PropBlacklist, closestReclaim)
-                LOG('Reclaim Added to blacklist')
+                LOG('* AI-RNG: Reclaim Added to blacklist')
             end
         else
             self.blocked = 0
@@ -123,10 +123,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             StartMoveDestination(self, closestReclaim)
         end
         local brokenDistance = closestDistance / 8
-        --LOG('One 6th of distance is '..brokenDistance)
+        --LOG('* AI-RNG: One 6th of distance is '..brokenDistance)
         local moveWait = 0
         while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
-            --LOG('Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
+            --LOG('* AI-RNG: Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
             WaitTicks(20)
             moveWait = moveWait + 1
             engPos = self:GetPosition()
@@ -134,29 +134,29 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 break
             end
         end
-        --LOG('Attempting agressive move to furtherest reclaim')
+        --LOG('* AI-RNG: Attempting agressive move to furtherest reclaim')
         -- Clear Commands first
         IssueClearCommands({self})
         IssueAggressiveMove({self}, furtherestReclaim)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         while reclaiming do
-            --LOG('Engineer is reclaiming')
+            --LOG('* AI-RNG: Engineer is reclaiming')
             WaitSeconds(max_time)
            if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                --LOG('Engineer no longer reclaiming')
+                --LOG('* AI-RNG: Engineer no longer reclaiming')
                 reclaiming = false
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-        --LOG('basePosition random location :'..repr(location))
+        --LOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitTicks(50)
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
-            LOG('reclaimLopp = 5 returning')
+            LOG('* AI-RNG: reclaimLopp = 5 returning')
             return
         end
     end
@@ -317,12 +317,12 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
                 continue
             end
             if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * categories.MOBILE, unit) then 
-                LOG('Unit is capturable and not category t1 mobile'..unitdesc)
+                LOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
                 IssueCapture({eng}, unit)
             else
-                LOG('We are going to reclaim the unit'..unitdesc)
+                LOG('* AI-RNG: We are going to reclaim the unit'..unitdesc)
                 -- if we can't capture then reclaim
                 unit.ReclaimInProgress = true
                 IssueReclaim({eng}, unit)
@@ -551,16 +551,16 @@ function GetLastACUPosition(aiBrain, enemyIndex)
             if k == enemyIndex then
                 acuPos = v.Position
                 lastSpotted = v.LastSpotted
-                LOG('acuPos has data')
+                LOG('* AI-RNG: acuPos has data')
             else
-                --LOG('acuPos is currently false')
+                --LOG('* AI-RNG: acuPos is currently false')
             end
         --[[if aiBrain.EnemyIntel.ACU[enemyIndex] == enemyIndex then
             acuPos = aiBrain.EnemyIntel.ACU[enemyIndex].ACUPosition
             lastSpotted = aiBrain.EnemyIntel.ACU[enemyIndex].LastSpotted
-            LOG('acuPos has data')
+            LOG('* AI-RNG: acuPos has data')
         else
-            LOG('acuPos is currently false')
+            LOG('* AI-RNG: acuPos is currently false')
         end]]
         end
     end
@@ -590,7 +590,7 @@ end
 
 function CheckCustomPlatoons(aiBrain)
     if not aiBrain.StructurePool then
-        LOG('Creating Structure Pool Platoon')
+        LOG('* AI-RNG: Creating Structure Pool Platoon')
         local structurepool = aiBrain:MakePlatoon('StructurePool', 'none')
         structurepool:UniquelyNamePlatoon('StructurePool')
         structurepool.BuilderName = 'Structure Pool'
@@ -635,18 +635,18 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
     local StructureUpgradeThread = import('/lua/ai/aibehaviors.lua').StructureUpgradeThread
     local structurePool = aiBrain.StructurePool
     local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
-    --LOG('Structure Upgrade Initializing')
+    --LOG('* AI-RNG: Structure Upgrade Initializing')
     if EntityCategoryContains(categories.MASSEXTRACTION, finishedUnit) then
         local extractorPlatoon = aiBrain:MakePlatoon('ExtractorPlatoon'..tostring(finishedUnit.Sync.id), 'none')
         extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(finishedUnit.Sync.id)
         extractorPlatoon.MovementLayer = 'Land'
-        --LOG('Assigning Extractor to new platoon')
+        --LOG('* AI-RNG: Assigning Extractor to new platoon')
         AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
 
         if not finishedUnit.UpgradeThread then
-            --LOG('Forking Upgrade Thread')
+            --LOG('* AI-RNG: Forking Upgrade Thread')
             upgradeSpec = aiBrain:GetUpgradeSpec(finishedUnit)
-            --LOG('UpgradeSpec'..repr(upgradeSpec))
+            --LOG('* AI-RNG: UpgradeSpec'..repr(upgradeSpec))
             finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread, aiBrain, upgradeSpec, true)
         end
     end

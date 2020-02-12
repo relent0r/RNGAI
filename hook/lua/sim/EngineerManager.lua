@@ -16,14 +16,14 @@ EngineerManager = Class(RNGEngineerManager) {
             end
             local unitBp = finishedUnit:GetBlueprint()
             local StructurePool = self.Brain.StructurePool
-            LOG('Assigning built extractor to StructurePool')
+            LOG('* AI-RNG: Assigning built extractor to StructurePool')
             self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
             --Debug log
             local platoonUnits = StructurePool:GetPlatoonUnits()
-            LOG('StructurePool now has :'..table.getn(platoonUnits))
+            LOG('* AI-RNG: StructurePool now has :'..table.getn(platoonUnits))
             local upgradeID = unitBp.General.UpgradesTo or false
 			if upgradeID and unitBp then
-				LOG('UpgradeID')
+				LOG('* AI-RNG: UpgradeID')
 				RUtils.StructureUpgradeInitialize(finishedUnit, self.Brain)
             end
         end

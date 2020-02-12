@@ -11,7 +11,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         --LOG('Oncreate')
         if string.find(per, 'RNG') then
-            LOG('This is RNG')
+            LOG('* AI-RNG: This is RNG')
             self.RNG = true
 
             -- Structure Upgrade properties
@@ -75,12 +75,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     local StructurePool = self.StructurePool
                     self:AssignUnitsToPlatoon(StructurePool, {unit}, 'Support', 'none' )
                     local upgradeID = unitBp.General.UpgradesTo or false
-                    LOG('BlueprintID to upgrade to is : '..unitBp.General.UpgradesTo)
+                    LOG('* AI-RNG: BlueprintID to upgrade to is : '..unitBp.General.UpgradesTo)
                     if upgradeID and __blueprints[upgradeID] then
                         RUtils.StructureUpgradeInitialize(unit, self)
                     end
                     local unitTable = StructurePool:GetPlatoonUnits()
-                    LOG('StructurePool now has :'..table.getn(unitTable))
+                    LOG('* AI-RNG: StructurePool now has :'..table.getn(unitTable))
                 end
             end
         end
@@ -102,7 +102,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.RNG then
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
-        LOG('Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
+        LOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
         -- Make sure we don't do anything for the human player!!!
         if self.BrainType == 'Human' then
             return
@@ -337,26 +337,26 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             
             
-            LOG('EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
+            LOG('* AI-RNG: EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
             local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
         
             for _, start in startLocations do
                 markersStartPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Mass', start, 30)
                 for _, marker in markersStartPos do
-                    --LOG('Start Mass Marker ..'..repr(marker))
+                    --LOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
                     table.insert(startPosMarkers, marker)
                 end
             end
             for k, massMarker in massLocations do
                 for c, startMarker in startPosMarkers do
                     if massMarker.Position == startMarker.Position then
-                        --LOG('Removing Mass Marker Position : '..repr(massMarker.Position))
+                        --LOG('* AI-RNG: Removing Mass Marker Position : '..repr(massMarker.Position))
                         table.remove(massLocations, k)
                     end
                 end
             end
             for k, massMarker in massLocations do
-                --LOG('Inserting Mass Marker Position : '..repr(massMarker.Position))
+                --LOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
                 table.insert(aiBrain.InterestList.LowPriority,
                         {
                             Position = massMarker.Position,
@@ -411,27 +411,27 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, v in ecoStructures do
                     local bp = v:GetBlueprint()
                     local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                    --LOG('Eco Structure'..ecoStructThreat)
+                    --LOG('* AI-RNG: Eco Structure'..ecoStructThreat)
                     ecoThreat = ecoThreat + ecoStructThreat
                 end
             else
                 ecoThreat = 1
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
-            --LOG('Enemy Index is :'..enemyIndex)
+            --LOG('* AI-RNG: Enemy Index is :'..enemyIndex)
             local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
-            --LOG('ACU Position is has data'..repr(acuPos))
+            --LOG('* AI-RNG: ACU Position is has data'..repr(acuPos))
             insertTable.ACUPosition = acuPos
             insertTable.ACULastSpotted = lastSpotted
             
             insertTable.EconomicThreat = ecoThreat
             if insertTable.Enemy then
                 insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', v:GetArmyIndex())
-                --LOG('First Enemy Pass Strength is :'..insertTable.Strength)
+                --LOG('* AI-RNG: First Enemy Pass Strength is :'..insertTable.Strength)
             else
                 insertTable.Position = {startX, 0 ,startZ}
                 insertTable.Strength = ecoThreat
-                --LOG('First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
+                --LOG('* AI-RNG: First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
             end
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
@@ -439,7 +439,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyEnemy = self:GetAllianceEnemyRNG(armyStrengthTable)
         
         if allyEnemy  then
-            --LOG('Ally Enemy is true or ACU is close')
+            --LOG('* AI-RNG: Ally Enemy is true or ACU is close')
             self:SetCurrentEnemy(allyEnemy)
         else
             local findEnemy = false
@@ -475,10 +475,10 @@ AIBrain = Class(RNGAIBrainClass) {
 
                     if v.Strength == 0 then
                         name = v.Brain.Nickname
-                        --LOG('Name is'..name)
-                        --LOG('v.strenth is 0')
+                        --LOG('* AI-RNG: Name is'..name)
+                        --LOG('* AI-RNG: v.strenth is 0')
                         if name ~= 'civilian' then
-                            --LOG('Inserted Name is '..name)
+                            --LOG('* AI-RNG: Inserted Name is '..name)
                             table.insert(enemyTable, v.Brain)
                         end
                         continue
@@ -488,25 +488,25 @@ AIBrain = Class(RNGAIBrainClass) {
                     local distanceWeight = 0.1
                     local distance = VDist3(self:GetStartVector3f(), v.Position)
                     local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
-                    --LOG('armyStrengthTable Strength is :'..v.Strength)
-                    --LOG('Threat Weight is :'..threatWeight)
+                    --LOG('* AI-RNG: armyStrengthTable Strength is :'..v.Strength)
+                    --LOG('* AI-RNG: Threat Weight is :'..threatWeight)
                     if not enemy or threatWeight > enemyStrength then
                         enemy = v.Brain
                         enemyStrength = threatWeight
-                        --LOG('Enemy Strength is'..enemyStrength)
+                        --LOG('* AI-RNG: Enemy Strength is'..enemyStrength)
                     end
                 end
 
                 if enemy then
-                    LOG('Enemy is :'..enemy.Name)
+                    LOG('* AI-RNG: Enemy is :'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 else
                     local num = table.getn(enemyTable)
-                    --LOG('Table number is'..num)
+                    --LOG('* AI-RNG: Table number is'..num)
                     local ran = math.random(num)
-                    --LOG('Random Number is'..ran)
+                    --LOG('* AI-RNG: Random Number is'..ran)
                     enemy = enemyTable[ran]
-                    LOG('Random Enemy is'..enemy.Name)
+                    LOG('* AI-RNG: Random Enemy is'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 end
             end
@@ -579,20 +579,20 @@ AIBrain = Class(RNGAIBrainClass) {
         local startX, startZ = self:GetArmyStartPos()
         local ACUDist = nil
         
-        --LOG('My Own Strength is'..highStrength)
+        --LOG('* AI-RNG: My Own Strength is'..highStrength)
         for _, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
-                --LOG('ACU Position is :'..repr(v.ACUPosition))
+                --LOG('* AI-RNG: ACU Position is :'..repr(v.ACUPosition))
                 if v.ACUPosition[1] then
                     ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
-                    --LOG('Enemy ACU Distance in Alliance Check is'..ACUDist)
+                    --LOG('* AI-RNG: Enemy ACU Distance in Alliance Check is'..ACUDist)
                     if ACUDist < 180 then
-                        LOG('Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
+                        LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     elseif v.Threat < 200 and ACUDist < 240 then
-                        LOG('Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
+                        LOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     end
@@ -614,9 +614,9 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if returnEnemy then
-            LOG('Ally Enemy Returned is : '..returnEnemy.Nickname)
+            LOG('* AI-RNG: Ally Enemy Returned is : '..returnEnemy.Nickname)
         else
-            LOG('returnEnemy is false')
+            LOG('* AI-RNG: returnEnemy is false')
         end
         return returnEnemy
     end,
@@ -653,7 +653,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 return upgradeSpec
             end
         else
-            LOG('Unit is not Mass Extractor')
+            LOG('* AI-RNG: Unit is not Mass Extractor')
             upgradeSpec = false
             return upgradeSpec
         end
@@ -677,7 +677,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
-        LOG('New Entry Added to platoon distress'..repr(self.BaseMonitor.PlatoonDistressTable))
+        LOG('* AI-RNG: New Entry Added to platoon distress'..repr(self.BaseMonitor.PlatoonDistressTable))
         -- Create the distress call if it doesn't exist
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
@@ -692,11 +692,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 if self:PlatoonExists(v.Platoon) then
                     local threat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
                     local myThreat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
-                    LOG('Threat of attacker'..threat)
-                    LOG('Threat of platoon'..myThreat)
+                    LOG('* AI-RNG: Threat of attacker'..threat)
+                    LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
                 if threat and threat > (myThreat * 1.5) then
-                    LOG('Created Threat Alert')
+                    LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -791,7 +791,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     TacticalMonitorInitializationRNG = function(self, spec)
-        LOG('Tactical Monitor Is Initializing')
+        LOG('* AI-RNG: Tactical Monitor Is Initializing')
         self.TacticalMonitor = {
             TacticalMonitorStatus = 'ACTIVE',
             TacticalLocationFound = false,
@@ -804,7 +804,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorThreadRNG = function(self)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
-                LOG('Tactical Monitor Is Active')
+                LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:TacticalMonitorRNG()
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -813,12 +813,12 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorRNG = function(self)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
-        LOG('Tactical Monitor Threat Pass')
+        LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
 
         if enemyStarts then
-            LOG('Enemy Start Locations :'..repr(enemyStarts))
+            LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
         end
         local selfIndex = self:GetArmyIndex()
         local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'AntiSurface')
@@ -827,23 +827,23 @@ AIBrain = Class(RNGAIBrainClass) {
         if threats then
             local threatLocation = {}
             for _, threat in threats do
-                LOG('Threat is'..repr(threat))
+                LOG('* AI-RNG: Threat is'..repr(threat))
                 if threat[3] > 5 then
                     for _, pos in enemyStarts do
-                        LOG('Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
+                        LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
                         if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
-                            LOG('Tactical Potential Interest Location Found at :'..repr(threat))
+                            LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
                             threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3]}
                             table.insert(potentialThreats, threatLocation)
                         else
-                            LOG('Tactical Potential Interest Location Found at :'..repr(threat))
+                            LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
                             threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3]}
                             table.insert(potentialThreats, threatLocation)
                         end
                     end
                 end
             end
-            LOG('Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
+            LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
             for Index_1, value_1 in potentialThreats do
                 for Index_2, value_2 in potentialThreats do
                     -- no need to check against self
@@ -851,33 +851,33 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     -- check if we have the same position
-                    LOG('checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                    LOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
                     if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
-                        LOG('eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                        LOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
                         if value_1.EnemyBaseRadius == false then
-                            LOG('deleating '..repr(value_1))
+                            LOG('* AI-RNG: deleating '..repr(value_1))
                             potentialThreats[Index_1] = nil
                             break
                         elseif value_2.EnemyBaseRadius == false then
-                            LOG('deleating '..repr(value_2))
+                            LOG('* AI-RNG: deleating '..repr(value_2))
                             potentialThreats[Index_2] = nil
                             break
                         else
-                            LOG('Both entires have true, deleting nothing')
+                            LOG('* AI-RNG: Both entires have true, deleting nothing')
                         end
                     end
                 end
             end
-            LOG('second table pass :'..repr(potentialThreats))
+            LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             for _, threat in potentialThreats do
                 if threat.EnemyBaseRadius == false then
                     threat.InsertTime = GetGameTimeSeconds()
                     table.insert(validThreats, threat)
                 else
-                    LOG('Removing Threat within Enemy Base Radius')
+                    LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
                 end
             end
-            LOG('Final Valid Threat Locations :'..repr(validThreats))
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(validThreats))
             self.EnemyIntel.EnemyThreatLocations = validThreats
         end
     end,

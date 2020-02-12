@@ -1,7 +1,7 @@
 
 function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
-    --LOG('Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
+    --LOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
     if markerType == 'Start Location' then
         local tempMarkers = AIGetMarkerLocations(aiBrain, 'Blank Marker')
         for k, v in tempMarkers do
@@ -12,7 +12,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
                 for _, v in ecoStructures do
                     local bp = v:GetBlueprint()
                     local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                    --LOG('Eco Structure'..ecoStructThreat)
+                    --LOG('* AI-RNG: Eco Structure'..ecoStructThreat)
                     ecoThreat = ecoThreat + ecoStructThreat
                 end
                 if ecoThreat < 10 then

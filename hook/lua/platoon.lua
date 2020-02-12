@@ -139,11 +139,11 @@ Platoon = Class(oldPlatoon) {
         self:SetPlatoonFormationOverride(PlatoonFormation)
 
         if IgnoreFriendlyBase then
-            LOG('ignore friendlybase true')
+            LOG('* AI-RNG: ignore friendlybase true')
             local markerPos = AIUtils.AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
             markerLocations = markerPos
         else
-            LOG('ignore friendlybase false')
+            LOG('* AI-RNG: ignore friendlybase false')
             local markerPos = AIUtils.AIGetMarkerLocations(aiBrain, markerType)
             markerLocations = markerPos
         end
@@ -247,7 +247,7 @@ Platoon = Class(oldPlatoon) {
         if bestMarker then
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
-            --LOG("GuardMarker: Attacking " .. bestMarker.Name)
+            --LOG('* AI-RNG: GuardMarker: Attacking '' .. bestMarker.Name)
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, 10, maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(self:GetPlatoonUnits())
@@ -269,15 +269,15 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
             elseif (not path and reason == 'NoPath') then
-                --LOG('Guardmarker requesting transports')
+                --LOG('* AI-RNG: Guardmarker requesting transports')
                 local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not foundTransport then
-                    --LOG('Guardmarker no transports')
+                    --LOG('* AI-RNG: Guardmarker no transports')
                     self:PlatoonDisband()
                     return
                 end
-                --LOG('Guardmarker found transports')
+                --LOG('* AI-RNG: Guardmarker found transports')
             else
                 self:PlatoonDisband()
                 return
@@ -348,7 +348,7 @@ Platoon = Class(oldPlatoon) {
     end,
     
     ReclaimAIRNG = function(self)
-        --LOG('ReclaimAIRNG has been started')
+        --LOG('* AI-RNG: ReclaimAIRNG has been started')
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
         local eng
@@ -359,14 +359,14 @@ Platoon = Class(oldPlatoon) {
             end
         end
         if eng then
-            --LOG('Engineer Condition is true')
+            --LOG('* AI-RNG: Engineer Condition is true')
             eng.UnitBeingBuilt = eng -- this is important, per uveso (It's a build order fake, i assigned the engineer to itself so it will not produce errors because UnitBeingBuilt must be a unit and can not just be set to true)
             RUtils.ReclaimRNGAIThread(self,eng,aiBrain)
             eng.UnitBeingBuilt = nil
         else
-            --LOG('Engineer Condition is false')
+            --LOG('* AI-RNG: Engineer Condition is false')
         end
-        LOG('Ending ReclaimAIRNG..Disbanding')
+        LOG('* AI-RNG: Ending ReclaimAIRNG..Disbanding')
         self:PlatoonDisband()
     end,
 
@@ -381,13 +381,13 @@ Platoon = Class(oldPlatoon) {
     end,
 
     AirScoutingAIRNG = function(self)
-        --LOG('Starting AirScoutAIRNG')
+        --LOG('* AI-RNG: Starting AirScoutAIRNG')
         local patrol = self.PlatoonData.Patrol or false
         local scout = self:GetPlatoonUnits()[1]
         if not scout then
             return
         end
-        --LOG('Patrol function is :'..tostring(patrol))
+        --LOG('* AI-RNG: Patrol function is :'..tostring(patrol))
         local aiBrain = self:GetBrain()
 
         -- build scoutlocations if not already done.
@@ -401,7 +401,7 @@ Platoon = Class(oldPlatoon) {
         end
 
         if patrol == true then
-            --LOG('Patrol function is true, starting patrol function')
+            --LOG('* AI-RNG: Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
             --local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
             local estartX = nil
@@ -415,35 +415,35 @@ Platoon = Class(oldPlatoon) {
                     estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
                 end
                 startX, startZ = aiBrain:GetArmyStartPos()
-                --LOG('Start Location X Z :'..startX..startZ)
+                --LOG('* AI-RNG: Start Location X Z :'..startX..startZ)
                 local rng = math.random(1,3)
                 if rng == 1 then
-                    --LOG('Patroling BaseMilitaryArea')
+                    --LOG('* AI-RNG: Patroling BaseMilitaryArea')
                     patrolPositionX = (estartX + startX) / 2.2
                     patrolPositionZ = (estartZ + startZ) / 2.2
                 elseif rng == 2 then
-                    --LOG('Patroling BaseRestrictedArea')
+                    --LOG('* AI-RNG: Patroling BaseRestrictedArea')
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
                     patrolPositionX = (patrolPositionX + startX) / 2
                     patrolPositionZ = (patrolPositionZ + startZ) / 2
                 elseif rng == 3 then
-                    --LOG('Patroling BaseDMZArea')
+                    --LOG('* AI-RNG: Patroling BaseDMZArea')
                     patrolPositionX = (estartX + startX) / 2
                     patrolPositionZ = (estartZ + startZ) / 2
                 end
-                --LOG('Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
+                --LOG('* AI-RNG: Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
                 patrolLocation1 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
                 patrolLocation2 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
-                --LOG('Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
+                --LOG('* AI-RNG: Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
                 self:MoveToLocation({patrolPositionX, 0, patrolPositionZ}, false)
-                --LOG('Issuing Patrol Commands')
+                --LOG('* AI-RNG: Issuing Patrol Commands')
                 local patrolunits = self:GetPlatoonUnits()
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 WaitSeconds(patrolTime)
-                --LOG('Scout Returning to base')
+                --LOG('* AI-RNG: Scout Returning to base')
                 self:MoveToLocation({startX, 0, startZ}, false)
                 self:PlatoonDisband()
                 return
@@ -723,14 +723,14 @@ Platoon = Class(oldPlatoon) {
                     movingToScout = false
                 elseif not movingToScout then
                     if data.Defensive then
-                        LOG('Defensive Platoon')
+                        LOG('* AI-RNG: Defensive Platoon')
                         return self:ReturnToBaseAIRNG()
                     end
                     movingToScout = true
                     self:Stop()
                     for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, self:GetPlatoonPosition()) do
                         if v[1] < 0 or v[3] < 0 or v[1] > ScenarioInfo.size[1] or v[3] > ScenarioInfo.size[2] then
-                            --LOG('*AI DEBUG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
+                            --LOG('*AI-RNG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
                         end
                         self:MoveToLocation((v), false)
                     end
@@ -765,12 +765,12 @@ Platoon = Class(oldPlatoon) {
         -- (This is also the wrong place to do it. Should be called from Buildermanager BEFORE the builder is selected)
         if cons.T4 then
             if not aiBrain.T4Building then
-                --LOG('EngineerBuildAIRNG'..repr(cons))
+                --LOG('* AI-RNG: EngineerBuildAIRNG'..repr(cons))
                 aiBrain.T4Building = true
                 ForkThread(SUtils.T4Timeout, aiBrain)
-                --LOG('Building T4 uinit, delaytime started')
+                --LOG('* AI-RNG: Building T4 uinit, delaytime started')
             else
-                --LOG('BLOCK building T4 unit; aiBrain.T4Building = TRUE')
+                --LOG('* AI-RNG: BLOCK building T4 unit; aiBrain.T4Building = TRUE')
                 WaitTicks(1)
                 self:PlatoonDisband()
                 return
