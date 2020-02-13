@@ -635,8 +635,8 @@ function TacticalResponse(platoon)
             LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
             for _, v in tacticalThreat do
-                if v.threat > threat then
-                    threat = v.threat
+                if v.Threat > threat then
+                    threat = v.Threat
                 end
             end
             if threat > 0 then
