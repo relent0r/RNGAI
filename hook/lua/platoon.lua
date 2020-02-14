@@ -1872,8 +1872,8 @@ Platoon = Class(oldPlatoon) {
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
                 for _, v in tacticalThreat do
-                    if v.threat > threat then
-                        threat = v.threat
+                    if v.Threat > threat then
+                        threat = v.Threat
                         threatPos = v.Position
                     end
                 end
