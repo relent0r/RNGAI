@@ -628,6 +628,7 @@ Platoon = Class(oldPlatoon) {
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
                     end
+                    IssueClearCommands(self:GetSquadUnits('Scout'))
                     IssueGuard(self:GetSquadUnits('Scout'), attackUnits[guardedUnit])
                 end
                 if self:GetSquadUnits('Guard') then
@@ -635,6 +636,7 @@ Platoon = Class(oldPlatoon) {
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
                     end
+                    IssueClearCommands(self:GetSquadUnits('Guard'))
                     IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
                 end
                 blip = target:GetBlip(armyIndex)
@@ -1842,7 +1844,7 @@ Platoon = Class(oldPlatoon) {
     TacticalResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
-        if platoonUnits and PlatoonStrength > 0 then
+        if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
                     if IsDestroyed(v) then

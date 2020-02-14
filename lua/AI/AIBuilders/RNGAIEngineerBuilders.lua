@@ -33,7 +33,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 600 } },
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 7, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
         },
         BuilderType = 'All',
     },

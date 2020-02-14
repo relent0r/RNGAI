@@ -47,7 +47,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.3}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
@@ -60,7 +60,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.3}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
             { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
@@ -432,6 +432,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.8}},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
@@ -446,6 +447,7 @@ BuilderGroup {
         Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.8}},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },

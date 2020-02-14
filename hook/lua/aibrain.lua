@@ -634,7 +634,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 100
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.72
+                upgradeSpec.MassLowTrigger = 0.75
                 upgradeSpec.EnergyLowTrigger = 1.01
                 upgradeSpec.MassHighTrigger = 1.6
                 upgradeSpec.EnergyHighTrigger = 9999
@@ -827,16 +827,16 @@ AIBrain = Class(RNGAIBrainClass) {
         if threats then
             local threatLocation = {}
             for _, threat in threats do
-                LOG('* AI-RNG: Threat is'..repr(threat))
+                --LOG('* AI-RNG: Threat is'..repr(threat))
                 if threat[3] > 5 then
                     for _, pos in enemyStarts do
-                        LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
+                        --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
                         if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
-                            LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
                             threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3]}
                             table.insert(potentialThreats, threatLocation)
                         else
-                            LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
                             threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3]}
                             table.insert(potentialThreats, threatLocation)
                         end
@@ -851,15 +851,15 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     -- check if we have the same position
-                    LOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                    --LOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
                     if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
-                        LOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                        --LOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
                         if value_1.EnemyBaseRadius == false then
-                            LOG('* AI-RNG: deleating '..repr(value_1))
+                            --LOG('* AI-RNG: deleating '..repr(value_1))
                             potentialThreats[Index_1] = nil
                             break
                         elseif value_2.EnemyBaseRadius == false then
-                            LOG('* AI-RNG: deleating '..repr(value_2))
+                            --LOG('* AI-RNG: deleating '..repr(value_2))
                             potentialThreats[Index_2] = nil
                             break
                         else
