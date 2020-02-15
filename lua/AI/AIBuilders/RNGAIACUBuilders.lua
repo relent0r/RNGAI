@@ -286,6 +286,27 @@ BuilderGroup {
         }
     },
     Builder {    	
+        BuilderName = 'RNGAI ACU T1 Power Scale',
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 800,
+        BuilderConditions = {            
+            { MIBC, 'GreaterThanGameTime', { 80 } },
+            { UCBC, 'LessThanEnergyTrend', { 20.0 } }, -- If our energy is trending into negatives
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = false,
+            Construction = {
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                BuildStructures = {
+                    'T1EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Storage',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
@@ -371,13 +392,13 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssisteeType = 'Engineer',
-                AssistRange = 60,
+                AssistRange = 30,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
                 Time = 30,
             },
         }
-    },
+    },--[[
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
         PlatoonTemplate = 'CommanderAssist',
@@ -413,7 +434,7 @@ BuilderGroup {
                 Time = 30,
             },
         }
-    },
+    },]]
 }
 
 BuilderGroup { 

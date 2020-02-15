@@ -14,7 +14,7 @@ BaseBuilderTemplate {
         'RNGAI Initial ACU Builder Small Close',
 
         -- ACU Other Builders --
-       -- 'RNGAI ACU Build Assist',
+        'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
         --'RNGAI Test PD',
         'RNGAI ACU Enhancements Gun',

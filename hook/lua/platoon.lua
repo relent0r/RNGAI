@@ -1900,7 +1900,7 @@ Platoon = Class(oldPlatoon) {
                                 while aiBrain:PlatoonExists(self) do
                                     PlatoonPosition = self:GetPlatoonPosition() or nil
                                     if not PlatoonPosition then break end
-                                    dist = VDist2sq( path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3] )
+                                    dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                                     -- are we closer then 15 units from the next marker ? Then break and move to the next marker
                                     if dist < 400 then
                                         -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units

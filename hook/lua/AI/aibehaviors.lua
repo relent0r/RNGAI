@@ -459,6 +459,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyEfficiency
     
     local initial_delay = 0
+    local ecoPassbyTimeout = GetGameTimeSeconds()
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
 		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
@@ -515,7 +516,10 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             else
                 continue
             end
-            
+            if (GetGameTimeSeconds() - ecoPassbyTimeout) > 900 then
+                LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
+                bypasseco = true
+            end
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
@@ -556,19 +560,15 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                     if not ( massTrend >= massTrendNeeded ) then
                         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..massTrend.." needed "..massTrendNeeded)
                     end
-                    
                     if not ( energyTrend >= energyTrendNeeded ) then
                         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..energyTrend.." needed "..energyTrendNeeded)
                     end
-                    
                     if not (energyTrend >= energyMaintenance) then
                         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..energyTrend.." "..energyMaintenance)  
                     end
-                    
                     if not ( massStorage >= (massNeeded * .8)) then
                         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS storage trigger "..massStorage.." needed "..(massNeeded*.8) )
                     end
-                    
                     if not (energyStorage > (energyNeeded * .4)) then
                         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER storage trigger "..energyStorage.." needed "..(energyNeeded*.4) )
                     end

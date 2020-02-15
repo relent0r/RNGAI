@@ -647,7 +647,7 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
             --LOG('* AI-RNG: Forking Upgrade Thread')
             upgradeSpec = aiBrain:GetUpgradeSpec(finishedUnit)
             --LOG('* AI-RNG: UpgradeSpec'..repr(upgradeSpec))
-            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread, aiBrain, upgradeSpec, true)
+            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread, aiBrain, upgradeSpec, false)
         end
     end
     if finishedUnit.UpgradeThread then

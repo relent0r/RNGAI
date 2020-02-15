@@ -234,21 +234,21 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAir BaseGuard',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
             GuardRadius = BaseMilitaryArea, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
         },
     },
     Builder {
         BuilderName = 'RNGAI Bomber Base Guard',
         PlatoonTemplate = 'RNGAI Bomber BaseGuard',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        Priority = 950,
+        Priority = 900,
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderConditions = {
