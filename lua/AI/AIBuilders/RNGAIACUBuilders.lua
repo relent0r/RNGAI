@@ -291,9 +291,9 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {            
             { MIBC, 'GreaterThanGameTime', { 80 } },
-            { UCBC, 'LessThanEnergyTrend', { 20.0 } }, -- If our energy is trending into negatives
+            { UCBC, 'LessThanEnergyTrend', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
+            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
         },
         BuilderType = 'Any',
         BuilderData = {

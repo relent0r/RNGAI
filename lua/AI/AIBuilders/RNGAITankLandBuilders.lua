@@ -50,7 +50,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
