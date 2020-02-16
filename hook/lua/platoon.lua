@@ -1459,11 +1459,42 @@ Platoon = Class(oldPlatoon) {
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
-                    for i=1, pathLength-1 do
+                    for i=1, pathLength - 1 do
+                        LOG('* AI-RNG: * MassRaidRNG: moving to destination. i: '..i..' coords '..repr(path[i]))
                         if bAggroMove then
                             self:AggressiveMoveToLocation(path[i])
                         else
                             self:MoveToLocation(path[i], false)
+                        end
+                        LOG('* AI-RNG: * MassRaidRNG: moving to Waypoint')
+                        local PlatoonPosition
+                        local Lastdist
+                        local dist
+                        local Stuck = 0
+                        while aiBrain:PlatoonExists(self) do
+                            PlatoonPosition = self:GetPlatoonPosition() or nil
+                            if not PlatoonPosition then break end
+                            dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
+                            -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                            if dist < 400 then
+                                -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                self:Stop()
+                                break
+                            end
+                            -- Do we move ?
+                            if Lastdist ~= dist then
+                                Stuck = 0
+                                Lastdist = dist
+                            -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                            else
+                                Stuck = Stuck + 1
+                                if Stuck > 15 then
+                                    LOG('* AI-RNG: * MassRaidRNG: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                    self:Stop()
+                                    break
+                                end
+                            end
+                            WaitTicks(10)
                         end
                     end
                 end
