@@ -80,7 +80,10 @@ BaseBuilderTemplate {
         'RNGAI ScoutAirFormer',
         'RNGAI Air Platoon Builder',
         'RNGAI Air Response Formers T1',
-
+        
+        -- Sea Unit Builders
+        'RNGAI Sea Builders',
+        
         -- Defence Builders --
         'RNGAI Base Defenses',
         'RNGAI T1 Perimeter Defenses',

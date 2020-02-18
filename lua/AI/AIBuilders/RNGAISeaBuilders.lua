@@ -1,9 +1,7 @@
 BuilderGroup {
     BuilderGroupName = 'RNGAI Sea Builders',                               
     BuildersType = 'FactoryBuilder',
-    -- ======================== --
-    --    TECH 1   PanicZone    --
-    -- ======================== --
+    -- TECH 1
     Builder {
         BuilderName = 'RNGAI Sea T1 Sub Response',
         PlatoonTemplate = 'T1SeaSub',
