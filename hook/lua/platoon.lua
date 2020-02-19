@@ -697,12 +697,6 @@ Platoon = Class(oldPlatoon) {
                 IssueClearCommands(guardUnits)
                 IssueGuard(guardUnits, attackUnits[guardedUnit])
             end
-                if attackUnits then
-                    self:Stop('Attack')
-                    self:AggressiveMoveToLocation(targetPosition), 'Attack')
-                    local position = AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
-                    self:MoveToLocation(position, false, 'Attack')
-                end
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), targetPosition, 100 , maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
             IssueClearCommands(self:GetPlatoonUnits())
