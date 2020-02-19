@@ -38,3 +38,83 @@ BuilderGroup {
         },
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Shields Upgrader',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI Shield Cybran 1',
+        PlatoonTemplate = 'T2Shield1',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 2},
+        InstanceCount = 5,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.40, 0.10}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Shield Cybran 2',
+        PlatoonTemplate = 'T2Shield2',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 2},
+        InstanceCount = 5,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 0.10}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Shield Cybran 3',
+        PlatoonTemplate = 'T2Shield3',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 2},
+        InstanceCount = 5,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 0.10}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Shield Cybran 4',
+        PlatoonTemplate = 'T2Shield4',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 2},
+        InstanceCount = 5,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 1.00 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Shield UEF Seraphim',
+        PlatoonTemplate = 'T2Shield',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 2},
+        InstanceCount = 5,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 1.00 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
+        },
+        BuilderType = 'Any',
+    },
+}
