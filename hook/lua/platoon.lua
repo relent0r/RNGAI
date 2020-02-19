@@ -709,20 +709,14 @@ Platoon = Class(oldPlatoon) {
                 end
                 if not usedTransports then
                     for i=1, table.getn(path) do
-                        LOG'* AI-RNG: * SPAMAI: Checking for enemy units')
-                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, enemyRadius, 'Enemy')
-                        local retreatCount = 0
+                        LOG('* AI-RNG: * SPAMAI: Checking for enemy units')
+                        
                         local PlatoonPosition
-                        if enemyUnitCount > 2 then
-                            LOG('* AI-RNG: * SPAMAI: Enemy Units Detected, retreating..')
-                            self:MoveToLocation(path[i-1], false, 'Attack')
-                            WaitTicks(30)
-                            self:Stop()
-                        end
+                        
                         LOG('* AI-RNG: * SPAMAI: moving to destination. i: '..i..' coords '..repr(path[i]))
                         if bAggroMove and attackUnits then
                              self:AggressiveMoveToLocation(path[i], 'Attack')
-                        elseif attackUnits
+                        elseif attackUnits then
                             self:MoveToLocation(path[i], false, 'Attack')
                         end
                         LOG('* AI-RNG: * SPAMAI: moving to Waypoint')
@@ -730,6 +724,8 @@ Platoon = Class(oldPlatoon) {
                         local dist
                         local Stuck = 0
                         while aiBrain:PlatoonExists(self) do
+                            local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, enemyRadius, 'Enemy')
+                            local retreatCount = 0
                             PlatoonPosition = self:GetPlatoonPosition() or nil
                             if not PlatoonPosition then break end
                             dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
@@ -738,6 +734,12 @@ Platoon = Class(oldPlatoon) {
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 self:Stop()
                                 break
+                            end
+                            if enemyUnitCount > 2 then
+                                LOG('* AI-RNG: * SPAMAI: Enemy Units Detected, retreating..')
+                                self:MoveToLocation(path[i-1], false, 'Attack')
+                                WaitTicks(30)
+                                self:Stop()
                             end
                             -- Do we move ?
                             if Lastdist ~= dist then
@@ -752,7 +754,7 @@ Platoon = Class(oldPlatoon) {
                                     break
                                 end
                             end
-                            WaitTicks(10)
+                            WaitTicks(20)
                         end
                     end
                 end

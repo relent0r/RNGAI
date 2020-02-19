@@ -432,6 +432,27 @@ function BuildOnlyOnLocation(aiBrain, LocationType, AllowedLocationType)
     return false
 end
 
+function CanPathNavalBaseToNavalTargets(aiBrain, locationType, unitCategory)
+    local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+    baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
+    --LOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
+    local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
+    local path, reason
+    for _, EnemyUnit in EnemyNavalUnits do
+        if not EnemyUnit.Dead then
+            --LOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
+            path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
+            --LOG('reason'..repr(reason))
+            if path then
+                --LOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
+                return true
+            end
+        end
+    end
+    --LOG('Found no path to any target from naval base ['..locationType..']')
+    return false
+end
+
 --function HasNotParagon(aiBrain)
 --    if not aiBrain.HasParagon then
 --        return true

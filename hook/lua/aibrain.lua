@@ -1,3 +1,4 @@
+WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibrain.lua' )
 
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
@@ -26,10 +27,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.ACUSupport.PlatoonCount = 0
             self.ACUSupport.Position = {}
             self.ACUSupport.ReturnHome = true
-            
-            -- Intel Data
-            self.EnemyIntel = {}
-            self.EnemyIntel.ACU = {}
 
             -- Misc
             self.ReclaimEnabled = true
@@ -126,6 +123,13 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitor)
         self.LowEnergyMode = false
+        
+        --Tactical Monitor
+        -- Intel Data
+        self.EnemyIntel = {}
+        self.EnemyIntel.ACU = {}
+        self.EnemyIntel.EnemyStartLocations = {}
+        self.EnemyIntel.EnemyThreatLocations = {}
 
         -- Add default main location and setup the builder managers
         self.NumBases = 0 -- AddBuilderManagers will increase the number
@@ -207,8 +211,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local startLocations = {}
         local startPosMarkers = {}
         local allyStarts = {}
-        aiBrain.EnemyIntel.EnemyStartLocations = {}
-        aiBrain.EnemyIntel.EnemyThreatLocations = {}
+        
 
         if not aiBrain.InterestList then
             aiBrain.InterestList = {}
@@ -796,7 +799,8 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalMonitorStatus = 'ACTIVE',
             TacticalLocationFound = false,
             TacticalLocations = {},
-            TacticalMonitorTime = 120,
+            TacticalTimeout = 60,
+            TacticalMonitorTime = 180,
         }
         self:ForkThread(self.TacticalMonitorThreadRNG)
     end,
@@ -816,14 +820,25 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
-
+        local timeout = self.TacticalMonitor.TacticalTimeout
+        local gameTime = GetGameTimeSeconds()
+        LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for k, v in self.EnemyIntel.EnemyThreatLocations do
+                LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
+                if gameTime - v.InsertTime > timeout then
+                    self.EnemyIntel.EnemyThreatLocations[k] = nil
+                end
+            end
+            self.RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+        end
+        -- debug, remove later on
         if enemyStarts then
             LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
         end
         local selfIndex = self:GetArmyIndex()
         local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'AntiSurface')
         local potentialThreats = {}
-        local validThreats = {}
         if threats then
             local threatLocation = {}
             for _, threat in threats do
@@ -843,7 +858,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
+            --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
             for Index_1, value_1 in potentialThreats do
                 for Index_2, value_2 in potentialThreats do
                     -- no need to check against self
@@ -868,17 +883,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
+            --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             for _, threat in potentialThreats do
                 if threat.EnemyBaseRadius == false then
                     threat.InsertTime = GetGameTimeSeconds()
-                    table.insert(validThreats, threat)
+                    table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
                 else
-                    LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
+                    --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
                 end
             end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(validThreats))
-            self.EnemyIntel.EnemyThreatLocations = validThreats
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
     end,
 }
