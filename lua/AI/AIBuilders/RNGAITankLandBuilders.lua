@@ -431,7 +431,7 @@ BuilderGroup {
     }, 
     Builder {
         BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 800,                                                          -- Priority. 1000 is normal.
         PlatoonAddBehaviors = { 'TacticalResponse' },
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
