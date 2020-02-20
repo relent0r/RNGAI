@@ -724,9 +724,8 @@ Platoon = Class(oldPlatoon) {
                             local Lastdist
                             local dist
                             local Stuck = 0
+                            local retreatCount = 2
                             while aiBrain:PlatoonExists(self) do
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, enemyRadius, 'Enemy')
-                                local retreatCount = 0
                                 PlatoonPosition = self:GetPlatoonPosition() or nil
                                 if not PlatoonPosition then break end
                                 dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
@@ -736,11 +735,16 @@ Platoon = Class(oldPlatoon) {
                                     self:Stop()
                                     break
                                 end
-                                if enemyUnitCount > 2 then
-                                    LOG('* AI-RNG: * SPAMAI: Enemy Units Detected, retreating..')
-                                    self:MoveToLocation(path[i-1], false, 'Attack')
-                                    WaitTicks(30)
-                                    self:Stop()
+                                if retreatCount < 5 then
+                                    local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, enemyRadius, 'Enemy')
+                                    if enemyUnitCount > 2 then
+                                        LOG('* AI-RNG: * SPAMAI: Enemy Units Detected, retreating..')
+                                        self:MoveToLocation(path[i - retreatCount], false, 'Attack')
+                                        retreatCount = retreatCount + 1
+                                        WaitTicks(30)
+                                        self:Stop()
+                                        break
+                                    end
                                 end
                                 -- Do we move ?
                                 if Lastdist ~= dist then
