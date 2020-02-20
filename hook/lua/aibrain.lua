@@ -830,7 +830,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.EnemyIntel.EnemyThreatLocations[k] = nil
                 end
             end
-            self.RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+            if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+                self.RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+            end
         end
         -- debug, remove later on
         if enemyStarts then
