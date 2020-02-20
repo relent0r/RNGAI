@@ -128,8 +128,20 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI LandAttack Spam',
+    Name = 'RNGAI LandAttack Spam Intelli',
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
+    GlobalSquads = {
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+          4, -- Min number of units.
+          12, -- Max number of units.
+          'attack', -- platoon types: 'support', 'attack', 'scout',
+          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+          { categories.LAND * (categories.ANTIAIR + categories.SCOUT), 0, 4, 'guard', 'none' },
+    },
+}
+PlatoonTemplate {
+    Name = 'RNGAI LandAttack Spam',
+    Plan = 'HuntAIRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           4, -- Min number of units.
@@ -207,7 +219,7 @@ PlatoonTemplate {
           3, -- Max number of units.
           'guard', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -225,7 +237,7 @@ PlatoonTemplate {
           4, -- Max number of units.
           'support', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -239,7 +251,7 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
           { categories.MOBILE * categories.LAND * categories.TECH2 * categories.STEALTHFIELD, 0, 1, 'guard', 'none'},
     },
 }

@@ -227,9 +227,10 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTime', { 300 } },
             { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY AIR TECH1' }},
