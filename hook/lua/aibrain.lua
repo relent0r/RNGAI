@@ -72,12 +72,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     local StructurePool = self.StructurePool
                     self:AssignUnitsToPlatoon(StructurePool, {unit}, 'Support', 'none' )
                     local upgradeID = unitBp.General.UpgradesTo or false
-                    LOG('* AI-RNG: BlueprintID to upgrade to is : '..unitBp.General.UpgradesTo)
+                    --LOG('* AI-RNG: BlueprintID to upgrade to is : '..unitBp.General.UpgradesTo)
                     if upgradeID and __blueprints[upgradeID] then
                         RUtils.StructureUpgradeInitialize(unit, self)
                     end
                     local unitTable = StructurePool:GetPlatoonUnits()
-                    LOG('* AI-RNG: StructurePool now has :'..table.getn(unitTable))
+                    --LOG('* AI-RNG: StructurePool now has :'..table.getn(unitTable))
                 end
             end
         end
@@ -340,7 +340,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             
             
-            LOG('* AI-RNG: EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
+            --LOG('* AI-RNG: EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
             local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
         
             for _, start in startLocations do
@@ -656,7 +656,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 return upgradeSpec
             end
         else
-            LOG('* AI-RNG: Unit is not Mass Extractor')
+            --LOG('* AI-RNG: Unit is not Mass Extractor')
             upgradeSpec = false
             return upgradeSpec
         end
@@ -680,7 +680,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
-        LOG('* AI-RNG: New Entry Added to platoon distress'..repr(self.BaseMonitor.PlatoonDistressTable))
+        --LOG('* AI-RNG: New Entry Added to platoon distress'..repr(self.BaseMonitor.PlatoonDistressTable))
         -- Create the distress call if it doesn't exist
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
@@ -695,11 +695,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 if self:PlatoonExists(v.Platoon) then
                     local threat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
                     local myThreat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
-                    LOG('* AI-RNG: Threat of attacker'..threat)
-                    LOG('* AI-RNG: Threat of platoon'..myThreat)
+                    --LOG('* AI-RNG: Threat of attacker'..threat)
+                    --LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
                 if threat and threat > (myThreat * 1.5) then
-                    LOG('* AI-RNG: Created Threat Alert')
+                    --LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -794,7 +794,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     TacticalMonitorInitializationRNG = function(self, spec)
-        LOG('* AI-RNG: Tactical Monitor Is Initializing')
+        --LOG('* AI-RNG: Tactical Monitor Is Initializing')
         self.TacticalMonitor = {
             TacticalMonitorStatus = 'ACTIVE',
             TacticalLocationFound = false,
@@ -808,7 +808,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorThreadRNG = function(self)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
-                LOG('* AI-RNG: Tactical Monitor Is Active')
+                --LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:TacticalMonitorRNG()
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -825,7 +825,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, v in self.EnemyIntel.EnemyThreatLocations do
-                LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
+                --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
                 if (gameTime - v.InsertTime) > timeout then
                     self.EnemyIntel.EnemyThreatLocations[k] = nil
                 end

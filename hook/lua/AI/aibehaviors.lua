@@ -586,7 +586,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 		local unitbeingbuilt = unit.UnitBeingBuilt
         unitbeingbuiltbp = unitbeingbuilt:GetBlueprint()
         upgradeID = unitbeingbuiltbp.General.UpgradesTo or false
-        LOG('* AI-RNG: T1 extractor upgrading to T2 then upgrades to :'..upgradeID)
+        --LOG('* AI-RNG: T1 extractor upgrading to T2 then upgrades to :'..upgradeID)
 		
 		-- if the upgrade has a follow on upgrade - start an upgrade thread for it --
         if upgradeID and not unitbeingbuilt.Dead then
@@ -600,7 +600,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 			local extractorPlatoon = MakePlatoon( aiBrain,'ExtractorPlatoon'..tostring(unitbeingbuilt.Sync.id), 'none')
 			extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(unitbeingbuilt.Sync.id)
             extractorPlatoon.MovementLayer = 'Land'
-            LOG('* AI-RNG: Extractor Platoon name is '..extractorPlatoon.BuilderName)
+            --LOG('* AI-RNG: Extractor Platoon name is '..extractorPlatoon.BuilderName)
 			AssignUnitsToPlatoon( aiBrain, extractorPlatoon, {unitbeingbuilt}, 'Support', 'none' )
 			extractorPlatoon:ForkThread( extractorPlatoon.ExtractorCallForHelpAIRNG, aiBrain )
 		elseif (not unitbeingbuilt.Dead) then
@@ -632,7 +632,7 @@ function TacticalResponse(platoon)
         local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
         --acuSupport = aiBrain.ACUSupport.Supported
         if tacticalThreat then
-            LOG('* AI-RNG: TacticalResponse Cycle')
+            --LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
             for _, v in tacticalThreat do
                 if v.Threat > threat then
@@ -640,7 +640,7 @@ function TacticalResponse(platoon)
                 end
             end
             if threat > 0 then
-                LOG('* AI-RNG: Setting tactical response plan')
+                --LOG('* AI-RNG: Setting tactical response plan')
                 platoon:SetAIPlan('TacticalResponseAIRNG')
             end
         end

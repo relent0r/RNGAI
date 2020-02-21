@@ -44,7 +44,18 @@ BuilderGroup {
         BuilderConditions = {
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 180, -500, 0, 0, 'AntiSurface', 1}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Power',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 775,
+        BuilderConditions = {
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'LessThanEnergyTrend', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
     },
