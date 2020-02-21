@@ -845,7 +845,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local threatLocation = {}
             for _, threat in threats do
                 --LOG('* AI-RNG: Threat is'..repr(threat))
-                if threat[3] > 5 then
+                if threat[3] > 10 then
                     for _, pos in enemyStarts do
                         --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
                         if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
