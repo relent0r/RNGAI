@@ -8,7 +8,7 @@
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Distant',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Distant Null',
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small Distant',

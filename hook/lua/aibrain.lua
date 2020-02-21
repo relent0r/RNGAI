@@ -822,21 +822,21 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local timeout = self.TacticalMonitor.TacticalTimeout
         local gameTime = GetGameTimeSeconds()
-        LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
+        --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, v in self.EnemyIntel.EnemyThreatLocations do
                 LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if gameTime - v.InsertTime > timeout then
+                if (gameTime - v.InsertTime) > timeout then
                     self.EnemyIntel.EnemyThreatLocations[k] = nil
                 end
             end
-            if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-                self.RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+            if self.EnemyIntel.EnemyThreatLocations then
+                self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
             end
         end
         -- debug, remove later on
         if enemyStarts then
-            LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
+            --LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
         end
         local selfIndex = self:GetArmyIndex()
         local threats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'AntiSurface')

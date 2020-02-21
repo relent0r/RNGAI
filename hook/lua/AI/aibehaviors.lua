@@ -263,7 +263,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if distressLoc and (Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
                         IssueClearCommands({cdr})
-                        LOG('* AI-RNG: Moving to distress location')
+                        --LOG('* AI-RNG: Moving to distress location')
                         cdr.PlatoonHandle:MoveToLocation(distressLoc, false)
                         cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                     end

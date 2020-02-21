@@ -1627,13 +1627,13 @@ Platoon = Class(oldPlatoon) {
                 if not usedTransports then
                     local pathLength = table.getn(path)
                     for i=1, pathLength - 1 do
-                        LOG('* AI-RNG: * MassRaidRNG: moving to destination. i: '..i..' coords '..repr(path[i]))
+                        --LOG('* AI-RNG: * MassRaidRNG: moving to destination. i: '..i..' coords '..repr(path[i]))
                         if bAggroMove then
                             self:AggressiveMoveToLocation(path[i])
                         else
                             self:MoveToLocation(path[i], false)
                         end
-                        LOG('* AI-RNG: * MassRaidRNG: moving to Waypoint')
+                        --LOG('* AI-RNG: * MassRaidRNG: moving to Waypoint')
                         local PlatoonPosition
                         local Lastdist
                         local dist
