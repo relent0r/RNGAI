@@ -205,7 +205,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
-            { UCBC, 'FactoryLessAtLocation', { 'MAIN', 1, 'FACTORY NAVAL TECH1' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY NAVAL TECH1' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY NAVAL TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },

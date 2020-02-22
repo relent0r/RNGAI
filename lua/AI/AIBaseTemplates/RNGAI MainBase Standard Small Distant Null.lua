@@ -18,71 +18,13 @@ BaseBuilderTemplate {
         'RNGAI ACU Structure Builders',
         --'RNGAI Test PD',
         'RNGAI ACU Enhancements Gun',
-
-        -- Intel Builders --
-        'RNGAI RadarBuilders',
-        'RNGAI RadarUpgrade',
-
-        -- Economy Builders --
-        'RNGAI Energy Builder',
-        'RNGAI Energy Storage Builder',
-        'RNGAI Mass Builder',
-        'RNGAI Mass Storage Builder',
-        'RNGAI Hydro Builder',
-        --'RNGAI ExtractorUpgrades',
-        'RNGAI Mass Fab',
-
-        -- Engineer Builders --
         'RNGAI Engineer Builder',
-        'RNGAI Engineering Support Builder',
-        'RNGAI T1 Reclaim Builders',
-        'RNGAI T1 Assist Builders',
-        'RNGAI T2 Assist Builders',
-        'RNGAI Energy Production Reclaim',
-
-        -- Land Unit Builders T1 --
-        'RNGAI ScoutLandBuilder',
-        'RNGAI LabLandBuilder',
-        'RNGAI TankLandBuilder',
-        'RNGAI Land AA 2',
-        'RNGAI Reaction Tanks',
-        'RNGAI T2 TankLandBuilder',
-        'RNGAI T3 AttackLandBuilder',
-
-        -- Land Unit Formers T1 --
-        'RNGAI ScoutLandFormer',
-        'RNGAI Land Mass Raid',
-        'RNGAI Land FormBuilders',
-        'RNGAI Mass Hunter Labs FormBuilders',
-        'RNGAI Land Response Formers',
-
-        -- Land Factory Builders --
-        'RNGAI Factory Builder Land',
-
-        -- Land Factory Formers --
-        'RNGAI Land Upgrade Builders',
-
-        -- Air Factory Builders --
-        'RNGAI Factory Builder Air',
-        'RNGAI Air Staging Platform',
-        
-        -- Air Factory Formers --
-        'RNGAI Air Upgrade Builders',
-
-        -- Air Unit Builders --
-        'RNGAI ScoutAirBuilder',
-        'RNGAI Air Builder T1',
-        'RNGAI Air Builder T2',
-        'RNGAI Air Builder T3',
-        'RNGAI TransportFactoryBuilders',
-
-        -- Air Unit Formers --
-        'RNGAI ScoutAirFormer',
-        'RNGAI Air Platoon Builder',
-        'RNGAI Air Response Formers T1',
-        
         -- Sea Unit Builders
         'RNGAI Sea Builders',
+        'RNGAI Factory Builder Sea',
+        'RNGAI Sea Formers',
+        'RNGAI ScoutAirFormer',
+        'RNGAI ScoutAirBuilder',
 
     },
     NonCheatBuilders = {
@@ -97,7 +39,7 @@ BaseBuilderTemplate {
         FactoryCount = {
             Land = 15,
             Air = 4,
-            Sea = 0,
+            Sea = 1,
             Gate = 1,
         },
         MassToFactoryValues = {

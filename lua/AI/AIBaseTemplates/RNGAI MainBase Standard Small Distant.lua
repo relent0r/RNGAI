@@ -66,6 +66,9 @@ BaseBuilderTemplate {
         'RNGAI Factory Builder Air',
         'RNGAI Air Staging Platform',
         
+        -- Sea Factory Builders
+        'RNGAI Factory Builder Sea',
+
         -- Air Factory Formers --
         'RNGAI Air Upgrade Builders',
 
@@ -116,7 +119,7 @@ BaseBuilderTemplate {
         FactoryCount = {
             Land = 15,
             Air = 4,
-            Sea = 0,
+            Sea = 1,
             Gate = 1,
         },
         MassToFactoryValues = {

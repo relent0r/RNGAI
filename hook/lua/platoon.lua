@@ -693,8 +693,12 @@ Platoon = Class(oldPlatoon) {
                 local guardUnits = self:GetSquadUnits('Guard')
                 if scoutUnits then
                     local guardedUnit = 1
-                    while attackUnits[guardedUnit].Dead do
-                        guardedUnit = guardedUnit + 1
+                    if attackUnits then
+                        while attackUnits[guardedUnit].Dead do
+                            guardedUnit = guardedUnit + 1
+                        end
+                    else
+                        return self:ReturnToBaseAIRNG()
                     end
                     IssueClearCommands(scoutUnits)
                     IssueGuard(scoutUnits, attackUnits[guardedUnit])

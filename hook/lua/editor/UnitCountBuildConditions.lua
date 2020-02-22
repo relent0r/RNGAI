@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BASEPOSTITIONS = {}
+local mapSizeX, mapSizeZ = GetMapSize()
 -- hook for additional build conditions used from AIBuilders
 
 --{ UCBC, 'ReturnTrue', {} },
@@ -459,3 +460,49 @@ end
 --    end
 --    return false
 --end
+
+function NavalBaseWithLeastUnits(aiBrain, radius, locationType, unitCategory)
+    local navalMarkers = AIUtils.AIGetMarkerLocations(aiBrain, 'Naval Area')
+    local lowloc
+    local lownum
+    for baseLocation, managers in aiBrain.BuilderManagers do
+        for index, marker in navalMarkers do
+            if marker.Name == baseLocation then
+                local pos = aiBrain.BuilderManagers[baseLocation].EngineerManager.Location
+                local numUnits = aiBrain:GetNumUnitsAroundPoint(unitCategory, pos, radius , 'Ally')
+                local numFactory = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, pos, radius , 'Ally')
+                if numFactory < 1 then continue end
+                if not lownum or lownum > numUnits then
+                    lowloc = baseLocation
+                    lownum = numUnits
+                end
+            end
+        end
+    end
+    --LOG('Checking location: '..repr(locationType)..' - Location with lowest units: '..repr(lowloc))
+    return locationType == lowloc
+end
+
+function HaveUnitRatioVersusEnemy(aiBrain, ratio, categoryOwn, compareType, categoryEnemy)
+    -- in case we don't have omni view, return always true. We cant count units without omni
+    if not aiBrain.CheatEnabled or ScenarioInfo.Options.OmniCheat ~= "on" then
+        --LOG('* HaveUnitRatioVersusEnemy: AI is not Cheating or Omni is Off')
+        return true
+    end
+    local numOwnUnits = aiBrain:GetCurrentUnits(categoryOwn)
+    local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
+    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..numEnemyUnits..' ) -- ['..ratio..'] -- return '..repr(CompareBody(numOwnUnits / numEnemyUnits, ratio, compareType)))
+    return CompareBody(numOwnUnits / numEnemyUnits, ratio, compareType)
+end
+
+function GetEnemyUnits(aiBrain, unitCount, categoryEnemy, compareType)
+    local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
+    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
+    return CompareBody(numEnemyUnits, unitCount, compareType)
+end
+function UnitsLessAtEnemy(aiBrain, unitCount, categoryEnemy)
+    return GetEnemyUnits(aiBrain, unitCount, categoryEnemy, '<')
+end
+function UnitsGreaterAtEnemy(aiBrain, unitCount, categoryEnemy)
+    return GetEnemyUnits(aiBrain, unitCount, categoryEnemy, '>')
+end
