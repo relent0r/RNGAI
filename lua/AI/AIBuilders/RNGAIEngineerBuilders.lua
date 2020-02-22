@@ -229,6 +229,52 @@ BuilderGroup {
             },
         }
     },
+    Builder {
+        BuilderName = 'RNGAI Assist Factory Air AA',
+        PlatoonTemplate = 'EngineerAssist',
+        Priority = 600,
+        InstanceCount = 4,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR } },
+        },
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Factory',
+                AssistRange = 120,
+                BeingBuiltCategories = {'AIR MOBILE ANTIAIR'},                   
+                AssistClosestUnit = false,                                       
+                AssistUntilFinished = true,
+                Time = 0,
+            },
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Assist Factory Air AA T2',
+        PlatoonTemplate = 'T2EngineerAssist',
+        Priority = 600,
+        InstanceCount = 4,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR } },
+        },
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Factory',
+                AssistRange = 120,
+                BeingBuiltCategories = {'AIR MOBILE ANTIAIR'},                   
+                AssistClosestUnit = false,                                       
+                AssistUntilFinished = true,
+                Time = 0,
+            },
+        },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {
