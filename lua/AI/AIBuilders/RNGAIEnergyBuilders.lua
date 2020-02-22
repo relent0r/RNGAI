@@ -121,7 +121,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Power Engineer Scale',
         PlatoonTemplate = 'T2EngineerBuilder',
         Priority = 700,
-        InstanceCount = 1,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
@@ -170,7 +170,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Power Engineer Scale',
         PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 700,
-        InstanceCount = 1,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},

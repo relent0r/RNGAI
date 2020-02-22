@@ -237,7 +237,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
-            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR } },
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR } },
         },
         BuilderData = {
             Assist = {
@@ -260,7 +260,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
-            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR } },
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR } },
         },
         BuilderData = {
             Assist = {
@@ -349,7 +349,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
-                { UCBC, 'LessThanEnergyTrend', { 10.0 } },
+                { UCBC, 'LessThanEnergyTrend', { 50.0 } },
             },
         BuilderData = {
             Assist = {
@@ -391,7 +391,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
-            { UCBC, 'LessThanEnergyTrend', { 10.0 } },
+            { UCBC, 'LessThanEnergyTrend', { 100.0 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -433,7 +433,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
-            { UCBC, 'LessThanEnergyTrend', { 10.0 } },
+            { UCBC, 'LessThanEnergyTrend', { 100.0 } },
         },
         BuilderType = 'Any',
         BuilderData = {
