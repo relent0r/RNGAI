@@ -621,7 +621,7 @@ Platoon = Class(oldPlatoon) {
         end
         while aiBrain:PlatoonExists(self) do
             
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
             if target then
                 
                 local attackUnits =  self:GetSquadUnits('Attack')
@@ -761,7 +761,7 @@ Platoon = Class(oldPlatoon) {
                                         self:MoveToLocation(path[i - retreatCount], false, 'Attack')
                                         --LOG('* AI-RNG: * HuntAIPATH: Retreat Command Given')
                                         retreatCount = retreatCount + 1
-                                        WaitTicks(40)
+                                        WaitTicks(50)
                                         self:Stop()
                                         break
                                     elseif enemyUnitCount > 2 and i <= 2 then
@@ -2260,6 +2260,69 @@ Platoon = Class(oldPlatoon) {
                 end
             end
             WaitSeconds(aiBrain.BaseMonitor.PoolReactionTime)
+        end
+    end,
+
+    GuardBaseRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local target = false
+        local basePosition = false
+
+        if self.PlatoonData.LocationType and self.PlatoonData.LocationType != 'NOTMAIN' then
+            basePosition = aiBrain.BuilderManagers[self.PlatoonData.LocationType].Position
+        else
+            local platoonPosition = self:GetPlatoonPosition()
+            if platoonPosition then
+                basePosition = aiBrain:FindClosestBuilderManagerPosition(self:GetPlatoonPosition())
+            end
+        end
+
+        if not basePosition then
+            return
+        end
+
+        --DUNCAN - changed from 75, added home radius
+        local guardRadius = self.PlatoonData.GuardRadius or 200
+        local homeRadius = self.PlatoonData.HomeRadius or 200
+
+        local guardType = self.PlatoonData.GuardType
+
+        while aiBrain:PlatoonExists(self) do
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.WALL)
+            --DUNCAN - added to target experimentals if they exist.
+            local newtarget
+            if AIAttackUtils.GetSurfaceThreatOfUnits(self) > 0 then
+                newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * (categories.LAND + categories.NAVAL + categories.STRUCTURE))
+            elseif AIAttackUtils.GetAirThreatOfUnits(self) > 0 then
+                newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR)
+            end
+            if newtarget then
+                target = newtarget
+            end
+            --DUNCAN - use the base position to work out radius rather than self:GetPlatoonPosition()
+            if target and not target.Dead and VDist3(target:GetPosition(), basePosition) < guardRadius then
+                if guardType == 'AntiAir' then
+                    self:Stop()
+                    self:AggressiveMoveToLocation(target:GetPosition())
+                elseif guardType == 'Bomber' then
+                    self:Stop()
+                    self:AttackTarget(target)
+                else
+                    self:Stop()
+                    self:AggressiveMoveToLocation(target:GetPosition())
+                end
+            else
+                local PlatoonPosition = self:GetPlatoonPosition()
+                if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
+                    --DUNCAN - still try to move closer to the base if outside the radius
+                    local position = AIUtils.RandomLocation(basePosition[1],basePosition[3])
+                    self:Stop()
+                    self:MoveToLocation(position, false)
+                end
+            end
+            WaitTicks(50)
         end
     end,
 

@@ -237,8 +237,9 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderType = 'Any',
         BuilderData = {
+            GuardType = 'AntiAir',
             NeverGuardEngineers = true,
-            GuardRadius = BaseMilitaryArea, -- this is in the guardBase function as self.PlatoonData.GuardRadius
+            GuardRadius = BaseDMZArea, -- this is in the guardBase function as self.PlatoonData.GuardRadius
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
@@ -256,6 +257,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.TECH3 } },
         },
         BuilderData = {
+            GuardType = 'Bomber',
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
                 'ENGINEER TECH1',
