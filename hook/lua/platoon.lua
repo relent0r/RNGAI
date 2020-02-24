@@ -722,8 +722,12 @@ Platoon = Class(oldPlatoon) {
                             local PlatoonPosition
                             if guardUnits then
                                 local guardedUnit = 1
-                                while attackUnits[guardedUnit].Dead do
-                                    guardedUnit = guardedUnit + 1
+                                if attackUnits then
+                                    while attackUnits[guardedUnit].Dead do
+                                        guardedUnit = guardedUnit + 1
+                                    end
+                                else
+                                    return self:ReturnToBaseAIRNG()
                                 end
                                 IssueClearCommands(guardUnits)
                                 --LOG('* AI-RNG: * HuntAIPATH: Issuing Guard of Attack Squad')
