@@ -323,7 +323,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
         PlatoonTemplate = 'EngineerBuilder',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
@@ -344,7 +343,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
         PlatoonTemplate = 'EngineerBuilder',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
@@ -364,8 +362,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'EngineerBuilder',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
+        PlatoonTemplate = 'EngineerAssist',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -377,7 +374,8 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
-                AssisteeType = 'Engineer',
+                AssistRange = 100,
+                AssistClosestUnit = true,
                 BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
                 Time = 60,
             },
@@ -386,7 +384,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T2EngineerAssist',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -407,7 +404,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T2EngineerAssist',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -428,7 +424,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T3EngineerAssist',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -449,7 +444,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T3EngineerAssist',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
