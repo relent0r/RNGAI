@@ -435,7 +435,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 800,                                                          -- Priority. 1000 is normal.
         PlatoonAddBehaviors = { 'TacticalResponse' },
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 5 minutes
@@ -506,6 +506,7 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchCategory = (categories.STRUCTURE + categories.MOBILE ) * categories.LAND - categories.SCOUT - categories.WALL,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
+                'MOBILE LAND',
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',
                 'STRUCTURE ANTIAIR',

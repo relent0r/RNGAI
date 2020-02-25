@@ -322,10 +322,11 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerAssist',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
                 { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             },
@@ -342,10 +343,11 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerAssist',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
                 { UCBC, 'LessThanEnergyTrend', { 50.0 } },
             },
@@ -353,9 +355,10 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
-                AssisteeType = 'Engineer',
-                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
-                Time = 20,
+                AssistRange = 100,
+                AssisteeType = 'Structure',
+                BeingBuiltCategories = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
+                Time = 30,
             },
         },
         BuilderType = 'Any',

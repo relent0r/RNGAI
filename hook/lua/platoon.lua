@@ -2073,7 +2073,71 @@ Platoon = Class(oldPlatoon) {
         end
         while aiBrain:PlatoonExists(self) do
             tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
-            if tacticalThreat then
+            if aiBrain.ACUSupport.Supported then
+                LOG('* AI-RNG: Platoon detected ACUSupport.Supported set to true, moving to target position')
+                acuTarget = aiBrain.ACUSupport.TargetPosition
+                local platoonPos = self:GetPlatoonPosition()
+                local oldPlan = self:GetPlan()
+                if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 350 then
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {acuTarget[1],0,acuTarget[3]}, 1000)
+                    if path then
+                        -- Uvesos stuff (my fav part of his unit movement)
+                        if table.getn(path) > 1 then
+                            --LOG('* AI-RNG: * TacticalResponseAI: table.getn(path): '..table.getn(path))
+                        end
+                        --LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
+                        for i=1, table.getn(path) do
+                            --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
+                            self:MoveToLocation(path[i], false)
+                            --LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint')
+                            local PlatoonPosition
+                            local Lastdist
+                            local dist
+                            local Stuck = 0
+                            while aiBrain:PlatoonExists(self) do
+                                PlatoonPosition = self:GetPlatoonPosition() or nil
+                                if not PlatoonPosition then break end
+                                dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
+                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                                if dist < 400 then
+                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                    self:Stop()
+                                    break
+                                end
+                                -- Do we move ?
+                                if Lastdist ~= dist then
+                                    Stuck = 0
+                                    Lastdist = dist
+                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                                else
+                                    Stuck = Stuck + 1
+                                    if Stuck > 15 then
+                                        --LOG('* AI-RNG: * TacticalResponseAI: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                        self:Stop()
+                                        break
+                                    end
+                                end
+                                WaitTicks(10)
+                            end
+                        end
+                    else
+                        --LOG('* AI-RNG: * TacticalResponseAI: we have no Graph to reach the destination. Checking CanPathTo()')
+                        if reason == 'NoGraph' then
+                            local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, basePosition)
+                            if success then
+                                --LOG('* AI-RNG: * TacticalResponseAI: found a way with CanPathTo(). moving to destination')
+                                self:MoveToLocation(basePosition, false)
+                            else
+                                --LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(basePosition)..'.')
+                            end
+                        end
+                        if reason == 'NoPath' then
+                            LOG('* AI-RNG: CanPathToCurrentEnemy: No land path to the threat location found!')
+                            return self:ReturnToBaseAIRNG()
+                        end
+                    end
+                end
+            elseif tacticalThreat then
                 --LOG('TacticalResponseAI Cycle')
                 local threatPos = {}
                 local threat = 0

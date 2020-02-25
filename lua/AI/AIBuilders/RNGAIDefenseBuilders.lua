@@ -161,7 +161,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE TECH2'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.30}},
             { MIBC, 'GreaterThanGameTime', { 480 } },
@@ -280,9 +280,9 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { MIBC, 'GreaterThanGameTime', { 360 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
@@ -293,7 +293,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                NearBasePatrolPoints = true,
+                NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
                     'T1AADefense',

@@ -26,6 +26,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.ACUSupport.Supported = false
             self.ACUSupport.PlatoonCount = 0
             self.ACUSupport.Position = {}
+            self.ACUSupport.TargetPosition = {}
             self.ACUSupport.ReturnHome = true
 
             -- Misc

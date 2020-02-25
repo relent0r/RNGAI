@@ -176,6 +176,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         if cdr.UnitBeingBuilt then
             cdr.UnitBeingBuiltBehavior = cdr.UnitBeingBuilt
         end
+        
         local plat = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
         plat:Stop()
@@ -205,6 +206,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                     for k, v in priList do
                         target = plat:FindClosestUnit('Support', 'Enemy', true, v)
                         if target and Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) <= searchRadius then
+                            if not aiBrain.ACUSupport.Supported then
+                                aiBrain.ACUSupport.Supported = true
+                                LOG('* AI-RNG: ACUSupport.Supported set to true')
+                                aiBrain.ACUSupport.TargetPosition = target:GetPosition()
+                            end
                             local cdrLayer = cdr:GetCurrentLayer()
                             local targetLayer = target:GetCurrentLayer()
                             if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -288,11 +294,13 @@ function CDROverChargeRNG(aiBrain, cdr)
             if aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, maxRadius, 'Enemy') <= 0
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
+                aiBrain.ACUSupport.Supported = false
             end
             -- If com is down to yellow then dont keep fighting
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 aiBrain.ACUSupport.ReturnHome = true
                 continueFighting = false
+                aiBrain.ACUSupport.Supported = false
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
         
@@ -630,8 +638,9 @@ function TacticalResponse(platoon)
     local aiBrain = platoon:GetBrain()
     while aiBrain:PlatoonExists(platoon) do
         local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
-        --acuSupport = aiBrain.ACUSupport.Supported
-        if tacticalThreat then
+        if aiBrain.ACUSupport.Supported then
+            platoon:SetAIPlan('TacticalResponseAIRNG')
+        elseif tacticalThreat then
             --LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
             for _, v in tacticalThreat do
