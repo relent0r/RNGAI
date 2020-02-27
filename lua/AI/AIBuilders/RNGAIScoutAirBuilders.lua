@@ -30,7 +30,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout T1',
         PlatoonTemplate = 'RNGAI T1AirScoutForm',
         PlatoonAddBehaviors = {'ACUDetection',},
-        InstanceCount = 2,
+        InstanceCount = 5,
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
@@ -44,7 +44,7 @@ BuilderGroup {
     Builder {
     BuilderName = 'RNGAI Former Scout T3',
         PlatoonTemplate = 'RNGAI T3AirScoutForm',
-        InstanceCount = 3,
+        InstanceCount = 5,
         Priority = 910,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
@@ -71,7 +71,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Patrol DMZ T3',
         PlatoonTemplate = 'RNGAI T3AirScoutForm',
-        InstanceCount = 1,
+        InstanceCount = 2,
         Priority = 900,
         BuilderData = {
             Patrol = true,
