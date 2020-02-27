@@ -190,7 +190,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Engineer Assist Engineer',
-        PlatoonTemplate = 'EngineerAssist',
+        PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 500,
         InstanceCount = 12,
         BuilderConditions = {
@@ -211,7 +211,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Assist Factory',
-        PlatoonTemplate = 'EngineerAssist',
+        PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
@@ -231,7 +231,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Assist Factory Air AA',
-        PlatoonTemplate = 'EngineerAssist',
+        PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 600,
         InstanceCount = 4,
         BuilderConditions = {
@@ -322,7 +322,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
-        PlatoonTemplate = 'EngineerAssist',
+        PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
@@ -343,7 +343,8 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'EngineerAssist',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
@@ -355,8 +356,8 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
+                AssisteeType = 'Structure',
                 AssistRange = 100,
-                AssisteeType = 'Engineer',
                 BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
                 Time = 30,
             },
@@ -365,7 +366,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'EngineerAssist',
+        PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
