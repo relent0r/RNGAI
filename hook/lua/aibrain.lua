@@ -895,7 +895,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
                 end
             end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
     end,
 }

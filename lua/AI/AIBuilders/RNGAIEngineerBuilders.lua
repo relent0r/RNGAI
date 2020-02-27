@@ -237,7 +237,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
-            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR } },
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR } },
         },
         BuilderData = {
             Assist = {
@@ -245,9 +245,10 @@ BuilderGroup {
                 AssisteeType = 'Factory',
                 AssistRange = 120,
                 BeingBuiltCategories = {'AIR MOBILE ANTIAIR'},                   
+                PermanentAssist = false,
                 AssistClosestUnit = false,                                       
                 AssistUntilFinished = true,
-                Time = 0,
+                Time = 60,
             },
         },
         BuilderType = 'Any',
@@ -260,7 +261,7 @@ BuilderGroup {
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
-            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR } },
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR} },
         },
         BuilderData = {
             Assist = {
@@ -268,9 +269,10 @@ BuilderGroup {
                 AssisteeType = 'Factory',
                 AssistRange = 120,
                 BeingBuiltCategories = {'AIR MOBILE ANTIAIR'},                   
+                PermanentAssist = false,
                 AssistClosestUnit = false,                                       
                 AssistUntilFinished = true,
-                Time = 0,
+                Time = 60,
             },
         },
         BuilderType = 'Any',
@@ -322,7 +324,8 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
-        PlatoonTemplate = 'T1EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = {
@@ -387,7 +390,8 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T2EngineerAssist',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
@@ -427,7 +431,8 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T3EngineerAssist',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {

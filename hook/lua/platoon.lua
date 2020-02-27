@@ -802,7 +802,7 @@ Platoon = Class(oldPlatoon) {
                 elseif (not path and reason == 'NoPath') then
                     LOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --LOG('Guardmarker requesting transports')
-                    local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                    local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not foundTransport then
                         --LOG('Guardmarker no transports')
@@ -2076,11 +2076,13 @@ Platoon = Class(oldPlatoon) {
             if aiBrain.ACUSupport.Supported then
                 LOG('* AI-RNG: Platoon detected ACUSupport.Supported set to true, moving to target position')
                 acuTarget = aiBrain.ACUSupport.TargetPosition
+                --LOG('* AI-RNG: ACUTarget Position is :'..repr(acuTarget))
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
-                if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 350 then
+                if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 122500 then
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {acuTarget[1],0,acuTarget[3]}, 1000)
                     if path then
+                        --LOG('* AI-RNG: * Path for ACUTarget is true')
                         -- Uvesos stuff (my fav part of his unit movement)
                         if table.getn(path) > 1 then
                             --LOG('* AI-RNG: * TacticalResponseAI: table.getn(path): '..table.getn(path))
@@ -2089,7 +2091,7 @@ Platoon = Class(oldPlatoon) {
                         for i=1, table.getn(path) do
                             --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
                             self:MoveToLocation(path[i], false)
-                            --LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint')
+                            LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint to support ACU')
                             local PlatoonPosition
                             local Lastdist
                             local dist
@@ -2120,15 +2122,17 @@ Platoon = Class(oldPlatoon) {
                                 WaitTicks(10)
                             end
                         end
+                        return self:HuntAIPATHRNG()
                     else
                         --LOG('* AI-RNG: * TacticalResponseAI: we have no Graph to reach the destination. Checking CanPathTo()')
                         if reason == 'NoGraph' then
-                            local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, basePosition)
+                            local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, acuTarget)
+                            --LOG('* AI-RNG: NoGraph CheckPlatoonPathingEx done')
                             if success then
                                 --LOG('* AI-RNG: * TacticalResponseAI: found a way with CanPathTo(). moving to destination')
-                                self:MoveToLocation(basePosition, false)
+                                self:MoveToLocation(acuTarget, false)
                             else
-                                --LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(basePosition)..'.')
+                                LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(acuTarget)..'.')
                             end
                         end
                         if reason == 'NoPath' then
@@ -2136,9 +2140,12 @@ Platoon = Class(oldPlatoon) {
                             return self:ReturnToBaseAIRNG()
                         end
                     end
+                else
+                    LOG('Target is too far, return to base')
+                    return self:ReturnToBaseAIRNG()
                 end
             elseif tacticalThreat then
-                --LOG('TacticalResponseAI Cycle')
+                LOG('* AI-RNG: Tactical Threat Detected')
                 local threatPos = {}
                 local threat = 0
                 local platoonPos = self:GetPlatoonPosition()
@@ -2150,7 +2157,7 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
                 if threat > 0 then
-                    --LOG('TacticalResponseAI : threat is '..threat..' threat position is :'..repr(threatPos))
+                    LOG('TacticalResponseAI : threat is '..threat..' threat position is :'..repr(threatPos))
                     if VDist2Sq(platoonPos[1], platoonPos[3], threatPos[1], threatPos[2]) < 350 then
                         local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {threatPos[1],0,threatPos[2]}, 1000)
                         if path then
@@ -2196,12 +2203,12 @@ Platoon = Class(oldPlatoon) {
                         else
                             --LOG('* AI-RNG: * TacticalResponseAI: we have no Graph to reach the destination. Checking CanPathTo()')
                             if reason == 'NoGraph' then
-                                local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, basePosition)
+                                local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, threatPos)
                                 if success then
                                     --LOG('* AI-RNG: * TacticalResponseAI: found a way with CanPathTo(). moving to destination')
-                                    self:MoveToLocation(basePosition, false)
+                                    self:MoveToLocation(threatPos, false)
                                 else
-                                    --LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(basePosition)..'.')
+                                    --LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(threatPos)..'.')
                                 end
                             end
                             if reason == 'NoPath' then

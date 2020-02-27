@@ -151,7 +151,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         and GetGameTimeSeconds() > 243
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
-        maxRadius = 280 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
@@ -198,6 +198,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local enemyThreat
         repeat
             overCharging = false
+            
             if counter >= 5 or not target or target.Dead or Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) > maxRadius then
                 counter = 0
                 searchRadius = 30
@@ -224,7 +225,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
                 if target then
                     local targetPos = target:GetPosition()
-                    local cdrPos = cdr:GetPosition()
+                    cdrPos = cdr:GetPosition()
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     
 
@@ -300,6 +301,13 @@ function CDROverChargeRNG(aiBrain, cdr)
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 aiBrain.ACUSupport.ReturnHome = true
                 continueFighting = false
+                aiBrain.ACUSupport.Supported = false
+            end
+            local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 50, 'Enemy')
+            if enenyUnitLimit > 20 then
+                LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
+                continueFighting = false
+                aiBrain.ACUSupport.ReturnHome = true
                 aiBrain.ACUSupport.Supported = false
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
