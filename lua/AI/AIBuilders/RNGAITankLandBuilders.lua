@@ -44,8 +44,8 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Tank 9',
-        PlatoonTemplate = 'T1LandDFTank',
+        BuilderName = 'RNGAI Factory Initial Queue',
+        PlatoonTemplate = 'RNGAIT1InitialAttackBuild',
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
@@ -363,8 +363,8 @@ BuilderGroup {
             TargetSearchCategory = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
-                'MOBILE LAND DIRECTFIRE',
                 'MOBILE LAND INDIRECTFIRE',
+                'MOBILE LAND DIRECTFIRE',
                 'ENGINEER',
                 'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
@@ -643,7 +643,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
