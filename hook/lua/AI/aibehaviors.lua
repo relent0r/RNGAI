@@ -296,6 +296,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
                 aiBrain.ACUSupport.Supported = false
+                aiBrain.ACUSupport.ReturnHome = true
             end
             -- If com is down to yellow then dont keep fighting
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
@@ -304,7 +305,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 aiBrain.ACUSupport.Supported = false
             end
             local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 50, 'Enemy')
-            if enenyUnitLimit > 20 then
+            if enenyUnitLimit > 15 then
                 LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
                 continueFighting = false
                 aiBrain.ACUSupport.ReturnHome = true
