@@ -19,6 +19,11 @@ BaseBuilderTemplate {
         --'RNGAI Test PD',
         'RNGAI ACU Enhancements Gun',
         'RNGAI Engineer Builder',
+        -- Mass Building
+        'RNGAI Mass Builder',
+        -- Energy Building
+        'RNGAI Energy Builder',
+
         -- Sea Unit Builders
         'RNGAI Sea Builders',
         'RNGAI Factory Builder Sea',

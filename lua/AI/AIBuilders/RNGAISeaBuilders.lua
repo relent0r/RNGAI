@@ -10,7 +10,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Sea T1 Sub Response',
         PlatoonTemplate = 'T1SeaSub',
-        Priority = 18600,
+        Priority = 900,
         BuilderConditions = {
             -- When do we want to build this ?
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
@@ -25,7 +25,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Sea T1 Frig Response',
         PlatoonTemplate = 'T1SeaAntiAir',
-        Priority = 18500,
+        Priority = 900,
         BuilderConditions = {
             -- When do we want to build this ?
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
@@ -67,6 +67,23 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             -- When do we want to build this ?
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
+            --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
+            --{ UCBC, 'NavalBaseWithLeastUnits', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
+            -- Respect UnitCap
+            --{ UCBC, 'HaveUnitRatioVersusCap', { MaxAttackForce , '<=', categories.MOBILE } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder {
+        BuilderName = 'RNGAI Sea Frigate Initial',
+        PlatoonTemplate = 'T1SeaFrigate',
+        Priority = 500,
+        BuilderConditions = {
+            -- Have we the eco to build it ?
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            -- When do we want to build this ?
             --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
             --{ UCBC, 'NavalBaseWithLeastUnits', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
             -- Respect UnitCap
