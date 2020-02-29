@@ -296,12 +296,14 @@ function CDROverChargeRNG(aiBrain, cdr)
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
                 aiBrain.ACUSupport.Supported = false
+                aiBrain.ACUSupport.TargetPosition = false
                 aiBrain.ACUSupport.ReturnHome = true
             end
             -- If com is down to yellow then dont keep fighting
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 aiBrain.ACUSupport.ReturnHome = true
                 continueFighting = false
+                aiBrain.ACUSupport.TargetPosition = false
                 aiBrain.ACUSupport.Supported = false
             end
             local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 50, 'Enemy')
@@ -309,6 +311,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
                 continueFighting = false
                 aiBrain.ACUSupport.ReturnHome = true
+                aiBrain.ACUSupport.TargetPosition = false
                 aiBrain.ACUSupport.Supported = false
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
@@ -344,6 +347,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             if (cdr:GetHealthPercent() > 0.75) then
                 if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
                     cdr.GoingHome = false
+                    IssueStop({cdr})
                     return CDROverChargeRNG(aiBrain, cdr)
                 end
             end
@@ -533,7 +537,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             else
                 continue
             end
-            if (GetGameTimeSeconds() - ecoPassbyTimeout) > 900 then
+            if (GetGameTimeSeconds() - ecoPassbyTimeout) > 960 then
                 LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
                 bypasseco = true
             end
@@ -648,6 +652,7 @@ function TacticalResponse(platoon)
     while aiBrain:PlatoonExists(platoon) do
         local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
         if aiBrain.ACUSupport.Supported then
+            platoon:Stop()
             platoon:SetAIPlan('TacticalResponseAIRNG')
         elseif tacticalThreat then
             --LOG('* AI-RNG: TacticalResponse Cycle')

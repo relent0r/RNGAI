@@ -2122,6 +2122,7 @@ Platoon = Class(oldPlatoon) {
                                 WaitTicks(10)
                             end
                         end
+                        self:Stop()
                         return self:HuntAIPATHRNG()
                     else
                         --LOG('* AI-RNG: * TacticalResponseAI: we have no Graph to reach the destination. Checking CanPathTo()')
@@ -2130,6 +2131,7 @@ Platoon = Class(oldPlatoon) {
                             --LOG('* AI-RNG: NoGraph CheckPlatoonPathingEx done')
                             if success then
                                 --LOG('* AI-RNG: * TacticalResponseAI: found a way with CanPathTo(). moving to destination')
+                                self:Stop()
                                 self:MoveToLocation(acuTarget, false)
                             else
                                 LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(acuTarget)..'.')
@@ -2137,11 +2139,13 @@ Platoon = Class(oldPlatoon) {
                         end
                         if reason == 'NoPath' then
                             LOG('* AI-RNG: CanPathToCurrentEnemy: No land path to the threat location found!')
+                            self:Stop()
                             return self:ReturnToBaseAIRNG()
                         end
                     end
                 else
                     LOG('Target is too far, return to base')
+                    self:Stop()
                     return self:ReturnToBaseAIRNG()
                 end
             elseif tacticalThreat then
@@ -2165,11 +2169,11 @@ Platoon = Class(oldPlatoon) {
                             if table.getn(path) > 1 then
                                 --LOG('* AI-RNG: * TacticalResponseAI: table.getn(path): '..table.getn(path))
                             end
-                            --LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
+                            LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
                             for i=1, table.getn(path) do
                                 --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
                                 self:MoveToLocation(path[i], false)
-                                --LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint')
+                                LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint :'..i)
                                 local PlatoonPosition
                                 local Lastdist
                                 local dist
@@ -2398,6 +2402,65 @@ Platoon = Class(oldPlatoon) {
                 end
             end
             WaitTicks(50)
+        end
+    end,
+
+    NavalHuntAIRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local target
+        local blip
+        local cmd = false
+        local platoonUnits = self:GetPlatoonUnits()
+        local PlatoonFormation = self.PlatoonData.UseFormation or 'NoFormation'
+        self:SetPlatoonFormationOverride(PlatoonFormation)
+        local atkPri = { 'SPECIALHIGHPRI', 'STRUCTURE ANTINAVY', 'MOBILE NAVAL', 'STRUCTURE NAVAL', 'COMMAND', 'EXPERIMENTAL', 'STRUCTURE STRATEGIC EXPERIMENTAL', 'ARTILLERY EXPERIMENTAL', 'STRUCTURE ARTILLERY TECH3', 'STRUCTURE NUKE TECH3', 'STRUCTURE ANTIMISSILE SILO',
+                            'STRUCTURE DEFENSE DIRECTFIRE', 'TECH3 MASSFABRICATION', 'TECH3 ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE DEFENSE', 'STRUCTURE', 'MOBILE', 'SPECIALLOWPRI', 'ALLUNITS' }
+        local atkPriTable = {}
+        for k,v in atkPri do
+            table.insert(atkPriTable, ParseEntityCategory(v))
+        end
+        self:SetPrioritizedTargetList('Attack', atkPriTable)
+        local maxRadius = 6000
+        for k,v in platoonUnits do
+
+            if v.Dead then
+                continue
+            end
+
+            if v:GetCurrentLayer() == 'Sub' then
+                continue
+            end
+
+            if v:TestCommandCaps('RULEUCC_Dive') and v:GetUnitId() != 'uas0401' then
+                IssueDive({v})
+            end
+        end
+        WaitSeconds(5)
+        while aiBrain:PlatoonExists(self) do
+            target = AIUtils.AIFindBrainTargetInRangeSorian(aiBrain, self, 'Attack', maxRadius, atkPri)
+            if target then
+                blip = target:GetBlip(armyIndex)
+                self:Stop()
+                cmd = self:AggressiveMoveToLocation(target:GetPosition())
+            end
+            WaitSeconds(1)
+            if (not cmd or not self:IsCommandsActive(cmd)) then
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.WALL)
+                if target then
+                    blip = target:GetBlip(armyIndex)
+                    self:Stop()
+                    cmd = self:AggressiveMoveToLocation(target:GetPosition())
+                else
+                    local scoutPath = {}
+                    scoutPath = AIUtils.AIGetSortedNavalLocations(self:GetBrain())
+                    for k, v in scoutPath do
+                        self:Patrol(v)
+                    end
+                end
+            end
+            WaitSeconds(17)
         end
     end,
 

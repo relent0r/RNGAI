@@ -25,7 +25,7 @@ BaseBuilderTemplate {
         'RNGAI Energy Builder',
 
         -- Sea Unit Builders
-        'RNGAI Sea Builders',
+        'RNGAI Sea Builders T1',
         'RNGAI Factory Builder Sea',
         'RNGAI Sea Formers',
         'RNGAI ScoutAirFormer',

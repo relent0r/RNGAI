@@ -4,7 +4,7 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local MaxAttackForce = 0.45
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Sea Builders',                               
+    BuilderGroupName = 'RNGAI Sea Builders T1',                               
     BuildersType = 'FactoryBuilder',
     -- TECH 1
     Builder {
@@ -99,7 +99,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T1',
         PlatoonTemplate = 'SeaAttack',
-        Priority = 1,
+        Priority = 300,
         InstanceCount = 10,
         BuilderType = 'Any',
         BuilderData = {
@@ -120,6 +120,22 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'MOBILE NAVAL SUB' } },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Sea Hunters T1',
+        PlatoonTemplate = 'RNGAI Sea Hunt',
+        PlatoonAddPlans = {'DistressResponseAI'},
+        Priority = 300,
+        InstanceCount = 10,
+        BuilderType = 'Any',
+        BuilderData = {
+        UseFormation = 'GrowthFormation',
+        },
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'MOBILE NAVAL SUB' } },
+            --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
     },
 }
