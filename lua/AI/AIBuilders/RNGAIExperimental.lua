@@ -15,17 +15,17 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.50}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
             { IBC, 'BrainNotLowPowerMode', {} },
         },
         BuilderType = 'Any',
         BuilderData = {
-            MinNumAssistees = 6,
             Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                NearMarkerType = 'Rally Point',
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
                 },

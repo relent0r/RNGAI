@@ -144,6 +144,32 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Power Engineer Scale Extra',
+        PlatoonTemplate = 'T2EngineerBuilder',
+        Priority = 700,
+        InstanceCount = 2,
+        DelayEqualBuildPlattons = {'Energy', 9},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'LessThanEnergyTrend', { 300.0 } },
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.0}},
+            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 2, 'ENERGYPRODUCTION TECH2, ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T2EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Power Engineer 1st',
         PlatoonTemplate = 'T3EngineerBuilder',
         Priority = 900,
@@ -175,7 +201,32 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 100.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.02, 0.0}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 2, 'ENERGYPRODUCTION TECH3' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T3EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Power Engineer Scale Extra',
+        PlatoonTemplate = 'T3EngineerBuilder',
+        Priority = 500,
+        InstanceCount = 2,
+        DelayEqualBuildPlattons = {'Energy', 9},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'LessThanEnergyTrend', { 500.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.02, 0.0}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 2, 'ENERGYPRODUCTION TECH3' }},

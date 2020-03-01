@@ -603,8 +603,8 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 700,
-        InstanceCount = 6,
+        Priority = 500,
+        InstanceCount = 10,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
