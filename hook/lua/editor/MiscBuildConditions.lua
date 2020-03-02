@@ -1,4 +1,4 @@
-
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 -- ##############################################################################################################
 -- # function: ReclaimablesInArea = BuildCondition   doc = "Please work function docs."
@@ -126,6 +126,14 @@ end
 
 function CheckMustScoutAreas(aiBrain)
     if table.getn(aiBrain.InterestList.MustScout) > 0 then
+        return true
+    else
+        return false
+    end
+end
+
+function MassMarkersInWater(aiBrain)
+    if aiBrain.MassMarkersInWater then
         return true
     else
         return false

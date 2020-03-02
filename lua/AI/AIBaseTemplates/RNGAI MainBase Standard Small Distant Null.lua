@@ -19,6 +19,7 @@ BaseBuilderTemplate {
         --'RNGAI Test PD',
         'RNGAI ACU Enhancements Gun',
         'RNGAI Engineer Builder',
+        'RNGAI Land Upgrade Builders',
         -- Mass Building
         'RNGAI Mass Builder',
         -- Energy Building
@@ -28,8 +29,22 @@ BaseBuilderTemplate {
         'RNGAI Sea Builders T1',
         'RNGAI Factory Builder Sea',
         'RNGAI Sea Formers',
-        'RNGAI ScoutAirFormer',
+        'RNGAI Mass Hunter Sea Formers',
+
+        -- Air Factory Formers --
+        'RNGAI Air Upgrade Builders',
+
+        -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
+        'RNGAI Air Builder T1',
+        'RNGAI Air Builder T2',
+        'RNGAI Air Builder T3',
+        'RNGAI TransportFactoryBuilders',
+
+        -- Air Unit Formers --
+        'RNGAI ScoutAirFormer',
+        'RNGAI Air Platoon Builder',
+        'RNGAI Air Response Formers T1',
 
     },
     NonCheatBuilders = {

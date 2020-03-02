@@ -139,6 +139,14 @@ AIBrain = Class(RNGAIBrainClass) {
         SUtils.AddCustomUnitSupport(self)
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
 
+        if RUtils.InitialMassMarkersInWater then
+            LOG('* AI-RNG: Map has mass markers in water')
+            self.MassMarkersInWater = true
+        else
+            LOG('* AI-RNG: Map does not have mass markers in water')
+            self.MassMarkersInWater = false
+        end
+
         -- Begin the base monitor process
         if self.Sorian then
             local spec = {

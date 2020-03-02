@@ -1500,6 +1500,8 @@ Platoon = Class(oldPlatoon) {
         -- Include mass markers that are under water
         local includeWater = self.PlatoonData.IncludeWater or false
 
+        local waterOnly = self.PlatoonData.WaterOnly or false
+
         -- Minimum distance when looking for closest
         local avoidClosestRadius = self.PlatoonData.AvoidClosestRadius or 0
 
@@ -1531,7 +1533,7 @@ Platoon = Class(oldPlatoon) {
         AIAttackUtils.GetMostRestrictiveLayer(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
         
-        markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater)
+        markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
         
         local bestMarker = false
 
@@ -1587,7 +1589,7 @@ Platoon = Class(oldPlatoon) {
             end
         end
 
-        LOG('Best Marker Selected is at position'..repr(bestMarker.Position))
+        LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 900 then
             --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')

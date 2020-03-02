@@ -1,5 +1,6 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local MaxAttackForce = 0.45
 
@@ -80,10 +81,25 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             -- Have we the eco to build it ?
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 } }, -- Build engies until we have 3 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             -- When do we want to build this ?
+            --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
+            --{ UCBC, 'NavalBaseWithLeastUnits', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
+            -- Respect UnitCap
+            --{ UCBC, 'HaveUnitRatioVersusCap', { MaxAttackForce , '<=', categories.MOBILE } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder {
+        BuilderName = 'RNGAI Sea Sub Initial',
+        PlatoonTemplate = 'T1SeaSub',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
             --{ UCBC, 'NavalBaseWithLeastUnits', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
             -- Respect UnitCap
@@ -124,7 +140,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Sea Hunters T1',
-        PlatoonTemplate = 'RNGAI Sea Hunt',
+        PlatoonTemplate = 'RNGAI Sea Hunt T1',
         PlatoonAddPlans = {'DistressResponseAI'},
         Priority = 300,
         InstanceCount = 10,
@@ -137,5 +153,35 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'MOBILE NAVAL SUB' } },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Hunter Sea Formers',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI Sea Mass Raid',
+        PlatoonTemplate = 'RNGAI Sea Mass Raid T1',
+        Priority = 600,
+        BuilderConditions = {  
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},      	
+                { MIBC, 'MassMarkersInWater', {} },
+            },
+        BuilderData = {
+            MarkerType = 'Mass',            
+            WaterOnly = true,
+            MoveFirst = 'Random',
+            MoveNext = 'Threat',
+            ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
+            FindHighestThreat = true,			-- Don't find high threat targets
+            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
+            AvoidBases = false,
+            AvoidBasesRadius = 75,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50, 
+        },    
+        InstanceCount = 2,
+        BuilderType = 'Any',
     },
 }

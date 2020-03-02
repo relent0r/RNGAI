@@ -455,13 +455,17 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
     return retPos, retName
 end
 
-function AIGetMassMarkerLocations(aiBrain, includeWater)
+function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
     local markerList = {}
         local markers = ScenarioUtils.GetMarkers()
         if markers then
             for k, v in markers do
                 if v.type == 'Mass' then
-                    if includeWater then
+                    if waterOnly then
+                        if PositionInWater(v.position) then
+                            table.insert(markerList, {Position = v.position, Name = k})
+                        end
+                    elseif includeWater then
                         table.insert(markerList, {Position = v.position, Name = k})
                     else
                         if not PositionInWater(v.position) then
@@ -655,6 +659,12 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
     end
 end
 
-
+function InitialMassMarkersInWater(aiBrain)
+    if table.getn(RUtils.AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
+        return true
+    else
+        return false
+    end
+end
 
 

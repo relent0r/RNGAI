@@ -89,6 +89,7 @@ BaseBuilderTemplate {
         
         -- Sea Unit Formers
         'RNGAI Sea Formers',
+        'RNGAI Mass Hunter Sea Formers',
         
         -- Defence Builders --
         'RNGAI Base Defenses',
