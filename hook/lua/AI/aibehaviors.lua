@@ -262,6 +262,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
                 elseif distressLoc then
+                    LOG('* AI-RNG: ACU Detected Distress Location')
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
                     enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
                     friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
@@ -270,7 +271,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if distressLoc and (Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
                         IssueClearCommands({cdr})
-                        --LOG('* AI-RNG: Moving to distress location')
+                        LOG('* AI-RNG: ACU Moving to distress location')
                         cdr.PlatoonHandle:MoveToLocation(distressLoc, false)
                         cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                     end
@@ -295,27 +296,22 @@ function CDROverChargeRNG(aiBrain, cdr)
             if aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, maxRadius, 'Enemy') <= 0
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
-                aiBrain.ACUSupport.Supported = false
-                aiBrain.ACUSupport.TargetPosition = false
-                aiBrain.ACUSupport.ReturnHome = true
             end
             -- If com is down to yellow then dont keep fighting
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
-                aiBrain.ACUSupport.ReturnHome = true
                 continueFighting = false
-                aiBrain.ACUSupport.TargetPosition = false
-                aiBrain.ACUSupport.Supported = false
             end
             local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 50, 'Enemy')
             if enenyUnitLimit > 15 then
                 LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
                 continueFighting = false
-                aiBrain.ACUSupport.ReturnHome = true
-                aiBrain.ACUSupport.TargetPosition = false
-                aiBrain.ACUSupport.Supported = false
+                
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
-        
+        aiBrain.ACUSupport.ReturnHome = true
+        aiBrain.ACUSupport.TargetPosition = false
+        aiBrain.ACUSupport.Supported = false
+        LOG('* AI-RNG: ACUSupport.Supported set to false')
     end
 end
 
