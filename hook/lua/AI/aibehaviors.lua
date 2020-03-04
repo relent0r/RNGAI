@@ -334,9 +334,9 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             cdr.GoingHome = true
             WaitTicks(40)
-            newLoc[1] = loc[1] + Random(-20, 20)
+            newLoc[1] = loc[1] + Random(-40, 40)
             newLoc[2] = loc[2]
-            newLoc[3] = loc[3] + Random(-20, 20)
+            newLoc[3] = loc[3] + Random(-40, 40)
             IssueClearCommands({cdr})
             cdr.PlatoonHandle:MoveToLocation(newLoc, false)
             WaitTicks(40)

@@ -47,6 +47,7 @@ BuilderGroup {
         Priority = 600,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.1, 0.50}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { IBC, 'BrainNotLowPowerMode', {} },
@@ -81,6 +82,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.RADAR }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.0, 0.50}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},

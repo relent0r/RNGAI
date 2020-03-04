@@ -2046,7 +2046,7 @@ Platoon = Class(oldPlatoon) {
             end
         end
         -- return 
-        return self:StrikeForceAIRNG()
+        self:PlatoonDisband()
     end,
     
     TacticalResponseAIRNG = function(self)
@@ -2395,13 +2395,14 @@ Platoon = Class(oldPlatoon) {
                     self:AggressiveMoveToLocation(target:GetPosition())
                 end
             else
-                local PlatoonPosition = self:GetPlatoonPosition()
-                if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
+                self:ReturnToBaseAIRNG()
+                --local PlatoonPosition = self:GetPlatoonPosition()
+                --if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
                     --DUNCAN - still try to move closer to the base if outside the radius
-                    local position = AIUtils.RandomLocation(basePosition[1],basePosition[3])
-                    self:Stop()
-                    self:MoveToLocation(position, false)
-                end
+                    --local position = AIUtils.RandomLocation(basePosition[1],basePosition[3])
+                    --self:Stop()
+                    --self:MoveToLocation(position, false)
+                --end
             end
             WaitTicks(50)
         end
