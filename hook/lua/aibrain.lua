@@ -941,7 +941,7 @@ AIBrain = Class(RNGAIBrainClass) {
         for _, t in threatTypes do
             rawThreats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
-                local threatRow = {posX=raw[1], posZ=raw[2], Threat=raw[3], ThreatType=t}
+                local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 table.insert(potentialThreats, threatRow)
             end
         end
@@ -951,22 +951,22 @@ AIBrain = Class(RNGAIBrainClass) {
             local threatLocation = {}
             for _, threat in potentialThreats do
                 --LOG('* AI-RNG: Threat is'..repr(threat))
-                if threat[3] > 10 then
+                if threat.rThreat > 10 then
                     for _, pos in enemyStarts do
-                        --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
-                        if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
+                        LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
+                        if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 3600 then
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3]}
+                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = true, Threat=threat.rThreat, ThreatType=threat.rThreatType}
                             table.insert(phaseTwoThreats, threatLocation)
                         else
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3]}
+                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType}
                             table.insert(phaseTwoThreats, threatLocation)
                         end
                     end
                 end
             end
-            --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
+            LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
             for Index_1, value_1 in phaseTwoThreats do
                 for Index_2, value_2 in phaseTwoThreats do
                     -- no need to check against self
