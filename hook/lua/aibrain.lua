@@ -639,7 +639,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.UpgradeMode == 'Aggressive' then
                 upgradeSpec.MassLowTrigger = 0.6
                 upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 1.5
+                upgradeSpec.MassHighTrigger = 1.8
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18
                 upgradeSpec.InitialDelay = 90
@@ -648,7 +648,7 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif self.UpgradeMode == 'Normal' then
                 upgradeSpec.MassLowTrigger = 0.72
                 upgradeSpec.EnergyLowTrigger = 1.01
-                upgradeSpec.MassHighTrigger = 1.6
+                upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18
                 upgradeSpec.InitialDelay = 90
@@ -657,7 +657,7 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif self.UpgradeMode == 'Caution' then
                 upgradeSpec.MassLowTrigger = 1.0
                 upgradeSpec.EnergyLowTrigger = 1.2
-                upgradeSpec.MassHighTrigger = 1.6
+                upgradeSpec.MassHighTrigger = 2.2
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18
                 upgradeSpec.InitialDelay = 90
@@ -824,7 +824,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    TacticalMonitorRNG = function(self)
+    TacticalMonitorRNGold = function(self)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
         LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
@@ -904,6 +904,103 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+        end
+    end,
+
+    TacticalMonitorRNG = function(self)
+        -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
+        LOG('* AI-RNG: Tactical Monitor Threat Pass')
+        local enemyBrains = {}
+        local enemyStarts = self.EnemyIntel.EnemyStartLocations
+        local timeout = self.TacticalMonitor.TacticalTimeout
+        local gameTime = GetGameTimeSeconds()
+        --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for k, v in self.EnemyIntel.EnemyThreatLocations do
+                --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
+                if (gameTime - v.InsertTime) > timeout then
+                    self.EnemyIntel.EnemyThreatLocations[k] = nil
+                end
+            end
+            if self.EnemyIntel.EnemyThreatLocations then
+                self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+            end
+        end
+        -- debug, remove later on
+        if enemyStarts then
+            --LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
+        end
+        local selfIndex = self:GetArmyIndex()
+        local potentialThreats = {}
+        local threatTypes = {
+            'Land',
+            'Air',
+            'Naval',
+            'AntiSurface'
+        }
+        for _, t in threatTypes do
+            rawThreats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, t)
+            for _, raw in rawThreats do
+                local threatRow = {posX=raw[1], posZ=raw[2], Threat=raw[3], ThreatType=t}
+                table.insert(potentialThreats, threatRow)
+            end
+        end
+        LOG('Potential Threats :'..repr(potentialThreats))
+        local phaseTwoThreats = {}
+        if table.getn(potentialThreats) > 0 then
+            local threatLocation = {}
+            for _, threat in potentialThreats do
+                --LOG('* AI-RNG: Threat is'..repr(threat))
+                if threat[3] > 10 then
+                    for _, pos in enemyStarts do
+                        --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
+                        if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
+                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3]}
+                            table.insert(phaseTwoThreats, threatLocation)
+                        else
+                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3]}
+                            table.insert(phaseTwoThreats, threatLocation)
+                        end
+                    end
+                end
+            end
+            --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(potentialThreats))
+            for Index_1, value_1 in phaseTwoThreats do
+                for Index_2, value_2 in phaseTwoThreats do
+                    -- no need to check against self
+                    if Index_1 == Index_2 then 
+                        continue
+                    end
+                    -- check if we have the same position
+                    --LOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                    if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
+                        --LOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                        if value_1.EnemyBaseRadius == false then
+                            --LOG('* AI-RNG: deleating '..repr(value_1))
+                            phaseTwoThreats[Index_1] = nil
+                            break
+                        elseif value_2.EnemyBaseRadius == false then
+                            --LOG('* AI-RNG: deleating '..repr(value_2))
+                            phaseTwoThreats[Index_2] = nil
+                            break
+                        else
+                            LOG('* AI-RNG: Both entires have true, deleting nothing')
+                        end
+                    end
+                end
+            end
+            --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
+            for _, threat in phaseTwoThreats do
+                if threat.EnemyBaseRadius == false then
+                    threat.InsertTime = GetGameTimeSeconds()
+                    table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
+                else
+                    --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
+                end
+            end
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
     end,
 }

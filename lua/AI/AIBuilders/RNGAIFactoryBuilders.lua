@@ -112,7 +112,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.80}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'FactoryLessAtLocation', { 'MAIN', 1, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY AIR TECH1' }},
@@ -140,7 +140,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.80}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...
@@ -170,7 +170,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
             { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.70}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             -- Don't build it if...

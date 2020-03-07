@@ -375,25 +375,25 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI Antiair Small',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
-        Priority = 1000,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',
+        PlatoonTemplate = 'RNGAI Antiair Small',
+        Priority = 1000,
+        InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * (categories.BOMBER + categories.GROUNDATTACK) - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.AIR * (categories.ANTIAIR + categories.BOMBER + categories.GROUNDATTACK) - categories.SCOUT }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
         },
         BuilderData = {
-            SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
+            SearchRadius = BaseMilitaryArea,
+            GetTargetsFromBase = true,
+            RequireTransport = false,
+            AggressiveMove = true,
             LocationType = 'LocationType',
             Defensive = true,
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = categories.MOBILE * categories.AIR - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
-            PrioritizedCategories = {                                           -- Attack these targets.
+            AttackEnemyStrength = 200,                              
+            TargetSearchCategory = categories.MOBILE * categories.AIR - categories.SCOUT - categories.WALL ,
+            PrioritizedCategories = {   
                 'MOBILE AIR GROUNDATTACK',
                 'MOBILE AIR BOMBER',
                 'MOBILE AIR',

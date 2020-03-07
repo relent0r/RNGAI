@@ -450,7 +450,7 @@ BuilderGroup {
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
                 { EBC, 'GreaterThanEconIncome',  { 1.2, 60.0}},
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
                 { UCBC, 'CmdrHasUpgrade', { 'HeavyAntiMatterCannon', false }},
                 { MIBC, 'FactionIndex', {1}},
             },
@@ -470,7 +470,7 @@ BuilderGroup {
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
                 { EBC, 'GreaterThanEconIncome',  { 1.2, 60.0}},
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
                 { UCBC, 'CmdrHasUpgrade', { 'CrysalisBeam', false }},
                 { MIBC, 'FactionIndex', {2}},
             },
@@ -490,7 +490,7 @@ BuilderGroup {
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
                 { EBC, 'GreaterThanEconIncome',  { 1.2, 60.0}},
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
                 { UCBC, 'CmdrHasUpgrade', { 'CoolingUpgrade', false }},
                 { MIBC, 'FactionIndex', {3}},
             },
@@ -510,7 +510,7 @@ BuilderGroup {
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
                 { EBC, 'GreaterThanEconIncome',  { 1.2, 60.0}},
-                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
                 { UCBC, 'CmdrHasUpgrade', { 'RateOfFire', false }},
                 { MIBC, 'FactionIndex', {4}},
             },
@@ -518,6 +518,29 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Enhancement = { 'RateOfFire' },
+        },
+
+    },
+}
+
+BuilderGroup { 
+    BuilderGroupName = 'RNGAI ACU Enhancements Tier',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'CDR Enhancement AdvancedEngineering Mid Game',
+        PlatoonTemplate = 'CommanderEnhance',
+        Priority = 900,
+        BuilderConditions = {
+                { MIBC, 'GreaterThanGameTime', { 1500 } },
+                { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
+                { EBC, 'GreaterThanEconIncome',  { 1.2, 120.0}},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+                --{ MIBC, 'FactionIndex', {4}},
+            },
+        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderType = 'Any',
+        BuilderData = {
+            Enhancement = { 'AdvancedEngineering' },
         },
 
     },

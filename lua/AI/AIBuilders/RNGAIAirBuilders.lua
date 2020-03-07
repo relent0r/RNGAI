@@ -222,7 +222,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 700,
-        InstanceCount = 5,
+        InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
@@ -237,7 +237,7 @@ BuilderGroup {
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 800,
-        InstanceCount = 1,
+        InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
             GuardType = 'AntiAir',
@@ -254,7 +254,7 @@ BuilderGroup {
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT}},
@@ -277,7 +277,7 @@ BuilderGroup {
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 900,
-        InstanceCount = 1,
+        InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
@@ -297,7 +297,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Gunship Attack',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 5,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE GROUNDATTACK' } },
@@ -317,7 +317,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack Enemy',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 900,
-        InstanceCount = 1,
+        InstanceCount = 5,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
@@ -339,7 +339,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
-        InstanceCount = 6,
+        InstanceCount = 20,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
@@ -358,7 +358,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 5,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'AIR MOBILE BOMBER' } },
@@ -378,7 +378,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack T2',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 800,
-        InstanceCount = 2,
+        InstanceCount = 5,
         BuilderType = 'Any',
         BuilderData = {
             PrioritizedCategories = {
@@ -402,7 +402,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Energy Bomber Attack T2',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 800,
-        InstanceCount = 2,
+        InstanceCount = 5,
         BuilderType = 'Any',
         BuilderData = {
             PrioritizedCategories = {
@@ -421,7 +421,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Gunship Attack T2',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 400,
-        InstanceCount = 5,
+        InstanceCount = 10,
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'AIR MOBILE GROUNDATTACK' } },

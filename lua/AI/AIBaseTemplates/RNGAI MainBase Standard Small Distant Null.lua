@@ -18,8 +18,13 @@ BaseBuilderTemplate {
         'RNGAI ACU Structure Builders',
         --'RNGAI Test PD',
         'RNGAI ACU Enhancements Gun',
+        'RNGAI ACU Enhancements Tier',
         'RNGAI Engineer Builder',
         'RNGAI Land Upgrade Builders',
+        'RNGAI Land AA 2',
+        'RNGAI T1 Assist Builders',
+        'RNGAI T2 Assist Builders',
+
         -- Mass Building
         'RNGAI Mass Builder',
         -- Energy Building

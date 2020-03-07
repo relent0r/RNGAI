@@ -1421,13 +1421,16 @@ Platoon = Class(oldPlatoon) {
             local engpos = eng:GetPosition()
             if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
                 --LOG('Repeat Build is set')
+                local MABC = import('/lua/editor/MarkerBuildConditions.lua')
                 if type == 'Mass' and distance then
-                    --LOG('Type is Mass, setting ai plan')
-                    massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
-                    --LOG('Mass Marker Returned is'..repr(massMarker))
-                    if massMarker[1] and VDist3( massMarker, engpos ) < distance then
-                        eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
-                        return
+                    if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
+                        --LOG('Type is Mass, setting ai plan')
+                        massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
+                        --LOG('Mass Marker Returned is'..repr(massMarker))
+                        if massMarker[1] and VDist3( massMarker, engpos ) < distance then
+                            eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
+                            return
+                        end
                     end
                 else
                     WARN('Invalid Construction Type or Distance, Expected : Mass, number')

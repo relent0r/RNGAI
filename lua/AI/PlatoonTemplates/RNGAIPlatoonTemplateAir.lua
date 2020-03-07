@@ -30,7 +30,7 @@ PlatoonTemplate {
     Name = 'RNGAI AntiAir BaseGuard',
     Plan = 'GuardBaseRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 50, 'attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 2, 50, 'attack', 'none' },
     }
 }
 
