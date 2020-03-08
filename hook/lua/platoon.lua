@@ -2077,6 +2077,7 @@ Platoon = Class(oldPlatoon) {
             end
         end
         while aiBrain:PlatoonExists(self) do
+            local threatType
             tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
             if aiBrain.ACUSupport.Supported then
                 LOG('* AI-RNG: Platoon detected ACUSupport.Supported set to true, moving to target position')
@@ -2159,8 +2160,9 @@ Platoon = Class(oldPlatoon) {
                 local threat = 0
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
+                LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
                 for _, v in tacticalThreat do
-                    if v.Threat > threat then
+                    if v.Threat > threat and v.ThreatType == self.MovementLayer then
                         threat = v.Threat
                         threatPos = v.Position
                     end

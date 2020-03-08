@@ -224,7 +224,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 until target or searchRadius >= maxRadius
 
                 if target then
-                    local targetPos = target:GetPosition()
+                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     

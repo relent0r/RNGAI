@@ -30,6 +30,7 @@ BuilderGroup {
             AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
             AdjacencyDistance = 50,
             NeedGuard = false,
+            BuildClose = true,
             DesiresAssist = true,
             Construction = {
                 BuildStructures = {
