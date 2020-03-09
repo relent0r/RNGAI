@@ -36,13 +36,16 @@ function DrawIMAPThreatsRNG()
                     PosY = Y * DistanceBetweenMarkers + DistanceBetweenMarkers / 2
 
                     enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'AntiSurface')
-                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'fff4a460' )
+                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ffff0000' ) -- red
 
-                    enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'AntiAir')
-                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ffffffff' )
+                    enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'Air')
+                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ffffff00' ) -- yellow
 
                     enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'Land')
-                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ff202020' )
+                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ffff9600' ) -- orange
+
+                    enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'Naval')
+                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ff00ffff' ) -- cyan
                 end
             end        
         end

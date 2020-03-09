@@ -1,8 +1,8 @@
 AIOpts = {
     {
         default = 2,
-        label = "<LOC aisettingsRNG_0200>AI Map Marker generator",
-        help = "<LOC aisettingsRNG_0201>Autogenerate map markers for AI pathfinding on 5x5 and 10x10 maps",
+        label = "<LOC aisettingsRNG_0200>IMAP Threat Display",
+        help = "<LOC aisettingsRNG_0201>Generates visual threat indicators",
         key = 'AIThreatDisplay',
         values = {
             {

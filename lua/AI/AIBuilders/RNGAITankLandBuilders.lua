@@ -664,7 +664,7 @@ BuilderGroup {
             },
             DistressRange = 200,
             DistressReactionTime = 8,
-            ThreatSupport = 1,
+            ThreatSupport = 10,
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
