@@ -106,6 +106,11 @@ BaseBuilderTemplate {
         'RNGAI Gate Builders',
         'RNGAI SACU Builder',
 
+        --Strategic Builders
+        'RNGAI SML Builders',
+        'RNGAI Strategic Artillery Builders',
+        'RNGAI Strategic Formers',
+
         --Experimentals --
         'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',

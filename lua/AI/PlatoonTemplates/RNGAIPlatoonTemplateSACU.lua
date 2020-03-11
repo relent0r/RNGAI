@@ -40,7 +40,7 @@ PlatoonTemplate {
     }
 }
 PlatoonTemplate {
-    Name = 'RNGAI SACU RAS preset 123x5',
+    Name = 'RNGAI SACU RAS',
     FactionSquads = {
         UEF = {
             { categories.PRAS, 1, 1, 'Attack', 'None' }
@@ -235,6 +235,24 @@ PlatoonTemplate {
         },
         Nomads = {
             { 'xnl0301_engineer', 1, 1, 'attack', 'none' }
+        },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAI SACU RAS preset 123x5',
+    FactionSquads = {
+        UEF = {
+            { 'uel0301_RAS', 1, 1, 'Attack', 'None' }
+        },
+        Aeon = {
+            { 'ual0301_RAS', 1, 1, 'Attack', 'None' }
+        },
+        Cybran = {
+            { 'url0301_RAS', 1, 1, 'Attack', 'None' }
+        },
+        Nomads = {
+            { 'xnl0301_RAS', 1, 1, 'Attack', 'None' }
         },
     }
 }

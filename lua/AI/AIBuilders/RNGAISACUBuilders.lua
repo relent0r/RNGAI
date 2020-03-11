@@ -10,7 +10,19 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI SACU Engineer preset',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.SUBCOMMANDER } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SUBCOMMANDER } },
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.75}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.SUBCOMMANDER }},
+        },
+        BuilderType = 'Gate',
+    },
+    Builder {
+        BuilderName = 'RNGAI SACU RAS',
+        PlatoonTemplate = 'RNGAI SACU RAS preset 123x5',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SUBCOMMANDER } },
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.75}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.SUBCOMMANDER }},

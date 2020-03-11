@@ -22,6 +22,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 750,
         BuilderConditions = { 
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.3}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.ANTIAIR * categories.TECH3} },
@@ -151,11 +152,23 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T3',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory ASF Response',
+        PlatoonTemplate = 'RNGAIT3AirResponse',
+        Priority = 900,
+        BuilderConditions = { 
+            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Air Attack',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
         Priority = 850,
         BuilderType = 'Air',
         BuilderConditions = {
+            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatio', { 0.01, 0.80}},

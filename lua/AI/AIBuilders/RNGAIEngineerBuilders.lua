@@ -381,9 +381,10 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
+                AssisteeType = 'Engineer',
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
+                BeingBuiltCategories = {'EXPERIMENTAL MOBILE'},
                 Time = 60,
             },
         }
@@ -424,7 +425,7 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = 'Engineer',
-                BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
+                BeingBuiltCategories = {'EXPERIMENTAL MOBILE'},
                 Time = 60,
             },
         }
@@ -465,7 +466,7 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = 'Engineer',
-                BeingBuiltCategories = {categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)},
+                BeingBuiltCategories = {'EXPERIMENTAL MOBILE'},
                 Time = 60,
             },
         }

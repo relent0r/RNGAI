@@ -20,7 +20,7 @@ AI = {
             name = "<LOC RNG_0003>AIx: RNG Standard",
         },
         {
-            key = 'RNGStandardcheatnull',
+            key = 'RNGStandardnullcheat',
             name = "<LOC RNG_0003>AIx: RNG Standardnull",
         },
     },

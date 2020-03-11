@@ -25,6 +25,14 @@ BaseBuilderTemplate {
         'RNGAI Land AA 2',
         'RNGAI T1 Assist Builders',
         'RNGAI T2 Assist Builders',
+        --Strategic Builders
+        'RNGAI SML Builders',
+        'RNGAI Strategic Artillery Builders',
+        'RNGAI Strategic Formers',
+        'RNGAI Experimental Builders',
+        'RNGAI Experimental Formers',
+        'RNGAI Gate Builders',
+        'RNGAI SACU Builder',
 
         -- Mass Building
         'RNGAI Mass Builder',
@@ -41,15 +49,21 @@ BaseBuilderTemplate {
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
-        'RNGAI Air Builder T1',
-        'RNGAI Air Builder T2',
-        'RNGAI Air Builder T3',
+        --'RNGAI Air Builder T1',
+        --'RNGAI Air Builder T2',
+        --'RNGAI Air Builder T3',
         'RNGAI TransportFactoryBuilders',
 
         -- Air Unit Formers --
         'RNGAI ScoutAirFormer',
         'RNGAI Air Platoon Builder',
         'RNGAI Air Response Formers T1',
+        'RNGAI Null Land Response Formers',
+
+        -- Land Unit Builders --
+        --'RNGAI Null TankLandBuilder',
+        -- Land Unit Formers --
+        'RNGAI Null Land FormBuilders',
         
     },
     NonCheatBuilders = {
@@ -80,7 +94,7 @@ BaseBuilderTemplate {
     FirstBaseFunction = function(aiBrain)
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if personality == 'RNGStandardnull' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardcheatnull' and mapSizeX < 1000 and mapSizeZ < 1000 then
+        if personality == 'RNGStandardnull' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardnullcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
             if MABC.CanBuildOnMassLessThanDistance(aiBrain, 'MAIN', 10, -500, 0, 0, 'AntiSurface', 1) then

@@ -696,6 +696,10 @@ Platoon = Class(oldPlatoon) {
                     if attackUnits then
                         while attackUnits[guardedUnit].Dead do
                             guardedUnit = guardedUnit + 1
+                            if table.getn(self:GetSquadUnits('Attack')) == 0 then
+                                LOG('Not more attack squad units..breaking guard')
+                                return self:ReturnToBaseAIRNG()
+                            end
                         end
                     else
                         return self:ReturnToBaseAIRNG()
@@ -725,6 +729,10 @@ Platoon = Class(oldPlatoon) {
                                 if attackUnits then
                                     while attackUnits[guardedUnit].Dead do
                                         guardedUnit = guardedUnit + 1
+                                        if table.getn(self:GetSquadUnits('Attack')) == 0 then
+                                            LOG('Not more attack squad units..breaking guard')
+                                            return self:ReturnToBaseAIRNG()
+                                        end
                                     end
                                 else
                                     return self:ReturnToBaseAIRNG()
