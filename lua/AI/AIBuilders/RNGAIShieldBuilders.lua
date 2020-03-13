@@ -8,7 +8,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Shield Ratio',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 600,
         InstanceCount = 1,
         BuilderConditions = {
@@ -49,10 +49,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.50}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.50}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
             { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
         },
         BuilderType = 'Any',
@@ -64,10 +64,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.50}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
             { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
         },
         BuilderType = 'Any',
@@ -79,10 +79,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.50}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatio', { 0.40, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
             { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
         },
         BuilderType = 'Any',
@@ -97,7 +97,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
             { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
         },
         BuilderType = 'Any',
@@ -109,10 +109,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgrade', { 3, categories.STRUCTURE * categories.SHIELD }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
             { UCBC, 'CheckBuildPlattonDelay', { 'Shield' }},
         },
         BuilderType = 'Any',

@@ -2026,7 +2026,6 @@ Platoon = Class(oldPlatoon) {
 
             local oldDistSq = 0
             while aiBrain:PlatoonExists(self) do
-                WaitSeconds(10)
                 platPos = self:GetPlatoonPosition()
                 local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
                 if distSq < 400 then
@@ -2038,6 +2037,7 @@ Platoon = Class(oldPlatoon) {
                     break
                 end
                 oldDistSq = distSq
+                WaitTicks(20)
             end
         end
         -- return 
@@ -2155,7 +2155,7 @@ Platoon = Class(oldPlatoon) {
                 local threat = 0
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
-                LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
+                --LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
                 for _, v in tacticalThreat do
                     if v.Threat > threat and v.ThreatType == self.MovementLayer then
                         if self.MovementLayer == 'Water' and not v.PositionOnWater then
@@ -2468,6 +2468,76 @@ Platoon = Class(oldPlatoon) {
                 end
             end
             WaitSeconds(17)
+        end
+    end,
+
+    TacticalAIRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local platoonUnits = self:GetPlatoonUnits()
+        local unit
+
+        if not aiBrain:PlatoonExists(self) then return end
+
+        --GET THE Launcher OUT OF THIS PLATOON
+        for k, v in platoonUnits do
+            if EntityCategoryContains(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, v) then
+                unit = v
+                break
+            end
+        end
+
+        if not unit then return end
+
+        local bp = unit:GetBlueprint()
+        local weapon = bp.Weapon[1]
+        local maxRadius = weapon.MaxRadius
+        local minRadius = weapon.MinRadius
+        unit:SetAutoMode(true)
+
+        --DUNCAN - commented out
+        --local atkPri = { 'COMMAND', 'STRUCTURE STRATEGIC', 'STRUCTURE DEFENSE', 'CONSTRUCTION', 'EXPERIMENTAL MOBILE LAND', 'TECH3 MOBILE LAND',
+        --    'TECH2 MOBILE LAND', 'TECH1 MOBILE LAND', 'ALLUNITS' }
+
+        --DUNCAN - added energy production, removed construction, repriotised.
+        self:SetPrioritizedTargetList('Attack', {
+            categories.COMMAND,
+            categories.EXPERIMENTAL,
+            categories.ENERGYPRODUCTION,
+            categories.STRUCTURE,
+            categories.TECH3 * categories.MOBILE})
+        while aiBrain:PlatoonExists(self) do
+            local target = false
+            local blip = false
+            while unit:GetTacticalSiloAmmoCount() < 1 or not target do
+                WaitSeconds(7)
+                target = false
+                while not target do
+
+                    --DUNCAN - Commented out
+                    --if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
+                    --    aiBrain:PickEnemyLogic()
+                    --end
+                    --target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius, atkPri, aiBrain:GetCurrentEnemy())
+
+                    if not target then
+                        target = self:FindPrioritizedUnit('Attack', 'Enemy', true, unit:GetPosition(), maxRadius)
+                    end
+                    if target then
+                        break
+                    end
+                    WaitSeconds(3)
+                    if not aiBrain:PlatoonExists(self) then
+                        return
+                    end
+                end
+            end
+            if not target.Dead then
+                --LOG('*AI DEBUG: Firing Tactical Missile at enemy swine!')
+                IssueTactical({unit}, target)
+            end
+            WaitSeconds(3)
         end
     end,
 

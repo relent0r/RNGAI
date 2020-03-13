@@ -23,7 +23,20 @@ PlatoonTemplate {
         { categories.ENGINEER * categories.TECH3 - categories.ENGINEERSTATION, 1, 1, 'support', 'None' }
     },
 }
-
+PlatoonTemplate {
+    Name = 'T23EngineerBuilderRNG',
+    Plan = 'EngineerBuildAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.ENGINEERSTATION, 1, 1, 'support', 'None' }
+    },
+}
+PlatoonTemplate {
+    Name = 'T3SACUEngineerBuilderRNG',
+    Plan = 'EngineerBuildAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION, 1, 1, 'support', 'None' }
+    },
+}
 PlatoonTemplate {
     Name = 'CommanderBuilderRNG',
     Plan = 'EngineerBuildAIRNG',

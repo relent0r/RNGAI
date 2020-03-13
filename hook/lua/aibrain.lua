@@ -920,6 +920,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorRNG = function(self)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
+        WaitTicks(Random(1,7))
         LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
@@ -947,7 +948,7 @@ AIBrain = Class(RNGAIBrainClass) {
             'Land',
             'Air',
             'Naval',
-            'AntiSurface'
+            --'AntiSurface'
         }
         for _, t in threatTypes do
             rawThreats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, t)

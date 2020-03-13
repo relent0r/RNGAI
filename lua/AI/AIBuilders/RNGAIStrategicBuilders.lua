@@ -7,7 +7,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI SML Hi Pri',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3 } },
@@ -40,7 +40,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T3 Artillery Hi Pri',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {

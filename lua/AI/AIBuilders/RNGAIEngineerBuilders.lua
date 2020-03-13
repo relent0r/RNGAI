@@ -555,7 +555,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Pgens',
         PlatoonTemplate = 'EngineerBuilder',
         PlatoonAIPlan = 'ReclaimStructuresAI',
-        Priority = 850,
+        Priority = 800,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
@@ -567,6 +567,25 @@ BuilderGroup {
         BuilderData = {
             Location = 'LocationType',
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Reclaim T2 Pgens',
+        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonAIPlan = 'ReclaimStructuresAI',
+        Priority = 600,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.TECH3 * categories.ENERGYPRODUCTION}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
+                { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.1, 1.1 }},
+            },
+        BuilderData = {
+            Location = 'LocationType',
+            Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
         BuilderType = 'Any',
     },
