@@ -667,4 +667,19 @@ function InitialMassMarkersInWater(aiBrain)
     end
 end
 
+function PositionOnWater(aiBrain, positionX, positionZ)
+    --Check if a position is under water. Used to identify if threat/unit position is over water
+    -- Terrain >= Surface = Target is on land
+    -- Terrain < Surface = Target is in water
+
+    local TerrainHeight = GetTerrainHeight( positionX, positionZ ) -- terran high
+    local SurfaceHeight = GetSurfaceHeight( positionX, positionZ ) -- water(surface) high
+    if Terrain < Surface then
+        return true
+    else
+        return false
+    end
+end
+
+
 

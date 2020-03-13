@@ -33,6 +33,9 @@ BaseBuilderTemplate {
         'RNGAI Experimental Formers',
         'RNGAI Gate Builders',
         'RNGAI SACU Builder',
+        'RNGAI SMD Builders',
+        'RNGAI Shield Builder',
+        'RNGAI Shields Upgrader',
 
         -- Mass Building
         'RNGAI Mass Builder',

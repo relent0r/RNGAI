@@ -831,6 +831,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local timeout = self.TacticalMonitor.TacticalTimeout
         local gameTime = GetGameTimeSeconds()
+        local PositionOnWater = RUtils.PositionOnWater
         --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, v in self.EnemyIntel.EnemyThreatLocations do
@@ -859,11 +860,21 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat[1], threat[2], pos[1], pos[3]))
                         if VDist2Sq(threat[1], threat[2], pos[1], pos[3]) < 3600 then
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3]}
+                            if RUtils.PositionOnWater(aiBrain, threat[1], threat[2]) then
+                                onWater = true
+                            else
+                                onWater = false
+                            end
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = true, Threat=threat[3], PositionOnWater=onWater}
                             table.insert(potentialThreats, threatLocation)
                         else
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3]}
+                            if RUtils.PositionOnWater(aiBrain, threat[1], threat[2]) then
+                                onWater = true
+                            else
+                                onWater = false
+                            end
+                            threatLocation = {Position = {threat[1], threat[2]}, EnemyBaseRadius = false, Threat=threat[3], PositionOnWater=onWater}
                             table.insert(potentialThreats, threatLocation)
                         end
                     end
@@ -945,7 +956,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 table.insert(potentialThreats, threatRow)
             end
         end
-        LOG('Potential Threats :'..repr(potentialThreats))
+        --LOG('Potential Threats :'..repr(potentialThreats))
         local phaseTwoThreats = {}
         if table.getn(potentialThreats) > 0 then
             local threatLocation = {}
@@ -953,7 +964,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --LOG('* AI-RNG: Threat is'..repr(threat))
                 if threat.rThreat > 10 then
                     for _, pos in enemyStarts do
-                        LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
+                        --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
                         if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 3600 then
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
                             threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = true, Threat=threat.rThreat, ThreatType=threat.rThreatType}
@@ -966,7 +977,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
+            --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
             for Index_1, value_1 in phaseTwoThreats do
                 for Index_2, value_2 in phaseTwoThreats do
                     -- no need to check against self

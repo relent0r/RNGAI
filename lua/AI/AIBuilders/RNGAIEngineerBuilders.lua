@@ -128,6 +128,17 @@ BuilderGroup {
         },
         BuilderType = 'All',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Excess',
+        PlatoonTemplate = 'T3BuildEngineer',
+        Priority = 500, -- Top factory priority
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.90, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
+        },
+        BuilderType = 'All',
+    },
     
 }
 

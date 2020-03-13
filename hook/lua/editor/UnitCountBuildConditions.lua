@@ -32,10 +32,10 @@ function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
         LOG('Current Energy Trend is : ', econ.EnergyTrend)
     end
     if econ.EnergyTrend < eTrend then
-        LOG('Less Than Energy Trend Returning True')
+        LOG('Less Than Energy Trend Returning True : '..econ.EnergyTrend)
         return true
     else
-        LOG('Less Than Energy Trend Returning False')
+        LOG('Less Than Energy Trend Returning False : '..econ.EnergyTrend)
         return false
     end
 end
@@ -46,10 +46,10 @@ function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
         LOG('Current Energy Trend is : ', econ.MassTrend)
     end
     if econ.MassTrend < mTrend then
-        LOG('Less Than Mass Trend Returning True')
+        LOG('Less Than Mass Trend Returning True : '..econ.MassTrend)
         return true
     else
-        LOG('Less Than Mass Trend Returning False')
+        LOG('Less Than Mass Trend Returning False : '..econ.MassTrend)
         return false
     end
 end
@@ -60,10 +60,10 @@ function GreaterThanEnergyTrend(aiBrain, eTrend, DEBUG)
         LOG('Current Energy Trend is : ', econ.EnergyTrend)
     end
     if econ.EnergyTrend > eTrend then
-        LOG('Greater than Energy Trend Returning True')
+        LOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
         return true
     else
-        LOG('Greater than Energy Trend Returning False')
+        LOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
         return false
     end
 end

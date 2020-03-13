@@ -334,10 +334,11 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             cdr.GoingHome = true
             WaitTicks(40)
-            newLoc[1] = loc[1] + Random(-40, 40)
+            newLoc[1] = loc[1] + Random(-20, 20)
             newLoc[2] = loc[2]
-            newLoc[3] = loc[3] + Random(-40, 40)
+            newLoc[3] = loc[3] + Random(-20, 20)
             IssueClearCommands({cdr})
+            IssueStop({cdr})
             cdr.PlatoonHandle:MoveToLocation(newLoc, false)
             WaitTicks(40)
             if (cdr:GetHealthPercent() > 0.75) then
@@ -655,12 +656,8 @@ function TacticalResponse(platoon)
             local threat = 0
             for _, v in tacticalThreat do
                 if v.Threat > threat then
-                    threat = v.Threat
+                    platoon:SetAIPlan('TacticalResponseAIRNG')
                 end
-            end
-            if threat > 0 then
-                --LOG('* AI-RNG: Setting tactical response plan')
-                platoon:SetAIPlan('TacticalResponseAIRNG')
             end
         end
     WaitTicks(100)

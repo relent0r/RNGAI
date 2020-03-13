@@ -115,6 +115,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T1',
         PlatoonTemplate = 'SeaAttack',
+        PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 300,
         InstanceCount = 10,
         BuilderType = 'Any',

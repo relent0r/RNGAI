@@ -940,27 +940,9 @@ Platoon = Class(oldPlatoon) {
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
         local armyIndex = aiBrain:GetArmyIndex()
-        local x,z = aiBrain:GetArmyStartPos()
+        --local x,z = aiBrain:GetArmyStartPos()
         local cons = self.PlatoonData.Construction
         local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile
-
-        -- Old version of delaying the build of an experimental.
-        -- This was implemended but a depricated function from sorian AI. 
-        -- makes the same as the new DelayEqualBuildPlattons. Can be deleted if all platoons are rewritten to DelayEqualBuildPlattons
-        -- (This is also the wrong place to do it. Should be called from Buildermanager BEFORE the builder is selected)
-        if cons.T4 then
-            if not aiBrain.T4Building then
-                --LOG('* AI-RNG: EngineerBuildAIRNG'..repr(cons))
-                aiBrain.T4Building = true
-                ForkThread(SUtils.T4Timeout, aiBrain)
-                --LOG('* AI-RNG: Building T4 uinit, delaytime started')
-            else
-                --LOG('* AI-RNG: BLOCK building T4 unit; aiBrain.T4Building = TRUE')
-                WaitTicks(1)
-                self:PlatoonDisband()
-                return
-            end
-        end
 
         local eng
         for k, v in platoonUnits do
@@ -1428,13 +1410,13 @@ Platoon = Class(oldPlatoon) {
             local type = eng.PlatoonHandle.PlatoonData.Construction.Type
             local engpos = eng:GetPosition()
             if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
-                --LOG('Repeat Build is set')
+                LOG('Repeat Build is set for :'..eng.Sync.id)
                 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
                 if type == 'Mass' and distance then
                     if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
-                        --LOG('Type is Mass, setting ai plan')
+                        LOG('Type is Mass, setting ai plan')
                         massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
-                        --LOG('Mass Marker Returned is'..repr(massMarker))
+                        LOG('Mass Marker Returned is'..repr(massMarker))
                         if massMarker[1] and VDist3( massMarker, engpos ) < distance then
                             eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
                             return
@@ -1447,9 +1429,11 @@ Platoon = Class(oldPlatoon) {
         end
         -- final check for if we should disband
         if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
+            LOG('* AI-RNG: * Final Disband Check Engineer Build Queue is :'..table.getn(eng.EngineerBuildQueue))
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
-                --LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand bottom " .. eng.Sync.id)
-                eng.PlatoonHandle:PlatoonDisband()
+                LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand bottom " .. eng.Sync.id)
+                --eng.PlatoonHandle:PlatoonDisband()
+                return eng.PlatoonHandle:ReturnToBaseAIRNG()
             end
             if eng then eng.ProcessBuild = nil end
             return
@@ -2063,6 +2047,9 @@ Platoon = Class(oldPlatoon) {
     TacticalResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
+        if not self.MovementLayer then
+            AIAttackUtils.GetMostRestrictiveLayer(self)
+        end
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
@@ -2171,6 +2158,10 @@ Platoon = Class(oldPlatoon) {
                 LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
                 for _, v in tacticalThreat do
                     if v.Threat > threat and v.ThreatType == self.MovementLayer then
+                        if self.MovementLayer == 'Water' and not v.PositionOnWater then
+                            LOG('Movement Layer is Water and Position on water is false')
+                            continue
+                        end
                         threat = v.Threat
                         threatPos = v.Position
                     end
