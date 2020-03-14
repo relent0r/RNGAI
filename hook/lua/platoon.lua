@@ -2286,6 +2286,7 @@ Platoon = Class(oldPlatoon) {
                     until not distressLocation or (distressLocation[1] == moveLocation[1] and distressLocation[3] == moveLocation[3])
 
                     --LOG('*AI DEBUG: '..aiBrain.Name..' DISTRESS RESPONSE AI DEACTIVATION - oldPlan: '..oldPlan)
+                    self:Stop()
                     self:SetAIPlan(oldPlan)
                 end
             end

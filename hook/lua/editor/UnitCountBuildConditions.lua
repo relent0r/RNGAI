@@ -506,3 +506,18 @@ end
 function UnitsGreaterAtEnemy(aiBrain, unitCount, categoryEnemy)
     return GetEnemyUnits(aiBrain, unitCount, categoryEnemy, '>')
 end
+
+function ScalePlatoonSize(aiBrain, locationType, unitCategory)
+    local currentTime = GetGameTimeSeconds()
+    if currentTime < 240 and PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then 
+        return true
+    elseif currentTime < 480 and PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+        return true
+    elseif currentTime < 720 and PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+        return true
+    elseif currentTime > 900 and PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+        return true
+    else
+        return false
+    end
+end
