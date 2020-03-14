@@ -674,7 +674,7 @@ function PositionOnWater(aiBrain, positionX, positionZ)
 
     local TerrainHeight = GetTerrainHeight( positionX, positionZ ) -- terran high
     local SurfaceHeight = GetSurfaceHeight( positionX, positionZ ) -- water(surface) high
-    if Terrain < Surface then
+    if TerrainHeight < SurfaceHeight then
         return true
     else
         return false
