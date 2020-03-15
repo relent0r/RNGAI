@@ -29,13 +29,13 @@ end
 function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then
-        LOG('Current Energy Trend is : ', econ.EnergyTrend)
+        --LOG('Current Energy Trend is : ', econ.EnergyTrend)
     end
     if econ.EnergyTrend < eTrend then
-        LOG('Less Than Energy Trend Returning True : '..econ.EnergyTrend)
+        --LOG('Less Than Energy Trend Returning True : '..econ.EnergyTrend)
         return true
     else
-        LOG('Less Than Energy Trend Returning False : '..econ.EnergyTrend)
+        --LOG('Less Than Energy Trend Returning False : '..econ.EnergyTrend)
         return false
     end
 end
@@ -43,13 +43,13 @@ end
 function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then
-        LOG('Current Energy Trend is : ', econ.MassTrend)
+        --LOG('Current Energy Trend is : ', econ.MassTrend)
     end
     if econ.MassTrend < mTrend then
-        LOG('Less Than Mass Trend Returning True : '..econ.MassTrend)
+        --LOG('Less Than Mass Trend Returning True : '..econ.MassTrend)
         return true
     else
-        LOG('Less Than Mass Trend Returning False : '..econ.MassTrend)
+        --LOG('Less Than Mass Trend Returning False : '..econ.MassTrend)
         return false
     end
 end
@@ -57,13 +57,13 @@ end
 function GreaterThanEnergyTrend(aiBrain, eTrend, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then
-        LOG('Current Energy Trend is : ', econ.EnergyTrend)
+        --LOG('Current Energy Trend is : ', econ.EnergyTrend)
     end
     if econ.EnergyTrend > eTrend then
-        LOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
+        --LOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
         return true
     else
-        LOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
+        --LOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
         return false
     end
 end
@@ -110,7 +110,7 @@ end
 function EnergyToMassRatioIncome(aiBrain, ratio, compareType, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then
-        LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( E:'..(econ.EnergyIncome*10)..' '..compareType..' M:'..(econ.MassIncome*10)..' ) -- R['..ratio..'] -- return '..repr(CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)))
+        --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( E:'..(econ.EnergyIncome*10)..' '..compareType..' M:'..(econ.MassIncome*10)..' ) -- R['..ratio..'] -- return '..repr(CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)))
     end
     return CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)
 end

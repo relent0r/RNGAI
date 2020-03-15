@@ -19,7 +19,7 @@ end
 function GreaterThanEconTrend(aiBrain, MassTrend, EnergyTrend)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     -- If a paragon is present and we have at least a neutral m+e trend, return true
-    LOG('Current Econ Trends M E: ', econ.MassTrend, econ.EnergyTrend)
+    --LOG('Current Econ Trends M E: ', econ.MassTrend, econ.EnergyTrend)
     if aiBrain.HasParagon and econ.MassTrend >= 0 and econ.EnergyTrend >= 0 then
         return true
     elseif econ.MassTrend >= MassTrend and econ.EnergyTrend >= EnergyTrend then
@@ -42,7 +42,7 @@ end
 
 function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEfficiency)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    LOG('Mass Wanted :'..MassEfficiency..'Actual :'..econ.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..econ.EnergyEfficiencyOverTime)
+    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..econ.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..econ.EnergyEfficiencyOverTime)
     if (econ.MassEfficiencyOverTime >= MassEfficiency and econ.EnergyEfficiencyOverTime >= EnergyEfficiency) then
         --LOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true

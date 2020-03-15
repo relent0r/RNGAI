@@ -651,12 +651,13 @@ function TacticalResponse(platoon)
         if aiBrain.ACUSupport.Supported then
             platoon:Stop()
             platoon:SetAIPlan('TacticalResponseAIRNG')
-        elseif tacticalThreat then
+        elseif table.getn(tacticalThreat) > 0 then
             --LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
             for _, v in tacticalThreat do
                 if v.Threat > threat then
                     platoon:SetAIPlan('TacticalResponseAIRNG')
+                    break
                 end
             end
         end

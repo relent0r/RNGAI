@@ -1588,7 +1588,7 @@ Platoon = Class(oldPlatoon) {
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 900 then
             --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
-            return self:HuntAIRNG()
+            return self:HuntAIPATHRNG()
         elseif bestMarker.Position == nil then
             --LOG('Best Marker position was nil, select random')
             if table.getn(markerLocations) <= 2 then
@@ -1666,7 +1666,7 @@ Platoon = Class(oldPlatoon) {
                                     break
                                 end
                             end
-                            WaitTicks(10)
+                            WaitTicks(15)
                         end
                     end
                 end
@@ -2023,6 +2023,7 @@ Platoon = Class(oldPlatoon) {
                 end
             end
             self:MoveToLocation(bestBase.Position, false)
+            
 
             local oldDistSq = 0
             while aiBrain:PlatoonExists(self) do
@@ -2050,25 +2051,24 @@ Platoon = Class(oldPlatoon) {
         if not self.MovementLayer then
             AIAttackUtils.GetMostRestrictiveLayer(self)
         end
-        if platoonUnits > 0 then
-            for k, v in platoonUnits do
-                if not v.Dead then
-                    if IsDestroyed(v) then
-                        WARN('Unit is not Dead but DESTROYED')
-                    end
-                    if v:BeenDestroyed() then
-                        WARN('Unit is not Dead but DESTROYED')
-                    end
-                    if v:TestToggleCaps('RULEUTC_StealthToggle') then
-                        v:SetScriptBit('RULEUTC_StealthToggle', false)
-                    end
-                    if v:TestToggleCaps('RULEUTC_CloakToggle') then
-                        v:SetScriptBit('RULEUTC_CloakToggle', false)
-                    end
-                    -- prevent units from reclaiming while attack moving
-                    v:RemoveCommandCap('RULEUCC_Reclaim')
-                    v:RemoveCommandCap('RULEUCC_Repair')
+
+        for k, v in platoonUnits do
+            if not v.Dead then
+                if IsDestroyed(v) then
+                    WARN('Unit is not Dead but DESTROYED')
                 end
+                if v:BeenDestroyed() then
+                    WARN('Unit is not Dead but DESTROYED')
+                end
+                if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                    v:SetScriptBit('RULEUTC_StealthToggle', false)
+                end
+                if v:TestToggleCaps('RULEUTC_CloakToggle') then
+                    v:SetScriptBit('RULEUTC_CloakToggle', false)
+                end
+                -- prevent units from reclaiming while attack moving
+                v:RemoveCommandCap('RULEUCC_Reclaim')
+                v:RemoveCommandCap('RULEUCC_Repair')
             end
         end
         while aiBrain:PlatoonExists(self) do
@@ -2120,7 +2120,7 @@ Platoon = Class(oldPlatoon) {
                                         break
                                     end
                                 end
-                                WaitTicks(10)
+                                WaitTicks(15)
                             end
                         end
                         self:Stop()
@@ -2149,7 +2149,7 @@ Platoon = Class(oldPlatoon) {
                     self:Stop()
                     return self:ReturnToBaseAIRNG()
                 end
-            elseif tacticalThreat then
+            elseif table.getn(tacticalThreat) > 0 then
                 LOG('* AI-RNG: Tactical Threat Detected')
                 local threatPos = {}
                 local threat = 0
@@ -2207,7 +2207,7 @@ Platoon = Class(oldPlatoon) {
                                             break
                                         end
                                     end
-                                    WaitTicks(10)
+                                    WaitTicks(15)
                                 end
                             end
                         else
@@ -2228,7 +2228,12 @@ Platoon = Class(oldPlatoon) {
                         end
                     end
                 end
-                self:SetAIPlan('HuntAIRNG')
+                if self.MovementLayer == 'Water' then
+                    self:Stop()
+                    self:SetAIPlan('NavalHuntAIRNG')
+                end
+                self:Stop()
+                self:SetAIPlan('HuntAIPATHRNG')
             end
             WaitTicks(100)
         end
