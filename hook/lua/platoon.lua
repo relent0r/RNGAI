@@ -2547,4 +2547,45 @@ Platoon = Class(oldPlatoon) {
         end
     end,
 
+    SACUAttackAIRNG function(self)
+        -- SACU Attack Platoon
+        AIAttackUtils.GetMostRestrictiveLayer(self)
+        local platoonUnits = self:GetPlatoonUnits()
+
+        if platoonUnits and PlatoonStrength > 0 then
+            for k, v in platoonUnits do
+                if not v.Dead then
+                    if IsDestroyed(v) then
+                        WARN('Unit is not Dead but DESTROYED')
+                    end
+                    if v:BeenDestroyed() then
+                        WARN('Unit is not Dead but DESTROYED')
+                    end
+                    if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                        v:SetScriptBit('RULEUTC_StealthToggle', false)
+                    end
+                    if v:TestToggleCaps('RULEUTC_CloakToggle') then
+                        v:SetScriptBit('RULEUTC_CloakToggle', false)
+                    end
+                    if EntityCategoryContains(categories.EXPERIMENTAL, v) then
+                        ExperimentalInPlatoon = true
+                    end
+                    -- prevent units from reclaiming while attack moving
+                    v:RemoveCommandCap('RULEUCC_Reclaim')
+                    v:RemoveCommandCap('RULEUCC_Repair')
+                end
+            end
+        end
+        
+        local MoveToCategories = {}
+        if self.PlatoonData.MoveToCategories then
+            for k,v in self.PlatoonData.MoveToCategories do
+                table.insert(MoveToCategories, v )
+            end
+        else
+            LOG('* RNGAI: * SACUATTACKAIRNG: MoveToCategories missing in platoon '..self.BuilderName)
+        end
+
+    end,
+
 }

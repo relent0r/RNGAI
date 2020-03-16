@@ -681,5 +681,84 @@ function PositionOnWater(aiBrain, positionX, positionZ)
     end
 end
 
+function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
+    -- Usage ManualBuildStructure(aiBrain, engineerunit, 'AntiSurface', 'TECH2', {123:20:123})
+    factionIndex = aiBrain:GetFactionIndex()
+    -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+    DefenseTable = {
+        { 
+        AntiAir = {
+            TECH1 = 'ueb2104',
+            TECH2 = 'ueb2204',
+            TECH3 = 'ueb2304'
+            },
+        AntiSurface = {
+            TECH1 = 'ueb2101',
+            TECH2 = 'ueb2301',
+            TECH3 = 'xeb2306'
+            },
+        AntiNaval = {
+            TECH1 = 'ueb2109',
+            TECH2 = 'ueb2205',
+            TECH3 = ''
+            }
+        },
+        {
+        AntiAir = {
+            TECH1 = 'uab2104',
+            TECH2 = 'uab2204',
+            TECH3 = 'uab2304'
+            },
+        AntiSurface = {
+            TECH1 = 'uab2101',
+            TECH2 = 'uab2301',
+            TECH3 = ''
+            },
+        AntiNaval = {
+            TECH1 = 'uab2109',
+            TECH2 = 'uab2205',
+            TECH3 = ''
+            }
+        },
+        {
+        AntiAir = {
+            TECH1 = 'urb2104',
+            TECH2 = 'urb2204',
+            TECH3 = 'urb2304'
+            },
+        AntiSurface = {
+            TECH1 = 'urb2101',
+            TECH2 = 'urb2301',
+            TECH3 = ''
+            },
+        AntiNaval = {
+            TECH1 = 'urb2109',
+            TECH2 = 'urb2205',
+            TECH3 = 'xrb2308'
+            }
+        },
+        {
+        AntiAir = {
+            TECH1 = 'xsb2104',
+            TECH2 = 'xsb2204',
+            TECH3 = 'xsb2304'
+            },
+        AntiSurface = {
+            TECH1 = 'xsb2101',
+            TECH2 = 'xsb2301',
+            TECH3 = ''
+            },
+        AntiNaval = {
+            TECH1 = 'xsb2109',
+            TECH2 = 'xsb2205',
+            TECH3 = ''
+            }
+        }
+    }
+    blueprintID = DefenseTable[factionIndex][structureType][tech]
+    if aiBrain:CanBuildStructureAt(blueprintID, position) then
+        aiBrain:BuildStructure(eng, blueprintID, position, false)
+    end
+end
 
 
