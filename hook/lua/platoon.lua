@@ -1472,10 +1472,10 @@ Platoon = Class(oldPlatoon) {
 
         eng.NotBuildingThread = nil
         if not eng.Dead and eng:IsIdleState() and table.getn(eng.EngineerBuildQueue) != 0 and eng.PlatoonHandle then
-            eng.PlatoonHandle.SetupEngineerCallbacks(eng)
+            eng.PlatoonHandle.SetupEngineerCallbacksRNG(eng)
             if not eng.ProcessBuild then
                 --LOG('Forking Process Build Command with table remove')
-                eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommand, true)
+                eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommandRNG, true)
             end
         end
     end,
