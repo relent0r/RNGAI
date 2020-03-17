@@ -40,6 +40,13 @@ function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
     end
 end
 
+function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
+    local numOne = aiBrain:GetCurrentUnits(categoryOne)
+    local numTwo = aiBrain:GetCurrentUnits(categoryTwo)
+    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOne..' '..compareType..' '..numTwo..' ) -- ['..ratio..'] -- '..categoryOne..' '..compareType..' '..categoryTwo..' ('..(numOne / numTwo)..' '..compareType..' '..ratio..' ?) return '..repr(CompareBody(numOne / numTwo, ratio, compareType)))
+    return CompareBody(numOne / numTwo, ratio, compareType)
+end
+
 function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then

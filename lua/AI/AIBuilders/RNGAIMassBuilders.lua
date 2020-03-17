@@ -186,7 +186,7 @@ BuilderGroup {
             -- When do we want to build this ?
             -- Do we need additional conditions to build it ?
             --{ UCBC, 'HasNotParagon', {} },
-            { UCBC, 'HaveUnitRatioUveso', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
+            { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatio', { 0.40, 1.00}}, -- Ratio from 0 to 1. (1=100%)
@@ -221,7 +221,7 @@ BuilderGroup {
             -- When do we want to build this ?
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             -- Do we need additional conditions to build it ?
-            { UCBC, 'HaveUnitRatioUveso', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
+            { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             --{ UCBC, 'HasNotParagon', {} },
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
