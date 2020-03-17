@@ -760,5 +760,73 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
         aiBrain:BuildStructure(eng, blueprintID, position, false)
     end
 end
+--[[
+function TacticalMassLocationsold(aiBrain)
+    -- Scans the map and trys to figure out tactical locations with multiple mass markers
+    -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
+    LOG('Starting Tactical Mass Location Function')
+    local markerGroups = {}
+    local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
+    local group = 0
+    local duplicateMarker = {}
+    for key_1, marker_1 in markerLocations do
+        group = group + 1
+        local groupSet = {MarkerGroup=group, Markers={}}
+        for key_2, marker_2 in markerLocations do
+            -- no need to check against self
+            if marker_1 == marker_2 then 
+                continue
+            end
+            if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 900 then
+                table.insert(groupSet['Markers'], marker_2)
+                table.insert(duplicateMarker, marker_1)
+            end
+        end
+        table.insert(groupSet['Markers'], marker_1)
+        if table.getn(groupSet['Markers']) > 2 then
+            table.insert(markerGroups, groupSet)
+        end
+    end
+    LOG('Marker Groups :'..repr(markerGroups))
+end
+]]
+function TacticalMassLocations(aiBrain)
+    -- Scans the map and trys to figure out tactical locations with multiple mass markers
+    -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
+    LOG('Starting Tactical Mass Location Function')
+    local markerGroups = {}
+    local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
+    local group = 0
+    local duplicateMarker = {}
+    for key_1, marker_1 in markerLocations do
+        group = group + 1
+        local groupSet = {MarkerGroup=group, Markers={}}
+        table.insert(duplicateMarker, marker_1)
+        for key_2, marker_2 in markerLocations do
+            -- no need to check against self
+            for key_3, marker_3 in duplicateMarker do
+                if marker_3 ~= marker_2 then
+                    if marker_1 == marker_2 then 
+                        --LOG('Marker Already Present')
+                    else
+                        if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 900 then
+                            table.insert(groupSet['Markers'], marker_2)
+                        end
+                    end
+                else
+                    --LOG('Duplicate')
+                end
+            end
+        end
+        table.insert(groupSet['Markers'], marker_1)
+        if table.getn(groupSet['Markers']) > 2 then
+            table.insert(markerGroups, groupSet)
+        end
+    end
+    LOG('Marker Groups :'..repr(markerGroups))
+end
+
+
+
 
 

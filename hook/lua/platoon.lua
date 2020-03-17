@@ -2547,7 +2547,7 @@ Platoon = Class(oldPlatoon) {
         end
     end,
 
-    SACUAttackAIRNG function(self)
+    SACUAttackAIRNG = function(self)
         -- SACU Attack Platoon
         AIAttackUtils.GetMostRestrictiveLayer(self)
         local platoonUnits = self:GetPlatoonUnits()
@@ -2585,6 +2585,15 @@ Platoon = Class(oldPlatoon) {
         else
             LOG('* RNGAI: * SACUATTACKAIRNG: MoveToCategories missing in platoon '..self.BuilderName)
         end
+        local WeaponTargetCategories = {}
+        if self.PlatoonData.WeaponTargetCategories then
+            for k,v in self.PlatoonData.WeaponTargetCategories do
+                table.insert(WeaponTargetCategories, v )
+            end
+        elseif self.PlatoonData.MoveToCategories then
+            WeaponTargetCategories = MoveToCategories
+        end
+        self:SetPrioritizedTargetList('Attack', WeaponTargetCategories)
 
     end,
 

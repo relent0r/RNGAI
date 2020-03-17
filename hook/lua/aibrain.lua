@@ -146,7 +146,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
-
+        --RUtils.TacticalMassLocations(self)
         -- Begin the base monitor process
         if self.Sorian then
             local spec = {
