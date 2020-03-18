@@ -796,8 +796,9 @@ function TacticalMassLocationsOld(aiBrain)
     end
     LOG('Marker Groups :'..repr(markerGroups))
 end
-]]
-function TacticalMassLocations(aiBrain)
+
+
+function TacticalMassLocations2ndattempt(aiBrain)
     -- Scans the map and trys to figure out tactical locations with multiple mass markers
     -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
     LOG('Starting Tactical Mass Location Function')
@@ -830,6 +831,44 @@ function TacticalMassLocations(aiBrain)
         if table.getn(groupSet['Markers']) > 2 then
             group = group + 1
             table.insert(markerGroups, groupSet)
+        end
+    end
+    LOG('Marker Groups :'..repr(markerGroups))
+end
+]]
+
+function TacticalMassLocations(aiBrain)
+    -- Scans the map and trys to figure out tactical locations with multiple mass markers
+    -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
+    LOG('Starting Tactical Mass Location Function')
+    local markerGroups = {}
+    local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
+    local group = 0
+    local duplicateMarker = {}
+    -- loop thru all the markers --
+    for key_1, marker_1 in markerLocations do
+        -- only process a marker that has not already been used
+        if not duplicateMarker[marker_1] then
+            group = group + 1
+            local groupSet = {MarkerGroup=group, Markers={}}
+            -- record that marker has been used
+            table.insert(duplicateMarker, marker_1)
+            -- loop thru all the markers --
+            for key_2, marker_2 in markerLocations do
+                -- bypass any marker that's already been used
+                if not duplicateMarker[marker_2] then
+                    if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 900 then
+                        -- record that marker has been used
+                        table.insert(duplicateMarker, marker_2)
+                        -- insert marker into group --
+                        table.insert(groupSet['Markers'], marker_2)
+                    end
+                end
+            end
+            table.insert(groupSet['Markers'], marker_1)
+            if table.getn(groupSet['Markers']) > 2 then
+                table.insert(markerGroups, groupSet)
+            end
         end
     end
     LOG('Marker Groups :'..repr(markerGroups))
