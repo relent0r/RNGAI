@@ -757,6 +757,8 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
     }
     blueprintID = DefenseTable[factionIndex][structureType][tech]
     if aiBrain:CanBuildStructureAt(blueprintID, position) then
+        IssueStop({eng})
+        IssueClearCommands({eng})
         aiBrain:BuildStructure(eng, blueprintID, position, false)
     end
 end
