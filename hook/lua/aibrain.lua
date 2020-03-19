@@ -810,6 +810,8 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalLocations = {},
             TacticalTimeout = 53,
             TacticalMonitorTime = 180,
+            TacticalMassLocations = {},
+            TacticalSACUMode = false,
         }
         self:ForkThread(self.TacticalMonitorThreadRNG)
     end,

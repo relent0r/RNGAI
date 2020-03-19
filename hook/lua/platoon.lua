@@ -2601,152 +2601,154 @@ Platoon = Class(oldPlatoon) {
         local requestTransport = self.PlatoonData.RequestTransport
         while aiBrain:PlatoonExists(self) do
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
-            if target then
-                --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
-                local targetPosition = target:GetPosition()
-                local attackUnits =  self:GetSquadUnits('Attack')
-                local scoutUnits = self:GetSquadUnits('Scout')
-                local guardUnits = self:GetSquadUnits('Guard')
-                if scoutUnits then
-                    local guardedUnit = 1
-                    if attackUnits then
-                        while attackUnits[guardedUnit].Dead do
-                            guardedUnit = guardedUnit + 1
-                            if table.getn(self:GetSquadUnits('Attack')) == 0 then
-                                LOG('Not more attack squad units..breaking guard')
-                                return self:ReturnToBaseAIRNG()
-                            end
-                        end
-                    else
-                        return self:ReturnToBaseAIRNG()
-                    end
-                    IssueClearCommands(scoutUnits)
-                    IssueGuard(scoutUnits, attackUnits[guardedUnit])
-                end
-                --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
-                --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(self:GetPlatoonPosition())..' Target Position :'..repr(targetPosition))
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), targetPosition, 100 , maxPathDistance)
-                local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
-                IssueClearCommands(self:GetPlatoonUnits())
-                if path then
-                    --LOG('* AI-RNG: * HuntAIPATH: Path found')
-                    local position = self:GetPlatoonPosition()
-                    local usedTransports = false
-                    if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
-                    elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, false)
-                    end
-                    if not usedTransports then
-                        for i=1, table.getn(path) do
-                            local PlatoonPosition
-                            if guardUnits then
-                                local guardedUnit = 1
-                                if attackUnits then
-                                    while attackUnits[guardedUnit].Dead do
-                                        guardedUnit = guardedUnit + 1
-                                        if table.getn(self:GetSquadUnits('Attack')) == 0 then
-                                            LOG('Not more attack squad units..breaking guard')
-                                            return self:ReturnToBaseAIRNG()
-                                        end
-                                    end
-                                else
+            if aiBrain.TacticalMonitor.TacticalSACUMode then
+                --stuff
+            else
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
+                if target then
+                    --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
+                    local targetPosition = target:GetPosition()
+                    local attackUnits =  self:GetSquadUnits('Attack')
+                    local guardUnits = self:GetSquadUnits('Guard')
+                    if guardUnits then
+                        local guardedUnit = 1
+                        if attackUnits then
+                            while attackUnits[guardedUnit].Dead do
+                                guardedUnit = guardedUnit + 1
+                                if table.getn(self:GetSquadUnits('Attack')) == 0 then
+                                    LOG('Not more attack squad units..breaking guard')
                                     return self:ReturnToBaseAIRNG()
                                 end
-                                IssueClearCommands(guardUnits)
-                                --LOG('* AI-RNG: * HuntAIPATH: Issuing Guard of Attack Squad')
-                                IssueGuard(guardUnits, attackUnits[guardedUnit])
                             end
-                            --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
-                            if bAggroMove and attackUnits then
-                                self:AggressiveMoveToLocation(path[i], 'Attack')
-                            elseif attackUnits then
-                                self:MoveToLocation(path[i], false, 'Attack')
-                            end
-                            --LOG('* AI-RNG: * HuntAIPATH:: moving to Waypoint')
-                            local Lastdist
-                            local dist
-                            local Stuck = 0
-                            local retreatCount = 2
-                            while aiBrain:PlatoonExists(self) do
-                                SquadPosition = self:GetSquadPosition('Attack') or nil
-                                if not SquadPosition then break end
-                                dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
-                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
-                                --LOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
-                                if dist < 400 then
-                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                    self:Stop()
-                                    break
-                                end
-                                if retreatCount < 5 then
-                                    local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
-                                    --LOG('* AI-RNG: * HuntAIPATH: EnemyCount :'..enemyUnitCount)
-                                    if enemyUnitCount > 2 and i > 2 then
-                                        LOG('* AI-RNG: * HuntAIPATH: Enemy Units Detected, retreating..')
-                                        --LOG('* AI-RNG: * HuntAIPATH: Retreation Position :'..repr(path[i - retreatCount]))
-                                        self:Stop()
-                                        self:MoveToLocation(path[i - retreatCount], false, 'Attack')
-                                        --LOG('* AI-RNG: * HuntAIPATH: Retreat Command Given')
-                                        retreatCount = retreatCount + 1
-                                        WaitTicks(50)
-                                        self:Stop()
-                                        break
-                                    elseif enemyUnitCount > 2 and i <= 2 then
-                                        LOG('* AI-RNG: * HuntAIPATH: Not enough path nodes : increasing retreat count')
-                                        retreatCount = retreatCount + 1
-                                        self:Stop()
-                                        break
-                                    end
-                                end
-                                -- Do we move ?
-                                if Lastdist ~= dist then
-                                    Stuck = 0
-                                    Lastdist = dist
-                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
-                                else
-                                    Stuck = Stuck + 1
-                                    if Stuck > 15 then
-                                        LOG('* AI-RNG: * HuntAIPATH: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
-                                        self:Stop()
-                                        break
-                                    end
-                                end
-                                if not target then
-                                    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. '..repr(path[i]))
-                                    self:Stop()
-                                    break
-                                end
-                                --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
-                                WaitTicks(15)
-                            end
-                            --LOG('* AI-RNG: * HuntAIPATH: Ending Loop at :'..GetGameTimeSeconds())
+                        else
+                            return self:ReturnToBaseAIRNG()
                         end
+                        IssueClearCommands(guardUnits)
+                        IssueGuard(guardUnits, attackUnits[guardedUnit])
                     end
-                elseif (not path and reason == 'NoPath') then
-                    LOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
-                    --LOG('Guardmarker requesting transports')
-                    local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
-                    --DUNCAN - if we need a transport and we cant get one the disband
-                    if not foundTransport then
-                        --LOG('Guardmarker no transports')
+                    --LOG('* AI-RNG: * SACUAIPATH: Performing Path Check')
+                    --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(self:GetPlatoonPosition())..' Target Position :'..repr(targetPosition))
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), targetPosition, 100 , maxPathDistance)
+                    local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
+                    IssueClearCommands(self:GetPlatoonUnits())
+                    if path then
+                        --LOG('* AI-RNG: * HuntAIPATH: Path found')
+                        local position = self:GetPlatoonPosition()
+                        local usedTransports = false
+                        if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
+                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
+                        elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
+                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, false)
+                        end
+                        if not usedTransports then
+                            for i=1, table.getn(path) do
+                                local PlatoonPosition
+                                if guardUnits then
+                                    local guardedUnit = 1
+                                    if attackUnits then
+                                        while attackUnits[guardedUnit].Dead do
+                                            guardedUnit = guardedUnit + 1
+                                            if table.getn(self:GetSquadUnits('Attack')) == 0 then
+                                                LOG('Not more attack squad units..breaking guard')
+                                                return self:ReturnToBaseAIRNG()
+                                            end
+                                        end
+                                    else
+                                        return self:ReturnToBaseAIRNG()
+                                    end
+                                    IssueClearCommands(guardUnits)
+                                    --LOG('* AI-RNG: * SACUATTACKAIRNG: Issuing Guard of Attack Squad')
+                                    IssueGuard(guardUnits, attackUnits[guardedUnit])
+                                end
+                                --LOG('* AI-RNG: * SACUATTACKAIRNG:: moving to destination. i: '..i..' coords '..repr(path[i]))
+                                if bAggroMove and attackUnits then
+                                    self:AggressiveMoveToLocation(path[i], 'Attack')
+                                elseif attackUnits then
+                                    self:MoveToLocation(path[i], false, 'Attack')
+                                end
+                                --LOG('* AI-RNG: * SACUATTACKAIRNG:: moving to Waypoint')
+                                local Lastdist
+                                local dist
+                                local Stuck = 0
+                                local retreatCount = 2
+                                while aiBrain:PlatoonExists(self) do
+                                    SquadPosition = self:GetSquadPosition('Attack') or nil
+                                    if not SquadPosition then break end
+                                    dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
+                                    -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                                    --LOG('* AI-RNG: * SACUATTACKAIRNG: Distance to path node'..dist)
+                                    if dist < 400 then
+                                        -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                        self:Stop()
+                                        break
+                                    end
+                                    if retreatCount < 5 then
+                                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                        --LOG('* AI-RNG: * SACUATTACKAIRNG: EnemyCount :'..enemyUnitCount)
+                                        if enemyUnitCount > 2 and i > 2 then
+                                            LOG('* AI-RNG: * SACUATTACKAIRNG: Enemy Units Detected, retreating..')
+                                            --LOG('* AI-RNG: * SACUATTACKAIRNG: Retreation Position :'..repr(path[i - retreatCount]))
+                                            self:Stop()
+                                            self:MoveToLocation(path[i - retreatCount], false, 'Attack')
+                                            --LOG('* AI-RNG: * SACUATTACKAIRNG: Retreat Command Given')
+                                            retreatCount = retreatCount + 1
+                                            WaitTicks(50)
+                                            self:Stop()
+                                            break
+                                        elseif enemyUnitCount > 2 and i <= 2 then
+                                            LOG('* AI-RNG: * SACUATTACKAIRNG: Not enough path nodes : increasing retreat count')
+                                            retreatCount = retreatCount + 1
+                                            self:Stop()
+                                            break
+                                        end
+                                    end
+                                    -- Do we move ?
+                                    if Lastdist ~= dist then
+                                        Stuck = 0
+                                        Lastdist = dist
+                                    -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                                    else
+                                        Stuck = Stuck + 1
+                                        if Stuck > 15 then
+                                            LOG('* AI-RNG: * SACUATTACKAIRNG: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                            self:Stop()
+                                            break
+                                        end
+                                    end
+                                    if not target then
+                                        --LOG('* AI-RNG: * SACUATTACKAIRNG: Lost target while moving to Waypoint. '..repr(path[i]))
+                                        self:Stop()
+                                        break
+                                    end
+                                    --LOG('* AI-RNG: * SACUATTACKAIRNG: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
+                                    WaitTicks(15)
+                                end
+                                --LOG('* AI-RNG: * SACUATTACKAIRNG: Ending Loop at :'..GetGameTimeSeconds())
+                            end
+                        end
+                    elseif (not path and reason == 'NoPath') then
+                        LOG('* AI-RNG: * SACUATTACKAIRNG: NoPath reason from path')
+                        --LOG('Guardmarker requesting transports')
+                        local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
+                        --DUNCAN - if we need a transport and we cant get one the disband
+                        if not foundTransport then
+                            --LOG('Guardmarker no transports')
+                            self:PlatoonDisband()
+                            return
+                        end
+                        --LOG('Guardmarker found transports')
+                    else
+                        LOG('* AI-RNG: * SACUATTACKAIRNG: No Path found, no reason')
                         self:PlatoonDisband()
                         return
                     end
-                    --LOG('Guardmarker found transports')
-                else
-                    LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
-                    self:PlatoonDisband()
-                    return
-                end
 
-                if (not path or not success) and not usedTransports then
-                    self:PlatoonDisband()
-                    return
+                    if (not path or not success) and not usedTransports then
+                        self:PlatoonDisband()
+                        return
+                    end
                 end
-            end
-            LOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
+            LOG('* AI-RNG: * SACUATTACKAIRNG: No target, waiting 5 seconds')
             WaitTicks(50)
         end
 
