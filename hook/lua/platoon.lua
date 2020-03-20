@@ -2750,9 +2750,8 @@ Platoon = Class(oldPlatoon) {
                 end
             LOG('* AI-RNG: * SACUATTACKAIRNG: No target, waiting 5 seconds')
             WaitTicks(50)
+            end
         end
-
-
     end,
 
 }

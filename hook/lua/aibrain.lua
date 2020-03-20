@@ -126,6 +126,15 @@ AIBrain = Class(RNGAIBrainClass) {
         self.LowEnergyMode = false
         
         --Tactical Monitor
+        self.TacticalMonitor = {
+            TacticalMonitorStatus = 'ACTIVE',
+            TacticalLocationFound = false,
+            TacticalLocations = {},
+            TacticalTimeout = 53,
+            TacticalMonitorTime = 180,
+            TacticalMassLocations = {},
+            TacticalSACUMode = false,
+        }
         -- Intel Data
         self.EnemyIntel = {}
         self.EnemyIntel.ACU = {}
@@ -146,7 +155,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
-        --RUtils.TacticalMassLocations(self)
+        RUtils.TacticalMassLocations(self)
         -- Begin the base monitor process
         if self.Sorian then
             local spec = {
@@ -804,15 +813,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorInitializationRNG = function(self, spec)
         --LOG('* AI-RNG: Tactical Monitor Is Initializing')
-        self.TacticalMonitor = {
-            TacticalMonitorStatus = 'ACTIVE',
-            TacticalLocationFound = false,
-            TacticalLocations = {},
-            TacticalTimeout = 53,
-            TacticalMonitorTime = 180,
-            TacticalMassLocations = {},
-            TacticalSACUMode = false,
-        }
         self:ForkThread(self.TacticalMonitorThreadRNG)
     end,
 
