@@ -148,7 +148,7 @@ AIBrain = Class(RNGAIBrainClass) {
         SUtils.AddCustomUnitSupport(self)
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
 
-        if RUtils.InitialMassMarkersInWater then
+        if RUtils.InitialMassMarkersInWater(self) then
             LOG('* AI-RNG: Map has mass markers in water')
             self.MassMarkersInWater = true
         else

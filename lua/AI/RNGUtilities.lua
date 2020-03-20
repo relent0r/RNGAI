@@ -660,7 +660,7 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
 end
 
 function InitialMassMarkersInWater(aiBrain)
-    if table.getn(RUtils.AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
+    if table.getn(AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
         return true
     else
         return false
