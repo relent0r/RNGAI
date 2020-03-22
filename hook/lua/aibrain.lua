@@ -3,7 +3,6 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
-
 local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
@@ -124,7 +123,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitor)
         self.LowEnergyMode = false
-        
+
         --Tactical Monitor
         self.TacticalMonitor = {
             TacticalMonitorStatus = 'ACTIVE',
@@ -133,6 +132,7 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalTimeout = 53,
             TacticalMonitorTime = 180,
             TacticalMassLocations = {},
+            TacticalUnmarkedMassGroups = {},
             TacticalSACUMode = false,
         }
         -- Intel Data
@@ -156,6 +156,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.MassMarkersInWater = false
         end
         RUtils.TacticalMassLocations(self)
+        RUtils.MarkTacticalMassLocations(self)
         -- Begin the base monitor process
         if self.Sorian then
             local spec = {
@@ -932,7 +933,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
                 end
             end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
     end,
 }

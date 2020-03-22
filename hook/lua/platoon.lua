@@ -455,6 +455,7 @@ Platoon = Class(oldPlatoon) {
 
                 local mustScoutArea, mustScoutIndex = aiBrain:GetUntaggedMustScoutArea()
                 local unknownThreats = aiBrain:GetThreatsAroundPosition(scout:GetPosition(), 16, true, 'Unknown')
+                LOG('Unknown Threat is'..repr(unknownThreats))
 
                 --1) If we have any "must scout" (manually added) locations that have not been scouted yet, then scout them
                 if mustScoutArea then
@@ -766,7 +767,7 @@ Platoon = Class(oldPlatoon) {
                                 if retreatCount < 5 then
                                     local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                     --LOG('* AI-RNG: * HuntAIPATH: EnemyCount :'..enemyUnitCount)
-                                    if enemyUnitCount > 2 and i > 2 then
+                                    if enemyUnitCount > 3 and i > 2 then
                                         LOG('* AI-RNG: * HuntAIPATH: Enemy Units Detected, retreating..')
                                         --LOG('* AI-RNG: * HuntAIPATH: Retreation Position :'..repr(path[i - retreatCount]))
                                         self:Stop()
@@ -776,7 +777,7 @@ Platoon = Class(oldPlatoon) {
                                         WaitTicks(50)
                                         self:Stop()
                                         break
-                                    elseif enemyUnitCount > 2 and i <= 2 then
+                                    elseif enemyUnitCount > 3 and i <= 2 then
                                         LOG('* AI-RNG: * HuntAIPATH: Not enough path nodes : increasing retreat count')
                                         retreatCount = retreatCount + 1
                                         self:Stop()

@@ -573,6 +573,7 @@ end
 
 
 function lerpy(vec1, vec2, distance)
+    -- Courtesy of chp2001
     -- note the distance param is {distance, distance - weapon range}
     -- vec1 is friendly unit, vec2 is enemy unit
     distanceFrac = distance[2] / distance[1]
@@ -583,6 +584,7 @@ function lerpy(vec1, vec2, distance)
 end
 
 function LerpyRotate(vec1, vec2, distance)
+    -- Courtesy of chp2001
     -- note the distance param is {distance, weapon range}
     -- vec1 is friendly unit, vec2 is enemy unit
     distanceFrac = distance[2] / distance[1]
@@ -763,10 +765,10 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
     end
 end
 
-function TacticalMassLocations(aiBrain)
+function TacticalMassLocationsold(aiBrain)
     -- Scans the map and trys to figure out tactical locations with multiple mass markers
     -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
-    LOG('Starting Tactical Mass Location Function')
+    LOG('* AI-RNG: * Starting Tactical Mass Location Function')
     local markerGroups = {}
     local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
     local group = 1
@@ -775,19 +777,23 @@ function TacticalMassLocations(aiBrain)
     for key_1, marker_1 in markerLocations do
         -- only process a marker that has not already been used
         if duplicateMarker[key_1] then
+            LOG('Duplicate Found Skipping :'..repr(marker_1)..'at key :'..key_1)
             continue
         else
             local groupSet = {MarkerGroup=group, Markers={}}
             -- record that marker has been used
+            LOG('Inserting Duplicate Marker phase 1:'..repr(marker_1)..'at key :'..key_1)
             table.insert(duplicateMarker, key_1, marker_1)
             -- loop thru all the markers --
             for key_2, marker_2 in markerLocations do
                 -- bypass any marker that's already been used
                 if duplicateMarker[key_2] then
+                    LOG('Duplicate Found Skipping :'..repr(marker_2)..'at key :'..key_2)
                     continue
                 else
                     if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 1600 then
                         -- record that marker has been used
+                        LOG('Inserting Duplicate Marker phase 2:'..repr(marker_2)..'at key :'..key_2)
                         table.insert(duplicateMarker, key_2, marker_2)
                         -- insert marker into group --
                         table.insert(groupSet['Markers'], marker_2)
@@ -797,13 +803,163 @@ function TacticalMassLocations(aiBrain)
             table.insert(groupSet['Markers'], marker_1)
             if table.getn(groupSet['Markers']) > 2 then
                 table.insert(markerGroups, groupSet)
+                LOG('Group Set Markers :'..repr(groupSet))
                 group = group + 1
             end
         
         end
     end
+    LOG('Duplicate Marker Set :'..repr(duplicateMarker))
     aiBrain.TacticalMonitor.TacticalMassLocations = markerGroups
-    --LOG('Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
+    --LOG('* AI-RNG: * Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
+end
+
+function TacticalMassLocations(aiBrain)
+    -- Scans the map and trys to figure out tactical locations with multiple mass markers
+    -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
+
+    LOG('* AI-RNG: * Starting Tactical Mass Location Function')
+    local markerGroups = {}
+    local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
+    local group = 1
+    local duplicateMarker = {}
+    -- loop thru all the markers --
+    for key_1, marker_1 in markerLocations do
+        -- only process a marker that has not already been used
+            local groupSet = {MarkerGroup=group, Markers={}}
+            -- loop thru all the markers --
+            for key_2, marker_2 in markerLocations do
+                -- bypass any marker that's already been used
+                if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 1600 then
+                    -- insert marker into group --
+                    table.insert(groupSet['Markers'], marker_2)
+                    markerLocations[key_2] = nil
+                end
+            end
+            markerLocations[key_1] = nil
+            if table.getn(groupSet['Markers']) > 2 then
+                table.insert(markerGroups, groupSet)
+                --LOG('Group Set Markers :'..repr(groupSet))
+                group = group + 1
+            end
+    end
+    LOG('End Marker Groups :'..repr(markerGroups))
+    aiBrain.TacticalMonitor.TacticalMassLocations = markerGroups
+    --LOG('* AI-RNG: * Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
+end
+
+function MarkTacticalMassLocations(aiBrain)
+--[[ Gets tactical mass locations and sets markers on ones with no existing expansion markers
+    'Air Path Node',
+    'Amphibious Path Node',
+    'Blank Marker',
+    'Camera Info',
+    'Combat Zone',
+    'Defensive Point',
+    'Effect',
+    'Expansion Area',
+    'Hydrocarbon',
+    'Island',
+    'Land Path Node',
+    'Large Expansion Area',
+    'Mass',
+    'Naval Area',
+    'Naval Defensive Point',
+    'Naval Exclude',
+    'Naval Link',
+    'Naval Rally Point',
+    'Protected Experimental Construction',
+    'Rally Point',
+    'Transport Marker',
+    'Water Path Node',
+    'Weather Definition',
+    'Weather Generator',]]
+
+    local massGroups = aiBrain.TacticalMonitor.TacticalMassLocations
+    local expansionMarkers = ScenarioUtils.GetMarkers()
+    local markerList = {}
+    --LOG('Pre Sorted MassGroups'..repr(massGroups))
+    if massGroups then
+        if expansionMarkers then
+            for k, v in expansionMarkers do
+                if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' then
+                    table.insert(markerList, {Position = v.position})
+                end
+            end
+        end
+        for i = 1, 16 do
+            if Scenario.MasterChain._MASTERCHAIN_.Markers['ARMY_'..i] then
+                table.insert(markerList, {Position = Scenario.MasterChain._MASTERCHAIN_.Markers['ARMY_'..i].position})
+            end
+        end
+        for key, group in massGroups do
+            for key2, marker in markerList do
+                if VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]) < 2500 then
+                    --LOG('Location :'..repr(group.Markers[1])..' is less than 2500 from :'..repr(marker))
+                    massGroups[key] = nil
+                else
+                    --LOG('Location :'..repr(group.Markers[1])..' is more than 2500 from :'..repr(marker))
+                    --LOG('Location distance :'..VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]))
+                end
+            end
+        end
+        aiBrain:RebuildTable(massGroups)
+    end
+    aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups = massGroups
+    --LOG('* AI-RNG: * Total Expansion, Large expansion markers'..repr(markerList))
+    --LOG('* AI-RNG: * Unmarked Mass Groups'..repr(massGroups))
+end
+
+function CreateMarkers(markerType, newMarkers)
+-- markerType = string e.g "Marker Area"
+-- newMarkers = a table of new marker positions e.g {{123,12,123}}
+
+    for index, markerPosition in newMarkers do    
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index] = {}
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].color = 'b93f81'
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].hint = true
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].orientation = { 0, 0, 0 }
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].prop = "/env/common/props/markers/M_Expansion_prop.bp"
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].type = markerType
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].position = markerPosition
+    end
+end
+
+function GeneratePointsAroundPosition(position,radius,num)
+    -- Courtesy of chp2001
+    -- position = { 233.5, 25.239820480347, 464.5, type="VECTOR3" }
+    -- radius = the size of the circle
+    -- num = the number of points around the circle
+
+    local nnn=0
+    local coords = {}
+    while nnn < num do
+        local xxx = 0
+        local yyy = 0
+        xxx = position[1] + radius * math.cos (nnn/num* (2 * math.pi))
+        yyy = position[3] + radius * math.sin (nnn/num* (2 * math.pi))
+        table.insert(coords, {xxx, yyy})
+        nnn = nnn + 1
+    end
+    return coords
+end
+
+
+function MassGroupCenter(massGroup)
+    -- Courtesy of chp2001
+    -- takes a group of mass marker positions and will return the center point
+    -- Mark Group definition = {MarkerGroup=1,Markers={{ Name="Mass 20", Position={ 159.5, 10.000610351563, 418.5, type="VECTOR3" }}}
+    local xx1=0
+    local yy1=0
+    local zz1=0
+    local nn1=0
+    for key_1, marker_1 in massGroup.Markers do
+        xx1=xx1+marker_1.Position[1]
+        yy1=yy1+marker_1.Position[2]
+        zz1=zz1+marker_1.Position[3]
+        nn1=nn1 + 1
+    end
+    return {xx1/nn1,yy1/nn1,zz1/nn1}
 end
 
 
