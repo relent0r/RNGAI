@@ -155,6 +155,9 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
+        local arcenemyBase = { 360.5, 10, 365.5, type="VECTOR3" }
+        local arcengineer = { 233.5, 10, 386.5, type="VECTOR3" }
+        RUtils.SetArcPoints(arcengineer, arcenemyBase, 80, 3, 30)
         RUtils.TacticalMassLocations(self)
         RUtils.MarkTacticalMassLocations(self)
         -- Begin the base monitor process

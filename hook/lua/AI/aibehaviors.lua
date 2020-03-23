@@ -355,6 +355,43 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     end
 end
 
+function CDRReturnHomeRNGExperimental(aiBrain, cdr)
+    -- This is a reference... so it will autoupdate
+    local cdrPos = cdr:GetPosition()
+    local distSqAway = 1600
+    local loc = cdr.CDRHome
+    --local newLoc = {}
+    if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
+        local plat = aiBrain:MakePlatoon('', '')
+        
+        aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
+        repeat
+            CDRRevertPriorityChange(aiBrain, cdr)
+            if not aiBrain:PlatoonExists(plat) then
+                return
+            end
+            IssueClearCommands({cdr})
+            IssueStop({cdr})
+            cdr.GoingHome = true
+            local movePosTable = RUtils.SetArcPoints(loc, cdr:GetPosition(), 8, 5, 10)
+            local indexVar = math.random(1,5)
+            LOG('Move to position is :'..repr(movePosTable[indexVar]))
+            cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
+            WaitTicks(40)
+            if (cdr:GetHealthPercent() > 0.75) then
+                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
+                    cdr.GoingHome = false
+                    IssueStop({cdr})
+                    return CDROverChargeRNG(aiBrain, cdr)
+                end
+            end
+        until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
+
+        cdr.GoingHome = false
+        IssueClearCommands({cdr})
+    end
+end
+
 function CDRUnitCompletion(aiBrain, cdr)
     if cdr.UnitBeingBuiltBehavior then
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then

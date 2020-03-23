@@ -935,10 +935,10 @@ function GeneratePointsAroundPosition(position,radius,num)
     local coords = {}
     while nnn < num do
         local xxx = 0
-        local yyy = 0
+        local zzz = 0
         xxx = position[1] + radius * math.cos (nnn/num* (2 * math.pi))
-        yyy = position[3] + radius * math.sin (nnn/num* (2 * math.pi))
-        table.insert(coords, {xxx, yyy})
+        zzz = position[3] + radius * math.sin (nnn/num* (2 * math.pi))
+        table.insert(coords, {xxx, zzz})
         nnn = nnn + 1
     end
     return coords
@@ -962,7 +962,35 @@ function MassGroupCenter(massGroup)
     return {xx1/nn1,yy1/nn1,zz1/nn1}
 end
 
+function SetArcPoints(position,enemyPosition,radius,num,arclength)
+    -- Courtesy of chp2001
+    -- position = engineer position
+    -- enemyPosition = base or assault point
+    -- radius = distance from the enemyPosition
+    -- num = number of points along the arc. Must be greater than 1.
+    -- length of the arc in game units
+    -- Example set
+    -- local arcenemyBase = { 360.5, 10, 365.5, type="VECTOR3" }
+    -- local arcengineer = { 233.5, 10, 386.5, type="VECTOR3" }
+    -- RUtils.SetArcPoints(arcengineer, arcenemyBase, 80, 3, 30)
 
+    local nnn=0
+    local num1 = num-1
+    local coords = {}
+    local distvec = {position[1]-enemyPosition[1],position[3]-enemyPosition[3]}
+    local angoffset = math.atan2(distvec[2],distvec[1])
+    local arcangle = arclength/radius
+    while nnn <= num1 do
+        local xxx = 0
+        local zzz = 0
+        xxx = enemyPosition[1] + radius * math.cos (nnn/num1* (arcangle)+angoffset-arcangle/2)
+        zzz = enemyPosition[3] + radius * math.sin (nnn/num1* (arcangle)+angoffset-arcangle/2)
+        table.insert(coords, {xxx,0,zzz})
+        nnn = nnn + 1
+    end
+    LOG('Resulting Table :'..repr(coords))
+    return coords
+end
 
 
 
