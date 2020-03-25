@@ -7,6 +7,7 @@ local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local MakePlatoon = moho.aibrain_methods.MakePlatoon
 local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
+local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
 
 -- Don't delete this yet.
 --[[RNGCommanderBehavior = CommanderBehavior
@@ -148,7 +149,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() > 243
+        and GetGameTimeSeconds() > 260
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
         maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
@@ -315,7 +316,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
 end
 
-function CDRReturnHomeRNG(aiBrain, cdr)
+function CDRReturnHomeRNGold(aiBrain, cdr)
     -- This is a reference... so it will autoupdate
     local cdrPos = cdr:GetPosition()
     local distSqAway = 1600
@@ -355,7 +356,61 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     end
 end
 
-function CDRReturnHomeRNGExperimental(aiBrain, cdr)
+function CDRReturnHomeRNGPath(aiBrain, cdr)
+    -- This is a reference... so it will autoupdate
+    local cdrPos = cdr:GetPosition()
+    local distSqAway = 1600
+    local loc = cdr.CDRHome
+    --local newLoc = {}
+    if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
+        local plat = aiBrain:MakePlatoon('', '')
+        
+        aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
+        GetMostRestrictiveLayer(plat)
+        local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, plat.MovementLayer, plat:GetPlatoonPosition(), loc, 10)
+        CDRRevertPriorityChange(aiBrain, cdr)
+        if not aiBrain:PlatoonExists(plat) then
+            return
+        end
+        if path then
+            LOG('ACU Path is true')
+            for i=1, table.getn(path) do
+                LOG('Starting Return movement loop')
+                cdr.GoingHome = true
+                IssueClearCommands({cdr})
+                IssueStop({cdr})
+                cdr.PlatoonHandle:MoveToLocation(path[i], false)
+                LOG('MoveToLocation :'..repr(path[i]))
+                while not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway do
+                    LOG('CDRPos is :'..repr(cdrPos))
+                    LOG('Base Distance vs cutoff distance'..distSqAway..':'..VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]))
+                    dist = VDist2Sq(path[i][1], path[i][3], cdrPos[1], cdrPos[3])
+                    --local movePosTable = RUtils.SetArcPoints(loc, cdr:GetPosition(), 8, 5, 10)
+                    --local indexVar = math.random(1,5)
+                    --LOG('Move to position is :'..repr(movePosTable[indexVar]))
+                    --cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
+                    WaitTicks(30)
+                    if dist < 400 then
+                        -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                        IssueStop({cdr})
+                        break
+                    end
+                    if (cdr:GetHealthPercent() > 0.75) then
+                        if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
+                            cdr.GoingHome = false
+                            IssueStop({cdr})
+                            return CDROverChargeRNG(aiBrain, cdr)
+                        end
+                    end
+                end
+            end
+        end
+        cdr.GoingHome = false
+        IssueClearCommands({cdr})
+    end
+end
+
+function CDRReturnHomeRNG(aiBrain, cdr)
     -- This is a reference... so it will autoupdate
     local cdrPos = cdr:GetPosition()
     local distSqAway = 1600
@@ -370,16 +425,26 @@ function CDRReturnHomeRNGExperimental(aiBrain, cdr)
             if not aiBrain:PlatoonExists(plat) then
                 return
             end
+            cdr.GoingHome = true
             IssueClearCommands({cdr})
             IssueStop({cdr})
-            cdr.GoingHome = true
-            local movePosTable = RUtils.SetArcPoints(loc, cdr:GetPosition(), 8, 5, 10)
-            local indexVar = math.random(1,5)
-            LOG('Move to position is :'..repr(movePosTable[indexVar]))
-            cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
+            local acuPos1 = table.copy(cdrPos)
+            --LOG('ACU Pos 1 :'..repr(acuPos1))
+            cdr.PlatoonHandle:MoveToLocation(loc, false)
             WaitTicks(40)
+            local acuPos2 = table.copy(cdrPos)
+            --LOG('ACU Pos 2 :'..repr(acuPos2))
+            local headingVec = {(2 * (10 * acuPos2[1] - acuPos1[1]*9) + loc[1])/3, 0, (2 * (10 * acuPos2[3] - acuPos1[3]*9) + loc[3])/3}
+            --LOG('Heading Vector is :'..repr(headingVec))
+            local movePosTable = RUtils.SetArcPoints(headingVec,acuPos2, 15, 3, 8)
+            local indexVar = math.random(1,3)
+            --LOG('Move to position is :'..repr(movePosTable[indexVar]))
+            IssueClearCommands({cdr})
+            IssueStop({cdr})
+            cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
+            WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
-                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdr:GetPosition(), 20, 'ENEMY') > 0 ) then
+                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdrPos, 20, 'ENEMY') > 0 ) then
                     cdr.GoingHome = false
                     IssueStop({cdr})
                     return CDROverChargeRNG(aiBrain, cdr)

@@ -527,7 +527,7 @@ Platoon = Class(oldPlatoon) {
                 else
                     WaitTicks(10)
                 end
-                WaitTicks(1)
+                WaitTicks(10)
             end
         end
     end,
@@ -1430,9 +1430,9 @@ Platoon = Class(oldPlatoon) {
         end
         -- final check for if we should disband
         if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
-            LOG('* AI-RNG: * Final Disband Check Engineer Build Queue is :'..table.getn(eng.EngineerBuildQueue))
+            --LOG('* AI-RNG: * Final Disband Check Engineer Build Queue is :'..table.getn(eng.EngineerBuildQueue))
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
-                LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand bottom " .. eng.Sync.id)
+                --LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand bottom " .. eng.Sync.id)
                 --eng.PlatoonHandle:PlatoonDisband()
                 return eng.PlatoonHandle:ReturnToBaseAIRNG()
             end
