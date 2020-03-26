@@ -6,7 +6,7 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard Small',
+    BaseTemplateName = 'RNGAI Unmarked Expansion Standard Small',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders',
@@ -15,6 +15,7 @@ BaseBuilderTemplate {
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder Expansion',
+                'RNGAI Mass Storage Builder',
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
@@ -37,8 +38,6 @@ BaseBuilderTemplate {
                
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',
-                'RNGAI T1 Perimeter Defenses',
-                'RNGAI T2 Expansion TML',
 		},
     NonCheatBuilders = { },
     BaseSettings = {
@@ -64,7 +63,7 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        if markerType ~= 'Expansion Area' then
+        if markerType ~= 'Unmarked Expansion' then
             LOG('* AI-RNG: Expansion MarkerType is', markerType)
             return 0
         end

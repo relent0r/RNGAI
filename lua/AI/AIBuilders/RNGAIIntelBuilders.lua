@@ -84,7 +84,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.RADAR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.2, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.3, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',

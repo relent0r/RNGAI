@@ -12,6 +12,7 @@ BaseBuilderTemplate {
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small Distant',
+        'RNGAI Engineer Expansion Builders Small',
 
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',
@@ -66,7 +67,7 @@ BaseBuilderTemplate {
         -- Land Unit Builders --
         --'RNGAI Null TankLandBuilder',
         -- Land Unit Formers --
-        'RNGAI Null Land FormBuilders',
+        --'RNGAI Null Land FormBuilders',
     },
     NonCheatBuilders = {
     },

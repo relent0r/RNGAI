@@ -1059,6 +1059,16 @@ Platoon = Class(oldPlatoon) {
                     self:PlatoonDisband()
                     return
                 end
+            elseif cons.NearMarkerType == 'Unmarked Expansion' then
+                reference, refName = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
+                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
+                -- didn't find a location to build at
+                LOG('refName is : '..refName)
+                if not reference or not refName then
+                    LOG('Unmarked Expansion Builder reference or refName missing')
+                    self:PlatoonDisband()
+                    return
+                end
             elseif cons.NearMarkerType == 'Large Expansion Area' then
                 reference, refName = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
@@ -1445,6 +1455,7 @@ Platoon = Class(oldPlatoon) {
     WatchForNotBuildingRNG = function(eng)
         WaitTicks(5)
         local aiBrain = eng:GetAIBrain()
+        local engPos = eng:GetPosition()
 
         --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
         while not eng.Dead and (eng.GoingHome or eng:IsUnitState("Building") or
@@ -1453,6 +1464,20 @@ Platoon = Class(oldPlatoon) {
                   or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Moving") or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing")
                  ) do
             WaitTicks(30)
+
+            if eng:IsUnitState("Moving") then
+                if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                    local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
+                    local enemyEngPos = enemyEngineer[1]:GetPosition()
+                    if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                        IssueStop({eng})
+                        IssueClearCommands({eng})
+                        IssueReclaim({eng}, enemyEngineer[1])
+                    end
+                end
+            end
+
+
 
             --if eng.CDRHome then
             --  LOG('*AI DEBUG: Commander waiting for building.')

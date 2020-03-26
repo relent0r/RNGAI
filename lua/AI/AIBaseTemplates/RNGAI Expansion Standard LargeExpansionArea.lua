@@ -15,27 +15,19 @@ BaseBuilderTemplate {
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder Expansion',
-                'RNGAI Mass Storage Builder',
-                --'RNGAI ExtractorUpgrades Expansion',
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
                 'RNGAI Engineering Support Builder',
                 'RNGAI T1 Reclaim Builders Expansion',
-                'RNGAI T1 Assist Builders',
-                'RNGAI T2 Assist Builders',
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder',
-                'RNGAI Reaction Tanks',
-                'RNGAI T2 TankLandBuilder',
+                'RNGAI TankLandBuilder Expansions',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
-                'RNGAI Land Mass Raid',
                 'RNGAI Land FormBuilders Expansion',
-                'RNGAI Land Response Formers',
         
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Land',

@@ -409,6 +409,24 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     return false
 end
 
+function AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
+    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    if not pos then
+        return false
+    end
+
+    local validPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Unmarked Expansion', pos, radius, tMin, tMax, tRings, tType)
+
+    local retPos, retName
+    if eng then
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+    else
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+    end
+
+    return retPos, retName
+end
+
 function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
     local pos = aiBrain:PBMGetLocationCoords(locationType)
     if not pos then
@@ -907,21 +925,55 @@ function MarkTacticalMassLocations(aiBrain)
     end
     aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups = massGroups
     --LOG('* AI-RNG: * Total Expansion, Large expansion markers'..repr(markerList))
-    --LOG('* AI-RNG: * Unmarked Mass Groups'..repr(massGroups))
+    LOG('* AI-RNG: * Unmarked Mass Groups'..repr(massGroups))
+end
+
+function GenerateMassGroupMarkerLocations(aiBrain)
+    -- Will generate locations for markers on the center point for each unmarked mass group
+    local markerGroups = aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups
+    local newMarkerLocations = {}
+    if table.getn(markerGroups) > 0 then
+        for key, group in markerGroups do
+            local position = MassGroupCenter(group)
+            table.insert(newMarkerLocations, position)
+            LOG('Position for new marker is :'..repr(position))
+        end
+        LOG('Completed New marker positions :'..repr(newMarkerLocations))
+        return newMarkerLocations
+    end
+    return false
 end
 
 function CreateMarkers(markerType, newMarkers)
 -- markerType = string e.g "Marker Area"
 -- newMarkers = a table of new marker positions e.g {{123,12,123}}
-
+--[[    
+    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Expansion Area' then
+            if string.find(k, 'ExpansionArea') then
+                WARN('* AI-Uveso: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
+            elseif not string.find(k, 'Expansion Area') then
+                WARN('* AI-Uveso: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
+            end
+        end
+    end
+]]
+    --LOG('Marker Dump'..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
     for index, markerPosition in newMarkers do    
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index] = {}
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].color = 'b93f81'
+        --LOG('markerType is : '..markerType..' Index is : '..index)
+        --local markerName = markerType..' '..index
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index] = { }
+        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].color = 'ff000000'
         Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].hint = true
         Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].orientation = { 0, 0, 0 }
         Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].prop = "/env/common/props/markers/M_Expansion_prop.bp"
         Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].type = markerType
         Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].position = markerPosition
+    end
+    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Unmarked Expansion' then
+            LOG('Unmarked Expansion Marker at :'..repr(v.position))
+        end
     end
 end
 
@@ -991,6 +1043,4 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     LOG('Resulting Table :'..repr(coords))
     return coords
 end
-
-
 

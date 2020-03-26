@@ -218,6 +218,16 @@ function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, 
     return false
 end
 
+function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
+    local pos, name = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        --LOG('UnmarkedExpansionNeedsEngineer is True')
+        return true
+    end
+    --LOG('UnmarkedExpansionNeedsEngineer is False')
+    return false
+end
+
 function FactoryComparisonAtLocation(aiBrain, locationType, unitCount, unitCategory, compareType)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     local testCat = unitCategory

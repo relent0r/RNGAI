@@ -9,27 +9,6 @@ local MakePlatoon = moho.aibrain_methods.MakePlatoon
 local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
 
--- Don't delete this yet.
---[[RNGCommanderBehavior = CommanderBehavior
-function CommanderBehaviorRNG(platoon)
-    local aiBrain = platoon:GetBrain()
-    if not aiBrain.RNG then
-        return RNGCommanderBehavior(platoon)
-    end
-    per = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
-    for _, v in platoon:GetPlatoonUnits() do
-        if not v.Dead and not v.CommanderThread then
-            if per == 'RNGStandard' or per == 'RNGStandardcheat' then
-                LOG('* AI-RNG: Correct ai brain name')
-                v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
-            else
-                LOG('* AI-RNG: Incorrect ai brain name')
-                v.CommanderThread = v:ForkThread(CommanderThread, platoon)
-            end
-        end
-    end
-end]]
-
 function CommanderBehaviorRNG(platoon)
     for _, v in platoon:GetPlatoonUnits() do
         if not v.Dead and not v.CommanderThread then
