@@ -63,15 +63,13 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
+        LOG('Expansion Function for Small Unmarked')
+        if not aiBrain.RNG then
+            return -1
+        end
         if markerType ~= 'Unmarked Expansion' then
             LOG('* AI-RNG: Expansion MarkerType is', markerType)
-            return 0
-        end
-        
-        local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
-        if not( personality == 'RNGStandard' or personality == 'RNGStandardcheat' ) then
-            LOG('* AI-RNG: Expansion personality is', personality)
-            return 0
+            return -1
         end
 
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
@@ -91,6 +89,6 @@ BaseBuilderTemplate {
             return 100
         end
         LOG('* AI-RNG: Expansion return default 0')
-        return 0
+        return -1
     end,
 }

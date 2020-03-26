@@ -2,9 +2,24 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local Utils = import('/lua/utilities.lua')
-
-
-
+--[[
+Valid Threat Options:
+            Overall
+            OverallNotAssigned
+            StructuresNotMex
+            Structures
+            Naval
+            Air
+            Land
+            Experimental
+            Commander
+            Artillery
+            AntiAir
+            AntiSurface
+            AntiSub
+            Economy
+            Unknown
+]]
 
 local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
@@ -936,9 +951,9 @@ function GenerateMassGroupMarkerLocations(aiBrain)
         for key, group in markerGroups do
             local position = MassGroupCenter(group)
             table.insert(newMarkerLocations, position)
-            LOG('Position for new marker is :'..repr(position))
+            --LOG('Position for new marker is :'..repr(position))
         end
-        LOG('Completed New marker positions :'..repr(newMarkerLocations))
+        --LOG('Completed New marker positions :'..repr(newMarkerLocations))
         return newMarkerLocations
     end
     return false

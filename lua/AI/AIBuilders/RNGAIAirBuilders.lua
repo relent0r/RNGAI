@@ -189,6 +189,11 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
+            PrioritizedCategories = {
+                'BOMBER AIR',
+                'GUNSHIP AIR',
+                'ANTIAIR AIR',
+            },
         },
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
@@ -202,6 +207,11 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
+            PrioritizedCategories = {
+                'BOMBER AIR',
+                'GUNSHIP AIR',
+                'ANTIAIR AIR',
+            },
         },
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
@@ -239,6 +249,11 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
+            PrioritizedCategories = {
+                'BOMBER AIR',
+                'GUNSHIP AIR',
+                'ANTIAIR AIR',
+            },
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },

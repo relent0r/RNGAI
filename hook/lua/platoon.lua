@@ -29,22 +29,48 @@ Platoon = Class(oldPlatoon) {
         self:Stop()
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
+        local data = self.PlatoonData
+        local categoryList = {}
+        local atkPri = {}
         local target
         local blip
-        local startX = nil
-        local StartZ = nil
-        startX, startZ = aiBrain:GetArmyStartPos()
+        local startX, startZ = aiBrain:GetArmyStartPos()
+        local currentPosition = self:GetPlatoonPosition()
+        if data.PrioritizedCategories then
+            for k,v in data.PrioritizedCategories do
+                table.insert(atkPri, v)
+                table.insert(categoryList, ParseEntityCategory(v))
+            end
+        else
+            table.insert(atkPri, 'ALLUNITS')
+            table.insert(categoryList, categories.ALLUNITS)
+        end
+        self:SetPrioritizedTargetList('Attack', categoryList)
+        local maxRadius = data.SearchRadius or 1000
         while aiBrain:PlatoonExists(self) do
-            if self:IsOpponentAIRunning() then
-                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.AIR - categories.WALL)
-                if target then
-                    blip = target:GetBlip(armyIndex)
-                    self:Stop()
-                    self:AggressiveMoveToLocation( table.copy(target:GetPosition()) )
+            if not target or target.Dead then
+                local mult = { 1,10,25 }
+                for _,i in mult do
+                    target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
+                    if target then
+                        break
+                    end
+                    WaitSeconds(1) --DUNCAN - was 3
+                    if not aiBrain:PlatoonExists(self) then
+                        return
+                    end
                 end
             end
-            WaitTicks(170)
-            self:MoveToLocation({startX, 0, startZ}, false)
+            LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
+            if target then
+                self:Stop()
+                LOG('* AI-RNG: Attacking Target')
+                self:AttackTarget(target)
+                WaitTicks(70)
+            elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 2500 then
+                LOG('* AI-RNG: No Target Returning to base')
+                return self:ReturnToBaseAIRNG()
+            end
         end
     end,
     
