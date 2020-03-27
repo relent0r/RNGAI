@@ -95,8 +95,9 @@ BaseBuilderTemplate {
         return -1
     end,
     FirstBaseFunction = function(aiBrain)
+        local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if aiBrain.RNG and mapSizeX < 1000 and mapSizeZ < 1000 then
+        if (personality == 'rngstandardnull' or personality == 'rngstandardnullcheat') and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
             if MABC.CanBuildOnMassLessThanDistance(aiBrain, 'MAIN', 10, -500, 0, 0, 'AntiSurface', 1) then

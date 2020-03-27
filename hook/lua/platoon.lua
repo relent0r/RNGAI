@@ -2128,7 +2128,7 @@ Platoon = Class(oldPlatoon) {
                 --LOG('* AI-RNG: ACUTarget Position is :'..repr(acuTarget))
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
-                if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 122500 then
+                if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 40000 then
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {acuTarget[1],0,acuTarget[3]}, 1000)
                     if path then
                         --LOG('* AI-RNG: * Path for ACUTarget is true')
@@ -2218,7 +2218,7 @@ Platoon = Class(oldPlatoon) {
                 end
                 if threat > 0 then
                     LOG('TacticalResponseAI : threat is '..threat..' threat position is :'..repr(threatPos))
-                    if VDist2Sq(platoonPos[1], platoonPos[3], threatPos[1], threatPos[2]) < 122500 then
+                    if VDist2Sq(platoonPos[1], platoonPos[3], threatPos[1], threatPos[2]) < 40000 then
                         local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {threatPos[1],0,threatPos[2]}, 1000)
                         if path then
                             -- Uvesos stuff (my fav part of his unit movement)
