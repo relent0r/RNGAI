@@ -872,7 +872,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         --LOG('Potential Threats :'..repr(potentialThreats))
         local phaseTwoThreats = {}
-        local threatLimit = 10
+        local threatLimit = 15
 
         if table.getn(potentialThreats) > 0 then
             local threatLocation = {}

@@ -65,9 +65,15 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             local factoryPos = self.Brain.BuilderManagers[locationType].Position
                             LOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
                             local startDistance = VDist2(opponentStart[1], opponentStart[3], factoryPos[1], factoryPos[3])
-                            position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 30})
-                            LOG('Rally Position is :'..repr(position))
-                            break
+                            if EntityCategoryContains(categories.AIR, factory) then
+                                position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 60})
+                                LOG('Air Rally Position is :'..repr(position))
+                                break
+                            else
+                                position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 30})
+                                LOG('Rally Position is :'..repr(position))
+                                break
+                            end
                         end
                     end
                 end

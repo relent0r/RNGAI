@@ -30,7 +30,7 @@ BaseBuilderTemplate {
                 'RNGAI Land FormBuilders Expansion',
         
                 -- Land Factory Builders --
-                'RNGAI Factory Builder Land',
+                --'RNGAI Factory Builder Land',
         
                 -- Land Factory Formers --
                 'RNGAI T1 Upgrade Builders Expansion',

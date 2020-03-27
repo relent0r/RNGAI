@@ -15,15 +15,15 @@ BaseBuilderTemplate {
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder Expansion',
-                'RNGAI Mass Storage Builder',
+                --'RNGAI Mass Storage Builder',
                 --'RNGAI ExtractorUpgrades Expansion',
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
-                'RNGAI Engineering Support Builder',
+                --'RNGAI Engineering Support Builder',
                 'RNGAI T1 Reclaim Builders Expansion',
-                'RNGAI T1 Assist Builders',
-                'RNGAI T2 Assist Builders',
+                --'RNGAI T1 Assist Builders',
+                --'RNGAI T2 Assist Builders',
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
@@ -38,13 +38,13 @@ BaseBuilderTemplate {
                 'RNGAI Land Response Formers',
         
                 -- Land Factory Builders --
-                'RNGAI Factory Builder Land',
+                --'RNGAI Factory Builder Land',
         
                 -- Land Factory Formers --
                 'RNGAI T1 Upgrade Builders Expansion',
         
                 -- Air Factory Builders --
-                'RNGAI Factory Builder Air',
+                --'RNGAI Factory Builder Air',
         
                 -- Air Unit Builders T1 --
                 'RNGAI ScoutAirBuilder',
@@ -55,9 +55,9 @@ BaseBuilderTemplate {
                 'RNGAI Air Platoon Builder',
         
                 -- Defence Builders --
-                'RNGAI Base Defenses',
-                'RNGAI T1 Perimeter Defenses',
-                'RNGAI T2 Expansion TML',
+                'RNGAI Base Defenses Expansion',
+                --'RNGAI T1 Perimeter Defenses',
+                --'RNGAI T2 Expansion TML',
 		},
     NonCheatBuilders = { },
     BaseSettings = {

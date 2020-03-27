@@ -55,7 +55,7 @@ Platoon = Class(oldPlatoon) {
                     if target then
                         break
                     end
-                    WaitSeconds(1) --DUNCAN - was 3
+                    WaitTicks(10) --DUNCAN - was 3
                     if not aiBrain:PlatoonExists(self) then
                         return
                     end
@@ -356,7 +356,7 @@ Platoon = Class(oldPlatoon) {
             -- we're there... wait here until we're done
             local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and aiBrain:PlatoonExists(self) do
-                WaitSeconds(Random(5,10))
+                WaitTicks(Random(50,100))
                 numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
 
@@ -488,33 +488,29 @@ Platoon = Class(oldPlatoon) {
                     mustScoutArea.TaggedBy = scout
                     targetArea = mustScoutArea.Position
 
-                --2) Scout "unknown threat" areas with a threat higher than 25
-                elseif table.getn(unknownThreats) > 0 and unknownThreats[1][3] > 25 then
-                    aiBrain:AddScoutArea({unknownThreats[1][1], 0, unknownThreats[1][2]})
-
-                --3) Scout high priority locations
+                --2) Scout high priority locations
                 elseif aiBrain.IntelData.AirHiPriScouts < aiBrain.NumOpponents and aiBrain.IntelData.AirLowPriScouts < 1
                 and table.getn(aiBrain.InterestList.HighPriority) > 0 then
                     aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
-
                     highPri = true
-
                     targetData = aiBrain.InterestList.HighPriority[1]
                     targetData.LastScouted = GetGameTimeSeconds()
                     targetArea = targetData.Position
-
                     aiBrain:SortScoutingAreas(aiBrain.InterestList.HighPriority)
 
-                --4) Every time we scout NumOpponents number of high priority locations, scout a low priority location
+                --3) Every time we scout NumOpponents number of high priority locations, scout a low priority location
                 elseif aiBrain.IntelData.AirLowPriScouts < 1 and table.getn(aiBrain.InterestList.LowPriority) > 0 then
                     aiBrain.IntelData.AirHiPriScouts = 0
                     aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
-
                     targetData = aiBrain.InterestList.LowPriority[1]
                     targetData.LastScouted = GetGameTimeSeconds()
                     targetArea = targetData.Position
-
                     aiBrain:SortScoutingAreas(aiBrain.InterestList.LowPriority)
+
+                --4) Scout "unknown threat" areas with a threat higher than 25
+                elseif table.getn(unknownThreats) > 0 and unknownThreats[1][3] > 25 then
+                    aiBrain:AddScoutArea({unknownThreats[1][1], 0, unknownThreats[1][2]})
+                
                 else
                     --Reset number of scoutings and start over
                     aiBrain.IntelData.AirLowPriScouts = 0
@@ -903,7 +899,7 @@ Platoon = Class(oldPlatoon) {
                         if target then
                             break
                         end
-                        WaitSeconds(1) --DUNCAN - was 3
+                        WaitTicks(10) --DUNCAN - was 3
                         if not aiBrain:PlatoonExists(self) then
                             return
                         end
@@ -948,7 +944,7 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
             end
-            WaitSeconds(7)
+            WaitTicks(70)
         end
     end,
 
@@ -2205,22 +2201,24 @@ Platoon = Class(oldPlatoon) {
                 LOG('* AI-RNG: Tactical Threat Detected')
                 local threatPos = {}
                 local threat = 0
+                local threatKey = false
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
                 --LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
-                for _, v in tacticalThreat do
+                for k, v in tacticalThreat do
                     if v.Threat > threat and v.ThreatType == self.MovementLayer then
                         if self.MovementLayer == 'Water' and not v.PositionOnWater then
                             LOG('Movement Layer is Water and Position on water is false')
                             continue
                         end
+                        threatKey = k
                         threat = v.Threat
                         threatPos = v.Position
                     end
                 end
                 if threat > 0 then
                     LOG('TacticalResponseAI : threat is '..threat..' threat position is :'..repr(threatPos))
-                    if VDist2Sq(platoonPos[1], platoonPos[3], threatPos[1], threatPos[2]) < 350 then
+                    if VDist2Sq(platoonPos[1], platoonPos[3], threatPos[1], threatPos[2]) < 122500 then
                         local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {threatPos[1],0,threatPos[2]}, 1000)
                         if path then
                             -- Uvesos stuff (my fav part of his unit movement)
@@ -2231,7 +2229,7 @@ Platoon = Class(oldPlatoon) {
                             for i=1, table.getn(path) do
                                 --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
                                 self:MoveToLocation(path[i], false)
-                                LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint :'..i)
+                                --LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint :'..i)
                                 local PlatoonPosition
                                 local Lastdist
                                 local dist
@@ -2260,6 +2258,24 @@ Platoon = Class(oldPlatoon) {
                                         end
                                     end
                                     WaitTicks(15)
+                                end
+                            end
+                            local currentThreat
+                            if self.MovementLayer == 'Water' then
+                                currentThreat = aiBrain:GetThreatAtPosition({threatPos[1],0,threatPos[2]}, 0, true, 'Naval')
+                                LOG('Movement Layer is Water current threat is :'..currentThreat)
+                            elseif self.MovementLayer == 'Land' then
+                                currentThreat = aiBrain:GetThreatAtPosition({threatPos[1],0,threatPos[2]}, 0, true, 'Land')
+                                LOG('Movement Layer is Land current threat is :'..currentThreat)
+                            else
+                                currentThreat = aiBrain:GetThreatAtPosition({threatPos[1],0,threatPos[2]}, 0, true, 'Overall')
+                                LOG('Movement Layer is unknown current threat is :'..currentThreat)
+                            end
+                            if currentThreat < 10 then
+                                if aiBrain.EnemyIntel.EnemyThreatLocations[threatKey] then
+                                    LOG('No more threat at location, nil threatKey')
+                                    aiBrain.EnemyIntel.EnemyThreatLocations[threatKey] = nil
+                                    LOG('Current Threat Table :'..repr(aiBrain.EnemyIntel.EnemyThreatLocations))
                                 end
                             end
                         else
@@ -2502,7 +2518,7 @@ Platoon = Class(oldPlatoon) {
                 IssueDive({v})
             end
         end
-        WaitSeconds(5)
+        WaitTicks(50)
         while aiBrain:PlatoonExists(self) do
             target = AIUtils.AIFindBrainTargetInRangeSorian(aiBrain, self, 'Attack', maxRadius, atkPri)
             if target then
@@ -2510,7 +2526,7 @@ Platoon = Class(oldPlatoon) {
                 self:Stop()
                 cmd = self:AggressiveMoveToLocation(target:GetPosition())
             end
-            WaitSeconds(1)
+            WaitTicks(10)
             if (not cmd or not self:IsCommandsActive(cmd)) then
                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.WALL)
                 if target then
@@ -2525,7 +2541,7 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
             end
-            WaitSeconds(17)
+            WaitTicks(170)
         end
     end,
 
@@ -2569,7 +2585,7 @@ Platoon = Class(oldPlatoon) {
             local target = false
             local blip = false
             while unit:GetTacticalSiloAmmoCount() < 1 or not target do
-                WaitSeconds(7)
+                WaitTicks(70)
                 target = false
                 while not target do
 
@@ -2585,7 +2601,7 @@ Platoon = Class(oldPlatoon) {
                     if target then
                         break
                     end
-                    WaitSeconds(3)
+                    WaitTicks(30)
                     if not aiBrain:PlatoonExists(self) then
                         return
                     end
@@ -2595,7 +2611,7 @@ Platoon = Class(oldPlatoon) {
                 --LOG('*AI DEBUG: Firing Tactical Missile at enemy swine!')
                 IssueTactical({unit}, target)
             end
-            WaitSeconds(3)
+            WaitTicks(30)
         end
     end,
 

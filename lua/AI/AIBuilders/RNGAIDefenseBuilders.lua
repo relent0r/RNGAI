@@ -23,7 +23,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 DIRECTFIRE'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
@@ -51,7 +51,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 ANTIAIR'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -79,7 +79,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3)} },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE TECH2 DIRECTFIRE'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -107,7 +107,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3)} },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE TECH2 ANTIAIR'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE TECH2 ANTIAIR'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -249,7 +249,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 DIRECTFIRE'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
@@ -277,7 +277,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE'}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 ANTIAIR'}},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -336,7 +336,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence - Perimeter',
         PlatoonTemplate = 'EngineerBuilder',
-        Priority = 850,
+        Priority = 650,
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 360 } },
