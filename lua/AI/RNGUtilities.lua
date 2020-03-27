@@ -1059,3 +1059,27 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     return coords
 end
 
+function ExtractorsBeingUpgraded(aiBrain)
+    -- Returns number of extractors upgrading
+
+    local tech1ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH1, false)
+    local tech2ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH2, false)
+    local tech1ExtNumBuilding = 0
+    local tech2ExtNumBuilding = 0
+    -- own armyIndex
+    local armyIndex = aiBrain:GetArmyIndex()
+    -- loop over all units and search for upgrading units
+    for t1extKey, t1extrator in tech1ExtractorUpgrading do
+        if not t1extrator.Dead and not t1extrator:BeenDestroyed() and t1extrator:IsUnitState('Upgrading') and t1extrator:GetAIBrain():GetArmyIndex() == armyIndex then
+            tech1ExtNumBuilding = tech1ExtNumBuilding + 1
+        end
+    end
+    for t2extKey, t2extrator in tech2ExtractorUpgrading do
+        if not t2extrator.Dead and not t2extrator:BeenDestroyed() and t2extrator:IsUnitState('Upgrading') and t2extrator:GetAIBrain():GetArmyIndex() == armyIndex then
+            tech2ExtNumBuilding = tech2ExtNumBuilding + 1
+        end
+    end
+    
+    return {TECH1 = tech1ExtNumBuilding, TECH2 = tech2ExtNumBuilding}
+end
+

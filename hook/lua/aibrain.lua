@@ -123,6 +123,13 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitor)
         self.LowEnergyMode = false
+        self.EcoManager = {
+            EcoManagerTime = 30,
+            EcoManagerStatus = 'ACTIVE',
+            ExtractorUpgradeLimit = 2,
+            ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
+        }
+        
 
         --Tactical Monitor
         self.TacticalMonitor = {
@@ -177,6 +184,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
+        self:ForkThread(self.EcoManagerThreadRNG)
     end,
     
     BaseMonitorThreadRNG = function(self)
@@ -940,4 +948,26 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
     end,
+
+    EcoManagerThreadRNG = function(self)
+        while true do
+            if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
+                --LOG('* AI-RNG: Tactical Monitor Is Active')
+                self:EcoManagerRNG()
+            end
+            WaitTicks(self.EcoManager.EcoManagerTime)
+        end
+    end,
+
+    EcoManagerRNG = function(self)
+    -- A straight shooter with upper management written all over him
+        WaitTicks(Random(1,7))
+        local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
+        self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1
+        self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2
+        LOG('Extractors Upgrading :'..repr(self.EcoManager.ExtractorsUpgrading))
+
+    end,
+
+    
 }

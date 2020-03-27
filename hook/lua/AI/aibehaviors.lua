@@ -281,7 +281,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 continueFighting = false
             end
-            local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 50, 'Enemy')
+            local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 70, 'Enemy')
             if enenyUnitLimit > 15 then
                 LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
                 continueFighting = false
@@ -413,7 +413,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local unitBp = unit:GetBlueprint()
     local upgradeID = unitBp.General.UpgradesTo or false
     local upgradebp = false
-
+    local unitType, unitTech = StructureTypeCheck(aiBrain, unitBp)
 
     if upgradeID then
         upgradebp = aiBrain:GetUnitBlueprint(upgradeID) or false
@@ -462,6 +462,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyTrend
     local massEfficiency
     local energyEfficiency
+    local upgradeNumLimit
     
     local initial_delay = 0
     local ecoPassbyTimeout = GetGameTimeSeconds()
@@ -478,7 +479,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
-
+        upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
+        extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit
+        LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
             --LOG('* AI-RNG:'..aiBrain.Nickname)
             --LOG('* AI-RNG: UpgradeIssues and UpgradeIssuedLimit are set')
@@ -506,7 +509,6 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: massEfficiency'..massEfficiency)
             energyEfficiency = math.min(energyIncome / energyRequested, 2)
             --LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
-
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .60 and energyStorageRatio > .70))
@@ -528,7 +530,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
-				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
+				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco and upgradeNumLimit < extractorUpgradeLimit then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 						if not unit.Dead then
 							-- if upgrade issued and not completely full --
@@ -629,6 +631,52 @@ function StructureUpgradeDelay( aiBrain, delay )
     if ScenarioInfo.StructureUpgradeDialog then
         LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
     end
+end
+
+function StructureUpgradeNumDelay(aiBrain, type, tech)
+    -- Checked if a slot is available for unit upgrades
+    local numLimit = false
+    if type == 'MASSEXTRACTION' and tech == 'TECH1' then
+        numLimit = aiBrain.EcoManager.ExtractorsUpgrading.TECH1
+    elseif type == 'MASSEXTRACTION' and tech == 'TECH2' then
+        numLimit = aiBrain.EcoManager.ExtractorsUpgrading.TECH2
+    end
+    if numLimit then
+        return numLimit
+    else
+        return false
+    end
+    return false
+end
+
+function StructureTypeCheck(aiBrain, unitBp)
+    -- Returns the tech and type of a structure unit
+    local unitType = false
+    local unitTech = false
+    for k, v in unitBp.Categories do
+        if v == 'MASSEXTRACTION' then
+            --LOG('Unit is Mass Extractor')
+            unitType = 'MASSEXTRACTION'
+        else
+            --LOG('Value Not Mass Extraction')
+        end
+
+        if v == 'TECH1' then
+            --LOG('Extractor is Tech 1')
+            unitTech = 'TECH1'
+        elseif v == 'TECH2' then
+            --LOG('Extractor is Tech 2')
+            unitTech = 'TECH2'
+        else
+            --LOG('Value not TECH1, TECH2')
+        end
+    end
+    if unitType and unitTech then
+       return unitType, unitTech
+    else
+        return false, false
+    end
+    return false, false
 end
 
 function TacticalResponse(platoon)
