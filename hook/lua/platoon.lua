@@ -2133,12 +2133,10 @@ Platoon = Class(oldPlatoon) {
                     if path then
                         --LOG('* AI-RNG: * Path for ACUTarget is true')
                         -- Uvesos stuff (my fav part of his unit movement)
-                        if table.getn(path) > 1 then
-                            --LOG('* AI-RNG: * TacticalResponseAI: table.getn(path): '..table.getn(path))
-                        end
                         --LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
                         for i=1, table.getn(path) do
                             --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
+                            self:Stop()
                             self:MoveToLocation(path[i], false)
                             LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint to support ACU')
                             local PlatoonPosition
@@ -2222,12 +2220,10 @@ Platoon = Class(oldPlatoon) {
                         local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {threatPos[1],0,threatPos[2]}, 1000)
                         if path then
                             -- Uvesos stuff (my fav part of his unit movement)
-                            if table.getn(path) > 1 then
-                                --LOG('* AI-RNG: * TacticalResponseAI: table.getn(path): '..table.getn(path))
-                            end
                             LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
                             for i=1, table.getn(path) do
                                 --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
+                                self:Stop()
                                 self:MoveToLocation(path[i], false)
                                 --LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint :'..i)
                                 local PlatoonPosition
@@ -2272,6 +2268,8 @@ Platoon = Class(oldPlatoon) {
                                 LOG('Movement Layer is unknown current threat is :'..currentThreat)
                             end
                             if currentThreat < 10 then
+                                LOG('Threat key is :'..threatKey)
+                                LOG('Threat Location Details..:'..repr(aiBrain.EnemyIntel.EnemyThreatLocations[threatKey]))
                                 if aiBrain.EnemyIntel.EnemyThreatLocations[threatKey] then
                                     LOG('No more threat at location, nil threatKey')
                                     aiBrain.EnemyIntel.EnemyThreatLocations[threatKey] = nil
