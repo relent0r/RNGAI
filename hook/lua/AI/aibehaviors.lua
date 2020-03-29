@@ -463,12 +463,14 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local massEfficiency
     local energyEfficiency
     local upgradeNumLimit
+    local extractorUpgradeLimit
+    local extractorClosest = false
     
     local initial_delay = 0
     local ecoPassbyTimeout = GetGameTimeSeconds()
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
-		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 2000 and unit:GetFractionComplete() == 1 then
+		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 1000 and unit:GetFractionComplete() == 1 then
 			initial_delay = initial_delay + 10
         end
         --LOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
@@ -481,7 +483,16 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
         extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit
+        if upgradeNumLimit >= extractorUpgradeLimit then
+            continue
+        end
         LOG('Current Upgrade Limit is :'..upgradeNumLimit)
+        extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
+        if not extractorClosest then
+            LOG('ExtractorClosest is false')
+            continue
+        end
+        
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
             --LOG('* AI-RNG:'..aiBrain.Nickname)
             --LOG('* AI-RNG: UpgradeIssues and UpgradeIssuedLimit are set')
@@ -530,7 +541,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
-				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco and upgradeNumLimit < extractorUpgradeLimit then
+				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 						if not unit.Dead then
 							-- if upgrade issued and not completely full --
@@ -677,6 +688,56 @@ function StructureTypeCheck(aiBrain, unitBp)
         return false, false
     end
     return false, false
+end
+
+function ExtractorClosest(aiBrain, unit, unitBp)
+    -- Checks if the unit is closest to the main base
+    local MassExtractorUnitList = false
+    local unitType, unitTech = StructureTypeCheck(aiBrain, unitBp)
+    local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
+    local DistanceToBase = nil
+    local LowestDistanceToBase = nil
+    local UnitPos
+
+    if unitType == 'MASSEXTRACTION' and unitTech == 'TECH1' then
+        MassExtractorUnitList = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1), false, false)
+    elseif unitType == 'MASSEXTRACTION' and unitTech == 'TECH2' then
+        MassExtractorUnitList = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH2), false, false)
+    end
+
+    for k, v in MassExtractorUnitList do
+        local TempID
+        -- Check if we don't want to upgrade this unit
+        if not v
+            or v.Dead
+            or v:BeenDestroyed()
+            or v:IsPaused()
+            or not EntityCategoryContains(ParseEntityCategory(unitTech), v)
+            or v:GetFractionComplete() < 1
+        then
+            -- Skip this loop and continue with the next array
+            continue
+        end
+        if v:IsUnitState('Upgrading') then
+        -- skip upgrading buildings
+            continue
+        end
+        -- Check for the nearest distance from mainbase
+        UnitPos = v:GetPosition()
+        DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
+        if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
+            -- see if we can find a upgrade
+            LowestDistanceToBase = DistanceToBase
+            lowestUnitPos = UnitPos
+        end
+    end
+    if unit:GetPosition() == lowestUnitPos then
+        LOG('Extractor is closest to base')
+        return true
+    else
+        LOG('Extractor is not closest to base')
+        return false
+    end
 end
 
 function TacticalResponse(platoon)
