@@ -880,7 +880,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         --LOG('Potential Threats :'..repr(potentialThreats))
         local phaseTwoThreats = {}
-        local threatLimit = 15
+        local threatLimit = 20
 
         if table.getn(potentialThreats) > 0 then
             local threatLocation = {}
@@ -889,7 +889,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if threat.rThreat > threatLimit then
                     for _, pos in enemyStarts do
                         --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
-                        if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 3600 then
+                        if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 10000 then
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
                             if RUtils.PositionOnWater(self, threat.posX, threat.posZ) then
                                 onWater = true

@@ -2221,10 +2221,17 @@ Platoon = Class(oldPlatoon) {
                         if path then
                             -- Uvesos stuff (my fav part of his unit movement)
                             LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
-                            for i=1, table.getn(path) do
+                            local pathLength = table.getn(path)
+                            for i=1, pathLength do
+                                if not aiBrain.EnemyIntel.EnemyThreatLocations[threatKey] then
+                                    LOG('No more threat at location, breaking path movement')
+                                    i  = pathLength
+                                    break
+                                end
                                 --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
                                 self:Stop()
                                 self:MoveToLocation(path[i], false)
+                                --self:AggressiveMoveToLocation(path[i])
                                 --LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint :'..i)
                                 local PlatoonPosition
                                 local Lastdist
@@ -2267,7 +2274,7 @@ Platoon = Class(oldPlatoon) {
                                 currentThreat = aiBrain:GetThreatAtPosition({threatPos[1],0,threatPos[2]}, 0, true, 'Overall')
                                 LOG('Movement Layer is unknown current threat is :'..currentThreat)
                             end
-                            if currentThreat < 10 then
+                            if currentThreat < 20 then
                                 LOG('Threat key is :'..threatKey)
                                 LOG('Threat Location Details..:'..repr(aiBrain.EnemyIntel.EnemyThreatLocations[threatKey]))
                                 if aiBrain.EnemyIntel.EnemyThreatLocations[threatKey] then

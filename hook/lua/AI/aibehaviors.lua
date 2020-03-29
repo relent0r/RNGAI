@@ -523,7 +523,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             else
                 continue
             end
-            if (GetGameTimeSeconds() - ecoPassbyTimeout) > 960 then
+            if (GetGameTimeSeconds() - ecoPassbyTimeout) > 720 then
                 LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
                 bypasseco = true
             end
