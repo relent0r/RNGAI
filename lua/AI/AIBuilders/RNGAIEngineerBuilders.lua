@@ -54,7 +54,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'LessThanEnergyTrend', { 0.0 } },
+            { UCBC, 'LessThanEnergyTrend', { 30.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',

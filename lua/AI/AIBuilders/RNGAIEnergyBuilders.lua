@@ -46,7 +46,7 @@ BuilderGroup {
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTime', { 360 } },
+            { MIBC, 'GreaterThanGameTime', { 300 } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 80.0 } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.02, 0.0}},
