@@ -2048,6 +2048,8 @@ Platoon = Class(oldPlatoon) {
         local bestBaseName = ""
         local bestDistSq = 999999999
         local platPos = self:GetPlatoonPosition()
+        AIAttackUtils.GetMostRestrictiveLayer(self)
+
         if not mainBase then
             for baseName, base in aiBrain.BuilderManagers do
                 local distSq = VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3])
@@ -2059,37 +2061,46 @@ Platoon = Class(oldPlatoon) {
                 end
             end
         else
-            bestBase = aiBrain.BuilderManagers['MAIN'].Position
+            bestBase = aiBrain.BuilderManagers['MAIN']
         end
-
+        
         if bestBase then
-            AIAttackUtils.GetMostRestrictiveLayer(self)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestBase.Position, 200)
-            IssueClearCommands(self)
-
-            if path then
-                local pathLength = table.getn(path)
-                for i=1, pathLength-1 do
-                    self:MoveToLocation(path[i], false)
+            if self.MovementLayer == 'Air' then
+                self:MoveToLocation(bestBase.Position, false)
+                while aiBrain:PlatoonExists(self) do
+                    platPos = self:GetPlatoonPosition()
+                    local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
+                    if distSq < 400 then
+                        self:PlatoonDisband()
+                        return
+                    end
+                    WaitTicks(15)
                 end
-            end
-            self:MoveToLocation(bestBase.Position, false)
-            
-
-            local oldDistSq = 0
-            while aiBrain:PlatoonExists(self) do
-                platPos = self:GetPlatoonPosition()
-                local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
-                if distSq < 400 then
-                    self:PlatoonDisband()
-                    return
+            else
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestBase.Position, 200)
+                IssueClearCommands(self)
+                if path then
+                    local pathLength = table.getn(path)
+                    for i=1, pathLength-1 do
+                        self:MoveToLocation(path[i], false)
+                        local oldDistSq = 0
+                        while aiBrain:PlatoonExists(self) do
+                            platPos = self:GetPlatoonPosition()
+                            local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
+                            if distSq < 400 then
+                                self:PlatoonDisband()
+                                return
+                            end
+                            -- if we haven't moved in 10 seconds... go back to attacking
+                            if (distSq - oldDistSq) < 25 then
+                                break
+                            end
+                            oldDistSq = distSq
+                            WaitTicks(20)
+                        end
+                    end
                 end
-                -- if we haven't moved in 10 seconds... go back to attacking
-                if (distSq - oldDistSq) < 25 then
-                    break
-                end
-                oldDistSq = distSq
-                WaitTicks(20)
+                self:MoveToLocation(bestBase.Position, false)
             end
         end
         -- return 
@@ -2132,67 +2143,34 @@ Platoon = Class(oldPlatoon) {
                 local platoonPos = self:GetPlatoonPosition()
                 local oldPlan = self:GetPlan()
                 if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 40000 then
-                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', {platoonPos[1],0,platoonPos[3]}, {acuTarget[1],0,acuTarget[3]}, 1000)
-                    if path then
-                        --LOG('* AI-RNG: * Path for ACUTarget is true')
-                        -- Uvesos stuff (my fav part of his unit movement)
-                        --LOG('* AI-RNG: * TacticalResponseAI: moving to destination by path.')
-                        for i=1, table.getn(path) do
-                            --LOG('* AI-RNG: * TacticalResponseAI: moving to destination. i: '..i..' coords '..repr(path[i]))
+                    self:MoveToLocation({acuTarget[1], 0 ,acuTarget[3]}, false)
+                    while aiBrain:PlatoonExists(self) do
+                        PlatoonPosition = self:GetPlatoonPosition() or nil
+                        if not PlatoonPosition then break end
+                        dist = VDist2Sq(acuTarget[1], acuTarget[3], PlatoonPosition[1], PlatoonPosition[3])
+                        -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                        if dist < 400 then
+                            -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             self:Stop()
-                            self:MoveToLocation(path[i], false)
-                            LOG('* AI-RNG: * TacticalResponseAI: moving to Waypoint to support ACU')
-                            local PlatoonPosition
-                            local Lastdist
-                            local dist
-                            local Stuck = 0
-                            while aiBrain:PlatoonExists(self) do
-                                PlatoonPosition = self:GetPlatoonPosition() or nil
-                                if not PlatoonPosition then break end
-                                dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
-                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
-                                if dist < 400 then
-                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                    self:Stop()
-                                    break
-                                end
-                                -- Do we move ?
-                                if Lastdist ~= dist then
-                                    Stuck = 0
-                                    Lastdist = dist
-                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
-                                else
-                                    Stuck = Stuck + 1
-                                    if Stuck > 15 then
-                                        --LOG('* AI-RNG: * TacticalResponseAI: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
-                                        self:Stop()
-                                        break
-                                    end
-                                end
-                                WaitTicks(15)
-                            end
+                            break
                         end
-                        self:Stop()
-                        return self:HuntAIPATHRNG()
-                    else
-                        --LOG('* AI-RNG: * TacticalResponseAI: we have no Graph to reach the destination. Checking CanPathTo()')
-                        if reason == 'NoGraph' then
-                            local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, acuTarget)
-                            --LOG('* AI-RNG: NoGraph CheckPlatoonPathingEx done')
-                            if success then
-                                --LOG('* AI-RNG: * TacticalResponseAI: found a way with CanPathTo(). moving to destination')
+                        -- Do we move ?
+                        if Lastdist ~= dist then
+                            Stuck = 0
+                            Lastdist = dist
+                        -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                        else
+                            Stuck = Stuck + 1
+                            if Stuck > 15 then
+                                --LOG('* AI-RNG: * TacticalResponseAI: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
                                 self:Stop()
-                                self:MoveToLocation(acuTarget, false)
-                            else
-                                LOG('* AI-RNG: * TacticalResponseAI: CanPathTo() failed for '..repr(acuTarget)..'.')
+                                break
                             end
                         end
-                        if reason == 'NoPath' then
-                            LOG('* AI-RNG: CanPathToCurrentEnemy: No land path to the threat location found!')
-                            self:Stop()
-                            return self:ReturnToBaseAIRNG()
-                        end
+                        WaitTicks(15)
                     end
+                    self:Stop()
+                    return self:HuntAIPATHRNG()
                 else
                     LOG('Target is too far, return to base')
                     self:Stop()
@@ -2436,6 +2414,7 @@ Platoon = Class(oldPlatoon) {
         local armyIndex = aiBrain:GetArmyIndex()
         local target = false
         local basePosition = false
+        AIAttackUtils.GetMostRestrictiveLayer(self)
 
         if self.PlatoonData.LocationType and self.PlatoonData.LocationType != 'NOTMAIN' then
             basePosition = aiBrain.BuilderManagers[self.PlatoonData.LocationType].Position
@@ -2457,18 +2436,12 @@ Platoon = Class(oldPlatoon) {
         local guardType = self.PlatoonData.GuardType
 
         while aiBrain:PlatoonExists(self) do
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.WALL)
-            --DUNCAN - added to target experimentals if they exist.
-            local newtarget
-            if AIAttackUtils.GetSurfaceThreatOfUnits(self) > 0 then
-                newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * (categories.LAND + categories.NAVAL + categories.STRUCTURE))
-            elseif AIAttackUtils.GetAirThreatOfUnits(self) > 0 then
-                newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR)
+            if self.MovementLayer == 'Air' then
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.AIR - categories.WALL)
+            else
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.WALL)
             end
-            if newtarget then
-                target = newtarget
-            end
-            --DUNCAN - use the base position to work out radius rather than self:GetPlatoonPosition()
+
             if target and not target.Dead and VDist3(target:GetPosition(), basePosition) < guardRadius then
                 if guardType == 'AntiAir' then
                     self:Stop()
@@ -2490,7 +2463,7 @@ Platoon = Class(oldPlatoon) {
                     --self:MoveToLocation(position, false)
                 --end
             end
-            WaitTicks(50)
+            WaitTicks(20)
         end
     end,
 

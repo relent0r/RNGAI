@@ -244,7 +244,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefit' },
-        Priority = 700,
+        Priority = 800,
         InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
