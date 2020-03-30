@@ -732,10 +732,10 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         end
     end
     if unit:GetPosition() == lowestUnitPos then
-        LOG('Extractor is closest to base')
+        --LOG('Extractor is closest to base')
         return true
     else
-        LOG('Extractor is not closest to base')
+        --LOG('Extractor is not closest to base')
         return false
     end
 end
@@ -750,8 +750,11 @@ function TacticalResponse(platoon)
         elseif table.getn(tacticalThreat) > 0 then
             --LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
+            local threatType = self.MovementLayer
+            local platoonThreat = pool:CalculatePlatoonThreat(threatType, categories.ALLUNITS)
+            local threatCutOff = platoonThreat * 0.50
             for _, v in tacticalThreat do
-                if v.Threat > threat then
+                if v.Threat > threat and v.Threat > threatCutOff then
                     platoon:SetAIPlan('TacticalResponseAIRNG')
                     break
                 end

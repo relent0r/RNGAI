@@ -69,7 +69,7 @@ Platoon = Class(oldPlatoon) {
                 WaitTicks(70)
             elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 2500 then
                 LOG('* AI-RNG: No Target Returning to base')
-                return self:ReturnToBaseAIRNG()
+                return self:ReturnToBaseAIRNG(true)
             end
         end
     end,
@@ -481,7 +481,7 @@ Platoon = Class(oldPlatoon) {
 
                 local mustScoutArea, mustScoutIndex = aiBrain:GetUntaggedMustScoutArea()
                 local unknownThreats = aiBrain:GetThreatsAroundPosition(scout:GetPosition(), 16, true, 'Unknown')
-                LOG('Unknown Threat is'..repr(unknownThreats))
+                --LOG('Unknown Threat is'..repr(unknownThreats))
 
                 --1) If we have any "must scout" (manually added) locations that have not been scouted yet, then scout them
                 if mustScoutArea then
@@ -2037,7 +2037,7 @@ Platoon = Class(oldPlatoon) {
 
     end,
 
-    ReturnToBaseAIRNG = function(self)
+    ReturnToBaseAIRNG = function(self, mainBase)
         local aiBrain = self:GetBrain()
 
         if not aiBrain:PlatoonExists(self) or not self:GetPlatoonPosition() then
@@ -2048,15 +2048,18 @@ Platoon = Class(oldPlatoon) {
         local bestBaseName = ""
         local bestDistSq = 999999999
         local platPos = self:GetPlatoonPosition()
+        if not mainBase then
+            for baseName, base in aiBrain.BuilderManagers do
+                local distSq = VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3])
 
-        for baseName, base in aiBrain.BuilderManagers do
-            local distSq = VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3])
-
-            if distSq < bestDistSq then
-                bestBase = base
-                bestBaseName = baseName
-                bestDistSq = distSq
+                if distSq < bestDistSq then
+                    bestBase = base
+                    bestBaseName = baseName
+                    bestDistSq = distSq
+                end
             end
+        else
+            bestBase = aiBrain.BuilderManagers['MAIN'].Position
         end
 
         if bestBase then
@@ -2478,7 +2481,7 @@ Platoon = Class(oldPlatoon) {
                     self:AggressiveMoveToLocation(target:GetPosition())
                 end
             else
-                self:ReturnToBaseAIRNG()
+                self:ReturnToBaseAIRNG(true)
                 --local PlatoonPosition = self:GetPlatoonPosition()
                 --if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
                     --DUNCAN - still try to move closer to the base if outside the radius
