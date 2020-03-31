@@ -2140,14 +2140,19 @@ Platoon = Class(oldPlatoon) {
                 LOG('* AI-RNG: Platoon detected ACUSupport.Supported set to true, moving to target position')
                 acuTarget = aiBrain.ACUSupport.TargetPosition
                 --LOG('* AI-RNG: ACUTarget Position is :'..repr(acuTarget))
-                local platoonPos = self:GetPlatoonPosition()
+                local platoonPos = self:GetPlatoonPosition() or nil
                 local oldPlan = self:GetPlan()
+                local Lastdist
+                local dist
+                local Stuck = 0
                 if VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3]) < 40000 then
                     self:MoveToLocation({acuTarget[1], 0 ,acuTarget[3]}, false)
                     while aiBrain:PlatoonExists(self) do
-                        PlatoonPosition = self:GetPlatoonPosition() or nil
-                        if not PlatoonPosition then break end
-                        dist = VDist2Sq(acuTarget[1], acuTarget[3], PlatoonPosition[1], PlatoonPosition[3])
+                        if not aiBrain.ACUSupport.Supported then
+                            break
+                        end
+                        if not platoonPos then break end
+                        dist = VDist2Sq(acuTarget[1], acuTarget[3], platoonPos[1], platoonPos[3])
                         -- are we closer then 15 units from the next marker ? Then break and move to the next marker
                         if dist < 400 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
