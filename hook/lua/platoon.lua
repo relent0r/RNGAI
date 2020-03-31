@@ -627,6 +627,7 @@ Platoon = Class(oldPlatoon) {
         local target
         local blip
         local platoonUnits = self:GetPlatoonUnits()
+        AIAttackUtils.GetMostRestrictiveLayer(self)
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
@@ -873,6 +874,7 @@ Platoon = Class(oldPlatoon) {
         table.insert(atkPri, 'ALLUNITS')
         table.insert(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
+        AIAttackUtils.GetMostRestrictiveLayer(self)
         local target
         local blip = false
         local maxRadius = data.SearchRadius or 50

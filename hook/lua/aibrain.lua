@@ -3,6 +3,10 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 
+local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
+local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
+local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
+
 local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
@@ -953,13 +957,14 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
-                self:EcoManagerRNG()
+                self:EcoExtractorManagerRNG()
+                --self:EcoPowerManagerRNG()
             end
             WaitTicks(self.EcoManager.EcoManagerTime)
         end
     end,
 
-    EcoManagerRNG = function(self)
+    EcoExtractorManagerRNG = function(self)
     -- A straight shooter with upper management written all over him
         WaitTicks(Random(1,7))
         local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
@@ -968,6 +973,29 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Extractors Upgrading :'..repr(self.EcoManager.ExtractorsUpgrading))
 
     end,
-
+    
+    EcoPowerManagerRNG = function(self)
+    -- Watches for low power states
+        local powerStateCaution = false
+        if GetEconomyTrend('ENERGY') <= 0.0 then
+            powerStateCaution = true
+        end
+        
+        if powerStateCaution then
+            local timeToStall = GetEconomyStored(self,'ENERGY') / GetEconomyRequested(self,'ENERGY') - GetEconomyIncome(self,'ENERGY')
+            while powerStateCaution do
+                if timeToStall < aiBrain.EcoManager.StallTable[self:getblueprintID()] then
+                    if math.ciel(math.Random(1,aiBrain.UrgencyFactor)) == aiBrain.UrgencyFactor then
+                        self.disable()
+                        self.pause()
+                        WaitTicks(50)
+                    else
+                        WaitTicks(3)
+                    end
+                end
+            WaitTicks(10)
+            end
+        end
+    end,
     
 }
