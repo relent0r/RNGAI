@@ -140,6 +140,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
     local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
+    local acuUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.COMMAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
     local distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdrPos)
     local overCharging = false
 

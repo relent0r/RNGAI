@@ -1035,7 +1035,9 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     -- enemyPosition = base or assault point
     -- radius = distance from the enemyPosition
     -- num = number of points along the arc. Must be greater than 1.
-    -- length of the arc in game units
+    -- arclength - length of the arc in game units
+    -- The radius impacts how large the arclength will be, the arclength has a maximum of around 32
+    -- so to increase the width of the arc you also need to increase the radius.
     -- Example set
     -- local arcenemyBase = { 360.5, 10, 365.5, type="VECTOR3" }
     -- local arcengineer = { 233.5, 10, 386.5, type="VECTOR3" }

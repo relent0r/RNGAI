@@ -459,15 +459,20 @@ Platoon = Class(oldPlatoon) {
                     patrolPositionZ = (estartZ + startZ) / 2
                 end
                 --LOG('* AI-RNG: Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
-                patrolLocation1 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
-                patrolLocation2 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
+                --patrolLocation1 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
+                --patrolLocation2 = AIUtils.RandomLocation(patrolPositionX, patrolPositionZ)
+                patrolLocations = RUtils.SetArcPoints({startX,0,startZ},{patrolPositionX,0,patrolPositionZ},40,5,50)
+                LOG('Patrol Locations :'..repr(patrolLocations))
                 --LOG('* AI-RNG: Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
                 self:MoveToLocation({patrolPositionX, 0, patrolPositionZ}, false)
                 --LOG('* AI-RNG: Issuing Patrol Commands')
                 local patrolunits = self:GetPlatoonUnits()
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
+                for k, v in patrolLocations do
+                    IssuePatrol(patrolunits, {v[1],0,v[3]})
+                end
+                --IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
+                --IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
+                --IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 WaitSeconds(patrolTime)
                 --LOG('* AI-RNG: Scout Returning to base')
                 self:MoveToLocation({startX, 0, startZ}, false)
@@ -646,6 +651,9 @@ Platoon = Class(oldPlatoon) {
         while aiBrain:PlatoonExists(self) do
             
             target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
+            if EntityCategoryContains(categories.COMMAND, target) then
+                LOG('Target is ACU')
+            end
             if target then
                 
                 local attackUnits =  self:GetSquadUnits('Attack')

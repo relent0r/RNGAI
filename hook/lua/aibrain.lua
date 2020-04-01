@@ -151,6 +151,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
+        self.EnemyIntel.EnemyThreatRaw = {}
 
         -- Add default main location and setup the builder managers
         self.NumBases = 0 -- AddBuilderManagers will increase the number
@@ -875,6 +876,7 @@ AIBrain = Class(RNGAIBrainClass) {
             'Naval',
             --'AntiSurface'
         }
+        -- Get threats for each threat type listed on the threatTypes table. Full map scan.
         for _, t in threatTypes do
             rawThreats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
@@ -885,7 +887,13 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Potential Threats :'..repr(potentialThreats))
         local phaseTwoThreats = {}
         local threatLimit = 20
+        -- Set a raw threat table that is replaced on each loop so we can get a snapshot of current enemy strength across the map.
+        self.EnemyIntel.EnemyThreatRaw = potentialThreats
 
+        -- Remove threats that are too close to the enemy base so we are focused on whats happening in the battlefield.
+        -- Also set if the threat is on water or not
+        -- Set the time the threat was identified so we can flush out old entries
+        -- If you want the full map thats what EnemyThreatRaw is for.
         if table.getn(potentialThreats) > 0 then
             local threatLocation = {}
             for _, threat in potentialThreats do
@@ -958,7 +966,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:EcoExtractorManagerRNG()
-                --self:EcoPowerManagerRNG()
+                self:EcoPowerManagerRNG()
             end
             WaitTicks(self.EcoManager.EcoManagerTime)
         end
@@ -973,14 +981,19 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Extractors Upgrading :'..repr(self.EcoManager.ExtractorsUpgrading))
 
     end,
-    
+
     EcoPowerManagerRNG = function(self)
     -- Watches for low power states
+        local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         local powerStateCaution = false
-        if GetEconomyTrend('ENERGY') <= 0.0 then
+        local econTime = self:GetEconomyOverTime()
+        local energyStorage = self:GetEconomyStored('ENERGY')
+        local stallTime = energyStorage / ((econTime.EnergyRequested * 10) - (econTime.EnergyIncome * 10))
+        LOG('Time to stall for '..per..' :'..stallTime)
+        --[[
+        if econTime.EnergyRequested - econTime.EnergyIncome <= 0.0 then
             powerStateCaution = true
         end
-        
         if powerStateCaution then
             local timeToStall = GetEconomyStored(self,'ENERGY') / GetEconomyRequested(self,'ENERGY') - GetEconomyIncome(self,'ENERGY')
             while powerStateCaution do
@@ -995,7 +1008,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             WaitTicks(10)
             end
-        end
+        end]]
     end,
     
 }

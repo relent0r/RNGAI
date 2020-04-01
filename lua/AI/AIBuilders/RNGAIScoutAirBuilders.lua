@@ -30,8 +30,23 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout T1',
         PlatoonTemplate = 'RNGAI T1AirScoutForm',
         PlatoonAddBehaviors = {'ACUDetection',},
-        InstanceCount = 8,
+        InstanceCount = 1,
         Priority = 900,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
+        },
+        BuilderData = {
+            ScanWait = 20,
+        },
+        LocationType = 'LocationType',
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Former Scout T1 Excess',
+        PlatoonTemplate = 'RNGAI T1AirScoutForm',
+        PlatoonAddBehaviors = {'ACUDetection',},
+        InstanceCount = 8,
+        Priority = 890,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
         },
@@ -55,7 +70,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Patrol DMZ T1',
         PlatoonTemplate = 'RNGAI T1AirScoutForm',
-        InstanceCount = 4,
+        InstanceCount = 2,
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
@@ -71,7 +86,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Patrol DMZ T3',
         PlatoonTemplate = 'RNGAI T3AirScoutForm',
-        InstanceCount = 4,
+        InstanceCount = 2,
         Priority = 900,
         BuilderData = {
             Patrol = true,
