@@ -13,6 +13,15 @@ local IBC = '/lua/editor/InstantBuildConditions.lua'
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
+local EnemyAirThreat = function(self, aiBrain, manager)
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    local aiAirThreat = aiBrain.BrainIntel.Average.Air
+    if enemyAirThreat > aiAirThreat then
+        LOG('PriorityFunction EnemyAirThreat Modifying priority to 1000')
+        return 1000, true
+    end
+    return 0, true
+end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
@@ -32,12 +41,23 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
-        PlatoonTemplate = 'T1AirFighter',
+        PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Intie Enemy Threat',
+        PlatoonTemplate = 'RNGAIFighterGroup',
+        Priority = 0,
+        PriorityFunction = EnemyAirThreat,
+        BuilderConditions = { 
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
     },

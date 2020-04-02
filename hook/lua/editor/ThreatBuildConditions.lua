@@ -16,3 +16,22 @@ function EnemyThreatGreaterThanValueAtBase(aiBrain, locationType, threatValue, t
     --LOG('EnemyThreatGreaterThanValueAtBase returning false for : ', builder)
     return false
 end
+
+-- not in use
+function EnemyThreatGreaterThanAI(aiBrain, threatType)
+    local enemyThreat
+    local aiThreat
+    if threatType == 'Air' then
+        enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+        aiThreat = aiBrain.BrainIntel.SelfThreat.Air
+    elseif threatType == 'Land' then
+        enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Land
+        aiThreat = aiBrain.BrainIntel.SelfThreat.Land
+    end
+    if enemyThreat > aiThreat then
+        return true
+    else
+        return false
+    end
+    return false
+end

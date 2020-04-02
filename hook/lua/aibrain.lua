@@ -6,6 +6,9 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
+local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local VDist2Sq = VDist2Sq
+local WaitTicks = coroutine.yield
 
 local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
@@ -133,6 +136,14 @@ AIBrain = Class(RNGAIBrainClass) {
             ExtractorUpgradeLimit = 2,
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
         }
+        self.EcoManager.PriorityTable = {
+            ENGINEER = 11,
+            SHIELD = 10,
+            AIR = 9,
+            LAND = 7,
+            RADAR = 8,
+            MASSEXTRACTION = 6,
+        }
         
 
         --Tactical Monitor
@@ -152,6 +163,21 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
+        self.EnemyIntel.EnemyThreatCurrent = {
+            Air = 0,
+            Land = 0,
+            Experimental = 0,
+        }
+
+        self.BrainIntel = {}
+        self.BrainIntel.SelfThreat = {}
+        self.BrainIntel.Average = {
+            Air = 0,
+            Land = 0,
+            Experimental = 0,
+        }
+        self.BrainIntel.SelfThreat.Air = {}
+        
 
         -- Add default main location and setup the builder managers
         self.NumBases = 0 -- AddBuilderManagers will increase the number
@@ -831,20 +857,22 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorInitializationRNG = function(self, spec)
         --LOG('* AI-RNG: Tactical Monitor Is Initializing')
-        self:ForkThread(self.TacticalMonitorThreadRNG)
+        local ALLBPS = __blueprints
+        self:ForkThread(self.TacticalMonitorThreadRNG, ALLBPS)
     end,
 
-    TacticalMonitorThreadRNG = function(self)
+    TacticalMonitorThreadRNG = function(self, ALLBPS)
+        LOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
-                self:TacticalMonitorRNG()
+                self:TacticalMonitorRNG(ALLBPS)
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
 
-    TacticalMonitorRNG = function(self)
+    TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
         WaitTicks(Random(1,7))
         LOG('* AI-RNG: Tactical Monitor Threat Pass')
@@ -862,6 +890,20 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if self.EnemyIntel.EnemyThreatLocations then
                 self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+            end
+        end
+        -- Rebuild the self threat tables
+        LOG('SelfThreat Table count:'..table.getn(self.BrainIntel.SelfThreat))
+        LOG('SelfThreat Table present:'..repr(self.BrainIntel.SelfThreat))
+        if self.BrainIntel.SelfThreat then
+            for k, v in self.BrainIntel.SelfThreat.Air do
+                LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
+                if (gameTime - v.InsertTime) > timeout then
+                    self.BrainIntel.SelfThreat.Air[k] = nil
+                end
+            end
+            if self.BrainIntel.SelfThreat.Air then
+                self.BrainIntel.SelfThreat.Air = self:RebuildTable(self.BrainIntel.SelfThreat.Air)
             end
         end
         -- debug, remove later on
@@ -959,6 +1001,45 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
+
+        -- Get AI strength
+        local brainUnits = GetListOfUnits( self, categories.MOBILE, false, false)
+        local airthreat = 0
+        local bp
+
+		
+		-- calculate my present airvalue			
+		for _,v in EntityCategoryFilterDown( (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, brainUnits ) do
+            -- This is temporary until they next patch adds the UnitId to the units themselves
+            local unitbpId = v:GetUnitId()
+            --LOG('Unit blueprint id :'..unitbpId)
+			bp = ALLBPS[unitbpId].Defense
+
+			airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+        end
+        if airthreat > 0 then
+            local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
+            table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
+            LOG('Total Air Unit Threat :'..airthreat)
+            LOG('Current Self Air Threat Table :'..repr(self.BrainIntel.SelfThreat.Air))
+            local averageSelfThreat = 0
+            for k, v in self.BrainIntel.SelfThreat.Air do
+                averageSelfThreat = averageSelfThreat + v.Threat
+            end
+            self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
+            LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
+        end
+
+        if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
+            local totalAirThreat = 0
+            for k, v in self.EnemyIntel.EnemyThreatRaw do
+                if v.rThreatType == 'Air' then
+                    totalAirThreat = totalAirThreat + v.rThreat
+                end
+            end
+            self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
+            LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        end
     end,
 
     EcoManagerThreadRNG = function(self)
@@ -984,31 +1065,32 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoPowerManagerRNG = function(self)
     -- Watches for low power states
-        local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         local powerStateCaution = false
-        local econTime = self:GetEconomyOverTime()
+        local energyIncome = self:GetEconomyIncome('ENERGY')
+        local energyRequest = self:GetEconomyRequested('ENERGY')
         local energyStorage = self:GetEconomyStored('ENERGY')
-        local stallTime = energyStorage / ((econTime.EnergyRequested * 10) - (econTime.EnergyIncome * 10))
-        LOG('Time to stall for '..per..' :'..stallTime)
-        --[[
-        if econTime.EnergyRequested - econTime.EnergyIncome <= 0.0 then
+        local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
+        LOG('Energy Income :'..(energyIncome * 10)..' Energy Requested :'..(energyRequest * 10)..' Energy Storage :'..energyStorage)
+        LOG('Time to stall for '..stallTime)
+        if 44444 < 0.0 then
             powerStateCaution = true
         end
         if powerStateCaution then
-            local timeToStall = GetEconomyStored(self,'ENERGY') / GetEconomyRequested(self,'ENERGY') - GetEconomyIncome(self,'ENERGY')
+            local powerCycle = 0
             while powerStateCaution do
-                if timeToStall < aiBrain.EcoManager.StallTable[self:getblueprintID()] then
-                    if math.ciel(math.Random(1,aiBrain.UrgencyFactor)) == aiBrain.UrgencyFactor then
-                        self.disable()
-                        self.pause()
-                        WaitTicks(50)
-                    else
-                        WaitTicks(3)
+                local priorityNum = 0
+                local priorityUnit = false
+                powerCycle = powerCycle + 1
+                for k, v in self.EcoManager.PriorityTable do
+                    if v > priorityNum then
+                        priorityNum = v
+                        priorityUnit = k
                     end
                 end
+                LOG('Doing anti power stall stuff for :'..priorityUnit)
             WaitTicks(10)
             end
-        end]]
+        end
     end,
     
 }
