@@ -1,7 +1,7 @@
 RNGBuilderManager = BuilderManager
 BuilderManager = Class(RNGBuilderManager) {
     ManagerLoopBody = function(self,builder,bType)
-        LOG('ManagerLoopBody pass')
+        --LOG('ManagerLoopBody pass')
         if builder:CalculatePriority(self) then
             self.BuilderData[bType].NeedSort = true
         end
@@ -14,7 +14,7 @@ BuilderManager = Class(RNGBuilderManager) {
             local numPerTick = math.ceil(self.NumBuilders / (self.BuilderCheckInterval * 10))
             local numTicks = 0
             local numTested = 0
-            LOG('Manager Thread Pass')
+            --LOG('Manager Thread Pass')
             for bType,bTypeData in self.BuilderData do
                 for bNum,bData in bTypeData.Builders do
                     numTested = numTested + 1

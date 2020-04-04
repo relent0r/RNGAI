@@ -133,7 +133,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EcoManager = {
             EcoManagerTime = 30,
             EcoManagerStatus = 'ACTIVE',
-            ExtractorUpgradeLimit = 2,
+            ExtractorUpgradeLimit = {
+                TECH1 = 2,
+                TECH2 = 1
+            },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
         }
         self.EcoManager.PriorityTable = {
@@ -1012,7 +1015,7 @@ AIBrain = Class(RNGAIBrainClass) {
 		for _,v in EntityCategoryFilterDown( (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, brainUnits ) do
             -- This is temporary until they next patch adds the UnitId to the units themselves
             local unitbpId = v:GetUnitId()
-            --LOG('Unit blueprint id :'..unitbpId)
+            --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
 			bp = ALLBPS[unitbpId].Defense
 
 			airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
@@ -1047,7 +1050,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:EcoExtractorManagerRNG()
-                self:EcoPowerManagerRNG()
+                --self:EcoPowerManagerRNG()
             end
             WaitTicks(self.EcoManager.EcoManagerTime)
         end
@@ -1065,18 +1068,16 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoPowerManagerRNG = function(self)
     -- Watches for low power states
-        local powerStateCaution = false
-        local energyIncome = self:GetEconomyIncome('ENERGY')
-        local energyRequest = self:GetEconomyRequested('ENERGY')
-        local energyStorage = self:GetEconomyStored('ENERGY')
-        local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
-        LOG('Energy Income :'..(energyIncome * 10)..' Energy Requested :'..(energyRequest * 10)..' Energy Storage :'..energyStorage)
-        LOG('Time to stall for '..stallTime)
-        if 44444 < 0.0 then
-            powerStateCaution = true
+        if GetGameTimeSeconds() < 300 then
+            return
         end
+        local powerStateCaution = self:EcoManagerPowerStateCheck()
+        local unitTypePaused = false
+        
         if powerStateCaution then
+            LOG('Power State Caution is true')
             local powerCycle = 0
+            local unitTypePaused = {}
             while powerStateCaution do
                 local priorityNum = 0
                 local priorityUnit = false
@@ -1088,9 +1089,62 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 LOG('Doing anti power stall stuff for :'..priorityUnit)
-            WaitTicks(10)
+                if priorityUnit == 'ENGINEER' then
+                    table.insert(unitTypePaused, priorityUnit)
+                    local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                    self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause')
+                end
+                WaitTicks(20)
+                powerStateCaution = self:EcoManagerPowerStateCheck()
+            end
+            for k, v in unitTypePaused do
+                if v == 'ENGINEER' then
+                    local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                    self:EcoSelectorManagerRNG(v, Engineers, 'unpause')
+                end
+            end
+            powerStateCaution = false
+        end
+    end,
+
+    EcoManagerPowerStateCheck = function(self)
+
+        local energyIncome = self:GetEconomyIncome('ENERGY')
+        local energyRequest = self:GetEconomyRequested('ENERGY')
+        local energyStorage = self:GetEconomyStored('ENERGY')
+        local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
+        LOG('Energy Income :'..(energyIncome * 10)..' Energy Requested :'..(energyRequest * 10)..' Energy Storage :'..energyStorage)
+        LOG('Time to stall for '..stallTime)
+        if stallTime > 0.0 then
+            if stallTime < 20 then
+                return true
+            elseif stallTime > 20 then
+                return false
+            end
+        end
+        return false
+    end,
+
+    EcoSelectorManagerRNG = function(self, priorityUnit, units, action)
+
+        for k, v in units do
+            if v.Dead then continue end
+            if priorityUnit == 'ENGINEER' then
+                LOG('Priority Unit Is Engineer')
+                if action == 'unpause' then
+                    LOG('Unpausing Engineer')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.PlatoonHandle.PlatoonData.Assist.AssisteeType then continue end
+                if not v.UnitBeingAssist then continue end
+                if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.ECONOMIC, v.UnitBeingAssist) then
+                    LOG('Pausing Engineer')
+                    v:SetPaused(true)
+                end
             end
         end
     end,
+
     
 }

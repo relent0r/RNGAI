@@ -3,6 +3,8 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
+local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
@@ -35,7 +37,7 @@ Platoon = Class(oldPlatoon) {
         local target
         local blip
         local startX, startZ = aiBrain:GetArmyStartPos()
-        local currentPosition = self:GetPlatoonPosition()
+        local currentPosition = GetPlatoonPosition(self)
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 table.insert(atkPri, v)
@@ -100,7 +102,7 @@ Platoon = Class(oldPlatoon) {
     GuardMarkerRNG = function(self)
         local aiBrain = self:GetBrain()
 
-        local platLoc = self:GetPlatoonPosition()
+        local platLoc = GetPlatoonPosition(self)
 
         if not aiBrain:PlatoonExists(self) or not platLoc then
             return
@@ -274,11 +276,11 @@ Platoon = Class(oldPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG('* AI-RNG: GuardMarker: Attacking '' .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, 10, maxPathDistance)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10, maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
-            IssueClearCommands(self:GetPlatoonUnits())
+            IssueClearCommands(GetPlatoonUnits(self))
             if path then
-                local position = self:GetPlatoonPosition()
+                local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
@@ -316,7 +318,7 @@ Platoon = Class(oldPlatoon) {
 
             if moveNext == 'None' then
                 -- guard
-                IssueGuard(self:GetPlatoonUnits(), bestMarker.Position)
+                IssueGuard(GetPlatoonUnits(self), bestMarker.Position)
                 -- guard forever
                 if guardTimer <= 0 then return end
             else
@@ -325,11 +327,11 @@ Platoon = Class(oldPlatoon) {
             end
 
             -- wait till we get there
-            local oldPlatPos = self:GetPlatoonPosition()
+            local oldPlatPos = GetPlatoonPosition(self)
             local StuckCount = 0
             repeat
                 WaitTicks(50)
-                platLoc = self:GetPlatoonPosition()
+                platLoc = GetPlatoonPosition(self)
                 if VDist3(oldPlatPos, platLoc) < 1 then
                     StuckCount = StuckCount + 1
                 else
@@ -376,7 +378,7 @@ Platoon = Class(oldPlatoon) {
     ReclaimAIRNG = function(self)
         --LOG('* AI-RNG: ReclaimAIRNG has been started')
         local aiBrain = self:GetBrain()
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         local eng
         for k, v in platoonUnits do
             if not v.Dead and EntityCategoryContains(categories.MOBILE * categories.ENGINEER, v) then
@@ -409,7 +411,7 @@ Platoon = Class(oldPlatoon) {
     AirScoutingAIRNG = function(self)
         --LOG('* AI-RNG: Starting AirScoutAIRNG')
         local patrol = self.PlatoonData.Patrol or false
-        local scout = self:GetPlatoonUnits()[1]
+        local scout = GetPlatoonUnits(self)[1]
         if not scout then
             return
         end
@@ -466,7 +468,7 @@ Platoon = Class(oldPlatoon) {
                 --LOG('* AI-RNG: Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
                 self:MoveToLocation({patrolPositionX, 0, patrolPositionZ}, false)
                 --LOG('* AI-RNG: Issuing Patrol Commands')
-                local patrolunits = self:GetPlatoonUnits()
+                local patrolunits = GetPlatoonUnits(self)
                 for k, v in patrolLocations do
                     IssuePatrol(patrolunits, {v[1],0,v[3]})
                 end
@@ -563,7 +565,7 @@ Platoon = Class(oldPlatoon) {
         AIAttackUtils.GetMostRestrictiveLayer(self)
 
         local aiBrain = self:GetBrain()
-        local scout = self:GetPlatoonUnits()[1]
+        local scout = GetPlatoonUnits(self)[1]
 
         -- build scoutlocations if not already done.
         if not aiBrain.InterestList then
@@ -631,7 +633,7 @@ Platoon = Class(oldPlatoon) {
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local blip
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         AIAttackUtils.GetMostRestrictiveLayer(self)
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -694,7 +696,7 @@ Platoon = Class(oldPlatoon) {
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local blip
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         local maxPathDistance = 250
         local enemyRadius = 20
         local bAggroMove = self.PlatoonData.AggressiveMove
@@ -740,13 +742,13 @@ Platoon = Class(oldPlatoon) {
                     IssueGuard(scoutUnits, attackUnits[guardedUnit])
                 end
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
-                --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(self:GetPlatoonPosition())..' Target Position :'..repr(targetPosition))
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), targetPosition, 100 , maxPathDistance)
+                --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
                 local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
-                IssueClearCommands(self:GetPlatoonUnits())
+                IssueClearCommands(GetPlatoonUnits(self))
                 if path then
                     --LOG('* AI-RNG: * HuntAIPATH: Path found')
-                    local position = self:GetPlatoonPosition()
+                    local position = GetPlatoonPosition(self)
                     local usedTransports = false
                     if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
@@ -890,9 +892,9 @@ Platoon = Class(oldPlatoon) {
         if data.LocationType and data.LocationType != 'NOTMAIN' then
             basePosition = aiBrain.BuilderManagers[data.LocationType].Position
         else
-            local platoonPosition = self:GetPlatoonPosition()
+            local platoonPosition = GetPlatoonPosition(self)
             if platoonPosition then
-                basePosition = aiBrain:FindClosestBuilderManagerPosition(self:GetPlatoonPosition())
+                basePosition = aiBrain:FindClosestBuilderManagerPosition(GetPlatoonPosition(self))
             end
         end
         while aiBrain:PlatoonExists(self) do
@@ -916,7 +918,7 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
                 
-                --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, self:GetPlatoonPosition(), maxRadius)
+                --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
                 -- Set to mass extraction, can't make experimentals without mass
                 local newtarget
@@ -946,7 +948,7 @@ Platoon = Class(oldPlatoon) {
                     end
                     movingToScout = true
                     self:Stop()
-                    for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, self:GetPlatoonPosition()) do
+                    for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, GetPlatoonPosition(self)) do
                         if v[1] < 0 or v[3] < 0 or v[1] > ScenarioInfo.size[1] or v[3] > ScenarioInfo.size[2] then
                             --LOG('*AI-RNG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
                         end
@@ -971,7 +973,7 @@ Platoon = Class(oldPlatoon) {
     -------------------------------------------------------
     EngineerBuildAIRNG = function(self)
         local aiBrain = self:GetBrain()
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         local armyIndex = aiBrain:GetArmyIndex()
         --local x,z = aiBrain:GetArmyStartPos()
         local cons = self.PlatoonData.Construction
@@ -1030,7 +1032,7 @@ Platoon = Class(oldPlatoon) {
         end
         if cons.NearUnitCategory then
             self:SetPrioritizedTargetList('support', {ParseEntityCategory(cons.NearUnitCategory)})
-            local unitNearBy = self:FindPrioritizedUnit('support', 'Ally', false, self:GetPlatoonPosition(), cons.NearUnitRadius or 50)
+            local unitNearBy = self:FindPrioritizedUnit('support', 'Ally', false, GetPlatoonPosition(self), cons.NearUnitRadius or 50)
             --LOG("ENGINEER BUILD: " .. cons.BuildStructures[1] .." attempt near: ", cons.NearUnitCategory)
             if unitNearBy then
                 reference = table.copy(unitNearBy:GetPosition())
@@ -1046,7 +1048,7 @@ Platoon = Class(oldPlatoon) {
             buildFunction = AIBuildStructures.AIExecuteBuildStructure
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.Wall then
-            local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or self:GetPlatoonPosition()
+            local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
             local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
             relative = false
             reference = AIUtils.GetLocationNeedingWalls(aiBrain, 200, 4, 'STRUCTURE - WALLS', cons.ThreatMin, cons.ThreatMax, cons.ThreatRings)
@@ -1072,7 +1074,7 @@ Platoon = Class(oldPlatoon) {
             end
 
         elseif cons.NearMarkerType and cons.ExpansionBase then
-            local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or self:GetPlatoonPosition()
+            local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
             local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
 
             if cons.NearMarkerType == 'Expansion Area' then
@@ -1095,7 +1097,7 @@ Platoon = Class(oldPlatoon) {
                 reference, refName = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
-                LOG('refName is : '..refName)
+                --LOG('refName is : '..refName)
                 if not reference or not refName then
                     LOG('Unmarked Expansion Builder reference or refName missing')
                     self:PlatoonDisband()
@@ -1160,7 +1162,7 @@ Platoon = Class(oldPlatoon) {
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
 
             relative = false
-            local pos = self:GetPlatoonPosition()
+            local pos = GetPlatoonPosition(self)
             reference, refName = AIUtils.AIFindDefensivePointNeedsStructure(aiBrain, cons.LocationType, (cons.LocationRadius or 100),
                             cons.MarkerUnitCategory, cons.MarkerRadius, cons.MarkerUnitCount, (cons.ThreatMin or 0), (cons.ThreatMax or 1),
                             (cons.ThreatRings or 1), (cons.ThreatType or 'AntiSurface'))
@@ -1172,7 +1174,7 @@ Platoon = Class(oldPlatoon) {
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
 
             relative = false
-            local pos = self:GetPlatoonPosition()
+            local pos = GetPlatoonPosition(self)
             reference, refName = AIUtils.AIFindNavalDefensivePointNeedsStructure(aiBrain, cons.LocationType, (cons.LocationRadius or 100),
                             cons.MarkerUnitCategory, cons.MarkerRadius, cons.MarkerUnitCount, (cons.ThreatMin or 0), (cons.ThreatMax or 1),
                             (cons.ThreatRings or 1), (cons.ThreatType or 'AntiSurface'))
@@ -1188,7 +1190,7 @@ Platoon = Class(oldPlatoon) {
                 cons.ThreatRings = 0
             end
             relative = false
-            local pos = self:GetPlatoonPosition()
+            local pos = GetPlatoonPosition(self)
             reference, refName = AIUtils.AIGetClosestThreatMarkerLoc(aiBrain, cons.NearMarkerType, pos[1], pos[3],
                                                             cons.ThreatMin, cons.ThreatMax, cons.ThreatRings)
             if not reference then
@@ -1207,7 +1209,7 @@ Platoon = Class(oldPlatoon) {
                 baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             end
             relative = false
-            local pos = self:GetPlatoonPosition()
+            local pos = GetPlatoonPosition(self)
             reference, refName = AIUtils.AIGetClosestThreatMarkerLoc(aiBrain, cons.NearMarkerType, pos[1], pos[3],
                                                             cons.ThreatMin, cons.ThreatMax, cons.ThreatRings)
             if cons.ExpansionBase and refName then
@@ -1541,7 +1543,7 @@ Platoon = Class(oldPlatoon) {
     MassRaidRNG = function(self)
         local aiBrain = self:GetBrain()
         --LOG('Platoon ID is : '..self:GetPlatoonUniqueName())
-        local platLoc = self:GetPlatoonPosition()
+        local platLoc = GetPlatoonPosition(self)
 
         if not aiBrain:PlatoonExists(self) or not platLoc then
             return
@@ -1677,11 +1679,11 @@ Platoon = Class(oldPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG("GuardMarker: Attacking " .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestMarker.Position, 100 , maxPathDistance)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 100 , maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
-            IssueClearCommands(self:GetPlatoonUnits())
+            IssueClearCommands(GetPlatoonUnits(self))
             if path then
-                local position = self:GetPlatoonPosition()
+                local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
@@ -1702,7 +1704,7 @@ Platoon = Class(oldPlatoon) {
                         local dist
                         local Stuck = 0
                         while aiBrain:PlatoonExists(self) do
-                            PlatoonPosition = self:GetPlatoonPosition() or nil
+                            PlatoonPosition = GetPlatoonPosition(self) or nil
                             if not PlatoonPosition then break end
                             dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                             -- are we closer then 15 units from the next marker ? Then break and move to the next marker
@@ -1751,11 +1753,11 @@ Platoon = Class(oldPlatoon) {
             self:AggressiveMoveToLocation(bestMarker.Position)
 
             -- wait till we get there
-            local oldPlatPos = self:GetPlatoonPosition()
+            local oldPlatPos = GetPlatoonPosition(self)
             local StuckCount = 0
             repeat
                 WaitTicks(50)
-                platLoc = self:GetPlatoonPosition()
+                platLoc = GetPlatoonPosition(self)
                 if VDist3(oldPlatPos, platLoc) < 1 then
                     StuckCount = StuckCount + 1
                 else
@@ -1800,7 +1802,7 @@ Platoon = Class(oldPlatoon) {
 
         local enemy = aiBrain:GetCurrentEnemy()
 
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         local numberOfUnitsInPlatoon = table.getn(platoonUnits)
         local oldNumberOfUnitsInPlatoon = numberOfUnitsInPlatoon
         local stuckCount = 0
@@ -1813,7 +1815,7 @@ Platoon = Class(oldPlatoon) {
         self:SetPlatoonFormationOverride(PlatoonFormation)
 
         while aiBrain:PlatoonExists(self) do
-            local pos = self:GetPlatoonPosition() -- update positions; prev position done at end of loop so not done first time
+            local pos = GetPlatoonPosition(self) -- update positions; prev position done at end of loop so not done first time
 
             -- if we can't get a position, then we must be dead
             if not pos then
@@ -1836,7 +1838,7 @@ Platoon = Class(oldPlatoon) {
             self:MergeWithNearbyPlatoonsRNG('AttackForceAIRNG', 10, 15)
 
             -- rebuild formation
-            platoonUnits = self:GetPlatoonUnits()
+            platoonUnits = GetPlatoonUnits(self)
             numberOfUnitsInPlatoon = table.getn(platoonUnits)
             -- if we have a different number of units in our platoon, regather
             if (oldNumberOfUnitsInPlatoon != numberOfUnitsInPlatoon) then
@@ -1876,7 +1878,7 @@ Platoon = Class(oldPlatoon) {
                 end
                 self.UsingTransport = false
                 AIUtils.ReturnTransportsToPool(strayTransports, true)
-                platoonUnits = self:GetPlatoonUnits()
+                platoonUnits = GetPlatoonUnits(self)
             end
 
 
@@ -1968,7 +1970,7 @@ Platoon = Class(oldPlatoon) {
         if self.UsingTransport then
             return
         end
-        local platUnits = self:GetPlatoonUnits()
+        local platUnits = GetPlatoonUnits(self)
         local platCount = 0
 
         for _, u in platUnits do
@@ -1981,7 +1983,7 @@ Platoon = Class(oldPlatoon) {
             return
         end 
 
-        local platPos = self:GetPlatoonPosition()
+        local platPos = GetPlatoonPosition(self)
         if not platPos then
             return
         end
@@ -2024,7 +2026,7 @@ Platoon = Class(oldPlatoon) {
             end
 
             if  VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
-                local units = aPlat:GetPlatoonUnits()
+                local units = GetPlatoonUnits(aPlat)
                 local validUnits = {}
                 local bValidUnits = false
                 for _,u in units do
@@ -2050,14 +2052,14 @@ Platoon = Class(oldPlatoon) {
     ReturnToBaseAIRNG = function(self, mainBase)
         local aiBrain = self:GetBrain()
 
-        if not aiBrain:PlatoonExists(self) or not self:GetPlatoonPosition() then
+        if not aiBrain:PlatoonExists(self) or not GetPlatoonPosition(self) then
             return
         end
 
         local bestBase = false
         local bestBaseName = ""
         local bestDistSq = 999999999
-        local platPos = self:GetPlatoonPosition()
+        local platPos = GetPlatoonPosition(self)
         AIAttackUtils.GetMostRestrictiveLayer(self)
 
         if not mainBase then
@@ -2078,7 +2080,7 @@ Platoon = Class(oldPlatoon) {
             if self.MovementLayer == 'Air' then
                 self:MoveToLocation(bestBase.Position, false)
                 while aiBrain:PlatoonExists(self) do
-                    platPos = self:GetPlatoonPosition()
+                    platPos = GetPlatoonPosition(self)
                     local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
                     if distSq < 400 then
                         self:PlatoonDisband()
@@ -2087,7 +2089,7 @@ Platoon = Class(oldPlatoon) {
                     WaitTicks(15)
                 end
             else
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), bestBase.Position, 200)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestBase.Position, 200)
                 IssueClearCommands(self)
                 if path then
                     local pathLength = table.getn(path)
@@ -2095,7 +2097,7 @@ Platoon = Class(oldPlatoon) {
                         self:MoveToLocation(path[i], false)
                         local oldDistSq = 0
                         while aiBrain:PlatoonExists(self) do
-                            platPos = self:GetPlatoonPosition()
+                            platPos = GetPlatoonPosition(self)
                             local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
                             if distSq < 400 then
                                 self:PlatoonDisband()
@@ -2119,7 +2121,7 @@ Platoon = Class(oldPlatoon) {
     
     TacticalResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         if not self.MovementLayer then
             AIAttackUtils.GetMostRestrictiveLayer(self)
         end
@@ -2150,7 +2152,7 @@ Platoon = Class(oldPlatoon) {
                 LOG('* AI-RNG: Platoon detected ACUSupport.Supported set to true, moving to target position')
                 acuTarget = aiBrain.ACUSupport.TargetPosition
                 --LOG('* AI-RNG: ACUTarget Position is :'..repr(acuTarget))
-                local platoonPos = self:GetPlatoonPosition() or nil
+                local platoonPos = GetPlatoonPosition(self) or nil
                 local oldPlan = self:GetPlan()
                 local Lastdist
                 local dist
@@ -2196,7 +2198,7 @@ Platoon = Class(oldPlatoon) {
                 local threatPos = {}
                 local threat = 0
                 local threatKey = false
-                local platoonPos = self:GetPlatoonPosition()
+                local platoonPos = GetPlatoonPosition(self)
                 local oldPlan = self:GetPlan()
                 --LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
                 for k, v in tacticalThreat do
@@ -2234,7 +2236,7 @@ Platoon = Class(oldPlatoon) {
                                 local dist
                                 local Stuck = 0
                                 while aiBrain:PlatoonExists(self) do
-                                    PlatoonPosition = self:GetPlatoonPosition() or nil
+                                    PlatoonPosition = GetPlatoonPosition(self) or nil
                                     if not PlatoonPosition then break end
                                     dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                                     -- are we closer then 15 units from the next marker ? Then break and move to the next marker
@@ -2315,7 +2317,7 @@ Platoon = Class(oldPlatoon) {
             local distressRange = self.PlatoonData.DistressRange or aiBrain.BaseMonitor.DefaultDistressRange
             local reactionTime = self.PlatoonData.DistressReactionTime or aiBrain.BaseMonitor.PlatoonDefaultReactionTime
             local threatThreshold = self.PlatoonData.ThreatSupport or 1
-            local platoonPos = self:GetPlatoonPosition()
+            local platoonPos = GetPlatoonPosition(self)
             if platoonPos and not self.DistressCall then
                 -- Find a distress location within the platoons range
                 local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold)
@@ -2348,7 +2350,7 @@ Platoon = Class(oldPlatoon) {
                         until not self:IsCommandsActive(cmd) or aiBrain:GetThreatAtPosition(moveLocation, 0, true, 'Overall') <= threatThreshold
                         --LOG('Initial Distress Response Loop finished')
 
-                        platoonPos = self:GetPlatoonPosition()
+                        platoonPos = GetPlatoonPosition(self)
                         if platoonPos then
                             -- Now that we have helped the first location, see if any other location needs the help
                             distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange)
@@ -2370,7 +2372,7 @@ Platoon = Class(oldPlatoon) {
 
     ExtractorCallForHelpAIRNG = function(self, aiBrain)
         local checkTime = self.PlatoonData.DistressCheckTime or 4
-        local pos = self:GetPlatoonPosition()
+        local pos = GetPlatoonPosition(self)
         while aiBrain:PlatoonExists(self) and pos do
             if not self.DistressCall then
                 local threat = aiBrain:GetThreatAtPosition(pos, 1, true, 'AntiSurface')
@@ -2392,7 +2394,7 @@ Platoon = Class(oldPlatoon) {
             local distressRange = aiBrain.BaseMonitor.PoolDistressRange
             local reactionTime = aiBrain.BaseMonitor.PoolReactionTime
 
-            local platoonUnits = self:GetPlatoonUnits()
+            local platoonUnits = GetPlatoonUnits(self)
 
             for locName, locData in aiBrain.BuilderManagers do
                 if not locData.DistressCall then
@@ -2434,9 +2436,9 @@ Platoon = Class(oldPlatoon) {
         if self.PlatoonData.LocationType and self.PlatoonData.LocationType != 'NOTMAIN' then
             basePosition = aiBrain.BuilderManagers[self.PlatoonData.LocationType].Position
         else
-            local platoonPosition = self:GetPlatoonPosition()
+            local platoonPosition = GetPlatoonPosition(self)
             if platoonPosition then
-                basePosition = aiBrain:FindClosestBuilderManagerPosition(self:GetPlatoonPosition())
+                basePosition = aiBrain:FindClosestBuilderManagerPosition(GetPlatoonPosition(self))
             end
         end
 
@@ -2470,7 +2472,7 @@ Platoon = Class(oldPlatoon) {
                 end
             else
                 self:ReturnToBaseAIRNG(true)
-                --local PlatoonPosition = self:GetPlatoonPosition()
+                --local PlatoonPosition = GetPlatoonPosition(self)
                 --if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
                     --DUNCAN - still try to move closer to the base if outside the radius
                     --local position = AIUtils.RandomLocation(basePosition[1],basePosition[3])
@@ -2489,7 +2491,7 @@ Platoon = Class(oldPlatoon) {
         local target
         local blip
         local cmd = false
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         local PlatoonFormation = self.PlatoonData.UseFormation or 'NoFormation'
         self:SetPlatoonFormationOverride(PlatoonFormation)
         local atkPri = { 'SPECIALHIGHPRI', 'STRUCTURE ANTINAVY', 'MOBILE NAVAL', 'STRUCTURE NAVAL', 'COMMAND', 'EXPERIMENTAL', 'STRUCTURE STRATEGIC EXPERIMENTAL', 'ARTILLERY EXPERIMENTAL', 'STRUCTURE ARTILLERY TECH3', 'STRUCTURE NUKE TECH3', 'STRUCTURE ANTIMISSILE SILO',
@@ -2545,7 +2547,7 @@ Platoon = Class(oldPlatoon) {
         self:Stop()
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
         local unit
 
         if not aiBrain:PlatoonExists(self) then return end
@@ -2614,7 +2616,7 @@ Platoon = Class(oldPlatoon) {
     SACUAttackAIRNG = function(self)
         -- SACU Attack Platoon
         AIAttackUtils.GetMostRestrictiveLayer(self)
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(self)
 
         if platoonUnits and PlatoonStrength > 0 then
             for k, v in platoonUnits do
@@ -2691,13 +2693,13 @@ Platoon = Class(oldPlatoon) {
                         IssueGuard(guardUnits, attackUnits[guardedUnit])
                     end
                     --LOG('* AI-RNG: * SACUAIPATH: Performing Path Check')
-                    --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(self:GetPlatoonPosition())..' Target Position :'..repr(targetPosition))
-                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self:GetPlatoonPosition(), targetPosition, 100 , maxPathDistance)
+                    --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
                     local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
-                    IssueClearCommands(self:GetPlatoonUnits())
+                    IssueClearCommands(GetPlatoonUnits(self))
                     if path then
                         --LOG('* AI-RNG: * HuntAIPATH: Path found')
-                        local position = self:GetPlatoonPosition()
+                        local position = GetPlatoonPosition(self)
                         local usedTransports = false
                         if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
                             usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)

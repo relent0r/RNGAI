@@ -349,7 +349,7 @@ function CDRUnitCompletion(aiBrain, cdr)
             LOG('* AI-RNG: Attempt unit Completion')
             IssueClearCommands( {cdr} )
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
-            WaitTicks(30)
+            WaitTicks(60)
         end
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
             LOG('* AI-RNG: Unit Completion is :'..cdr.UnitBeingBuiltBehavior:GetFractionComplete())
@@ -483,7 +483,11 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
-        extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit
+        if unitTech == 'TECH1' then
+            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
+        elseif unitTech == 'TECH2' then
+            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
+        end
         if upgradeNumLimit >= extractorUpgradeLimit then
             continue
         end
