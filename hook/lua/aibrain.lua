@@ -1050,7 +1050,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:EcoExtractorManagerRNG()
-                --self:EcoPowerManagerRNG()
+                self:EcoPowerManagerRNG()
             end
             WaitTicks(self.EcoManager.EcoManagerTime)
         end
@@ -1132,12 +1132,14 @@ AIBrain = Class(RNGAIBrainClass) {
             if priorityUnit == 'ENGINEER' then
                 LOG('Priority Unit Is Engineer')
                 if action == 'unpause' then
+                    if not v:IsPaused() then continue end
                     LOG('Unpausing Engineer')
                     v:SetPaused(false)
                     continue
                 end
                 if not v.PlatoonHandle.PlatoonData.Assist.AssisteeType then continue end
                 if not v.UnitBeingAssist then continue end
+                if v:IsPaused() then continue end
                 if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.ECONOMIC, v.UnitBeingAssist) then
                     LOG('Pausing Engineer')
                     v:SetPaused(true)
