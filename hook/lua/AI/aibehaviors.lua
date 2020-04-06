@@ -533,18 +533,18 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             else
                 continue
             end
-            
+            --[[
             if (massEfficiency <= upgradeSpec.MassHighTrigger and energyEfficiency <= upgradeSpec.EnergyHighTrigger) then
                 --LOG('* AI-RNG: hi_trigger_good = true')
             else
                 continue
-            end
+            end]]
             if (GetGameTimeSeconds() - ecoPassbyTimeout) > 720 then
                 LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
                 bypasseco = true
             end
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
-				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) )  then
+				or ( massStorage >= (massNeeded * .6) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
 				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
