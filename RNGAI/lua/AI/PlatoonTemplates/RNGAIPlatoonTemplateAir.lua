@@ -81,7 +81,7 @@ PlatoonTemplate {
     Name = 'T2AirMissile',
     FactionSquads = {
         Aeon = {
-            { 'daa0206', 1, 2, 'attack', 'none' },
+            { 'daa0206', 1, 4, 'attack', 'none' },
         },
     }
 }

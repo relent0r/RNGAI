@@ -19,6 +19,9 @@ Valid Threat Options:
             AntiSub
             Economy
             Unknown
+    
+        self:SetUpAttackVectorsToArmy(categories.STRUCTURE - (categories.MASSEXTRACTION))
+        LOG('Attack Vectors'..repr(self:GetAttackVectors()))
 ]]
 
 local PropBlacklist = {}
