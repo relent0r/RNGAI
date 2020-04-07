@@ -366,17 +366,35 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     end
     local pos = unit:GetPosition()
     -- don't check a path if we are in build range
-    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 25 then
+    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 14 then
         return true
     end
-    local result, bestPos = unit:CanPathTo(destination)
+
+    -- first try to find a path with markers. 
+    local result, bestPos
+    local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+    -- only use CanPathTo for distance closer then 200 and if we can't path with markers
+    if reason ~= 'PathOK' then
+        -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
+        if reason == 'NoGraph' then
+            result = true
+        elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
+            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
+            -- be really sure we don't try a pathing with a destoryed c-object
+            if unit.Dead or unit:BeenDestroyed() or IsDestroyed(unit) then
+                SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
+                return false
+            end
+            result, bestPos = unit:CanPathTo(destination)
+        end 
+    end
     local bUsedTransports = false
     -- Increase check to 300 for transports
-    if not result or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300
+    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 200 * 200
     and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
         -- If we can't path to our destination, we need, rather than want, transports
-        local needTransports = not result
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300 then
+        local needTransports = not result and reason ~= 'PathOK'
+        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 200 * 200 then
             needTransports = true
         end
 
@@ -392,9 +410,13 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     end
 
     -- If we're here, we haven't used transports and we can path to the destination
-    if result then
-        local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Amphibious', pos, destination)
+    if result or reason == 'PathOK' then
+        --LOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
+        if reason ~= 'PathOK' then
+            path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+        end
         if path then
+            --LOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
             local pathSize = table.getn(path)
             -- Move to way points (but not to destination... leave that for the final command)
             for widx, waypointPath in path do
