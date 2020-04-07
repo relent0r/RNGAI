@@ -330,7 +330,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
             WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
-                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdrPos, 20, 'ENEMY') > 0 ) then
+                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdrPos, 30, 'ENEMY') > 0 ) then
                     cdr.GoingHome = false
                     IssueStop({cdr})
                     return CDROverChargeRNG(aiBrain, cdr)
@@ -464,7 +464,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local massEfficiency
     local energyEfficiency
     local upgradeNumLimit
-    local extractorUpgradeLimit
+    local extractorUpgradeLimit = 5
     local extractorClosest = false
     
     local initial_delay = 0
@@ -483,9 +483,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
-        if unitTech == 'TECH1' then
+        if unitTech == 'TECH1' and bypasseco then
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
-        elseif unitTech == 'TECH2' then
+        elseif unitTech == 'TECH2' and bypasseco then
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
         end
         if upgradeNumLimit >= extractorUpgradeLimit then
