@@ -22,6 +22,22 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI T2EngineerReclaimer',
+    Plan = 'ReclaimAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH2, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'RNGAI T3EngineerReclaimer',
+    Plan = 'ReclaimAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH3, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1 Guard Marker Small',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {

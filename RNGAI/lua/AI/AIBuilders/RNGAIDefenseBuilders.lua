@@ -39,6 +39,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T1GroundDefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -67,6 +69,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -95,6 +99,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T2GroundDefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -123,6 +129,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T2AADefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -151,6 +159,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T3AADefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -180,6 +190,8 @@ BuilderGroup {
                     'T2GroundDefense',
                     'T2MissileDefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -204,6 +216,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -233,6 +247,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T3AADefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -265,6 +281,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T1GroundDefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -293,6 +311,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -321,6 +341,8 @@ BuilderGroup {
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -357,6 +379,8 @@ BuilderGroup {
                     'T1GroundDefense',
                     'T1AADefense',
                 },
+                AvoidCategory = categories.MASSEXTRACTION,
+                maxRadius = 10,,
                 Location = 'LocationType',
             }
         }
@@ -404,7 +428,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = false,
                 AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
-                AdjacencyDistance = 50,
+                AdjacencyDistance = 80,
                 AvoidCategory = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3,
                 maxUnits = 1,
                 maxRadius = 20,

@@ -144,7 +144,7 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1AirFactory',
                     'T1EnergyProduction',
-                }
+                },
             }
         }
     },
