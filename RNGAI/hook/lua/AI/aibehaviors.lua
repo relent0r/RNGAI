@@ -482,6 +482,10 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
+        if (GetGameTimeSeconds() - ecoPassbyTimeout) > 600 then
+            LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
+            bypasseco = true
+        end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
         if unitTech == 'TECH1' and bypasseco then
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
@@ -539,10 +543,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             else
                 continue
             end]]
-            if (GetGameTimeSeconds() - ecoPassbyTimeout) > 720 then
-                LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
-                bypasseco = true
-            end
+
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .6) and energyStorage > (energyNeeded * .4) )  then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
