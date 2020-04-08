@@ -402,7 +402,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'T2EngineerBuilderRNG',
         PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
@@ -443,7 +443,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
         InstanceCount = 12,
@@ -464,7 +464,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'T3EngineerAssist',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
@@ -654,7 +654,6 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 10,
         BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
@@ -671,7 +670,6 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 10,
         BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },

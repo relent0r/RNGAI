@@ -37,6 +37,7 @@ PlatoonTemplate {
         { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION, 1, 1, 'support', 'None' }
     },
 }
+
 PlatoonTemplate {
     Name = 'CommanderBuilderRNG',
     Plan = 'EngineerBuildAIRNG',

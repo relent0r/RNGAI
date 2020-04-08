@@ -10,13 +10,40 @@ BuilderGroup {
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatio', { 0.20, 0.95 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.NUKE * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AvoidCategory = categories.STRUCTURE * categories.NUKE,
+                maxUnits = 1,
+                maxRadius = 20,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T3StrategicMissile',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI SML Low Pri',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 700,
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { EBC, 'GreaterThanEconIncome', { 9.0, 800.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.50, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.NUKE * categories.STRUCTURE}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.ENERGYPRODUCTION * categories.TECH3 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -46,10 +73,9 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { UCBC, 'CheckBuildPlattonDelay', { 'Artillery' }},
-            { EBC, 'GreaterThanEconTrend', { 2.0, 300.0 } },
+            { EBC, 'GreaterThanEconTrend', { 2.0, 200.0 } },
             { EBC, 'GreaterThanEconIncome', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.95 } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.EXPERIMENTAL}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
         },
         BuilderType = 'Any',
