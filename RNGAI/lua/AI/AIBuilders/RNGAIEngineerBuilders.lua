@@ -381,7 +381,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T1EngineerAssistRNG',
-        Priority = 950,
+        Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
@@ -424,7 +424,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T2EngineerAssist',
-        Priority = 950,
+        Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
@@ -465,7 +465,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T3EngineerAssist',
-        Priority = 950,
+        Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},

@@ -159,7 +159,7 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH1' }},
@@ -182,7 +182,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Lower Pri'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -204,7 +204,7 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH1' }},
@@ -228,7 +228,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
@@ -273,7 +273,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 70 } },
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -294,7 +294,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 80 } },
             { UCBC, 'LessThanEnergyTrend', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -315,7 +315,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
-            { UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Storage'}},
+            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Storage'}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
         },
         BuilderType = 'Any',
