@@ -385,7 +385,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -428,7 +428,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -469,7 +469,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {

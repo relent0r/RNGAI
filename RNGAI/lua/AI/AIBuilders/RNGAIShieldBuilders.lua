@@ -7,7 +7,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Shield Builder',                   
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI Shield Ratio',
+        BuilderName = 'RNGAI T2 Shield Ratio',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 600,
         InstanceCount = 1,
@@ -36,6 +36,37 @@ BuilderGroup {
                 },
             },
         },
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Shield Ratio',
+        PlatoonTemplate = 'T3EngineerBuilder',
+        Priority = 650,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.95 } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 2, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'HaveUnitRatioAtLocation', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'HaveUnitRatioVersusCap', { 0.12 / 2, '<', categories.STRUCTURE * categories.DEFENSE * categories.SHIELD } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 4,
+                BuildClose = false,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
+                AvoidCategory = categories.STRUCTURE * categories.SHIELD,
+                maxUnits = 1,
+                maxRadius = 35,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T3ShieldDefense',
+                }
+            }
+        }
     },
 }
 
