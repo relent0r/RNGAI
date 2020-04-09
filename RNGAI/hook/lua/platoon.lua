@@ -5,6 +5,7 @@ local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
+local ALLBPS = __blueprints
 
 oldPlatoon = Platoon
 Platoon = Class(oldPlatoon) {
@@ -722,6 +723,27 @@ Platoon = Class(oldPlatoon) {
             if target then
                 --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                 local targetPosition = target:GetPosition()
+                if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
+                    local platoonPos = GetPlatoonPosition(self)
+                    positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
+                    local threatAroundplatoon = 0
+                    local bp
+                    -- calculate my present land threat			
+                    for _,v in positionUnits do
+                        bp = ALLBPS[v.UnitId].Defense
+                        threatAroundplatoon = threatAroundplatoon + bp.SurfaceThreatLevel
+                    end
+                    if threatAroundplatoon < 75 then
+                        local retreatPos = RUtils.lerpy(platoonPos, targetPosition, {50, 1})
+                        self:MoveToLocation(retreatPos, false)
+                        LOG('Target is ACU retreating')
+                        local platoonThreat = self:GetPlatoonThreat('Land', categories.MOBILE * categories.LAND)
+                        LOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
+                        LOG('Platoon Threat = '..platoonThreat)
+                        WaitTicks(30)
+                        continue
+                    end
+                end
                 local attackUnits =  self:GetSquadUnits('Attack')
                 local scoutUnits = self:GetSquadUnits('Scout')
                 local guardUnits = self:GetSquadUnits('Guard')
@@ -2198,17 +2220,23 @@ Platoon = Class(oldPlatoon) {
                 local threatPos = {}
                 local threat = 0
                 local threatKey = false
+                local basePosX, BasePosZ = aiBrain:GetArmyStartPos()
                 local platoonPos = GetPlatoonPosition(self)
                 local oldPlan = self:GetPlan()
                 --LOG('Dump of tacticalThreat table for tactical response'..repr(tacticalThreat))
                 for k, v in tacticalThreat do
-                    if v.Threat > threat and v.ThreatType == self.MovementLayer then
+                    -- Get threats and look for highest, increase threats closer than 200 to start position.
+                    local threatModifier = 1
+                    if VDist2Sq(basePosX, BasePosZ, v.Position[1], v.Position[2]) < 40000 then
+                        threatModifier = 2
+                    end
+                    if (v.Threat * threatModifier) > threat and v.ThreatType == self.MovementLayer then
                         if self.MovementLayer == 'Water' and not v.PositionOnWater then
                             LOG('Movement Layer is Water and Position on water is false')
                             continue
                         end
                         threatKey = k
-                        threat = v.Threat
+                        threat = v.Threat 
                         threatPos = v.Position
                     end
                 end

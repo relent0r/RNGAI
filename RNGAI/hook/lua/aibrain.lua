@@ -205,15 +205,8 @@ AIBrain = Class(RNGAIBrainClass) {
             RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
         end
         -- Begin the base monitor process
-        if self.Sorian then
-            local spec = {
-                DefaultDistressRange = 200,
-                AlertLevel = 8,
-            }
-            self:BaseMonitorInitializationSorian(spec)
-        else
-            self:BaseMonitorInitializationRNG()
-        end
+
+        self:BaseMonitorInitializationRNG()
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
@@ -226,7 +219,7 @@ AIBrain = Class(RNGAIBrainClass) {
     BaseMonitorThreadRNG = function(self)
         while true do
             if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
-                self:BaseMonitorCheck()
+                self:BaseMonitorCheckRNG()
             end
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
@@ -270,6 +263,74 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
         self:ForkThread(self.TacticalMonitorInitializationRNG)
+    end,
+
+    BaseMonitorCheckRNG = function(self)
+        
+        local gameTime = GetGameTimeSeconds()
+        if gameTime < 300 then
+            -- default monitor spec
+        elseif gameTime > 300 then
+            self.BaseMonitor.PoolDistressRange = 130
+            self.AlertLevel = 5
+        end
+
+        local vecs = self:GetStructureVectors()
+        if table.getn(vecs) > 0 then
+            -- Find new points to monitor
+            for k, v in vecs do
+                local found = false
+                for subk, subv in self.BaseMonitor.BaseMonitorPoints do
+                    if v[1] == subv.Position[1] and v[3] == subv.Position[3] then
+                        found = true
+                        -- if we found this point already stored, we don't need to continue searching the rest
+                        break
+                    end
+                end
+                if not found then
+                    table.insert(self.BaseMonitor.BaseMonitorPoints,
+                        {
+                            Position = v,
+                            Threat = self:GetThreatAtPosition(v, 0, true, 'Overall'),
+                            Alert = false
+                        }
+                    )
+                end
+            end
+            -- Remove any points that we dont monitor anymore
+            for k, v in self.BaseMonitor.BaseMonitorPoints do
+                local found = false
+                for subk, subv in vecs do
+                    if v.Position[1] == subv[1] and v.Position[3] == subv[3] then
+                        found = true
+                        break
+                    end
+                end
+                -- If point not in list and the num units around the point is small
+                if not found and self:GetNumUnitsAroundPoint(categories.STRUCTURE, v.Position, 16, 'Ally') <= 1 then
+                    table.remove(self.BaseMonitor.BaseMonitorPoints, k)
+                end
+            end
+            -- Check monitor points for change
+            local alertThreat = self.BaseMonitor.AlertLevel
+            for k, v in self.BaseMonitor.BaseMonitorPoints do
+                if not v.Alert then
+                    v.Threat = self:GetThreatAtPosition(v.Position, 0, true, 'Overall')
+                    if v.Threat > alertThreat then
+                        v.Alert = true
+                        table.insert(self.BaseMonitor.AlertsTable,
+                            {
+                                Position = v.Position,
+                                Threat = v.Threat,
+                            }
+                        )
+                        self.BaseMonitor.AlertSounded = true
+                        self:ForkThread(self.BaseMonitorAlertTimeout, v.Position)
+                        self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
+                    end
+                end
+            end
+        end
     end,
 
     BuildScoutLocationsRNG = function(self)
@@ -691,6 +752,10 @@ AIBrain = Class(RNGAIBrainClass) {
         return returnEnemy
     end,
 
+    GetBaseMonitorSpec = function(self)
+
+    end,
+
     GetUpgradeSpec = function(self, unit)
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
@@ -1004,7 +1069,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
                 end
             end
-            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
 
         -- Get AI strength

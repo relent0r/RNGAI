@@ -291,7 +291,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         BuilderConditions = {            
-            { MIBC, 'GreaterThanGameTime', { 80 } },
+            { MIBC, 'GreaterThanGameTime', { 120 } },
             { UCBC, 'LessThanEnergyTrend', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
