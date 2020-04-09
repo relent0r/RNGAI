@@ -21,8 +21,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             -- When do we want to build this ?
-            { EBC, 'GreaterThanEconStorageRatio', { 0.07, 0.30}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.30}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             -- Don't build it if...
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },

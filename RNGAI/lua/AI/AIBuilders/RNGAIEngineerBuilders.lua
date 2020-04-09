@@ -639,6 +639,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -651,10 +652,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T2 Excess',
         PlatoonTemplate = 'RNGAI T2EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 500,
+        Priority = 100,
         InstanceCount = 10,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD }},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -667,10 +669,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T3 Excess',
         PlatoonTemplate = 'RNGAI T3EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
-        Priority = 500,
+        Priority = 100,
         InstanceCount = 10,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {

@@ -55,4 +55,15 @@ BuilderGroup {
         LocationType = 'LocationType',
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI Former Scout Excess',
+        PlatoonTemplate = 'RNGAI T1LandScoutForm',
+        Priority = 100,
+        InstanceCount = 15,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.LAND * categories.SCOUT } },
+        },
+        LocationType = 'LocationType',
+        BuilderType = 'Any',
+    },
 }

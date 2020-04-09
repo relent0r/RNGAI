@@ -24,7 +24,7 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Structure Upgrade properties
             self.UpgradeMode = 'Normal'
             self.UpgradeIssued = 0
-		    self.UpgradeIssuedLimit = 1
+		    self.UpgradeIssuedLimit = 2
             self.UpgradeIssuedPeriod = 225
 
             -- ACU Support Data
@@ -695,7 +695,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.6
+                upgradeSpec.MassLowTrigger = 0.60
                 upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 1.8
                 upgradeSpec.EnergyHighTrigger = 9999
@@ -704,8 +704,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 100
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.72
-                upgradeSpec.EnergyLowTrigger = 1.01
+                upgradeSpec.MassLowTrigger = 0.68
+                upgradeSpec.EnergyLowTrigger = 0.8
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18

@@ -8,6 +8,7 @@
 function GreaterThanEconStorageRatio(aiBrain, mStorageRatio, eStorageRatio)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     -- If a paragon is present and we not stall mass or energy, return true
+    --LOG('Mass Storage Ratio :'..econ.MassStorageRatio..' Energy Storage Ratio :'..econ.EnergyStorageRatio)
     if aiBrain.HasParagon and econ.MassStorageRatio >= 0.01 and econ.EnergyStorageRatio >= 0.01 then
         return true
     elseif econ.MassStorageRatio >= mStorageRatio and econ.EnergyStorageRatio >= eStorageRatio then

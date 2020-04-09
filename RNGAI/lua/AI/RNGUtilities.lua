@@ -613,7 +613,7 @@ function GetLastACUPosition(aiBrain, enemyIndex)
             if k == enemyIndex then
                 acuPos = v.Position
                 lastSpotted = v.LastSpotted
-                LOG('* AI-RNG: acuPos has data')
+                --LOG('* AI-RNG: acuPos has data')
             else
                 --LOG('* AI-RNG: acuPos is currently false')
             end

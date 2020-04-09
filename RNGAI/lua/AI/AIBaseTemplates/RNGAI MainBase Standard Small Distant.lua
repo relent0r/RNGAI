@@ -129,7 +129,7 @@ BaseBuilderTemplate {
         },
         FactoryCount = {
             Land = 15,
-            Air = 4,
+            Air = 5,
             Sea = 1,
             Gate = 1,
         },
