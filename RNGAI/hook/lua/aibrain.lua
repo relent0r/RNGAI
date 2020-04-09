@@ -752,10 +752,6 @@ AIBrain = Class(RNGAIBrainClass) {
         return returnEnemy
     end,
 
-    GetBaseMonitorSpec = function(self)
-
-    end,
-
     GetUpgradeSpec = function(self, unit)
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
