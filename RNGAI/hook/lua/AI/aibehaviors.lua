@@ -471,7 +471,12 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local extractorClosest = false
     
     local initial_delay = 0
-    local ecoPassbyTimeout = GetGameTimeSeconds()
+    local ecoStartTime = GetGameTimeSeconds()
+    if unitTech == 'TECH1' then
+        ecoTimeOut = 480
+    elseif unitTech == 'TECH2' then
+        ecoTimeOut = 600
+    end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
 		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 1000 and unit:GetFractionComplete() == 1 then
@@ -485,7 +490,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
-        if (GetGameTimeSeconds() - ecoPassbyTimeout) > 480 then
+        
+        if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
             LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
             bypasseco = true
         end
