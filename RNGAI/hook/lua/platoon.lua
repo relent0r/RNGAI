@@ -658,7 +658,28 @@ Platoon = Class(oldPlatoon) {
                 LOG('Target is ACU')
             end
             if target then
-                
+                local targetPosition = target:GetPosition()
+                if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
+                    local platoonPos = GetPlatoonPosition(self)
+                    positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
+                    local threatAroundplatoon = 0
+                    local bp
+                    -- calculate my present land threat			
+                    for _,v in positionUnits do
+                        bp = ALLBPS[v.UnitId].Defense
+                        threatAroundplatoon = threatAroundplatoon + bp.SurfaceThreatLevel
+                    end
+                    if threatAroundplatoon < 75 then
+                        local retreatPos = RUtils.lerpy(platoonPos, targetPosition, {50, 1})
+                        self:MoveToLocation(retreatPos, false)
+                        LOG('Target is ACU retreating')
+                        local platoonThreat = self:GetPlatoonThreat('Land', categories.MOBILE * categories.LAND)
+                        LOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
+                        LOG('Platoon Threat = '..platoonThreat)
+                        WaitTicks(30)
+                        continue
+                    end
+                end
                 local attackUnits =  self:GetSquadUnits('Attack')
                 if self:GetSquadUnits('Scout') then
                     local guardedUnit = 1
@@ -2215,7 +2236,8 @@ Platoon = Class(oldPlatoon) {
                     self:Stop()
                     return self:ReturnToBaseAIRNG()
                 end
-            elseif table.getn(tacticalThreat) > 0 then
+            end
+            --[[elseif table.getn(tacticalThreat) > 0 then
                 LOG('* AI-RNG: Tactical Threat Detected')
                 local threatPos = {}
                 local threat = 0
@@ -2334,6 +2356,9 @@ Platoon = Class(oldPlatoon) {
                 self:Stop()
                 self:SetAIPlan('HuntAIPATHRNG')
             end
+            ]]
+            self:Stop()
+            self:SetAIPlan('HuntAIPATHRNG')
             WaitTicks(100)
         end
     end,

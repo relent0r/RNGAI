@@ -189,6 +189,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         target = plat:FindClosestUnit('Support', 'Enemy', true, v)
                         if target and Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) <= searchRadius then
                             if not aiBrain.ACUSupport.Supported then
+                                aiBrain.ACUSupport.Position = cdrPos
                                 aiBrain.ACUSupport.Supported = true
                                 LOG('* AI-RNG: ACUSupport.Supported set to true')
                                 aiBrain.ACUSupport.TargetPosition = target:GetPosition()
@@ -486,13 +487,14 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         if (GetGameTimeSeconds() - ecoPassbyTimeout) > 480 then
             LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
-            WaitTicks(Random(10,20))
             bypasseco = true
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
         if unitTech == 'TECH1' and bypasseco then
+            WaitTicks(Random(10,40))
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
         elseif unitTech == 'TECH2' and bypasseco then
+            WaitTicks(Random(10,40))
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
         end
         if upgradeNumLimit >= extractorUpgradeLimit then
@@ -751,12 +753,21 @@ end
 
 function TacticalResponse(platoon)
     local aiBrain = platoon:GetBrain()
+    local platoonPos = platoon:GetPlatoonPosition()
+    local acuTarget = false
+    local targetDistance = 0
     while aiBrain:PlatoonExists(platoon) do
-        local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
+        --local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
         if aiBrain.ACUSupport.Supported then
-            platoon:Stop()
-            platoon:SetAIPlan('TacticalResponseAIRNG')
-        elseif table.getn(tacticalThreat) > 0 then
+            acuTarget = aiBrain.ACUSupport.TargetPosition
+            LOG('Platoon Pos :'..repr(platoonPos)..' ACU TargetPos :'..repr(acuTarget))
+            targetDistance = VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3])
+            if targetDistance > 50 and targetDistance < 200 then
+                platoon:Stop()
+                platoon:SetAIPlan('TacticalResponseAIRNG')
+            end
+        end
+        --[[elseif table.getn(tacticalThreat) > 0 then
             --LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
             local threatType = platoon.MovementLayer
@@ -768,7 +779,7 @@ function TacticalResponse(platoon)
                     break
                 end
             end
-        end
+        end]]
     WaitTicks(100)
     end
 end

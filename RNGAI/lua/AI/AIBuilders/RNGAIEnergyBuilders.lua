@@ -400,6 +400,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 600 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.08, 0.80}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'ENERGYSTORAGE' }},
         },
         BuilderType = 'Any',

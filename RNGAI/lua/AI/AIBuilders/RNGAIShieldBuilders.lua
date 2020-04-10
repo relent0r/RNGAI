@@ -29,7 +29,7 @@ BuilderGroup {
                 AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
                 AvoidCategory = categories.STRUCTURE * categories.SHIELD,
                 maxUnits = 1,
-                maxRadius = 25,
+                maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
                     'T2ShieldDefense',
