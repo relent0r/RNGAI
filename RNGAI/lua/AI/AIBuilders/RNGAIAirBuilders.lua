@@ -268,6 +268,26 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
+            AvoidBases = true,
+            NeverGuardEngineers = true,
+            PrioritizedCategories = {
+                'BOMBER AIR',
+                'GUNSHIP AIR',
+                'ANTIAIR AIR',
+            },
+        },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+         },
+    },
+    Builder {
+        BuilderName = 'RNGAI Air Lockdown',
+        PlatoonTemplate = 'RNGAI AntiAirHunt',
+        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        Priority = 750,
+        InstanceCount = 8,
+        BuilderType = 'Any',
+        BuilderData = {
             NeverGuardEngineers = true,
             PrioritizedCategories = {
                 'BOMBER AIR',

@@ -2,6 +2,8 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local Utils = import('/lua/utilities.lua')
+local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
+
 --[[
 Valid Threat Options:
             Overall
@@ -335,12 +337,12 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
                 continue
             end
             if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * categories.MOBILE, unit) then 
-                LOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
+                --LOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
                 IssueCapture({eng}, unit)
             else
-                LOG('* AI-RNG: We are going to reclaim the unit'..unitdesc)
+                --LOG('* AI-RNG: We are going to reclaim the unit'..unitdesc)
                 -- if we can't capture then reclaim
                 unit.ReclaimInProgress = true
                 IssueReclaim({eng}, unit)
@@ -662,7 +664,7 @@ function CheckCustomPlatoons(aiBrain)
     end
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, enemyBrain)
+function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxRange, atkPri, enemyBrain)
     local position = platoon:GetPlatoonPosition()
     if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
         return false
@@ -693,7 +695,6 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
 
     return false
 end
-
 -- 99% of the below was Sprouto's work
 function StructureUpgradeInitialize(finishedUnit, aiBrain)
     local StructureUpgradeThread = import('/lua/ai/aibehaviors.lua').StructureUpgradeThread
@@ -1108,5 +1109,61 @@ function ExtractorsBeingUpgraded(aiBrain)
     end
     
     return {TECH1 = tech1ExtNumBuilding, TECH2 = tech2ExtNumBuilding}
+end
+
+function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases)
+    local position = platoon:GetPlatoonPosition()
+    if not aiBrain or not position or not maxRange then
+        return false
+    end
+    if not avoidbases then
+        avoidbases = false
+    end
+    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+    for _, v in atkPri do
+        local category = ParseEntityCategory(v)
+        local retUnit = false
+        local distance = false
+        local targetShields = 9999
+        for num, unit in targetUnits do
+            if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                local unitPos = unit:GetPosition()
+                if avoidbases then
+                    for _, w in ArmyBrains do
+                        if IsAlly(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
+                            local estartX, estartZ = w:GetArmyStartPos()
+                            if VDist2Sq(estartX, estartZ, unitPos[1], unitPos[3]) < 22500 then
+                                continue
+                            end
+                        end
+                    end
+                end
+                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                    retUnit = unit
+                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                    targetShields = numShields
+                end
+            end
+        end
+        if retUnit and targetShields > 0 then
+            local platoonUnits = platoon:GetPlatoonUnits()
+            for _, w in platoonUnits do
+                if not w.Dead then
+                    unit = w
+                    break
+                end
+            end
+            local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+            if closestBlockingShield then
+                return closestBlockingShield
+            end
+        end
+        if retUnit then
+            return retUnit
+        end
+    end
+
+    return false
 end
 

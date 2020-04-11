@@ -39,6 +39,7 @@ Platoon = Class(oldPlatoon) {
         local blip
         local startX, startZ = aiBrain:GetArmyStartPos()
         local currentPosition = GetPlatoonPosition(self)
+        local avoidBases = data.AvoidBases or false
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 table.insert(atkPri, v)
@@ -54,7 +55,7 @@ Platoon = Class(oldPlatoon) {
             if not target or target.Dead then
                 local mult = { 1,10,25 }
                 for _,i in mult do
-                    target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius * i, atkPri, avoidBases)
                     if target then
                         break
                     end
@@ -68,12 +69,14 @@ Platoon = Class(oldPlatoon) {
             if target then
                 self:Stop()
                 LOG('* AI-RNG: Attacking Target')
+                LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
                 self:AttackTarget(target)
-                WaitTicks(70)
+                WaitTicks(60)
             elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 2500 then
                 LOG('* AI-RNG: No Target Returning to base')
                 return self:ReturnToBaseAIRNG(true)
             end
+            WaitTicks(10)
         end
     end,
     
@@ -946,7 +949,7 @@ Platoon = Class(oldPlatoon) {
                     aiBrain:PickEnemyLogicRNG()
                 end
                 if data.Defensive then
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
+                    target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
                 else
                     local mult = { 1,10,25 }
                     for _,i in mult do
@@ -1457,7 +1460,7 @@ Platoon = Class(oldPlatoon) {
             local buildLocation = BuildToNormalLocation(eng.EngineerBuildQueue[1][2])
             local buildRelative = eng.EngineerBuildQueue[1][3]
             -- see if we can move there first
-            if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
+            if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, whatToBuild) then
                 if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
@@ -1478,6 +1481,14 @@ Platoon = Class(oldPlatoon) {
                     if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
                         -- otherwise, go ahead and build the next structure there
                         --LOG('BuildStructure Triggered')
+                        --[[
+                        if EntityCategoryContains(categories.MASSEXTRACTION, whatToBuild) then
+                            if not aiBrain:CanBuildStructureAt(whatToBuild, buildLocation) then
+                                LOG('Cannot Build structure at location :'..repr(buildLocation))
+                            else
+                                LOG('Can Build Structure at Loation :'..repr(buildLocation))
+                            end
+                        end]]
                         aiBrain:BuildStructure(eng, whatToBuild, NormalToBuildLocation(buildLocation), buildRelative)
                         if not eng.NotBuildingThread then
                             eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
@@ -2627,6 +2638,8 @@ Platoon = Class(oldPlatoon) {
 
         --DUNCAN - added energy production, removed construction, repriotised.
         self:SetPrioritizedTargetList('Attack', {
+            categories.MASSEXTRACTION * categories.TECH2,
+            categories.MASSEXTRACTION * categories.TECH3,
             categories.COMMAND,
             categories.EXPERIMENTAL,
             categories.ENERGYPRODUCTION,

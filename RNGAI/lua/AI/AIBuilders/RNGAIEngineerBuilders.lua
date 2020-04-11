@@ -205,7 +205,7 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 12,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
@@ -227,6 +227,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
@@ -236,6 +237,8 @@ BuilderGroup {
                 AssistLocation = 'LocationType',
                 PermanentAssist = true,
                 AssisteeType = 'Factory',
+                AssistRange = 80,
+                BeingBuiltCategories = {'STRUCTURE FACTORY'},
                 Time = 45,
             },
         }
@@ -247,6 +250,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR } },
         },
@@ -271,6 +275,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}}, 
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR} },
         },
@@ -300,6 +305,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
@@ -320,6 +326,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
@@ -384,8 +391,9 @@ BuilderGroup {
         Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -407,6 +415,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             { UCBC, 'LessThanEnergyTrend', { 100.0 } },
         },
@@ -427,8 +436,9 @@ BuilderGroup {
         Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -448,6 +458,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 12,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD } },
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             { UCBC, 'LessThanEnergyTrend', { 100.0 } },
         },
@@ -468,8 +479,9 @@ BuilderGroup {
         Priority = 940,
         InstanceCount = 12,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD } },
             { UCBC, 'UnfinishedUnits', { 'LocationType', categories.EXPERIMENTAL * (categories.MOBILE + categories.AIR)}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -540,6 +552,7 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER - categories.STATIONASSISTPOD } },
                 { MIBC, 'DamagedStructuresInAreaRNG', { 'LocationType', }},
             },
         BuilderData = {
