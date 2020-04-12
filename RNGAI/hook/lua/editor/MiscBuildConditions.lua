@@ -132,11 +132,22 @@ function CheckMustScoutAreas(aiBrain)
     end
 end
 
+function ACURequiresSupport(aiBrain)
+    if aiBrain.ACUSupport.Supported then
+        LOG('ACU Supported is TRUE')
+        return true
+    else
+        return false
+    end
+    return false
+end
+
 function MassMarkersInWater(aiBrain)
     if aiBrain.MassMarkersInWater then
         return true
     else
         return false
     end
+    return false
 end
 

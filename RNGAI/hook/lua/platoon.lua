@@ -415,6 +415,7 @@ Platoon = Class(oldPlatoon) {
     AirScoutingAIRNG = function(self)
         --LOG('* AI-RNG: Starting AirScoutAIRNG')
         local patrol = self.PlatoonData.Patrol or false
+        local acuSupport = self.PlatoonData.ACUSupport or false
         local scout = GetPlatoonUnits(self)[1]
         if not scout then
             return
@@ -484,6 +485,18 @@ Platoon = Class(oldPlatoon) {
                 self:MoveToLocation({startX, 0, startZ}, false)
                 self:PlatoonDisband()
                 return
+            end
+        elseif acuSupport == true then
+            while not scout.Dead and aiBrain.ACUSupport.Supported == true do
+                LOG('ACU Supported is true, scout moving to patrol')
+                local patrolTime = self.PlatoonData.PatrolTime or 30
+                acuPos = aiBrain.ACUSupport.Position
+                self:MoveToLocation(acuPos, false)
+                local patrolunits = GetPlatoonUnits(self)
+                IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
+                IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
+                WaitSeconds(patrolTime)
+                self:Stop()
             end
         else
             while not scout.Dead do
@@ -563,6 +576,9 @@ Platoon = Class(oldPlatoon) {
                 WaitTicks(10)
             end
         end
+        self:MoveToLocation({startX, 0, startZ}, false)
+        WaitTicks(50)
+        self:PlatoonDisband()
     end,
 
     LandScoutingAIRNG = function(self)

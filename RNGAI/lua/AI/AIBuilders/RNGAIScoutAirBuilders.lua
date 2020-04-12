@@ -6,6 +6,7 @@
 ]]
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
+local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutAirBuilder',
@@ -63,6 +64,22 @@ BuilderGroup {
         Priority = 910,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
+        },
+        LocationType = 'LocationType',
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Former Scout ACU Support',
+        PlatoonTemplate = 'RNGAI T1AirScoutForm',
+        InstanceCount = 1,
+        Priority = 950,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.AIR * categories.SCOUT } },
+            { MIBC, 'ACURequiresSupport', {} },
+        },
+        BuilderData = {
+            ACUSupport = true,
+            PatrolTime = 10,
         },
         LocationType = 'LocationType',
         BuilderType = 'Any',
