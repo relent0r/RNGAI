@@ -241,7 +241,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Mercy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI MercyAttack',
         Priority = 960,
-        InstanceCount = 1,
+        InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = BaseEnemyArea,

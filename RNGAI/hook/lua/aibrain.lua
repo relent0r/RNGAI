@@ -201,8 +201,10 @@ AIBrain = Class(RNGAIBrainClass) {
         RUtils.TacticalMassLocations(self)
         RUtils.MarkTacticalMassLocations(self)
         local MassGroupMarkers = RUtils.GenerateMassGroupMarkerLocations(self)
-        if table.getn(MassGroupMarkers) > 0 then
-            RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
+        if MassGroupMarkers then
+            if table.getn(MassGroupMarkers) > 0 then
+                RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
+            end
         end
         -- Begin the base monitor process
 

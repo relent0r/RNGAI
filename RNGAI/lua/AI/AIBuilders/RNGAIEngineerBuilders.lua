@@ -566,7 +566,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Pgens',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'ReclaimStructuresAI',
         Priority = 800,
         InstanceCount = 1,
@@ -585,7 +585,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T2 Pgens',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'ReclaimStructuresAI',
         Priority = 600,
         InstanceCount = 1,

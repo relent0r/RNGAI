@@ -432,23 +432,26 @@ Platoon = Class(oldPlatoon) {
         if scout:TestToggleCaps('RULEUTC_CloakToggle') then
             scout:EnableUnitIntel('Toggle', 'Cloak')
         end
-
+        local estartX = nil
+        local estartZ = nil
+        local startX = nil 
+        local startZ = nil
+        
         if patrol == true then
             --LOG('* AI-RNG: Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
             --local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
-            local estartX = nil
-            local estartZ = nil
-            local startX = nil
-            local startZ = nil
+
             local patrolPositionX = nil
             local patrolPositionZ = nil
             while not scout.Dead do
-                if aiBrain:GetCurrentEnemy() then
-                    estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
-                end
                 startX, startZ = aiBrain:GetArmyStartPos()
                 --LOG('* AI-RNG: Start Location X Z :'..startX..startZ)
+                if aiBrain:GetCurrentEnemy() then
+                    estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+                else
+                    LOG('No Current enemy')
+                end
                 local rng = math.random(1,3)
                 if rng == 1 then
                     --LOG('* AI-RNG: Patroling BaseMilitaryArea')
@@ -481,14 +484,14 @@ Platoon = Class(oldPlatoon) {
                 --IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 --IssuePatrol(patrolunits, AIUtils.RandomLocation(patrolPositionX, patrolPositionZ))
                 WaitSeconds(patrolTime)
-                --LOG('* AI-RNG: Scout Returning to base')
+                LOG('* AI-RNG: Scout Returning to base : {'..startX..', 0, '..startZ..'}')
                 self:MoveToLocation({startX, 0, startZ}, false)
                 self:PlatoonDisband()
                 return
             end
         elseif acuSupport == true then
             while not scout.Dead and aiBrain.ACUSupport.Supported == true do
-                LOG('ACU Supported is true, scout moving to patrol')
+                LOG('ACU Supported is true, scout moving to patrol :'..repr(acuPos))
                 local patrolTime = self.PlatoonData.PatrolTime or 30
                 acuPos = aiBrain.ACUSupport.Position
                 self:MoveToLocation(acuPos, false)
@@ -576,6 +579,8 @@ Platoon = Class(oldPlatoon) {
                 WaitTicks(10)
             end
         end
+        startX, startZ = aiBrain:GetArmyStartPos()
+        LOG('* AI-RNG: Scout Returning to base : {'..startX..', 0, '..startZ..'}')
         self:MoveToLocation({startX, 0, startZ}, false)
         WaitTicks(50)
         self:PlatoonDisband()
@@ -1109,13 +1114,13 @@ Platoon = Class(oldPlatoon) {
             relative = false
             buildFunction = AIBuildStructures.AIExecuteBuildStructure
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
-        elseif cons.Wall then
+        --[[elseif cons.Wall then
             local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
             local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
             relative = false
             reference = AIUtils.GetLocationNeedingWalls(aiBrain, 200, 4, 'STRUCTURE - WALLS', cons.ThreatMin, cons.ThreatMax, cons.ThreatRings)
             table.insert(baseTmplList, 'Blank')
-            buildFunction = AIBuildStructures.WallBuilder
+            buildFunction = AIBuildStructures.WallBuilder]]
         elseif cons.NearBasePatrolPoints then
             relative = false
             reference = AIUtils.GetBasePatrolPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 100)

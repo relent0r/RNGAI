@@ -17,7 +17,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -45,7 +45,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -73,7 +73,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Land',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -101,7 +101,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -129,7 +129,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'T3EngineerBuilder',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -158,7 +158,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
         InstanceCount = 2,
         BuilderConditions = {
@@ -187,7 +187,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2TMLEngineer',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 720 } },
@@ -211,7 +211,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Base D Engineer AA',
-        PlatoonTemplate = 'T3EngineerBuilder',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH3 ANTIAIR STRUCTURE'}},
@@ -242,7 +242,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Land Expansion',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -270,7 +270,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Air Expansion',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -302,7 +302,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2TMLEngineer Expansion',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 720 } },
@@ -334,7 +334,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence - Perimeter',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
         InstanceCount = 2,
         BuilderConditions = {
@@ -388,7 +388,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI SMD 1st Main',
-        PlatoonTemplate = 'T3EngineerBuilder',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },

@@ -15,7 +15,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -44,7 +44,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase T2',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T2EngineerBuilderRNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -73,7 +73,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -105,7 +105,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 High Pri',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -133,7 +133,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -163,7 +163,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main T2',
-        PlatoonTemplate = 'T2EngineerBuilder',
+        PlatoonTemplate = 'T2EngineerBuilderRNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -198,7 +198,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 High Pri',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -223,7 +223,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -255,7 +255,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Air Staging 1',
-        PlatoonTemplate = 'EngineerBuilder', -- Air Staging has been moved to T1 so don't need T2 engineers now.
+        PlatoonTemplate = 'EngineerBuilderRNG', -- Air Staging has been moved to T1 so don't need T2 engineers now.
         Priority = 900,
         BuilderConditions = {
             -- When do we want to build this ?
@@ -578,7 +578,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Gate Builder',
-        PlatoonTemplate = 'T3EngineerBuilder',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Gate' } },

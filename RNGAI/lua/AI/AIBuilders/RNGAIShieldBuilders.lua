@@ -39,7 +39,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Shield Ratio',
-        PlatoonTemplate = 'T3EngineerBuilder',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 650,
         InstanceCount = 2,
         BuilderConditions = {

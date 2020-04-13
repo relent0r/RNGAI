@@ -42,6 +42,11 @@ function CommanderThreadRNG(cdr, platoon)
             CDRUnitCompletion(aiBrain, cdr) 
         end
         WaitTicks(1)
+        if not cdr.Dead then
+            CDRHideBehaviorRNG(aiBrain, cdr)
+        end
+        WaitTicks(1)
+
         -- Call platoon resume building deal...
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
@@ -206,8 +211,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                 until target or searchRadius >= maxRadius
 
                 if target then
-                     local targetPos = target:GetPosition()
+                    local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
+                    LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     
 
@@ -238,9 +244,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                         --LOG('* AI-RNG: Move Position is'..repr(movePos))
                         --LOG('* AI-RNG: Moving to movePos to attack')
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        cdrNewPos[1] = movePos[1] + Random(-5, 5)
+                        cdrNewPos[1] = movePos[1] + Random(-8, 8)
                         cdrNewPos[2] = movePos[2]
-                        cdrNewPos[3] = movePos[3] + Random(-5, 5)
+                        cdrNewPos[3] = movePos[3] + Random(-8, 8)
                         cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
                 elseif distressLoc then
@@ -363,6 +369,44 @@ function CDRUnitCompletion(aiBrain, cdr)
             cdr.UnitBeingBuiltBehavior = false
         end
     end
+end
+
+function CDRHideBehaviorRNG(aiBrain, cdr)
+    if cdr:IsIdleState() then
+        cdr.GoingHome = false
+        cdr.Fighting = false
+        cdr.Upgrading = false
+
+        local category = false
+        local runShield = false
+        local runPos = false
+        local nmaShield = aiBrain:GetNumUnitsAroundPoint(categories.SHIELD * categories.STRUCTURE, cdr:GetPosition(), 100, 'Ally')
+        local nmaPD = aiBrain:GetNumUnitsAroundPoint(categories.DIRECTFIRE * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
+        local nmaAA = aiBrain:GetNumUnitsAroundPoint(categories.ANTIAIR * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
+
+        if nmaShield > 0 then
+            category = categories.SHIELD * categories.STRUCTURE
+            runShield = true
+        elseif nmaAA > 0 then
+            category = categories.DEFENSE * categories.ANTIAIR
+        elseif nmaPD > 0 then
+            category = categories.DEFENSE * categories.DIRECTFIRE
+        end
+
+        if category then
+            runPos = AIUtils.AIFindDefensiveAreaSorian(aiBrain, cdr, category, 100, runShield)
+            IssueClearCommands({cdr})
+            IssueMove({cdr}, runPos)
+        end
+
+        if not category or not runPos then
+            local x, z = aiBrain:GetArmyStartPos()
+            runPos = AIUtils.RandomLocation(x, z)
+            IssueClearCommands({cdr})
+            IssueMove({cdr}, runPos)
+        end
+    end
+    WaitTicks(10)
 end
 
 function ACUDetection(platoon)
