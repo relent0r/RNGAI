@@ -491,9 +491,9 @@ Platoon = Class(oldPlatoon) {
             end
         elseif acuSupport == true then
             while not scout.Dead and aiBrain.ACUSupport.Supported == true do
+                local acuPos = aiBrain.ACUSupport.Position
                 LOG('ACU Supported is true, scout moving to patrol :'..repr(acuPos))
                 local patrolTime = self.PlatoonData.PatrolTime or 30
-                acuPos = aiBrain.ACUSupport.Position
                 self:MoveToLocation(acuPos, false)
                 local patrolunits = GetPlatoonUnits(self)
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
