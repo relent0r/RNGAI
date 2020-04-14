@@ -5,13 +5,13 @@ local mapSizeX, mapSizeZ = GetMapSize()
 
 --{ UCBC, 'ReturnTrue', {} },
 function ReturnTrue(aiBrain)
-    LOG('** true')
+    --LOG('** true')
     return true
 end
 
 --{ UCBC, 'ReturnFalse', {} },
 function ReturnFalse(aiBrain)
-    LOG('** false')
+    --LOG('** false')
     return false
 end
 
@@ -405,7 +405,7 @@ end
 
 function CheckBuildPlatoonDelay(aiBrain, PlatoonName)
     if aiBrain.DelayEqualBuildPlattons[PlatoonName] and aiBrain.DelayEqualBuildPlattons[PlatoonName] > GetGameTimeSeconds() then
-        LOG('Platoon Delay is false')
+        --LOG('Platoon Delay is false')
         return false
     end
     return true

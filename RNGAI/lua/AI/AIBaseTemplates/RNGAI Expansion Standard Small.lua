@@ -68,27 +68,27 @@ BaseBuilderTemplate {
             return -1
         end
         if markerType ~= 'Expansion Area' then
-            LOG('* AI-RNG: Expansion MarkerType is', markerType)
+            --LOG('* AI-RNG: Expansion MarkerType is', markerType)
             return -1
         end
         
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
         local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
-        LOG('* AI-RNG: Distance is ', distance)
+        --LOG('* AI-RNG: Distance is ', distance)
         if not distance or distance > 1000 then
-            LOG('* AI-RNG: Expansion return is 10')
+            --LOG('* AI-RNG: Expansion return is 10')
             return 10
         elseif distance > 500 then
-            LOG('* AI-RNG: Expansion return is 25')
+            --LOG('* AI-RNG: Expansion return is 25')
             return 25
         elseif distance > 250 then
-            LOG('* AI-RNG: Expansion return is 50')
+            --LOG('* AI-RNG: Expansion return is 50')
             return 50
         else
-            LOG('* AI-RNG: Expansion return is 100')
+            --LOG('* AI-RNG: Expansion return is 100')
             return 100
         end
-        LOG('* AI-RNG: Expansion return default 0')
+        --LOG('* AI-RNG: Expansion return default 0')
         return -1
     end,
 }

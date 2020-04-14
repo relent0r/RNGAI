@@ -17,7 +17,7 @@ local EnemyAirThreat = function(self, aiBrain, manager)
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     local aiAirThreat = aiBrain.BrainIntel.Average.Air
     if enemyAirThreat > aiAirThreat then
-        LOG('PriorityFunction EnemyAirThreat Modifying priority to 1000')
+        --LOG('PriorityFunction EnemyAirThreat Modifying priority to 1000')
         return 1000, true
     end
     return 0, true

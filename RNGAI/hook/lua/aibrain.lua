@@ -18,7 +18,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         --LOG('Oncreate')
         if string.find(per, 'RNG') then
-            LOG('* AI-RNG: This is RNG')
+            --LOG('* AI-RNG: This is RNG')
             self.RNG = true
 
             -- Structure Upgrade properties
@@ -106,7 +106,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.RNG then
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
-        LOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
+        --LOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
         -- Make sure we don't do anything for the human player!!!
         if self.BrainType == 'Human' then
             return
@@ -192,10 +192,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
 
         if RUtils.InitialMassMarkersInWater(self) then
-            LOG('* AI-RNG: Map has mass markers in water')
+            --LOG('* AI-RNG: Map has mass markers in water')
             self.MassMarkersInWater = true
         else
-            LOG('* AI-RNG: Map does not have mass markers in water')
+            --LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
         RUtils.TacticalMassLocations(self)
@@ -631,7 +631,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
 
                 if enemy then
-                    LOG('* AI-RNG: Enemy is :'..enemy.Name)
+                    --LOG('* AI-RNG: Enemy is :'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 else
                     local num = table.getn(enemyTable)
@@ -639,7 +639,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local ran = math.random(num)
                     --LOG('* AI-RNG: Random Number is'..ran)
                     enemy = enemyTable[ran]
-                    LOG('* AI-RNG: Random Enemy is'..enemy.Name)
+                    --LOG('* AI-RNG: Random Enemy is'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 end
             end
@@ -721,11 +721,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
                     --LOG('* AI-RNG: Enemy ACU Distance in Alliance Check is'..ACUDist)
                     if ACUDist < 180 then
-                        LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
+                        --LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     elseif v.Threat < 200 and ACUDist < 240 then
-                        LOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
+                        --LOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     end
@@ -747,9 +747,9 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if returnEnemy then
-            LOG('* AI-RNG: Ally Enemy Returned is : '..returnEnemy.Nickname)
+            --LOG('* AI-RNG: Ally Enemy Returned is : '..returnEnemy.Nickname)
         else
-            LOG('* AI-RNG: returnEnemy is false')
+            --LOG('* AI-RNG: returnEnemy is false')
         end
         return returnEnemy
     end,
@@ -930,7 +930,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     TacticalMonitorThreadRNG = function(self, ALLBPS)
-        LOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
+        --LOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
@@ -943,7 +943,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
         WaitTicks(Random(1,7))
-        LOG('* AI-RNG: Tactical Monitor Threat Pass')
+        --LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local timeout = self.TacticalMonitor.TacticalTimeout
@@ -1067,7 +1067,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
                 end
             end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
 
         -- Get AI strength
@@ -1088,14 +1088,14 @@ AIBrain = Class(RNGAIBrainClass) {
         if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
-            LOG('Total Air Unit Threat :'..airthreat)
+            --LOG('Total Air Unit Threat :'..airthreat)
             --LOG('Current Self Air Threat Table :'..repr(self.BrainIntel.SelfThreat.Air))
             local averageSelfThreat = 0
             for k, v in self.BrainIntel.SelfThreat.Air do
                 averageSelfThreat = averageSelfThreat + v.Threat
             end
             self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
-            LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
+            --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end
 
         if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
@@ -1106,7 +1106,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
-            LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+            --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
         end
     end,
 
@@ -1140,7 +1140,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local unitTypePaused = false
         
         if powerStateCaution then
-            LOG('Power State Caution is true')
+            --LOG('Power State Caution is true')
             local powerCycle = 0
             local unitTypePaused = {}
             while powerStateCaution do
@@ -1163,7 +1163,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         priorityUnit = k
                     end
                 end
-                LOG('Doing anti power stall stuff for :'..priorityUnit)
+                --LOG('Doing anti power stall stuff for :'..priorityUnit)
                 if priorityUnit == 'ENGINEER' then
                     local unitAlreadySet = false
                     for k, v in unitTypePaused do
@@ -1229,14 +1229,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 WaitTicks(20)
                 powerStateCaution = self:EcoManagerPowerStateCheck()
                 if powerStateCaution then
-                    LOG('Power State Caution still true after first pass')
+                    --LOG('Power State Caution still true after first pass')
                     if powerCycle > 5 then
-                        LOG('Power Cycle Threashold met, waiting longer')
+                        --LOG('Power Cycle Threashold met, waiting longer')
                         WaitTicks(100)
                         powerCycle = 0
                     end
                 else
-                    LOG('Power State Caution is now false')
+                    --LOG('Power State Caution is now false')
                 end
                 --LOG('unitTypePaused table is :'..repr(unitTypePaused))
             end
@@ -1268,8 +1268,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local energyRequest = self:GetEconomyRequested('ENERGY')
         local energyStorage = self:GetEconomyStored('ENERGY')
         local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
-        LOG('Energy Income :'..(energyIncome * 10)..' Energy Requested :'..(energyRequest * 10)..' Energy Storage :'..energyStorage)
-        LOG('Time to stall for '..stallTime)
+        --LOG('Energy Income :'..(energyIncome * 10)..' Energy Requested :'..(energyRequest * 10)..' Energy Storage :'..energyStorage)
+        --LOG('Time to stall for '..stallTime)
         if stallTime >= 0.0 then
             if stallTime < 20 then
                 return true

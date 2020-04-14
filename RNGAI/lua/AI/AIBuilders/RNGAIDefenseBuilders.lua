@@ -415,3 +415,36 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup { 
+    BuilderGroupName = 'RNGAI ENG PD1',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'PD with wall Eng',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 990,
+        BuilderConditions = {
+            },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
+                BuildClose = true,
+                NearBasePatrolPoints = false,
+                BuildStructures = {
+                    'T1GroundDefense',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                },
+                Location = 'LocationType',
+            }
+        },
+    },
+}

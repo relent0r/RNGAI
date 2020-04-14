@@ -23,14 +23,14 @@ Valid Threat Options:
             Unknown
     
         self:SetUpAttackVectorsToArmy(categories.STRUCTURE - (categories.MASSEXTRACTION))
-        LOG('Attack Vectors'..repr(self:GetAttackVectors()))
+        --LOG('Attack Vectors'..repr(self:GetAttackVectors()))
 ]]
 
 local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
-    LOG('* AI-RNG: Start Reclaim Function')
+    --LOG('* AI-RNG: Start Reclaim Function')
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
     local initialRange = 40
@@ -95,9 +95,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             end
         else
             initialRange = initialRange + 100
-            LOG('* AI-RNG: initialRange is'..initialRange)
+            --LOG('* AI-RNG: initialRange is'..initialRange)
             if initialRange > 300 then
-                LOG('* AI-RNG: Reclaim range > 300, Disabling Reclaim.')
+                --LOG('* AI-RNG: Reclaim range > 300, Disabling Reclaim.')
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
@@ -107,9 +107,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         end
         if closestDistance == 10000 then
             initialRange = initialRange + 100
-            LOG('* AI-RNG: initialRange is'..initialRange)
+            --LOG('* AI-RNG: initialRange is'..initialRange)
             if initialRange > 200 then
-                LOG('* AI-RNG: Reclaim range > 200, Disabling Reclaim.')
+                --LOG('* AI-RNG: Reclaim range > 200, Disabling Reclaim.')
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
@@ -120,7 +120,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if self.Dead then 
             return
         end
-        LOG('* AI-RNG: Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
+        --LOG('* AI-RNG: Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
         -- Clear Commands first
         IssueClearCommands({self})
         --LOG('* AI-RNG: Attempting move to closest reclaim')
@@ -130,11 +130,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
             self.blocked = self.blocked + 1
-            LOG('* AI-RNG: Reclaim Blocked + 1 :'..self.blocked)
+            --LOG('* AI-RNG: Reclaim Blocked + 1 :'..self.blocked)
             if self.blocked > 3 then
                 self.blocked = 0
                 table.insert (PropBlacklist, closestReclaim)
-                LOG('* AI-RNG: Reclaim Added to blacklist')
+                --LOG('* AI-RNG: Reclaim Added to blacklist')
             end
         else
             self.blocked = 0
@@ -176,7 +176,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         WaitTicks(50)
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
-            LOG('* AI-RNG: reclaimLopp = 5 returning')
+            --LOG('* AI-RNG: reclaimLopp = 5 returning')
             return
         end
     end
@@ -210,10 +210,10 @@ function GetMOARadii(bool)
     local BaseEnemyArea = math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) * 1.5
     -- "bool" is only true if called from "AIBuilders/Mobile Land.lua", so we only print this once.
     if bool then
-        LOG('* RNGAI: BaseRestrictedArea= '..math.floor( BaseRestrictedArea * 0.01953125 ) ..' Km - ('..BaseRestrictedArea..' units)' )
-        LOG('* RNGAI: BaseMilitaryArea= '..math.floor( BaseMilitaryArea * 0.01953125 )..' Km - ('..BaseMilitaryArea..' units)' )
-        LOG('* RNGAI: BaseDMZArea= '..math.floor( BaseDMZArea * 0.01953125 )..' Km - ('..BaseDMZArea..' units)' )
-        LOG('* RNGAI: BaseEnemyArea= '..math.floor( BaseEnemyArea * 0.01953125 )..' Km - ('..BaseEnemyArea..' units)' )
+        --LOG('* RNGAI: BaseRestrictedArea= '..math.floor( BaseRestrictedArea * 0.01953125 ) ..' Km - ('..BaseRestrictedArea..' units)' )
+        --LOG('* RNGAI: BaseMilitaryArea= '..math.floor( BaseMilitaryArea * 0.01953125 )..' Km - ('..BaseMilitaryArea..' units)' )
+        --LOG('* RNGAI: BaseDMZArea= '..math.floor( BaseDMZArea * 0.01953125 )..' Km - ('..BaseDMZArea..' units)' )
+        --LOG('* RNGAI: BaseEnemyArea= '..math.floor( BaseEnemyArea * 0.01953125 )..' Km - ('..BaseEnemyArea..' units)' )
     end
     return BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea
 end
@@ -622,9 +622,9 @@ function GetLastACUPosition(aiBrain, enemyIndex)
         --[[if aiBrain.EnemyIntel.ACU[enemyIndex] == enemyIndex then
             acuPos = aiBrain.EnemyIntel.ACU[enemyIndex].ACUPosition
             lastSpotted = aiBrain.EnemyIntel.ACU[enemyIndex].LastSpotted
-            LOG('* AI-RNG: acuPos has data')
+            --LOG('* AI-RNG: acuPos has data')
         else
-            LOG('* AI-RNG: acuPos is currently false')
+            --LOG('* AI-RNG: acuPos is currently false')
         end]]
         end
     end
@@ -656,7 +656,7 @@ end
 
 function CheckCustomPlatoons(aiBrain)
     if not aiBrain.StructurePool then
-        LOG('* AI-RNG: Creating Structure Pool Platoon')
+        --LOG('* AI-RNG: Creating Structure Pool Platoon')
         local structurepool = aiBrain:MakePlatoon('StructurePool', 'none')
         structurepool:UniquelyNamePlatoon('StructurePool')
         structurepool.BuilderName = 'Structure Pool'
@@ -827,7 +827,7 @@ end
 function TacticalMassLocationsold(aiBrain)
     -- Scans the map and trys to figure out tactical locations with multiple mass markers
     -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
-    LOG('* AI-RNG: * Starting Tactical Mass Location Function')
+    --LOG('* AI-RNG: * Starting Tactical Mass Location Function')
     local markerGroups = {}
     local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
     local group = 1
@@ -836,23 +836,23 @@ function TacticalMassLocationsold(aiBrain)
     for key_1, marker_1 in markerLocations do
         -- only process a marker that has not already been used
         if duplicateMarker[key_1] then
-            LOG('Duplicate Found Skipping :'..repr(marker_1)..'at key :'..key_1)
+            --LOG('Duplicate Found Skipping :'..repr(marker_1)..'at key :'..key_1)
             continue
         else
             local groupSet = {MarkerGroup=group, Markers={}}
             -- record that marker has been used
-            LOG('Inserting Duplicate Marker phase 1:'..repr(marker_1)..'at key :'..key_1)
+            --LOG('Inserting Duplicate Marker phase 1:'..repr(marker_1)..'at key :'..key_1)
             table.insert(duplicateMarker, key_1, marker_1)
             -- loop thru all the markers --
             for key_2, marker_2 in markerLocations do
                 -- bypass any marker that's already been used
                 if duplicateMarker[key_2] then
-                    LOG('Duplicate Found Skipping :'..repr(marker_2)..'at key :'..key_2)
+                    --LOG('Duplicate Found Skipping :'..repr(marker_2)..'at key :'..key_2)
                     continue
                 else
                     if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 1600 then
                         -- record that marker has been used
-                        LOG('Inserting Duplicate Marker phase 2:'..repr(marker_2)..'at key :'..key_2)
+                        --LOG('Inserting Duplicate Marker phase 2:'..repr(marker_2)..'at key :'..key_2)
                         table.insert(duplicateMarker, key_2, marker_2)
                         -- insert marker into group --
                         table.insert(groupSet['Markers'], marker_2)
@@ -862,13 +862,13 @@ function TacticalMassLocationsold(aiBrain)
             table.insert(groupSet['Markers'], marker_1)
             if table.getn(groupSet['Markers']) > 2 then
                 table.insert(markerGroups, groupSet)
-                LOG('Group Set Markers :'..repr(groupSet))
+                --LOG('Group Set Markers :'..repr(groupSet))
                 group = group + 1
             end
         
         end
     end
-    LOG('Duplicate Marker Set :'..repr(duplicateMarker))
+    --LOG('Duplicate Marker Set :'..repr(duplicateMarker))
     aiBrain.TacticalMonitor.TacticalMassLocations = markerGroups
     --LOG('* AI-RNG: * Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
 end
@@ -877,7 +877,7 @@ function TacticalMassLocations(aiBrain)
     -- Scans the map and trys to figure out tactical locations with multiple mass markers
     -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
 
-    LOG('* AI-RNG: * Starting Tactical Mass Location Function')
+    --LOG('* AI-RNG: * Starting Tactical Mass Location Function')
     local markerGroups = {}
     local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
     local group = 1
@@ -902,7 +902,7 @@ function TacticalMassLocations(aiBrain)
                 group = group + 1
             end
     end
-    LOG('End Marker Groups :'..repr(markerGroups))
+    --LOG('End Marker Groups :'..repr(markerGroups))
     aiBrain.TacticalMonitor.TacticalMassLocations = markerGroups
     --LOG('* AI-RNG: * Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
 end
@@ -966,7 +966,7 @@ function MarkTacticalMassLocations(aiBrain)
     end
     aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups = massGroups
     --LOG('* AI-RNG: * Total Expansion, Large expansion markers'..repr(markerList))
-    LOG('* AI-RNG: * Unmarked Mass Groups'..repr(massGroups))
+    --LOG('* AI-RNG: * Unmarked Mass Groups'..repr(massGroups))
 end
 
 function GenerateMassGroupMarkerLocations(aiBrain)
@@ -992,9 +992,9 @@ function CreateMarkers(markerType, newMarkers)
     for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
         if v.type == 'Expansion Area' then
             if string.find(k, 'ExpansionArea') then
-                WARN('* AI-Uveso: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
+                WARN('* AI-RNG: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
             elseif not string.find(k, 'Expansion Area') then
-                WARN('* AI-Uveso: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
+                WARN('* AI-RNG: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
             end
         end
     end
@@ -1013,7 +1013,7 @@ function CreateMarkers(markerType, newMarkers)
     end
     for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
         if v.type == 'Unmarked Expansion' then
-            LOG('Unmarked Expansion Marker at :'..repr(v.position))
+            --LOG('Unmarked Expansion Marker at :'..repr(v.position))
         end
     end
 end
@@ -1083,7 +1083,7 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
         table.insert(coords, {xxx,0,zzz})
         nnn = nnn + 1
     end
-    LOG('Resulting Table :'..repr(coords))
+    --LOG('Resulting Table :'..repr(coords))
     return coords
 end
 

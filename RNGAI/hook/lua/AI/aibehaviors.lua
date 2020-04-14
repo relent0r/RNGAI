@@ -18,7 +18,7 @@ function CommanderBehaviorRNG(platoon)
 end
 
 function CommanderThreadRNG(cdr, platoon)
-    LOG('* AI-RNG: Starting CommanderThreadRNG')
+    --LOG('* AI-RNG: Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
     aiBrain:BuildScoutLocationsRNG()
     cdr.UnitBeingBuiltBehavior = false
@@ -196,7 +196,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             if not aiBrain.ACUSupport.Supported then
                                 aiBrain.ACUSupport.Position = cdrPos
                                 aiBrain.ACUSupport.Supported = true
-                                LOG('* AI-RNG: ACUSupport.Supported set to true')
+                                --LOG('* AI-RNG: ACUSupport.Supported set to true')
                                 aiBrain.ACUSupport.TargetPosition = target:GetPosition()
                             end
                             local cdrLayer = cdr:GetCurrentLayer()
@@ -213,7 +213,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 if target then
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
-                    LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
+                    --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     
 
@@ -250,7 +250,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
                 elseif distressLoc then
-                    LOG('* AI-RNG: ACU Detected Distress Location')
+                    --LOG('* AI-RNG: ACU Detected Distress Location')
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
                     enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
                     friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
@@ -259,7 +259,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if distressLoc and (Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
                         IssueClearCommands({cdr})
-                        LOG('* AI-RNG: ACU Moving to distress location')
+                        --LOG('* AI-RNG: ACU Moving to distress location')
                         cdr.PlatoonHandle:MoveToLocation(distressLoc, false)
                         cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                     end
@@ -291,7 +291,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
             local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 70, 'Enemy')
             if enenyUnitLimit > 15 then
-                LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
+                --LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
                 continueFighting = false
                 
             end
@@ -299,7 +299,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.ReturnHome = true
         aiBrain.ACUSupport.TargetPosition = false
         aiBrain.ACUSupport.Supported = false
-        LOG('* AI-RNG: ACUSupport.Supported set to false')
+        --LOG('* AI-RNG: ACUSupport.Supported set to false')
     end
 end
 
@@ -353,19 +353,19 @@ end
 function CDRUnitCompletion(aiBrain, cdr)
     if cdr.UnitBeingBuiltBehavior then
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
-            LOG('* AI-RNG: Attempt unit Completion')
+            --LOG('* AI-RNG: Attempt unit Completion')
             IssueClearCommands( {cdr} )
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
             WaitTicks(60)
         end
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
-            LOG('* AI-RNG: Unit Completion is :'..cdr.UnitBeingBuiltBehavior:GetFractionComplete())
+            --LOG('* AI-RNG: Unit Completion is :'..cdr.UnitBeingBuiltBehavior:GetFractionComplete())
             if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
-                LOG('* AI-RNG: Unit is completed set UnitBeingBuiltBehavior to false')
+                --LOG('* AI-RNG: Unit is completed set UnitBeingBuiltBehavior to false')
                 cdr.UnitBeingBuiltBehavior = false
             end
         elseif cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
-            LOG('* AI-RNG: Unit was destroyed set UnitBeingBuiltBehavior to false')
+            --LOG('* AI-RNG: Unit was destroyed set UnitBeingBuiltBehavior to false')
             cdr.UnitBeingBuiltBehavior = false
         end
     end
@@ -422,7 +422,7 @@ function ACUDetection(platoon)
             local currentGameTime = GetGameTimeSeconds()
             local acuUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, unit:GetPosition(), 40, 'Enemy')
             if acuUnits[1] then
-                LOG('* AI-RNG: ACU Detected')
+                --LOG('* AI-RNG: ACU Detected')
                 for _, v in acuUnits do
                     --unitDesc = GetBlueprint(v).Description
                     --LOG('* AI-RNG: Units is'..unitDesc)
@@ -438,7 +438,7 @@ function ACUDetection(platoon)
                             --LOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                             c.Position = v:GetPosition()
                             acuThreat = aiBrain:GetThreatAtPosition(c.Position, 0, true, 'Overall')
-                            LOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
+                            --LOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                             c.Threat = acuThreat
                             c.LastSpotted = currentGameTime
                         end
@@ -491,9 +491,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyProduction = unitBp.Economy.ProductionPerSecondEnergy or 0
     
     local massTrendNeeded = ( math.min( 0,(massNeeded / buildtime) * buildrate) - massProduction) * .1
-    LOG('Mass Trend Needed for '..unitTech..' Extractor :'..massTrendNeeded)
+    --LOG('Mass Trend Needed for '..unitTech..' Extractor :'..massTrendNeeded)
     local energyTrendNeeded = ( math.min( 0,(energyNeeded / buildtime) * buildrate) - energyProduction) * .1
-    LOG('Energy Trend Needed for '..unitTech..' Extractor :'..energyTrendNeeded)
+    --LOG('Energy Trend Needed for '..unitTech..' Extractor :'..energyTrendNeeded)
     local energyMaintenance = (upgradebp.Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
 
     -- Define Economic Data
@@ -536,7 +536,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-            LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
+            --LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
             bypasseco = true
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
@@ -550,10 +550,10 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         if upgradeNumLimit >= extractorUpgradeLimit then
             continue
         end
-        LOG('Current Upgrade Limit is :'..upgradeNumLimit)
+        --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
         if not extractorClosest then
-            LOG('ExtractorClosest is false')
+            --LOG('ExtractorClosest is false')
             continue
         end
         
@@ -577,9 +577,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyRequested'..energyRequested)
             massTrend = GetEconomyTrend(aiBrain, 'MASS')
-            LOG('* AI-RNG: massTrend'..massTrend)
+            --LOG('* AI-RNG: massTrend'..massTrend)
             energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
-            LOG('* AI-RNG: energyTrend'..energyTrend)
+            --LOG('* AI-RNG: energyTrend'..energyTrend)
             massEfficiency = math.min(massIncome / massRequested, 2)
             --LOG('* AI-RNG: massEfficiency'..massEfficiency)
             energyEfficiency = math.min(energyIncome / energyRequested, 2)
@@ -616,7 +616,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                             IssueUpgrade({unit}, upgradeID)
 
                             if ScenarioInfo.StructureUpgradeDialog then
-                                LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(__blueprints[upgradeID].Description).." at "..GetGameTimeSeconds() )
+                                --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(__blueprints[upgradeID].Description).." at "..GetGameTimeSeconds() )
                             end
 
                             repeat
@@ -625,7 +625,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                         end
 
                         if unit.Dead then
-                            LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." to "..upgradeID.." failed.  Dead is "..repr(unit.Dead))
+                            --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." to "..upgradeID.." failed.  Dead is "..repr(unit.Dead))
                             upgradeIssued = false
                         end
 
@@ -637,19 +637,19 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             else
                 if ScenarioInfo.StructureUpgradeDialog then
                     if not ( massTrend >= massTrendNeeded ) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..massTrend.." needed "..massTrendNeeded)
+                        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..massTrend.." needed "..massTrendNeeded)
                     end
                     if not ( energyTrend >= energyTrendNeeded ) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..energyTrend.." needed "..energyTrendNeeded)
+                        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..energyTrend.." needed "..energyTrendNeeded)
                     end
                     if not (energyTrend >= energyMaintenance) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..energyTrend.." "..energyMaintenance)  
+                        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..energyTrend.." "..energyMaintenance)  
                     end
                     if not ( massStorage >= (massNeeded * .8)) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS storage trigger "..massStorage.." needed "..(massNeeded*.8) )
+                        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS storage trigger "..massStorage.." needed "..(massNeeded*.8) )
                     end
                     if not (energyStorage > (energyNeeded * .4)) then
-                        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER storage trigger "..energyStorage.." needed "..(energyNeeded*.4) )
+                        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER storage trigger "..energyStorage.." needed "..(energyNeeded*.4) )
                     end
                 end
             end
@@ -694,14 +694,14 @@ function StructureUpgradeDelay( aiBrain, delay )
     aiBrain.UpgradeIssued = aiBrain.UpgradeIssued + 1
     
     if ScenarioInfo.StructureUpgradeDialog then
-        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter up to "..aiBrain.UpgradeIssued.." period is "..delay)
+        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter up to "..aiBrain.UpgradeIssued.." period is "..delay)
     end
 
     WaitTicks( delay )
     aiBrain.UpgradeIssued = aiBrain.UpgradeIssued - 1
     
     if ScenarioInfo.StructureUpgradeDialog then
-        LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
+        --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
     end
 end
 
@@ -810,7 +810,7 @@ function TacticalResponse(platoon)
         --local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
         if aiBrain.ACUSupport.Supported then
             acuTarget = aiBrain.ACUSupport.TargetPosition
-            LOG('Platoon Pos :'..repr(platoonPos)..' ACU TargetPos :'..repr(acuTarget))
+            --LOG('Platoon Pos :'..repr(platoonPos)..' ACU TargetPos :'..repr(acuTarget))
             targetDistance = VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3])
             if targetDistance > 50 and targetDistance < 200 then
                 platoon:Stop()

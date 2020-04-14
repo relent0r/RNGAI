@@ -14,6 +14,7 @@ BaseBuilderTemplate {
         'RNGAI Initial ACU Builder Small Close',
         'RNGAI Engineer Expansion Builders Small',
         'RNGAI ACU PD1',
+        'RNGAI ENG PD1',
 
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',

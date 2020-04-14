@@ -57,29 +57,29 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     end
 
     -- path wit AI markers from our base to the enemy base
-    LOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
+    --LOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
     -- if we have a path generated with AI path markers then....
     if path then
-        LOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
+        --LOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
         CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
     -- if we not have a path
     else
         -- "NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
         if reason == 'NoPath' then
-            LOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
+            --LOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
             CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
         -- "NoGraph" means we have no AI markers and cant graph to the enemy. We can't search for a path - No markers
         elseif reason == 'NoGraph' then
-            LOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
+            --LOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
             -- Check if we have less then 50% water on the map
             if aiBrain:GetMapWaterRatio() < 0.50 then
                 --lets asume we can move on land to the enemy
-                LOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                --LOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
                 CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
             else
                 -- we have more then 50% water on this map. Ity maybe a water map..
-                LOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                --LOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
                 CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
             end
         end
@@ -111,9 +111,9 @@ end
 
 function CheckIfReclaimEnabled(aiBrain)
     if aiBrain.ReclaimEnabled == false then
-        LOG('Reclaim Currently Disabled..validate last check time.')
+        --LOG('Reclaim Currently Disabled..validate last check time.')
         if (GetGameTimeSeconds() - aiBrain.ReclaimLastCheck) > 300 then
-            LOG('Last check time older than 5 minutes, re-enabling')
+            --LOG('Last check time older than 5 minutes, re-enabling')
             aiBrain.ReclaimEnabled = true
             return true
         else
@@ -134,7 +134,7 @@ end
 
 function ACURequiresSupport(aiBrain)
     if aiBrain.ACUSupport.Supported then
-        LOG('ACU Supported is TRUE')
+        --LOG('ACU Supported is TRUE')
         return true
     else
         return false

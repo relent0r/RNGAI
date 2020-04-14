@@ -51,7 +51,7 @@ BaseBuilderTemplate {
         local mapSizeX, mapSizeZ = GetMapSize()
         if aiBrain.RNG and mapSizeX > 1000 and mapSizeZ > 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
-            LOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
+            --LOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
             return 1000, 'RNGStandardMainBaseTemplate Large'
         end
         return -1

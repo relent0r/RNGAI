@@ -9,7 +9,7 @@ end
 
 function DrawIMAPThreatsRNG()
     coroutine.yield(100)
-    LOG('Starting IMAP Threat Thread')
+    --LOG('Starting IMAP Threat Thread')
     local MCountX = 48
     local MCountY = 48
     local PosX

@@ -44,7 +44,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         -- Use factory location if no other rally or if rally point is far away
         if not rally or VDist2(rally[1], rally[3], position[1], position[3]) > 75 then
             -- DUNCAN - added to try and vary the rally points.
-            LOG('No Rally Point Found. Setting Point between me and enemy Location')
+            --LOG('No Rally Point Found. Setting Point between me and enemy Location')
             local position = false
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
                 -- Spawn locations were fixed. We know exactly where our opponents are.
@@ -63,22 +63,22 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             local opponentStart = startPos
                             
                             local factoryPos = self.Brain.BuilderManagers[locationType].Position
-                            LOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
+                            --LOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
                             local startDistance = VDist2(opponentStart[1], opponentStart[3], factoryPos[1], factoryPos[3])
                             if EntityCategoryContains(categories.AIR, factory) then
                                 position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 60})
-                                LOG('Air Rally Position is :'..repr(position))
+                                --LOG('Air Rally Position is :'..repr(position))
                                 break
                             else
                                 position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 30})
-                                LOG('Rally Position is :'..repr(position))
+                                --LOG('Rally Position is :'..repr(position))
                                 break
                             end
                         end
                     end
                 end
             else
-                LOG('No Rally Point Found. Setting Random Location')
+                --LOG('No Rally Point Found. Setting Random Location')
                 position = AIUtils.RandomLocation(position[1],position[3])
             end
             rally = position
