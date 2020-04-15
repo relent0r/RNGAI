@@ -151,6 +151,24 @@ function MassMarkersInWater(aiBrain)
     return false
 end
 
+function NumCloseMassMarkers(aiBrain, number)
+    massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
+    engPos = aiBrain.BuilderManagers.MAIN.Position
+    closeMarkers = 0
+    for k, marker in massMarkers do
+        if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 100 then
+            closeMarkers = closeMarkers + 1
+        end
+    end
+    LOG('Number of mass markers is :'..closeMarkers)
+    if closeMarkers == number then
+        return true
+    else
+        return false
+    end
+    return false
+end
+
 function TMLEnemyStartRangeCheck(aiBrain)
     local mainPos = aiBrain.BuilderManagers.MAIN.Position
     if aiBrain.EnemyIntel.EnemyStartLocations then

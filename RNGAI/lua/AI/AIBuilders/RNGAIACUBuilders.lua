@@ -11,6 +11,7 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
 BuilderGroup {
@@ -21,12 +22,15 @@ BuilderGroup {
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1000,
+        PriorityFunction = function(self, aiBrain)
+			return 0, false
+		end,
         BuilderConditions = {
             { IBC, 'NotPreBuilt', {}},
         },
         InstantCheck = true,
         BuilderType = 'Any',
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        --PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
         BuilderData = {
             ScanWait = 40,
             Construction = {
@@ -37,6 +41,42 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1Resource',
                     'T1Resource',
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                    'T1EnergyProduction',
+                },
+            }
+        }
+
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 4M',
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1050,
+        PriorityFunction = function(self, aiBrain)
+			return 0, false
+		end,
+        BuilderConditions = {
+            { IBC, 'NotPreBuilt', {}},
+            { MIBC, 'NumCloseMassMarkers', { 4 }}
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        --PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
+        BuilderData = {
+            ScanWait = 40,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
+                BaseTemplate = 'ACUBaseTemplate',
+                BuildStructures = {
+                    'T1LandFactory',
+                    'T1EnergyProduction',
+                    'T1Resource',
+                    'T1Resource',
+                    'T1Resource',
+                    'T1Resource',
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -89,6 +129,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
                 BuildStructures = {
                     'T1LandFactory',
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },

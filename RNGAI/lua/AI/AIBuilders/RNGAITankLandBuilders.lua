@@ -465,7 +465,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
         PlatoonAddBehaviors = { 'TacticalResponse' },
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -495,7 +495,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. 
         PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads

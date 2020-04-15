@@ -286,20 +286,10 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
-                BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
                 },
                 Location = 'LocationType',
             }
