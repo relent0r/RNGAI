@@ -221,13 +221,14 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Assist Factory',
+        BuilderName = 'RNGAI T1 Engineer Assist Factory T2 Upgrade',
         PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
         },
@@ -235,11 +236,35 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssistLocation = 'LocationType',
+                AssistUntilFinished = true,
                 PermanentAssist = true,
                 AssisteeType = 'Factory',
                 AssistRange = 80,
-                BeingBuiltCategories = {'STRUCTURE FACTORY'},
-                Time = 45,
+                BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH2'},
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Assist Factory T3 Upgrade',
+        PlatoonTemplate = 'T1EngineerAssistRNG',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssistUntilFinished = true,
+                PermanentAssist = true,
+                AssisteeType = 'Factory',
+                AssistRange = 80,
+                BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH3'},
             },
         }
     },
@@ -367,7 +392,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 950,
-        InstanceCount = 3,
+        InstanceCount = 5,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
@@ -380,7 +405,7 @@ BuilderGroup {
                 AssisteeType = 'Structure',
                 AssistRange = 100,
                 BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
-                Time = 30,
+                AssistClosestUnit = true,
             },
         },
         BuilderType = 'Any',
@@ -574,7 +599,7 @@ BuilderGroup {
                 { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
                 { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.1, 1.1 }},
             },
         BuilderData = {
@@ -666,7 +691,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T2EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 100,
-        InstanceCount = 10,
+        InstanceCount = 5,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD }},
@@ -683,7 +708,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T3EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 100,
-        InstanceCount = 10,
+        InstanceCount = 2,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},

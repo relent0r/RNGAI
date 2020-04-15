@@ -151,3 +151,18 @@ function MassMarkersInWater(aiBrain)
     return false
 end
 
+function TMLEnemyStartRangeCheck(aiBrain)
+    local mainPos = aiBrain.BuilderManagers.MAIN.Position
+    if aiBrain.EnemyIntel.EnemyStartLocations then
+        if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+            for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
+                if VDist2Sq(mainPos[1],  mainPos[3], pos[1], pos[3]) < 65536 then
+                    --LOG('TMLEnemyStartRangeCheck is true')
+                    return true
+                end
+            end
+        end
+    end
+    --LOG('TMLEnemyStartRangeCheck is false')
+    return false
+end

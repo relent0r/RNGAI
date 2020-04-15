@@ -43,6 +43,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI Gunship BaseGuard',
+    Plan = 'GuardBaseRNG',
+    GlobalSquads = {
+        { categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH1 + categories.TECH2) - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'attack', 'none' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
     Plan = 'StrikeForceAIRNG',
     GlobalSquads = {

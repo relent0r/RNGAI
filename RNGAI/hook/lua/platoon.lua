@@ -67,11 +67,25 @@ Platoon = Class(oldPlatoon) {
             end
             --LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
             if target then
+                local targetPos = target:GetPosition()
                 self:Stop()
                 --LOG('* AI-RNG: Attacking Target')
                 --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
                 self:AttackTarget(target)
-                WaitTicks(60)
+                while not target.dead do
+                    if aiBrain.EnemyIntel.EnemyStartLocations then
+                        if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+                            for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
+                                if VDist2Sq(targetPos[1],  targetPos[3], pos[1], pos[3]) < 10000 then
+                                    self:Stop()
+                                    return self:ReturnToBaseAIRNG(true)
+                                end
+                            end
+                        end
+                    end
+                    WaitTicks(20)
+                end
+                WaitTicks(40)
             elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 2500 then
                 --LOG('* AI-RNG: No Target Returning to base')
                 return self:ReturnToBaseAIRNG(true)
@@ -1006,7 +1020,7 @@ Platoon = Class(oldPlatoon) {
                 elseif not movingToScout then
                     if data.Defensive then
                         --LOG('* AI-RNG: Defensive Platoon')
-                        return self:ReturnToBaseAIRNG()
+                        return self:ReturnToBaseAIRNG(true)
                     end
                     movingToScout = true
                     self:Stop()
@@ -2765,11 +2779,11 @@ Platoon = Class(oldPlatoon) {
                                 guardedUnit = guardedUnit + 1
                                 if table.getn(self:GetSquadUnits('Attack')) == 0 then
                                     --LOG('Not more attack squad units..breaking guard')
-                                    return self:ReturnToBaseAIRNG()
+                                    return self:ReturnToBaseAIRNG(true)
                                 end
                             end
                         else
-                            return self:ReturnToBaseAIRNG()
+                            return self:ReturnToBaseAIRNG(true)
                         end
                         IssueClearCommands(guardUnits)
                         IssueGuard(guardUnits, attackUnits[guardedUnit])

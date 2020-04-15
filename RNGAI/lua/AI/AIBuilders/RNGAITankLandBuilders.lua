@@ -50,7 +50,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -135,8 +135,22 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.ANTIAIR * categories.TECH2 } },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY LAND TECH2' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Mobile AA Response',
+        PlatoonTemplate = 'T2LandAA',
+        Priority = 920,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.ANTIAIR * categories.TECH3 } },
+            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -450,8 +464,8 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        PlatoonAddBehaviors = { 'TacticalResponse' },
+        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -479,6 +493,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Aeon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. 
+        PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 550,                                                          -- Priority. 1000 is normal.
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -494,6 +509,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
+        PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 650,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

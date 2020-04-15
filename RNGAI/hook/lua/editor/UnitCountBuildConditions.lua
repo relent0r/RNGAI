@@ -165,6 +165,69 @@ function CanBuildOnHydroLessThanDistance(aiBrain, locationType, distance, threat
     return false
 end
 
+--    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
+function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation(aiBrain, locationType, numReq, category, constructionCat)
+    local numUnits
+    if constructionCat then
+        numUnits = table.getn( GetUnitsBeingBuiltLocation(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+    else
+        numUnits = table.getn( GetUnitsBeingBuiltLocation(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+    end
+    if numUnits > numReq then
+        return true
+    end
+    return false
+end
+
+function GetUnitsBeingBuiltLocation(aiBrain, locType, buildingCategory, builderCategory)
+    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    elseif aiBrain:PBMHasPlatoonList() then
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == locType then
+                baseposition = v.Location
+                radius = v.Radius
+                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
+                break
+            end
+        end
+    end
+    if not baseposition then
+        return false
+    end
+    local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
+    local retUnits = {}
+    for k,v in filterUnits do
+        -- Only assist if allowed
+        if v.DesiresAssist == false then
+            continue
+        end
+        -- Engineer doesn't want any more assistance
+        if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
+            continue
+        end
+        -- skip the unit, if it's not building or upgrading.
+        if not v:IsUnitState('Building') and not v:IsUnitState('Upgrading') then
+            continue
+        end
+        local beingBuiltUnit = v.UnitBeingBuilt
+        if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
+            continue
+        end
+        table.insert(retUnits, v)
+    end
+    return retUnits
+end
+
 -- # ==================================================== #
 -- #     Factory Manager Check Maximum Factory Number
 -- # ==================================================== #

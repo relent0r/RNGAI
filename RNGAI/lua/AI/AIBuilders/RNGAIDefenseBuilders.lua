@@ -36,6 +36,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
                 },
@@ -210,6 +211,31 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2TMLEngineer Close Enemy',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 825,
+        BuilderConditions = {
+            { MIBC, 'TMLEnemyStartRangeCheck', {} },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.TACTICALMISSILEPLATFORM}},
+            { EBC, 'GreaterThanEconEfficiency', { 0.7, 1.0}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.70}},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2StrategicMissile',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    
+    Builder {
         BuilderName = 'RNGAI T3 Base D Engineer AA',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 900,
@@ -260,9 +286,20 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
+                NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
                 },
                 Location = 'LocationType',
             }
@@ -291,6 +328,30 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T1AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2TMLEngineer Close Enemy Expansion',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 825,
+        BuilderConditions = {
+            { MIBC, 'TMLEnemyStartRangeCheck', {} },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.TACTICALMISSILEPLATFORM}},
+            { EBC, 'GreaterThanEconEfficiency', { 0.7, 1.0}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.70}},
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2StrategicMissile',
                 },
                 Location = 'LocationType',
             }

@@ -1,3 +1,5 @@
+WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibehaviors.lua' )
+
 --local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
@@ -41,11 +43,11 @@ function CommanderThreadRNG(cdr, platoon)
         if not cdr.Dead then 
             CDRUnitCompletion(aiBrain, cdr) 
         end
-        WaitTicks(1)
+        WaitTicks(1)--[[
         if not cdr.Dead then
             CDRHideBehaviorRNG(aiBrain, cdr)
         end
-        WaitTicks(1)
+        WaitTicks(1)]]
 
         -- Call platoon resume building deal...
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
@@ -66,6 +68,7 @@ function CommanderThreadRNG(cdr, platoon)
                 -- get the global armypool platoon
                 local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
                 -- assing the CDR to the armypool
+                --LOG('CDR Getting assigned back to unassigned pool')
                 AssignUnitsToPlatoon(aiBrain, pool, {cdr}, 'Unassigned', 'None')
             -- if we have a BuildQueue then continue building
             elseif cdr.EngineerBuildQueue and table.getn(cdr.EngineerBuildQueue) ~= 0 then
@@ -160,6 +163,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
     if numUnits > 0 or (not cdr.DistressCall and distressLoc and Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
         if cdr.UnitBeingBuilt then
+            --LOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
             cdr.UnitBeingBuiltBehavior = cdr.UnitBeingBuilt
         end
         
@@ -306,7 +310,7 @@ end
 function CDRReturnHomeRNG(aiBrain, cdr)
     -- This is a reference... so it will autoupdate
     local cdrPos = cdr:GetPosition()
-    local distSqAway = 1600
+    local distSqAway = 900
     local loc = cdr.CDRHome
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
@@ -323,6 +327,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueStop({cdr})
             local acuPos1 = table.copy(cdrPos)
             --LOG('ACU Pos 1 :'..repr(acuPos1))
+            --LOG('Home location is :'..repr(loc))
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             WaitTicks(40)
             local acuPos2 = table.copy(cdrPos)
@@ -331,7 +336,6 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             --LOG('Heading Vector is :'..repr(headingVec))
             local movePosTable = RUtils.SetArcPoints(headingVec,acuPos2, 15, 3, 8)
             local indexVar = math.random(1,3)
-            --LOG('Move to position is :'..repr(movePosTable[indexVar]))
             IssueClearCommands({cdr})
             IssueStop({cdr})
             cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
