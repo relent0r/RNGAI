@@ -5,13 +5,11 @@
         Main Base template
 ]]
 
-local MABC = import('/lua/editor/MarkerBuildConditions.lua')
-
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Distant',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Close',
     Builders = {
         -- ACU MainBase Initial Builder --
-        'RNGAI Initial ACU Builder Small Distant',
+        'RNGAI Initial ACU Builder Small',
 
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',
@@ -84,10 +82,10 @@ BaseBuilderTemplate {
         'RNGAI ScoutAirFormer',
         'RNGAI Air Platoon Builder',
         'RNGAI Air Response Formers T1',
-        
+
         -- Sea Unit Builders
         'RNGAI Sea Builders T1',
-
+        
         -- Sea Unit Formers
         'RNGAI Sea Formers',
         'RNGAI Mass Hunter Sea Formers',
@@ -111,20 +109,18 @@ BaseBuilderTemplate {
         'RNGAI SML Builders',
         'RNGAI Strategic Artillery Builders',
         'RNGAI Strategic Formers',
-        
+
         --Experimentals --
         'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',
-
-
     },
     NonCheatBuilders = {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 16,
-            Tech2 = 7,
-            Tech3 = 4,
+            Tech1 = 20,
+            Tech2 = 9,
+            Tech3 = 6,
             SCU = 3,
         },
         FactoryCount = {
@@ -149,13 +145,7 @@ BaseBuilderTemplate {
         if personality == 'RNGStandard' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
-            if MABC.CanBuildOnMassLessThanDistance(aiBrain, 'MAIN', 10, -500, 0, 0, 'AntiSurface', 1) then
-                --LOG('* AI-RNG: ACU has close mexes')
-                return -1
-            else
-                --LOG('* AI-RNG: ACU has distant mexes')
-                return 1000, 'RNGStandard'
-            end
+            return 1000, 'RNGStandard'
         end
         return -1
     end,

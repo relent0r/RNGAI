@@ -156,11 +156,11 @@ function NumCloseMassMarkers(aiBrain, number)
     engPos = aiBrain.BuilderManagers.MAIN.Position
     closeMarkers = 0
     for k, marker in massMarkers do
-        if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 100 then
+        if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 121 then
             closeMarkers = closeMarkers + 1
         end
     end
-    LOG('Number of mass markers is :'..closeMarkers)
+    --LOG('Number of mass markers is :'..closeMarkers)
     if closeMarkers == number then
         return true
     else
