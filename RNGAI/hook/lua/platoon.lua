@@ -77,8 +77,9 @@ Platoon = Class(oldPlatoon) {
                         if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
                             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
                                 if VDist2Sq(targetPos[1],  targetPos[3], pos[1], pos[3]) < 10000 then
+                                    LOG('AirHuntAI target within enemy start range, return to base')
                                     self:Stop()
-                                    return self:ReturnToBaseAIRNG(true)
+                                    self:SetAIPlan('ReturnToBaseAIRNG', true)
                                 end
                             end
                         end
@@ -86,9 +87,10 @@ Platoon = Class(oldPlatoon) {
                     WaitTicks(20)
                 end
                 WaitTicks(40)
-            elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 2500 then
+            elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
                 --LOG('* AI-RNG: No Target Returning to base')
-                return self:ReturnToBaseAIRNG(true)
+                self:Stop()
+                self:SetAIPlan('ReturnToBaseAIRNG', true)
             end
             WaitTicks(10)
         end
@@ -1053,7 +1055,7 @@ Platoon = Class(oldPlatoon) {
         local armyIndex = aiBrain:GetArmyIndex()
         --local x,z = aiBrain:GetArmyStartPos()
         local cons = self.PlatoonData.Construction
-        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile
+        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
 
         local eng
         for k, v in platoonUnits do
@@ -1083,6 +1085,7 @@ Platoon = Class(oldPlatoon) {
 
         buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
         baseTmplFile = import(cons.BaseTemplateFile or '/lua/BaseTemplates.lua')
+        baseTmplDefault = import('/lua/BaseTemplates.lua')
         buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
         baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
 
@@ -1123,6 +1126,17 @@ Platoon = Class(oldPlatoon) {
             relative = false
             buildFunction = AIBuildStructures.AIExecuteBuildStructure
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+        elseif cons.OrderedTemplate then
+            relativeTo = table.copy(eng:GetPosition())
+            LOG('relativeTo is'..repr(relativeTo))
+            relative = true
+            local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
+            local reference = eng:CalculateWorldPositionFromRelative(tmpReference)
+            LOG('reference is '..repr(reference))
+            LOG('World Pos '..repr(tmpReference))
+            buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
+            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            LOG('baseTmpList is :'..repr(baseTmplList))
         --[[elseif cons.Wall then
             local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
             local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
@@ -2163,10 +2177,12 @@ Platoon = Class(oldPlatoon) {
         if bestBase then
             if self.MovementLayer == 'Air' then
                 self:MoveToLocation(bestBase.Position, false)
+                LOG('Return to base provided position :'..repr(bestBase.Position))
                 while aiBrain:PlatoonExists(self) do
                     platPos = GetPlatoonPosition(self)
                     local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
-                    if distSq < 400 then
+                    if distSq < 6400 then
+                        self:Stop()
                         self:PlatoonDisband()
                         return
                     end

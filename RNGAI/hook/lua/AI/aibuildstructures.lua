@@ -14,6 +14,33 @@ function AddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
     local newEntry = {whatToBuild, buildLocation, relative}
     table.insert(builder.EngineerBuildQueue, newEntry)
 end
+
+function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
+    local factionIndex = aiBrain:GetFactionIndex()
+    local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
+    if whatToBuild then
+        if IsResource(buildingType) then
+            return AIExecuteBuildStructure(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
+        else
+            for l,bType in baseTemplate do
+                for m,bString in bType[1] do
+                    if bString == buildingType then
+                        for n,position in bType do
+                            if n > 1 and aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
+                                 AddToBuildQueue(aiBrain, builder, whatToBuild, position, false)
+                                 table.remove(bType,n)
+                                 return DoHackyLogic(buildingType, builder)
+                            end # if n > 1 and can build structure at
+                        end # for loop
+                        break
+                    end # if bString == builderType
+                end # for loop
+            end # for loop
+        end # end else
+    end # if what to build
+    return # unsuccessful build
+end
+
 --[[
 local AntiSpamList = {}
 RNGExecuteBuildStructure = AIExecuteBuildStructure
@@ -123,8 +150,8 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
 
     -- Replace T1GroundDefense with T2 Pgen to try keep enough room for surounding walls.
     if buildingType == 'T1GroundDefense' then
-        buildingTypeReplace = 'T2EnergyProduction'
-        whatToBuildReplace = 'ueb1201'
+        buildingTypeReplace = 'T1LandFactory'
+        whatToBuildReplace = 'ueb0101'
     end
 
     if IsResource(buildingType) then

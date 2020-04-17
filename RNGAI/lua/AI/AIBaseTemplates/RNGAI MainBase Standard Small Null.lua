@@ -5,13 +5,11 @@
         Main Base template
 ]]
 
-local MABC = import('/lua/editor/MarkerBuildConditions.lua')
-
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Close Null',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Null',
     Builders = {
         -- ACU MainBase Initial Builder --
-        'RNGAI Initial ACU Builder Small Close',
+        'RNGAI Initial ACU Builder Small',
         'RNGAI Engineer Expansion Builders Small',
         'RNGAI ACU PD1',
         'RNGAI ENG PD1',
@@ -103,13 +101,7 @@ BaseBuilderTemplate {
         if personality == 'RNGStandardnull' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardnullcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
-            if MABC.CanBuildOnMassLessThanDistance(aiBrain, 'MAIN', 10, -500, 0, 0, 'AntiSurface', 1) then
-                --LOG('* AI-RNG: ACU has close mexes')
-                return 1000, 'RNGStandardnull'
-            else 
-                --LOG('* AI-RNG: ACU has distant mexes')
-                return -1
-            end
+            return 1000, 'RNGStandardnull'
         end
         return -1
     end,

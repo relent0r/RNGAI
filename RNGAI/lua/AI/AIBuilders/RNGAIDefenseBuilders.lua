@@ -35,10 +35,21 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
+                OrderedTemplate = true,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
                 },
                 Location = 'LocationType',
             }
@@ -284,12 +295,23 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             DesiresAssist = true,
-            NumAssistees = 5,
+            NumAssistees = 2,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
+                OrderedTemplate = true,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
+                    'Wall',
                 },
                 Location = 'LocationType',
             }
@@ -471,17 +493,29 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ENG PD1',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'PD with wall Eng',
+        BuilderName = 'RNGAI T1 PD with Wall',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 990,
+        Priority = 980,
+        InstanceCount = 2,
         BuilderConditions = {
-            },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 DIRECTFIRE'}},
+            { MIBC, 'GreaterThanGameTime', { 300 } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
         BuilderType = 'Any',
         BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
+                OrderedTemplate = true,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
@@ -496,6 +530,6 @@ BuilderGroup {
                 },
                 Location = 'LocationType',
             }
-        },
+        }
     },
 }
