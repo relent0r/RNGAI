@@ -104,7 +104,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2Engineer Mass 240',
         PlatoonTemplate = 'T2EngineerBuilderRNG',
         Priority = 800,
-        InstanceCount = 4,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH2' }},
@@ -337,11 +337,12 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1, ENGINEER TECH2, ENGINEER TECH3' }},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 100, -3, 0, 0}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'UnitCapCheckLess', { .8 } },

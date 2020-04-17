@@ -43,7 +43,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 4,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
@@ -69,7 +69,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer 1st',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 1000,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -97,7 +97,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Negative Trend',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 900,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -126,7 +126,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Scale',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 700,
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -155,7 +155,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Scale Extra',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 700,
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -328,7 +328,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 30',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 920,
         InstanceCount = 1,
         BuilderConditions = { 
@@ -348,7 +348,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 250',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 800,
         InstanceCount = 1,
         BuilderConditions = { 
@@ -373,7 +373,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'T1 Energy Storage Builder OverCharge',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 800,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
@@ -394,14 +394,14 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'T1 Energy Storage Builder',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 600 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.08, 0.80}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'ENERGYSTORAGE' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, 'ENERGYSTORAGE' }},
         },
         BuilderType = 'Any',
         BuilderData = {

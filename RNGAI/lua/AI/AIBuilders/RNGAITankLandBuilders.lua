@@ -169,7 +169,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { IBC, 'BrainNotLowPowerMode', {} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 4, 'FACTORY LAND TECH3' }},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.03, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },

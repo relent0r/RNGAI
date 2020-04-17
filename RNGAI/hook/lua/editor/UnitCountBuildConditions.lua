@@ -113,8 +113,8 @@ function CanBuildOnMassGreaterThanLocationDistance(aiBrain, locationType, distan
     return false
 end
 
--- { UCBC, 'EnergyToMassRatioIncome', { 10.0, '>=',true } },  -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
-function EnergyToMassRatioIncome(aiBrain, ratio, compareType, DEBUG)
+-- { UCBC, 'EnergyToMassRatioIncomeRNG', { 10.0, '>=',true } },  -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
+function EnergyToMassRatioIncomeRNG(aiBrain, ratio, compareType, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then
         --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( E:'..(econ.EnergyIncome*10)..' '..compareType..' M:'..(econ.MassIncome*10)..' ) -- R['..ratio..'] -- return '..repr(CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)))
@@ -165,13 +165,13 @@ function CanBuildOnHydroLessThanDistance(aiBrain, locationType, distance, threat
     return false
 end
 
---    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
-function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation(aiBrain, locationType, numReq, category, constructionCat)
+--    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
+function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, locationType, numReq, category, constructionCat)
     local numUnits
     if constructionCat then
-        numUnits = table.getn( GetUnitsBeingBuiltLocation(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+        numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
     else
-        numUnits = table.getn( GetUnitsBeingBuiltLocation(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+        numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
     end
     if numUnits > numReq then
         return true
@@ -179,7 +179,7 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation(aiBrain, locationTyp
     return false
 end
 
-function GetUnitsBeingBuiltLocation(aiBrain, locType, buildingCategory, builderCategory)
+function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, builderCategory)
     local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     local baseposition, radius
     if BASEPOSTITIONS[AIName][locType] then
@@ -306,36 +306,6 @@ function FactoryComparisonAtLocation(aiBrain, locationType, unitCount, unitCateg
     return CompareBody(numUnits, unitCount, compareType)
 end
 
-function FactoryCapCheck(aiBrain, locationType, factoryType)
-    local catCheck = false
-    if factoryType == 'Land' then
-        catCheck = categories.LAND * categories.FACTORY
-    elseif factoryType == 'Air' then
-        catCheck = categories.AIR * categories.FACTORY
-    elseif factoryType == 'Sea' then
-        catCheck = categories.NAVAL * categories.FACTORY
-    elseif factoryType == 'Gate' then
-        catCheck = categories.GATE
-    else
-        WARN('*AI WARNING: Invalid factorytype - ' .. factoryType)
-        return false
-    end
-    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-    if not factoryManager then
-        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
-        return false
-    end
-    local numUnits = factoryManager:GetNumCategoryFactories(catCheck)
-    numUnits = numUnits + aiBrain:GetEngineerManagerUnitsBeingBuilt(catCheck)
-    --LOG('FactoryCapCheck, Location is : '..locationType..'Current Factories : '..numUnits..'Factory Cap : '..aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType])
-    if numUnits < aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType] then
-        --LOG('FactoryCapCheck is True')
-        return true
-    end
-    --LOG('FactoryCapCheck is False')
-    return false
-end
-
 function UnitCapCheckLess(aiBrain, percent)
     local currentCount = GetArmyUnitCostTotal(aiBrain:GetArmyIndex())
     local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
@@ -432,9 +402,9 @@ function HaveGreaterThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category
     return HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, '>')
 end
 
-function HaveEnemyUnitAtLocation(aiBrain, radius, locationType, unitCount, categoryEnemy, compareType)
+function HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, compareType)
     if not aiBrain.BuilderManagers[locationType] then
-        WARN('*AI WARNING: HaveEnemyUnitAtLocation - Invalid location - ' .. locationType)
+        WARN('*AI WARNING: HaveEnemyUnitAtLocationRNG - Invalid location - ' .. locationType)
         return false
     end
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, aiBrain.BuilderManagers[locationType].Position, radius , 'Enemy')
@@ -443,11 +413,11 @@ function HaveEnemyUnitAtLocation(aiBrain, radius, locationType, unitCount, categ
 end
 --            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BasePanicZone, 'LocationType', 0, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
 function EnemyUnitsGreaterAtLocationRadius(aiBrain, radius, locationType, unitCount, categoryEnemy)
-    return HaveEnemyUnitAtLocation(aiBrain, radius, locationType, unitCount, categoryEnemy, '>')
+    return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '>')
 end
 --            { UCBC, 'EnemyUnitsLessAtLocationRadius', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
 function EnemyUnitsLessAtLocationRadius(aiBrain, radius, locationType, unitCount, categoryEnemy)
-    return HaveEnemyUnitAtLocation(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
+    return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
 end
 
 function IsAcuBuilder(aiBrain, builderName)
@@ -474,7 +444,7 @@ function CheckBuildPlatoonDelay(aiBrain, PlatoonName)
     return true
 end
 
-function HaveUnitRatioAtLocation(aiBrain, locType, ratio, categoryNeed, compareType, categoryHave)
+function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compareType, categoryHave)
     local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     local baseposition, radius
     if BASEPOSTITIONS[AIName][locType] then
@@ -513,7 +483,7 @@ function BuildOnlyOnLocation(aiBrain, LocationType, AllowedLocationType)
     return false
 end
 
-function CanPathNavalBaseToNavalTargets(aiBrain, locationType, unitCategory)
+function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --LOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
@@ -541,7 +511,7 @@ end
 --    return false
 --end
 
-function NavalBaseWithLeastUnits(aiBrain, radius, locationType, unitCategory)
+function NavalBaseWithLeastUnitsRNG(aiBrain, radius, locationType, unitCategory)
     local navalMarkers = AIUtils.AIGetMarkerLocations(aiBrain, 'Naval Area')
     local lowloc
     local lownum

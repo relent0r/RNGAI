@@ -65,12 +65,12 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
             end
-            --LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
+            LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
             if target then
                 local targetPos = target:GetPosition()
                 self:Stop()
-                --LOG('* AI-RNG: Attacking Target')
-                --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
+                LOG('* AI-RNG: Attacking Target')
+                LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
                 self:AttackTarget(target)
                 while not target.dead do
                     if aiBrain.EnemyIntel.EnemyStartLocations then
@@ -79,7 +79,7 @@ Platoon = Class(oldPlatoon) {
                                 if VDist2Sq(targetPos[1],  targetPos[3], pos[1], pos[3]) < 10000 then
                                     LOG('AirHuntAI target within enemy start range, return to base')
                                     self:Stop()
-                                    self:SetAIPlan('ReturnToBaseAIRNG', true)
+                                    return self:ReturnToBaseAIRNG(true)
                                 end
                             end
                         end
@@ -88,9 +88,9 @@ Platoon = Class(oldPlatoon) {
                 end
                 WaitTicks(40)
             elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
-                --LOG('* AI-RNG: No Target Returning to base')
+                LOG('* AI-RNG: No Target Returning to base')
                 self:Stop()
-                self:SetAIPlan('ReturnToBaseAIRNG', true)
+                return self:ReturnToBaseAIRNG(true)
             end
             WaitTicks(10)
         end
@@ -2581,7 +2581,7 @@ Platoon = Class(oldPlatoon) {
                     self:AggressiveMoveToLocation(target:GetPosition())
                 end
             else
-                self:ReturnToBaseAIRNG(true)
+                return self:ReturnToBaseAIRNG(true)
                 --local PlatoonPosition = GetPlatoonPosition(self)
                 --if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
                     --DUNCAN - still try to move closer to the base if outside the radius
