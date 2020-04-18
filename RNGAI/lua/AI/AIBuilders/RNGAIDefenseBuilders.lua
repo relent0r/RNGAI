@@ -175,8 +175,8 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.20, 0.50}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 9, 'DEFENSE TECH2'}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.80}},
             { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},

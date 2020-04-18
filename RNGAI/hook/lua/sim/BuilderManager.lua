@@ -3,7 +3,7 @@ BuilderManager = Class(RNGBuilderManager) {
     ManagerLoopBody = function(self,builder,bType)
         --LOG('ManagerLoopBody pass on '..builder.BuilderName)
         if builder:CalculatePriority(self) then
-            LOG('CalculatePriority run on '..builder.BuilderName)
+            --LOG('CalculatePriority run on '..builder.BuilderName)
             self.BuilderData[bType].NeedSort = true
         end
         #builder:CheckBuilderConditions(self.Brain)

@@ -38,7 +38,6 @@ Platoon = Class(oldPlatoon) {
         local target
         local blip
         local startX, startZ = aiBrain:GetArmyStartPos()
-        local currentPosition = GetPlatoonPosition(self)
         local avoidBases = data.AvoidBases or false
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
@@ -46,12 +45,13 @@ Platoon = Class(oldPlatoon) {
                 table.insert(categoryList, ParseEntityCategory(v))
             end
         else
-            table.insert(atkPri, 'ALLUNITS')
-            table.insert(categoryList, categories.ALLUNITS)
+            table.insert(atkPri, 'MOBILE AIR')
+            table.insert(categoryList, categories.MOBILE * categories.AIR)
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
         local maxRadius = data.SearchRadius or 1000
         while aiBrain:PlatoonExists(self) do
+            local currentPosition = GetPlatoonPosition(self)
             if not target or target.Dead then
                 local mult = { 1,10,25 }
                 for _,i in mult do
@@ -65,34 +65,49 @@ Platoon = Class(oldPlatoon) {
                     end
                 end
             end
-            LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
+            --LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
+            --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
             if target then
                 local targetPos = target:GetPosition()
                 self:Stop()
-                LOG('* AI-RNG: Attacking Target')
-                LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
+                --LOG('* AI-RNG: Attacking Target')
+                --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
                 self:AttackTarget(target)
-                while not target.dead do
+                while aiBrain:PlatoonExists(self) do
+                    currentPosition = GetPlatoonPosition(self)
                     if aiBrain.EnemyIntel.EnemyStartLocations then
                         if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
                             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
                                 if VDist2Sq(targetPos[1],  targetPos[3], pos[1], pos[3]) < 10000 then
-                                    LOG('AirHuntAI target within enemy start range, return to base')
-                                    self:Stop()
-                                    return self:ReturnToBaseAIRNG(true)
+                                    --LOG('AirHuntAI target within enemy start range, return to base')
+                                    target = false
+                                    if aiBrain:PlatoonExists(self) then
+                                        self:Stop()
+                                        self:ReturnToBaseAIRNG(true)
+                                    end
                                 end
                             end
                         end
                     end
                     WaitTicks(20)
+                    if not target then
+                        break
+                    end
+                    if (target.Dead or not target or target:BeenDestroyed()) then
+                        --LOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
+                        break
+                    end
                 end
-                WaitTicks(40)
-            elseif VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
-                LOG('* AI-RNG: No Target Returning to base')
-                self:Stop()
-                return self:ReturnToBaseAIRNG(true)
+                WaitTicks(20)
             end
-            WaitTicks(10)
+            if (target.Dead or not target or target:BeenDestroyed()) and VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
+                --LOG('* AI-RNG: No Target Returning to base')
+                if aiBrain:PlatoonExists(self) then
+                    self:Stop()
+                    self:ReturnToBaseAIRNG(true)
+                end
+            end
+            WaitTicks(15)
         end
     end,
     
@@ -1128,15 +1143,15 @@ Platoon = Class(oldPlatoon) {
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.OrderedTemplate then
             relativeTo = table.copy(eng:GetPosition())
-            LOG('relativeTo is'..repr(relativeTo))
+            --LOG('relativeTo is'..repr(relativeTo))
             relative = true
             local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
             local reference = eng:CalculateWorldPositionFromRelative(tmpReference)
-            LOG('reference is '..repr(reference))
-            LOG('World Pos '..repr(tmpReference))
+            --LOG('reference is '..repr(reference))
+            --LOG('World Pos '..repr(tmpReference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
-            LOG('baseTmpList is :'..repr(baseTmplList))
+            --LOG('baseTmpList is :'..repr(baseTmplList))
         --[[elseif cons.Wall then
             local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
             local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
@@ -1590,14 +1605,12 @@ Platoon = Class(oldPlatoon) {
         local engPos = eng:GetPosition()
 
         --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
-        while not eng.Dead and (eng.GoingHome or eng:IsUnitState("Building") or
-                  eng:IsUnitState("Attacking") or eng:IsUnitState("Repairing") or eng:IsUnitState("Guarding") or
-                  eng:IsUnitState("Reclaiming") or eng:IsUnitState("Capturing") or eng.ProcessBuild != nil
-                  or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Moving") or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing")
+        while not eng.Dead and (eng.GoingHome or eng.ProcessBuild != nil
+                  or eng.UnitBeingBuiltBehavior or not eng:IsIdleState()
                  ) do
             WaitTicks(30)
 
-            if eng:IsUnitState("Moving") then
+            if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                 if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
                     local enemyEngPos = enemyEngineer[1]:GetPosition()
@@ -2148,6 +2161,7 @@ Platoon = Class(oldPlatoon) {
     end,
 
     ReturnToBaseAIRNG = function(self, mainBase)
+
         local aiBrain = self:GetBrain()
 
         if not aiBrain:PlatoonExists(self) or not GetPlatoonPosition(self) then
@@ -2176,15 +2190,16 @@ Platoon = Class(oldPlatoon) {
         
         if bestBase then
             if self.MovementLayer == 'Air' then
+                self:Stop()
                 self:MoveToLocation(bestBase.Position, false)
-                LOG('Return to base provided position :'..repr(bestBase.Position))
+                --LOG('Air Unit Return to base provided position :'..repr(bestBase.Position))
                 while aiBrain:PlatoonExists(self) do
-                    platPos = GetPlatoonPosition(self)
-                    local distSq = VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3])
+                    local currentPlatPos = self:GetPlatoonPosition()
+                    --LOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3]))
+                    --LOG('Air Unit Platoon Position is :'..repr(currentPlatPos))
+                    local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3])
                     if distSq < 6400 then
-                        self:Stop()
-                        self:PlatoonDisband()
-                        return
+                        break
                     end
                     WaitTicks(15)
                 end

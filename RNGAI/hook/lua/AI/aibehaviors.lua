@@ -53,7 +53,8 @@ function CommanderThreadRNG(cdr, platoon)
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
         and not cdr:IsUnitState("Attacking") and not cdr:IsUnitState("Repairing")
-        and not cdr:IsUnitState("Upgrading") and not cdr:IsUnitState("Enhancing") then
+        and not cdr:IsUnitState("Upgrading") and not cdr:IsUnitState("Enhancing") 
+        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior then
             -- if we have nothing to build...
             if not cdr.EngineerBuildQueue or table.getn(cdr.EngineerBuildQueue) == 0 then
                 -- check if the we have still a platton assigned to the CDR
@@ -73,7 +74,7 @@ function CommanderThreadRNG(cdr, platoon)
             -- if we have a BuildQueue then continue building
             elseif cdr.EngineerBuildQueue and table.getn(cdr.EngineerBuildQueue) ~= 0 then
                 if not cdr.NotBuildingThread then
-                    cdr.NotBuildingThread = cdr:ForkThread(platoon.WatchForNotBuilding)
+                    cdr.NotBuildingThread = cdr:ForkThread(platoon.WatchForNotBuildingRNG)
                 end
             end
         end
@@ -162,6 +163,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
 
     if numUnits > 0 or (not cdr.DistressCall and distressLoc and Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
+        --LOG('Num of units greater than zero or base distress')
         if cdr.UnitBeingBuilt then
             --LOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
             cdr.UnitBeingBuiltBehavior = cdr.UnitBeingBuilt
@@ -198,7 +200,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         target = plat:FindClosestUnit('Support', 'Enemy', true, v)
                         if target and Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) <= searchRadius then
                             if not aiBrain.ACUSupport.Supported then
-                                aiBrain.ACUSupport.Position = cdrPos
+                                aiBrain.ACUSupport.Position = cdr:GetPosition()
                                 aiBrain.ACUSupport.Supported = true
                                 --LOG('* AI-RNG: ACUSupport.Supported set to true')
                                 aiBrain.ACUSupport.TargetPosition = target:GetPosition()

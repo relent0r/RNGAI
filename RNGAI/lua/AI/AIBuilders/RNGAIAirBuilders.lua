@@ -116,6 +116,18 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory Swift Wind Response',
+        PlatoonTemplate = 'RNGAIT2FighterAeon',
+        Priority = 910,
+        BuilderConditions = { 
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory T2 FighterBomber',
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 800,
@@ -220,24 +232,6 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Air Intercept Response BaseMilitaryArea',
-        PlatoonTemplate = 'RNGAI AntiAirHunt',
-        Priority = 900,
-        InstanceCount = 5,
-        BuilderType = 'Any',
-        BuilderData = {
-            NeverGuardEngineers = true,
-            PrioritizedCategories = {
-                'BOMBER AIR',
-                'GUNSHIP AIR',
-                'ANTIAIR AIR',
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Air Mercy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI MercyAttack',
         Priority = 960,
@@ -265,7 +259,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 800,
-        InstanceCount = 8,
+        InstanceCount = 5,
         BuilderType = 'Any',
         BuilderData = {
             AvoidBases = true,
@@ -277,12 +271,12 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
          },
     },
     Builder {
         BuilderName = 'RNGAI Air Lockdown',
-        PlatoonTemplate = 'RNGAI AntiAirHunt',
+        PlatoonTemplate = 'AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 750,
         InstanceCount = 8,
@@ -296,7 +290,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
          },
     },
     Builder {
@@ -326,7 +320,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.TECH3 - categories.daa0206 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.AIR * categories.BOMBER - categories.TECH3 - categories.daa0206 } },
         },
         BuilderData = {
             GuardType = 'Bomber',

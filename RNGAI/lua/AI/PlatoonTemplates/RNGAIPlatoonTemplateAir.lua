@@ -111,6 +111,24 @@ PlatoonTemplate {
     }
 }
 
+PlatoonTemplate {
+    Name = 'RNGAIT2FighterAeon',
+    FactionSquads = {
+        UEF = {
+            { 'dea0202', 1, 1, 'attack', 'None' },
+        },
+        Aeon = {
+            { 'xaa0202', 1, 1, 'attack', 'None' },
+        },
+        Cybran = {
+            { 'dra0202', 1, 1, 'attack', 'None' },
+        },
+        Seraphim = {
+            { 'xsa0202', 1, 1, 'attack', 'None' },
+        },
+    },
+}
+
 PlatoonTemplate { Name = 'RNGAIT3AirResponse',
     FactionSquads = {
         UEF = {
