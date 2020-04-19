@@ -48,8 +48,9 @@ EngineerManager = Class(RNGEngineerManager) {
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
         if unit.Combat or unit.GoingHome then
+            --LOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
-            self:ForkThread(self.EngineerWaiting, unit)
+            self:DelayAssign(unit, 50)
             return
         end
         unit.LastActive = GetGameTimeSeconds()
@@ -70,12 +71,6 @@ EngineerManager = Class(RNGEngineerManager) {
         end
 
         local builder = self:GetHighestBuilder('Any', {unit})
-
-        if unit.Combat == true then
-            LOG('Unit has Combat flag set to true')
-        elseif unit.Combat == false then
-            LOG('Unit has Combat flag set to false')
-        end
 
         if builder and (not unit.Combat or not unit.GoingHome) then
             -- Fork off the platoon here
@@ -145,6 +140,6 @@ EngineerManager = Class(RNGEngineerManager) {
             return
         end
         self.AssigningTask = false
-        self:ForkThread(self.EngineerWaiting, unit)
+        self:DelayAssign(unit, 50)
     end,
 }

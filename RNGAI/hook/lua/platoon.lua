@@ -1090,10 +1090,6 @@ Platoon = Class(oldPlatoon) {
                 end
             end
         end
-        while  eng.Combat or eng.GoingHome do
-            LOG('ACU in combat, waiting')
-            WaitTicks(20)
-        end
 
         if not eng or eng.Dead then
             WaitTicks(1)
