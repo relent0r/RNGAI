@@ -111,6 +111,13 @@ Platoon = Class(oldPlatoon) {
         end
     end,
     
+    CDRFakeRNG = function(self)
+        local aiBrain = self:GetBrain()
+        while aiBrain:PlatoonExists(self) do
+            WaitTicks(30)
+        end
+    end,
+
     MercyAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
@@ -1083,13 +1090,17 @@ Platoon = Class(oldPlatoon) {
                 end
             end
         end
+        while  eng.Combat or eng.GoingHome do
+            LOG('ACU in combat, waiting')
+            WaitTicks(20)
+        end
 
         if not eng or eng.Dead then
             WaitTicks(1)
             self:PlatoonDisband()
             return
         end
-
+        
         --DUNCAN - added
         if eng:IsUnitState('Building') or eng:IsUnitState('Upgrading') or eng:IsUnitState("Enhancing") then
            return
