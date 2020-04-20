@@ -50,12 +50,14 @@ EngineerManager = Class(RNGEngineerManager) {
         if unit.Combat or unit.GoingHome then
             --LOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
+            --LOG('CDR Combat Delay')
             self:DelayAssign(unit, 50)
             return
         end
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
-            self:DelayAssign(self, unit)
+            --LOG('UnitBeingAssist Delay')
+            self:DelayAssign(unit, 50)
             return
         end
 
@@ -64,7 +66,8 @@ EngineerManager = Class(RNGEngineerManager) {
         unit.MinNumAssistees = nil
 
         if self.AssigningTask then
-            self:DelayAssign(self, unit)
+            --LOG('Assigning Task Delay')
+            self:DelayAssign(unit, 50)
             return
         else
             self.AssigningTask = true
@@ -140,6 +143,7 @@ EngineerManager = Class(RNGEngineerManager) {
             return
         end
         self.AssigningTask = false
+        --LOG('End of AssignEngineerTask Delay')
         self:DelayAssign(unit, 50)
     end,
 }

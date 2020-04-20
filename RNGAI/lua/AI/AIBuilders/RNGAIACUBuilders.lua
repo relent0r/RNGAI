@@ -530,28 +530,6 @@ BuilderGroup {
             }
         }
     },
-    Builder {    	
-        BuilderName = 'RNGAI ACU T1 Power Storage',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 850,
-        BuilderConditions = {            
-            { EBC, 'LessThanEconStorageRatio', { 0.0, 0.50}}, -- Ratio from 0 to 1. (1=100%) -- If our energy is trending into negatives
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.2 }},
-            { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.6 }},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Storage'}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = false,
-            Construction = {
-                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-                BuildStructures = {
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
     Builder {
         BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Land',
         PlatoonTemplate = 'CommanderBuilderRNG',
@@ -622,7 +600,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssist',
         Priority = 700,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.4}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6}},
         },
         BuilderType = 'Any',
         BuilderData = {

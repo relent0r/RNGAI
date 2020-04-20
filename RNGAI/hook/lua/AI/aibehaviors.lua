@@ -44,11 +44,11 @@ function CommanderThreadRNG(cdr, platoon)
         if not cdr.Dead then 
             CDRUnitCompletion(aiBrain, cdr) 
         end
-        WaitTicks(1)--[[
+        WaitTicks(1)
         if not cdr.Dead then
             CDRHideBehaviorRNG(aiBrain, cdr)
         end
-        WaitTicks(1)]]
+        WaitTicks(1)
 
         -- Call platoon resume building deal...
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
@@ -326,12 +326,10 @@ function CDROverChargeRNG(aiBrain, cdr)
                 LOG('Continue Fighting was set to false')
             else
                 LOG('Continue Fighting is still true')
-            end
-            if not aiBrain:PlatoonExists(plat) then
-                LOG('CDRAttack platoon no longer exist')
-            else
-                LOG('CDRAttack platoon still exist')
             end]]
+            if not aiBrain:PlatoonExists(plat) then
+                LOG('* AI-RNG: CDRAttack platoon no longer exist, something disbanded it')
+            end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
         cdr.Combat = false
         aiBrain.ACUSupport.ReturnHome = true
@@ -417,7 +415,7 @@ end
 function CDRHideBehaviorRNG(aiBrain, cdr)
     if cdr:IsIdleState() then
         cdr.GoingHome = false
-        cdr.Fighting = false
+        cdr.Combat = false
         cdr.Upgrading = false
 
         local category = false
@@ -443,13 +441,17 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
         end
 
         if not category or not runPos then
-            local x, z = aiBrain:GetArmyStartPos()
-            runPos = AIUtils.RandomLocation(x, z)
-            IssueClearCommands({cdr})
-            IssueMove({cdr}, runPos)
+            local cdrNewPos = {}
+            cdrNewPos[1] = cdr.CDRHome[1] + Random(-6, 6)
+            cdrNewPos[2] = cdr.CDRHome[2]
+            cdrNewPos[3] = cdr.CDRHome[3] + Random(-6, 6)
+            WaitTicks(1)
+            IssueStop({cdr})
+            IssueMove({cdr}, cdrNewPos)
+            WaitTicks(30)
         end
     end
-    WaitTicks(10)
+    WaitTicks(5)
 end
 
 function ACUDetection(platoon)

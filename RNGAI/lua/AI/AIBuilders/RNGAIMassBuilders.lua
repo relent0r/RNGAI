@@ -343,7 +343,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1, ENGINEER TECH2, ENGINEER TECH3' }},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 100, -3, 0, 0}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
+            { EBC, 'GreaterThanEconStorageRatio', { 0.02, 0.60}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3', 100, 'ueb1106' } },
