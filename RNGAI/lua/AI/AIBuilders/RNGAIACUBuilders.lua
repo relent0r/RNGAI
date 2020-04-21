@@ -380,7 +380,9 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.10}},
@@ -403,7 +405,9 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.15}},
@@ -425,7 +429,9 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.20}},
@@ -449,7 +455,9 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Air Factory Lower Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { MIBC, 'GreaterThanGameTime', { 300 } },
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.80}},
@@ -492,8 +500,9 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Power Trend',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
-        BuilderConditions = {            
-            { MIBC, 'GreaterThanGameTime', { 70 } },
+        DelayEqualBuildPlattons = {'Energy', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'LessThanEnergyTrend', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
@@ -513,7 +522,9 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Power Scale',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
-        BuilderConditions = {            
+        DelayEqualBuildPlattons = {'Energy', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { MIBC, 'GreaterThanGameTime', { 120 } },
             { UCBC, 'LessThanEnergyTrend', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
@@ -741,6 +752,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTime', { 1500 } },
+                { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
                 { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
                 { EBC, 'GreaterThanEconIncome',  { 1.2, 120.0}},
                 --{ MIBC, 'FactionIndex', {4}},

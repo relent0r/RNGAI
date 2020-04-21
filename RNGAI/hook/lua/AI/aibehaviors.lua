@@ -146,6 +146,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
+        aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
     
     -- Take away engineers too
@@ -344,6 +345,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local cdrPos = cdr:GetPosition()
     local distSqAway = 1600
     local loc = cdr.CDRHome
+    local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         LOG('CDR further than distSqAway')
@@ -378,7 +380,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             end
             WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
-                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, cdrPos, 30, 'ENEMY') > 0 ) then
+                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
                     cdr.GoingHome = false
                     IssueStop({cdr})
                     return CDROverChargeRNG(aiBrain, cdr)
@@ -438,6 +440,7 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
             runPos = AIUtils.AIFindDefensiveAreaSorian(aiBrain, cdr, category, 100, runShield)
             IssueClearCommands({cdr})
             IssueMove({cdr}, runPos)
+            WaitTicks(30)
         end
 
         if not category or not runPos then

@@ -27,17 +27,6 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Engineer T1 Small',
-        PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 850,
-        BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSeconds', { 600 } },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 6 of them.
-        },
-        BuilderType = 'All',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Mass',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 750,
@@ -54,7 +43,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'LessThanEnergyTrend', { 30.0 } },
+            { UCBC, 'LessThanEnergyTrend', { 15.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -100,7 +89,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
         },
         BuilderType = 'All',

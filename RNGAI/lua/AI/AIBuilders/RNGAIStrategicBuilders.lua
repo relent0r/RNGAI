@@ -72,7 +72,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
             { EBC, 'GreaterThanEconTrend', { 2.0, 200.0 } },
             { EBC, 'GreaterThanEconIncome', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.95 } },

@@ -6,14 +6,15 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local ALLBPS = __blueprints
+local SUtils = import('/lua/AI/sorianutilities.lua')
 
-oldPlatoon = Platoon
-Platoon = Class(oldPlatoon) {
+RNGAIPlatoon = Platoon
+Platoon = Class(RNGAIPlatoon) {
 
     OnCreate = function(self, plan)
         local aiBrain = self:GetBrain()
         if not aiBrain.RNG then
-            return oldPlatoon.OnCreate(self, plan)
+            return RNGAIPlatoon.OnCreate(self, plan)
         end
         self.Trash = TrashBag()
         if self[plan] then
@@ -1598,7 +1599,7 @@ Platoon = Class(oldPlatoon) {
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
                 --LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand bottom " .. eng.Sync.id)
                 --eng.PlatoonHandle:PlatoonDisband()
-                return eng.PlatoonHandle:ReturnToBaseAIRNG()
+                return eng.PlatoonHandle:PlatoonDisband()
             end
             if eng then eng.ProcessBuild = nil end
             return
