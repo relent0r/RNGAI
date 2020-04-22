@@ -4,10 +4,35 @@
     Summary :
         Threat Build Conditions
 ]]
+local MAPBASEPOSTITIONSRNG = {}
 
 function EnemyThreatGreaterThanValueAtBase(aiBrain, locationType, threatValue, threatType, rings, builder)
     local testRings = rings or 10
-    currentThreat = aiBrain:GetThreatAtPosition( aiBrain.BuilderManagers[locationType].FactoryManager:GetLocationCoords(), testRings, true, threatType or 'Overall' )
+    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local baseposition, radius
+    if MAPBASEPOSTITIONSRNG[AIName][locationType] then
+        baseposition = MAPBASEPOSTITIONSRNG[AIName][locationType].Pos
+        radius = MAPBASEPOSTITIONSRNG[AIName][locationType].Rad
+    elseif aiBrain.BuilderManagers[locationType] then
+        baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locationType].FactoryManager:GetLocationRadius()
+        MAPBASEPOSTITIONSRNG[AIName] = MAPBASEPOSTITIONSRNG[AIName] or {} 
+        MAPBASEPOSTITIONSRNG[AIName][locationType] = {Pos=baseposition, Rad=radius}
+    elseif aiBrain:PBMHasPlatoonList() then
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == locationType then
+                baseposition = v.Location
+                radius = v.Radius
+                MAPBASEPOSTITIONSRNG[AIName] = MAPBASEPOSTITIONSRNG[AIName] or {} 
+                MAPBASEPOSTITIONSRNG[AIName][locationType] = {baseposition, radius}
+                break
+            end
+        end
+    end
+    if not baseposition then
+        return false
+    end
+    currentThreat = aiBrain:GetThreatAtPosition( baseposition, testRings, true, threatType or 'Overall' )
     --LOG('Threat Value Detected :'..currentThreat..'Threat Value Desired'..threatValue)
     if currentThreat > threatValue then
         --LOG('EnemyThreatGreaterThanValueAtBase returning true for : ', builder)
