@@ -6,7 +6,7 @@
 ]]
 local MAPBASEPOSTITIONSRNG = {}
 
-function EnemyThreatGreaterThanValueAtBase(aiBrain, locationType, threatValue, threatType, rings, builder)
+function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue, threatType, rings, builder)
     local testRings = rings or 10
     local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     local baseposition, radius
