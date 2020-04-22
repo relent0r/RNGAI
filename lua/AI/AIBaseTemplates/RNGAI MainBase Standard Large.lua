@@ -11,16 +11,73 @@ BaseBuilderTemplate {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Large',
 
+        -- ACU MainBase Builder --
+        'RNGAI ACU Structure Builders Large',
+
+        -- Engineer Builders --
+        'RNGAI Engineer Builder',
+        'RNGAI Engineering Support Builder',
+        'RNGAI T1 Reclaim Builders',
+        'RNGAI T1 Assist Builders',
+        'RNGAI T2 Assist Builders',
+        'RNGAI Energy Production Reclaim',
+
         -- Economy Builder --
         'RNGAI Energy Builder',
+        'RNGAI Energy Storage Builder',
         'RNGAI Mass Builder',
+        'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
-        --'RNGAI ExtractorUpgrades',
+        'RNGAI Mass Fab',
 
-        -- Land Unit Builders T1 --
-        'RNGAI Engineer Builder',
+        -- Scout Builders --
+        'RNGAI ScoutAirBuilder',
         'RNGAI ScoutLandBuilder',
-        'RNGAI TankLandBuilder',
+
+        -- Scout Formers --
+        'RNGAI ScoutAirFormer',
+        'RNGAI ScoutLandFormer',
+        
+        -- Defence Builders --
+        'RNGAI Base Defenses',
+        'RNGAI T1 Perimeter Defenses',
+        'RNGAI T2 Defense FormBuilders',
+        'RNGAI Shield Builder',
+        'RNGAI Shields Upgrader',
+        'RNGAI SMD Builders',
+
+        -- Land Unit Formers T1 --
+        'RNGAI ScoutLandFormer',
+        'RNGAI Land Mass Raid',
+        'RNGAI Land FormBuilders',
+        'RNGAI Mass Hunter Labs FormBuilders',
+        'RNGAI Land Response Formers',
+
+        -- Land Factory Builders --
+        'RNGAI Factory Builder Land Large',
+
+        -- Land Upgrade Builders --
+        'RNGAI Land Upgrade Builders',
+
+        -- Air Upgrade Builders --
+        'RNGAI Air Upgrade Builders',
+
+        -- RNGAI Air Support Builders --
+        'RNGAI Air Staging Platform',
+
+        -- SACU Builders --
+        'RNGAI Gate Builders',
+        'RNGAI SACU Builder',
+
+        --Strategic Builders
+        'RNGAI SML Builders',
+        'RNGAI Strategic Artillery Builders',
+        'RNGAI Strategic Formers',
+
+        --Experimentals --
+        'RNGAI Experimental Builders',
+        'RNGAI Experimental Formers',
+
     },
     NonCheatBuilders = {
     },
