@@ -176,7 +176,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 9, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.80}},
             { MIBC, 'GreaterThanGameTime', { 480 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
@@ -205,7 +205,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 1.0, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.30}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.30}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -229,7 +229,7 @@ BuilderGroup {
             { MIBC, 'TMLEnemyStartRangeCheck', {} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 0.7, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -255,7 +255,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 } },
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.20, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH3 ANTIAIR STRUCTURE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -353,7 +353,7 @@ BuilderGroup {
             { MIBC, 'TMLEnemyStartRangeCheck', {} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 0.7, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -381,7 +381,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 1.0, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -414,7 +414,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 360 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatio', { 0.30, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.70}},
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -462,18 +462,48 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI SMD 1st Main',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 900,
+        Priority = 800,
         BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },                      -- relative income
-            { EBC, 'GreaterThanEconStorageRatio', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.STRUCTURE * categories.NUKE * categories.SILO } },
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 5,
             Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyDistance = 80,
+                AvoidCategory = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 20,
+                BuildStructures = {
+                    'T3StrategicMissileDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI SMD Response',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 900,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
+            { UCBC, 'UnitsGreaterAtEnemy', { 1 , categories.STRUCTURE * categories.NUKE * categories.SILO } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
                 BuildClose = false,
                 AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
                 AdjacencyDistance = 80,

@@ -14,6 +14,9 @@ BaseBuilderTemplate {
         -- ACU MainBase Builder --
         'RNGAI ACU Structure Builders Large',
 
+        -- Expansion Builders --
+        'RNGAI Engineer Expansion Builders Large',
+
         -- Engineer Builders --
         'RNGAI Engineer Builder',
         'RNGAI Engineering Support Builder',
@@ -22,6 +25,11 @@ BaseBuilderTemplate {
         'RNGAI T2 Assist Builders',
         'RNGAI Energy Production Reclaim',
 
+        -- Intel Builders --
+        'RNGAI RadarBuilders',
+        'RNGAI RadarUpgrade',
+        'RNGAI RadarUpgrade T1 Expansion',
+        
         -- Economy Builder --
         'RNGAI Energy Builder',
         'RNGAI Energy Storage Builder',
@@ -53,6 +61,16 @@ BaseBuilderTemplate {
         'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
 
+        -- Air Unit Builders --
+        'RNGAI TransportFactoryBuilders',
+        'RNGAI Air Builder T1',
+        'RNGAI Air Builder T2',
+        'RNGAI Air Builder T3',
+
+        -- Air Unit Formers --
+        'RNGAI Air Response Formers T1',
+        'RNGAI Air Platoon Builder',
+
         -- Land Factory Builders --
         'RNGAI Factory Builder Land Large',
 
@@ -69,24 +87,29 @@ BaseBuilderTemplate {
         'RNGAI Gate Builders',
         'RNGAI SACU Builder',
 
-        --Strategic Builders
+        -- Strategic Builders
         'RNGAI SML Builders',
         'RNGAI Strategic Artillery Builders',
         'RNGAI Strategic Formers',
 
-        --Experimentals --
+        -- Experimentals --
         'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',
 
+        -- Sea Builders --
+        'RNGAI Sea Builders T1',
+
+        -- Sea Formers --
+        'RNGAI Sea Formers',
     },
     NonCheatBuilders = {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 9,
-            Tech2 = 3,
-            Tech3 = 3,
-            SCU = 2,
+            Tech1 = 15,
+            Tech2 = 12,
+            Tech3 = 10,
+            SCU = 6,
         },
         FactoryCount = {
             Land = 6,

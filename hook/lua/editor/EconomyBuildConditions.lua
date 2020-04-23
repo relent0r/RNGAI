@@ -5,8 +5,13 @@
         Economy Build Conditions
 ]]
 
-function GreaterThanEconStorageRatio(aiBrain, mStorageRatio, eStorageRatio)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
+local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+
+function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio)
+    local econ = {}
+    econ.MassStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
+    econ.EnergyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
     -- If a paragon is present and we not stall mass or energy, return true
     --LOG('Mass Storage Ratio :'..econ.MassStorageRatio..' Energy Storage Ratio :'..econ.EnergyStorageRatio)
     if aiBrain.HasParagon and econ.MassStorageRatio >= 0.01 and econ.EnergyStorageRatio >= 0.01 then
@@ -17,8 +22,10 @@ function GreaterThanEconStorageRatio(aiBrain, mStorageRatio, eStorageRatio)
     return false
 end
 
-function GreaterThanEconTrend(aiBrain, MassTrend, EnergyTrend)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
+function GreaterThanEconTrendRNG(aiBrain, MassTrend, EnergyTrend)
+    local econ = {}
+    econ.MassTrend = GetEconomyTrend(aiBrain, 'MASS')
+    econ.EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
     -- If a paragon is present and we have at least a neutral m+e trend, return true
     --LOG('Current Econ Trends M E: ', econ.MassTrend, econ.EnergyTrend)
     if aiBrain.HasParagon and econ.MassTrend >= 0 and econ.EnergyTrend >= 0 then
@@ -29,6 +36,26 @@ function GreaterThanEconTrend(aiBrain, MassTrend, EnergyTrend)
     return false
 end
 
+function LessThanMassTrendRNG(aiBrain, mTrend)
+    local econ = {}
+    econ.MassTrend = GetEconomyTrend(aiBrain, 'MASS')
+    if econ.MassTrend < mTrend then
+        return true
+    else
+        return false
+    end
+end
+
+--            { EBC, 'LessThanEnergyTrendRNG', { 50.0 } },
+function LessThanEnergyTrendRNG(aiBrain, eTrend)
+    local econ = {}
+    econ.EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+    if econ.EnergyTrend < eTrend then
+        return true
+    else
+        return false
+    end
+end
 function GreaterThanEconIncome(aiBrain, MassIncome, EnergyIncome)
     -- If a paragon is present, return true
     if aiBrain.HasParagon then

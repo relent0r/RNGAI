@@ -25,21 +25,6 @@ function LessThanGameTimeSeconds(aiBrain, num)
     return false
 end
 
--- Return true LessThanEnergyTrend. This will be in negatives in the early game.
-function LessThanEnergyTrend(aiBrain, eTrend, DEBUG)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    if DEBUG then
-        --LOG('Current Energy Trend is : ', econ.EnergyTrend)
-    end
-    if econ.EnergyTrend < eTrend then
-        --LOG('Less Than Energy Trend Returning True : '..econ.EnergyTrend)
-        return true
-    else
-        --LOG('Less Than Energy Trend Returning False : '..econ.EnergyTrend)
-        return false
-    end
-end
-
 function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     local numOne = aiBrain:GetCurrentUnits(categoryOne)
     local numTwo = aiBrain:GetCurrentUnits(categoryTwo)
@@ -179,6 +164,18 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, location
     return false
 end
 
+function GetOwnUnitsAroundLocation(aiBrain, category, location, radius)
+    local units = aiBrain:GetUnitsAroundPoint(category, location, radius, 'Ally')
+    local index = aiBrain:GetArmyIndex()
+    local retUnits = {}
+    for _, v in units do
+        if not v.Dead and v:GetAIBrain():GetArmyIndex() == index then
+            table.insert(retUnits, v)
+        end
+    end
+    return retUnits
+end
+
 function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, builderCategory)
     local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     local baseposition, radius
@@ -212,6 +209,10 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
             continue
         end
         -- Engineer doesn't want any more assistance
+        --[[
+        if v.NumAssistees then
+            LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
+        end]]
         if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
             continue
         end

@@ -3,6 +3,7 @@ local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local Utils = import('/lua/utilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
+local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 
 --[[
 Valid Threat Options:
@@ -1162,6 +1163,24 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
         if retUnit then
             return retUnit
         end
+    end
+
+    return false
+end
+
+function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, assisteeCategory)
+    if assisteeType == categories.FACTORY then
+        -- Sift through the factories in the location
+        local manager = aiBrain.BuilderManagers[locationType].FactoryManager
+        return manager:GetFactoriesWantingAssistance(buildingCategory, assisteeCategory)
+    elseif assisteeType == categories.ENGINEER then
+        local manager = aiBrain.BuilderManagers[locationType].EngineerManager
+        return manager:GetEngineersWantingAssistance(buildingCategory, assisteeCategory)
+    elseif assisteeType == categories.STRUCTURE then
+        local manager = aiBrain.BuilderManagers[locationType].PlatoonFormManager
+        return manager:GetUnitsBeingBuilt(buildingCategory, assisteeCategory)
+    else
+        error('*AI ERROR: Invalid assisteeType - ' .. ToString(assisteeType))
     end
 
     return false
