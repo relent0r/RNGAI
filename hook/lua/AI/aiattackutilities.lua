@@ -173,3 +173,16 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = 'bad' }
     return false
 end
+
+function CanGraphToRNG(startPos, destPos, layer)
+    local startNode = GetClosestPathNodeInRadiusByLayer(startPos, 100, layer)
+    local endNode = false
+
+    if startNode then
+        endNode = GetClosestPathNodeInRadiusByGraph(destPos, 100, startNode.graphName)
+    end
+
+    if endNode then
+        return true, endNode.Position
+    end
+end

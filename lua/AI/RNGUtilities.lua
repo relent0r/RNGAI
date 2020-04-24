@@ -459,6 +459,7 @@ function AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, ra
     end
 
     local validPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Unmarked Expansion', pos, radius, tMin, tMax, tRings, tType)
+    LOG('Valid Unmarked Expansion Markers '..repr(validPos))
 
     local retPos, retName
     if eng then
@@ -954,11 +955,11 @@ function MarkTacticalMassLocations(aiBrain)
         end
         for key, group in massGroups do
             for key2, marker in markerList do
-                if VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]) < 2500 then
-                    --LOG('Location :'..repr(group.Markers[1])..' is less than 2500 from :'..repr(marker))
+                if VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]) < 3600 then
+                    --LOG('Location :'..repr(group.Markers[1])..' is less than 3600 from :'..repr(marker))
                     massGroups[key] = nil
                 else
-                    --LOG('Location :'..repr(group.Markers[1])..' is more than 2500 from :'..repr(marker))
+                    --LOG('Location :'..repr(group.Markers[1])..' is more than 3600 from :'..repr(marker))
                     --LOG('Location distance :'..VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]))
                 end
             end
@@ -1186,3 +1187,51 @@ function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, 
     return false
 end
 
+function ExpansionSpamBaseLocationCheck(aiBrain, location)
+    local validLocation = false
+    local enemyStarts = {}
+
+    if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+        LOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
+        enemyStarts = aiBrain.EnemyIntel.EnemyStartLocations
+    else
+        return false
+    end
+    
+    for key, startloc in enemyStarts do
+        
+        local locationDistance = VDist2Sq(startloc[1], startloc[3],location[1], location[3])
+        LOG('*AI RNG: location position distance for ExpansionSpamBase is '..locationDistance)
+        if  locationDistance > 40000 and locationDistance < 250000 then
+            LOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
+            LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
+            --local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
+            local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
+            --LOG('Path reason is '..reason)
+            if reason then
+                LOG('Path position is is '..repr(reason))
+            end
+            WaitTicks(2)
+            if path then
+                LOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
+                validLocation = true
+                break
+            else
+                continue
+            end
+        else
+            continue
+        end
+    end
+
+    if validLocation then
+        LOG('*AI RNG: Unmarked Spam base is true')
+        return true
+    else
+        LOG('*AI RNG: Unmarked Spam base is false')
+        return false
+    end
+
+    return false
+end
+        

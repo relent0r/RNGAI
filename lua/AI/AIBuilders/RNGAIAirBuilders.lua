@@ -347,7 +347,6 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.GROUNDATTACK * (categories.TECH1 + categories.TECH2 + categories.TECH3) } },
         },
         BuilderData = {
-            GuardType = 'Bomber',
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
                 'ENGINEER TECH1',

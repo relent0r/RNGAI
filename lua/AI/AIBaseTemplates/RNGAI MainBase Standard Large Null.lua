@@ -6,17 +6,13 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Large',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Large Null',
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Large',
 
         -- ACU MainBase Builder --
         'RNGAI ACU Structure Builders Large',
-        'RNGAI ACU Enhancements Tier Large',
-
-        -- Expansion Builders --
-        'RNGAI Engineer Expansion Builders Large',
 
         -- Engineer Builders --
         'RNGAI Engineer Builder',
@@ -64,9 +60,6 @@ BaseBuilderTemplate {
 
         -- Air Unit Builders --
         'RNGAI TransportFactoryBuilders',
-        'RNGAI Air Builder T1',
-        'RNGAI Air Builder T2',
-        'RNGAI Air Builder T3',
 
         -- Air Unit Formers --
         'RNGAI Air Response Formers T1',
@@ -94,7 +87,7 @@ BaseBuilderTemplate {
         'RNGAI Strategic Formers',
 
         -- Experimentals --
-        'RNGAI Experimental Builders',
+        --'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',
 
         -- Sea Builders --
@@ -131,10 +124,10 @@ BaseBuilderTemplate {
     FirstBaseFunction = function(aiBrain)
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if personality == 'RNGStandard' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardcheat' and mapSizeX > 1000 and mapSizeZ > 1000 then
+        if personality == 'RNGStandardnull' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardcheatnull' and mapSizeX > 1000 and mapSizeZ > 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --LOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
-            return 1000, 'RNGStandard'
+            return 1000, 'RNGStandardnull'
         end
         return -1
     end,

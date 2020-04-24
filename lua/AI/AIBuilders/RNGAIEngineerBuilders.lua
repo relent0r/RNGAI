@@ -475,7 +475,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 540,
-        InstanceCount = 12,
+        InstanceCount = 4,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.SUBCOMMANDER - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
@@ -674,7 +674,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 }},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -691,7 +691,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD }},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -708,7 +708,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
