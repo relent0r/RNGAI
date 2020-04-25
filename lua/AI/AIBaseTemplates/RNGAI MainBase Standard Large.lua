@@ -55,6 +55,8 @@ BaseBuilderTemplate {
         'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
 
+        -- Land Unit Builders --
+        'RNGAI TankLandBuilder Large',
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
         'RNGAI Land Mass Raid',
@@ -98,6 +100,8 @@ BaseBuilderTemplate {
         'RNGAI Experimental Formers',
 
         -- Sea Builders --
+        'RNGAI Factory Builder Sea Large',
+        'RNGAI Sea Upgrade Builders',
         'RNGAI Sea Builders T1',
 
         -- Sea Formers --
@@ -114,8 +118,8 @@ BaseBuilderTemplate {
         },
         FactoryCount = {
             Land = 6,
-            Air = 3,
-            Sea = 0,
+            Air = 6,
+            Sea = 6,
             Gate = 1,
         },
         MassToFactoryValues = {

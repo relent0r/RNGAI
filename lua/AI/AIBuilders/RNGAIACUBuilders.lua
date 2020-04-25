@@ -607,7 +607,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Structure Builders Large',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
+        BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -633,7 +633,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
+        BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -641,7 +641,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.TECH1 * categories.ENERGYPRODUCTION } },

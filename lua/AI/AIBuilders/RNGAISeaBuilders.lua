@@ -81,7 +81,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             -- Have we the eco to build it ?
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             -- When do we want to build this ?
@@ -97,7 +97,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaSub',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
@@ -115,10 +115,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T1',
         PlatoonTemplate = 'SeaAttack',
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 300,
-        InstanceCount = 10,
-        BuilderType = 'Any',
+        InstanceCount = 20,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER} },
+            --{ SeaAttackCondition, { 'LocationType', 14 } },
+        },
         BuilderData = {
             UseFormation = 'AttackFormation',
             ThreatWeights = {
@@ -133,25 +137,22 @@ BuilderGroup {
                 FarThreatWeight = 1,
             },
         },
-        BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, 'MOBILE NAVAL SUB' } },
-            --{ SeaAttackCondition, { 'LocationType', 14 } },
-        },
+        BuilderType = 'Any',
+        
     },
     Builder {
         BuilderName = 'RNGAI Sea Hunters T1',
         PlatoonTemplate = 'RNGAI Sea Hunt T1',
-        PlatoonAddPlans = {'DistressResponseAI'},
+        --PlatoonAddPlans = {'DistressResponseAI'},
         Priority = 300,
-        InstanceCount = 10,
+        InstanceCount = 20,
         BuilderType = 'Any',
         BuilderData = {
         UseFormation = 'GrowthFormation',
         },
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'MOBILE NAVAL SUB' } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER} },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
     },
@@ -164,8 +165,9 @@ BuilderGroup {
         BuilderName = 'RNGAI Sea Mass Raid',
         PlatoonTemplate = 'RNGAI Sea Mass Raid T1',
         Priority = 600,
+        InstanceCount = 2,
         BuilderConditions = {  
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},      	
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
                 { MIBC, 'MassMarkersInWater', {} },
             },
         BuilderData = {
@@ -182,7 +184,6 @@ BuilderGroup {
             AggressiveMove = true,      
             AvoidClosestRadius = 50, 
         },    
-        InstanceCount = 2,
         BuilderType = 'Any',
     },
 }

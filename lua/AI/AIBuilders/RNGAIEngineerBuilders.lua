@@ -224,7 +224,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
-            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
         },
@@ -284,6 +284,30 @@ BuilderGroup {
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
                 BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH3'},
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Assist Artillery',
+        PlatoonTemplate = 'T12EngineerAssistRNG',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssistUntilFinished = true,
+                PermanentAssist = true,
+                AssisteeType = categories.STRUCTURE,
+                AssistRange = 80,
+                BeingBuiltCategories = {'STRUCTURE ARTILLERY STRATEGIC'},
             },
         }
     },

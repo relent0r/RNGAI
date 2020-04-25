@@ -1193,6 +1193,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
 
     if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
         LOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
+        LOG('*AI RNG: SpamBase position is'..repr(location))
         enemyStarts = aiBrain.EnemyIntel.EnemyStartLocations
     else
         return false
@@ -1202,14 +1203,14 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         
         local locationDistance = VDist2Sq(startloc[1], startloc[3],location[1], location[3])
         LOG('*AI RNG: location position distance for ExpansionSpamBase is '..locationDistance)
-        if  locationDistance > 40000 and locationDistance < 250000 then
+        if  locationDistance > 25600 and locationDistance < 250000 then
             LOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            --local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
-            local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
+            --local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
             --LOG('Path reason is '..reason)
             if reason then
-                LOG('Path position is is '..repr(reason))
+                LOG('Path position is is '..reason)
             end
             WaitTicks(2)
             if path then
@@ -1225,10 +1226,10 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
     end
 
     if validLocation then
-        LOG('*AI RNG: Unmarked Spam base is true')
+        LOG('*AI RNG: Spam base is true')
         return true
     else
-        LOG('*AI RNG: Unmarked Spam base is false')
+        LOG('*AI RNG: Spam base is false')
         return false
     end
 

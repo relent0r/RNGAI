@@ -27,7 +27,7 @@ function LandAttackCondition(aiBrain, locationType, targetNumber)
 end
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI TankLandBuilder',
+    BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     -- Opening Tank Build --
     Builder {
@@ -63,6 +63,79 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI TankLandBuilder Large',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI Factory Arty Sera Early Large', -- Sera cause floaty
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 900, -- After First Engie Group and scout
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 4 minutes
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.LAND * categories.MOBILE - categories.ENGINEER }},
+            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Tank Aeon Early Large', -- Aeon cause floaty
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 900, -- After First Engie Group and scout
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 4 minutes
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.LAND * categories.MOBILE - categories.ENGINEER }},
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Arty Sera Large', -- Sera cause floaty
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 500, -- After First Engie Group and scout
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
+            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Tank Aeon Large', -- Aeon cause floaty
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 500, -- After First Engie Group and scout
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land Attack Large',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
+        Priority = 750, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
             { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -198,7 +271,64 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI TankLandBuilder Expansions',
+    BuilderGroupName = 'RNGAI TankLandBuilder Large Unmarked',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI Factory Arty Sera Large Expansion', -- Sera cause floaty
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 500, -- After First Engie Group and scout
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.LAND * categories.MOBILE - categories.ENGINEER }},
+            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Tank Aeon Large Expansion', -- Aeon cause floaty
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 500, -- After First Engie Group and scout
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.LAND * categories.MOBILE - categories.ENGINEER }},
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land Expansion',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
+        Priority = 700, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Land Expansion',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        Priority = 700,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { IBC, 'BrainNotLowPowerMode', {} },
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI TankLandBuilder Small Expansions',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory Land Expansion',

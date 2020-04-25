@@ -74,8 +74,8 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.40}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.30}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.5, 0.7 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 8, 'FACTORY LAND TECH1' }},
          },
@@ -325,6 +325,62 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.STRUCTURE * categories.FACTORY * categories.NAVAL - categories.SUPPORTFACTORY } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY NAVAL TECH1' }},
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                NearMarkerType = 'Naval Area',
+                LocationRadius = 90,
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T1SeaFactory',
+                },
+            }
+        }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Factory Builder Sea Large',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T1 High Pri Large',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL - categories.SUPPORTFACTORY } },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY NAVAL TECH1' }},
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T1SeaFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T1 Marker Large',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY NAVAL TECH1' }},
@@ -662,6 +718,47 @@ BuilderGroup {
         BuilderType = 'Any',
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Sea Upgrade Builders',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Sea Factory Upgrade HQ',
+        PlatoonTemplate = 'T1SeaFactoryUpgrade',
+        Priority = 700,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { MIBC, 'GreaterThanGameTime', { 450 } },
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'FACTORY NAVAL TECH2, FACTORY NAVAL TECH3'}},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.FACTORY * categories.NAVAL}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
+                { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Sea Factory Upgrade Support',
+        PlatoonTemplate = 'T1SeaFactoryUpgrade',
+        Priority = 600,
+        InstanceCount = 1,
+        BuilderData = {
+            OverideUpgradeBlueprint = { 'zeb9503', 'zab9503', 'zrb9503', 'zsb9503', 'znb9503' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
+        },
+        BuilderConditions = {
+                { MIBC, 'GreaterThanGameTime', { 420 } },
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'FACTORY NAVAL TECH2, FACTORY NAVAL TECH3'}},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2'}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+                { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            },
+        BuilderType = 'Any',
+    },
+}
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Upgrade Builders Expansion',
     BuildersType = 'PlatoonFormBuilder',

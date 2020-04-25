@@ -27,7 +27,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder',
+                'RNGAI TankLandBuilder Small',
                 'RNGAI Reaction Tanks',
                 'RNGAI T2 TankLandBuilder',
         
@@ -91,20 +91,26 @@ BaseBuilderTemplate {
             --LOG('* AI-RNG: Expansion MarkerType is', markerType)
             return -1
         end
-
+        local spamBaseCheck
+        local mapSizeX, mapSizeZ = GetMapSize()
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
         local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
+        if mapSizeX < 1000 and mapSizeZ < 1000 then
+            spamBaseCheck = false
+        else
+            spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
+        end
         --LOG('* AI-RNG: Distance is ', distance)
-        if not distance or distance > 1000 then
+        if not distance or distance > 1000 and not spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 10')
             return 10
-        elseif distance > 500 then
+        elseif distance > 500 and not spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 25')
             return 25
-        elseif distance > 250 then
+        elseif distance > 250 and not spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 50')
             return 50
-        else
+        elseif not spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 100')
             return 100
         end

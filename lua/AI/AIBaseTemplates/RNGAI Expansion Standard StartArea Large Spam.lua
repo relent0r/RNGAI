@@ -6,7 +6,7 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard LargeExpansionArea',
+    BaseTemplateName = 'RNGAI Expansion Standard StartArea Large Spam',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders',
@@ -15,21 +15,30 @@ BaseBuilderTemplate {
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder Expansion',
+                --'RNGAI Mass Storage Builder',
+                --'RNGAI ExtractorUpgrades Expansion',
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
-                'RNGAI Engineering Support Builder',
+                --'RNGAI Engineering Support Builder',
                 'RNGAI T1 Reclaim Builders Expansion',
+                --'RNGAI T1 Assist Builders',
+                --'RNGAI T2 Assist Builders',
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder Small Expansions',
+                'RNGAI TankLandBuilder Small',
+                'RNGAI Reaction Tanks',
+                'RNGAI T2 TankLandBuilder',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
+                'RNGAI Land Mass Raid',
                 'RNGAI Land FormBuilders Expansion',
+                'RNGAI Land Response Formers',
         
                 -- Land Factory Builders --
+                'RNGAI Factory Builder Unmarked Spam',
                 --'RNGAI Factory Builder Land',
         
                 -- Land Factory Formers --
@@ -47,9 +56,9 @@ BaseBuilderTemplate {
                 'RNGAI Air Platoon Builder',
         
                 -- Defence Builders --
-                'RNGAI Base Defenses',
-                'RNGAI T1 Perimeter Defenses',
-                'RNGAI T2 Expansion TML',
+                'RNGAI Base Defenses Expansion',
+                --'RNGAI T1 Perimeter Defenses',
+                --'RNGAI T2 Expansion TML',
 		},
     NonCheatBuilders = { },
     BaseSettings = {
@@ -61,7 +70,7 @@ BaseBuilderTemplate {
         },
         
         FactoryCount = {
-            Land = 5,
+            Land = 10,
             Air = 2,
             Sea = 0,
             Gate = 0,
@@ -75,29 +84,36 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        --LOG('Expansion Function for Large Expansion')
+        --LOG('Expansion Function for Start Location')
         if not aiBrain.RNG then
             return -1
         end
-        if markerType ~= 'Large Expansion Area' then
+        if markerType ~= 'Start Location' then
             --LOG('* AI-RNG: Expansion MarkerType is', markerType)
             return -1
         end
-        
+        local spamBaseCheck
+        local mapSizeX, mapSizeZ = GetMapSize()
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
         local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
-        --LOG('* AI-RNG: Distance is ', distance)
-        if not distance or distance > 1000 then
-            --LOG('* AI-RNG: Expansion return is 10')
-            return 10
-        elseif distance > 500 then
-            --LOG('* AI-RNG: Expansion return is 25')
-            return 25
-        elseif distance > 250 then
-            --LOG('* AI-RNG: Expansion return is 50')
-            return 50
+        if mapSizeX < 1000 and mapSizeZ < 1000 then
+            return -1
         else
-            --LOG('* AI-RNG: Expansion return is 100')
+            spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
+        end
+        LOG('* AI-RNG: Distance is ', distance)
+        LOG('* AI-RNG: Position is ', repr(location))
+        if not distance or distance > 1000 and spamBaseCheck then
+            LOG('* AI-RNG: Start Area Spam Expansion return is 10')
+            return 10
+        elseif distance > 500 and spamBaseCheck then
+            LOG('* AI-RNG: Start Area Spam Expansion return is 25')
+            return 25
+        elseif distance > 250 and spamBaseCheck then
+            LOG('* AI-RNG: Start Area Spam Expansion return is 50')
+            return 50
+        elseif spamBaseCheck then
+            LOG('* AI-RNG: Start Area Spam Expansion return is 100')
             return 100
         end
         --LOG('* AI-RNG: Expansion return default 0')
