@@ -848,10 +848,10 @@ Platoon = Class(RNGAIPlatoon) {
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
                 local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
                 IssueClearCommands(GetPlatoonUnits(self))
+                local usedTransports = false
                 if path then
                     --LOG('* AI-RNG: * HuntAIPATH: Path found')
                     local position = GetPlatoonPosition(self)
-                    local usedTransports = false
                     if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
                     elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
@@ -1155,7 +1155,11 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('relativeTo is'..repr(relativeTo))
             relative = true
             local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
-            local reference = eng:CalculateWorldPositionFromRelative(tmpReference)
+            if tmpReference then
+                local reference = eng:CalculateWorldPositionFromRelative(tmpReference)
+            else
+                return
+            end
             --LOG('reference is '..repr(reference))
             --LOG('World Pos '..repr(tmpReference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
