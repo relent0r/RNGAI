@@ -133,7 +133,6 @@ BuilderGroup {
         Priority = 800,
         BuilderType = 'Air',
         BuilderConditions = { 
-            { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
@@ -159,7 +158,6 @@ BuilderGroup {
         Priority = 700,
         BuilderType = 'Air',
         BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
@@ -172,11 +170,23 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Torp Bomber',
+        PlatoonTemplate = 'T2AirTorpedoBomber',
+        Priority = 750,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconStorageRatio', { 0.10, 0.80 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.MOBILE * categories.AIR * categories.ANTINAVY }},
+            { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
+            { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.AIR * categories.ANTINAVY, '<',categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.GROUNDATTACK - categories.BOMBER } },
+            { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
+        },
+        BuilderType = 'Air',
     },
 }
 
@@ -202,7 +212,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
-            { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
         },
@@ -210,7 +219,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Air Response Formers T1',
+    BuilderGroupName = 'RNGAI Air Response Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI Air Intercept Response BaseRestrictedArea',
@@ -249,6 +258,24 @@ BuilderGroup {
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.daa0206 } },
         },
     },
+    Builder {
+        BuilderName = 'RNGAI Air AntiNavy BaseEnemyArea',
+        PlatoonTemplate = 'RNGAI TorpBomberAttack',
+        Priority = 960,
+        InstanceCount = 4,
+        BuilderType = 'Any',
+        BuilderData = {
+            SearchRadius = BaseMilitaryArea,
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+            },
+        },
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.NAVAL * categories.MOBILE }},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL } },
+        },
+    },
 }
 
 BuilderGroup {
@@ -284,13 +311,14 @@ BuilderGroup {
         BuilderData = {
             NeverGuardEngineers = true,
             PrioritizedCategories = {
+                'EXPERIMENTAL AIR',
                 'BOMBER AIR',
                 'GUNSHIP AIR',
                 'ANTIAIR AIR',
             },
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.GROUNDATTACK } },
          },
     },
     Builder {
@@ -549,7 +577,6 @@ BuilderGroup {
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
-            { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
         },
         BuilderType = 'Air',
@@ -564,7 +591,6 @@ BuilderGroup {
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'TRANSPORTFOCUS' } },
-            { IBC, 'BrainNotLowPowerMode', {} },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
         },
         BuilderType = 'Air',

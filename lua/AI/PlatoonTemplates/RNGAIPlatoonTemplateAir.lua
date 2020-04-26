@@ -86,6 +86,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI TorpBomberAttack',
+    Plan = 'AirHuntAI',
+    GlobalSquads = {
+        { categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL, 1, 50, 'Attack', 'GrowthFormation' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'T2AirMissile',
     FactionSquads = {
         Aeon = {

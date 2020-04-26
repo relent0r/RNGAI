@@ -50,7 +50,6 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.2, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
-            { IBC, 'BrainNotLowPowerMode', {} },
             { MIBC, 'GreaterThanGameTime', { 600 } },
         },
         BuilderType = 'Any',
@@ -64,7 +63,6 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.2, 0.90}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
-            { IBC, 'BrainNotLowPowerMode', {} },
         },
         BuilderType = 'Any',
     },
@@ -78,7 +76,6 @@ BuilderGroup {
         PlatoonTemplate = 'T1RadarUpgrade',
         Priority = 600,
         BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
             { MIBC, 'GreaterThanGameTime', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.RADAR }},

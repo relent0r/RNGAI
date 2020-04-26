@@ -13,7 +13,7 @@ BuilderGroup {
         InstanceCount = 1,
         Priority = 100,
         BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { MIBC, 'GreaterThanGameTime', { 1200 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
@@ -29,7 +29,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 300 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconStorageCurrent', { 200, 0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
@@ -44,7 +44,7 @@ BuilderGroup {
         Priority = 300,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 480 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
@@ -58,7 +58,7 @@ BuilderGroup {
         Priority = 300,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 120 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconStorageCurrent', { 500, 0 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },
@@ -73,7 +73,7 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 660 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
@@ -87,7 +87,7 @@ BuilderGroup {
         InstanceCount = 1,
         Priority = 200,
         BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
@@ -104,7 +104,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             {UCBC, 'HaveUnitRatio', {0.80, categories.MASSEXTRACTION * categories.TECH1, '<=', categories.MASSEXTRACTION * categories.TECH2}},
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
@@ -120,7 +120,7 @@ BuilderGroup {
         InstanceCount = 1,
         Priority = 300,
         BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconStorageCurrent', { 1500, 0 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH3 } },
@@ -139,7 +139,7 @@ BuilderGroup {
         InstanceCount = 1,
         Priority = 200,
         BuilderConditions = {
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { MIBC, 'GreaterThanGameTime', { 800 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
@@ -155,7 +155,7 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTime', { 120 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
+
             { EBC, 'GreaterThanEconStorageCurrent', { 1000, 0 } },
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },

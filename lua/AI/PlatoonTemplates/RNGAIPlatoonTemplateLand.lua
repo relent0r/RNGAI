@@ -376,6 +376,22 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
     }
 }
 
+PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
+    FactionSquads = {
+        UEF = {
+            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Heavy Tank
+            
+         },
+        Aeon = {
+            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            
+        },
+        Cybran = {
+            { 'url0203', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+        },
+    }
+}
+
 PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     FactionSquads = {
         UEF = {

@@ -57,6 +57,11 @@ BaseBuilderTemplate {
 
         -- Land Unit Builders --
         'RNGAI TankLandBuilder Large',
+        'RNGAI Land AA 2',
+        'RNGAI T2 TankLandBuilder Large',
+        'RNGAI T3 AttackLandBuilder Large',
+
+
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
         'RNGAI Land Mass Raid',
@@ -71,7 +76,7 @@ BaseBuilderTemplate {
         'RNGAI Air Builder T3',
 
         -- Air Unit Formers --
-        'RNGAI Air Response Formers T1',
+        'RNGAI Air Response Formers',
         'RNGAI Air Platoon Builder',
 
         -- Land Factory Builders --
@@ -117,7 +122,7 @@ BaseBuilderTemplate {
             SCU = 6,
         },
         FactoryCount = {
-            Land = 6,
+            Land = 12,
             Air = 6,
             Sea = 6,
             Gate = 1,

@@ -18,7 +18,6 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
-            { IBC, 'BrainNotLowPowerMode', {} },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -46,7 +45,6 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -74,7 +72,6 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
-            { IBC, 'BrainNotLowPowerMode', {} },
         },
         BuilderType = 'Any',
         BuilderData = {
