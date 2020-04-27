@@ -285,10 +285,10 @@ end
 function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        LOG('UnmarkedExpansionNeedsEngineer is True')
+        --LOG('UnmarkedExpansionNeedsEngineer is True')
         return true
     end
-    LOG('UnmarkedExpansionNeedsEngineer is False')
+    --LOG('UnmarkedExpansionNeedsEngineer is False')
     return false
 end
 

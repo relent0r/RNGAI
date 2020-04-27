@@ -44,10 +44,24 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Initial Queue',
-        PlatoonTemplate = 'RNGAIT1InitialAttackBuild',
+        BuilderName = 'RNGAI Factory Initial Queue 10km',
+        PlatoonTemplate = 'RNGAIT1InitialAttackBuild10k',
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
+            { MIBC, 'MapSizeLessThan', { 1000 } },
+            { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Initial Queue 5km',
+        PlatoonTemplate = 'RNGAIT1InitialAttackBuild5k',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'MapSizeLessThan', { 500 } },
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
@@ -139,6 +153,19 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Initial Queue 20km',
+        PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'MapSizeLessThan', { 2000 } },
+            { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -848,6 +875,44 @@ BuilderGroup {
     },
 }
 
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Island Large FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
+    Builder {
+        BuilderName = 'RNGAI Sera Arty Island',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        Priority = 550,                                                          -- Priority. 1000 is normal.
+        PlatoonAddBehaviors = { 'TacticalResponse' },
+        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 4 }},
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            AggressiveMove = true,
+            },
+    },
+    Builder {
+        BuilderName = 'RNGAI Aeon Tanks Island',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        Priority = 550,                                                          -- Priority. 1000 is normal.
+        PlatoonAddBehaviors = { 'TacticalResponse' },
+        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 }},
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            AggressiveMove = true,
+            },
+    },
+}
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land Mass Raid',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.

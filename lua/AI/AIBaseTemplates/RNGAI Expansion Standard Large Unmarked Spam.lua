@@ -83,8 +83,8 @@ BaseBuilderTemplate {
         else
             spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
         end
-        LOG('* AI-RNG: Distance is ', distance)
-        LOG('* AI-RNG: Position is ', repr(location))
+        --LOG('* AI-RNG: Distance is ', distance)
+        --LOG('* AI-RNG: Position is ', repr(location))
         if not distance or distance > 1000 and spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 10')
             return 10

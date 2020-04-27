@@ -815,15 +815,16 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Engineer',
-        PlatoonTemplate = 'CommanderAssist',
+        PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 700,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6}},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
-                AssisteeType = 'Engineer',
+                AssisteeType = categories.ENGINEER,
                 AssistRange = 30,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
@@ -833,7 +834,7 @@ BuilderGroup {
     },--[[
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
-        PlatoonTemplate = 'CommanderAssist',
+        PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 700,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8}},
@@ -851,7 +852,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Structure',
-        PlatoonTemplate = 'CommanderAssist',
+        PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 700,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6} },

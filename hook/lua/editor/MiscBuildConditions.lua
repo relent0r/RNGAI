@@ -55,7 +55,6 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     elseif CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'WATER' then
         return false == bool
     end
-
     -- path wit AI markers from our base to the enemy base
     --LOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
@@ -182,5 +181,26 @@ function TMLEnemyStartRangeCheck(aiBrain)
         end
     end
     --LOG('TMLEnemyStartRangeCheck is false')
+    return false
+end
+
+function MapSizeLessThan(aiBrain, size)
+    local mapSizeX, mapSizeZ = GetMapSize()
+    if mapSizeX < size and mapSizeZ < size then
+        if size == 2000 and mapSizeX > 1000 and mapSizeZ > 1000 then
+            --LOG('20 KM Map Check true')
+            return true
+        elseif size == 1000 and mapSizeX > 500 and mapSizeZ > 500 then
+            --LOG('10 KM Map Check true')
+            return true
+        elseif size == 500 and mapSizeX > 200 and mapSizeZ > 200 then
+            --LOG('5 KM Map Check true')
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
     return false
 end

@@ -118,7 +118,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if poolPlatoon then
             poolPlatoon:TurnOffPoolAI()
         end
-
+        --local mapSizeX, mapSizeZ = GetMapSize()
+        --LOG('Map X size is : '..mapSizeX..'Map Z size is : '..mapSizeZ)
         -- Stores handles to all builders for quick iteration and updates to all
         self.BuilderHandles = {}
 

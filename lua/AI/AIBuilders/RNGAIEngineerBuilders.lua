@@ -402,7 +402,7 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
-                AssisteeType = categories.ENGINEER,
+                AssisteeType = categories.STRUCTURE,
                 BeingBuiltCategories = {'STRUCTURE FACTORY, STRUCTURE'},
                 Time = 20,
             },
@@ -469,7 +469,7 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
-                AssisteeType = categories.ENGINEER,
+                AssisteeType = categories.STRUCTURE,
                 BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
                 Time = 30,
             },
@@ -478,9 +478,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T12 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T12EngineerAssistRNG',
-        PlatoonAIPlan = 'ManagerEngineerFindUnfinished',
         Priority = 550,
-        InstanceCount = 12,
+        InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
@@ -491,7 +490,7 @@ BuilderGroup {
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
-                AssisteeType = categories.ENGINEER,
+                AssisteeType = categories.STRUCTURE,
                 BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
                 Time = 60,
             },
@@ -501,7 +500,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T3SACUEngineerAssistRNG',
         Priority = 550,
-        InstanceCount = 12,
+        InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},

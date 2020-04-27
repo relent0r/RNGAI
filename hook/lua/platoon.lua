@@ -1156,7 +1156,7 @@ Platoon = Class(RNGAIPlatoon) {
             relative = true
             local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
             if tmpReference then
-                local reference = eng:CalculateWorldPositionFromRelative(tmpReference)
+                reference = eng:CalculateWorldPositionFromRelative(tmpReference)
             else
                 return
             end
@@ -1589,7 +1589,8 @@ Platoon = Class(RNGAIPlatoon) {
                         massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
                         --LOG('Mass Marker Returned is'..repr(massMarker))
                         if massMarker[1] and VDist3( massMarker, engpos ) < distance then
-                            eng.PlatoonHandle:EngineerBuildAI()
+                            eng.PlatoonHandle:EngineerBuildAIRNG()
+                            --eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
                             return
                         end
                     end
@@ -3071,7 +3072,7 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitSeconds(9)
                 end
             end
-            LOG('Assistee Not found for AssisteeType'..ToString(assistData.AssisteeType)..' with BeingBuiltCategories'..repr(assistData.BeingBuiltCategories))
+            --LOG('Assistee Not found for AssisteeType'..ToString(assistData.AssisteeType)..' with BeingBuiltCategories'..repr(assistData.BeingBuiltCategories))
             WaitSeconds(1)
         end
     end,

@@ -348,7 +348,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
-        LOG('CDR further than distSqAway')
+        --LOG('CDR further than distSqAway')
         local plat = aiBrain:MakePlatoon('', '')
         
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
@@ -567,7 +567,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if unitTech == 'TECH1' then
         ecoTimeOut = 480
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 600
+        ecoTimeOut = 720
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
