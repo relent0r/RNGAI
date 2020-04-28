@@ -97,7 +97,7 @@ function DamagedStructuresInAreaRNG(aiBrain, locationtype)
     if not engineerManager then
         return false
     end
-    local Structures = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.STRUCTURE - (categories.TECH1 - categories.FACTORY), engineerManager:GetLocationCoords(), engineerManager.Radius)
+    local Structures = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.STRUCTURE - (categories.TECH1 - categories.FACTORY), engineerManager.Location, engineerManager.Radius)
     for k,v in Structures do
         if not v.Dead and v:GetHealthPercent() < .8 then
         --LOG('*AI DEBUG: DamagedStructuresInArea return true')

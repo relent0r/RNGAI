@@ -138,7 +138,7 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
     if closeToBuilder then
         relativeTo = builder:GetPosition()
     elseif builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
-        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
+        relativeTo = builder.BuilderManagerData.EngineerManager.Location
     else
         local startPosX, startPosZ = aiBrain:GetArmyStartPos()
         relativeTo = {startPosX, 0, startPosZ}
@@ -171,7 +171,7 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
     -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
     if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
         --LOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
-        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
+        relativeTo = builder.BuilderManagerData.EngineerManager.Location
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
             location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then

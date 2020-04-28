@@ -16,7 +16,7 @@ function LandAttackCondition(aiBrain, locationType, targetNumber)
     local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
 
-    local position = engineerManager:GetLocationCoords()
+    local position = engineerManager.Location
     local radius = engineerManager:GetLocationRadius()
     
     local poolThreat = pool:GetPlatoonThreat( 'Surface', categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, radius )

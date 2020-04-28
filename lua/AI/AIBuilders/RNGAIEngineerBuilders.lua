@@ -237,6 +237,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
         },
         BuilderType = 'Any',
@@ -259,6 +260,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
@@ -282,6 +284,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
@@ -305,6 +308,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
@@ -327,6 +331,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH2 + categories.TECH2) - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}}, 
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR} },
         },
         BuilderData = {
@@ -357,6 +362,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.ALLUNITS }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
         },
         BuilderType = 'Any',
@@ -377,6 +383,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
         },
         BuilderType = 'Any',
@@ -396,6 +403,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
+                { UCBC, 'GreaterThanMassTrend', { 0.0 } },
                 { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 1.0 }},
             },
         BuilderData = {
@@ -417,6 +425,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
+                { UCBC, 'GreaterThanMassTrend', { 0.0 } },
                 { EBC, 'LessThanEnergyTrendRNG', { 50.0 } },
             },
         BuilderData = {
@@ -439,6 +448,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
         },
         BuilderType = 'Any',
@@ -462,6 +472,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 } },
         },
         BuilderType = 'Any',
@@ -483,6 +494,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 } },
         },
         BuilderType = 'Any',
@@ -504,6 +516,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 } },
         },
         BuilderType = 'Any',
@@ -525,6 +538,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.SUBCOMMANDER - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
         },
         BuilderType = 'Any',
@@ -547,6 +561,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.90}},
         },
         BuilderType = 'Any',

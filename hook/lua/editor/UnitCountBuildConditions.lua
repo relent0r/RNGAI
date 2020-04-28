@@ -141,7 +141,7 @@ function CanBuildOnHydroLessThanDistance(aiBrain, locationType, distance, threat
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
-    local position = engineerManager:GetLocationCoords()
+    local position = engineerManager.Location
 
     local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
     if markerTable[1] and VDist3(markerTable[1], position) < distance then

@@ -565,19 +565,24 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local initial_delay = 0
     local ecoStartTime = GetGameTimeSeconds()
     if unitTech == 'TECH1' then
-        ecoTimeOut = 480
+        ecoTimeOut = 420
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 720
+        ecoTimeOut = 660
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
 		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 1000 and unit:GetFractionComplete() == 1 then
-			initial_delay = initial_delay + 10
+            initial_delay = initial_delay + 10
+            unit.InitialDelay = true
+            if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
+                initial_delay = upgradeSpec.InitialDelay
+            end
         end
         --LOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
 		WaitTicks(100)
     end
-    
+    unit.InitialDelay = false
+
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
@@ -589,10 +594,10 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
         if unitTech == 'TECH1' and bypasseco then
-            WaitTicks(Random(10,40))
+            WaitTicks(Random(1,50))
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
         elseif unitTech == 'TECH2' and bypasseco then
-            WaitTicks(Random(10,40))
+            WaitTicks(Random(1,50))
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
         end
         if upgradeNumLimit >= extractorUpgradeLimit then
@@ -834,7 +839,7 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         -- Check for the nearest distance from mainbase
         UnitPos = v:GetPosition()
         DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-        if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
+        if (not LowestDistanceToBase and v.InitialDelay == false) or (DistanceToBase < LowestDistanceToBase and v.InitialDelay == false) then
             -- see if we can find a upgrade
             LowestDistanceToBase = DistanceToBase
             lowestUnitPos = UnitPos

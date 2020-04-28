@@ -10,7 +10,7 @@ function CanBuildOnMassLessThanDistance(aiBrain, locationType, distance, threatM
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
-    local position = engineerManager:GetLocationCoords()
+    local position = engineerManager.Location
     
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
     positionThreat = aiBrain:GetThreatAtPosition( position, threatRings, true, threatType or 'Overall' )

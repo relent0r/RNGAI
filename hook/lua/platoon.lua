@@ -1340,7 +1340,7 @@ Platoon = Class(RNGAIPlatoon) {
             buildFunction = AIBuildStructures.AIExecuteBuildStructure
         elseif cons.AvoidCategory then
             relative = false
-            local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager:GetLocationCoords()
+            local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
             local cat = cons.AdjacencyCategory
             -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
             if type(cat) == 'string' then
@@ -1362,7 +1362,7 @@ Platoon = Class(RNGAIPlatoon) {
             table.insert(baseTmplList, baseTmpl)
         elseif cons.AdjacencyCategory then
             relative = false
-            local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager:GetLocationCoords()
+            local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
             local cat = cons.AdjacencyCategory
             -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
             if type(cat) == 'string' then
@@ -1515,36 +1515,23 @@ Platoon = Class(RNGAIPlatoon) {
             table.remove(eng.EngineerBuildQueue, 1)
         end
 
-        function BuildToNormalLocation(location)
-            return {location[1], 0, location[2]}
-        end
-
-        function NormalToBuildLocation(location)
-            return {location[1], location[3], 0}
-        end
-
         eng.ProcessBuildDone = false
         IssueClearCommands({eng})
         local commandDone = false
 
         while not eng.Dead and not commandDone and table.getn(eng.EngineerBuildQueue) > 0  do
+
             local whatToBuild = eng.EngineerBuildQueue[1][1]
-            local buildLocation = BuildToNormalLocation(eng.EngineerBuildQueue[1][2])
+            local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
             local buildRelative = eng.EngineerBuildQueue[1][3]
+            if not eng.NotBuildingThread then
+                eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuilding)
+            end
             -- see if we can move there first
-            if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, whatToBuild) then
+            if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
                 if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
-                end
-
-                if not eng.NotBuildingThread then
-                    eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
-                end
-
-                local engpos = eng:GetPosition()
-                while not eng.Dead and eng:IsUnitState("Moving") and VDist2(engpos[1], engpos[3], buildLocation[1], buildLocation[3]) > 15 do
-                    WaitTicks(20)
                 end
 
                 -- check to see if we need to reclaim or capture...
@@ -1552,16 +1539,7 @@ Platoon = Class(RNGAIPlatoon) {
                     -- check to see if we can repair
                     if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
                         -- otherwise, go ahead and build the next structure there
-                        --LOG('BuildStructure Triggered')
-                        --[[
-                        if EntityCategoryContains(categories.MASSEXTRACTION, whatToBuild) then
-                            if not aiBrain:CanBuildStructureAt(whatToBuild, buildLocation) then
-                                --LOG('Cannot Build structure at location :'..repr(buildLocation))
-                            else
-                                --LOG('Can Build Structure at Loation :'..repr(buildLocation))
-                            end
-                        end]]
-                        aiBrain:BuildStructure(eng, whatToBuild, NormalToBuildLocation(buildLocation), buildRelative)
+                        aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                         if not eng.NotBuildingThread then
                             eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                         end
@@ -2537,7 +2515,7 @@ Platoon = Class(RNGAIPlatoon) {
 
             for locName, locData in aiBrain.BuilderManagers do
                 if not locData.DistressCall then
-                    local position = locData.EngineerManager:GetLocationCoords()
+                    local position = locData.EngineerManager.Location
                     local radius = locData.EngineerManager.Radius
                     local distressRange = locData.BaseSettings.DistressRange or aiBrain.BaseMonitor.PoolDistressRange
                     local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(position, distressRange, aiBrain.BaseMonitor.PoolDistressThreshold)
@@ -3065,7 +3043,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         elseif not assistee then
             if eng.BuilderManagerData then
-                local emLoc = eng.BuilderManagerData.EngineerManager:GetLocationCoords()
+                local emLoc = eng.BuilderManagerData.EngineerManager.Location
                 local dist = assistData.AssistRange or 80
                 if VDist3(eng:GetPosition(), emLoc) > dist then
                     self:MoveToLocation(emLoc, false)
