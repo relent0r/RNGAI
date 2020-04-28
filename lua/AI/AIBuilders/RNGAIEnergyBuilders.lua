@@ -68,6 +68,32 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Power MassRatio',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 700,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'EnergyToMassRatioIncome', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
+            { EBC, 'GreaterThanEconIncome',  { 0.6, 0.0}}, -- Absolut Base income
+            { UCBC, 'HaveUnitRatioVersusCap', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
+        },
+        InstanceCount = 1,
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * (categories.LAND + categories.AIR),
+                AdjacencyDistance = 50,
+                BuildClose = true,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T1EnergyProduction',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Power Engineer 1st',
         PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 1000,

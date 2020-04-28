@@ -565,9 +565,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local initial_delay = 0
     local ecoStartTime = GetGameTimeSeconds()
     if unitTech == 'TECH1' then
-        ecoTimeOut = 420
+        ecoTimeOut = 480
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 660
+        ecoTimeOut = 720
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
