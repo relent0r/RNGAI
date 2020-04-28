@@ -25,7 +25,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeMode = 'Normal'
             self.UpgradeIssued = 0
 		    self.UpgradeIssuedLimit = 2
-            self.UpgradeIssuedPeriod = 225
+            self.UpgradeIssuedPeriod = 160
 
             -- ACU Support Data
             self.ACUSupport = {}

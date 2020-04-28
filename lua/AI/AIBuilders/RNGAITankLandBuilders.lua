@@ -640,7 +640,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack Early',
         PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
         Priority = 700,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {     
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
@@ -667,7 +667,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 5 minutes
@@ -685,7 +685,7 @@ BuilderGroup {
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             UseFormation = 'None',
@@ -733,7 +733,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE}},
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
@@ -845,7 +845,7 @@ BuilderGroup {
         InstanceCount = 20,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 6, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.LAND - categories.ENGINEER - categories.EXPERIMENTAL } },
             { UCBC, 'UnitCapCheckGreater', { .95 } },
         },
         BuilderData = {
@@ -869,7 +869,7 @@ BuilderGroup {
             UseFormation = 'AttackFormation',
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER - categories.EXPERIMENTAL } },
             --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },

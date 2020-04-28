@@ -360,7 +360,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.ALLUNITS }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.ALLUNITS }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
@@ -447,7 +447,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
         },
@@ -471,7 +471,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 } },
         },
@@ -493,7 +493,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 } },
         },
@@ -515,7 +515,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 } },
         },
@@ -560,7 +560,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.90}},
         },

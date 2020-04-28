@@ -658,15 +658,17 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 						if not unit.Dead then
-							-- if upgrade issued and not completely full --
+							
+
+                            upgradeIssued = true
+                            IssueUpgrade({unit}, upgradeID)
+                            
+                            -- if upgrade issued and not completely full --
                             if massStorageRatio < 1 or energyStorageRatio < 1 then
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
                             else
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod * .5)     -- otherwise halve the delay period
                             end
-
-                            upgradeIssued = true
-                            IssueUpgrade({unit}, upgradeID)
 
                             if ScenarioInfo.StructureUpgradeDialog then
                                 --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(__blueprints[upgradeID].Description).." at "..GetGameTimeSeconds() )

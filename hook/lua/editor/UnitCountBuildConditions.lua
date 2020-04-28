@@ -534,6 +534,13 @@ function NavalBaseWithLeastUnitsRNG(aiBrain, radius, locationType, unitCategory)
     return locationType == lowloc
 end
 
+function HaveUnitRatioVersusCap(aiBrain, ratio, compareType, categoryOwn)
+    local numOwnUnits = aiBrain:GetCurrentUnits(categoryOwn)
+    local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
+    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..cap..' ) -- ['..ratio..'] -- '..repr(DEBUG)..' :: '..(numOwnUnits / cap)..' '..compareType..' '..cap..' return '..repr(CompareBody(numOwnUnits / cap, ratio, compareType)))
+    return CompareBody(numOwnUnits / cap, ratio, compareType)
+end
+
 function HaveUnitRatioVersusEnemy(aiBrain, ratio, categoryOwn, compareType, categoryEnemy)
     -- in case we don't have omni view, return always true. We cant count units without omni
     if not aiBrain.CheatEnabled or ScenarioInfo.Options.OmniCheat ~= "on" then

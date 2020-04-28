@@ -32,7 +32,6 @@ end
 
 -- For AI Patch V8 (Patched)
 function CommanderWarpDelay(cdrUnit, delay, ArmyBrain)
-    LOG('Checking if human')
     if ArmyBrain.BrainType == 'Human' then
         cdrUnit:SetBlockCommandQueue(true)
     end
