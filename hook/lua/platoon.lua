@@ -2053,7 +2053,7 @@ Platoon = Class(RNGAIPlatoon) {
 
                 -- we have nothing to do, so find the nearest base and disband
                 if not self.PlatoonData.NeverMerge then
-                    return self:ReturnToBaseAI()
+                    return self:ReturnToBaseAIRNG()
                 end
                 WaitTicks(50)
             else

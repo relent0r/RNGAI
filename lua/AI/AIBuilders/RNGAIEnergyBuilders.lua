@@ -74,6 +74,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'EnergyToMassRatioIncome', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconIncome',  { 0.6, 0.0}}, -- Absolut Base income
             { UCBC, 'HaveUnitRatioVersusCap', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
@@ -362,6 +363,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
@@ -459,7 +461,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTime', { 600 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 1.0, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, 'ENERGYSTORAGE' }},
         },
         BuilderType = 'Any',

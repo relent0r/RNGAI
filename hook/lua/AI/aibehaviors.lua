@@ -639,8 +639,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
-                or ((massStorageRatio > .50 and energyStorageRatio > .70))
-                or (massStorage > (massNeeded * .6) and energyStorage > (energyNeeded * .4 ) ) or bypasseco then
+                or ((massStorageRatio > .60 and energyStorageRatio > .70))
+                or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .4 ) ) or bypasseco then
                 --LOG('* AI-RNG: low_trigger_good = true')
             else
                 continue
@@ -653,12 +653,11 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             end]]
 
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
-				or ( massStorage >= (massNeeded * .6) and energyStorage > (energyNeeded * .4) ) or bypasseco then
+				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) ) or bypasseco then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
-				if (massStorage > ( massNeeded * .13 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .13 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
+				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
 						if not unit.Dead then
-							
 
                             upgradeIssued = true
                             IssueUpgrade({unit}, upgradeID)
@@ -754,6 +753,7 @@ function StructureUpgradeDelay( aiBrain, delay )
 
     WaitTicks( delay )
     aiBrain.UpgradeIssued = aiBrain.UpgradeIssued - 1
+    --LOG('Upgrade Issue delay over')
     
     if ScenarioInfo.StructureUpgradeDialog then
         --LOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade counter down to "..aiBrain.UpgradeIssued)
