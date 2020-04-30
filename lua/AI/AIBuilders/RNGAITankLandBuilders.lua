@@ -75,7 +75,7 @@ BuilderGroup {
         Priority = 750, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -724,39 +724,6 @@ BuilderGroup {
             UseFormation = 'None',
             },
     }, 
-    Builder {
-        BuilderName = 'RNGAI Ranged Attack',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
-        PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 650,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSeconds', { 960 } }, -- don't build after 16 minutes
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE}},
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchCategory = (categories.STRUCTURE + categories.MOBILE ) * categories.LAND - categories.SCOUT - categories.WALL,         -- Only find targets matching these categories.
-            PrioritizedCategories = {                                           -- Attack these targets.
-                'MOBILE LAND',
-                'STRUCTURE DEFENSE',
-                'MASSEXTRACTION',
-                'STRUCTURE ANTIAIR',
-                'STRUCTURE',
-                'ENERGYPRODUCTION',
-                'COMMAND',
-                'MASSFABRICATION',
-                'SHIELD',
-                'ALLUNITS',
-            },
-            UseFormation = 'GrowthFormation',
-        },
-    },
     Builder {
         BuilderName = 'RNGAI Ranged Defense Attack BaseDMZArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 

@@ -180,7 +180,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         cdr.Combat = true
         --LOG('Create Attack platoon')
-        local plat = aiBrain:MakePlatoon('CDRAttack', 'CDRFakeRNG')
+        local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
         --LOG('Set Platoon BuilderName')
         plat.BuilderName = 'CDR Combat'
         --LOG('Assign ACU to attack platoon')

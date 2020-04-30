@@ -1238,7 +1238,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         table.insert(unitTypePaused, priorityUnit)
                     end
                     local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
-                    LOG('Number of mass extractors'..table.getn(Extractors))
+                    --LOG('Number of mass extractors'..table.getn(Extractors))
                     self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause')
                 elseif priorityUnit == 'NUKE' then
                     local unitAlreadySet = false

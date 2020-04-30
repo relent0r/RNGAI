@@ -12,24 +12,6 @@ local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 RNGAIPlatoon = Platoon
 Platoon = Class(RNGAIPlatoon) {
 
-    OnCreate = function(self, plan)
-        local aiBrain = self:GetBrain()
-        if not aiBrain.RNG then
-            return RNGAIPlatoon.OnCreate(self, plan)
-        end
-        self.Trash = TrashBag()
-        if self[plan] then
-            self.AIThread = self:ForkThread(self[plan])
-        end
-        self.PlatoonData = {}
-        self.EventCallbacks = {
-            OnDestroyed = {},
-        }
-        self.PartOfAttackForce = false
-        self.CreationTime = GetGameTimeSeconds()
-        --self:UniquelyNamePlatoon('Platoon-'..Random(000000,999999))
-    end,
-
     AirHuntAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
@@ -113,13 +95,6 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
     
-    CDRFakeRNG = function(self)
-        local aiBrain = self:GetBrain()
-        while aiBrain:PlatoonExists(self) do
-            WaitTicks(30)
-        end
-    end,
-
     MercyAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
