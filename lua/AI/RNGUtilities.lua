@@ -180,6 +180,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --LOG('* AI-RNG: reclaimLopp = 5 returning')
             return
         end
+        WaitTicks(5)
     end
 end
 
@@ -1035,6 +1036,7 @@ function GeneratePointsAroundPosition(position,radius,num)
         zzz = position[3] + radius * math.sin (nnn/num* (2 * math.pi))
         table.insert(coords, {xxx, zzz})
         nnn = nnn + 1
+        WaitTicks(1)
     end
     return coords
 end
@@ -1084,6 +1086,7 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
         zzz = enemyPosition[3] + radius * math.sin (nnn/num1* (arcangle)+angoffset-arcangle/2)
         table.insert(coords, {xxx,0,zzz})
         nnn = nnn + 1
+        WaitTicks(1)
     end
     --LOG('Resulting Table :'..repr(coords))
     return coords

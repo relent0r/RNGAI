@@ -385,7 +385,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.25}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.7 }},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY LAND TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -525,7 +525,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { MIBC, 'GreaterThanGameTime', { 120 } },
+            { MIBC, 'GreaterThanGameTime', { 140 } },
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},

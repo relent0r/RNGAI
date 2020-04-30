@@ -575,6 +575,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. 
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 6,                                                      -- Number of platoons that will be formed.
@@ -640,6 +641,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack Early',
         PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
         Priority = 700,
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -758,6 +760,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 10,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -788,7 +791,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Frequent Land Attack T1',
         PlatoonTemplate = 'RNGAI LandAttack Medium',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 500,
         InstanceCount = 12,
         BuilderType = 'Any',
@@ -887,6 +889,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     

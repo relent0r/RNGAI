@@ -692,11 +692,11 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('Target is ACU')
             end
             if target then
+                local threatAroundplatoon = 0
                 local targetPosition = target:GetPosition()
+                local platoonPos = GetPlatoonPosition(self)
                 if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
-                    local platoonPos = GetPlatoonPosition(self)
                     positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
-                    local threatAroundplatoon = 0
                     local bp
                     -- calculate my present land threat			
                     for _,v in positionUnits do
@@ -714,11 +714,20 @@ Platoon = Class(RNGAIPlatoon) {
                         continue
                     end
                 end
+                local enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
+                if threatAroundplatoon < enemyThreat then
+                    --LOG('Enemy Threat too high, calling for help first waiting')
+                    aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
+                    self.DistressCall = true
+                    WaitTicks(50)
+                end
+                if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
                 if self:GetSquadUnits('Scout') then
                     local guardedUnit = 1
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
+                        WaitTicks(1)
                     end
                     IssueClearCommands(self:GetSquadUnits('Scout'))
                     IssueGuard(self:GetSquadUnits('Scout'), attackUnits[guardedUnit])
@@ -727,6 +736,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local guardedUnit = 1
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
+                        WaitTicks(1)
                     end
                     IssueClearCommands(self:GetSquadUnits('Guard'))
                     IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
@@ -776,12 +786,12 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
             target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
             if target then
+                local threatAroundplatoon = 0
                 --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                 local targetPosition = target:GetPosition()
                 if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
                     local platoonPos = GetPlatoonPosition(self)
                     positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
-                    local threatAroundplatoon = 0
                     local bp
                     -- calculate my present land threat			
                     for _,v in positionUnits do
@@ -799,6 +809,16 @@ Platoon = Class(RNGAIPlatoon) {
                         continue
                     end
                 end
+                local enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
+                local platoonPos = GetPlatoonPosition(self)
+                if threatAroundplatoon < enemyThreat then
+                    --LOG('Enemy Threat too high, calling for help first waiting')
+                    aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
+                    self.DistressCall = true
+                    WaitTicks(50)
+                    continue
+                end
+                if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
                 local scoutUnits = self:GetSquadUnits('Scout')
                 local guardUnits = self:GetSquadUnits('Guard')
@@ -807,6 +827,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if attackUnits then
                         while attackUnits[guardedUnit].Dead do
                             guardedUnit = guardedUnit + 1
+                            WaitTicks(1)
                             if table.getn(self:GetSquadUnits('Attack')) == 0 then
                                 --LOG('Not more attack squad units..breaking guard')
                                 return self:ReturnToBaseAIRNG()
@@ -840,6 +861,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 if attackUnits then
                                     while attackUnits[guardedUnit].Dead do
                                         guardedUnit = guardedUnit + 1
+                                        WaitTicks(1)
                                         if table.getn(self:GetSquadUnits('Attack')) == 0 then
                                             --LOG('Not more attack squad units..breaking guard')
                                             return self:ReturnToBaseAIRNG()
@@ -1526,6 +1548,7 @@ Platoon = Class(RNGAIPlatoon) {
                 -- we can't move there, so remove it from our build queue
                 table.remove(eng.EngineerBuildQueue, 1)
             end
+            WaitTicks(1)
         end
         --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
         if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
@@ -1851,7 +1874,7 @@ Platoon = Class(RNGAIPlatoon) {
             -- we're there... wait here until we're done
             local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and aiBrain:PlatoonExists(self) do
-                WaitSeconds(Random(5,10))
+                WaitTicks(Random(50,100))
                 --LOG('Still enemy stuff around marker position')
                 numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
@@ -2035,6 +2058,7 @@ Platoon = Class(RNGAIPlatoon) {
                 -- wait a little longer if we're stuck so that we have a better chance to move
                 WaitSeconds(Random(5,11) + 2 * stuckCount)
             end
+            WaitTicks(1)
         end
     end,
 
@@ -2775,6 +2799,7 @@ Platoon = Class(RNGAIPlatoon) {
                         if attackUnits then
                             while attackUnits[guardedUnit].Dead do
                                 guardedUnit = guardedUnit + 1
+                                WaitTicks(1)
                                 if table.getn(self:GetSquadUnits('Attack')) == 0 then
                                     --LOG('Not more attack squad units..breaking guard')
                                     return self:ReturnToBaseAIRNG(true)
@@ -2808,6 +2833,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     if attackUnits then
                                         while attackUnits[guardedUnit].Dead do
                                             guardedUnit = guardedUnit + 1
+                                            WaitTicks(1)
                                             if table.getn(self:GetSquadUnits('Attack')) == 0 then
                                                 --LOG('Not more attack squad units..breaking guard')
                                                 return self:ReturnToBaseAIRNG()
@@ -2911,6 +2937,7 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('* AI-RNG: * SACUATTACKAIRNG: No target, waiting 5 seconds')
             WaitTicks(50)
             end
+            WaitTicks(1)
         end
     end,
 

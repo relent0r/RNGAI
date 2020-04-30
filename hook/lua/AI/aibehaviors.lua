@@ -885,6 +885,6 @@ function TacticalResponse(platoon)
                 end
             end
         end]]
-    WaitTicks(100)
+        WaitTicks(100)
     end
 end
