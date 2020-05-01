@@ -1413,7 +1413,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                             end
                         else
-                            --LOG('Executing buildFunction')
+                            LOG('Executing buildFunction')
                             buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                         end
                     else
@@ -1437,6 +1437,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
 
         if not eng:IsUnitState('Building') then
+            LOG('Return ProcessBuildCommandRNG')
             return self.ProcessBuildCommandRNG(eng, false)
         end
     end,
@@ -1486,12 +1487,8 @@ Platoon = Class(RNGAIPlatoon) {
         --DUNCAN - Trying to stop commander leaving projects
         if not eng or eng.Dead or not eng.PlatoonHandle or eng.GoingHome or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing") or eng:IsUnitState("Guarding") then
             if eng then eng.ProcessBuild = nil end
-            --LOG('*AI DEBUG: Commander skipping process build.')
+            LOG('*AI DEBUG: Commander skipping process build.')
             return
-        end
-
-        if eng.CDRHome then
-            --LOG('*AI DEBUG: Commander starting process build...')
         end
 
         local aiBrain = eng.PlatoonHandle:GetBrain()
@@ -1504,11 +1501,13 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if eng then eng.ProcessBuild = nil end
+            LOG('EngineerBuildQueue si 0?')
             return
         end
 
         -- it wasn't a failed build, so we just finished something
         if removeLastBuild then
+            LOG('removeLastBuild true')
             table.remove(eng.EngineerBuildQueue, 1)
         end
 
@@ -1525,27 +1524,36 @@ Platoon = Class(RNGAIPlatoon) {
                 eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuilding)
             end
             -- see if we can move there first
+            LOG('Check if we can move to location')
             if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
                 if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
+                    LOG('not Eng after EngineerMoveWithSafePathRNG')
                     return
                 end
 
                 -- check to see if we need to reclaim or capture...
+                LOG('Running Try Reclaim Capture')
                 if not RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation) then
                     -- check to see if we can repair
                     if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
                         -- otherwise, go ahead and build the next structure there
                         aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                         if not eng.NotBuildingThread then
+                            LOG('Watch for not building')
                             eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                         end
+                    else
+                        LOG('TryRepair False')
                     end
+                else
+                    LOG('TryReclaimCapture false')
                 end
                 --LOG('Build commandDone set true')
                 commandDone = true
             else
                 -- we can't move there, so remove it from our build queue
+                LOG('Engineer Cant get to location, removing build queue')
                 table.remove(eng.EngineerBuildQueue, 1)
             end
             WaitTicks(1)
@@ -1577,10 +1585,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         -- final check for if we should disband
         if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
-            --LOG('* AI-RNG: * Final Disband Check Engineer Build Queue is :'..table.getn(eng.EngineerBuildQueue))
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
-                --LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand bottom " .. eng.Sync.id)
-                --eng.PlatoonHandle:PlatoonDisband()
                 return eng.PlatoonHandle:PlatoonDisband()
             end
             if eng then eng.ProcessBuild = nil end
@@ -1611,31 +1616,13 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             end
-
-
-
-            --if eng.CDRHome then
-            --  --LOG('*AI DEBUG: Commander waiting for building.')
-            --  eng:PrintCommandQueue()
-            --end
-            --if eng.GoingHome then
-            --  --LOG('*AI DEBUG: Commander waiting for building: return home.')
-            --end
-            --if eng.UnitBeingBuiltBehavior then
-            --  --LOG('*AI DEBUG: Commander waiting for building: unit being built.')
-            --end
         end
-
-        --if not eng.CDRHome and not eng:IsIdleState() then --LOG('Error in idlestate...' .. eng.Sync.id) end
-        --if eng.CDRHome then
-        --  --LOG('*AI DEBUG: After Commander wait for building.')
-        --end
 
         eng.NotBuildingThread = nil
         if not eng.Dead and eng:IsIdleState() and table.getn(eng.EngineerBuildQueue) != 0 and eng.PlatoonHandle then
             eng.PlatoonHandle.SetupEngineerCallbacksRNG(eng)
             if not eng.ProcessBuild then
-                --LOG('Forking Process Build Command with table remove')
+                LOG('Forking Process Build Command with table remove')
                 eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommandRNG, true)
             end
         end

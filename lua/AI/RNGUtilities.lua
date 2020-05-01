@@ -377,6 +377,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     -- first try to find a path with markers. 
     local result, bestPos
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+    LOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
@@ -403,7 +404,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
         end
 
         -- Skip the last move... we want to return and do a build
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, unit.PlatoonHandle, destination, needTransports, true, false)
+        LOG('run SendPlatoonWithTransportsNoCheck')
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, needTransports, true, false)
+        LOG('finish SendPlatoonWithTransportsNoCheck')
 
         if bUsedTransports then
             return true

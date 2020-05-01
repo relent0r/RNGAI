@@ -265,7 +265,7 @@ BuilderGroup {
                     'T1LandFactory',
                 }
             },
-            NeedGuard = true,
+            NeedGuard = false,
         }
     },
     Builder {
@@ -327,7 +327,7 @@ BuilderGroup {
                     'T1LandFactory',
                 }
             },
-            NeedGuard = true,
+            NeedGuard = false,
         }
     },
     Builder {

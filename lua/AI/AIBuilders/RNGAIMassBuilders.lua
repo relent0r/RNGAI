@@ -313,7 +313,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 1000 Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 650,
+        Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
@@ -322,7 +322,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
-            NeedGuard = true,
+            NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 BuildStructures = {
