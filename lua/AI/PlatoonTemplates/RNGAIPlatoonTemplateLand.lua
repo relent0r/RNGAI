@@ -499,6 +499,9 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
         Cybran = {
             { 'url0203', 2, 4, 'Attack', 'none' },      -- Heavy Tank
         },
+        Seraphim = {
+            { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+        },
     }
 }
 

@@ -58,7 +58,7 @@ BuilderGroup {
         BuilderType = 'Sea',
     },
     Builder {
-        BuilderName = 'RNGAI Sea Frigate ratio',
+        BuilderName = 'RNGAI Sea Frigate',
         PlatoonTemplate = 'T1SeaFrigate',
         Priority = 150,
         BuilderConditions = {
@@ -110,17 +110,144 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Sea Builders T23',                               
+    BuildersType = 'FactoryBuilder',
+    Builder { 
+        BuilderName = 'RNGAI Destroyer Initial',
+        PlatoonTemplate = 'T2SeaDestroyer',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.DESTROYER } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI Destroyer Response',
+        PlatoonTemplate = 'T2SeaDestroyer',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.DESTROYER }}, -- radius, LocationType, unitCount, categoryEnemy
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+
+    Builder { 
+        BuilderName = 'RNGAI Cruiser Initial',
+        PlatoonTemplate = 'T2SeaCruiser',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.CRUISER } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI Cruiser Response',
+        PlatoonTemplate = 'T2SeaCruiser',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.AIR * (categories.ANTINAVY + categories.GROUNDATTACK) }}, -- radius, LocationType, unitCount, categoryEnemy
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+
+    Builder { 
+        BuilderName = 'RNGAI SubKiller Initial',
+        PlatoonTemplate = 'T2SubKiller',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.T2SUBMARINE } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI SubKiller Response',
+        PlatoonTemplate = 'T2SubKiller',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI ShieldBoat Initial',
+        PlatoonTemplate = 'T2ShieldBoat',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.SHIELD } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI CounterIntel Initial',
+        PlatoonTemplate = 'T2CounterIntelBoat',
+        Priority = 500,
+        BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.STEALTH } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI Sea T2 Queue',
+        PlatoonTemplate = 'RNGAIT2SeaAttackQueue',
+        Priority = 400,
+        BuilderConditions = {
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI Sea T3 Queue',
+        PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
+        Priority = 450,
+        BuilderConditions = {
+            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY NAVAL TECH3' }},
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLessRNG', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Sea Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T1',
-        PlatoonTemplate = 'SeaAttack',
+        PlatoonTemplate = 'RNGAI Sea Attack T1',
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 300,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
@@ -138,11 +265,36 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
-        
     },
     Builder {
-        BuilderName = 'RNGAI Sea Hunters T1',
-        PlatoonTemplate = 'RNGAI Sea Hunt T1',
+        BuilderName = 'RNGAI Frequent Sea Attack T23',
+        PlatoonTemplate = 'RNGAI Sea Attack T123',
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        Priority = 300,
+        InstanceCount = 20,
+        BuilderConditions = {
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'NAVAL', categories.MOBILE * (categories.TECH2 + categories.TECH3) * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER} },
+            --{ SeaAttackCondition, { 'LocationType', 14 } },
+        },
+        BuilderData = {
+            UseFormation = 'AttackFormation',
+            ThreatWeights = {
+                IgnoreStrongerTargetsRatio = 100.0,
+                PrimaryThreatTargetType = 'Naval',
+                SecondaryThreatTargetType = 'Economy',
+                SecondaryThreatWeight = 1,
+                WeakAttackThreatWeight = 1,
+                VeryNearThreatWeight = 10,
+                NearThreatWeight = 5,
+                MidThreatWeight = 1,
+                FarThreatWeight = 1,
+            },
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Sea Hunters',
+        PlatoonTemplate = 'RNGAI Sea Hunt',
         --PlatoonAddPlans = {'DistressResponseAI'},
         Priority = 300,
         InstanceCount = 20,
@@ -151,8 +303,8 @@ BuilderGroup {
         UseFormation = 'GrowthFormation',
         },
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'MOBILE TECH2 NAVAL, MOBILE TECH3 NAVAL' } },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', categories.MOBILE * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER} },
+            -- Change to NUKESUB once the Cybran BP is updated
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.SUBMERSIBLE + categories.xes0102) - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
     },

@@ -56,17 +56,6 @@ function LessThanEnergyTrendRNG(aiBrain, eTrend)
         return false
     end
 end
-function GreaterThanEconIncome(aiBrain, MassIncome, EnergyIncome)
-    -- If a paragon is present, return true
-    if aiBrain.HasParagon then
-        return true
-    end
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    if (econ.MassIncome >= MassIncome and econ.EnergyIncome >= EnergyIncome) then
-        return true
-    end
-    return false
-end
 
 function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEfficiency)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
@@ -108,19 +97,4 @@ function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
     end
     --LOG('Mass income to factory is true')
     return true
-end
-
-function GreaterThanEconIncome(aiBrain, MassIncome, EnergyIncome)
-    if HaveGreaterThanUnitsWithCategory(aiBrain, 0, 'ENERGYPRODUCTION EXPERIMENTAL STRUCTURE') then
-        --LOG('*AI DEBUG: Found Paragon')
-        return true
-    end
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    --LOG('Current Econ Numbers, Current Mass : '..econ.MassIncome..'Desired Mass : '..MassIncome ..' Energy : '..econ.EnergyIncome..'Desired Energy :'..EnergyIncome)
-    if (econ.MassIncome >= MassIncome and econ.EnergyIncome >= EnergyIncome) then
-        --LOG('GreaterThanEconIncome is True')
-        return true
-    end
-    --LOG('GreaterThanEconIncome is False')
-    return false
 end

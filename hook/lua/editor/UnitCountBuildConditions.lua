@@ -565,26 +565,68 @@ function UnitsGreaterAtEnemy(aiBrain, unitCount, categoryEnemy)
     return GetEnemyUnits(aiBrain, unitCount, categoryEnemy, '>')
 end
 
-function ScalePlatoonSize(aiBrain, locationType, unitCategory)
+function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
     local currentTime = GetGameTimeSeconds()
-    if currentTime < 240  then
-        if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
-          return true
-        end
-    elseif currentTime < 480 then
-        if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+    if type == 'LAND' then
+        if currentTime < 240  then
+            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
             return true
+            end
+        elseif currentTime < 480 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+                return true
+            end
+        elseif currentTime < 720 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+                return true
+            end
+        elseif currentTime > 900 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+                return true
+            end
+        else
+            return false
         end
-    elseif currentTime < 720 then
-        if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+    elseif type == 'AIR' then
+        if currentTime < 240  then
+            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
             return true
+            end
+        elseif currentTime < 480 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+                return true
+            end
+        elseif currentTime < 720 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+                return true
+            end
+        elseif currentTime > 900 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+                return true
+            end
+        else
+            return false
         end
-    elseif currentTime > 900 then
-        if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+    elseif type == 'NAVAL' then
+        if currentTime < 30  then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
             return true
+            end
+        elseif currentTime < 600 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+                return true
+            end
+        elseif currentTime < 1200 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+                return true
+            end
+        elseif currentTime > 1800 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+                return true
+            end
+        else
+            return false
         end
-    else
-        return false
     end
     return false
 end
