@@ -80,7 +80,7 @@ function CommanderThreadRNG(cdr, platoon)
                 end
             end
         end
-        WaitTicks(1)
+        WaitTicks(5)
     end
 end
 
@@ -594,19 +594,19 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
         if unitTech == 'TECH1' and bypasseco then
-            WaitTicks(Random(1,50))
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
         elseif unitTech == 'TECH2' and bypasseco then
-            WaitTicks(Random(1,50))
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
         end
         if upgradeNumLimit >= extractorUpgradeLimit then
+            WaitTicks(10)
             continue
         end
         --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
         if not extractorClosest then
             --LOG('ExtractorClosest is false')
+            WaitTicks(10)
             continue
         end
         

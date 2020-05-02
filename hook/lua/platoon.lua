@@ -1485,9 +1485,7 @@ Platoon = Class(RNGAIPlatoon) {
     -------------------------------------------------------
     ProcessBuildCommandRNG = function(eng, removeLastBuild)
         --DUNCAN - Trying to stop commander leaving projects
-        if not eng or eng.Dead or not eng.PlatoonHandle or eng.GoingHome or eng.UnitBeingBuiltBehavior or eng:IsUnitState("Upgrading") or eng:IsUnitState("Enhancing") or eng:IsUnitState("Guarding") then
-            if eng then eng.ProcessBuild = nil end
-            LOG('*AI DEBUG: Commander skipping process build.')
+        if not eng or eng.Dead or not eng.PlatoonHandle then
             return
         end
 
@@ -1501,22 +1499,18 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if eng then eng.ProcessBuild = nil end
-            LOG('EngineerBuildQueue si 0?')
             return
         end
 
         -- it wasn't a failed build, so we just finished something
         if removeLastBuild then
-            LOG('removeLastBuild true')
             table.remove(eng.EngineerBuildQueue, 1)
         end
 
         eng.ProcessBuildDone = false
         IssueClearCommands({eng})
         local commandDone = false
-
         while not eng.Dead and not commandDone and table.getn(eng.EngineerBuildQueue) > 0  do
-
             local whatToBuild = eng.EngineerBuildQueue[1][1]
             local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
             local buildRelative = eng.EngineerBuildQueue[1][3]
@@ -1525,29 +1519,23 @@ Platoon = Class(RNGAIPlatoon) {
             end
             -- see if we can move there first
             LOG('Check if we can move to location')
+            LOG('Unit is '..eng.UnitId)
             if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
                 if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
-                    LOG('not Eng after EngineerMoveWithSafePathRNG')
                     return
                 end
 
                 -- check to see if we need to reclaim or capture...
                 LOG('Running Try Reclaim Capture')
-                if not RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation) then
+                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
                     -- check to see if we can repair
-                    if not AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation) then
+                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
-                        aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                        if not eng.NotBuildingThread then
-                            LOG('Watch for not building')
-                            eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
-                        end
-                    else
-                        LOG('TryRepair False')
-                    end
-                else
-                    LOG('TryReclaimCapture false')
+                aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                if not eng.NotBuildingThread then
+                    LOG('Watch for not building')
+                    eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
                 --LOG('Build commandDone set true')
                 commandDone = true
@@ -1595,12 +1583,12 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     WatchForNotBuildingRNG = function(eng)
-        WaitTicks(5)
+        WaitTicks(10)
         local aiBrain = eng:GetAIBrain()
         local engPos = eng:GetPosition()
 
         --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
-        while not eng.Dead and (eng.GoingHome or eng.ProcessBuild != nil
+        while not eng.Dead and not eng.PlatoonHandle.UsingTransport and (eng.GoingHome or eng.ProcessBuild != nil
                   or eng.UnitBeingBuiltBehavior or not eng:IsIdleState()
                  ) do
             WaitTicks(30)

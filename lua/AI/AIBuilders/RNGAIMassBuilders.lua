@@ -21,6 +21,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -40,7 +41,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 60, -500, 0, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -60,7 +61,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -83,7 +84,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -101,30 +102,6 @@ BuilderGroup {
     },
 
     Builder {
-        BuilderName = 'RNGAI T2Engineer Mass 240',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
-        Priority = 800,
-        InstanceCount = 3,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH2' }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                RepeatBuild = true,
-                Distance = 30,
-                Type = 'Mass',
-                BuildStructures = {
-                    'T2Resource',
-                },
-            }
-        }
-    },
-
-    Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
@@ -132,7 +109,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 180 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
             
         },
         BuilderType = 'Any',
@@ -158,7 +135,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTime', { 420 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 2, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
             
         },
         BuilderType = 'Any',
@@ -256,7 +233,7 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
@@ -276,7 +253,7 @@ BuilderGroup {
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 150, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
@@ -296,7 +273,7 @@ BuilderGroup {
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 350, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
@@ -316,7 +293,7 @@ BuilderGroup {
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MIBC, 'GreaterThanGameTime', { 420 } },
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 1, 0, 'AntiSurface', 1 }},
             },

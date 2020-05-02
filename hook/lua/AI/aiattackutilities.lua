@@ -192,12 +192,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
     GetMostRestrictiveLayer(platoon)
 
     local units = platoon:GetPlatoonUnits()
-    if bRequired then
-        LOG('bRequired is true')
-    else
-        LOG('bRequired is false')
-    end
-
 
     # only get transports for land (or partial land) movement
     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
@@ -226,7 +220,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             # we were told that transports are the only way to get where we want to go...
             # ask for a transport every 10 seconds
             local counter = 0
-            LOG('Transports are the only way to go')
             local transportsNeeded = AIUtils.GetNumTransports(units)
             local numTransportsNeeded = math.ceil((transportsNeeded.Small + (transportsNeeded.Medium * 2) + (transportsNeeded.Large * 4)) / 10)
             if not aiBrain.NeedTransports then
@@ -236,8 +229,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             if aiBrain.NeedTransports > 10 then
                 aiBrain.NeedTransports = 10
             end
+            
             local bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransports(platoon)
-            LOG('Start while loop for bUsedTransports')
             while not bUsedTransports and counter < 9 do #DUNCAN - was 6
                 # if we have overflow, dump the overflow and just send what we can
                 if not bUsedTransports and overflowSm+overflowMd+overflowLg > 0 then
@@ -258,13 +251,14 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     break
                 end
                 counter = counter + 1
+                LOG('Counter is now '..counter..'Waiting 10 seconds')
+                LOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
                 WaitSeconds(10)
                 if not aiBrain:PlatoonExists(platoon) then
                     aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
                     if aiBrain.NeedTransports < 0 then
                         aiBrain.NeedTransports = 0
                     end
-                    LOG('Platoon no longer exist within transport while loop, return false')
                     return false
                 end
 
@@ -275,6 +269,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     end
                 end
                 units = survivors
+                LOG('End of loop')
 
             end
             LOG('End while loop for bUsedTransports')
@@ -286,7 +281,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
             -- couldn't use transports...
             if bUsedTransports == false then
-                LOG('bUsedTransports is false')
                 return false
             end
         end
@@ -298,7 +292,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         if bSkipLastMove then
             transportLocation = destination
         end
-        LOG('Transport half way')
         --DUNCAN - try the land path nodefirst , not the transport marker as this will get units closer(thanks to Sorian).
         if not transportLocation then
             transportLocation = AIUtils.AIGetClosestMarkerLocation(aiBrain, 'Land Path Node', destination[1], destination[3])
@@ -336,7 +329,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         -- path from transport drop off to end location
         local path, reason = PlatoonGenerateSafePathTo(aiBrain, useGraph, transportLocation, destination, 200)
         -- use the transport!
-        LOG('Use Transport')
         AIUtils.UseTransports(units, platoon:GetSquadUnits('Scout'), transportLocation, platoon)
 
         -- just in case we're still landing...
@@ -347,7 +339,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 end
             end
         end
-        LOG('Transport half way')
 
         -- check to see we're still around
         if not platoon or not aiBrain:PlatoonExists(platoon) then
