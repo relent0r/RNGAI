@@ -584,7 +584,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport Excess',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 400,
+        Priority = 700,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.8}},
@@ -612,7 +612,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Transport Excess',
         PlatoonTemplate = 'T2AirTransport',
-        Priority = 400,
+        Priority = 700,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.8}},

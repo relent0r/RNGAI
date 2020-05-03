@@ -176,7 +176,7 @@ BuilderGroup {
         Priority = 750, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
@@ -318,7 +318,7 @@ BuilderGroup {
 
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 6, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -353,7 +353,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

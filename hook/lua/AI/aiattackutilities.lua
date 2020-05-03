@@ -237,6 +237,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     local goodunits, overflow = AIUtils.SplitTransportOverflow(units, overflowSm, overflowMd, overflowLg)
                     local numOverflow = table.getn(overflow)
                     if table.getn(goodunits) > numOverflow and numOverflow > 0 then
+                        --LOG('numOverflow is '..numOverflow)
                         local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
                         for _,v in overflow do
                             if not v.Dead then
@@ -251,8 +252,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     break
                 end
                 counter = counter + 1
-                LOG('Counter is now '..counter..'Waiting 10 seconds')
-                LOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
+                --LOG('Counter is now '..counter..'Waiting 10 seconds')
+                --LOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
                 WaitSeconds(10)
                 if not aiBrain:PlatoonExists(platoon) then
                     aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
@@ -269,10 +270,9 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     end
                 end
                 units = survivors
-                LOG('End of loop')
 
             end
-            LOG('End while loop for bUsedTransports')
+            --LOG('End while loop for bUsedTransports')
 
             aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
             if aiBrain.NeedTransports < 0 then

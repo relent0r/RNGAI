@@ -67,7 +67,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     target = false
                                     if aiBrain:PlatoonExists(self) then
                                         self:Stop()
-                                        self:ReturnToBaseAIRNG(true)
+                                        return self:ReturnToBaseAIRNG(true)
                                     end
                                 end
                             end
@@ -88,7 +88,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('* AI-RNG: No Target Returning to base')
                 if aiBrain:PlatoonExists(self) then
                     self:Stop()
-                    self:ReturnToBaseAIRNG(true)
+                    return self:ReturnToBaseAIRNG(true)
                 end
             end
             WaitTicks(15)
@@ -717,9 +717,9 @@ Platoon = Class(RNGAIPlatoon) {
                 local enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
                 if threatAroundplatoon < enemyThreat then
                     --LOG('Enemy Threat too high, calling for help first waiting')
-                    aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
-                    self.DistressCall = true
-                    WaitTicks(50)
+                    --aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
+                    --self.DistressCall = true
+                    WaitTicks(20)
                 end
                 if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
@@ -727,7 +727,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local guardedUnit = 1
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
-                        WaitTicks(1)
+                        WaitTicks(3)
                     end
                     IssueClearCommands(self:GetSquadUnits('Scout'))
                     IssueGuard(self:GetSquadUnits('Scout'), attackUnits[guardedUnit])
@@ -736,7 +736,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local guardedUnit = 1
                     while attackUnits[guardedUnit].Dead do
                         guardedUnit = guardedUnit + 1
-                        WaitTicks(1)
+                        WaitTicks(3)
                     end
                     IssueClearCommands(self:GetSquadUnits('Guard'))
                     IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
@@ -813,9 +813,9 @@ Platoon = Class(RNGAIPlatoon) {
                 local platoonPos = GetPlatoonPosition(self)
                 if threatAroundplatoon < enemyThreat then
                     --LOG('Enemy Threat too high, calling for help first waiting')
-                    aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
-                    self.DistressCall = true
-                    WaitTicks(50)
+                    --aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
+                    --self.DistressCall = true
+                    WaitTicks(20)
                     continue
                 end
                 if target.Dead or target:BeenDestroyed() then continue end
@@ -827,11 +827,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if attackUnits then
                         while attackUnits[guardedUnit].Dead do
                             guardedUnit = guardedUnit + 1
-                            WaitTicks(1)
-                            if table.getn(self:GetSquadUnits('Attack')) == 0 then
-                                --LOG('Not more attack squad units..breaking guard')
-                                return self:ReturnToBaseAIRNG()
-                            end
+                            WaitTicks(3)
                         end
                     else
                         return self:ReturnToBaseAIRNG()
@@ -861,11 +857,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 if attackUnits then
                                     while attackUnits[guardedUnit].Dead do
                                         guardedUnit = guardedUnit + 1
-                                        WaitTicks(1)
-                                        if table.getn(self:GetSquadUnits('Attack')) == 0 then
-                                            --LOG('Not more attack squad units..breaking guard')
-                                            return self:ReturnToBaseAIRNG()
-                                        end
+                                        WaitTicks(3)
                                     end
                                 else
                                     return self:ReturnToBaseAIRNG()
@@ -1413,7 +1405,6 @@ Platoon = Class(RNGAIPlatoon) {
                                 buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                             end
                         else
-                            LOG('Executing buildFunction')
                             buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
                         end
                     else
@@ -1437,7 +1428,6 @@ Platoon = Class(RNGAIPlatoon) {
         end
 
         if not eng:IsUnitState('Building') then
-            LOG('Return ProcessBuildCommandRNG')
             return self.ProcessBuildCommandRNG(eng, false)
         end
     end,
@@ -1448,15 +1438,15 @@ Platoon = Class(RNGAIPlatoon) {
             eng.BuildDoneCallbackSet = true
         end
         if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDone, eng)
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
             eng.CaptureDoneCallbackSet = true
         end
         if eng and not eng.Dead and not eng.ReclaimDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitStopReclaimTrigger(eng.PlatoonHandle.EngineerReclaimDone, eng)
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopReclaimTrigger(eng.PlatoonHandle.EngineerReclaimDoneRNG, eng)
             eng.ReclaimDoneCallbackSet = true
         end
         if eng and not eng.Dead and not eng.FailedToBuildCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(eng.PlatoonHandle.EngineerFailedToBuild, eng)
+            import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(eng.PlatoonHandle.EngineerFailedToBuildRNG, eng)
             eng.FailedToBuildCallbackSet = true
         end
     end,
@@ -1470,6 +1460,35 @@ Platoon = Class(RNGAIPlatoon) {
             unit.ProcessBuildDone = true
         end
     end,
+    EngineerCaptureDoneRNG = function(unit, params)
+        if not unit.PlatoonHandle then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        --LOG("*AI DEBUG: Capture done" .. unit.Sync.id)
+        if not unit.ProcessBuild then
+            unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
+        end
+    end,
+    EngineerReclaimDoneRNG = function(unit, params)
+        if not unit.PlatoonHandle then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        --LOG("*AI DEBUG: Reclaim done" .. unit.Sync.id)
+        if not unit.ProcessBuild then
+            unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
+        end
+    end,
+    EngineerFailedToBuildRNG = function(unit, params)
+        if not unit.PlatoonHandle then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if unit.ProcessBuildDone and unit.ProcessBuild then
+            KillThread(unit.ProcessBuild)
+            unit.ProcessBuild = nil
+        end
+        if not unit.ProcessBuild then
+            unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)  --DUNCAN - changed to true
+        end
+    end,
+
+
 
     -------------------------------------------------------
     --   Function: ProcessBuildCommand
@@ -1495,6 +1514,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand top " .. eng.Sync.id)
                 --if eng.CDRHome then --LOG('*AI DEBUG: Commander process build platoon disband...') end
                 if not eng.AssistSet and not eng.AssistPlatoon and not eng.UnitBeingAssist then
+                    --LOG('Disband engineer platoon start of process')
                     eng.PlatoonHandle:PlatoonDisband()
                 end
             end
@@ -1515,36 +1535,32 @@ Platoon = Class(RNGAIPlatoon) {
             local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
             local buildRelative = eng.EngineerBuildQueue[1][3]
             if not eng.NotBuildingThread then
-                eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuilding)
+                eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
             end
             -- see if we can move there first
-            LOG('Check if we can move to location')
-            LOG('Unit is '..eng.UnitId)
-            if RUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
+            --LOG('Check if we can move to location')
+            --LOG('Unit is '..eng.UnitId)
+            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
                 if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
                 end
 
                 -- check to see if we need to reclaim or capture...
-                LOG('Running Try Reclaim Capture')
                 RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
                     -- check to see if we can repair
                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 if not eng.NotBuildingThread then
-                    LOG('Watch for not building')
                     eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
                 --LOG('Build commandDone set true')
                 commandDone = true
             else
                 -- we can't move there, so remove it from our build queue
-                LOG('Engineer Cant get to location, removing build queue')
                 table.remove(eng.EngineerBuildQueue, 1)
             end
-            WaitTicks(1)
         end
         --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
         if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
@@ -1574,7 +1590,8 @@ Platoon = Class(RNGAIPlatoon) {
         -- final check for if we should disband
         if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
-                return eng.PlatoonHandle:PlatoonDisband()
+                --LOG('buildqueue 0 disband for'..eng.PlatoonHandle.BuilderName)
+                eng.PlatoonHandle:PlatoonDisband()
             end
             if eng then eng.ProcessBuild = nil end
             return
@@ -1607,10 +1624,10 @@ Platoon = Class(RNGAIPlatoon) {
         end
 
         eng.NotBuildingThread = nil
-        if not eng.Dead and eng:IsIdleState() and table.getn(eng.EngineerBuildQueue) != 0 and eng.PlatoonHandle then
+        if not eng.Dead and eng:IsIdleState() and table.getn(eng.EngineerBuildQueue) != 0 and eng.PlatoonHandle and not eng.WaitingForTransport then
             eng.PlatoonHandle.SetupEngineerCallbacksRNG(eng)
             if not eng.ProcessBuild then
-                LOG('Forking Process Build Command with table remove')
+                --LOG('Forking Process Build Command with table remove')
                 eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommandRNG, true)
             end
         end
@@ -2499,7 +2516,7 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- POOL DISTRESS RESPONSE ---')
 
                         -- Grab the units at the location
-                        local group = self:GetPlatoonUnitsAroundPoint(categories.MOBILE - categories.ENGINEER, position, radius)
+                        local group = self:GetPlatoonUnitsAroundPoint(categories.MOBILE - categories.ENGINEER - categories.TRANSPORTFOCUS , position, radius)
 
                         -- Move the group to the distress location and then back to the location of the base
                         IssueClearCommands(group)
@@ -2774,11 +2791,7 @@ Platoon = Class(RNGAIPlatoon) {
                         if attackUnits then
                             while attackUnits[guardedUnit].Dead do
                                 guardedUnit = guardedUnit + 1
-                                WaitTicks(1)
-                                if table.getn(self:GetSquadUnits('Attack')) == 0 then
-                                    --LOG('Not more attack squad units..breaking guard')
-                                    return self:ReturnToBaseAIRNG(true)
-                                end
+                                WaitTicks(3)
                             end
                         else
                             return self:ReturnToBaseAIRNG(true)
@@ -2808,11 +2821,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     if attackUnits then
                                         while attackUnits[guardedUnit].Dead do
                                             guardedUnit = guardedUnit + 1
-                                            WaitTicks(1)
-                                            if table.getn(self:GetSquadUnits('Attack')) == 0 then
-                                                --LOG('Not more attack squad units..breaking guard')
-                                                return self:ReturnToBaseAIRNG()
-                                            end
+                                            WaitTicks(3)
                                         end
                                     else
                                         return self:ReturnToBaseAIRNG()
