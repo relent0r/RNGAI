@@ -65,6 +65,7 @@ BaseBuilderTemplate {
 
                 -- Sea Unit Builders --
                 'RNGAI Sea Builders T1',
+                'RNGAI Sea Builders T23',
 
                 -- Sea Unit Formers --
                 'RNGAI Sea Formers',

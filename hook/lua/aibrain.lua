@@ -1455,7 +1455,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 powerStateCaution = false
             end
         end,
+        
 
+    --[[
     EcoManagerMassStateCheck = function(self)
 
         local massIncome = self:GetEconomyIncome('MASS')
@@ -1470,6 +1472,15 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif stallTime > 20 then
                 return false
             end
+        end
+        return false
+    end,]]
+
+    EcoManagerMassStateCheck = function(self)
+        if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') <= 0.10 then
+            return true
+        else
+            return false
         end
         return false
     end,

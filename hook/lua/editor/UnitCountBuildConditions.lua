@@ -307,17 +307,6 @@ function FactoryComparisonAtLocation(aiBrain, locationType, unitCount, unitCateg
     return CompareBody(numUnits, unitCount, compareType)
 end
 
-function UnitCapCheckLess(aiBrain, percent)
-    local currentCount = GetArmyUnitCostTotal(aiBrain:GetArmyIndex())
-    local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
-    if (currentCount / cap) < percent then
-        --LOG('UnitCapCheckLess is True')
-        return true
-    end
-    --LOG('UnitCapCheckLess is False')
-    return false
-end
-
 function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
     local numUnits
     local testCat = category

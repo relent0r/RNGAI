@@ -184,6 +184,17 @@ function TMLEnemyStartRangeCheck(aiBrain)
     return false
 end
 
+function GreaterThanGameTimeRNG(aiBrain, num)
+    local time = GetGameTimeSeconds()
+    local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+    if aiBrain.CheatEnabled and (num / multiplier) < time then
+        return true
+    elseif num < time then
+        return true
+    end
+    return false
+end
+
 function MapSizeLessThan(aiBrain, size)
     local mapSizeX, mapSizeZ = GetMapSize()
     if mapSizeX < size and mapSizeZ < size then

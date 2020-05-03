@@ -22,7 +22,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 5.0 }},
-            { MIBC, 'GreaterThanGameTime', { 240 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -50,7 +50,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.2, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
-            { MIBC, 'GreaterThanGameTime', { 600 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
         },
         BuilderType = 'Any',
     },
@@ -76,7 +76,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1RadarUpgrade',
         Priority = 600,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTime', { 600 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.RADAR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
