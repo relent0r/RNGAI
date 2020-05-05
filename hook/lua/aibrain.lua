@@ -195,6 +195,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Experimental = 0,
         }
         self.BrainIntel.SelfThreat.Air = {}
+        self.BrainIntel.SelfThreat.AirNow = 0
         
 
         -- Add default main location and setup the builder managers
@@ -780,7 +781,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 100
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.68
+                upgradeSpec.MassLowTrigger = 0.7
                 upgradeSpec.EnergyLowTrigger = 0.8
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 9999
@@ -948,10 +949,40 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:TacticalMonitorRNG(ALLBPS)
+                self:AirThreatCheckRNG(ALLBPS)
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
+
+    AirThreatCheckRNG = function(self, ALLBPS)
+        local selfIndex = self:GetArmyIndex()
+        local enemyBrains = {}
+        local enemyAirthreat = 0
+        LOG('Starting Air Threat Check at'..GetGameTick())
+        for index, brain in ArmyBrains do
+            if IsEnemy(selfIndex, brain:GetArmyIndex()) then
+                table.insert(enemyBrains, brain)
+            end
+        end
+        if table.getn(enemyBrains) > 0 then
+            for k, enemy in enemyBrains do
+                local enemyUnits = GetListOfUnits( enemy, categories.MOBILE * categories.ANTIAIR, false, false)
+                for _,v in enemyUnits do
+                    -- previous method of getting unit ID before the property was added.
+                    --local unitbpId = v:GetUnitId()
+                    --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
+                    bp = ALLBPS[v.UnitId].Defense
+        
+                    enemyAirthreat = enemyAirthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+                end
+            end
+        end
+        self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirthreat
+        LOG('Completing Air Threat Check'..GetGameTick())
+        LOG('Total Air Threat is'..enemyAirthreat)
+    end,
+
 
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
@@ -1098,6 +1129,8 @@ AIBrain = Class(RNGAIBrainClass) {
 
 			airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
         end
+        LOG('My Air Threat is'..airthreat)
+        self.BrainIntel.SelfThreat.AirNow = airthreat
         if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
@@ -1119,7 +1152,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
-            --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+            LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
         end
     end,
 

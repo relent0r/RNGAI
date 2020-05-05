@@ -464,7 +464,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
             { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH1' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 1, 'FACTORY AIR TECH1' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'FACTORY AIR TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -731,7 +731,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuilt', { 2, 'ENERGYPRODUCTION TECH2, ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, 'ENERGYPRODUCTION TECH2, ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.5 }},
             { EBC, 'LessThanEconEfficiencyOverTime', { 2.0, 1.7 }},
@@ -990,39 +990,6 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Enhancement = { 'AdvancedEngineering' },
-        },
-    },
-}
-
-BuilderGroup { 
-    BuilderGroupName = 'RNGAI ACU PD1',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'PD with wall',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 990,
-        BuilderConditions = {
-            },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
-                BaseTemplate = 'T1PDTemplate',
-                BuildClose = true,
-                NearBasePatrolPoints = false,
-                BuildStructures = {
-                    'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                },
-                Location = 'LocationType',
-            }
         },
     },
 }

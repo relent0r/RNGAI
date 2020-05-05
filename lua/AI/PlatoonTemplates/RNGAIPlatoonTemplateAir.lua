@@ -120,6 +120,52 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAIT1AirQueue',
+    FactionSquads = {
+        UEF = {
+            { 'uea0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'uea0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+        },
+        Aeon = {
+            { 'uaa0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'uaa0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+        },
+        Cybran = {
+            { 'ura0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'ura0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+            { 'xra0105', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Gunship
+            
+        },
+        Seraphim = {
+            { 'xsa0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'xsa0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+        },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAIT2AirQueue',
+    FactionSquads = {
+        UEF = {
+            { 'dea0202', 1, 2, 'attack', 'None' }, -- FighterBomber
+            { 'uea0203', 1, 2, 'attack', 'None' }, -- Gunship
+        },
+        Aeon = {
+            { 'xaa0202', 1, 1, 'attack', 'None' },-- Fighter
+            { 'xaa0202', 1, 2, 'attack', 'None' },-- Gunship
+        },
+        Cybran = {
+            { 'dra0202', 1, 2, 'attack', 'None' },-- FighterBomber
+            { 'dra0202', 1, 2, 'attack', 'None' },-- Gunship
+        },
+        Seraphim = {
+            { 'xsa0202', 1, 2, 'attack', 'None' },-- FighterBomber
+            { 'xsa0202', 1, 2, 'attack', 'None' }, -- Gunship
+        },
+    },
+}
+
+PlatoonTemplate {
     Name = 'RNGAIT2FighterAeon',
     FactionSquads = {
         UEF = {

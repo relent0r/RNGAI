@@ -2,12 +2,12 @@
 RNGBuilder = Builder
 Builder = Class(RNGBuilder) {
 
-    CalculatePriority = function(self, builderManager)
+    CalculatePriorityRNG = function(self, builderManager)
         self.PriorityAltered = false
-        --LOG('Calculate Priority Function, checking if PriorityFunction present')
+        LOG('Calculate Priority Function, checking if PriorityFunction present for location'..builderManager.LocationType..'for '..builderManager.NumBuilders)
         if Builders[self.BuilderName].PriorityFunction then
             --LOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
-            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain)
+            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager)
             if newPri != self.Priority then
                 self.Priority = newPri
                 self.PriorityAltered = true

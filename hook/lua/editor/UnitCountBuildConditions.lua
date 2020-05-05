@@ -333,14 +333,15 @@ end
     parameter 2: expr   category        = categories.ALLUNITS			doc = "param2 docs"
 ]]
 
-function HaveLessThanUnitsInCategoryBeingBuilt(aiBrain, numunits, category)
+function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1, numunits2, category2)
 
-    if type(category) == 'string' then
-        category = ParseEntityCategory(category)
+    if type(category1) == 'string' then
+        category1 = ParseEntityCategory(category1)
     end
 
     local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
-    local numBuilding = 0
+    local cat1NumBuilding = 0
+    local cat2NumBuilding = 0
     for unitNum, unit in unitsBuilding do
         if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
             --LOG('Category is in upgrading state')
@@ -348,23 +349,35 @@ function HaveLessThanUnitsInCategoryBeingBuilt(aiBrain, numunits, category)
         if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
             --LOG('Unit is in building state')
             local buildingUnit = unit.UnitBeingBuilt
-            if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
-                numBuilding = numBuilding + 1
+            if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category1, buildingUnit) then
+                cat1NumBuilding = cat1NumBuilding + 1
+            end
+            if category2 then
+                if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category2, buildingUnit) then
+                    cat2NumBuilding = cat2NumBuilding + 1
+                end
             end
         end
         --DUNCAN - added to pick up engineers that havent started building yet... does it work?
         if not unit:BeenDestroyed() and not unit:IsUnitState('Building') then
             local buildingUnit = unit.UnitBeingBuilt
-            if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+            if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category1, buildingUnit) then
                 --LOG('Engi building but not in building state...')
-                numBuilding = numBuilding + 1
+                cat1NumBuilding = cat1NumBuilding + 1
+            end
+            if category2 then
+                if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category1, buildingUnit) then
+                    --LOG('Engi building but not in building state...')
+                    cat2NumBuilding = cat2NumBuilding + 1
+                end
             end
         end
-        if numunits <= numBuilding then
+        if numunits1 <= cat1NumBuilding or numunits2 <= cat2NumBuilding then
             return false
         end
     end
-    if numunits > numBuilding then
+
+    if numunits1 > cat1NumBuilding or numunits2 > cat2NumBuilding then
         return true
     end
     return false

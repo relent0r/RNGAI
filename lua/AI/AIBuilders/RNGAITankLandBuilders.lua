@@ -73,6 +73,17 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Land Attack',
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
+        PriorityFunction = function(self, aiBrain)
+            local engineerManager = aiBrain.BuilderManagers['MAIN'].EngineerManager
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
+            if numUnits <= 5 then
+                LOG('Setting T1 Queue to Eng')
+                return 750
+            else
+                return 0
+            end
+        end,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
@@ -83,6 +94,53 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Land Attack NoEng',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueueNoEng',
+        Priority = 0, -- After Second Engie Group
+        PriorityFunction = function(self, aiBrain)
+            local engineerManager = aiBrain.BuilderManagers['MAIN'].EngineerManager
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
+            if numUnits > 5 then
+                LOG('Setting T1 Queue to NoEng')
+                return 750
+            else
+                return 0
+            end
+        end,
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
+
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    --[[
+    Builder {
+        BuilderName = 'RNGAI T1 Ttest',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 100,
+        PriorityFunction = function(self, aiBrain)
+            LOG('This is a tank')
+            if GetGameTimeSeconds() < 120 then
+                bpriotity = 0
+            elseif GetGameTimeSeconds() < 240 then
+                bpriotity = 600
+            else 
+                bpriotity = 2000
+            end
+            return bpriotity, false
+		end,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -174,10 +232,50 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Land Attack Large',
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
+        PriorityFunction = function(self, aiBrain, builderManager)
+            local locationType = builderManager.LocationType
+            LOG('Builder Mananger location is'..repr(builderManager))
+            local engineerManager = aiBrain.BuilderManagers['MAIN'].EngineerManager
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
+            if numUnits <= 5 then
+                LOG('Setting T1 Queue to Eng')
+                return 750
+            else
+                return 0
+            end
+        end,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 5, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
+
+            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land Attack NoEng Large',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueueNoEng',
+        Priority = 0, -- After Second Engie Group
+        PriorityFunction = function(self, aiBrain, builderManager)
+            local locationType = builderManager.LocationType
+            LOG('Builder Mananger location is'..repr(builderManager))
+            local engineerManager = aiBrain.BuilderManagers['MAIN'].EngineerManager
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
+            if numUnits > 5 then
+                LOG('Setting T1 Queue to NoEng')
+                return 750
+            else
+                return 0
+            end
+        end,
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
+            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -389,7 +487,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Land Expansion',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
@@ -419,8 +517,8 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small Expansions',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory Land Expansion',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
+        BuilderName = 'RNGAI Factory Land Expansion Sml',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
@@ -432,7 +530,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T2 Land Expansion',
+        BuilderName = 'RNGAI T2 Land Expansion Sml',
         PlatoonTemplate = 'RNGAIT2LandAttackQueue',
         Priority = 700,
         BuilderType = 'Land',

@@ -25,6 +25,8 @@ Valid Threat Options:
     
         self:SetUpAttackVectorsToArmy(categories.STRUCTURE - (categories.MASSEXTRACTION))
         --LOG('Attack Vectors'..repr(self:GetAttackVectors()))
+
+        setfocusarmy -1 = back to observer
 ]]
 
 local PropBlacklist = {}
@@ -476,6 +478,37 @@ function PositionInWater(pos)
 	return GetTerrainHeight(pos[1], pos[3]) < GetSurfaceHeight(pos[1], pos[3])
 end
 
+function GetClosestMassMarkerToPos(aiBrain, pos)
+    local markerList = {}
+    local markers = ScenarioUtils.GetMarkers()
+    if markers then
+        for k, v in markers do
+            if v.type == 'Mass' then
+                table.insert(markerList, {Position = v.position, Name = k})
+            end
+        end
+    end
+
+    local loc, distance, lowest, name = nil
+
+    for _, v in markerList do
+        local x = v.Position[1]
+        local y = v.Position[2]
+        local z = v.Position[3]
+        distance = VDist2(pos[1], pos[3], x, z)
+        if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+            LOG('Can build at position '..repr(v.Position))
+            loc = v.Position
+            name = v.Name
+            lowest = distance
+        else
+            LOG('Cant build at position '..repr(v.Position))
+        end
+    end
+
+    return loc, name
+end
+
 function GetClosestMassMarker(aiBrain, unit)
     local markerList = {}
     local markers = ScenarioUtils.GetMarkers()
@@ -495,7 +528,7 @@ function GetClosestMassMarker(aiBrain, unit)
         local y = v.Position[2]
         local z = v.Position[3]
         distance = VDist2(engPos[1], engPos[3], x, z)
-        if not lowest or distance < lowest then
+        if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
             loc = v.Position
             name = v.Name
             lowest = distance

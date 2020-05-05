@@ -486,6 +486,86 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
     }
 }
 
+PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueExp',
+    FactionSquads = {
+        UEF = {
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'uel0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
+         },
+        Aeon = {
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
+        },
+        Cybran = {
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
+            { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
+            { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+            { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
+        },
+        Seraphim = {
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
+        },
+    }
+}
+
+PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueNoEng',
+    FactionSquads = {
+        UEF = {
+            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'uel0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
+         },
+        Aeon = {
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
+        },
+        Cybran = {
+            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
+            { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
+            { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+            { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
+        },
+        Seraphim = {
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- artillery
+            { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- artillery
+            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
+        },
+    }
+}
+
 PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
     FactionSquads = {
         UEF = {

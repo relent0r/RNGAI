@@ -1,6 +1,7 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset platoon.lua' )
 
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
@@ -687,10 +688,11 @@ Platoon = Class(RNGAIPlatoon) {
         end
         while aiBrain:PlatoonExists(self) do
             
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.LAND - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
             if EntityCategoryContains(categories.COMMAND, target) then
                 --LOG('Target is ACU')
             end
+            local targetHealth = 0
             if target then
                 local threatAroundplatoon = 0
                 local targetPosition = target:GetPosition()
@@ -714,13 +716,6 @@ Platoon = Class(RNGAIPlatoon) {
                         continue
                     end
                 end
-                local enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
-                if threatAroundplatoon < enemyThreat then
-                    --LOG('Enemy Threat too high, calling for help first waiting')
-                    --aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
-                    --self.DistressCall = true
-                    WaitTicks(20)
-                end
                 if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
                 if self:GetSquadUnits('Scout') then
@@ -742,6 +737,7 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
                 end
                 blip = target:GetBlip(armyIndex)
+                targetHealth = target:GetHealth()
                 if self:GetSquadUnits('Attack') then
                     self:Stop('Attack')
                     self:AggressiveMoveToLocation(table.copy(target:GetPosition()), 'Attack')
@@ -749,8 +745,12 @@ Platoon = Class(RNGAIPlatoon) {
                     self:MoveToLocation(position, false, 'Attack')
                 end
             end
-            
             WaitTicks(170)
+            if not target.Dead and targetHealth == target:GetHealth() then
+                IssueClearCommands(self:GetSquadUnits('Attack'))
+                local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
+                self:MoveToLocation(position, false, 'Attack')
+            end
         end
     end,
 
@@ -808,15 +808,6 @@ Platoon = Class(RNGAIPlatoon) {
                         WaitTicks(30)
                         continue
                     end
-                end
-                local enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
-                local platoonPos = GetPlatoonPosition(self)
-                if threatAroundplatoon < enemyThreat then
-                    --LOG('Enemy Threat too high, calling for help first waiting')
-                    --aiBrain:BaseMonitorPlatoonDistress(self, enemyThreat)
-                    --self.DistressCall = true
-                    WaitTicks(20)
-                    continue
                 end
                 if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
@@ -877,6 +868,7 @@ Platoon = Class(RNGAIPlatoon) {
                             local dist
                             local Stuck = 0
                             local retreatCount = 2
+                            local targetHealth = 0
                             while aiBrain:PlatoonExists(self) do
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
@@ -909,6 +901,9 @@ Platoon = Class(RNGAIPlatoon) {
                                     end
                                 end
                                 -- Do we move ?
+                                if target and not target.Dead then
+                                    targetHealth = target:GetHealth()
+                                end
                                 if Lastdist ~= dist then
                                     Stuck = 0
                                     Lastdist = dist
@@ -919,6 +914,12 @@ Platoon = Class(RNGAIPlatoon) {
                                         --LOG('* AI-RNG: * HuntAIPATH: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
                                         self:Stop()
                                         break
+                                    elseif Stuck > 5 then
+                                        if not target.Dead and targetHealth == target:GetHealth() then
+                                            IssueClearCommands(self:GetSquadUnits('Attack'))
+                                            local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
+                                            self:MoveToLocation(position, false, 'Attack')
+                                        end
                                     end
                                 end
                                 if not target then
@@ -926,6 +927,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     self:Stop()
                                     break
                                 end
+                                
                                 --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
                                 WaitTicks(15)
                             end
@@ -1008,7 +1010,23 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 end
-                
+                if data.AvoidBases then
+                    local targetPos = target:GetPosition()
+                    if aiBrain.EnemyIntel.EnemyStartLocations then
+                        if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+                            for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
+                                if VDist2Sq(targetPos[1],  targetPos[3], pos[1], pos[3]) < 10000 then
+                                    --LOG('AirHuntAI target within enemy start range, return to base')
+                                    target = false
+                                    if aiBrain:PlatoonExists(self) then
+                                        self:Stop()
+                                        return self:ReturnToBaseAIRNG(true)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
                 -- Set to mass extraction, can't make experimentals without mass
@@ -1551,7 +1569,27 @@ Platoon = Class(RNGAIPlatoon) {
                     -- check to see if we can repair
                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
+                LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                LOG('whatToBuild is '..whatToBuild)
+                if whatToBuild == 'ueb1103' or 'uab1103' or 'urb1103' or 'xsb1103' then
+                    LOG('What to build was a mass extractor')
+                    if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
+                        LOG('Entity is an engineer')
+                        local engpos = eng:GetPosition()
+                        if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30, -500, 1, 0, 'AntiSurface', 1) then
+                            LOG('We can build on a mass marker within 30')
+                            massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, buildLocation)
+                            LOG('Mass Marker'..repr(massMarker))
+                            LOG('Attempting second mass marker')
+                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
+                            AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
+                            aiBrain:BuildStructure(eng, whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative)
+                        else
+                            LOG('Cant find mass within distance')
+                        end
+                    end
+                end
                 if not eng.NotBuildingThread then
                     eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
@@ -1570,7 +1608,6 @@ Platoon = Class(RNGAIPlatoon) {
             local engpos = eng:GetPosition()
             if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
                 --LOG('Repeat Build is set for :'..eng.Sync.id)
-                local MABC = import('/lua/editor/MarkerBuildConditions.lua')
                 if type == 'Mass' and distance then
                     if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
                         --LOG('Type is Mass, setting ai plan')
