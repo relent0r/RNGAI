@@ -20,13 +20,18 @@ function CommanderBehaviorRNG(platoon)
     end
 end
 
+function SetCDRDefaults(aiBrain, cdr, plat)
+    cdr.CDRHome = table.copy(cdr:GetPosition())
+    aiBrain.ACUSupport.ACUMaxSearchRadius = 60
+end
+
 function CommanderThreadRNG(cdr, platoon)
     --LOG('* AI-RNG: Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
     aiBrain:BuildScoutLocationsRNG()
     cdr.UnitBeingBuiltBehavior = false
     -- Added to ensure we know the start locations (thanks to Sorian).
-    SetCDRHome(cdr, platoon)
+    SetCDRDefaults(aiBrain, cdr, platoon)
 
     while not cdr.Dead do
         -- Overcharge

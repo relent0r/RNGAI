@@ -4,7 +4,7 @@ Builder = Class(RNGBuilder) {
 
     CalculatePriorityRNG = function(self, builderManager)
         self.PriorityAltered = false
-        LOG('Calculate Priority Function, checking if PriorityFunction present for location'..builderManager.LocationType..'for '..builderManager.NumBuilders)
+        LOG('Calculate Priority Function, checking if PriorityFunction present for location'..builderManager.LocationType)
         if Builders[self.BuilderName].PriorityFunction then
             --LOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
             local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager)

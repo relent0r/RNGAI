@@ -14,9 +14,9 @@ BuilderGroup {
         Priority = 100,
         BuilderConditions = {
 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION } },
         },
         FormRadius = 10000,
@@ -31,7 +31,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
 
             { EBC, 'GreaterThanEconStorageCurrent', { 200, 0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 60,
@@ -45,7 +45,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.6 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.6 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 120,
@@ -60,7 +60,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 120 } },
 
             { EBC, 'GreaterThanEconStorageCurrent', { 500, 0 } },
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 120,
@@ -74,8 +74,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 660 } },
 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 1.0 }},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 1000,
@@ -89,8 +89,8 @@ BuilderGroup {
         BuilderConditions = {
 
             { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 1.0 }},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 1.0 }},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { MIBC, 'GreaterThanGameTimeRNG', { 1500 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION } },
         },
@@ -106,8 +106,8 @@ BuilderGroup {
             {UCBC, 'HaveUnitRatio', {0.80, categories.MASSEXTRACTION * categories.TECH1, '<=', categories.MASSEXTRACTION * categories.TECH2}},
 
             { EBC, 'GreaterThanEconIncome',  { 2.8, 30}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION } },
             { MIBC, 'GreaterThanGameTimeRNG', { 1020 } },
         },
@@ -122,7 +122,7 @@ BuilderGroup {
         BuilderConditions = {
 
             { EBC, 'GreaterThanEconStorageCurrent', { 1500, 0 } },
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH3 } },
         },
         FormRadius = 512,
@@ -140,9 +140,9 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
 
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 800 } },
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 10000,
@@ -157,7 +157,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 120 } },
 
             { EBC, 'GreaterThanEconStorageCurrent', { 1000, 0 } },
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 3, categories.MASSEXTRACTION * categories.TECH1 } },
         },
         FormRadius = 120,

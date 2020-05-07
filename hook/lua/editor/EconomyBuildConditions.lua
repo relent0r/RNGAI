@@ -7,6 +7,8 @@
 
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
+local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio)
     local econ = {}
@@ -36,6 +38,20 @@ function GreaterThanEconTrendRNG(aiBrain, MassTrend, EnergyTrend)
     return false
 end
 
+function GreaterThanEnergyTrendRNG(aiBrain, eTrend, DEBUG)
+    local EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+    if DEBUG then
+        --LOG('Current Energy Trend is : ', econ.EnergyTrend)
+    end
+    if EnergyTrend > eTrend then
+        --LOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
+        return true
+    else
+        --LOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
+        return false
+    end
+end
+
 function LessThanMassTrendRNG(aiBrain, mTrend)
     local econ = {}
     econ.MassTrend = GetEconomyTrend(aiBrain, 'MASS')
@@ -48,19 +64,24 @@ end
 
 --            { EBC, 'LessThanEnergyTrendRNG', { 50.0 } },
 function LessThanEnergyTrendRNG(aiBrain, eTrend)
-    local econ = {}
-    econ.EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
-    if econ.EnergyTrend < eTrend then
+    local EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+    --LOG('Energy Trend is'..EnergyTrend)
+    if EnergyTrend < eTrend then
         return true
     else
         return false
     end
 end
 
-function GreaterThanEconEfficiencyOverTime(aiBrain, MassEfficiency, EnergyEfficiency)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..econ.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..econ.EnergyEfficiencyOverTime)
-    if (econ.MassEfficiencyOverTime >= MassEfficiency and econ.EnergyEfficiencyOverTime >= EnergyEfficiency) then
+function GreaterThanEconEfficiencyOverTimeRNG(aiBrain, MassEfficiency, EnergyEfficiency)
+    local EnergyIncome = GetEconomyIncome(aiBrain,'ENERGY')
+    local MassIncome = GetEconomyIncome(aiBrain,'MASS')
+    local EnergyRequested = GetEconomyRequested(aiBrain,'ENERGY')
+    local MassRequested = GetEconomyRequested(aiBrain,'MASS')
+    local EnergyEfficiencyOverTime = math.min(EnergyIncome / EnergyRequested, 2)
+    local MassEfficiencyOverTime = math.min(MassIncome / MassRequested, 2)
+    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
         --LOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true
     end

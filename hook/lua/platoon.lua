@@ -737,7 +737,9 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
                 end
                 blip = target:GetBlip(armyIndex)
-                targetHealth = target:GetHealth()
+                if target and not target.Dead then
+                    targetHealth = target:GetHealth()
+                end
                 if self:GetSquadUnits('Attack') then
                     self:Stop('Attack')
                     self:AggressiveMoveToLocation(table.copy(target:GetPosition()), 'Attack')
@@ -746,10 +748,12 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             WaitTicks(170)
-            if not target.Dead and targetHealth == target:GetHealth() then
-                IssueClearCommands(self:GetSquadUnits('Attack'))
-                local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
-                self:MoveToLocation(position, false, 'Attack')
+            if target and not target.Dead then
+                if targetHealth == target:GetHealth() then
+                    IssueClearCommands(self:GetSquadUnits('Attack'))
+                    local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
+                    self:MoveToLocation(position, false, 'Attack')
+                end
             end
         end
     end,
@@ -915,10 +919,12 @@ Platoon = Class(RNGAIPlatoon) {
                                         self:Stop()
                                         break
                                     elseif Stuck > 5 then
-                                        if not target.Dead and targetHealth == target:GetHealth() then
-                                            IssueClearCommands(self:GetSquadUnits('Attack'))
-                                            local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
-                                            self:MoveToLocation(position, false, 'Attack')
+                                        if target and not target.Dead then
+                                            if targetHealth == target:GetHealth() then
+                                                IssueClearCommands(self:GetSquadUnits('Attack'))
+                                                local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
+                                                self:MoveToLocation(position, false, 'Attack')
+                                            end
                                         end
                                     end
                                 end
@@ -997,6 +1003,8 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if data.Defensive then
                     target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
+                elseif data.AvoidBases then
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy(), data.AvoidBases)
                 else
                     local mult = { 1,10,25 }
                     for _,i in mult do
@@ -1007,23 +1015,6 @@ Platoon = Class(RNGAIPlatoon) {
                         WaitTicks(10) --DUNCAN - was 3
                         if not aiBrain:PlatoonExists(self) then
                             return
-                        end
-                    end
-                end
-                if data.AvoidBases then
-                    local targetPos = target:GetPosition()
-                    if aiBrain.EnemyIntel.EnemyStartLocations then
-                        if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
-                            for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
-                                if VDist2Sq(targetPos[1],  targetPos[3], pos[1], pos[3]) < 10000 then
-                                    --LOG('AirHuntAI target within enemy start range, return to base')
-                                    target = false
-                                    if aiBrain:PlatoonExists(self) then
-                                        self:Stop()
-                                        return self:ReturnToBaseAIRNG(true)
-                                    end
-                                end
-                            end
                         end
                     end
                 end
@@ -1042,10 +1033,10 @@ Platoon = Class(RNGAIPlatoon) {
 
                 if target then
                     self:Stop()
-                    if not data.UseMoveOrder then
-                        self:AttackTarget(target)
-                    elseif data.AggressiveMove then
+                    if data.AggressiveMove then
                         self:AggressiveMoveToLocation(table.copy(target:GetPosition()))
+                    elseif not data.UseMoveOrder then
+                        self:AttackTarget(target)
                     else
                         self:MoveToLocation(table.copy(target:GetPosition()), false)
                     end

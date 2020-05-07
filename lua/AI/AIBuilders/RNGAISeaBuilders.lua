@@ -227,7 +227,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
         Priority = 450,
         BuilderConditions = {
-            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY NAVAL TECH3' }},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY NAVAL TECH3' }},
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)

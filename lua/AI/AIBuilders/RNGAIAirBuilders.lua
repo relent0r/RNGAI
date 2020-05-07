@@ -13,7 +13,7 @@ local IBC = '/lua/editor/InstantBuildConditions.lua'
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
-local EnemyAirThreat = function(self, aiBrain, manager)
+local AirDefenseMode = function(self, aiBrain, manager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     if myAirThreat < enemyAirThreat then
@@ -21,6 +21,18 @@ local EnemyAirThreat = function(self, aiBrain, manager)
         return 880
     else
         LOG('Disable Air Intie Pool Builder')
+        return 10
+    end
+end
+
+local AirAttackMode = function(self, aiBrain, builderManager)
+    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    if myAirThreat / 2 > enemyAirThreat then
+        LOG('Enable Air Attack Queue')
+        return 880
+    else
+        LOG('Disable Air Attack Queue')
         return 10
     end
 end
@@ -33,9 +45,9 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 750,
         BuilderConditions = { 
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.ANTIAIR * categories.TECH3} },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
         },
@@ -46,8 +58,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 900,
         BuilderConditions = { 
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
@@ -56,9 +68,9 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Intie Enemy Threat',
         PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 10,
-        PriorityFunction = EnemyAirThreat,
+        PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
@@ -68,10 +80,10 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirBomber',
         Priority = 750,
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
         BuilderType = 'Air',
@@ -81,10 +93,10 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirBomber',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.3, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
@@ -97,8 +109,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -116,21 +128,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Attack Queue T1',
         PlatoonTemplate = 'RNGAIT1AirQueue',
         Priority = 10,
-        PriorityFunction = function(self, aiBrain, builderManager)
-            local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
-            local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-            if myAirThreat / 2 > enemyAirThreat then
-                LOG('Enable Air Attack Queue T1')
-                return 880
-            else
-                LOG('Disable Air Attack Queue T1')
-                return 10
-            end
-        end,
+        PriorityFunction = AirAttackMode,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -143,21 +145,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Attack Queue T2',
         PlatoonTemplate = 'RNGAIT2AirQueue',
         Priority = 10,
-        PriorityFunction = function(self, aiBrain, builderManager)
-            local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
-            local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-            if myAirThreat / 2 > enemyAirThreat then
-                LOG('Enable Air Attack Queue T2')
-                return 880
-            else
-                LOG('Disable Air Attack Queue T2')
-                return 10
-            end
-        end,
+        PriorityFunction = AirAttackMode,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.6}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.6, 0.9 }},
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -167,8 +159,8 @@ BuilderGroup {
         Priority = 910,
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
@@ -180,7 +172,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = { 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
     },
@@ -191,10 +183,10 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 2, categories.ANTIAIR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.BOMBER * categories.TECH3} },
-            { UCBC, 'FactoryLessAtLocation', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
         BuilderType = 'Air',
     },
@@ -205,7 +197,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
         },
     },
@@ -217,7 +209,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
     },
@@ -244,22 +236,35 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT3AirResponse',
         Priority = 900,
         BuilderConditions = { 
-            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.4, 0.7 }},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI T3 Air Attack',
-        PlatoonTemplate = 'RNGAIT3AirAttackQueue',
+        BuilderName = 'RNGAI T3 Air Queue',
+        PlatoonTemplate = 'RNGAIT3AirQueue',
         Priority = 850,
         BuilderType = 'Air',
         BuilderConditions = {
-            { UCBC, 'FactoryGreaterAtLocation', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Air Attack Queue',
+        PlatoonTemplate = 'RNGAIT3AirAttackQueue',
+        Priority = 10,
+        PriorityFunction = AirAttackMode,
+        BuilderType = 'Air',
+        BuilderConditions = {
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
         },
     },
 }
@@ -640,10 +645,10 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.8}},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
         BuilderType = 'Air',
     },
@@ -654,10 +659,10 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.8}},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
         BuilderType = 'Air',
     },
@@ -668,10 +673,10 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.8}},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
         BuilderType = 'Air',
     },
@@ -682,10 +687,10 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.8}},
-            { UCBC, 'GreaterThanEnergyTrend', { 0.0 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
-            { EBC, 'GreaterThanEconEfficiencyOverTime', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
         BuilderType = 'Air',
     },

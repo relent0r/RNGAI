@@ -46,19 +46,7 @@ function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
     end
 end
 
-function GreaterThanEnergyTrend(aiBrain, eTrend, DEBUG)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    if DEBUG then
-        --LOG('Current Energy Trend is : ', econ.EnergyTrend)
-    end
-    if econ.EnergyTrend > eTrend then
-        --LOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
-        return true
-    else
-        --LOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
-        return false
-    end
-end
+
 
 function CanBuildOnMassLessThanLocationDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum , builderName)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
@@ -631,4 +619,26 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
         end
     end
     return false
+end
+
+function FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, compareType)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    local testCat = unitCategory
+    if type(unitCategory) == 'string' then
+        testCat = ParseEntityCategory(unitCategory)
+    end
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+        return false
+    end
+    local numUnits = factoryManager:GetNumCategoryFactories(testCat)
+    return CompareBody(numUnits, unitCount, compareType)
+end
+
+function FactoryLessAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
+    return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '<')
+end
+
+function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
+    return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end

@@ -215,3 +215,16 @@ function MapSizeLessThan(aiBrain, size)
     end
     return false
 end
+
+function AirAttackModeCheck(self, aiBrain)
+    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    if myAirThreat and enemyAirThreat then
+        if myAirThreat / 2 > enemyAirThreat then
+            return true
+        else
+            return false
+        end
+    end
+    return false
+end
