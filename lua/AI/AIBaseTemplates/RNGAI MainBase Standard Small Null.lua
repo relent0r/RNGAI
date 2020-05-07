@@ -20,6 +20,8 @@ BaseBuilderTemplate {
         'RNGAI ACU Enhancements Gun',
         'RNGAI ACU Enhancements Tier',
         'RNGAI Engineer Builder',
+        'RNGAI Factory Builder Land',
+        'RNGAI Factory Builder Air',
         'RNGAI Factory Builder Sea',
         'RNGAI Land Upgrade Builders',
         'RNGAI Land AA 2',

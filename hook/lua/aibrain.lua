@@ -781,8 +781,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 100
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.7
-                upgradeSpec.EnergyLowTrigger = 0.8
+                upgradeSpec.MassLowTrigger = 0.72
+                upgradeSpec.EnergyLowTrigger = 0.9
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -1223,7 +1223,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     --LOG('Engineer added to unitTypePaused')
                     local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
-                    self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause')
+                    self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
                 elseif priorityUnit == 'STATIONPODS' then
                     local unitAlreadySet = false
                     for k, v in unitTypePaused do
@@ -1235,7 +1235,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         table.insert(unitTypePaused, priorityUnit)
                     end
                     local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
-                    self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause')
+                    self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'MASS')
                 elseif priorityUnit == 'AIR' then
                     local unitAlreadySet = false
                     for k, v in unitTypePaused do
@@ -1247,7 +1247,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         table.insert(unitTypePaused, priorityUnit)
                     end
                     local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
-                    self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause')
+                    self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                 elseif priorityUnit == 'LAND' then
                     local unitAlreadySet = false
                     for k, v in unitTypePaused do
@@ -1259,7 +1259,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         table.insert(unitTypePaused, priorityUnit)
                     end
                     local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
-                    self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause')
+                    self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                 elseif priorityUnit == 'MASSEXTRACTION' then
                     local unitAlreadySet = false
                     for k, v in unitTypePaused do
@@ -1272,7 +1272,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                     --LOG('Number of mass extractors'..table.getn(Extractors))
-                    self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause')
+                    self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause', 'MASS')
                 elseif priorityUnit == 'NUKE' then
                     local unitAlreadySet = false
                     for k, v in unitTypePaused do
@@ -1284,7 +1284,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         table.insert(unitTypePaused, priorityUnit)
                     end
                     local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
-                    self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause')
+                    self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
                 end
                 WaitTicks(20)
                 massStateCaution = self:EcoManagerMassStateCheck()
@@ -1303,22 +1303,22 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in unitTypePaused do
                 if v == 'ENGINEER' then
                     local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
-                    self:EcoSelectorManagerRNG(v, Engineers, 'unpause')
+                    self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'MASS')
                 elseif v == 'STATIONPODS' then
                     local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
-                    self:EcoSelectorManagerRNG(v, StationPods, 'unpause')
+                    self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'MASS')
                 elseif v == 'AIR' then
                     local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
-                    self:EcoSelectorManagerRNG(v, AirFactories, 'unpause')
+                    self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'MASS')
                 elseif v == 'LAND' then
                     local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
-                    self:EcoSelectorManagerRNG(v, LandFactories, 'unpause')
+                    self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
                 elseif v == 'MASSEXTRACTION' then
                     local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
-                    self:EcoSelectorManagerRNG(v, Extractors, 'unpause')
+                    self:EcoSelectorManagerRNG(v, Extractors, 'unpause', 'MASS')
                 elseif v == 'NUKE' then
                     local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
-                    self:EcoSelectorManagerRNG(v, Nukes, 'unpause')
+                    self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'MASS')
                 end
             end
             powerStateCaution = false
@@ -1388,7 +1388,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         --LOG('Engineer added to unitTypePaused')
                         local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
-                        self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause')
+                        self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'ENERGY')
                     elseif priorityUnit == 'STATIONPODS' then
                         local unitAlreadySet = false
                         for k, v in unitTypePaused do
@@ -1400,7 +1400,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             table.insert(unitTypePaused, priorityUnit)
                         end
                         local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
-                        self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause')
+                        self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'ENERGY')
                     elseif priorityUnit == 'AIR' then
                         local unitAlreadySet = false
                         for k, v in unitTypePaused do
@@ -1412,7 +1412,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             table.insert(unitTypePaused, priorityUnit)
                         end
                         local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
-                        self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause')
+                        self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
                     elseif priorityUnit == 'SHIELD' then
                         local unitAlreadySet = false
                         for k, v in unitTypePaused do
@@ -1424,7 +1424,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             table.insert(unitTypePaused, priorityUnit)
                         end
                         local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
-                        self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause')
+                        self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
                     elseif priorityUnit == 'MASSFABRICATION' then
                         local unitAlreadySet = false
                         for k, v in unitTypePaused do
@@ -1436,7 +1436,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             table.insert(unitTypePaused, priorityUnit)
                         end
                         local MassFabricators = self:GetListOfUnits(categories.STRUCTURE * categories.MASSFABRICATION, false, false)
-                        self:EcoSelectorManagerRNG(priorityUnit, MassFabricators, 'pause')
+                        self:EcoSelectorManagerRNG(priorityUnit, MassFabricators, 'pause', 'ENERGY')
                     elseif priorityUnit == 'NUKE' then
                         local unitAlreadySet = false
                         for k, v in unitTypePaused do
@@ -1448,7 +1448,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             table.insert(unitTypePaused, priorityUnit)
                         end
                         local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
-                        self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause')
+                        self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                     end
                     WaitTicks(20)
                     powerStateCaution = self:EcoManagerPowerStateCheck()
@@ -1467,22 +1467,22 @@ AIBrain = Class(RNGAIBrainClass) {
                 for k, v in unitTypePaused do
                     if v == 'ENGINEER' then
                         local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
-                        self:EcoSelectorManagerRNG(v, Engineers, 'unpause')
+                        self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'ENERGY')
                     elseif v == 'STATIONPODS' then
                         local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
-                        self:EcoSelectorManagerRNG(v, StationPods, 'unpause')
+                        self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'ENERGY')
                     elseif v == 'AIR' then
                         local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
-                        self:EcoSelectorManagerRNG(v, AirFactories, 'unpause')
+                        self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
                     elseif v == 'SHIELD' then
                         local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
-                        self:EcoSelectorManagerRNG(v, Shields, 'unpause')
+                        self:EcoSelectorManagerRNG(v, Shields, 'unpause', 'ENERGY')
                     elseif v == 'MASSFABRICATION' then
                         local MassFabricators = self:GetListOfUnits(categories.STRUCTURE * categories.MASSFABRICATION, false, false)
-                        self:EcoSelectorManagerRNG(v, MassFabricators, 'unpause')
+                        self:EcoSelectorManagerRNG(v, MassFabricators, 'unpause', 'ENERGY')
                     elseif v == 'NUKE' then
                         local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
-                        self:EcoSelectorManagerRNG(v, Nukes, 'unpause')
+                        self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'ENERGY')
                     end
                 end
                 powerStateCaution = false
@@ -1510,7 +1510,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,]]
 
     EcoManagerMassStateCheck = function(self)
-        if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') <= 0.10 then
+        if self:GetEconomyTrend('MASS') <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
             return true
         else
             return false
@@ -1518,7 +1518,7 @@ AIBrain = Class(RNGAIBrainClass) {
         return false
     end,
     
-    EcoSelectorManagerRNG = function(self, priorityUnit, units, action)
+    EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --LOG('Eco selector manager for '..priorityUnit..' is '..action)
         
 
@@ -1537,6 +1537,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v:IsPaused() then continue end
                 if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
                     --LOG('Pausing Engineer')
+                    v:SetPaused(true)
+                elseif type == 'MASS' then
                     v:SetPaused(true)
                 end
             elseif priorityUnit == 'STATIONPODS' then

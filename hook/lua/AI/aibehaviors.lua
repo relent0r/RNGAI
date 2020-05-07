@@ -572,7 +572,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if unitTech == 'TECH1' then
         ecoTimeOut = 480
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 720
+        ecoTimeOut = 780
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do

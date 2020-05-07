@@ -102,7 +102,7 @@ BuilderGroup {
         PriorityFunction = LandEngMode,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -117,7 +117,7 @@ BuilderGroup {
         PriorityFunction = LandNoEngMode,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -704,7 +704,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {     
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },  	
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
             MarkerType = 'Start Location',            
@@ -745,7 +745,7 @@ BuilderGroup {
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             UseFormation = 'None',
@@ -761,7 +761,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 6, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
         },
         BuilderData = {
@@ -778,7 +778,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             UseFormation = 'None',

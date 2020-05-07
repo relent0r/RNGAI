@@ -398,7 +398,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
         PlatoonTemplate = 'T1EngineerAssistRNG',
-        Priority = 550,
+        Priority = 700,
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},

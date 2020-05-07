@@ -527,7 +527,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { MIBC, 'GreaterThanGameTimeRNG', { 140 } },
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 10.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendRNG', { 15.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
         },
@@ -830,7 +830,27 @@ BuilderGroup {
                 Time = 30,
             },
         }
-    },--[[
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR Assist Assist Hydro',
+        PlatoonTemplate = 'CommanderAssist',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.HYDROCARBON }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssisteeType = 'Structure',
+                AssistRange = 50,
+                BeingBuiltCategories = {'STRUCTURE HYDROCARBON'},
+                AssistUntilFinished = true,
+                Time = 0,
+            },
+        }
+    },
+    --[[
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
         PlatoonTemplate = 'CommanderAssistRNG',

@@ -326,16 +326,11 @@ function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1,
     if type(category1) == 'string' then
         category1 = ParseEntityCategory(category1)
     end
-
     local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
     local cat1NumBuilding = 0
     local cat2NumBuilding = 0
     for unitNum, unit in unitsBuilding do
-        if not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') then
-            --LOG('Category is in upgrading state')
-        end
         if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
-            --LOG('Unit is in building state')
             local buildingUnit = unit.UnitBeingBuilt
             if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category1, buildingUnit) then
                 cat1NumBuilding = cat1NumBuilding + 1
@@ -354,20 +349,37 @@ function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1,
                 cat1NumBuilding = cat1NumBuilding + 1
             end
             if category2 then
-                if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category1, buildingUnit) then
+                if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category2, buildingUnit) then
                     --LOG('Engi building but not in building state...')
                     cat2NumBuilding = cat2NumBuilding + 1
                 end
             end
         end
-        if numunits1 <= cat1NumBuilding or numunits2 <= cat2NumBuilding then
+        if numunits1 <= cat1NumBuilding then
+            LOG('numunits1 is '..numunits1..'cat1numbuilding is '..cat1NumBuilding)
+            LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning False inside loop')
             return false
+        end
+        if numunits2 then
+            if numunits2 <= cat2NumBuilding then
+                LOG('numunits1 is '..numunits1..'cat1numbuilding is '..cat1NumBuilding)
+                LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning False inside loop')
+                return false
+            end
         end
     end
 
-    if numunits1 > cat1NumBuilding or numunits2 > cat2NumBuilding then
+    if numunits1 > cat1NumBuilding then
+        LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning True')
         return true
     end
+    if numunits2 then
+        if numunits2 > cat2NumBuilding then
+            LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning True')
+            return true
+        end
+    end
+    LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning False outside loop')
     return false
 end
 

@@ -9,6 +9,7 @@ local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
+local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio)
     local econ = {}
@@ -118,4 +119,14 @@ function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
     end
     --LOG('Mass income to factory is true')
     return true
+end
+
+function GreaterThanEconStorageCurrentRNG(aiBrain, mStorage, eStorage)
+    local MassStorage = GetEconomyStored(aiBrain, 'MASS')
+    local EnergyStorage = GetEconomyStored(aiBrain, 'ENERGY')
+
+    if (MassStorage >= mStorage and EnergyStorage >= eStorage) then
+        return true
+    end
+    return false
 end
