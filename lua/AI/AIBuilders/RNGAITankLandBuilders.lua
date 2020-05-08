@@ -31,7 +31,7 @@ local LandEngMode = function(self, aiBrain)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 5 then
-        LOG('Setting T1 Queue to Eng')
+        --LOG('Setting T1 Queue to Eng')
         return 750
     else
         return 10
@@ -40,12 +40,12 @@ end
 
 local LandNoEngMode = function(self, aiBrain, builderManager)
     local locationType = builderManager.LocationType
-    LOG('Builder Mananger location is'..repr(builderManager))
+    --LOG('Builder Mananger location is'..repr(builderManager))
     local engineerManager = aiBrain.BuilderManagers['MAIN'].EngineerManager
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits > 5 then
-        LOG('Setting T1 Queue to NoEng')
+        --LOG('Setting T1 Queue to NoEng')
         return 750
     else
         return 10

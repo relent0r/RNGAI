@@ -17,10 +17,10 @@ local AirDefenseMode = function(self, aiBrain, manager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     if myAirThreat < enemyAirThreat then
-        LOG('Enable Air Intie Pool Builder')
+        --LOG('Enable Air Intie Pool Builder')
         return 880
     else
-        LOG('Disable Air Intie Pool Builder')
+        --LOG('Disable Air Intie Pool Builder')
         return 10
     end
 end
@@ -29,10 +29,10 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     if myAirThreat / 2 > enemyAirThreat then
-        LOG('Enable Air Attack Queue')
+        --LOG('Enable Air Attack Queue')
         return 880
     else
-        LOG('Disable Air Attack Queue')
+        --LOG('Disable Air Attack Queue')
         return 10
     end
 end

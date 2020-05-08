@@ -356,30 +356,23 @@ function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1,
             end
         end
         if numunits1 <= cat1NumBuilding then
-            LOG('numunits1 is '..numunits1..'cat1numbuilding is '..cat1NumBuilding)
-            LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning False inside loop')
             return false
         end
         if numunits2 then
             if numunits2 <= cat2NumBuilding then
-                LOG('numunits1 is '..numunits1..'cat1numbuilding is '..cat1NumBuilding)
-                LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning False inside loop')
                 return false
             end
         end
     end
 
     if numunits1 > cat1NumBuilding then
-        LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning True')
         return true
     end
     if numunits2 then
         if numunits2 > cat2NumBuilding then
-            LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning True')
             return true
         end
     end
-    LOG('HaveLessThanUnitsInCategoryBeingBuiltRNG Returning False outside loop')
     return false
 end
 

@@ -1560,24 +1560,24 @@ Platoon = Class(RNGAIPlatoon) {
                     -- check to see if we can repair
                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
-                LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
+                --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                LOG('whatToBuild is '..whatToBuild)
+                --LOG('whatToBuild is '..whatToBuild)
                 if whatToBuild == 'ueb1103' or 'uab1103' or 'urb1103' or 'xsb1103' then
-                    LOG('What to build was a mass extractor')
+                    --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
-                        LOG('Entity is an engineer')
+                        --LOG('Entity is an engineer')
                         local engpos = eng:GetPosition()
                         if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30, -500, 1, 0, 'AntiSurface', 1) then
-                            LOG('We can build on a mass marker within 30')
+                            --LOG('We can build on a mass marker within 30')
                             massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, buildLocation)
-                            LOG('Mass Marker'..repr(massMarker))
-                            LOG('Attempting second mass marker')
+                            --LOG('Mass Marker'..repr(massMarker))
+                            --LOG('Attempting second mass marker')
                             RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
                             AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                             aiBrain:BuildStructure(eng, whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative)
                         else
-                            LOG('Cant find mass within distance')
+                            --LOG('Cant find mass within distance')
                         end
                     end
                 end

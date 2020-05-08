@@ -497,12 +497,12 @@ function GetClosestMassMarkerToPos(aiBrain, pos)
         local z = v.Position[3]
         distance = VDist2(pos[1], pos[3], x, z)
         if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
-            LOG('Can build at position '..repr(v.Position))
+            --LOG('Can build at position '..repr(v.Position))
             loc = v.Position
             name = v.Name
             lowest = distance
         else
-            LOG('Cant build at position '..repr(v.Position))
+            --LOG('Cant build at position '..repr(v.Position))
         end
     end
 

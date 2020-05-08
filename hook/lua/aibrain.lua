@@ -185,6 +185,8 @@ AIBrain = Class(RNGAIBrainClass) {
             Air = 0,
             Land = 0,
             Experimental = 0,
+            Extractor = 0,
+            ExtractorCount = 0,
         }
 
         self.BrainIntel = {}
@@ -194,7 +196,12 @@ AIBrain = Class(RNGAIBrainClass) {
             Land = 0,
             Experimental = 0,
         }
-        self.BrainIntel.SelfThreat.Air = {}
+        self.BrainIntel.SelfThreat = {
+            Air = {},
+            Extractor = 0,
+            MassMarker = 0,
+            ExtractorCount = 0,
+        }
         self.BrainIntel.SelfThreat.AirNow = 0
         
 
@@ -220,6 +227,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
             end
         end
+        self:CalculateMassMarkersRNG()
         -- Begin the base monitor process
 
         self:BaseMonitorInitializationRNG()
@@ -232,6 +240,21 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoManagerThreadRNG)
     end,
     
+    CalculateMassMarkersRNG = function(self)
+        local MassMarker = {}
+        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                    -- mass marker is too close to border, skip it.
+                    continue
+                end 
+                table.insert(MassMarker, v)
+            end
+        end
+        local markerCount = table.getn(MassMarker)
+        self.BrainIntel.SelfThreat.MassMarker = markerCount
+    end,
+
     BaseMonitorThreadRNG = function(self)
         while true do
             if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
@@ -949,17 +972,19 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
                 self:TacticalMonitorRNG(ALLBPS)
-                self:AirThreatCheckRNG(ALLBPS)
+                self:EnemyThreatCheckRNG(ALLBPS)
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
 
-    AirThreatCheckRNG = function(self, ALLBPS)
+    EnemyThreatCheckRNG = function(self, ALLBPS)
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
         local enemyAirthreat = 0
-        LOG('Starting Air Threat Check at'..GetGameTick())
+        local enemyExtractorthreat = 0
+        local enemyExtratorCount = 0
+        --LOG('Starting Threat Check at'..GetGameTick())
         for index, brain in ArmyBrains do
             if IsEnemy(selfIndex, brain:GetArmyIndex()) then
                 table.insert(enemyBrains, brain)
@@ -968,6 +993,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(enemyBrains) > 0 then
             for k, enemy in enemyBrains do
                 local enemyUnits = GetListOfUnits( enemy, categories.MOBILE * categories.ANTIAIR, false, false)
+                local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in enemyUnits do
                     -- previous method of getting unit ID before the property was added.
                     --local unitbpId = v:GetUnitId()
@@ -976,11 +1002,18 @@ AIBrain = Class(RNGAIBrainClass) {
         
                     enemyAirthreat = enemyAirthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                 end
+                for _,v in enemyExtractors do
+                    bp = ALLBPS[v.UnitId].Defense
+
+                    enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
+                    enemyExtratorCount = enemyExtratorCount + 1
+                end
             end
         end
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirthreat
-        LOG('Completing Air Threat Check'..GetGameTick())
-        LOG('Total Air Threat is'..enemyAirthreat)
+        self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
+        self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtratorCount
+        --LOG('Completing Threat Check'..GetGameTick())
     end,
 
 
@@ -1129,8 +1162,9 @@ AIBrain = Class(RNGAIBrainClass) {
 
 			airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
         end
-        LOG('My Air Threat is'..airthreat)
+        --LOG('My Air Threat is'..airthreat)
         self.BrainIntel.SelfThreat.AirNow = airthreat
+
         if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
@@ -1144,6 +1178,21 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end
 
+        local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+        local selfExtractorCount = 0
+        local selfExtractorThreat = 0
+        local exBp
+
+        for _,v in brainExtractors do
+            exBp = ALLBPS[v.UnitId].Defense
+
+            selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
+            selfExtractorCount = selfExtractorCount + 1
+        end
+        self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
+        self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
+
+        --[[
         if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
             local totalAirThreat = 0
             for k, v in self.EnemyIntel.EnemyThreatRaw do
@@ -1152,8 +1201,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
-            LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        end
+        end]]
+        --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
     end,
 
     EcoManagerThreadRNG = function(self)

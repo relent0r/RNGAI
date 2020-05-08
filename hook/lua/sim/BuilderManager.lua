@@ -3,6 +3,9 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 RNGBuilderManager = BuilderManager
 BuilderManager = Class(RNGBuilderManager) {
     ManagerLoopBody = function(self,builder,bType)
+        if not self.Brain.RNG then
+            return RNGBuilderManager.ManagerLoopBody(self,builder,bType)
+        end
         if builder:CalculatePriority(self) then
             --LOG('CalculatePriority run on '..builder.BuilderName..'Priority is now '..builder.Priority)
             self.BuilderData[bType].NeedSort = true
