@@ -563,6 +563,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyTrend
     local massEfficiency
     local energyEfficiency
+    local ecoTimeOut
     local upgradeNumLimit
     local extractorUpgradeLimit = 5
     local extractorClosest = false
@@ -570,9 +571,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local initial_delay = 0
     local ecoStartTime = GetGameTimeSeconds()
     if unitTech == 'TECH1' then
-        ecoTimeOut = 480
+        ecoTimeOut = 420
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 780
+        ecoTimeOut = 900
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
@@ -595,15 +596,18 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
             --LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
+            LOG('ByPassEco is now true')
+            LOG('Eco start time was '..ecoStartTime)
+            LOG('Current Game time is '..GetGameTimeSeconds())
+            LOG('Eco Time Out was '..ecoTimeOut)
+            LOG('Unit Tech Type logged as '..unitTech)
+            LOG('Unit ID is '..unit.UnitId)
             bypasseco = true
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
-        if unitTech == 'TECH1' and bypasseco then
-            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
-        elseif unitTech == 'TECH2' and bypasseco then
-            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
-        end
-        if upgradeNumLimit >= extractorUpgradeLimit then
+        if RUtils.UnitRatioCheckRNG( aiBrain, 1.5, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
+            LOG('Too few tech2 extractors to go tech3')
+            ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
             WaitTicks(10)
             continue
         end
@@ -866,6 +870,9 @@ function TacticalResponse(platoon)
     local platoonPos = platoon:GetPlatoonPosition()
     local acuTarget = false
     local targetDistance = 0
+    local distressRange = 200
+    local threatThreshold = 10
+    local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold)
     while aiBrain:PlatoonExists(platoon) do
         --local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
         if aiBrain.ACUSupport.Supported then
@@ -876,7 +883,8 @@ function TacticalResponse(platoon)
                 platoon:Stop()
                 platoon:SetAIPlan('TacticalResponseAIRNG')
             end
-        end
+        elseif distressLocation then
+            LOG('Tactical Response detected distress call')
         --[[elseif table.getn(tacticalThreat) > 0 then
             --LOG('* AI-RNG: TacticalResponse Cycle')
             local threat = 0
@@ -890,6 +898,7 @@ function TacticalResponse(platoon)
                 end
             end
         end]]
+        end
         WaitTicks(100)
     end
 end

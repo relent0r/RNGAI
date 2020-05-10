@@ -100,9 +100,10 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
         PriorityFunction = LandEngMode,
+        Restriction = 'TECH1',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -117,7 +118,7 @@ BuilderGroup {
         PriorityFunction = LandNoEngMode,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -356,7 +357,7 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -369,7 +370,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Attack T2 Large',
         PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 760,
+        Priority = 780,
         BuilderType = 'Land',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
@@ -389,7 +390,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Attack - Tech 3',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
-        Priority = 770,
+        Priority = 790,
         BuilderType = 'Land',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
@@ -700,7 +701,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
         Priority = 700,
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',
         BuilderConditions = {     
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
@@ -984,7 +985,7 @@ BuilderGroup {
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND - categories.ENGINEER } },
         },
         BuilderData = {
             IncludeWater = false,

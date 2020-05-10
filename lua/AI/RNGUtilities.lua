@@ -4,6 +4,7 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local Utils = import('/lua/utilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
+local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 
 --[[
 Valid Threat Options:
@@ -48,6 +49,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local closestDistance = 10000
         local furtherestDistance = 0
         local engPos = self:GetPosition()
+        local minRec = platoon.PlatoonData.MinimumReclaim
         local x1 = engPos[1] - initialRange
         local x2 = engPos[1] + initialRange
         local z1 = engPos[3] - initialRange
@@ -78,15 +80,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if blacklisted then continue end
                 -- End Blacklisted Props
                 if not needEnergy or v.MaxEnergyReclaim then
-                    if v.MaxMassReclaim and v.MaxMassReclaim > 1 then
+                    if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                         if not self.BadReclaimables[v] then
-                            local distance = VDist2(engPos[1], engPos[3], rpos[1], rpos[3])
+                            local recPos = v:GetCachePosition()
+                            local distance = VDist2(engPos[1], engPos[3], recPos[1], recPos[3])
                             if distance < closestDistance then
-                                closestReclaim = rpos
+                                closestReclaim = recPos
                                 closestDistance = distance
                             end
                             if distance > furtherestDistance then -- and distance < closestDistance + 20
-                                furtherestReclaim = rpos
+                                furtherestReclaim = recPos
                                 furtherestDistance = distance
                             end
                             if furtherestDistance - closestDistance > 20 then
@@ -163,12 +166,19 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         IssueAggressiveMove({self}, furtherestReclaim)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
+        local idleCount = 0
         while reclaiming do
             --LOG('* AI-RNG: Engineer is reclaiming')
             WaitSeconds(max_time)
-           if self:IsIdleState() or (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                --LOG('* AI-RNG: Engineer no longer reclaiming')
-                reclaiming = false
+            if self:IsIdleState() then
+                idleCount = idleCount + 1
+                if (max_time and (GetGameTick() - createTick)*10 > max_time) then
+                    --LOG('* AI-RNG: Engineer no longer reclaiming')
+                    reclaiming = false
+                end
+                if idleCount > 5 then
+                    reclaiming = false
+                end
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
@@ -1200,5 +1210,91 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
     end
 
     return false
+end
+
+function GetNavalPlatoonMaxRangeRNG(aiBrain, platoon)
+    local maxRange = 0
+    local platoonUnits = platoon:GetPlatoonUnits()
+    for _,unit in platoonUnits do
+        if unit.Dead then
+            continue
+        end
+
+        for _,weapon in unit.UnitId.Weapon do
+            if not weapon.FireTargetLayerCapsTable or not weapon.FireTargetLayerCapsTable.Water then
+                continue
+            end
+
+            #Check if the weapon can hit land from water
+            local canAttackLand = string.find(weapon.FireTargetLayerCapsTable.Water, 'Land', 1, true)
+
+            if canAttackLand and weapon.MaxRadius > maxRange then
+                isTech1 = EntityCategoryContains(categories.TECH1, unit)
+                maxRange = weapon.MaxRadius
+
+                if weapon.BallisticArc == 'RULEUBA_LowArc' then
+                    selectedWeaponArc = 'low'
+                elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
+                    selectedWeaponArc = 'high'
+                else
+                    selectedWeaponArc = 'none'
+                end
+            end
+        end
+    end
+
+    if maxRange == 0 then
+        return false
+    end
+
+    -- T1 naval units don't hit land targets very well. Bail out!
+    if isTech1 then
+        return false
+    end
+
+    return maxRange, selectedWeaponArc
+end
+
+function UnitRatioCheckRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
+    local numOne = GetCurrentUnits(aiBrain, categoryOne)
+    local numTwo = GetCurrentUnits(aiBrain, categoryTwo)
+    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOne..' '..compareType..' '..numTwo..' ) -- ['..ratio..'] -- return '..repr(CompareBody(numOne / numTwo, ratio, compareType)))
+    return CompareBodyRNG(numOne / numTwo, ratio, compareType)
+end
+
+function CompareBodyRNG(numOne, numTwo, compareType)
+    if compareType == '>' then
+        if numOne > numTwo then
+            return true
+        end
+    elseif compareType == '<' then
+        if numOne < numTwo then
+            return true
+        end
+    elseif compareType == '>=' then
+        if numOne >= numTwo then
+            return true
+        end
+    elseif compareType == '<=' then
+        if numOne <= numTwo then
+            return true
+        end
+    else
+       error('*AI ERROR: Invalid compare type: ' .. compareType)
+       return false
+    end
+    return false
+end
+
+function DebugArrayRNG(Table)
+    for Index, Array in Table do
+        if type(Array) == 'thread' or type(Array) == 'userdata' then
+            LOG('Index['..Index..'] is type('..type(Array)..'). I won\'t print that!')
+        elseif type(Array) == 'table' then
+            LOG('Index['..Index..'] is type('..type(Array)..'). I won\'t print that!')
+        else
+            LOG('Index['..Index..'] is type('..type(Array)..'). "', repr(Array),'".')
+        end
+    end
 end
         

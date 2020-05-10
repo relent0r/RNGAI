@@ -1004,7 +1004,13 @@ Platoon = Class(RNGAIPlatoon) {
                 if data.Defensive then
                     target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
                 elseif data.AvoidBases then
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy(), data.AvoidBases)
+                    LOG('Avoid Bases is set to true')
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy(), data.AvoidBases)
+                    if target then
+                        LOG('Target is true for Avoid Bases')
+                    else
+                        LOG('Target is not true for avoid bases')
+                    end
                 else
                     local mult = { 1,10,25 }
                     for _,i in mult do

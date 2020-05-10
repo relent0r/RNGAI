@@ -229,31 +229,6 @@ BuilderGroup {
             }
         }
     },
-    Builder {
-        BuilderName = 'RNG Factory Builder Air T1 Main Late',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.COMMAND}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                Location = 'LocationType',
-                BuildClose = true,
-                BuildStructures = {
-                    'T1AirFactory',
-                },
-            }
-        }
-    },
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Air Large',
@@ -526,9 +501,25 @@ BuilderGroup {
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Enemy',
+        PlatoonTemplate = 'T1LandFactoryUpgrade',
+        Priority = 800,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'EnemyHasUnitOfCategoryRNG', { categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2}},
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
+                { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.3}},
             },
         BuilderType = 'Any',
     },
@@ -539,7 +530,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.80}},
@@ -575,7 +566,22 @@ BuilderGroup {
                 { MIBC, 'GreaterThanGameTimeRNG', { 1080 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.3}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
+                { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
+            },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Enemy',
+        PlatoonTemplate = 'T2LandFactoryUpgrade',
+        Priority = 850,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
+                { UCBC, 'EnemyHasUnitOfCategoryRNG', { categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.3}},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
             },

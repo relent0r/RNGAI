@@ -42,5 +42,6 @@ BuilderManager = Class(RNGBuilderManager) {
             end
         end
     end,
+    
 
 }

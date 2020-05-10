@@ -1,6 +1,36 @@
 
 RNGBuilder = Builder
 Builder = Class(RNGBuilder) {
+--[[
+    Create = function(self, brain, data, locationType)
+        if not self.Brain.RNG then
+            return RNGBuilder.Create(self, brain, data, locationType)
+        end
+        -- make sure the table of strings exist, they are required for the builder
+        local verifyDictionary = { 'Priority', 'BuilderName' }
+        for k,v in verifyDictionary do
+            if not self:VerifyDataName(v, data) then return false end
+        end
+
+        self.Priority = data.Priority
+        self.OriginalPriority = self.Priority
+        LOG('Data'..repr(data))
+        self.Restriction = data.Restriction
+
+        self.Brain = brain
+
+        self.BuilderName = data.BuilderName
+        
+        self.DelayEqualBuildPlattons = data.DelayEqualBuildPlattons
+
+        self.ReportFailure = data.ReportFailure
+
+        self:SetupBuilderConditions(data, locationType)
+
+        self.BuilderStatus = false
+
+        return true
+    end,
 
     CalculatePriorityRNG = function(self, builderManager)
         self.PriorityAltered = false
@@ -15,5 +45,5 @@ Builder = Class(RNGBuilder) {
             --LOG('New Priority '..self.BuilderName..' - '..self.Priority)
         end
         return self.PriorityAltered
-    end,
+    end,]]
 }

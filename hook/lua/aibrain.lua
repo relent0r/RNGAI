@@ -1185,7 +1185,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
         for _,v in brainExtractors do
             exBp = ALLBPS[v.UnitId].Defense
-
             selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
             selfExtractorCount = selfExtractorCount + 1
         end
@@ -1202,7 +1201,8 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
         end]]
-        --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
         LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
         LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
         LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)

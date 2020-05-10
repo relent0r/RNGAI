@@ -1,6 +1,7 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
+local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 -- hook for additional build conditions used from AIBuilders
 
 --{ UCBC, 'ReturnTrue', {} },
@@ -152,6 +153,22 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, location
     return false
 end
 
+function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, locationType, numReq, radiusOverride, category, constructionCat)
+    local numUnits
+    if radiusOverride then
+        LOG('Radius OverRide first function'..radiusOverride)
+    end
+    if constructionCat then
+        numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+    else
+        numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain,locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+    end
+    if numUnits > numReq then
+        return true
+    end
+    return false
+end
+
 function GetOwnUnitsAroundLocation(aiBrain, category, location, radius)
     local units = aiBrain:GetUnitsAroundPoint(category, location, radius, 'Ally')
     local index = aiBrain:GetArmyIndex()
@@ -162,6 +179,29 @@ function GetOwnUnitsAroundLocation(aiBrain, category, location, radius)
         end
     end
     return retUnits
+end
+
+function EnemyHasUnitOfCategoryRNG(aiBrain, category)
+    local selfIndex = aiBrain:GetArmyIndex()
+    local enemyBrains = {}
+    local unitCount = 0
+
+    --LOG('Starting Threat Check at'..GetGameTick())
+    for index, brain in ArmyBrains do
+        if IsEnemy(selfIndex, brain:GetArmyIndex()) then
+            table.insert(enemyBrains, brain)
+        end
+    end
+    if table.getn(enemyBrains) > 0 then
+        for k, enemy in enemyBrains do
+            local enemyUnits = GetCurrentUnits( enemy, category)
+            if enemyUnits > 0 then
+                return true
+            end
+        end
+    end
+    return false
+    --LOG('Completing Threat Check'..GetGameTick())
 end
 
 function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, builderCategory)
@@ -189,6 +229,63 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
     if not baseposition then
         return false
     end
+    local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
+    local retUnits = {}
+    for k,v in filterUnits do
+        -- Only assist if allowed
+        if v.DesiresAssist == false then
+            continue
+        end
+        -- Engineer doesn't want any more assistance
+        --[[
+        if v.NumAssistees then
+            LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
+        end]]
+        if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
+            continue
+        end
+        -- skip the unit, if it's not building or upgrading.
+        if not v:IsUnitState('Building') and not v:IsUnitState('Upgrading') then
+            continue
+        end
+        local beingBuiltUnit = v.UnitBeingBuilt
+        if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
+            continue
+        end
+        table.insert(retUnits, v)
+    end
+    return retUnits
+end
+
+function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, buildingCategory, builderCategory)
+    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    elseif aiBrain:PBMHasPlatoonList() then
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == locType then
+                baseposition = v.Location
+                radius = v.Radius
+                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
+                break
+            end
+        end
+    end
+    if not baseposition then
+        return false
+    end
+    if radiusOverride then
+        radius = radiusOverride
+    end
+    LOG('Radius is '..radius)
     local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
     local retUnits = {}
     for k,v in filterUnits do
@@ -564,19 +661,19 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
     local currentTime = GetGameTimeSeconds()
     if type == 'LAND' then
         if currentTime < 240  then
-            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
             return true
             end
         elseif currentTime < 480 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
                 return true
             end
         elseif currentTime < 720 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
                 return true
             end
         elseif currentTime > 900 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
                 return true
             end
         else

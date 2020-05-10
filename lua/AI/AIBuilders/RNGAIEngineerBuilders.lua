@@ -590,6 +590,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.4 }},
         },
         BuilderType = 'Any',
@@ -612,6 +613,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.4 }},
         },
         BuilderType = 'Any',
@@ -702,7 +704,8 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 80
+            ReclaimTime = 80,
+            MinimumReclaim = 8
         },
         BuilderType = 'Any',
     },
@@ -720,7 +723,8 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 80
+            ReclaimTime = 80,
+            MinimumReclaim = 8
         },
         BuilderType = 'Any',
     },
@@ -738,7 +742,8 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 80
+            ReclaimTime = 80,
+            MinimumReclaim = 1
         },
         BuilderType = 'Any',
     },

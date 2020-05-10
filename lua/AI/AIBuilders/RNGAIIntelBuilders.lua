@@ -44,12 +44,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Radar Upgrade',
         PlatoonTemplate = 'T1RadarUpgrade',
-        Priority = 600,
+        Priority = 700,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.2, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
         },
         BuilderType = 'Any',
@@ -57,7 +57,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Radar Upgrade',
         PlatoonTemplate = 'T2RadarUpgrade',
-        Priority = 600,
+        Priority = 700,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
