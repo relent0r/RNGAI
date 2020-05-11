@@ -22,7 +22,7 @@ end
 
 function SetCDRDefaults(aiBrain, cdr, plat)
     cdr.CDRHome = table.copy(cdr:GetPosition())
-    aiBrain.ACUSupport.ACUMaxSearchRadius = 60
+    aiBrain.ACUSupport.ACUMaxSearchRadius = 80
 end
 
 function CommanderThreadRNG(cdr, platoon)
@@ -348,12 +348,12 @@ end
 function CDRReturnHomeRNG(aiBrain, cdr)
     -- This is a reference... so it will autoupdate
     local cdrPos = cdr:GetPosition()
-    local distSqAway = 1600
+    local distSqAway = 2500
     local loc = cdr.CDRHome
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
-        --LOG('CDR further than distSqAway')
+        LOG('CDR further than distSqAway')
         local plat = aiBrain:MakePlatoon('', '')
         
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
@@ -366,8 +366,8 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueClearCommands({cdr})
             IssueStop({cdr})
             local acuPos1 = table.copy(cdrPos)
-            --LOG('ACU Pos 1 :'..repr(acuPos1))
-            --LOG('Home location is :'..repr(loc))
+            LOG('ACU Pos 1 :'..repr(acuPos1))
+            LOG('Home location is :'..repr(loc))
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             WaitTicks(40)
             local acuPos2 = table.copy(cdrPos)
@@ -573,7 +573,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if unitTech == 'TECH1' then
         ecoTimeOut = 420
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 900
+        ecoTimeOut = 780
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
@@ -605,6 +605,15 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             bypasseco = true
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
+        if unitTech == 'TECH1' and bypasseco then
+            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
+        elseif unitTech == 'TECH2' and bypasseco then
+            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
+        end
+        if upgradeNumLimit >= extractorUpgradeLimit then
+            WaitTicks(10)
+            continue
+        end
         if RUtils.UnitRatioCheckRNG( aiBrain, 1.5, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
             LOG('Too few tech2 extractors to go tech3')
             ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
