@@ -822,46 +822,7 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
             target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
             if target then
-                local threatAroundplatoon = 0
-                --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                 local targetPosition = target:GetPosition()
-                if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
-                    local platoonPos = GetPlatoonPosition(self)
-                    positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
-                    local bp
-                    -- calculate my present land threat			
-                    for _,v in positionUnits do
-                        bp = ALLBPS[v.UnitId].Defense
-                        threatAroundplatoon = threatAroundplatoon + bp.SurfaceThreatLevel
-                    end
-                    if threatAroundplatoon < 75 then
-                        local retreatPos = RUtils.lerpy(platoonPos, targetPosition, {50, 1})
-                        self:MoveToLocation(retreatPos, false)
-                        --LOG('Target is ACU retreating')
-                        local platoonThreat = self:GetPlatoonThreat('Land', categories.MOBILE * categories.LAND)
-                        --LOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
-                        --LOG('Platoon Threat = '..platoonThreat)
-                        WaitTicks(30)
-                        continue
-                    end
-                end
-                if target.Dead or target:BeenDestroyed() then continue end
-                local attackUnits =  self:GetSquadUnits('Attack')
-                local scoutUnits = self:GetSquadUnits('Scout')
-                local guardUnits = self:GetSquadUnits('Guard')
-                if scoutUnits then
-                    local guardedUnit = 1
-                    if attackUnits then
-                        while attackUnits[guardedUnit].Dead do
-                            guardedUnit = guardedUnit + 1
-                            WaitTicks(3)
-                        end
-                    else
-                        return self:ReturnToBaseAIRNG()
-                    end
-                    IssueClearCommands(scoutUnits)
-                    IssueGuard(scoutUnits, attackUnits[guardedUnit])
-                end
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
@@ -869,6 +830,45 @@ Platoon = Class(RNGAIPlatoon) {
                 IssueClearCommands(GetPlatoonUnits(self))
                 local usedTransports = false
                 if path then
+                    local threatAroundplatoon = 0
+                    --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
+                    if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
+                        local platoonPos = GetPlatoonPosition(self)
+                        positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
+                        local bp
+                        -- calculate my present land threat			
+                        for _,v in positionUnits do
+                            bp = ALLBPS[v.UnitId].Defense
+                            threatAroundplatoon = threatAroundplatoon + bp.SurfaceThreatLevel
+                        end
+                        if threatAroundplatoon < 75 then
+                            local retreatPos = RUtils.lerpy(platoonPos, targetPosition, {50, 1})
+                            self:MoveToLocation(retreatPos, false)
+                            --LOG('Target is ACU retreating')
+                            local platoonThreat = self:GetPlatoonThreat('Land', categories.MOBILE * categories.LAND)
+                            --LOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
+                            --LOG('Platoon Threat = '..platoonThreat)
+                            WaitTicks(30)
+                            continue
+                        end
+                    end
+                    if target.Dead or target:BeenDestroyed() then continue end
+                    local attackUnits =  self:GetSquadUnits('Attack')
+                    local scoutUnits = self:GetSquadUnits('Scout')
+                    local guardUnits = self:GetSquadUnits('Guard')
+                    if scoutUnits then
+                        local guardedUnit = 1
+                        if attackUnits then
+                            while attackUnits[guardedUnit].Dead do
+                                guardedUnit = guardedUnit + 1
+                                WaitTicks(3)
+                            end
+                        else
+                            return self:ReturnToBaseAIRNG()
+                        end
+                        IssueClearCommands(scoutUnits)
+                        IssueGuard(scoutUnits, attackUnits[guardedUnit])
+                    end
                     --LOG('* AI-RNG: * HuntAIPATH: Path found')
                     local position = GetPlatoonPosition(self)
                     if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
@@ -876,6 +876,7 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, false)
                     end
+
                     if not usedTransports then
                         for i=1, table.getn(path) do
                             local PlatoonPosition

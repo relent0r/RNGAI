@@ -21,24 +21,6 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('* AI-RNG: This is RNG')
             self.RNG = true
 
-            -- Structure Upgrade properties
-            self.UpgradeMode = 'Normal'
-            self.UpgradeIssued = 0
-		    self.UpgradeIssuedLimit = 1
-            self.UpgradeIssuedPeriod = 120
-
-            -- ACU Support Data
-            self.ACUSupport = {}
-            self.ACUMaxSearchRadius = 0
-            self.ACUSupport.Supported = false
-            self.ACUSupport.PlatoonCount = 0
-            self.ACUSupport.Position = {}
-            self.ACUSupport.TargetPosition = false
-            self.ACUSupport.ReturnHome = true
-
-            -- Misc
-            self.ReclaimEnabled = true
-            self.ReclaimLastCheck = 0
         end
     end,
 
@@ -203,8 +185,34 @@ AIBrain = Class(RNGAIBrainClass) {
             ExtractorCount = 0,
         }
         self.BrainIntel.SelfThreat.AirNow = 0
-        
 
+        -- Structure Upgrade properties
+        self.UpgradeMode = 'Normal'
+        self.UpgradeIssued = 0
+        
+        self.UpgradeIssuedPeriod = 120
+        local mapSizeX, mapSizeZ = GetMapSize()
+        if mapSizeX < 1000 and mapSizeZ < 1000  then
+            self.UpgradeIssuedLimit = 1
+            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
+        else
+            self.UpgradeIssuedLimit = 2
+            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
+        end
+
+        -- ACU Support Data
+        self.ACUSupport = {}
+        self.ACUMaxSearchRadius = 0
+        self.ACUSupport.Supported = false
+        self.ACUSupport.PlatoonCount = 0
+        self.ACUSupport.Position = {}
+        self.ACUSupport.TargetPosition = false
+        self.ACUSupport.ReturnHome = true
+
+        -- Misc
+        self.ReclaimEnabled = true
+        self.ReclaimLastCheck = 0
+        
         -- Add default main location and setup the builder managers
         self.NumBases = 0 -- AddBuilderManagers will increase the number
 

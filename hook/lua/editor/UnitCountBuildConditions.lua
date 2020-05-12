@@ -705,15 +705,15 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
             return true
             end
         elseif currentTime < 600 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end
         elseif currentTime < 1200 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 5, unitCategory) then
                 return true
             end
         elseif currentTime > 1800 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
                 return true
             end
         else

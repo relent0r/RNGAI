@@ -2,6 +2,8 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 
 --local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
+local lerpy = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').lerpy
+local SetArcPoints = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').SetArcPoints
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
@@ -266,14 +268,14 @@ function CDROverChargeRNG(aiBrain, cdr)
                         overCharging = true
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
-                        local movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
                         if target and not target.Dead and not target:BeenDestroyed() then
                             IssueOverCharge({cdr}, target)
                         end
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
-                        local movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         local cdrNewPos = {}
                         --LOG('* AI-RNG: Move Position is'..repr(movePos))
                         --LOG('* AI-RNG: Moving to movePos to attack')
@@ -359,6 +361,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         LOG('CDR further than distSqAway')
+        cdr.GoingHome = true
         local plat = aiBrain:MakePlatoon('', '')
         
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
@@ -367,7 +370,6 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             if not aiBrain:PlatoonExists(plat) then
                 return
             end
-            cdr.GoingHome = true
             IssueClearCommands({cdr})
             IssueStop({cdr})
             local acuPos1 = table.copy(cdrPos)
@@ -379,7 +381,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             --LOG('ACU Pos 2 :'..repr(acuPos2))
             local headingVec = {(2 * (10 * acuPos2[1] - acuPos1[1]*9) + loc[1])/3, 0, (2 * (10 * acuPos2[3] - acuPos1[3]*9) + loc[3])/3}
             --LOG('Heading Vector is :'..repr(headingVec))
-            local movePosTable = RUtils.SetArcPoints(headingVec,acuPos2, 15, 3, 8)
+            local movePosTable = SetArcPoints(headingVec,acuPos2, 15, 3, 8)
             local indexVar = math.random(1,3)
             IssueClearCommands({cdr})
             IssueStop({cdr})
@@ -578,7 +580,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local energyEfficiency
     local ecoTimeOut
     local upgradeNumLimit
-    local extractorUpgradeLimit = 5
+    local extractorUpgradeLimit = 0
     local extractorClosest = false
     
     local initial_delay = 0
@@ -608,6 +610,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
+            LOG('Eco Bypass is True')
             bypasseco = true
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
@@ -616,6 +619,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         elseif unitTech == 'TECH2' and bypasseco then
             extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
         end
+        LOG('UpgradeNumLimit is '..upgradeNumLimit)
+        LOG('extractorUpgradeLimit is '..extractorUpgradeLimit)
         if upgradeNumLimit >= extractorUpgradeLimit then
             WaitTicks(10)
             continue
@@ -641,13 +646,13 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG:'..aiBrain.Nickname)
             --LOG('* AI-RNG: UpgradeIssues and UpgradeIssuedLimit are set')
             massStorage = GetEconomyStored( aiBrain, 'MASS')
-            --LOG('* AI-RNG: massStorage'..massStorage)
+            LOG('* AI-RNG: massStorage'..massStorage)
             energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
-            --LOG('* AI-RNG: energyStorage'..energyStorage)
+            LOG('* AI-RNG: energyStorage'..energyStorage)
             massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
-            --LOG('* AI-RNG: massStorageRatio'..massStorageRatio)
+            LOG('* AI-RNG: massStorageRatio'..massStorageRatio)
             energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
-            --LOG('* AI-RNG: energyStorageRatio'..energyStorageRatio)
+            LOG('* AI-RNG: energyStorageRatio'..energyStorageRatio)
             massIncome = GetEconomyIncome(aiBrain, 'MASS')
             --LOG('* AI-RNG: massIncome'..massIncome)
             massRequested = GetEconomyRequested(aiBrain, 'MASS')
@@ -661,9 +666,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyTrend'..energyTrend)
             massEfficiency = math.min(massIncome / massRequested, 2)
-            --LOG('* AI-RNG: massEfficiency'..massEfficiency)
+            LOG('* AI-RNG: massEfficiency'..massEfficiency)
             energyEfficiency = math.min(energyIncome / energyRequested, 2)
-            --LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
+            LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .60 and energyStorageRatio > .70))

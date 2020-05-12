@@ -249,7 +249,7 @@ BuilderGroup {
         Priority = 500, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { MIBC, 'FactionIndex', { 1, 2, 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { MIBC, 'FactionIndex', { 1, 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, 'FACTORY LAND TECH3' }}, -- stop building after we decent reach tech2 capability
 
@@ -954,7 +954,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Sera Arty Island',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Hover',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
@@ -973,7 +973,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Aeon Tanks Island',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Hover',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
