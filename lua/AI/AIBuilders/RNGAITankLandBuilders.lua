@@ -600,7 +600,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Expansion',                          -- Template Name. 
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -610,6 +611,7 @@ BuilderGroup {
         },
         BuilderData = {
             UseFormation = 'None',
+            ThreatSupport = 5,
             },
     },
     Builder {
@@ -634,8 +636,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. 
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 6,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -663,6 +665,7 @@ BuilderGroup {
                 'ALLUNITS',
             },
             UseFormation = 'AttackFormation',
+            ThreatSupport = 5,
         },
     },
     Builder {
@@ -700,6 +703,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack Early',
         PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
         Priority = 700,
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 2,
         BuilderType = 'Any',
@@ -722,6 +726,7 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
+            ThreatSupport = 5,
         },    
     }, 
     Builder {
@@ -742,7 +747,8 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -751,13 +757,15 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             AggressiveMove = true,
+            ThreatSupport = 5,
             },
     },
     Builder {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. 
         Priority = 500,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 50,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -767,12 +775,14 @@ BuilderGroup {
         },
         BuilderData = {
             UseFormation = 'None',
+            ThreatSupport = 2,
             },
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. 
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 550,                                                          -- Priority. 1000 is normal.
         InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -783,6 +793,7 @@ BuilderGroup {
         },
         BuilderData = {
             UseFormation = 'None',
+            ThreatSupport = 2,
             },
     }, 
     Builder {
@@ -819,6 +830,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 10,                                                      -- Number of platoons that will be formed.
@@ -845,6 +857,7 @@ BuilderGroup {
                 'ALLUNITS',
             },
             UseFormation = 'GrowthFormation',
+            ThreatSupport = 5,
         },
     },
     Builder {
@@ -943,7 +956,8 @@ BuilderGroup {
         BuilderName = 'RNGAI Sera Arty Island',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -954,13 +968,15 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             AggressiveMove = true,
+            ThreatSupport = 5,
             },
     },
     Builder {
         BuilderName = 'RNGAI Aeon Tanks Island',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'TacticalResponse' },
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -971,6 +987,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             AggressiveMove = true,
+            ThreatSupport = 5,
             },
     },
 }
@@ -981,7 +998,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -1007,7 +1023,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Medium',                          -- Template Name.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

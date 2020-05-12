@@ -80,19 +80,6 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Bomber T1',
-        PlatoonTemplate = 'T1AirBomber',
-        Priority = 750,
-        BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2' }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory Bomber T1 Response',
         PlatoonTemplate = 'T1AirBomber',
         Priority = 850,
@@ -115,16 +102,6 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Intie Small',
-        PlatoonTemplate = 'RNGAIFighterGroup',
-        Priority = 700,
-        BuilderConditions = { 
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
         },
         BuilderType = 'Air',
     },
@@ -179,20 +156,6 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory T2 FighterBomber Response',
-        PlatoonTemplate = 'T2FighterBomber',
-        Priority = 850,
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 2, categories.ANTIAIR }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.BOMBER * categories.TECH3} },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
-        },
-        BuilderType = 'Air',
     },
     Builder {
         BuilderName = 'RNGAI T2 Air Gunship',
@@ -427,7 +390,7 @@ BuilderGroup {
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 900,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
@@ -439,6 +402,7 @@ BuilderGroup {
                 'MASSEXTRACTION',
                 'ENGINEER',
             },
+            ThreatSupport = 5,
         },
     },
     Builder {
@@ -541,30 +505,6 @@ BuilderGroup {
                 'ENERGYPRODUCTION TECH2',
                 'ALLUNITS',
             },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Bomber Attack T23',
-        PlatoonTemplate = 'RNGAI BomberAttack',
-        Priority = 800,
-        InstanceCount = 5,
-        BuilderType = 'Any',
-        BuilderData = {
-            PrioritizedCategories = {
-                'MASSEXTRACTION',
-                'ENERGYPRODUCTION',
-                'COMMAND',
-                'MASSFABRICATION',
-                'ANTIAIR STRUCTURE',
-                'DEFENSE STRUCTURE',
-                'STRUCTURE',
-                'MOBILE ANTIAIR',
-                'ALLUNITS',
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.AIR * categories.BOMBER * (categories.TECH2 + categories.TECH3) - categories.daa0206 } },
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 1, 'AIR MOBILE TECH3' } },
         },
     },
 }

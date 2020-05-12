@@ -190,6 +190,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
 
         self.BrainIntel = {}
+        self.BrainIntel.MassMarker = 0
         self.BrainIntel.SelfThreat = {}
         self.BrainIntel.Average = {
             Air = 0,
@@ -199,7 +200,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat = {
             Air = {},
             Extractor = 0,
-            MassMarker = 0,
             ExtractorCount = 0,
         }
         self.BrainIntel.SelfThreat.AirNow = 0

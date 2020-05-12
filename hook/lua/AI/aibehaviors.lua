@@ -1,7 +1,7 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibehaviors.lua' )
 
 --local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
@@ -10,6 +10,7 @@ local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local MakePlatoon = moho.aibrain_methods.MakePlatoon
 local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
+local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
 
 function CommanderBehaviorRNG(platoon)
@@ -220,7 +221,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             if not aiBrain.ACUSupport.Supported then
                                 aiBrain.ACUSupport.Position = cdr:GetPosition()
                                 aiBrain.ACUSupport.Supported = true
-                                --LOG('* AI-RNG: ACUSupport.Supported set to true')
+                                LOG('* AI-RNG: ACUSupport.Supported set to true')
                                 aiBrain.ACUSupport.TargetPosition = target:GetPosition()
                             end
                             local cdrLayer = cdr:GetCurrentLayer()
@@ -240,6 +241,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --LOG('Target Found')
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
+                    aiBrain.BaseMonitor.CDRDistress = targetPos
+                    aiBrain.BaseMonitor.CDRThreatLevel = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                     --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     
@@ -341,7 +344,9 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.ReturnHome = true
         aiBrain.ACUSupport.TargetPosition = false
         aiBrain.ACUSupport.Supported = false
-        --LOG('* AI-RNG: ACUSupport.Supported set to false')
+        aiBrain.BaseMonitor.CDRDistress = false
+        aiBrain.BaseMonitor.CDRThreatLevel = 0
+        LOG('* AI-RNG: ACUSupport.Supported set to false')
     end
 end
 
@@ -395,6 +400,14 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 
         cdr.GoingHome = false
         IssueClearCommands({cdr})
+    end
+    LOG('Sometimes the combat platoon gets disbanded, hard to find the reason')
+    if aiBrain.ACUSupport.Supported then
+        aiBrain.ACUSupport.Supported = false
+end
+    if aiBrain.BaseMonitor.CDRDistress then
+        aiBrain.BaseMonitor.CDRDistress = false
+        aiBrain.BaseMonitor.CDRThreatLevel = 0
     end
 end
 
@@ -573,7 +586,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if unitTech == 'TECH1' then
         ecoTimeOut = 420
     elseif unitTech == 'TECH2' then
-        ecoTimeOut = 780
+        ecoTimeOut = 720
     end
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < upgradeSpec.InitialDelay do
@@ -595,13 +608,6 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-            --LOG('Extractor has not started upgrade for more than 10 mins, removing eco restriction')
-            LOG('ByPassEco is now true')
-            LOG('Eco start time was '..ecoStartTime)
-            LOG('Current Game time is '..GetGameTimeSeconds())
-            LOG('Eco Time Out was '..ecoTimeOut)
-            LOG('Unit Tech Type logged as '..unitTech)
-            LOG('Unit ID is '..unit.UnitId)
             bypasseco = true
         end
         upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
@@ -614,19 +620,22 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-        if RUtils.UnitRatioCheckRNG( aiBrain, 1.5, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
-            LOG('Too few tech2 extractors to go tech3')
-            ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
-            WaitTicks(10)
-            continue
-        end
-        --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
+
         extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
         if not extractorClosest then
             --LOG('ExtractorClosest is false')
             WaitTicks(10)
             continue
         end
+
+        if UnitRatioCheckRNG( aiBrain, 1.5, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
+            LOG('Too few tech2 extractors to go tech3')
+            ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
+            WaitTicks(10)
+            continue
+        end
+        --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
+        
         
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
             --LOG('* AI-RNG:'..aiBrain.Nickname)
@@ -834,9 +843,9 @@ function ExtractorClosest(aiBrain, unit, unitBp)
     local UnitPos
 
     if unitType == 'MASSEXTRACTION' and unitTech == 'TECH1' then
-        MassExtractorUnitList = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1), false, false)
+        MassExtractorUnitList = GetListOfUnits(aiBrain, categories.MASSEXTRACTION * (categories.TECH1), false, false)
     elseif unitType == 'MASSEXTRACTION' and unitTech == 'TECH2' then
-        MassExtractorUnitList = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH2), false, false)
+        MassExtractorUnitList = GetListOfUnits(aiBrain, categories.MASSEXTRACTION * (categories.TECH2), false, false)
     end
 
     for k, v in MassExtractorUnitList do
@@ -874,40 +883,3 @@ function ExtractorClosest(aiBrain, unit, unitBp)
     end
 end
 
-function TacticalResponse(platoon)
-    local aiBrain = platoon:GetBrain()
-    local platoonPos = platoon:GetPlatoonPosition()
-    local acuTarget = false
-    local targetDistance = 0
-    local distressRange = 200
-    local threatThreshold = 10
-    local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold)
-    while aiBrain:PlatoonExists(platoon) do
-        --local tacticalThreat = aiBrain.EnemyIntel.EnemyThreatLocations
-        if aiBrain.ACUSupport.Supported then
-            acuTarget = aiBrain.ACUSupport.TargetPosition
-            --LOG('Platoon Pos :'..repr(platoonPos)..' ACU TargetPos :'..repr(acuTarget))
-            targetDistance = VDist2Sq(platoonPos[1], platoonPos[3], acuTarget[1], acuTarget[3])
-            if targetDistance > 50 and targetDistance < 200 then
-                platoon:Stop()
-                platoon:SetAIPlan('TacticalResponseAIRNG')
-            end
-        elseif distressLocation then
-            LOG('Tactical Response detected distress call')
-        --[[elseif table.getn(tacticalThreat) > 0 then
-            --LOG('* AI-RNG: TacticalResponse Cycle')
-            local threat = 0
-            local threatType = platoon.MovementLayer
-            local platoonThreat = platoon:CalculatePlatoonThreat(threatType, categories.ALLUNITS)
-            local threatCutOff = platoonThreat * 0.50
-            for _, v in tacticalThreat do
-                if v.Threat > threat and v.Threat > threatCutOff then
-                    platoon:SetAIPlan('TacticalResponseAIRNG')
-                    break
-                end
-            end
-        end]]
-        end
-        WaitTicks(100)
-    end
-end

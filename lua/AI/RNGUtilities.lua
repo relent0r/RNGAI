@@ -856,6 +856,9 @@ function TacticalMassLocations(aiBrain)
     --LOG('* AI-RNG: * Starting Tactical Mass Location Function')
     local markerGroups = {}
     local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
+    if markerLocations then
+        aiBrain.BrainIntel.MassMarker = table.getn(markerLocations)
+    end
     local group = 1
     local duplicateMarker = {}
     -- loop thru all the markers --
