@@ -550,7 +550,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local massNeeded = upgradebp.Economy.BuildCostMass
 	local energyNeeded = upgradebp.Economy.BuildCostEnergy
     local buildtime = upgradebp.Economy.BuildTime
-    
+    LOG('Mass Needed '..massNeeded)
+    LOG('Energy Needed '..energyNeeded)
     -- build rate
     local buildrate = unitBp.Economy.BuildRate
 
@@ -613,17 +614,19 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             LOG('Eco Bypass is True')
             bypasseco = true
         end
-        upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
-        if unitTech == 'TECH1' and bypasseco then
-            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
-        elseif unitTech == 'TECH2' and bypasseco then
-            extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
-        end
-        LOG('UpgradeNumLimit is '..upgradeNumLimit)
-        LOG('extractorUpgradeLimit is '..extractorUpgradeLimit)
-        if upgradeNumLimit >= extractorUpgradeLimit then
-            WaitTicks(10)
-            continue
+        if bypasseco then
+            upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
+            if unitTech == 'TECH1' then
+                extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
+            elseif unitTech == 'TECH2' then
+                extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
+            end
+            LOG('UpgradeNumLimit is '..upgradeNumLimit)
+            LOG('extractorUpgradeLimit is '..extractorUpgradeLimit)
+            if upgradeNumLimit >= extractorUpgradeLimit then
+                WaitTicks(10)
+                continue
+            end
         end
 
         extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
@@ -641,7 +644,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         end
         --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         
-        
+        LOG('Upgrade Issued '..aiBrain.UpgradeIssued..' Upgrade Issued Limit '..aiBrain.UpgradeIssuedLimit)
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
             --LOG('* AI-RNG:'..aiBrain.Nickname)
             --LOG('* AI-RNG: UpgradeIssues and UpgradeIssuedLimit are set')
@@ -654,17 +657,17 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
             LOG('* AI-RNG: energyStorageRatio'..energyStorageRatio)
             massIncome = GetEconomyIncome(aiBrain, 'MASS')
-            --LOG('* AI-RNG: massIncome'..massIncome)
+            LOG('* AI-RNG: massIncome'..massIncome)
             massRequested = GetEconomyRequested(aiBrain, 'MASS')
-            --LOG('* AI-RNG: massRequested'..massRequested)
+            LOG('* AI-RNG: massRequested'..massRequested)
             energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
-            --LOG('* AI-RNG: energyIncome'..energyIncome)
+            LOG('* AI-RNG: energyIncome'..energyIncome)
             energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
-            --LOG('* AI-RNG: energyRequested'..energyRequested)
+            LOG('* AI-RNG: energyRequested'..energyRequested)
             massTrend = GetEconomyTrend(aiBrain, 'MASS')
-            --LOG('* AI-RNG: massTrend'..massTrend)
+            LOG('* AI-RNG: massTrend'..massTrend)
             energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
-            --LOG('* AI-RNG: energyTrend'..energyTrend)
+            LOG('* AI-RNG: energyTrend'..energyTrend)
             massEfficiency = math.min(massIncome / massRequested, 2)
             LOG('* AI-RNG: massEfficiency'..massEfficiency)
             energyEfficiency = math.min(energyIncome / energyRequested, 2)
@@ -672,9 +675,15 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .60 and energyStorageRatio > .70))
-                or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .4 ) ) or bypasseco then
+                or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .7 ) ) or bypasseco then
+                    if bypasseco then
+                        LOG('Low Triggered bypasseco')
+                    else
+                        LOG('* AI-RNG: low_trigger_good = true')
+                    end
                 --LOG('* AI-RNG: low_trigger_good = true')
             else
+                WaitTicks(10)
                 continue
             end
             --[[
@@ -685,7 +694,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             end]]
 
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
-				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .4) ) or bypasseco then
+				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .7) ) or bypasseco then
 				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
 				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
                     if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
@@ -716,6 +725,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                         end
 
                         if upgradeIssued then
+                            WaitTicks(10)
                             continue
                         end
                     end
@@ -887,4 +897,3 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         return false
     end
 end
-

@@ -1037,13 +1037,8 @@ Platoon = Class(RNGAIPlatoon) {
                 if data.Defensive then
                     target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
                 elseif data.AvoidBases then
-                    LOG('Avoid Bases is set to true')
+                    --LOG('Avoid Bases is set to true')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy(), data.AvoidBases)
-                    if target then
-                        LOG('Target is true for Avoid Bases')
-                    else
-                        LOG('Target is not true for avoid bases')
-                    end
                 else
                     local mult = { 1,10,25 }
                     for _,i in mult do
@@ -2289,7 +2284,7 @@ Platoon = Class(RNGAIPlatoon) {
         while PlatoonExists(aiBrain, self) do
             if aiBrain.BaseMonitor.AlertSounded or aiBrain.BaseMonitor.CDRDistress or aiBrain.BaseMonitor.PlatoonAlertSounded then
                 -- In the loop so they may be changed by other platoon things
-                LOG('Distress Response Triggered')
+                --LOG('Distress Response Triggered')
                 local distressRange = self.PlatoonData.DistressRange or aiBrain.BaseMonitor.DefaultDistressRange
                 local reactionTime = self.PlatoonData.DistressReactionTime or aiBrain.BaseMonitor.PlatoonDefaultReactionTime
                 local threatThreshold = self.PlatoonData.ThreatSupport or 1

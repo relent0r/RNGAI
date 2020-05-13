@@ -168,6 +168,18 @@ PlatoonTemplate {
     },
 }
 
+PlatoonTemplate {
+    Name = 'RNGAI LandAttack Spam Intelli Amphib',
+    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
+    GlobalSquads = {
+        { categories.MOBILE * categories.LAND * categories.AMPHIBIOUS * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+          4, -- Min number of units.
+          12, -- Max number of units.
+          'attack', -- platoon types: 'support', 'attack', 'scout',
+          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
+    },
+}
+
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack AA Structures',

@@ -761,6 +761,23 @@ BuilderGroup {
             },
     },
     Builder {
+        BuilderName = 'RNGAI Spam Intelli Amphib',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
+        Priority = 550,                                                          -- Priority. 1000 is normal.
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            AggressiveMove = true,
+            ThreatSupport = 5,
+            },
+    },
+    Builder {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. 
         Priority = 500,                                                          -- Priority. 1000 is normal.

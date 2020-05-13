@@ -273,7 +273,7 @@ BuilderGroup {
         Priority = 300,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'NAVAL', categories.MOBILE * (categories.TECH2 + categories.TECH3) * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER} },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'NAVAL', categories.MOBILE * (categories.TECH1 * categories.TECH2 + categories.TECH3) * categories.NAVAL * (categories.SUBMERSIBLE + categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {

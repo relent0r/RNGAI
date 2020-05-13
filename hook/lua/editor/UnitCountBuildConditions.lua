@@ -156,7 +156,7 @@ end
 function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, locationType, numReq, radiusOverride, category, constructionCat)
     local numUnits
     if radiusOverride then
-        LOG('Radius OverRide first function'..radiusOverride)
+        --LOG('Radius OverRide first function'..radiusOverride)
     end
     if constructionCat then
         numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
@@ -285,7 +285,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
     if radiusOverride then
         radius = radiusOverride
     end
-    LOG('Radius is '..radius)
+    --LOG('Radius is '..radius)
     local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
     local retUnits = {}
     for k,v in filterUnits do
@@ -680,19 +680,19 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
             return false
         end
     elseif type == 'AIR' then
-        if currentTime < 240  then
+        if currentTime < 480  then
             if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
             return true
             end
-        elseif currentTime < 480 then
+        elseif currentTime < 720 then
             if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
                 return true
             end
-        elseif currentTime < 720 then
+        elseif currentTime < 900 then
             if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
                 return true
             end
-        elseif currentTime > 900 then
+        elseif currentTime > 1200 then
             if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
                 return true
             end
@@ -700,11 +700,11 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
             return false
         end
     elseif type == 'NAVAL' then
-        if currentTime < 30  then
+        if currentTime < 720  then
             if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
             return true
             end
-        elseif currentTime < 600 then
+        elseif currentTime < 960 then
             if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end

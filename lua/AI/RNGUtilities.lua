@@ -1071,8 +1071,8 @@ end
 function ExtractorsBeingUpgraded(aiBrain)
     -- Returns number of extractors upgrading
 
-    local tech1ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH1, false)
-    local tech2ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH2, false)
+    local tech1ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH1, true)
+    local tech2ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH2, true)
     local tech1ExtNumBuilding = 0
     local tech2ExtNumBuilding = 0
     -- own armyIndex
@@ -1088,7 +1088,6 @@ function ExtractorsBeingUpgraded(aiBrain)
             tech2ExtNumBuilding = tech2ExtNumBuilding + 1
         end
     end
-    
     return {TECH1 = tech1ExtNumBuilding, TECH2 = tech2ExtNumBuilding}
 end
 
