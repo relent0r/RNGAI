@@ -1211,13 +1211,13 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
         end]]
-        LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
     end,
 
     EcoExtractorUpgradeCheckRNG = function(self)

@@ -348,7 +348,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.Supported = false
         aiBrain.BaseMonitor.CDRDistress = false
         aiBrain.BaseMonitor.CDRThreatLevel = 0
-        LOG('* AI-RNG: ACUSupport.Supported set to false')
+        --LOG('* AI-RNG: ACUSupport.Supported set to false')
     end
 end
 
@@ -360,7 +360,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
-        LOG('CDR further than distSqAway')
+        --LOG('CDR further than distSqAway')
         cdr.GoingHome = true
         local plat = aiBrain:MakePlatoon('', '')
         
@@ -373,8 +373,8 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueClearCommands({cdr})
             IssueStop({cdr})
             local acuPos1 = table.copy(cdrPos)
-            LOG('ACU Pos 1 :'..repr(acuPos1))
-            LOG('Home location is :'..repr(loc))
+            --LOG('ACU Pos 1 :'..repr(acuPos1))
+            --LOG('Home location is :'..repr(loc))
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             WaitTicks(40)
             local acuPos2 = table.copy(cdrPos)
@@ -403,7 +403,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         cdr.GoingHome = false
         IssueClearCommands({cdr})
     end
-    LOG('Sometimes the combat platoon gets disbanded, hard to find the reason')
+    --LOG('Sometimes the combat platoon gets disbanded, hard to find the reason')
     if aiBrain.ACUSupport.Supported then
         aiBrain.ACUSupport.Supported = false
 end
@@ -550,8 +550,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local massNeeded = upgradebp.Economy.BuildCostMass
 	local energyNeeded = upgradebp.Economy.BuildCostEnergy
     local buildtime = upgradebp.Economy.BuildTime
-    LOG('Mass Needed '..massNeeded)
-    LOG('Energy Needed '..energyNeeded)
+    --LOG('Mass Needed '..massNeeded)
+    --LOG('Energy Needed '..energyNeeded)
     -- build rate
     local buildrate = unitBp.Economy.BuildRate
 
@@ -621,8 +621,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             elseif unitTech == 'TECH2' then
                 extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
             end
-            LOG('UpgradeNumLimit is '..upgradeNumLimit)
-            LOG('extractorUpgradeLimit is '..extractorUpgradeLimit)
+            --LOG('UpgradeNumLimit is '..upgradeNumLimit)
+            --LOG('extractorUpgradeLimit is '..extractorUpgradeLimit)
             if upgradeNumLimit >= extractorUpgradeLimit then
                 WaitTicks(10)
                 continue
@@ -637,14 +637,14 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         end
 
         if UnitRatioCheckRNG( aiBrain, 1.5, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
-            LOG('Too few tech2 extractors to go tech3')
+            --LOG('Too few tech2 extractors to go tech3')
             ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
             WaitTicks(10)
             continue
         end
         --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         
-        LOG('Upgrade Issued '..aiBrain.UpgradeIssued..' Upgrade Issued Limit '..aiBrain.UpgradeIssuedLimit)
+        --LOG('Upgrade Issued '..aiBrain.UpgradeIssued..' Upgrade Issued Limit '..aiBrain.UpgradeIssuedLimit)
         if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
             --LOG('* AI-RNG:'..aiBrain.Nickname)
             --LOG('* AI-RNG: UpgradeIssues and UpgradeIssuedLimit are set')
