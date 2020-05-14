@@ -333,7 +333,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 continueFighting = false
             end
             if continueFighting == true then
-                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER, cdr:GetPosition(), 70, 'Enemy')
+                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND, cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
@@ -419,7 +419,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
                 if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
-                    local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER, cdr:GetPosition(), 70, 'Enemy')
+                    local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND, cdr:GetPosition(), 70, 'Enemy')
                     local enemyUnitThreat = 0
                     local bp
                     for k,v in enemyUnits do
