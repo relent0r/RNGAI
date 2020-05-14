@@ -330,7 +330,7 @@ function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
             if continueFighting == true then
                 local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, 70, 'Enemy')
                 local enemyUnitThreat = 0
-                for k,v in enenyUnits do
+                for k,v in enemyUnits do
                     bp = ALLBPS[v.UnitId].Defense
                     enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
                 end
