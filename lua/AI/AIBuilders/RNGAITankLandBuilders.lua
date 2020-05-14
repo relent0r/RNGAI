@@ -26,6 +26,30 @@ function LandAttackCondition(aiBrain, locationType, targetNumber)
     return false
 end
 
+local LandAttackHeavyMode = function(self, aiBrain, builderManager)
+    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.ExtractorCount
+    local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
+    if myExtractorCount > totalMassMarkers / 2 then
+        --LOG('Enable Land Heavy Attack Queue')
+        return 790
+    else
+        --LOG('Disable Land Heavy Attack Queue')
+        return 10
+    end
+end
+
+local LandAttackMode = function(self, aiBrain, builderManager)
+    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.ExtractorCount
+    local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
+    if myExtractorCount < totalMassMarkers / 2 then
+        --LOG('Enable Land Attack Queue')
+        return 790
+    else
+        --LOG('Disable Land Attack Queue')
+        return 10
+    end
+end
+
 local LandEngMode = function(self, aiBrain)
     local engineerManager = aiBrain.BuilderManagers['MAIN'].EngineerManager
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
@@ -385,12 +409,27 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T3 AttackLandBuilder',
+    BuilderGroupName = 'RNGAI T3 AttackLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T3 Attack - Tech 3',
+        BuilderName = 'RNGAI Attack T3',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 790,
+        PriorityFunction = LandAttackMode,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.80 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.1}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Attack Heavy T3',
+        PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
+        Priority = 10,
+        PriorityFunction = LandAttackHeavyMode,
         BuilderType = 'Land',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
@@ -405,7 +444,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Large',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T3 Attack T3 Large',
+        BuilderName = 'RNGAI Attack T3 Large',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 770,
         BuilderType = 'Land',
@@ -413,6 +452,20 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.80 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Attack Heavy T3 Large',
+        PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
+        Priority = 10,
+        PriorityFunction = LandAttackHeavyMode,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.80 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

@@ -658,11 +658,12 @@ function UnitsGreaterAtEnemy(aiBrain, unitCount, categoryEnemy)
 end
 
 function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
+    -- Note to self, create a brain flag in the air superiority function that can assist with the AIR platoon sizing increase.
     local currentTime = GetGameTimeSeconds()
     if type == 'LAND' then
         if currentTime < 240  then
             if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
-            return true
+                return true
             end
         elseif currentTime < 480 then
             if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
@@ -681,19 +682,23 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
         end
     elseif type == 'AIR' then
         if currentTime < 480  then
-            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
-            return true
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+                return true
             end
-        elseif currentTime < 720 then
+        elseif currentTime < 720 and aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+                return true
+            end
+        elseif currentTime < 900 and aiBrain.BrainIntel.AirAttackMode then
             if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
                 return true
             end
-        elseif currentTime < 900 then
+        elseif currentTime > 1200 and aiBrain.BrainIntel.AirAttackMode then
             if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
                 return true
             end
-        elseif currentTime > 1200 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+        elseif currentTime >= 480 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
                 return true
             end
         else
@@ -702,7 +707,7 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
     elseif type == 'NAVAL' then
         if currentTime < 720  then
             if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
-            return true
+                return true
             end
         elseif currentTime < 960 then
             if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then

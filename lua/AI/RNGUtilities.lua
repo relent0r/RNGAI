@@ -1299,4 +1299,146 @@ function DebugArrayRNG(Table)
         end
     end
 end
+
+-- Temporary : Move to aibehaviors once fully fleshed out. These 3 functions are from Uveso.
+function CDREnhancementsRNG(aiBrain, cdr)
+    local cdrPos = cdr:GetPosition()
+    local distSqAway = 2500
+    local loc = cdr.CDRHome
+    local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+
+    if cdr:IsIdleState() and and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
+            cdr.GoingHome = false
+            cdr.Combat = false
+            cdr.Upgrading = false
+
+            local ACUEnhancements = {
+                -- UEF
+                ['uel0001'] = {Combat = {'HeavyAntiMatterCannon', 'DamageStabilization', 'Shield'},
+                            Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering', 'ResourceAllocation'},
+                            },
+                -- Aeon
+                ['ual0001'] = {Combat = {'HeatSink', 'CrysalisBeam', 'Shield', 'ShieldHeavy'},
+                            Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering','ShieldHeavy'}
+                            },
+                -- Cybran
+                ['url0001'] = {Combat = {'CoolingUpgrade', 'StealthGenerator', 'MicrowaveLaserGenerator', 'CloakingGenerator'},
+                            Engineering = {'AdvancedEngineering', 'StealthGenerator', 'T3Engineering','CloakingGenerator'}
+                            },
+                -- Seraphim
+                ['xsl0001'] = {Combat = {'RateOfFire', 'DamageStabilization', 'BlastAttack', 'DamageStabilizationAdvanced'},
+                            Engineering = {'AdvancedEngineering', 'T3Engineering',}
+                            },
+                -- Nomads
+                ['xnl0001'] = {Combat = {'Capacitor', 'GunUpgrade', 'MovementSpeedIncrease', 'DoubleGuns'},},
+            }
+            local CRDBlueprint = cdr:GetBlueprint()
+            --LOG('* AI-Uveso: BlueprintId '..repr(CRDBlueprint.BlueprintId))
+            local ACUUpgradeList = EnhancementsByUnitID[CRDBlueprint.BlueprintId]
+            --LOG('* AI-Uveso: ACUUpgradeList '..repr(ACUUpgradeList))
+            local NextEnhancement = false
+            local HaveEcoForEnhancement = false
+            for _,enhancement in ACUUpgradeList or {} do
+                local wantedEnhancementBP = CRDBlueprint.Enhancements[enhancement]
+                --LOG('* AI-Uveso: wantedEnhancementBP '..repr(wantedEnhancementBP))
+                if not wantedEnhancementBP then
+                    SPEW('* AI-Uveso: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
+                elseif cdr:HasEnhancement(enhancement) then
+                    NextEnhancement = false
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
+                elseif platoon:EcoGoodForUpgrade(cdr, wantedEnhancementBP) then
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
+                    if not NextEnhancement then
+                        NextEnhancement = enhancement
+                        HaveEcoForEnhancement = true
+                        --LOG('* AI-Uveso: * ACUAttackAIUveso: *** Set as Enhancememnt: '..NextEnhancement)
+                    end
+                else
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is bad for '..enhancement)
+                    if not NextEnhancement then
+                        NextEnhancement = enhancement
+                        HaveEcoForEnhancement = false
+                        -- if we don't have the eco for this ugrade, stop the search
+                        --LOG('* AI-Uveso: * ACUAttackAIUveso: canceled search. no eco available')
+                        break
+                    end
+                end
+            end
+            if NextEnhancement and HaveEcoForEnhancement then
+                --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements Building '..NextEnhancement)
+                if platoon:BuildEnhancement(cdr, NextEnhancement) then
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned true'..NextEnhancement)
+                    return true
+                else
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned false'..NextEnhancement)
+                    return false
+                end
+            end
+            return false
+        end
+    end
+end
+
+EcoGoodForUpgrade = function(platoon,cdr,enhancement)
+    local aiBrain = platoon:GetBrain()
+    local BuildRate = cdr:GetBuildRate()
+    if not enhancement.BuildTime then
+        WARN('* AI-Uveso: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
+    end
+    --LOG('* AI-Uveso: cdr:GetBuildRate() '..BuildRate..'')
+    local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
+    local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
+    --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
+    --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
+    if aiBrain.HasParagon then
+        return true
+    elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
+    and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
+        -- only RUSH AI; don't enhance if mass storage is lower than 90%
+        local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
+        if personality == 'uvesorush' or personality == 'uvesorushcheat' then
+            if aiBrain:GetEconomyStoredRatio('MASS') < 0.90 then
+                return false
+            end
+        end
+        return true
+    end
+    return false
+end,
+
+BuildEnhancement = function(platoon,cdr,enhancement)
+    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
+    local aiBrain = platoon:GetBrain()
+
+    IssueStop({cdr})
+    IssueClearCommands({cdr})
+    
+    if not cdr:HasEnhancement(enhancement) then
         
+        local tempEnhanceBp = cdr:GetBlueprint().Enhancements[enhancement]
+        local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(cdr.EntityId)
+        -- Do we have already a enhancment in this slot ?
+        if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
+            -- remove the enhancement
+            --LOG('* AI-Uveso: * ACUAttackAIUveso: Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
+            local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
+            IssueScript({cdr}, order)
+            coroutine.yield(10)
+        end
+        --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' IssueScript: '..enhancement)
+        local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
+        IssueScript({cdr}, order)
+    end
+    while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
+        if UUtils.ComHealth(cdr) < 60 then
+            --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            IssueStop({cdr})
+            IssueClearCommands({cdr})
+            return false
+        end
+        coroutine.yield(10)
+    end
+    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    return true
+end,

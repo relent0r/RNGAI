@@ -32,9 +32,11 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     if myAirThreat / 2 > enemyAirThreat then
         --LOG('Enable Air Attack Queue')
+        aiBrain.BrainIntel.AirAttackMode = true
         return 880
     else
         --LOG('Disable Air Attack Queue')
+        aiBrain.BrainIntel.AirAttackMode = false
         return 10
     end
 end
@@ -433,7 +435,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
