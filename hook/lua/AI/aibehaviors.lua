@@ -413,7 +413,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     --LOG('Sometimes the combat platoon gets disbanded, hard to find the reason')
     if aiBrain.ACUSupport.Supported then
         aiBrain.ACUSupport.Supported = false
-end
+    end
     if aiBrain.BaseMonitor.CDRDistress then
         aiBrain.BaseMonitor.CDRDistress = false
         aiBrain.BaseMonitor.CDRThreatLevel = 0
