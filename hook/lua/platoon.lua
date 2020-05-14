@@ -750,29 +750,56 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
-                if self:GetSquadUnits('Scout') then
+                local attackUnitCount = table.getn(attackUnits)
+                local scoutUnits = self:GetSquadUnits('Scout')
+                local guardUnits = self:GetSquadUnits('Guard')
+                if scoutUnits then
                     local guardedUnit = 1
-                    while attackUnits[guardedUnit].Dead do
-                        guardedUnit = guardedUnit + 1
-                        WaitTicks(3)
+                    if attackUnitCount > 0 then
+                        while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
+                            guardedUnit = guardedUnit + 1
+                            WaitTicks(3)
+                            if guardedUnit > attackUnitCount then
+                                guardedUnit = false
+                                break
+                            end
+                        end
+                    else
+                        return self:ReturnToBaseAIRNG()
                     end
-                    IssueClearCommands(self:GetSquadUnits('Scout'))
-                    IssueGuard(self:GetSquadUnits('Scout'), attackUnits[guardedUnit])
+                    IssueClearCommands(scoutUnits)
+                    if not guardedUnit then
+                        return self:ReturnToBaseAIRNG()
+                    else
+                        IssueGuard(scoutUnits, attackUnits[guardedUnit])
+                    end
                 end
-                if self:GetSquadUnits('Guard') then
+                if guardUnits then
                     local guardedUnit = 1
-                    while attackUnits[guardedUnit].Dead do
-                        guardedUnit = guardedUnit + 1
-                        WaitTicks(3)
+                    if attackUnitCount > 0 then
+                        while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
+                            guardedUnit = guardedUnit + 1
+                            WaitTicks(3)
+                            if guardedUnit > attackUnitCount then
+                                guardedUnit = false
+                                break
+                            end
+                        end
+                    else
+                        return self:ReturnToBaseAIRNG()
                     end
-                    IssueClearCommands(self:GetSquadUnits('Guard'))
-                    IssueGuard(self:GetSquadUnits('Guard'), attackUnits[guardedUnit])
+                    IssueClearCommands(guardUnits)
+                    if not guardedUnit then
+                        return self:ReturnToBaseAIRNG()
+                    else
+                        IssueGuard(guardUnits, attackUnits[guardedUnit])
+                    end
                 end
                 blip = target:GetBlip(armyIndex)
                 if target and not target.Dead then
                     targetHealth = target:GetHealth()
                 end
-                if self:GetSquadUnits('Attack') then
+                if attackUnits then
                     self:Stop('Attack')
                     self:AggressiveMoveToLocation(table.copy(target:GetPosition()), 'Attack')
                     local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
@@ -854,20 +881,29 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     if target.Dead or target:BeenDestroyed() then continue end
                     local attackUnits =  self:GetSquadUnits('Attack')
+                    local attackUnitCount = table.getn(attackUnits)
                     local scoutUnits = self:GetSquadUnits('Scout')
                     local guardUnits = self:GetSquadUnits('Guard')
                     if scoutUnits then
                         local guardedUnit = 1
-                        if attackUnits then
-                            while attackUnits[guardedUnit].Dead do
+                        if attackUnitCount > 0 then
+                            while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
                                 guardedUnit = guardedUnit + 1
                                 WaitTicks(3)
+                                if guardedUnit > attackUnitCount then
+                                    guardedUnit = false
+                                    break
+                                end
                             end
                         else
                             return self:ReturnToBaseAIRNG()
                         end
                         IssueClearCommands(scoutUnits)
-                        IssueGuard(scoutUnits, attackUnits[guardedUnit])
+                        if not guardedUnit then
+                            return self:ReturnToBaseAIRNG()
+                        else
+                            IssueGuard(scoutUnits, attackUnits[guardedUnit])
+                        end
                     end
                     --LOG('* AI-RNG: * HuntAIPATH: Path found')
                     local position = GetPlatoonPosition(self)
@@ -882,17 +918,24 @@ Platoon = Class(RNGAIPlatoon) {
                             local PlatoonPosition
                             if guardUnits then
                                 local guardedUnit = 1
-                                if attackUnits then
-                                    while attackUnits[guardedUnit].Dead do
+                                if attackUnitCount > 0 then
+                                    while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
                                         guardedUnit = guardedUnit + 1
                                         WaitTicks(3)
+                                        if guardedUnit > attackUnitCount then
+                                            guardedUnit = false
+                                            break
+                                        end
                                     end
                                 else
                                     return self:ReturnToBaseAIRNG()
                                 end
                                 IssueClearCommands(guardUnits)
-                                --LOG('* AI-RNG: * HuntAIPATH: Issuing Guard of Attack Squad')
-                                IssueGuard(guardUnits, attackUnits[guardedUnit])
+                                if not guardedUnit then
+                                    return self:ReturnToBaseAIRNG()
+                                else
+                                    IssueGuard(guardUnits, attackUnits[guardedUnit])
+                                end
                             end
                             --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
                             if bAggroMove and attackUnits then
@@ -2652,16 +2695,24 @@ Platoon = Class(RNGAIPlatoon) {
                     local guardUnits = self:GetSquadUnits('Guard')
                     if guardUnits then
                         local guardedUnit = 1
-                        if attackUnits then
-                            while attackUnits[guardedUnit].Dead do
+                        if attackUnitCount > 0 then
+                            while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
                                 guardedUnit = guardedUnit + 1
                                 WaitTicks(3)
+                                if guardedUnit > attackUnitCount then
+                                    guardedUnit = false
+                                    break
+                                end
                             end
                         else
-                            return self:ReturnToBaseAIRNG(true)
+                            return self:ReturnToBaseAIRNG()
                         end
                         IssueClearCommands(guardUnits)
-                        IssueGuard(guardUnits, attackUnits[guardedUnit])
+                        if not guardedUnit then
+                            return self:ReturnToBaseAIRNG()
+                        else
+                            IssueGuard(guardUnits, attackUnits[guardedUnit])
+                        end
                     end
                     --LOG('* AI-RNG: * SACUAIPATH: Performing Path Check')
                     --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
@@ -2682,17 +2733,24 @@ Platoon = Class(RNGAIPlatoon) {
                                 local PlatoonPosition
                                 if guardUnits then
                                     local guardedUnit = 1
-                                    if attackUnits then
-                                        while attackUnits[guardedUnit].Dead do
+                                    if attackUnitCount > 0 then
+                                        while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
                                             guardedUnit = guardedUnit + 1
                                             WaitTicks(3)
+                                            if guardedUnit > attackUnitCount then
+                                                guardedUnit = false
+                                                break
+                                            end
                                         end
                                     else
                                         return self:ReturnToBaseAIRNG()
                                     end
                                     IssueClearCommands(guardUnits)
-                                    --LOG('* AI-RNG: * SACUATTACKAIRNG: Issuing Guard of Attack Squad')
-                                    IssueGuard(guardUnits, attackUnits[guardedUnit])
+                                    if not guardedUnit then
+                                        return self:ReturnToBaseAIRNG()
+                                    else
+                                        IssueGuard(guardUnits, attackUnits[guardedUnit])
+                                    end
                                 end
                                 --LOG('* AI-RNG: * SACUATTACKAIRNG:: moving to destination. i: '..i..' coords '..repr(path[i]))
                                 if bAggroMove and attackUnits then

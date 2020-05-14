@@ -30,10 +30,10 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.ExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
-        LOG('Enable Land Heavy Attack Queue')
+        --LOG('Enable Land Heavy Attack Queue')
         return 790
     else
-        LOG('Disable Land Heavy Attack Queue')
+        --LOG('Disable Land Heavy Attack Queue')
         return 10
     end
 end
@@ -42,10 +42,10 @@ local LandAttackMode = function(self, aiBrain, builderManager)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.ExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
-        LOG('Enable Land Attack Queue')
+        --LOG('Enable Land Attack Queue')
         return 790
     else
-        LOG('Disable Land Attack Queue')
+        --LOG('Disable Land Attack Queue')
         return 10
     end
 end
@@ -274,7 +274,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { MIBC, 'FactionIndex', { 1, 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, 'FACTORY LAND TECH3' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -465,7 +465,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

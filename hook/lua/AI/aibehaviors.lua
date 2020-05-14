@@ -31,7 +31,7 @@ end
 function CommanderThreadRNG(cdr, platoon)
     --LOG('* AI-RNG: Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
-    local ALLBPS = __blueprints
+    
     aiBrain:BuildScoutLocationsRNG()
     cdr.UnitBeingBuiltBehavior = false
     -- Added to ensure we know the start locations (thanks to Sorian).
@@ -40,7 +40,7 @@ function CommanderThreadRNG(cdr, platoon)
     while not cdr.Dead do
         -- Overcharge
         if not cdr.Dead then 
-            CDROverChargeRNG(aiBrain, cdr, ALLBPS) 
+            CDROverChargeRNG(aiBrain, cdr) 
         end
         WaitTicks(1)
 
@@ -93,11 +93,12 @@ function CommanderThreadRNG(cdr, platoon)
     end
 end
 
-function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
+function CDROverChargeRNG(aiBrain, cdr)
     local weapBPs = cdr:GetBlueprint().Weapon
     local overCharge = {}
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
+    local acuThreatLimit = 15
     
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
@@ -116,18 +117,22 @@ function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
     if factionIndex == 1 then
         if cdr:HasEnhancement('HeavyAntiMatterCannon') then
             weapon.Range = 30 - 3
+            acuThreatLimit = 30
         end
     elseif factionIndex == 2 then
         if cdr:HasEnhancement('CrysalisBeam') then
             weapon.Range = 35 - 3
+            acuThreatLimit = 30
         end
     elseif factionIndex == 3 then
         if cdr:HasEnhancement('CoolingUpgrade') then
             weapon.Range = 30 - 3
+            acuThreatLimit = 30
         end
     elseif factionIndex == 4 then
         if cdr:HasEnhancement('RateOfFire') then
             weapon.Range = 30 - 3
+            acuThreatLimit = 30
         end
     end
 
@@ -328,18 +333,26 @@ function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
                 continueFighting = false
             end
             if continueFighting == true then
-                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND - categories.SCOUT - categories.ENGINEER, cdr:GetPosition(), 70, 'Enemy')
+                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER, cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
-                    --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                    --LOG('Unit ID is '..repr(ALLBPS[v.UnitId].Defense))
-                    bp = v:GetBlueprint().Defense
-                    --bp = ALLBPS[v.UnitId].Defense
-                    enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
+                    if not v.Dead then
+                        --LOG('Unit ID is '..v.UnitId)
+                        bp = __blueprints[v.UnitId].Defense
+                        --LOG(repr(__blueprints[v.UnitId].Defense))
+                        if bp.SurfaceThreatLevel ~= nil then
+                            enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
+                            if enemyUnitThreat > acuThreatLimit then
+                                break
+                            end
+                        end
+                    end
                 end
                 --LOG('Total Enemy Threat '..enemyUnitThreat)
-                if (enemyUnitThreat > 70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+                --LOG('ACU Cutoff Threat '..acuThreatLimit)
+                --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
+                if (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
                     --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end
@@ -351,7 +364,7 @@ function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
                 LOG('Continue Fighting is still true')
             end]]
             if not aiBrain:PlatoonExists(plat) then
-                LOG('* AI-RNG: CDRAttack platoon no longer exist, something disbanded it')
+                --LOG('* AI-RNG: CDRAttack platoon no longer exist, something disbanded it')
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
         cdr.Combat = false
@@ -370,6 +383,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local distSqAway = 2500
     local loc = cdr.CDRHome
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
+    local acuThreatLimit = 15
     --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         --LOG('CDR further than distSqAway')
@@ -405,9 +419,33 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
                 if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
-                    cdr.GoingHome = false
-                    IssueStop({cdr})
-                    return CDROverChargeRNG(aiBrain, cdr)
+                    local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER, cdr:GetPosition(), 70, 'Enemy')
+                    local enemyUnitThreat = 0
+                    local bp
+                    for k,v in enemyUnits do
+                        if not v.Dead then
+                            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+                            --LOG('Unit ID is '..v.UnitId)
+                            --bp = v:GetBlueprint().Defense
+                            bp = __blueprints[v.UnitId].Defense
+                            --LOG(repr(__blueprints[v.UnitId].Defense))
+                            if bp.SurfaceThreatLevel ~= nil then
+                                enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
+                                if enemyUnitThreat > acuThreatLimit then
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    --LOG('Total Enemy Threat '..enemyUnitThreat)
+                    --LOG('ACU Cutoff Threat '..acuThreatLimit)
+                    --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
+                    if (enemyUnitThreat < acuThreatLimit) then
+                        --LOG('* AI-RNG: Enemy unit threat low enough to return to fighting :'..enemyUnitThreat)
+                        cdr.GoingHome = false
+                        IssueStop({cdr})
+                        return CDROverChargeRNG(aiBrain, cdr)
+                    end
                 end
             end
         until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
