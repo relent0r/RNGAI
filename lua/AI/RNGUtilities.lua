@@ -1299,7 +1299,7 @@ function DebugArrayRNG(Table)
         end
     end
 end
-
+--[[
 -- Temporary : Move to aibehaviors once fully fleshed out. These 3 functions are from Uveso.
 function CDREnhancementsRNG(aiBrain, cdr)
     local cdrPos = cdr:GetPosition()
@@ -1307,7 +1307,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
     local loc = cdr.CDRHome
     local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 
-    if cdr:IsIdleState() and and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
+    if cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
         if GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
             cdr.GoingHome = false
             cdr.Combat = false
@@ -1441,4 +1441,4 @@ BuildEnhancement = function(platoon,cdr,enhancement)
     end
     --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
     return true
-end,
+end,]]

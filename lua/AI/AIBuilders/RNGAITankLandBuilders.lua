@@ -30,10 +30,10 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.ExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
-        --LOG('Enable Land Heavy Attack Queue')
+        LOG('Enable Land Heavy Attack Queue')
         return 790
     else
-        --LOG('Disable Land Heavy Attack Queue')
+        LOG('Disable Land Heavy Attack Queue')
         return 10
     end
 end
@@ -42,10 +42,10 @@ local LandAttackMode = function(self, aiBrain, builderManager)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.ExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
-        --LOG('Enable Land Attack Queue')
+        LOG('Enable Land Attack Queue')
         return 790
     else
-        --LOG('Disable Land Attack Queue')
+        LOG('Disable Land Attack Queue')
         return 10
     end
 end

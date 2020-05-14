@@ -224,7 +224,7 @@ function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
                             if not aiBrain.ACUSupport.Supported then
                                 aiBrain.ACUSupport.Position = cdr:GetPosition()
                                 aiBrain.ACUSupport.Supported = true
-                                LOG('* AI-RNG: ACUSupport.Supported set to true')
+                                --LOG('* AI-RNG: ACUSupport.Supported set to true')
                                 aiBrain.ACUSupport.TargetPosition = target:GetPosition()
                             end
                             local cdrLayer = cdr:GetCurrentLayer()
@@ -328,15 +328,19 @@ function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
                 continueFighting = false
             end
             if continueFighting == true then
-                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, 70, 'Enemy')
+                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND - categories.SCOUT - categories.ENGINEER, cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
-                    bp = ALLBPS[v.UnitId].Defense
+                    --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+                    --LOG('Unit ID is '..repr(ALLBPS[v.UnitId].Defense))
+                    bp = v:GetBlueprint().Defense
+                    --bp = ALLBPS[v.UnitId].Defense
                     enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
                 end
+                --LOG('Total Enemy Threat '..enemyUnitThreat)
                 if (enemyUnitThreat > 70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
-                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
+                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end
             end
@@ -619,7 +623,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-            LOG('Eco Bypass is True')
+            --LOG('Eco Bypass is True')
             bypasseco = true
         end
         if bypasseco then
