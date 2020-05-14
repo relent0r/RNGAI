@@ -31,6 +31,7 @@ end
 function CommanderThreadRNG(cdr, platoon)
     --LOG('* AI-RNG: Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
+    local ALLBPS = __blueprints
     aiBrain:BuildScoutLocationsRNG()
     cdr.UnitBeingBuiltBehavior = false
     -- Added to ensure we know the start locations (thanks to Sorian).
@@ -39,7 +40,7 @@ function CommanderThreadRNG(cdr, platoon)
     while not cdr.Dead do
         -- Overcharge
         if not cdr.Dead then 
-            CDROverChargeRNG(aiBrain, cdr) 
+            CDROverChargeRNG(aiBrain, cdr, ALLBPS) 
         end
         WaitTicks(1)
 
@@ -92,7 +93,7 @@ function CommanderThreadRNG(cdr, platoon)
     end
 end
 
-function CDROverChargeRNG(aiBrain, cdr)
+function CDROverChargeRNG(aiBrain, cdr, ALLBPS)
     local weapBPs = cdr:GetBlueprint().Weapon
     local overCharge = {}
     local weapon = {}
@@ -326,11 +327,17 @@ function CDROverChargeRNG(aiBrain, cdr)
             if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 continueFighting = false
             end
-            local enenyUnitLimit = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, 70, 'Enemy')
-            if enenyUnitLimit > 15 then
-                --LOG('* AI-RNG: Enemy unit count too high cease fighting, numUnits :'..enenyUnitLimit)
-                continueFighting = false
-                
+            if continueFighting == true then
+                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, 70, 'Enemy')
+                local enemyUnitThreat = 0
+                for k,v in enenyUnits do
+                    bp = ALLBPS[v.UnitId].Defense
+                    enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
+                end
+                if (enemyUnitThreat > 70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
+                    continueFighting = false
+                end
             end
             --[[
             if not continueFighting then
