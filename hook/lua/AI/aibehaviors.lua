@@ -359,9 +359,9 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
             --[[
             if not continueFighting then
-                LOG('Continue Fighting was set to false')
+                --LOG('Continue Fighting was set to false')
             else
-                LOG('Continue Fighting is still true')
+                --LOG('Continue Fighting is still true')
             end]]
             if not aiBrain:PlatoonExists(plat) then
                 --LOG('* AI-RNG: CDRAttack platoon no longer exist, something disbanded it')
@@ -661,8 +661,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
         upgradeSpec = aiBrain:GetUpgradeSpec(unit)
-        LOG('Upgrade Spec '..repr(upgradeSpec))
-        LOG('Current low mass trigger '..upgradeSpec.MassLowTrigger)
+        --LOG('Upgrade Spec '..repr(upgradeSpec))
+        --LOG('Current low mass trigger '..upgradeSpec.MassLowTrigger)
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
             --LOG('Eco Bypass is True')
             bypasseco = true

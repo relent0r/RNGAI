@@ -239,7 +239,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         -- Engineer doesn't want any more assistance
         --[[
         if v.NumAssistees then
-            LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
+            --LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
         end]]
         if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
             continue
@@ -296,7 +296,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         -- Engineer doesn't want any more assistance
         --[[
         if v.NumAssistees then
-            LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
+            --LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
         end]]
         if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
             continue

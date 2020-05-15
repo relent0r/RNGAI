@@ -109,6 +109,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                 return
             end
+            WaitTicks(2)
             continue
         end
         if closestDistance == 10000 then
@@ -121,6 +122,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                 return
             end
+            WaitTicks(2)
             continue
         end
         if self.Dead then 
@@ -132,6 +134,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('* AI-RNG: Attempting move to closest reclaim')
         --LOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
         if not closestReclaim then
+            WaitTicks(2)
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then

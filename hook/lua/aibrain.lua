@@ -185,6 +185,8 @@ AIBrain = Class(RNGAIBrainClass) {
             Extractor = 0,
             ExtractorCount = 0,
             MassMarker = 0,
+            AllyExtractorCount = 0,
+            AllyExtractor = 0,
         }
         self.BrainIntel.SelfThreat.AirNow = 0
 
@@ -995,7 +997,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyBrains = {}
         local enemyAirthreat = 0
         local enemyExtractorthreat = 0
-        local enemyExtratorCount = 0
+        local enemyExtractorCount = 0
         --LOG('Starting Threat Check at'..GetGameTick())
         for index, brain in ArmyBrains do
             if IsEnemy(selfIndex, brain:GetArmyIndex()) then
@@ -1018,13 +1020,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     bp = ALLBPS[v.UnitId].Defense
 
                     enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
-                    enemyExtratorCount = enemyExtratorCount + 1
+                    enemyExtractorCount = enemyExtractorCount + 1
                 end
             end
         end
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirthreat
         self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
-        self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtratorCount
+        self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -1202,8 +1204,36 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
         self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
+        local allyBrains = {}
+        for index, brain in ArmyBrains do
+            if index ~= self:GetArmyIndex() then
+                if IsAlly(selfIndex, brain:GetArmyIndex()) then
+                    table.insert(allyBrains, brain)
+                end
+            end
+        end
+        local allyExtractorCount = 0
+        local allyExtractorthreat = 0
+        --LOG('Number of Allies '..table.getn(allyBrains))
+        if table.getn(allyBrains) > 0 then
+            for k, ally in allyBrains do
+                local allyExtractors = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+                for _,v in allyExtractors do
+                    bp = ALLBPS[v.UnitId].Defense
+                    allyExtractorthreat = allyExtractorthreat + bp.EconomyThreatLevel
+                    allyExtractorCount = allyExtractorCount + 1
+                end
+            end
+            
+        end
+        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
+        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
+        --LOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
+        --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
+        --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
+        --LOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
 
-        if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 2 then
+        if self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 2 then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
@@ -1367,6 +1397,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         else
                             --LOG('Power State Caution is now false')
                         end
+                        WaitTicks(5)
                         --LOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
                     for k, v in unitTypePaused do
@@ -1537,6 +1568,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         else
                             --LOG('Power State Caution is now false')
                         end
+                        WaitTicks(5)
                         --LOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
                     for k, v in unitTypePaused do

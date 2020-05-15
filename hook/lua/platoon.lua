@@ -531,6 +531,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self:MoveToLocation({startX, 0, startZ}, false)
                 self:PlatoonDisband()
                 return
+                WaitTicks(5)
             end
         elseif acuSupport == true then
             while not scout.Dead and aiBrain.ACUSupport.Supported == true do
@@ -543,6 +544,7 @@ Platoon = Class(RNGAIPlatoon) {
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
                 WaitSeconds(patrolTime)
                 self:Stop()
+                WaitTicks(2)
             end
         else
             while not scout.Dead do
@@ -814,6 +816,7 @@ Platoon = Class(RNGAIPlatoon) {
                     self:MoveToLocation(position, false, 'Attack')
                 end
             end
+            WaitTicks(5)
         end
     end,
 
@@ -1667,6 +1670,7 @@ Platoon = Class(RNGAIPlatoon) {
                 -- we can't move there, so remove it from our build queue
                 table.remove(eng.EngineerBuildQueue, 1)
             end
+            WaitTicks(2)
         end
         --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
         if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
