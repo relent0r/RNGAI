@@ -368,7 +368,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
         cdr.Combat = false
-        --cdr.GoingHome = true -- had to add this as the EM was assigning jobs between this and the returnhome function
+        cdr.GoingHome = true -- had to add this as the EM was assigning jobs between this and the returnhome function
         aiBrain.ACUSupport.ReturnHome = true
         aiBrain.ACUSupport.TargetPosition = false
         aiBrain.ACUSupport.Supported = false
@@ -457,6 +457,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     if aiBrain.ACUSupport.Supported then
         aiBrain.ACUSupport.Supported = false
     end
+    cdr.GoingHome = false
     if aiBrain.BaseMonitor.CDRDistress then
         aiBrain.BaseMonitor.CDRDistress = false
         aiBrain.BaseMonitor.CDRThreatLevel = 0
@@ -659,7 +660,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         --LOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
         WaitTicks(upgradeSpec.UpgradeCheckWait * 10)
-        
+        upgradeSpec = aiBrain:GetUpgradeSpec(unit)
+        LOG('Upgrade Spec '..repr(upgradeSpec))
+        LOG('Current low mass trigger '..upgradeSpec.MassLowTrigger)
         if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
             --LOG('Eco Bypass is True')
             bypasseco = true
@@ -678,6 +681,8 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 continue
             end
         end
+
+
 
         extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
         if not extractorClosest then
@@ -719,9 +724,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyTrend'..energyTrend)
             massEfficiency = math.min(massIncome / massRequested, 2)
-            --LOG('* AI-RNG: massEfficiency'..massEfficiency)
+            LOG('* AI-RNG: massEfficiency'..massEfficiency)
             energyEfficiency = math.min(energyIncome / energyRequested, 2)
-            --LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
+            LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .60 and energyStorageRatio > .70))

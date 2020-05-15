@@ -807,13 +807,13 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.60
+                upgradeSpec.MassLowTrigger = 0.70
                 upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 1.8
+                upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 9999
                 upgradeSpec.UpgradeCheckWait = 18
                 upgradeSpec.InitialDelay = 90
-                upgradeSpec.EnemyThreatLimit = 100
+                upgradeSpec.EnemyThreatLimit = 10
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
                 upgradeSpec.MassLowTrigger = 1.0
@@ -1202,6 +1202,16 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
         self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
+
+        if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 2 then
+            LOG('Switch to agressive upgrade mode')
+            self.UpgradeMode = 'Aggressive'
+            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
+        else
+            LOG('Switch to normal upgrade mode')
+            self.UpgradeMode = 'Normal'
+            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
+        end
 
         --[[
         if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
