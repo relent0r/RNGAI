@@ -1086,6 +1086,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         --LOG('Potential Threats :'..repr(potentialThreats))
+        WaitTicks(2)
         local phaseTwoThreats = {}
         local threatLimit = 20
         -- Set a raw threat table that is replaced on each loop so we can get a snapshot of current enemy strength across the map.
@@ -1160,7 +1161,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
-
+        WaitTicks(2)
         -- Get AI strength
         local brainUnits = GetListOfUnits( self, categories.MOBILE, false, false)
         local airthreat = 0
@@ -1191,7 +1192,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
             --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end
-
+        WaitTicks(2)
         local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
@@ -1260,6 +1261,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
         --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        WaitTicks(2)
     end,
 
     EcoExtractorUpgradeCheckRNG = function(self)
