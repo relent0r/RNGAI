@@ -333,7 +333,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 continueFighting = false
             end
             if continueFighting == true then
-                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND, cdr:GetPosition(), 70, 'Enemy')
+                local enemyUnits = aiBrain:GetUnitsAroundPoint((categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
@@ -368,6 +368,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
         until not continueFighting or not aiBrain:PlatoonExists(plat)
         cdr.Combat = false
+        --cdr.GoingHome = true -- had to add this as the EM was assigning jobs between this and the returnhome function
         aiBrain.ACUSupport.ReturnHome = true
         aiBrain.ACUSupport.TargetPosition = false
         aiBrain.ACUSupport.Supported = false
@@ -380,20 +381,20 @@ end
 function CDRReturnHomeRNG(aiBrain, cdr)
     -- This is a reference... so it will autoupdate
     local cdrPos = cdr:GetPosition()
-    local distSqAway = 2500
+    local distSqAway = 2025
     local loc = cdr.CDRHome
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
     local acuThreatLimit = 15
-    --local newLoc = {}
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         --LOG('CDR further than distSqAway')
         cdr.GoingHome = true
-        local plat = aiBrain:MakePlatoon('', '')
+        local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
         
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
         repeat
             CDRRevertPriorityChange(aiBrain, cdr)
             if not aiBrain:PlatoonExists(plat) then
+                --LOG('CDRs plat vanished')
                 return
             end
             IssueClearCommands({cdr})
@@ -404,13 +405,12 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             WaitTicks(40)
             local acuPos2 = table.copy(cdrPos)
-            --LOG('ACU Pos 2 :'..repr(acuPos2))
             local headingVec = {(2 * (10 * acuPos2[1] - acuPos1[1]*9) + loc[1])/3, 0, (2 * (10 * acuPos2[3] - acuPos1[3]*9) + loc[3])/3}
-            --LOG('Heading Vector is :'..repr(headingVec))
             local movePosTable = SetArcPoints(headingVec,acuPos2, 15, 3, 8)
             local indexVar = math.random(1,3)
             IssueClearCommands({cdr})
             IssueStop({cdr})
+            --LOG('movePos Table '..repr(movePosTable[indexVar]))
             if movePosTable[indexVar] ~= nil then
                 cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
             else
@@ -419,7 +419,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
                 if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
-                    local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND, cdr:GetPosition(), 70, 'Enemy')
+                    local enemyUnits = aiBrain:GetUnitsAroundPoint((categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
                     local enemyUnitThreat = 0
                     local bp
                     for k,v in enemyUnits do

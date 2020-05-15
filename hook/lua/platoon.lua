@@ -1695,7 +1695,7 @@ Platoon = Class(RNGAIPlatoon) {
         -- final check for if we should disband
         if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
             if eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
-                --LOG('buildqueue 0 disband for'..eng.PlatoonHandle.BuilderName)
+                LOG('buildqueue 0 disband for'..eng.UnitId)
                 eng.PlatoonHandle:PlatoonDisband()
             end
             if eng then eng.ProcessBuild = nil end
@@ -3084,5 +3084,25 @@ Platoon = Class(RNGAIPlatoon) {
         self:ForkAIThread(self[plan])
     end,
 
+    PlatoonDisband = function(self)
+        local aiBrain = self:GetBrain()
+        if not aiBrain.RNG then
+            return RNGAIPlatoon.PlatoonDisband(self)
+        end
+        WARN('* AI-Uveso: PlatoonDisband: Disbanding platoon while transporting!!! Disbanding Blocked!')
+        WARN('* AI-Uveso: PlatoonDisband: PlanName '..repr(self.PlanName)..'  -  BuilderName: '..repr(self.BuilderName)..'.' )
+        if not self.PlanName or not self.BuilderName then
+            WARN('* AI-Uveso: PlatoonDisband: PlatoonData = '..repr(self.PlatoonData))
+        end
+        local FuncData = debug.getinfo(2)
+        if FuncData.name and FuncData.name ~= "" then
+            WARN('* AI-Uveso: PlatoonDisband: Called from '..FuncData.name..'.')
+        else
+            WARN('* AI-Uveso: PlatoonDisband: Called from '..FuncData.source..' - line: '..FuncData.currentline.. '  -  (Offset AI-Uveso: ['..(FuncData.currentline - 6543)..'])')
+        end
+        if aiBrain:PlatoonExists(self) then
+            RNGAIPlatoon.PlatoonDisband(self)
+        end
+    end,
 
 }
