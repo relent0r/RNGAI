@@ -1204,11 +1204,11 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
 
         if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 2 then
-            LOG('Switch to agressive upgrade mode')
+            --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         else
-            LOG('Switch to normal upgrade mode')
+            --LOG('Switch to normal upgrade mode')
             self.UpgradeMode = 'Normal'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
