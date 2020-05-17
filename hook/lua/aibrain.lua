@@ -1037,6 +1037,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
+        local startX, startZ = self:GetArmyStartPos()
         local timeout = self.TacticalMonitor.TacticalTimeout
         local gameTime = GetGameTimeSeconds()
         --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
@@ -1162,6 +1163,24 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         WaitTicks(2)
+        local landThreatAroundBase = 0
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for _, threat in self.EnemyIntel.EnemyThreatLocations do
+                if threat.ThreatType == 'Land' then
+                    local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
+                    if threatDistance < 32400 then
+                        threatAroundBase = threatAroundBase + threat.Threat
+                    end
+                end
+            end
+            if (gameTime < 900) and (threatAroundBase > 30) then
+                self.EnemyIntel.BaseThreatCaution = true
+            elseif (gameTime > 900) and (threatAroundBase > 60) then
+                self.EnemyIntel.BaseThreatCaution = true
+            else
+                self.EnemyIntel.BaseThreatCaution = false
+            end
+        end
         -- Get AI strength
         local brainUnits = GetListOfUnits( self, categories.MOBILE, false, false)
         local airthreat = 0

@@ -1305,6 +1305,10 @@ end
 --[[
 -- Temporary : Move to aibehaviors once fully fleshed out. These 3 functions are from Uveso.
 function CDREnhancementsRNG(aiBrain, cdr)
+    if GetGameTime() < 480 then
+        WaitTicks(2)
+        return
+    end
     local cdrPos = cdr:GetPosition()
     local distSqAway = 2500
     local loc = cdr.CDRHome
@@ -1350,7 +1354,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
                 elseif cdr:HasEnhancement(enhancement) then
                     NextEnhancement = false
                     --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
-                elseif platoon:EcoGoodForUpgrade(cdr, wantedEnhancementBP) then
+                elseif EnhancementEcoCheckRNG(cdr, wantedEnhancementBP) then
                     --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
@@ -1383,28 +1387,39 @@ function CDREnhancementsRNG(aiBrain, cdr)
     end
 end
 
-EcoGoodForUpgrade = function(platoon,cdr,enhancement)
+EnhancementEcoCheckRNG = function(platoon,cdr,enhancement)
     local aiBrain = platoon:GetBrain()
     local BuildRate = cdr:GetBuildRate()
+    local priorityUpgrade = false
+    local priorityUpgrades = {
+        'HeavyAntiMatterCannon',
+        'HeatSink',
+        'CrysalisBeam',
+        'CoolingUpgrade',
+        'RateOfFire'
+    }
     if not enhancement.BuildTime then
         WARN('* AI-Uveso: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
+    end
+    for k, v in priorityUpgrades do
+        if enhancement == v then
+            priorityUpgrade = true
+            break
+        end
     end
     --LOG('* AI-Uveso: cdr:GetBuildRate() '..BuildRate..'')
     local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
     local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
     --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
     --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
-    if aiBrain.HasParagon then
-        return true
+    if priorityUpgrade then
+        if GetGameTime() < 1500 and aiBrain.EnemyIntel.BaseThreatCaution and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
+         and (GetEconomyIncome(aiBrain, 'MASS') > 1.2) then
+            LOG('* RNGAI: Gun Upgrade Eco Check True')
+            return true
+        end
     elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
     and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
-        -- only RUSH AI; don't enhance if mass storage is lower than 90%
-        local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
-        if personality == 'uvesorush' or personality == 'uvesorushcheat' then
-            if aiBrain:GetEconomyStoredRatio('MASS') < 0.90 then
-                return false
-            end
-        end
         return true
     end
     return false
