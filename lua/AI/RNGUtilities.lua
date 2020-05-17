@@ -1412,8 +1412,8 @@ EnhancementEcoCheckRNG = function(platoon,cdr,enhancement)
     local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
     --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
     --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
-    if priorityUpgrade then
-        if GetGameTime() < 1500 and aiBrain.EnemyIntel.BaseThreatCaution and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
+    if priorityUpgrade and aiBrain.EnemyIntel.BaseThreatCaution then
+        if (GetGameTime() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
          and (GetEconomyIncome(aiBrain, 'MASS') > 1.2) then
             LOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
