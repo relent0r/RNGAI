@@ -193,7 +193,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 825,
+        Priority = 750,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
@@ -209,6 +209,38 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = true,
+                BuildStructures = {
+                    'T2AADefense',
+                    'T2GroundDefense',
+                    'T2MissileDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer TMD',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 825,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 7, 'DEFENSE TECH2 ANTIMISSILE'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2) + (categories.STRUCTURE * categories.FACTORY),
+                AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'T2AADefense',
                     'T2GroundDefense',
@@ -481,7 +513,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T2 TML Silo',
-        PlatoonTemplate = 'T2TacticalLauncher',
+        PlatoonTemplate = 'RNGAI T2 TML',
         Priority = 1,
         InstanceCount = 1000,
         FormRadius = 10000,

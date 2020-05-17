@@ -157,9 +157,8 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
                 BuildStructures = {
                     'T1LandFactory',
+                    'T1Resource',
                     'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
                     'T1Resource',
                     'T1Resource',
                     'T1EnergyProduction',

@@ -2570,7 +2570,6 @@ Platoon = Class(RNGAIPlatoon) {
         local unit
 
         if not PlatoonExists(aiBrain, self) then return end
-
         --GET THE Launcher OUT OF THIS PLATOON
         for k, v in platoonUnits do
             if EntityCategoryContains(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, v) then
@@ -2607,13 +2606,6 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(70)
                 target = false
                 while not target do
-
-                    --DUNCAN - Commented out
-                    --if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
-                    --    aiBrain:PickEnemyLogic()
-                    --end
-                    --target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius, atkPri, aiBrain:GetCurrentEnemy())
-
                     if not target then
                         target = self:FindPrioritizedUnit('Attack', 'Enemy', true, unit:GetPosition(), maxRadius)
                     end

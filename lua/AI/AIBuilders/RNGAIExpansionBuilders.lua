@@ -272,7 +272,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 1000 Large',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 650,
+        Priority = 300,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed

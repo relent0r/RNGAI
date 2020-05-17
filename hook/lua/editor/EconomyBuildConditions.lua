@@ -19,6 +19,10 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio)
     --LOG('Mass Storage Ratio :'..econ.MassStorageRatio..' Energy Storage Ratio :'..econ.EnergyStorageRatio)
     if aiBrain.HasParagon and econ.MassStorageRatio >= 0.01 and econ.EnergyStorageRatio >= 0.01 then
         return true
+    elseif aiBrain.UpgradeMode == 'Aggressive' then
+        if econ.MassStorageRatio >= mStorageRatio * 1.5 and econ.EnergyStorageRatio >= eStorageRatio then
+            return true
+        end
     elseif econ.MassStorageRatio >= mStorageRatio and econ.EnergyStorageRatio >= eStorageRatio then
         return true
     end
