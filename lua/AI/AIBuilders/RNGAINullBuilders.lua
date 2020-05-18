@@ -2,7 +2,6 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
-local IBC = '/lua/editor/InstantBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
 BuilderGroup {

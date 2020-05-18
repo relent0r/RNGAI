@@ -1,7 +1,6 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
-local IBC = '/lua/editor/InstantBuildConditions.lua'
 local ExBaseTmpl = 'ExpansionBaseTemplates'
 
 BuilderGroup {

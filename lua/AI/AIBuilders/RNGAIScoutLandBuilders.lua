@@ -6,7 +6,6 @@
 ]]
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
-local IBC = '/lua/editor/InstantBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
 BuilderGroup {

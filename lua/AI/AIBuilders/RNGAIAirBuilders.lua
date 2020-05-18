@@ -9,7 +9,6 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
-local IBC = '/lua/editor/InstantBuildConditions.lua'
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
@@ -50,7 +49,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.ANTIAIR * categories.TECH3} },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
@@ -63,7 +62,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.3, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
@@ -75,7 +74,7 @@ BuilderGroup {
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -101,7 +100,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -113,7 +112,7 @@ BuilderGroup {
         Priority = 10,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -130,7 +129,7 @@ BuilderGroup {
         Priority = 10,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.6}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.6}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
@@ -143,7 +142,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.3, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
