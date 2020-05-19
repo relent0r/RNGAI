@@ -57,7 +57,7 @@ BaseBuilderTemplate {
         'RNGAI Air Builder T1',
         'RNGAI Air Builder T2',
         'RNGAI Air Builder T3',
-        'RNGAI TransportFactoryBuilders',
+        'RNGAI TransportFactoryBuilders Small',
 
         -- Air Unit Formers --
         'RNGAI ScoutAirFormer',

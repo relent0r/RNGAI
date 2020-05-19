@@ -13,12 +13,12 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
 local AirDefenseMode = function(self, aiBrain, manager)
-    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
-    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
     if myAirThreat < enemyAirThreat then
         --LOG('Enable Air Intie Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 880
+        return 890
     else
         --LOG('Disable Air Intie Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
@@ -511,7 +511,68 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI TransportFactoryBuilders',
+    BuilderGroupName = 'RNGAI TransportFactoryBuilders Large',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Air Transport Large',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 900,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Air Transport Excess Large',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 700,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Transport Large',
+        PlatoonTemplate = 'T2AirTransport',
+        Priority = 910,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Transport Excess Large',
+        PlatoonTemplate = 'T2AirTransport',
+        Priority = 700,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.8}},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Air',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI TransportFactoryBuilders Small',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',

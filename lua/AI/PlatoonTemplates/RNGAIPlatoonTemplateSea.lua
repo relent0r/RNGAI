@@ -27,7 +27,7 @@ PlatoonTemplate {
     Name = 'RNGAI Sea Attack T123',
     Plan = 'NavalForceAI',
     GlobalSquads = {
-        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE, 1, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 1, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },

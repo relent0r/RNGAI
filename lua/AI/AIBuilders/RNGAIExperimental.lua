@@ -120,6 +120,60 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI Experimental1 Air',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            -- Have we the eco to build it ?
+            { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                BuildStructures = {
+                    'T4AirExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI Experimental1 Sea',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            -- Have we the eco to build it ?
+            { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                BuildStructures = {
+                    'T4SeaExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
@@ -167,6 +221,42 @@ BuilderGroup {
             },
             UseMoveOrder = true,
             PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY LAND', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Exp Air',
+        PlatoonTemplate = 'T4ExperimentalAir',
+        Priority = 1000,
+        FormRadius = 10000,
+        InstanceCount = 50,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.EXPERIMENTAL } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            ThreatWeights = {
+                TargetThreatType = 'Commander',
+            },
+            UseMoveOrder = true,
+            PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY LAND', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Exp Sea',
+        PlatoonTemplate = 'T4ExperimentalSea',
+        Priority = 1000,
+        FormRadius = 10000,
+        InstanceCount = 50,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.EXPERIMENTAL } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            ThreatWeights = {
+                TargetThreatType = 'Commander',
+            },
+            UseMoveOrder = true,
+            PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY NAVAL', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' },
         },
     },
     Builder {

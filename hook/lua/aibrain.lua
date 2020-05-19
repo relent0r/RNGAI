@@ -165,6 +165,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatRaw = {}
         self.EnemyIntel.EnemyThreatCurrent = {
             Air = 0,
+            AntiAir = 0,
             Land = 0,
             Experimental = 0,
             Extractor = 0,
@@ -187,8 +188,10 @@ AIBrain = Class(RNGAIBrainClass) {
             MassMarker = 0,
             AllyExtractorCount = 0,
             AllyExtractor = 0,
+            BaseThreatCaution = false,
+            AntiAirNow = 0,
+            AirNow = 0,
         }
-        self.BrainIntel.SelfThreat.AirNow = 0
 
         -- Structure Upgrade properties
         self.UpgradeMode = 'Normal'
@@ -996,6 +999,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
         local enemyAirthreat = 0
+        local enemyAntiAirThreat = 0
         local enemyExtractorthreat = 0
         local enemyExtractorCount = 0
         --LOG('Starting Threat Check at'..GetGameTick())
@@ -1006,7 +1010,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if table.getn(enemyBrains) > 0 then
             for k, enemy in enemyBrains do
-                local enemyUnits = GetListOfUnits( enemy, categories.MOBILE * categories.ANTIAIR, false, false)
+                local enemyUnits = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
                 local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in enemyUnits do
                     -- previous method of getting unit ID before the property was added.
@@ -1015,6 +1019,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     bp = ALLBPS[v.UnitId].Defense
         
                     enemyAirthreat = enemyAirthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+                    enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
                 end
                 for _,v in enemyExtractors do
                     bp = ALLBPS[v.UnitId].Defense
@@ -1025,6 +1030,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirthreat
+        self.EnemyIntel.EnemyThreatCurrent.AntiAir = enemyAntiAirThreat
         self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         --LOG('Completing Threat Check'..GetGameTick())
@@ -1164,26 +1170,31 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         WaitTicks(2)
         local landThreatAroundBase = 0
+        --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for _, threat in self.EnemyIntel.EnemyThreatLocations do
                 if threat.ThreatType == 'Land' then
                     local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
                     if threatDistance < 32400 then
-                        threatAroundBase = threatAroundBase + threat.Threat
+                        landThreatAroundBase = landThreatAroundBase + threat.Threat
                     end
                 end
             end
-            if (gameTime < 900) and (threatAroundBase > 30) then
-                self.EnemyIntel.BaseThreatCaution = true
-            elseif (gameTime > 900) and (threatAroundBase > 60) then
-                self.EnemyIntel.BaseThreatCaution = true
+            if (gameTime < 900) and (landThreatAroundBase > 30) then
+                --LOG('BaseThreatCaution True')
+                self.BrainIntel.SelfThreat.BaseThreatCaution = true
+            elseif (gameTime > 900) and (landThreatAroundBase > 60) then
+                --LOG('BaseThreatCaution True')
+                self.BrainIntel.SelfThreat.BaseThreatCaution = true
             else
-                self.EnemyIntel.BaseThreatCaution = false
+                --LOG('BaseThreatCaution False')
+                self.BrainIntel.SelfThreat.BaseThreatCaution = false
             end
         end
         -- Get AI strength
         local brainUnits = GetListOfUnits( self, categories.MOBILE, false, false)
         local airthreat = 0
+        local antiAirThreat = 0
         local bp
 
 		
@@ -1194,10 +1205,12 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
 			bp = ALLBPS[v.UnitId].Defense
 
-			airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+            airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+            antiAirThreat = antiAirThreat + bp.AirThreatLevel
         end
         --LOG('My Air Threat is'..airthreat)
         self.BrainIntel.SelfThreat.AirNow = airthreat
+        self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
 
         if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
@@ -1274,7 +1287,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
         end]]
         --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        --LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
         --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
         --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
         --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
         --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
