@@ -528,6 +528,19 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
     WaitTicks(5)
 end
 
+function CDRGetUnitClump(cdrPos, radius)
+    -- Will attempt to get a unit clump rather than single unit targets for OC
+    local unitList = GetUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
+    for k, v in unitList do
+        local unitPos = v:GetPosition()
+        local unitCount = GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+        if unitCount > 1 then
+            return true, v
+        end
+    end
+    return false
+end
+
 function ACUDetection(platoon)
     local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
     local aiBrain = platoon:GetBrain()
