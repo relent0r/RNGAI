@@ -234,6 +234,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
+        --[[ Below was used prior to Uveso adding the expansion generator to provide expansion in locations with multiple mass markers
         RUtils.TacticalMassLocations(self)
         RUtils.MarkTacticalMassLocations(self)
         local MassGroupMarkers = RUtils.GenerateMassGroupMarkerLocations(self)
@@ -241,7 +242,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if table.getn(MassGroupMarkers) > 0 then
                 RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
             end
-        end
+        end]]
         self:CalculateMassMarkersRNG()
         -- Begin the base monitor process
 
@@ -249,7 +250,9 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
-
+        local perlocations, orient, positionsel = RUtils.GetBasePerimeterPoints(self, 'MAIN', 50, 'FRONT', false, 'Land', true)
+        LOG('Perimeter Points '..repr(perlocations))
+        LOG('Orient is '..orient)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
@@ -528,7 +531,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
         
             for _, start in startLocations do
-                markersStartPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Mass', start, 30)
+                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Mass', start, 30)
                 for _, marker in markersStartPos do
                     --LOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
                     table.insert(startPosMarkers, marker)

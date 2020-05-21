@@ -889,7 +889,7 @@ BuilderGroup {
         }
     },]]
 }
-
+--[[
 BuilderGroup { 
     BuilderGroupName = 'RNGAI ACU Enhancements Gun',
     BuildersType = 'EngineerBuilder',
@@ -1011,4 +1011,4 @@ BuilderGroup {
             Enhancement = { 'AdvancedEngineering' },
         },
     },
-}
+}]]

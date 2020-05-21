@@ -9,6 +9,8 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local MakePlatoon = moho.aibrain_methods.MakePlatoon
 local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
@@ -48,16 +50,22 @@ function CommanderThreadRNG(cdr, platoon)
         if not cdr.Dead and aiBrain.ACUSupport.ReturnHome then 
             CDRReturnHomeRNG(aiBrain, cdr) 
         end
-        WaitTicks(1)
+        WaitTicks(2)
         
         if not cdr.Dead then 
             CDRUnitCompletion(aiBrain, cdr) 
         end
-        WaitTicks(1)
+        WaitTicks(2)
+
         if not cdr.Dead then
             CDRHideBehaviorRNG(aiBrain, cdr)
         end
-        WaitTicks(1)
+        WaitTicks(2)
+
+        if not cdr.Dead then
+            CDREnhancementsRNG(aiBrain, cdr)
+        end
+        WaitTicks(2)
 
         -- Call platoon resume building deal...
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
@@ -165,8 +173,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
-    local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
-    local acuUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.COMMAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
+    local numUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
+    local acuUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.COMMAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
     local distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdrPos)
     local overCharging = false
 
@@ -274,6 +282,13 @@ function CDROverChargeRNG(aiBrain, cdr)
                         overCharging = true
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
+                        local result, newTarget = CDRGetUnitClump(aiBrain, cdrPos, weapon.Range)
+                        if result then
+                            LOG('New Unit Found for OC')
+                            target = newTarget
+                            targetPos = target:GetPosition()
+                            targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                        end
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
                         if target and not target.Dead and not target:BeenDestroyed() then
@@ -324,7 +339,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 return
             end
 
-            if aiBrain:GetNumUnitsAroundPoint(categories.LAND - categories.SCOUT, cdrPos, maxRadius, 'Enemy') <= 0
+            if GetNumUnitsAroundPoint(aiBrain, categories.LAND - categories.SCOUT, cdrPos, maxRadius, 'Enemy') <= 0
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
             end
@@ -333,7 +348,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 continueFighting = false
             end
             if continueFighting == true then
-                local enemyUnits = aiBrain:GetUnitsAroundPoint((categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
+                local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
@@ -418,7 +433,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             end
             WaitTicks(20)
             if (cdr:GetHealthPercent() > 0.75) then
-                if (aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
+                if (GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
                     local enemyUnits = aiBrain:GetUnitsAroundPoint((categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
                     local enemyUnitThreat = 0
                     local bp
@@ -494,9 +509,9 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
         local category = false
         local runShield = false
         local runPos = false
-        local nmaShield = aiBrain:GetNumUnitsAroundPoint(categories.SHIELD * categories.STRUCTURE, cdr:GetPosition(), 100, 'Ally')
-        local nmaPD = aiBrain:GetNumUnitsAroundPoint(categories.DIRECTFIRE * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
-        local nmaAA = aiBrain:GetNumUnitsAroundPoint(categories.ANTIAIR * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
+        local nmaShield = GetNumUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, cdr:GetPosition(), 100, 'Ally')
+        local nmaPD = GetNumUnitsAroundPoint(aiBrain, categories.DIRECTFIRE * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
+        local nmaAA = GetNumUnitsAroundPoint(aiBrain, categories.ANTIAIR * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
 
         if nmaShield > 0 then
             category = categories.SHIELD * categories.STRUCTURE
@@ -528,13 +543,15 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
     WaitTicks(5)
 end
 
-function CDRGetUnitClump(cdrPos, radius)
+function CDRGetUnitClump(aiBrain, cdrPos, radius)
     -- Will attempt to get a unit clump rather than single unit targets for OC
-    local unitList = GetUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
+    local unitList = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
+    LOG('Check for unit clump')
     for k, v in unitList do
         local unitPos = v:GetPosition()
-        local unitCount = GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+        local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
         if unitCount > 1 then
+            LOG('Multiple Units found')
             return true, v
         end
     end
@@ -542,7 +559,7 @@ function CDRGetUnitClump(cdrPos, radius)
 end
 
 function ACUDetection(platoon)
-    local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+    
     local aiBrain = platoon:GetBrain()
     local ACUTable = aiBrain.EnemyIntel.ACU
     local scanWait = platoon.PlatoonData.ScanWait
@@ -968,4 +985,172 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         --LOG('Extractor is not closest to base')
         return false
     end
+end
+
+-- These 3 functions are from Uveso for CDR enhancements, modified slightly.
+function CDREnhancementsRNG(aiBrain, cdr)
+    local gameTime = GetGameTimeSeconds()
+    if gameTime < 480 then
+        WaitTicks(2)
+        return
+    end
+    
+    local cdrPos = cdr:GetPosition()
+    local distSqAway = 2500
+    local loc = cdr.CDRHome
+    local upgradeMode = false
+    if gameTime < 1500 then
+        upgradeMode = 'Combat'
+    else
+        upgradeMode = 'Engineering'
+    end
+
+    if cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
+            LOG('Economy good for ACU upgrade')
+            cdr.GoingHome = false
+            cdr.Combat = false
+            cdr.Upgrading = false
+
+            local ACUEnhancements = {
+                -- UEF
+                ['uel0001'] = {Combat = {'HeavyAntiMatterCannon', 'DamageStabilization', 'Shield'},
+                            Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering', 'ResourceAllocation'},
+                            },
+                -- Aeon
+                ['ual0001'] = {Combat = {'HeatSink', 'CrysalisBeam', 'Shield', 'ShieldHeavy'},
+                            Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering','ShieldHeavy'}
+                            },
+                -- Cybran
+                ['url0001'] = {Combat = {'CoolingUpgrade', 'StealthGenerator', 'MicrowaveLaserGenerator', 'CloakingGenerator'},
+                            Engineering = {'AdvancedEngineering', 'StealthGenerator', 'T3Engineering','CloakingGenerator'}
+                            },
+                -- Seraphim
+                ['xsl0001'] = {Combat = {'RateOfFire', 'DamageStabilization', 'BlastAttack', 'DamageStabilizationAdvanced'},
+                            Engineering = {'AdvancedEngineering', 'T3Engineering',}
+                            },
+                -- Nomads
+                ['xnl0001'] = {Combat = {'Capacitor', 'GunUpgrade', 'MovementSpeedIncrease', 'DoubleGuns'},},
+            }
+            local CRDBlueprint = cdr:GetBlueprint()
+            --LOG('* AI-Uveso: BlueprintId '..repr(CRDBlueprint.BlueprintId))
+            local ACUUpgradeList = ACUEnhancements[CRDBlueprint.BlueprintId][upgradeMode]
+            --LOG('* AI-Uveso: ACUUpgradeList '..repr(ACUUpgradeList))
+            local NextEnhancement = false
+            local HaveEcoForEnhancement = false
+            for _,enhancement in ACUUpgradeList or {} do
+                local wantedEnhancementBP = CRDBlueprint.Enhancements[enhancement]
+                --LOG('* AI-Uveso: wantedEnhancementBP '..repr(wantedEnhancementBP))
+                if not wantedEnhancementBP then
+                    SPEW('* AI-Uveso: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
+                elseif cdr:HasEnhancement(enhancement) then
+                    NextEnhancement = false
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
+                elseif EnhancementEcoCheckRNG(aiBrain, cdr, wantedEnhancementBP) then
+                    LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
+                    if not NextEnhancement then
+                        NextEnhancement = enhancement
+                        HaveEcoForEnhancement = true
+                        --LOG('* AI-Uveso: * ACUAttackAIUveso: *** Set as Enhancememnt: '..NextEnhancement)
+                    end
+                else
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is bad for '..enhancement)
+                    if not NextEnhancement then
+                        NextEnhancement = enhancement
+                        HaveEcoForEnhancement = false
+                        -- if we don't have the eco for this ugrade, stop the search
+                        --LOG('* AI-Uveso: * ACUAttackAIUveso: canceled search. no eco available')
+                        break
+                    end
+                end
+            end
+            if NextEnhancement and HaveEcoForEnhancement then
+                LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements Building '..NextEnhancement)
+                if BuildEnhancement(aiBrain, cdr, NextEnhancement) then
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned true'..NextEnhancement)
+                    return true
+                else
+                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned false'..NextEnhancement)
+                    return false
+                end
+            end
+            return false
+        end
+    end
+end
+
+EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement)
+
+    local BuildRate = cdr:GetBuildRate()
+    local priorityUpgrade = false
+    local priorityUpgrades = {
+        'HeavyAntiMatterCannon',
+        'HeatSink',
+        'CrysalisBeam',
+        'CoolingUpgrade',
+        'RateOfFire'
+    }
+    if not enhancement.BuildTime then
+        WARN('* AI-Uveso: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
+    end
+    for k, v in priorityUpgrades do
+        if enhancement == v then
+            priorityUpgrade = true
+            break
+        end
+    end
+    --LOG('* AI-Uveso: cdr:GetBuildRate() '..BuildRate..'')
+    local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
+    local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
+    --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
+    --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
+    if priorityUpgrade and aiBrain.EnemyIntel.BaseThreatCaution then
+        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
+         and (GetEconomyIncome(aiBrain, 'MASS') > 1.2) then
+            LOG('* RNGAI: Gun Upgrade Eco Check True')
+            return true
+        end
+    elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
+    and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
+        return true
+    end
+    LOG('* RNGAI: Upgrade Eco Check False')
+    return false
+end
+
+BuildEnhancement = function(aiBrain,cdr,enhancement)
+    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
+    cdr.Upgrading = true
+    IssueStop({cdr})
+    IssueClearCommands({cdr})
+    
+    if not cdr:HasEnhancement(enhancement) then
+        
+        local tempEnhanceBp = cdr:GetBlueprint().Enhancements[enhancement]
+        local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(cdr.EntityId)
+        -- Do we have already a enhancment in this slot ?
+        if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
+            -- remove the enhancement
+            --LOG('* AI-Uveso: * ACUAttackAIUveso: Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
+            local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
+            IssueScript({cdr}, order)
+            coroutine.yield(10)
+        end
+        LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
+        IssueScript({cdr}, order)
+    end
+    while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
+        if cdr:GetHealthPercent() < 0.40 then
+            --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            IssueStop({cdr})
+            IssueClearCommands({cdr})
+            cdr.Upgrading = false
+            return false
+        end
+        coroutine.yield(10)
+    end
+    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    cdr.Upgrading = false
+    return true
 end

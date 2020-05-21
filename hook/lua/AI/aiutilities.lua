@@ -3,7 +3,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
     --LOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
     if markerType == 'Start Location' then
-        local tempMarkers = AIGetMarkerLocations(aiBrain, 'Blank Marker')
+        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Blank Marker')
         for k, v in tempMarkers do
             if string.sub(v.Name, 1, 5) == 'ARMY_' then
                 local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
@@ -328,4 +328,80 @@ function RandomLocation(x, z)
     movePos[2] = height
 
     return movePos
+end
+
+function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatMin, threatMax, threatRings, threatType)
+    local markers = AIGetMarkerLocationsRNG(aiBrain, markerType)
+    local returnMarkers = {}
+    for _, v in markers do
+        local dist = VDist2(pos[1], pos[3], v.Position[1], v.Position[3])
+        if dist < radius then
+            if not threatMin then
+                table.insert(returnMarkers, v)
+            else
+                local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+                if threat >= threatMin and threat <= threatMax then
+                    table.insert(returnMarkers, v)
+                end
+            end
+        end
+    end
+
+    return returnMarkers
+end
+
+function AIGetMarkerLocationsRNG(aiBrain, markerType)
+    local markerList = {}
+    if markerType == 'Start Location' then
+        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Blank Marker')
+        for k, v in tempMarkers do
+            if string.sub(v.Name, 1, 5) == 'ARMY_' then
+                table.insert(markerList, {Position = v.Position, Name = v.Name, MassSpotsInRange = v.MassSpotsInRange})
+            end
+        end
+    else
+        local markers = ScenarioUtils.GetMarkers()
+        if markers then
+            for k, v in markers do
+                if v.type == markerType then
+                    table.insert(markerList, {Position = v.position, Name = k, MassSpotsInRange = v.MassSpotsInRange})
+                end
+            end
+        end
+    end
+
+    return markerList
+end
+
+function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    local closest = false
+    local markerCount = false
+    local retPos, retName
+    local positions = AIFilterAlliedBases(aiBrain, positions)
+    LOG('Pontetial Marker Locations '..repr(positions))
+    for _, v in positions do
+        if not aiBrain.BuilderManagers[v.Name] then
+            if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                closest = VDist3(pos, v.Position)
+                retPos = v.Position
+                retName = v.Name
+                markerCount = v.MassSpotsInRange
+            end
+        else
+            local managers = aiBrain.BuilderManagers[v.Name]
+            if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
+                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3(pos, v.Position)
+                    retPos = v.Position
+                    retName = v.Name
+                    markerCount = v.MassSpotsInRange
+                end
+            end
+        end
+    end
+    if not markerCount then 
+        markerCount = 0
+    end
+    LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
+    return retPos, retName
 end

@@ -47,7 +47,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
-        if unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior then
+        if unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             --LOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
             --LOG('CDR Combat Delay')

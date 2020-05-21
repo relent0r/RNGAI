@@ -404,14 +404,14 @@ function AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, ra
         return false
     end
 
-    local validPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Unmarked Expansion', pos, radius, tMin, tMax, tRings, tType)
+    local validPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Unmarked Expansion', pos, radius, tMin, tMax, tRings, tType)
     --LOG('Valid Unmarked Expansion Markers '..repr(validPos))
 
     local retPos, retName
     if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
     else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
     end
 
     return retPos, retName
@@ -423,13 +423,13 @@ function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radiu
         return false
     end
 
-    local validPos = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Large Expansion Area', pos, radius, tMin, tMax, tRings, tType)
+    local validPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Large Expansion Area', pos, radius, tMin, tMax, tRings, tType)
 
     local retPos, retName
     if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
     else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
     end
 
     return retPos, retName
@@ -443,7 +443,7 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 
     local validPos = {}
 
-    local positions = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Blank Marker', pos, radius, tMin, tMax, tRings, tType)
+    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Blank Marker', pos, radius, tMin, tMax, tRings, tType)
     local startX, startZ = aiBrain:GetArmyStartPos()
     for _, v in positions do
         if string.sub(v.Name, 1, 5) == 'ARMY_' then
@@ -455,9 +455,26 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 
     local retPos, retName
     if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
     else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+    end
+
+    return retPos, retName
+end
+
+function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
+    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    if not pos then
+        return false
+    end
+    local positions = AIGetMarkersAroundLocationRNG(aiBrain, 'Expansion Area', pos, radius, tMin, tMax, tRings, tType)
+
+    local retPos, retName
+    if eng then
+        retPos, retName = AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
+    else
+        retPos, retName = AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     end
 
     return retPos, retName
@@ -801,55 +818,6 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
         IssueClearCommands({eng})
         aiBrain:BuildStructure(eng, blueprintID, position, false)
     end
-end
-
-function TacticalMassLocationsold(aiBrain)
-    -- Scans the map and trys to figure out tactical locations with multiple mass markers
-    -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
-    --LOG('* AI-RNG: * Starting Tactical Mass Location Function')
-    local markerGroups = {}
-    local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
-    local group = 1
-    local duplicateMarker = {}
-    -- loop thru all the markers --
-    for key_1, marker_1 in markerLocations do
-        -- only process a marker that has not already been used
-        if duplicateMarker[key_1] then
-            --LOG('Duplicate Found Skipping :'..repr(marker_1)..'at key :'..key_1)
-            continue
-        else
-            local groupSet = {MarkerGroup=group, Markers={}}
-            -- record that marker has been used
-            --LOG('Inserting Duplicate Marker phase 1:'..repr(marker_1)..'at key :'..key_1)
-            table.insert(duplicateMarker, key_1, marker_1)
-            -- loop thru all the markers --
-            for key_2, marker_2 in markerLocations do
-                -- bypass any marker that's already been used
-                if duplicateMarker[key_2] then
-                    --LOG('Duplicate Found Skipping :'..repr(marker_2)..'at key :'..key_2)
-                    continue
-                else
-                    if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 1600 then
-                        -- record that marker has been used
-                        --LOG('Inserting Duplicate Marker phase 2:'..repr(marker_2)..'at key :'..key_2)
-                        table.insert(duplicateMarker, key_2, marker_2)
-                        -- insert marker into group --
-                        table.insert(groupSet['Markers'], marker_2)
-                    end
-                end
-            end
-            table.insert(groupSet['Markers'], marker_1)
-            if table.getn(groupSet['Markers']) > 2 then
-                table.insert(markerGroups, groupSet)
-                --LOG('Group Set Markers :'..repr(groupSet))
-                group = group + 1
-            end
-        
-        end
-    end
-    --LOG('Duplicate Marker Set :'..repr(duplicateMarker))
-    aiBrain.TacticalMonitor.TacticalMassLocations = markerGroups
-    --LOG('* AI-RNG: * Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
 end
 
 function TacticalMassLocations(aiBrain)
@@ -1302,161 +1270,311 @@ function DebugArrayRNG(Table)
         end
     end
 end
---[[
--- Temporary : Move to aibehaviors once fully fleshed out. These 3 functions are from Uveso.
-function CDREnhancementsRNG(aiBrain, cdr)
-    if GetGameTime() < 480 then
-        WaitTicks(2)
-        return
-    end
-    local cdrPos = cdr:GetPosition()
-    local distSqAway = 2500
-    local loc = cdr.CDRHome
-    local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 
-    if cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
-            cdr.GoingHome = false
-            cdr.Combat = false
-            cdr.Upgrading = false
 
-            local ACUEnhancements = {
-                -- UEF
-                ['uel0001'] = {Combat = {'HeavyAntiMatterCannon', 'DamageStabilization', 'Shield'},
-                            Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering', 'ResourceAllocation'},
-                            },
-                -- Aeon
-                ['ual0001'] = {Combat = {'HeatSink', 'CrysalisBeam', 'Shield', 'ShieldHeavy'},
-                            Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering','ShieldHeavy'}
-                            },
-                -- Cybran
-                ['url0001'] = {Combat = {'CoolingUpgrade', 'StealthGenerator', 'MicrowaveLaserGenerator', 'CloakingGenerator'},
-                            Engineering = {'AdvancedEngineering', 'StealthGenerator', 'T3Engineering','CloakingGenerator'}
-                            },
-                -- Seraphim
-                ['xsl0001'] = {Combat = {'RateOfFire', 'DamageStabilization', 'BlastAttack', 'DamageStabilizationAdvanced'},
-                            Engineering = {'AdvancedEngineering', 'T3Engineering',}
-                            },
-                -- Nomads
-                ['xnl0001'] = {Combat = {'Capacitor', 'GunUpgrade', 'MovementSpeedIncrease', 'DoubleGuns'},},
-            }
-            local CRDBlueprint = cdr:GetBlueprint()
-            --LOG('* AI-Uveso: BlueprintId '..repr(CRDBlueprint.BlueprintId))
-            local ACUUpgradeList = EnhancementsByUnitID[CRDBlueprint.BlueprintId]
-            --LOG('* AI-Uveso: ACUUpgradeList '..repr(ACUUpgradeList))
-            local NextEnhancement = false
-            local HaveEcoForEnhancement = false
-            for _,enhancement in ACUUpgradeList or {} do
-                local wantedEnhancementBP = CRDBlueprint.Enhancements[enhancement]
-                --LOG('* AI-Uveso: wantedEnhancementBP '..repr(wantedEnhancementBP))
-                if not wantedEnhancementBP then
-                    SPEW('* AI-Uveso: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
-                elseif cdr:HasEnhancement(enhancement) then
-                    NextEnhancement = false
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
-                elseif EnhancementEcoCheckRNG(cdr, wantedEnhancementBP) then
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
-                    if not NextEnhancement then
-                        NextEnhancement = enhancement
-                        HaveEcoForEnhancement = true
-                        --LOG('* AI-Uveso: * ACUAttackAIUveso: *** Set as Enhancememnt: '..NextEnhancement)
-                    end
-                else
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is bad for '..enhancement)
-                    if not NextEnhancement then
-                        NextEnhancement = enhancement
-                        HaveEcoForEnhancement = false
-                        -- if we don't have the eco for this ugrade, stop the search
-                        --LOG('* AI-Uveso: * ACUAttackAIUveso: canceled search. no eco available')
-                        break
-                    end
-                end
-            end
-            if NextEnhancement and HaveEcoForEnhancement then
-                --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements Building '..NextEnhancement)
-                if platoon:BuildEnhancement(cdr, NextEnhancement) then
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned true'..NextEnhancement)
-                    return true
-                else
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned false'..NextEnhancement)
-                    return false
-                end
-            end
-            return false
-        end
-    end
+function GetDirectionInDegrees( v1, v2 )
+    local LOUDACOS = math.acos
+	local vec = GetDirectionVector( v1, v2)
+	
+	if vec[1] >= 0 then
+		return LOUDACOS(vec[3]) * (360/(LOUDPI*2))
+	end
+	
+	return 360 - (LOUDACOS(vec[3]) * (360/(LOUDPI*2)))
 end
 
-EnhancementEcoCheckRNG = function(platoon,cdr,enhancement)
-    local aiBrain = platoon:GetBrain()
-    local BuildRate = cdr:GetBuildRate()
-    local priorityUpgrade = false
-    local priorityUpgrades = {
-        'HeavyAntiMatterCannon',
-        'HeatSink',
-        'CrysalisBeam',
-        'CoolingUpgrade',
-        'RateOfFire'
-    }
-    if not enhancement.BuildTime then
-        WARN('* AI-Uveso: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
-    end
-    for k, v in priorityUpgrades do
-        if enhancement == v then
-            priorityUpgrade = true
-            break
-        end
-    end
-    --LOG('* AI-Uveso: cdr:GetBuildRate() '..BuildRate..'')
-    local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
-    local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
-    --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
-    --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
-    if priorityUpgrade and aiBrain.EnemyIntel.BaseThreatCaution then
-        if (GetGameTime() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
-         and (GetEconomyIncome(aiBrain, 'MASS') > 1.2) then
-            LOG('* RNGAI: Gun Upgrade Eco Check True')
-            return true
-        end
-    elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
-    and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
-        return true
-    end
-    return false
-end,
+--[[
+   This is Sproutos work, an early function from the master himself
+   Inputs : 
+   location, location name string
+   radius, radius from location position int
+   orientation, return positions based on string 'FRONT', 'REAR', 'ALL'
+   positionselection, return all, random, selection int or bool
+   layer, movement layer string
+   patroltype return sequence bool or nil
 
-BuildEnhancement = function(platoon,cdr,enhancement)
-    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
-    local aiBrain = platoon:GetBrain()
-
-    IssueStop({cdr})
-    IssueClearCommands({cdr})
+   Returns :
+   sortedList, position table
+   Orient, string NESW
+   positionselection, int
+   ]]
+function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positionselection, layer, patroltype )
+    local LOUDGETN = table.getn
+    local LOUDINSERT = table.insert
+    local LOUDREMOVE = table.remove
+    local LOUDSORT = table.sort
+    local LOUDFLOOR = math.floor
+	local LOUDCEIL = math.ceil
     
-    if not cdr:HasEnhancement(enhancement) then
-        
-        local tempEnhanceBp = cdr:GetBlueprint().Enhancements[enhancement]
-        local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(cdr.EntityId)
-        -- Do we have already a enhancment in this slot ?
-        if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
-            -- remove the enhancement
-            --LOG('* AI-Uveso: * ACUAttackAIUveso: Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
-            local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
-            IssueScript({cdr}, order)
-            coroutine.yield(10)
-        end
-        --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' IssueScript: '..enhancement)
-        local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
-        IssueScript({cdr}, order)
-    end
-    while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
-        if UUtils.ComHealth(cdr) < 60 then
-            --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
-            IssueStop({cdr})
-            IssueClearCommands({cdr})
-            return false
-        end
-        coroutine.yield(10)
-    end
-    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
-    return true
-end,]]
+	local newloc = false
+	local Orient = false
+	local Basename = false
+	
+	-- we've been fed a base name rather than 3D co-ordinates
+	-- store the Basename and convert location into a 3D position
+	if type(location) == 'string' then
+		Basename = location
+		newloc = aiBrain.BuilderManagers[location].Position or false
+		Orient = aiBrain.BuilderManagers[location].Orientation or false
+		if newloc then
+			location = table.copy(newloc)
+		end
+	end
+
+	-- we dont have a valid 3D location
+	-- likely base is no longer active --
+	if not location[3] then
+		return {}
+	end
+
+	if not layer then
+		layer = 'Amphibious'
+	end
+
+	if not patroltype then
+		patroltype = false
+	end
+
+	-- get the map dimension sizes
+	local Mx = ScenarioInfo.size[1]
+	local Mz = ScenarioInfo.size[2]	
+	
+	if orientation then
+		local Sx = LOUDCEIL(location[1])
+		local Sz = LOUDCEIL(location[3])
+	
+		if not Orient then
+			-- tracks if we used threat to determine Orientation
+			local Direction = false
+			local threats = aiBrain:GetThreatsAroundPosition( location, 32, true, 'Economy' )
+			LOUDSORT( threats, function(a,b) return VDist2(a[1],a[2],location[1],location[3]) + a[3] < VDist2(b[1],b[2],location[1],location[3]) + b[3] end )
+			for _,v in threats do
+				Direction = GetDirectionInDegrees( {v[1],location[2],v[2]}, location )
+				break	-- process only the first one
+			end
+			
+			if Direction then
+				if Direction < 45 or Direction > 315 then
+					Orient = 'S'
+				elseif Direction >= 45 and Direction < 135 then
+					Orient = 'E'
+				elseif Direction >= 135 and Direction < 225 then
+					Orient = 'N'
+				else
+					Orient = 'W'
+				end
+			else
+				-- Use map position to determine orientation
+				-- First step is too determine if you're in the top or bottom 25% of the map
+				-- if you are then you will orient N or S otherwise E or W
+				-- the OrientvalueREAR will be set to value of the REAR positions (either the X or Z value depending upon NSEW Orient value)
+
+				-- check if upper or lower quarter		
+				if ( Sz <= (Mz * .25) or Sz >= (Mz * .75) ) then
+					Orient = 'NS'
+				-- otherwise use East/West orientation
+				else
+					Orient = 'EW'
+				end
+
+				-- orientation will be overridden if we are particularily close to a map edge
+				-- check if extremely close to an edge (within 11% of map size)
+				if (Sz <= (Mz * .11) or Sz >= (Mz * .89)) then
+					Orient = 'NS'
+				end
+
+				if (Sx <= (Mx * .11) or Sx >= (Mx * .89)) then
+					Orient = 'EW'
+				end
+
+				-- Second step is to determine if we are N or S - or - E or W
+				
+				if Orient == 'NS' then 
+					-- if N/S and in the lower half of map
+					if (Sz > (Mz* 0.5)) then
+						Orient = 'N'
+					-- else we must be in upper half
+					else	
+						Orient = 'S'
+					end
+				else
+					-- if E/W and we are in the right side of the map
+					if (Sx > (Mx* 0.5)) then
+						Orient = 'W'
+					-- else we must on the left side
+					else
+						Orient = 'E'
+					end
+				end
+			end
+
+			-- store the Orientation for any given base
+			if Basename then
+				aiBrain.BuilderManagers[Basename].Orientation = Orient		
+			end
+		end
+		
+		if Orient == 'S' then
+			OrientvalueREAR = Sz - radius
+			OrientvalueFRONT = Sz + radius		
+		elseif Orient == 'E' then
+			OrientvalueREAR = Sx - radius
+			OrientvalueFRONT = Sx + radius
+		elseif Orient == 'N' then
+			OrientvalueREAR = Sz + radius
+			OrientvalueFRONT = Sz - radius
+		elseif Orient == 'W' then
+			OrientvalueREAR = Sx + radius
+			OrientvalueFRONT = Sz - radius
+		end
+	end
+
+	-- If radius is very small just return the centre point and orientation
+	-- this is often used by engineers to build structures according to a base template with fixed positions
+	-- and still maintain the appropriate rotation -- 
+	if radius < 4 then
+		return { {location[1],0,location[3]} }, Orient
+	end	
+
+	local locList = {}
+	local counter = 0
+
+	local lowlimit = (radius * -1)
+	local highlimit = radius
+	local steplimit = (radius / 2)
+	
+	-- build an array of points in the shape of a box w 5 points to a side
+	-- eliminating the corner positions along the way
+	-- the points will be numbered from upper left to lower right
+	-- this code will always return the 12 points around whatever position it is fed
+	-- even if those points result in some point off of the map
+	for x = lowlimit, highlimit, steplimit do
+		
+		for y = lowlimit, highlimit, steplimit do
+			
+			-- this code lops off the corners of the box and the interior points leaving us with 3 points to a side
+			-- basically it forms a '+' shape
+			if not (x == 0 and y == 0)	and	(x == lowlimit or y == lowlimit or x == highlimit or y == highlimit)
+			and not ((x == lowlimit and y == lowlimit) or (x == lowlimit and y == highlimit)
+			or ( x == highlimit and y == highlimit) or ( x == highlimit and y == lowlimit)) then
+				locList[counter+1] = { LOUDCEIL(location[1] + x), GetSurfaceHeight(location[1] + x, location[3] + y), LOUDCEIL(location[3] + y) }
+				counter = counter + 1
+			end
+		end
+	end
+
+	-- if we have an orientation build a list of those points that meet that specification
+	-- FRONT will have all points that do not match the OrientvalueREAR (9 points)
+	-- REAR will have all point that DO match the OrientvalueREAR (3 points)
+	-- otherwise we keep all 12 generated points
+	if orientation == 'FRONT' or orientation == 'REAR' then
+		
+		local filterList = {}
+		counter = 0
+
+		for k,v in locList do
+			local x = v[1]
+			local z = v[3]
+
+			if Orient == 'N' or Orient == 'S' then
+				if orientation == 'FRONT' and z != OrientvalueREAR then
+					filterList[counter+1] = v
+					counter = counter + 1
+				elseif orientation == 'REAR' and z == OrientvalueREAR then
+					filterList[counter+1] = v
+					counter = counter + 1
+				end
+			elseif Orient == 'W' or Orient == 'E' then
+				if orientation == 'FRONT' and x != OrientvalueREAR then
+					filterList[counter+1] = v
+					counter = counter + 1
+				elseif orientation == 'REAR' and x == OrientvalueREAR then
+					filterList[counter+1] = v
+					counter = counter + 1
+				end
+			end
+		end
+		locList = filterList
+	end
+	
+	-- sort the points from front to rear based upon orientation
+	if Orient == 'N' then
+		table.sort(locList, function(a,b) return a[3] < b[3] end)
+	elseif Orient == 'S' then
+		table.sort(locList, function(a,b) return a[3] > b[3] end)
+	elseif Orient == 'E' then 
+		table.sort(locList, function(a,b) return a[1] > b[1] end)
+	elseif Orient == 'W' then
+		table.sort(locList, function(a,b) return a[1] < b[1] end)
+	end
+
+	local sortedList = {}
+	
+	if table.getsize(locList) == 0 then
+		return {} 
+	end
+	
+	-- Originally I always did this and it worked just fine but I want
+	-- to find a way to get the AI to rotate templated builds so I need
+	-- to provide a consistent result based upon orientation and NOT 
+	-- sorted by proximity to map centre -- as I had been doing -- so 
+	-- now I only sort the list if its a patrol or Air request
+	-- I have kept the original code contained inside this loop but 
+	-- it doesn't run
+	if patroltype or layer == 'Air' then
+		local lastX = Mx* 0.5
+		local lastZ = Mz* 0.5
+	
+		if patroltype or layer == 'Air' then
+			lastX = location[1]
+			lastZ = location[3]
+		end
+		
+	
+		-- Sort points by distance from (lastX, lastZ) - map centre
+		-- or if patrol or 'Air', then from the provided location
+		for i = 1, counter do
+		
+			local lowest
+			local czX, czZ, pos, distance, key
+		
+			for k, v in locList do
+				local x = v[1]
+				local z = v[3]
+				distance = VDist2Sq(lastX, lastZ, x, z)
+				if not lowest or distance < lowest then
+					pos = v
+					lowest = distance
+					key = k
+				end
+			end
+		
+			if not pos then
+				return {} 
+			end
+		
+			sortedList[i] = pos
+			
+			-- use the last point selected as the start point for the next distance check
+			if patroltype or layer == 'Air' then
+				lastX = pos[1]
+				lastZ = pos[3]
+			end
+			LOUDREMOVE(locList, key)
+		end
+	else
+		sortedList = locList
+	end
+
+	-- pick a specific position
+	if positionselection then
+	
+		if type(positionselection) == 'boolean' then
+			positionselection = Random( 1, counter )	--table.getn(sortedList))
+		end
+
+	end
+
+
+	return sortedList, Orient, positionselection
+end

@@ -109,6 +109,7 @@ BuilderGroup {
             NeedGuard = true,
         }
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T1 Unmarked Expansion Area 1000 Small',
         PlatoonTemplate = 'EngineerBuilderRNG',
@@ -139,7 +140,7 @@ BuilderGroup {
             },
             NeedGuard = true,
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T1 Large Expansion Area 1000 Small',
         PlatoonTemplate = 'EngineerBuilderRNG',
@@ -331,6 +332,7 @@ BuilderGroup {
             NeedGuard = false,
         }
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T1 Unmarked Expansion Area 1000 Large',
         PlatoonTemplate = 'EngineerBuilderRNG',
@@ -361,5 +363,5 @@ BuilderGroup {
             },
             NeedGuard = true,
         }
-    },
+    },]]
 }
