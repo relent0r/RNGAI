@@ -241,8 +241,6 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
-                    'T2AADefense',
-                    'T2GroundDefense',
                     'T2MissileDefense',
                 },
                 Location = 'LocationType',
