@@ -250,9 +250,9 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
-        local perlocations, orient, positionsel = RUtils.GetBasePerimeterPoints(self, 'MAIN', 50, 'FRONT', false, 'Land', true)
-        LOG('Perimeter Points '..repr(perlocations))
-        LOG('Orient is '..orient)
+        --local perlocations, orient, positionsel = RUtils.GetBasePerimeterPoints(self, 'MAIN', 50, 'FRONT', false, 'Land', true)
+        --LOG('Perimeter Points '..repr(perlocations))
+        --LOG('Orient is '..orient)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
@@ -1183,6 +1183,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
+            LOG('Total land threat around base '..landThreatAroundBase)
             if (gameTime < 900) and (landThreatAroundBase > 30) then
                 --LOG('BaseThreatCaution True')
                 self.BrainIntel.SelfThreat.BaseThreatCaution = true

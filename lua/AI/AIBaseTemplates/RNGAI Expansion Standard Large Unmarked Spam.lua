@@ -26,6 +26,7 @@ BaseBuilderTemplate {
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
                 'RNGAI Reaction Tanks',
+                'RNGAI Land AA 2',
                 'RNGAI TankLandBuilder Large Unmarked',
         
                 -- Land Unit Formers T1 --

@@ -1243,13 +1243,16 @@ Platoon = Class(RNGAIPlatoon) {
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             --LOG('baseTmpList is :'..repr(baseTmplList))
-        --[[elseif cons.Wall then
-            local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
-            local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
+        elseif cons.NearPerimeterPoints then
+            LOG('NearPerimeterPoints')
+            reference, orient, buildpoint = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
+            LOG('referece is '..repr(reference))
             relative = false
-            reference = AIUtils.GetLocationNeedingWalls(aiBrain, 200, 4, 'STRUCTURE - WALLS', cons.ThreatMin, cons.ThreatMax, cons.ThreatRings)
-            table.insert(baseTmplList, 'Blank')
-            buildFunction = AIBuildStructures.WallBuilder]]
+            baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
+            for k,v in reference do
+                table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
+            end
+            buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
         elseif cons.NearBasePatrolPoints then
             relative = false
             reference = AIUtils.GetBasePatrolPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 100)
@@ -3079,6 +3082,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.OldPlan = currentPlan
         self:ForkAIThread(self[plan])
     end,
+    
     -- For Debugging
     PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()

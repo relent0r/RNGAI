@@ -87,7 +87,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3)} },
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * (categories.LAND + categories.NAVAL) - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE TECH2 DIRECTFIRE'}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
@@ -182,6 +182,9 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'T1NavalDefense',
                 },
@@ -197,7 +200,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 9, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
@@ -207,6 +210,10 @@ BuilderGroup {
         BuilderData = {
             NumAssistees = 2,
             Construction = {
+                NearPerimeterPoints = true,
+                Radius = 50,
+                BasePerimeterOrientation = 'FRONT',
+                BasePerimeterSelection = true,
                 BuildClose = true,
                 BuildStructures = {
                     'T2AADefense',
@@ -477,7 +484,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Perimeter Defenses',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Defence - Perimeter',
+        BuilderName = 'RNGAI T1 Defence Land - Perimeter',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
         InstanceCount = 2,
@@ -493,11 +500,51 @@ BuilderGroup {
         BuilderData = {
             NumAssistees = 2,
             Construction = {
+                NearPerimeterPoints = true,
+                Radius = 40,
+                BasePerimeterOrientation = 'FRONT',
+                BasePerimeterSelection = true,
                 BuildClose = false,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
                     'T1AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Sea - Perimeter',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 650,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .6 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = 'ExpansionBaseTemplates',
+                ExpansionBase = true,
+                NearMarkerType = 'Naval Area',
+                LocationRadius = 250,
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 1,
+                ThreatType = 'AntiSurface',
+                ExpansionRadius = 120,
+                BuildStructures = {
+                    'T1AADefense',
+                    'T1NavalDefense',
                 },
                 Location = 'LocationType',
             }

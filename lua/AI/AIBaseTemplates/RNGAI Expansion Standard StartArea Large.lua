@@ -38,6 +38,7 @@ BaseBuilderTemplate {
                 'RNGAI Land Mass Raid',
                 'RNGAI Land FormBuilders Expansion',
                 'RNGAI Land Response Formers',
+                'RNGAI Land AA 2',
                 'RNGAI Island Large FormBuilders',
         
                 -- Land Factory Builders --
@@ -72,6 +73,8 @@ BaseBuilderTemplate {
                 -- Sea Unit Builders --
                 'RNGAI Sea Builders T1',
                 'RNGAI Sea Builders T23',
+                'RNGAI SonarBuilders',
+                'RNGAI SonarUpgrade',
 
                 -- Sea Unit Formers --
                 'RNGAI Sea Formers',

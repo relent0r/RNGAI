@@ -29,6 +29,7 @@ BaseBuilderTemplate {
                 'RNGAI ScoutLandBuilder',
                 'RNGAI TankLandBuilder Small',
                 'RNGAI Reaction Tanks',
+                'RNGAI Land AA 2',
                 'RNGAI T2 TankLandBuilder',
         
                 -- Land Unit Formers T1 --
@@ -36,6 +37,7 @@ BaseBuilderTemplate {
                 'RNGAI Land Mass Raid',
                 'RNGAI Land FormBuilders Expansion',
                 'RNGAI Land Response Formers',
+                'RNGAI Air Response Formers',
         
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Unmarked Spam',

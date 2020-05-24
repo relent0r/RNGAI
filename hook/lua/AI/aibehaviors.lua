@@ -996,7 +996,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
     end
     
     local cdrPos = cdr:GetPosition()
-    local distSqAway = 2500
+    local distSqAway = 2025
     local loc = cdr.CDRHome
     local upgradeMode = false
     if gameTime < 1500 then
@@ -1007,7 +1007,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
 
     if cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
         if GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
-            LOG('Economy good for ACU upgrade')
+            --LOG('Economy good for ACU upgrade')
             cdr.GoingHome = false
             cdr.Combat = false
             cdr.Upgrading = false
@@ -1040,21 +1040,21 @@ function CDREnhancementsRNG(aiBrain, cdr)
             local HaveEcoForEnhancement = false
             for _,enhancement in ACUUpgradeList or {} do
                 local wantedEnhancementBP = CRDBlueprint.Enhancements[enhancement]
-                --LOG('* AI-Uveso: wantedEnhancementBP '..repr(wantedEnhancementBP))
+                --LOG('* RNGAI: wantedEnhancementBP '..repr(wantedEnhancementBP))
                 if not wantedEnhancementBP then
-                    SPEW('* AI-Uveso: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
+                    SPEW('* RNGAI: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
                 elseif cdr:HasEnhancement(enhancement) then
                     NextEnhancement = false
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
+                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
                 elseif EnhancementEcoCheckRNG(aiBrain, cdr, wantedEnhancementBP) then
                     LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
                         HaveEcoForEnhancement = true
-                        --LOG('* AI-Uveso: * ACUAttackAIUveso: *** Set as Enhancememnt: '..NextEnhancement)
+                        --LOG('* RNGAI: * ACUAttackAIUveso: *** Set as Enhancememnt: '..NextEnhancement)
                     end
                 else
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements: Eco is bad for '..enhancement)
+                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Eco is bad for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
                         HaveEcoForEnhancement = false
@@ -1065,12 +1065,12 @@ function CDREnhancementsRNG(aiBrain, cdr)
                 end
             end
             if NextEnhancement and HaveEcoForEnhancement then
-                LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements Building '..NextEnhancement)
+                --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements Building '..NextEnhancement)
                 if BuildEnhancement(aiBrain, cdr, NextEnhancement) then
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned true'..NextEnhancement)
+                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements returned true'..NextEnhancement)
                     return true
                 else
-                    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildACUEnhancements returned false'..NextEnhancement)
+                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements returned false'..NextEnhancement)
                     return false
                 end
             end
@@ -1107,19 +1107,19 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement)
     if priorityUpgrade and aiBrain.EnemyIntel.BaseThreatCaution then
         if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
          and (GetEconomyIncome(aiBrain, 'MASS') > 1.2) then
-            LOG('* RNGAI: Gun Upgrade Eco Check True')
+            --LOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
     elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
     and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
         return true
     end
-    LOG('* RNGAI: Upgrade Eco Check False')
+    --LOG('* RNGAI: Upgrade Eco Check False')
     return false
 end
 
 BuildEnhancement = function(aiBrain,cdr,enhancement)
-    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
+    --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
     cdr.Upgrading = true
     IssueStop({cdr})
     IssueClearCommands({cdr})
@@ -1136,13 +1136,13 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             IssueScript({cdr}, order)
             coroutine.yield(10)
         end
-        LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
         local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
         IssueScript({cdr}, order)
     end
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
         if cdr:GetHealthPercent() < 0.40 then
-            --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
             cdr.Upgrading = false
@@ -1150,7 +1150,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         end
         coroutine.yield(10)
     end
-    --LOG('* AI-Uveso: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
     cdr.Upgrading = false
     return true
 end

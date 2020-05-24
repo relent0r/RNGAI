@@ -378,7 +378,7 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     local markerCount = false
     local retPos, retName
     local positions = AIFilterAlliedBases(aiBrain, positions)
-    LOG('Pontetial Marker Locations '..repr(positions))
+    --LOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
             if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
@@ -402,6 +402,6 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     if not markerCount then 
         markerCount = 0
     end
-    LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
+    --LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
     return retPos, retName
 end

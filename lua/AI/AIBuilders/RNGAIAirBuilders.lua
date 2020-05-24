@@ -288,6 +288,8 @@ BuilderGroup {
             PrioritizedCategories = {
                 'COMMAND',
                 'EXPERIMENTAL',
+                'NAVAL',
+                'AMPHIBIOUS',
             },
         },
         BuilderConditions = {
