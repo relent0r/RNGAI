@@ -6,6 +6,17 @@ local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 
+-- TEMPORARY LOUD LOCALS
+local LOUDPOW = math.pow
+local LOUDSQRT = math.sqrt
+local LOUDGETN = table.getn
+local LOUDINSERT = table.insert
+local LOUDREMOVE = table.remove
+local LOUDSORT = table.sort
+local LOUDFLOOR = math.floor
+local LOUDCEIL = math.ceil
+local LOUDPI = math.pi
+
 --[[
 Valid Threat Options:
             Overall
@@ -1272,16 +1283,7 @@ function DebugArrayRNG(Table)
 end
 
 
-function GetDirectionInDegrees( v1, v2 )
-    local LOUDACOS = math.acos
-	local vec = GetDirectionVector( v1, v2)
-	
-	if vec[1] >= 0 then
-		return LOUDACOS(vec[3]) * (360/(LOUDPI*2))
-	end
-	
-	return 360 - (LOUDACOS(vec[3]) * (360/(LOUDPI*2)))
-end
+
 
 --[[
    This is Sproutos work, an early function from the master himself
@@ -1299,12 +1301,6 @@ end
    positionselection, int
    ]]
 function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positionselection, layer, patroltype )
-    local LOUDGETN = table.getn
-    local LOUDINSERT = table.insert
-    local LOUDREMOVE = table.remove
-    local LOUDSORT = table.sort
-    local LOUDFLOOR = math.floor
-	local LOUDCEIL = math.ceil
     
 	local newloc = false
 	local Orient = false
@@ -1577,4 +1573,51 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 
 
 	return sortedList, Orient, positionselection
+end
+
+function GetDistanceBetweenTwoVectors( v1, v2 )
+    return VDist3(v1, v2)
+end
+
+function XZDistanceTwoVectors( v1, v2 )
+    return VDist2( v1[1], v1[3], v2[1], v2[3] )
+end
+
+function GetVectorLength( v )
+    return LOUDSQRT( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
+end
+
+function NormalizeVector( v )
+
+	if v.x then
+		v = {v.x, v.y, v.z}
+	end
+	
+    local length = LOUDSQRT( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
+	
+    if length > 0 then
+        local invlength = 1 / length
+        return Vector( v[1] * invlength, v[2] * invlength, v[3] * invlength )
+    else
+        return Vector( 0,0,0 )
+    end
+end
+
+function GetDifferenceVector( v1, v2 )
+    return Vector(v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3])
+end
+
+function GetDirectionVector( v1, v2 )
+    return NormalizeVector( Vector(v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]) )
+end
+
+function GetDirectionInDegrees( v1, v2 )
+    local LOUDACOS = math.acos
+	local vec = GetDirectionVector( v1, v2)
+	
+	if vec[1] >= 0 then
+		return LOUDACOS(vec[3]) * (360/(LOUDPI*2))
+	end
+	
+	return 360 - (LOUDACOS(vec[3]) * (360/(LOUDPI*2)))
 end

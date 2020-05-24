@@ -3082,14 +3082,13 @@ Platoon = Class(RNGAIPlatoon) {
         self.OldPlan = currentPlan
         self:ForkAIThread(self[plan])
     end,
-    
+
     -- For Debugging
     PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
         if not aiBrain.RNG then
             return RNGAIPlatoon.PlatoonDisband(self)
         end
-        WARN('* AI-Uveso: PlatoonDisband: Disbanding platoon while transporting!!! Disbanding Blocked!')
         WARN('* AI-Uveso: PlatoonDisband: PlanName '..repr(self.PlanName)..'  -  BuilderName: '..repr(self.BuilderName)..'.' )
         if not self.PlanName or not self.BuilderName then
             WARN('* AI-Uveso: PlatoonDisband: PlatoonData = '..repr(self.PlatoonData))

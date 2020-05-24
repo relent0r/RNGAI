@@ -11,14 +11,22 @@ BaseBuilderTemplate {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
         'RNGAI Engineer Expansion Builders Small',
-        'RNGAI ENG PD1',
+        --'RNGAI ENG PD1',
 
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
         --'RNGAI Test PD',
-        'RNGAI ACU Enhancements Gun',
-        'RNGAI ACU Enhancements Tier',
+        --'RNGAI ACU Enhancements Gun',
+        --'RNGAI ACU Enhancements Tier',
+
+        -- Defense Builders
+        'RNGAI Base Defenses',
+        'RNGAI Base Defenses Expansion',
+        'RNGAI T2 Expansion TML',
+        'RNGAI T1 Perimeter Defenses',
+        'RNGAI T2 Defense FormBuilders',
+
         'RNGAI Engineer Builder',
         'RNGAI Factory Builder Land',
         'RNGAI Factory Builder Air',
