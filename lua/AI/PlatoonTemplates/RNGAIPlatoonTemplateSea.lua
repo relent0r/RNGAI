@@ -34,6 +34,46 @@ PlatoonTemplate {
     },
 }
 
+PlatoonTemplate {
+    Name = 'RNGAIT1SeaSubQueue',
+    FactionSquads = {
+        UEF = {
+            { 'ues0203', 1, 3, 'attack', 'GrowthFormation' }
+        },
+        Aeon = {
+            { 'uas0203', 1, 3, 'attack', 'GrowthFormation' }
+        },
+        Cybran = {
+            { 'urs0203', 1, 3, 'attack', 'GrowthFormation' }
+        },
+        Seraphim = {
+            { 'xss0203', 1, 3, 'attack', 'GrowthFormation' }
+        },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAIT2SeaSubQueue',
+    FactionSquads = {
+        UEF = {
+            { 'ues0203', 1, 1, 'attack', 'GrowthFormation' },
+            { 'xes0102', 1, 2, 'attack', 'GrowthFormation' },
+        },
+        Aeon = {
+            { 'uas0203', 1, 1, 'attack', 'GrowthFormation' },
+            { 'xas0204', 1, 2, 'attack', 'GrowthFormation' },
+        },
+        Cybran = {
+            { 'urs0203', 1, 1, 'attack', 'GrowthFormation' },
+            { 'xrs0204', 1, 2, 'attack', 'GrowthFormation' },
+        },
+        Seraphim = {
+            { 'xss0203', 1, 1, 'attack', 'GrowthFormation' },
+            { 'xss0201', 1, 2, 'attack', 'GrowthFormation' },
+        },
+    }
+}
+
 PlatoonTemplate { 
     Name = 'RNGAIT2SeaAttackQueue',
     FactionSquads = {

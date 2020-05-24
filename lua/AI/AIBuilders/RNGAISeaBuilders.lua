@@ -4,6 +4,21 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local MaxAttackForce = 0.45
 
+local SeaDefenseMode = function(self, aiBrain, manager)
+    local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
+    local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
+    if mySubThreat < enemySubThreat then
+        --LOG('Enable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 890
+    else
+        --LOG('Disable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 10
+    end
+end
+
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Sea Builders T1',                               
     BuildersType = 'FactoryBuilder',
@@ -14,7 +29,7 @@ BuilderGroup {
         Priority = 840,
         BuilderConditions = {
             -- When do we want to build this ?
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             -- Do we need additional conditions to build it ?
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 20,  categories.MOBILE * categories.NAVAL } },
@@ -103,6 +118,20 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Sub Enemy Threat T1',
+        PlatoonTemplate = 'RNGAIT1SeaSubQueue',
+        Priority = 10,
+        PriorityFunction = SeaDefenseMode,
+        BuilderConditions = { 
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY NAVAL TECH2' }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Air',
+    },
 }
 
 BuilderGroup {
@@ -175,7 +204,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SubKiller',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
@@ -205,6 +234,19 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Sub Enemy Threat T2',
+        PlatoonTemplate = 'RNGAIT2SeaSubQueue',
+        Priority = 10,
+        PriorityFunction = SeaDefenseMode,
+        BuilderConditions = { 
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Air',
     },
     Builder { 
         BuilderName = 'RNGAI Sea T2 Queue',

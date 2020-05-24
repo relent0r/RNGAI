@@ -170,6 +170,8 @@ AIBrain = Class(RNGAIBrainClass) {
             Experimental = 0,
             Extractor = 0,
             ExtractorCount = 0,
+            Naval = 0,
+            NavalSub = 0,
         }
 
         self.BrainIntel = {}
@@ -191,6 +193,8 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseThreatCaution = false,
             AntiAirNow = 0,
             AirNow = 0,
+            NavalNow = 0,
+            NavalSubNow = 0,
         }
 
         -- Structure Upgrade properties
@@ -1001,8 +1005,10 @@ AIBrain = Class(RNGAIBrainClass) {
     EnemyThreatCheckRNG = function(self, ALLBPS)
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
-        local enemyAirthreat = 0
+        local enemyAirThreat = 0
         local enemyAntiAirThreat = 0
+        local enemyNavalThreat = 0
+        local enemyNavalSubThreat = 0
         local enemyExtractorthreat = 0
         local enemyExtractorCount = 0
         --LOG('Starting Threat Check at'..GetGameTick())
@@ -1013,29 +1019,41 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if table.getn(enemyBrains) > 0 then
             for k, enemy in enemyBrains do
-                local enemyUnits = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
-                local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
-                for _,v in enemyUnits do
+
+                local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
+                for _,v in enemyAir do
                     -- previous method of getting unit ID before the property was added.
                     --local unitbpId = v:GetUnitId()
                     --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
                     bp = ALLBPS[v.UnitId].Defense
         
-                    enemyAirthreat = enemyAirthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+                    enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                     enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
                 end
+
+                local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in enemyExtractors do
                     bp = ALLBPS[v.UnitId].Defense
 
                     enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
                     enemyExtractorCount = enemyExtractorCount + 1
                 end
+
+                local enemyNaval = GetListOfUnits( aiBrain, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
+                for _,v in enemyNaval do
+                    bp = ALLBPS[v.UnitId].Defense
+        
+                    enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+                    enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
+                end
             end
         end
-        self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirthreat
+        self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AntiAir = enemyAntiAirThreat
         self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
+        self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
+        self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -1196,14 +1214,13 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         -- Get AI strength
-        local brainUnits = GetListOfUnits( self, categories.MOBILE, false, false)
+        local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
         local airthreat = 0
         local antiAirThreat = 0
         local bp
 
-		
 		-- calculate my present airvalue			
-		for _,v in EntityCategoryFilterDown( (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, brainUnits ) do
+		for _,v in brainAirUnits do
             -- previous method of getting unit ID before the property was added.
             --local unitbpId = v:GetUnitId()
             --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
@@ -1269,6 +1286,18 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
         --LOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
+        WaitTicks(2)
+        local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
+        local navalThreat = 0
+        local navalSubThreat = 0
+        for _,v in brainNavalUnits do
+            bp = ALLBPS[v.UnitId].Defense
+            navalThreat = navalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+            navalSubThreat = navalSubThreat + bp.SubThreatLevel
+        end
+        self.BrainIntel.SelfThreat.NavalNow = navalThreat
+        self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
+
 
         if self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 2 then
             --LOG('Switch to agressive upgrade mode')
