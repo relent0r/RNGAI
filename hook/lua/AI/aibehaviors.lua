@@ -1154,3 +1154,58 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
     cdr.Upgrading = false
     return true
 end
+
+TargetControlThread = function (platoon)
+    local aiBrain = platoon:GetBrain()
+    
+    local TargetControlTemplates = {
+        structureMode = {
+                        'EXPERIMENTAL',
+                        'STRUCTURE DEFENSE',
+                        'MOBILE LAND INDIRECTFIRE',
+                        'MOBILE LAND DIRECTFIRE',
+                        'MASSEXTRACTION',
+                        'ENERGYPRODUCTION',
+                        'COMMAND',
+                        'MASSFABRICATION',
+                        'SHIELD',
+                        'STRUCTURE',
+                        'ALLUNITS',
+                    },
+
+        antiAirMode = {
+                        'EXPERIMENTAL',
+                        'MOBILE LAND ANTIAIR',
+                        'STRUCTURE ANTIAIR',
+                        'MOBILE LAND INDIRECTFIRE',
+                        'MOBILE LAND DIRECTFIRE',
+                        'STRUCTURE DEFENSE',
+                        'MASSEXTRACTION',
+                        'ENERGYPRODUCTION',
+                        'COMMAND',
+                        'MASSFABRICATION',
+                        'SHIELD',
+                        'STRUCTURE',
+                        'ALLUNITS',
+                    },
+
+        antiLandMode = {
+                        'EXPERIMENTAL',
+                        'MOBILE LAND DIRECTFIRE',
+                        'MOBILE LAND INDIRECTFIRE',
+                        'STRUCTURE DEFENSE',
+                        'MASSEXTRACTION',
+                        'ENERGYPRODUCTION',
+                        'COMMAND',
+                        'MASSFABRICATION',
+                        'SHIELD',
+                        'STRUCTURE',
+                        'ALLUNITS',
+                    },
+                }
+    while aiBrain:PlatoonExists(self) do
+        LOG('TargetControlThread')
+        WaitTicks(30)
+    end
+end
+
