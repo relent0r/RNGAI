@@ -51,7 +51,7 @@ BaseBuilderTemplate {
                 'RNGAI Factory Builder Air Large',
 
                 -- Air Factory Formers
-                'RNGAI Air Upgrade Builders',
+                'RNGAI Air Upgrade Builders Expansion',
                 
         
                 -- Air Unit Builders T1 --
@@ -68,7 +68,7 @@ BaseBuilderTemplate {
                 'RNGAI Factory Builder Sea Large Expansion',
 
                 -- Sea Factory Formers
-                'RNGAI Sea Upgrade Builders',
+                'RNGAI Sea Upgrade Builders Expansion',
 
                 -- Sea Unit Builders --
                 'RNGAI Sea Builders T1',

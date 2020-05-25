@@ -120,7 +120,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY NAVAL TECH2' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.6}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -236,7 +236,7 @@ BuilderGroup {
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.6}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

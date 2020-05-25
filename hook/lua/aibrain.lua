@@ -1039,11 +1039,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     enemyExtractorCount = enemyExtractorCount + 1
                 end
 
-                local enemyNaval = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
+                local enemyNaval = GetListOfUnits( enemy, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
                 for _,v in enemyNaval do
                     bp = ALLBPS[v.UnitId].Defense
-                    LOG('NavyThreat unit is '..v.UnitId)
-                    LOG('NavyThreat is '..bp.SubThreatLevel)
+                    --LOG('NavyThreat unit is '..v.UnitId)
+                    --LOG('NavyThreat is '..bp.SubThreatLevel)
                     enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                     enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
                 end
