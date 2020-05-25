@@ -1039,10 +1039,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     enemyExtractorCount = enemyExtractorCount + 1
                 end
 
-                local enemyNaval = GetListOfUnits( aiBrain, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
+                local enemyNaval = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
                 for _,v in enemyNaval do
                     bp = ALLBPS[v.UnitId].Defense
-        
+                    LOG('NavyThreat unit is '..v.UnitId)
+                    LOG('NavyThreat is '..bp.SubThreatLevel)
                     enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                     enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
                 end
@@ -1319,15 +1320,17 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
         end]]
-        --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        --LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
-        --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-        --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+        LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+        LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+        LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+        LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         WaitTicks(2)
     end,
 

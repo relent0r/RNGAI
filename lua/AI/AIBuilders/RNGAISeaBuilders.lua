@@ -8,12 +8,12 @@ local SeaDefenseMode = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
     if mySubThreat < enemySubThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        LOG('Enable Sub Pool Builder')
+        LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 890
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        LOG('Disable Sub Pool Builder')
+        LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 10
     end
 end
@@ -28,10 +28,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaSub',
         Priority = 840,
         BuilderConditions = {
-            -- When do we want to build this ?
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
-            -- Do we need additional conditions to build it ?
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 20,  categories.MOBILE * categories.NAVAL } },
         },
         BuilderType = 'Sea',
@@ -41,10 +39,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaAntiAir',
         Priority = 840,
         BuilderConditions = {
-            -- When do we want to build this ?
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
-            -- Do we need additional conditions to build it ?
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 20,  categories.MOBILE * categories.NAVAL } },
         },
         BuilderType = 'Sea',
@@ -56,10 +52,8 @@ BuilderGroup {
         Priority = 150,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }}, -- LocationType, categoryUnits
-            -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            -- When do we want to build this ?
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, 
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
             --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
             --{ UCBC, 'NavalBaseWithLeastUnitsRNG', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
@@ -130,7 +124,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Air',
+        BuilderType = 'Sea',
     },
 }
 
@@ -246,7 +240,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Air',
+        BuilderType = 'Sea',
     },
     Builder { 
         BuilderName = 'RNGAI Sea T2 Queue',

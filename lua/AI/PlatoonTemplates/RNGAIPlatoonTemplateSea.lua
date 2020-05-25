@@ -38,16 +38,20 @@ PlatoonTemplate {
     Name = 'RNGAIT1SeaSubQueue',
     FactionSquads = {
         UEF = {
-            { 'ues0203', 1, 3, 'attack', 'GrowthFormation' }
+            { 'ues0203', 1, 3, 'attack', 'none' },
+            { 'ues0103', 1, 1, 'attack', 'none' }
         },
         Aeon = {
-            { 'uas0203', 1, 3, 'attack', 'GrowthFormation' }
+            { 'uas0203', 1, 3, 'attack', 'none' },
+            { 'uas0102', 1, 1, 'attack', 'none' }
         },
         Cybran = {
-            { 'urs0203', 1, 3, 'attack', 'GrowthFormation' }
+            { 'urs0203', 1, 3, 'attack', 'none' },
+            { 'urs0103', 1, 1, 'attack', 'none' }
         },
         Seraphim = {
-            { 'xss0203', 1, 3, 'attack', 'GrowthFormation' }
+            { 'xss0203', 1, 3, 'attack', 'none' },
+            { 'xss0103', 1, 1, 'attack', 'none' }
         },
     }
 }
@@ -56,20 +60,24 @@ PlatoonTemplate {
     Name = 'RNGAIT2SeaSubQueue',
     FactionSquads = {
         UEF = {
-            { 'ues0203', 1, 1, 'attack', 'GrowthFormation' },
-            { 'xes0102', 1, 2, 'attack', 'GrowthFormation' },
+            { 'ues0203', 1, 1, 'attack', 'none' },
+            { 'xes0102', 1, 2, 'attack', 'none' },
+            { 'ues0201', 1, 1, 'attack', 'none' }
         },
         Aeon = {
-            { 'uas0203', 1, 1, 'attack', 'GrowthFormation' },
-            { 'xas0204', 1, 2, 'attack', 'GrowthFormation' },
+            { 'uas0203', 1, 1, 'attack', 'none' },
+            { 'xas0204', 1, 2, 'attack', 'none' },
+            { 'uas0201', 1, 1, 'attack', 'none' }
         },
         Cybran = {
-            { 'urs0203', 1, 1, 'attack', 'GrowthFormation' },
-            { 'xrs0204', 1, 2, 'attack', 'GrowthFormation' },
+            { 'urs0203', 1, 1, 'attack', 'none' },
+            { 'xrs0204', 1, 2, 'attack', 'none' },
+            { 'urs0201', 1, 1, 'attack', 'none' }
         },
         Seraphim = {
-            { 'xss0203', 1, 1, 'attack', 'GrowthFormation' },
-            { 'xss0201', 1, 2, 'attack', 'GrowthFormation' },
+            { 'xss0203', 1, 1, 'attack', 'none' },
+            { 'xss0201', 1, 2, 'attack', 'none' },
+            { 'xss0201', 1, 1, 'attack', 'none' }
         },
     }
 }

@@ -633,6 +633,22 @@ function HaveUnitRatioVersusCap(aiBrain, ratio, compareType, categoryOwn)
     return CompareBody(numOwnUnits / cap, ratio, compareType)
 end
 
+function HaveThreatRatioVersusEnemyRNG(aiBrain, ratio, compareType)
+    -- in case we don't have omni view, return always true. We cant count units without omni
+    local selfThreat = 0
+    local enemyThreat = 0
+    if compareType == 'NAVAL' then
+        selfThreat = aiBrain.BrainIntel.SelfThreat.NavalNow
+        enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
+    end
+    if selfThreat / enemyThreat < ratio then
+        return true
+    else
+        return false
+    end
+    return false
+end
+
 function HaveUnitRatioVersusEnemy(aiBrain, ratio, categoryOwn, compareType, categoryEnemy)
     -- in case we don't have omni view, return always true. We cant count units without omni
     if not aiBrain.CheatEnabled or ScenarioInfo.Options.OmniCheat ~= "on" then
