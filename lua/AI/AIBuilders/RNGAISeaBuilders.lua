@@ -47,36 +47,14 @@ BuilderGroup {
     },
 
     Builder {
-        BuilderName = 'RNGAI Sub',
-        PlatoonTemplate = 'T1SeaSub',
-        Priority = 150,
+        BuilderName = 'RNGAI Sea Attack Queue',
+        PlatoonTemplate = 'RNGAIT1SeaAttackQueue',
+        Priority = 400,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }}, -- LocationType, categoryUnits
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, 
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70 } },
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
-            --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
-            --{ UCBC, 'NavalBaseWithLeastUnitsRNG', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
-            -- Respect UnitCap
-            --{ UCBC, 'HaveUnitRatioVersusCap', { MaxAttackForce , '<=', categories.MOBILE } },
-        },
-        BuilderType = 'Sea',
-    },
-    Builder {
-        BuilderName = 'RNGAI Sea Frigate',
-        PlatoonTemplate = 'T1SeaFrigate',
-        Priority = 150,
-        BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }}, -- LocationType, categoryUnits
-            -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            -- When do we want to build this ?
-            { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
-            --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
-            --{ UCBC, 'NavalBaseWithLeastUnitsRNG', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
-            -- Respect UnitCap
-            --{ UCBC, 'HaveUnitRatioVersusCap', { MaxAttackForce , '<=', categories.MOBILE } },
         },
         BuilderType = 'Sea',
     },

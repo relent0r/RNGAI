@@ -33,6 +33,28 @@ PlatoonTemplate {
         { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },
     },
 }
+PlatoonTemplate {
+    Name = 'RNGAIT1SeaAttackQueue',
+    FactionSquads = {
+        UEF = {
+            { 'ues0203', 1, 1, 'attack', 'none' },
+            { 'ues0103', 1, 2, 'attack', 'none' }
+        },
+        Aeon = {
+            { 'uas0203', 1, 1, 'attack', 'none' },
+            { 'uas0103', 1, 2, 'attack', 'none' },
+            { 'uas0102', 1, 1, 'attack', 'none' }
+        },
+        Cybran = {
+            { 'urs0203', 1, 1, 'attack', 'none' },
+            { 'urs0103', 1, 2, 'attack', 'none' }
+        },
+        Seraphim = {
+            { 'xss0203', 1, 1, 'attack', 'none' },
+            { 'xss0103', 1, 2, 'attack', 'none' }
+        },
+    }
+}
 
 PlatoonTemplate {
     Name = 'RNGAIT1SeaSubQueue',
