@@ -8,12 +8,12 @@ local SeaDefenseMode = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
     if mySubThreat < enemySubThreat then
-        LOG('Enable Sub Pool Builder')
-        LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --LOG('Enable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 890
     else
-        LOG('Disable Sub Pool Builder')
-        LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --LOG('Disable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 10
     end
 end

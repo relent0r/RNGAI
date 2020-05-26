@@ -3082,7 +3082,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.OldPlan = currentPlan
         self:ForkAIThread(self[plan])
     end,
-
+--[[
     -- For Debugging
     PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
@@ -3102,6 +3102,6 @@ Platoon = Class(RNGAIPlatoon) {
         if aiBrain:PlatoonExists(self) then
             RNGAIPlatoon.PlatoonDisband(self)
         end
-    end,
+    end,]]
 
 }
