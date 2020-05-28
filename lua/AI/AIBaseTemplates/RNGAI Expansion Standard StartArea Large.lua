@@ -65,19 +65,19 @@ BaseBuilderTemplate {
                 'RNGAI Air Platoon Builder',
 
                 -- Sea Factory Builders --
-                'RNGAI Factory Builder Sea Large Expansion',
+                --'RNGAI Factory Builder Sea Large Expansion',
 
                 -- Sea Factory Formers
-                'RNGAI Sea Upgrade Builders Expansion',
+                --'RNGAI Sea Upgrade Builders Expansion',
 
                 -- Sea Unit Builders --
-                'RNGAI Sea Builders T1',
-                'RNGAI Sea Builders T23',
-                'RNGAI SonarBuilders',
-                'RNGAI SonarUpgrade',
+                --'RNGAI Sea Builders T1',
+                --'RNGAI Sea Builders T23',
+                --'RNGAI SonarBuilders',
+                --'RNGAI SonarUpgrade',
 
                 -- Sea Unit Formers --
-                'RNGAI Sea Formers',
+                --'RNGAI Sea Formers',
 
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',

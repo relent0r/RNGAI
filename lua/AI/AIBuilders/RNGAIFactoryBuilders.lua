@@ -524,8 +524,8 @@ BuilderGroup {
             -- Do we need additional conditions to build it ?
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.ENERGYPRODUCTION } },
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.70}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrendRNG', { 0.4, 40.0 }}, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconTrendRNG', { 0.2, 40.0 }}, -- relative income
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
@@ -555,7 +555,7 @@ BuilderGroup {
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
@@ -569,7 +569,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { UCBC, 'EnemyHasUnitOfCategoryRNG', { categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },

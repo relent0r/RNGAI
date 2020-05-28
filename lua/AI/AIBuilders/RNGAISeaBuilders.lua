@@ -232,6 +232,19 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Sub Enemy Threat T3',
+        PlatoonTemplate = 'RNGAIT3SeaSubQueue',
+        Priority = 10,
+        PriorityFunction = SeaDefenseMode,
+        BuilderConditions = { 
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Sea',
+    },
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',

@@ -91,10 +91,10 @@ BaseBuilderTemplate {
         'RNGAI Experimental Formers',
 
         -- Sea Builders --
-        'RNGAI Sea Builders T1',
+        --'RNGAI Sea Builders T1',
 
         -- Sea Formers --
-        'RNGAI Sea Formers',
+        --'RNGAI Sea Formers',
     },
     NonCheatBuilders = {
     },

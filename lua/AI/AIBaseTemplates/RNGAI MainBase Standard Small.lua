@@ -66,7 +66,7 @@ BaseBuilderTemplate {
         'RNGAI Air Staging Platform',
         
         -- Sea Factory Builders
-        'RNGAI Factory Builder Sea',
+        --'RNGAI Factory Builder Sea',
 
         -- Air Factory Formers --
         'RNGAI Air Upgrade Builders',
@@ -84,11 +84,11 @@ BaseBuilderTemplate {
         'RNGAI Air Response Formers',
 
         -- Sea Unit Builders
-        'RNGAI Sea Builders T1',
+        --'RNGAI Sea Builders T1',
         
         -- Sea Unit Formers
-        'RNGAI Sea Formers',
-        'RNGAI Mass Hunter Sea Formers',
+        --'RNGAI Sea Formers',
+        --'RNGAI Mass Hunter Sea Formers',
         
         -- Defence Builders --
         'RNGAI Base Defenses',

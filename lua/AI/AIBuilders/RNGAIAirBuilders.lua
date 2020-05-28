@@ -423,7 +423,7 @@ BuilderGroup {
             PrioritizedCategories = {
                 'MOBILE LAND',
                 'ENGINEER TECH1',
-                'MOBILE ANTIAIR',
+                'MOBILE LAND ANTIAIR',
                 'MASSEXTRACTION',
                 'ALLUNITS',
             },
@@ -441,10 +441,13 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
-                'MOBILE ANTIAIR',
+                'MOBILE LAND ANTIAIR',
                 'MOBILE LAND',
                 'ENGINEER TECH1',
                 'MASSEXTRACTION',
+                'RADAR STRUCTURE',
+                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION',
                 'ALLUNITS',
             },
         },

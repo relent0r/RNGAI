@@ -106,15 +106,15 @@ BaseBuilderTemplate {
         'RNGAI Experimental Formers',
 
         -- Sea Builders --
-        'RNGAI Factory Builder Sea Large',
-        'RNGAI Sea Upgrade Builders',
-        'RNGAI Sea Builders T1',
-        'RNGAI Sea Builders T23',
-        'RNGAI SonarBuilders',
-        'RNGAI SonarUpgrade',
+        --'RNGAI Factory Builder Sea Large',
+        --'RNGAI Sea Upgrade Builders',
+        --'RNGAI Sea Builders T1',
+        --'RNGAI Sea Builders T23',
+        --'RNGAI SonarBuilders',
+        --'RNGAI SonarUpgrade',
 
         -- Sea Formers --
-        'RNGAI Sea Formers',
+        --'RNGAI Sea Formers',
     },
     NonCheatBuilders = {
     },

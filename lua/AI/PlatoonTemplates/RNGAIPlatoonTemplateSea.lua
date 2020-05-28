@@ -133,6 +133,36 @@ PlatoonTemplate {
     }
 }
 
+PlatoonTemplate {
+    Name = 'RNGAIT3SeaSubQueue',
+    FactionSquads = {
+        UEF = {
+            { 'ues0203', 1, 1, 'attack', 'none' },
+            { 'xes0102', 1, 2, 'attack', 'none' },
+            { 'ues0201', 1, 1, 'attack', 'none' },
+            { 'ues0302', 1, 1, 'Artillery', 'None' },     -- BattleShip
+        },
+        Aeon = {
+            { 'uas0203', 1, 1, 'attack', 'none' },
+            { 'xas0204', 1, 2, 'attack', 'none' },
+            { 'uas0201', 1, 1, 'attack', 'none' },
+            { 'uas0302', 1, 1, 'Artillery', 'None' },     -- BattleShip
+        },
+        Cybran = {
+            { 'urs0203', 1, 1, 'attack', 'none' },
+            { 'xrs0204', 1, 2, 'attack', 'none' },
+            { 'urs0201', 1, 1, 'attack', 'none' },
+            { 'urs0302', 1, 1, 'Artillery', 'None' },     -- BattleShip
+        },
+        Seraphim = {
+            { 'xss0203', 1, 1, 'attack', 'none' },
+            { 'xss0201', 1, 2, 'attack', 'none' },
+            { 'xss0201', 1, 1, 'attack', 'none' },
+            { 'xss0302', 1, 1, 'Artillery', 'None' },     -- BattleShip
+        },
+    }
+}
+
 PlatoonTemplate { 
     Name = 'RNGAIT3SeaAttackQueue',
     FactionSquads = {

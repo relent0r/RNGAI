@@ -553,6 +553,112 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI T12 Perimeter Defenses Naval',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Sea - Perimeter Naval',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
+        Priority = 650,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .6 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = 'ExpansionBaseTemplates',
+                ExpansionBase = true,
+                NearMarkerType = 'Naval Area',
+                LocationRadius = 250,
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 1,
+                ThreatType = 'AntiSurface',
+                ExpansionRadius = 120,
+                BuildStructures = {
+                    'T1AADefense',
+                    'T1NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Sea - Perimeter Naval',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
+        Priority = 650,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .6 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = 'ExpansionBaseTemplates',
+                ExpansionBase = true,
+                NearMarkerType = 'Naval Area',
+                LocationRadius = 250,
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 1,
+                ThreatType = 'AntiSurface',
+                ExpansionRadius = 120,
+                BuildStructures = {
+                    'T2AADefense',
+                    'T2NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Naval',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
+        Priority = 950,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'DEFENSE TECH1 NAVAL'}},
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildStructures = {
+                    'T1NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+}
+BuilderGroup {
     BuilderGroupName = 'RNGAI T2 Defense FormBuilders',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
