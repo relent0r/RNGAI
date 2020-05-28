@@ -172,6 +172,10 @@ AIBrain = Class(RNGAIBrainClass) {
             ExtractorCount = 0,
             Naval = 0,
             NavalSub = 0,
+            DefenseAir = 0,
+            DefenseSurface = 0,
+            DefenseSub = 0,
+            ACUGunUpgrades = 0,
         }
 
         self.BrainIntel = {}
@@ -1011,6 +1015,11 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyNavalSubThreat = 0
         local enemyExtractorthreat = 0
         local enemyExtractorCount = 0
+        local enemyDefenseAir = 0
+        local enemyDefenseSurface = 0
+        local enemyDefenseSub = 0
+        local enemyACUGun = 0
+
         --LOG('Starting Threat Check at'..GetGameTick())
         for index, brain in ArmyBrains do
             if IsEnemy(selfIndex, brain:GetArmyIndex()) then
@@ -1047,14 +1056,49 @@ AIBrain = Class(RNGAIBrainClass) {
                     enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                     enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
                 end
+
+                local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
+                for _,v in enemyDefense do
+                    bp = ALLBPS[v.UnitId].Defense
+                    --LOG('DefenseThreat unit is '..v.UnitId)
+                    --LOG('DefenseThreat is '..bp.SubThreatLevel)
+                    enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
+                    enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
+                    enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
+                end
+                local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
+                for _,v in enemyACU do
+                    local factionIndex = enemy:GetFactionIndex()
+                    if factionIndex == 1 then
+                        if v:HasEnhancement('HeavyAntiMatterCannon') then
+                            enemyACUGun = enemyACUGun + 1
+                        end
+                    elseif factionIndex == 2 then
+                        if v:HasEnhancement('CrysalisBeam') then
+                            enemyACUGun = enemyACUGun + 1
+                        end
+                    elseif factionIndex == 3 then
+                        if v:HasEnhancement('CoolingUpgrade') then
+                            enemyACUGun = enemyACUGun + 1
+                        end
+                    elseif factionIndex == 4 then
+                        if v:HasEnhancement('RateOfFire') then
+                            enemyACUGun = enemyACUGun + 1
+                        end
+                    end
+                end
             end
         end
+        self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades = enemyACUGun
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AntiAir = enemyAntiAirThreat
         self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
         self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
+        self.EnemyIntel.EnemyThreatCurrent.DefenseAir = enemyDefenseAir
+        self.EnemyIntel.EnemyThreatCurrent.DefenseSurface = enemyDefenseSurface
+        self.EnemyIntel.EnemyThreatCurrent.DefenseSub = enemyDefenseSub
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -1331,6 +1375,10 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
         LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
         LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
+        LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
+        LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
     end,
 

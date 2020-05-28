@@ -28,6 +28,30 @@ end
 function SetCDRDefaults(aiBrain, cdr, plat)
     cdr.CDRHome = table.copy(cdr:GetPosition())
     aiBrain.ACUSupport.ACUMaxSearchRadius = 80
+    cdr.GunUpgradeRequired = false
+    cdr.GunUpgradePresent = false
+end
+
+function CDRGunCheck(aiBrain, cdr)
+    local factionIndex = aiBrain:GetFactionIndex()
+    if factionIndex == 1 then
+        if not cdr:HasEnhancement('HeavyAntiMatterCannon') then
+            return true
+        end
+    elseif factionIndex == 2 then
+        if not cdr:HasEnhancement('CrysalisBeam') then
+            return true
+        end
+    elseif factionIndex == 3 then
+        if not cdr:HasEnhancement('CoolingUpgrade') then
+            return true
+        end
+    elseif factionIndex == 4 then
+        if not cdr:HasEnhancement('RateOfFire') then
+            return true
+        end
+    end
+    return false
 end
 
 function CommanderThreadRNG(cdr, platoon)
@@ -41,6 +65,20 @@ function CommanderThreadRNG(cdr, platoon)
 
     while not cdr.Dead do
         -- Overcharge
+        if (aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0) and (not cdr.GunUpgradePresent) and (GetGameTimeSeconds() < 1500) then
+            if CDRGunCheck(aiBrain, cdr) then
+                LOG('ACU Requires Gun set upgrade flag to true')
+                cdr.GunUpgradeRequired = true
+            else
+                cdr.GunUpgradeRequired = false
+            end
+        end
+
+        if not cdr.Dead then
+            CDREnhancementsRNG(aiBrain, cdr)
+        end
+        WaitTicks(2)
+
         if not cdr.Dead then 
             CDROverChargeRNG(aiBrain, cdr) 
         end
@@ -59,11 +97,6 @@ function CommanderThreadRNG(cdr, platoon)
 
         if not cdr.Dead then
             CDRHideBehaviorRNG(aiBrain, cdr)
-        end
-        WaitTicks(2)
-
-        if not cdr.Dead then
-            CDREnhancementsRNG(aiBrain, cdr)
         end
         WaitTicks(2)
 
@@ -106,7 +139,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local overCharge = {}
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
-    local acuThreatLimit = 15
+    local acuThreatLimit = 16
     
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
@@ -372,6 +405,15 @@ function CDROverChargeRNG(aiBrain, cdr)
                     continueFighting = false
                 end
             end
+            if (aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0) and (not cdr.GunUpgradePresent) and (GetGameTimeSeconds() < 1500) then
+                if CDRGunCheck(aiBrain, cdr) then
+                    LOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
+                    cdr.GunUpgradeRequired = true
+                    continueFighting = false
+                else
+                    cdr.GunUpgradeRequired = false
+                end
+            end
             --[[
             if not continueFighting then
                 --LOG('Continue Fighting was set to false')
@@ -432,7 +474,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
                 cdr.PlatoonHandle:MoveToLocation(loc, false)
             end
             WaitTicks(20)
-            if (cdr:GetHealthPercent() > 0.75) then
+            if (cdr:GetHealthPercent() > 0.75) and not cdr.GunUpgradeRequired then
                 if (GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
                     local enemyUnits = aiBrain:GetUnitsAroundPoint((categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
                     local enemyUnitThreat = 0
@@ -990,13 +1032,13 @@ end
 -- These 3 functions are from Uveso for CDR enhancements, modified slightly.
 function CDREnhancementsRNG(aiBrain, cdr)
     local gameTime = GetGameTimeSeconds()
-    if gameTime < 480 then
+    if gameTime < 420 then
         WaitTicks(2)
         return
     end
     
     local cdrPos = cdr:GetPosition()
-    local distSqAway = 2025
+    local distSqAway = 2209
     local loc = cdr.CDRHome
     local upgradeMode = false
     if gameTime < 1500 then
@@ -1004,10 +1046,11 @@ function CDREnhancementsRNG(aiBrain, cdr)
     else
         upgradeMode = 'Engineering'
     end
-
-    if cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
-            --LOG('Economy good for ACU upgrade')
+    LOG('Enhancement Thread run at '..gameTime)
+    if (cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway) or (cdr.GunUpgradeRequired and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway) then
+        LOG('ACU within base range for enhancements')
+        if (GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired then
+            LOG('Economy good for ACU upgrade')
             cdr.GoingHome = false
             cdr.Combat = false
             cdr.Upgrading = false
@@ -1040,13 +1083,14 @@ function CDREnhancementsRNG(aiBrain, cdr)
             local HaveEcoForEnhancement = false
             for _,enhancement in ACUUpgradeList or {} do
                 local wantedEnhancementBP = CRDBlueprint.Enhancements[enhancement]
+                local enhancementName = enhancement
                 --LOG('* RNGAI: wantedEnhancementBP '..repr(wantedEnhancementBP))
                 if not wantedEnhancementBP then
                     SPEW('* RNGAI: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
                 elseif cdr:HasEnhancement(enhancement) then
                     NextEnhancement = false
                     --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
-                elseif EnhancementEcoCheckRNG(aiBrain, cdr, wantedEnhancementBP) then
+                elseif EnhancementEcoCheckRNG(aiBrain, cdr, wantedEnhancementBP, enhancementName) then
                     LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
@@ -1079,7 +1123,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
     end
 end
 
-EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement)
+EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
 
     local BuildRate = cdr:GetBuildRate()
     local priorityUpgrade = false
@@ -1093,9 +1137,11 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement)
     if not enhancement.BuildTime then
         WARN('* AI-Uveso: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
     end
+    LOG('Enhancement EcoCheck for '..enhancementName)
     for k, v in priorityUpgrades do
-        if enhancement == v then
+        if enhancementName == v then
             priorityUpgrade = true
+            LOG('Priority Upgrade is true')
             break
         end
     end
@@ -1104,10 +1150,10 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement)
     local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
     --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
     --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
-    if priorityUpgrade and aiBrain.EnemyIntel.BaseThreatCaution then
-        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
-         and (GetEconomyIncome(aiBrain, 'MASS') > 1.2) then
-            --LOG('* RNGAI: Gun Upgrade Eco Check True')
+    if priorityUpgrade and cdr.GunUpgradeRequired then
+        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
+         and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
+            LOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
     elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
@@ -1120,6 +1166,13 @@ end
 
 BuildEnhancement = function(aiBrain,cdr,enhancement)
     --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
+    local priorityUpgrades = {
+        'HeavyAntiMatterCannon',
+        'HeatSink',
+        'CrysalisBeam',
+        'CoolingUpgrade',
+        'RateOfFire'
+    }
     cdr.Upgrading = true
     IssueStop({cdr})
     IssueClearCommands({cdr})
@@ -1151,6 +1204,14 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         coroutine.yield(10)
     end
     --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    for k, v in priorityUpgrades do
+        if enhancement == v then
+            cdr.GunUpgradeRequired = false
+            cdr.GunUpgradePresent = true
+            LOG('Gun upgrade completed, falgs set')
+            break
+        end
+    end
     cdr.Upgrading = false
     return true
 end
@@ -1203,7 +1264,11 @@ TargetControlThread = function (platoon)
                         'ALLUNITS',
                     },
                 }
-    while aiBrain:PlatoonExists(self) do
+    while aiBrain:PlatoonExists(platoon) do
+        if aiBrain.EnemyIntel.EnemyThreatCurrent.DefenseAir > 20 then
+            local artillerySquad = platoon:GetSquadUnits('Artillery')
+            platoon:SetPrioritizedTargetList('Artillery', TargetControlTemplates.structureMode)
+        end
         LOG('TargetControlThread')
         WaitTicks(30)
     end

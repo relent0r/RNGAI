@@ -862,7 +862,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Assist Assist Hydro',
-        PlatoonTemplate = 'CommanderAssist',
+        PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,50, categories.STRUCTURE * categories.HYDROCARBON, }},

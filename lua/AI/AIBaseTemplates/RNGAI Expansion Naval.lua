@@ -1,11 +1,3 @@
-#***************************************************************************
-#*
-#**  File     :  /lua/ai/AIBaseTemplates/TurtleExpansion.lua
-#**
-#**  Summary  : Manage engineers for a location
-#**
-#**  Copyright © 2005 Gas Powered Games, Inc.  All rights reserved.
-#****************************************************************************
 
 BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval',

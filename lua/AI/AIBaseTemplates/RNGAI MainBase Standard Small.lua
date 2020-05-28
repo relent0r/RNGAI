@@ -15,8 +15,8 @@ BaseBuilderTemplate {
         'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
         --'RNGAI Test PD',
-        'RNGAI ACU Enhancements Gun',
-        'RNGAI ACU Enhancements Tier',
+        --'RNGAI ACU Enhancements Gun',
+        --'RNGAI ACU Enhancements Tier',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',

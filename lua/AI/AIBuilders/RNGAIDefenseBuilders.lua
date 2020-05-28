@@ -193,38 +193,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 750,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH2' } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NumAssistees = 2,
-            Construction = {
-                NearPerimeterPoints = true,
-                Radius = 50,
-                BasePerimeterOrientation = 'FRONT',
-                BasePerimeterSelection = true,
-                BuildClose = true,
-                BuildStructures = {
-                    'T2AADefense',
-                    'T2GroundDefense',
-                    'T2MissileDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer TMD',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
@@ -545,6 +513,38 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                     'T1NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 750,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH2' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                NearPerimeterPoints = true,
+                Radius = 45,
+                BasePerimeterOrientation = 'FRONT',
+                BasePerimeterSelection = true,
+                BuildClose = true,
+                BuildStructures = {
+                    'T2AADefense',
+                    'T2GroundDefense',
+                    'T2MissileDefense',
                 },
                 Location = 'LocationType',
             }

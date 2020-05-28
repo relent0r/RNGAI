@@ -13,7 +13,7 @@ BaseBuilderTemplate {
 
         -- ACU MainBase Builder --
         'RNGAI ACU Structure Builders Large',
-        'RNGAI ACU Enhancements Tier Large',
+        --'RNGAI ACU Enhancements Tier Large',
 
         -- Expansion Builders --
         'RNGAI Engineer Expansion Builders Large',
