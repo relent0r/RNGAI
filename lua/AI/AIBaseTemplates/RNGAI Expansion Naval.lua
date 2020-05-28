@@ -2,7 +2,7 @@
 BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval',
     Builders = {
-
+        'RNGAI Engineer Builder Expansion',
         -- Sea Builders --
         'RNGAI Factory Builder Sea Large',
         'RNGAI Sea Upgrade Builders',

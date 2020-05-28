@@ -101,6 +101,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1SonarUpgrade',
         Priority = 600,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatio', { 0.07, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.TECH1 * categories.SONAR }},
@@ -108,10 +109,11 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'U2 Sonar Upgrade',
+        BuilderName = 'RNGAI T2 Sonar Upgrade',
         PlatoonTemplate = 'T2SonarUpgrade',
         Priority = 400,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
             { MIBC, 'FactionIndex', { 1, 2, 3, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } }, -- relative income
