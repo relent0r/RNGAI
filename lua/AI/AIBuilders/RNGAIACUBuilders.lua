@@ -871,7 +871,7 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssistLocation = 'LocationType',
-                AssisteeType = 'Structure',
+                AssisteeType = categories.STRUCTURE,
                 AssistRange = 40,
                 BeingBuiltCategories = {'STRUCTURE HYDROCARBON'},
                 AssistUntilFinished = true,

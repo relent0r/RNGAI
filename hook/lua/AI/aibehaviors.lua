@@ -1076,9 +1076,9 @@ function CDREnhancementsRNG(aiBrain, cdr)
                 ['xnl0001'] = {Combat = {'Capacitor', 'GunUpgrade', 'MovementSpeedIncrease', 'DoubleGuns'},},
             }
             local CRDBlueprint = cdr:GetBlueprint()
-            --LOG('* AI-Uveso: BlueprintId '..repr(CRDBlueprint.BlueprintId))
+            --LOG('* RNGAI: BlueprintId '..repr(CRDBlueprint.BlueprintId))
             local ACUUpgradeList = ACUEnhancements[CRDBlueprint.BlueprintId][upgradeMode]
-            --LOG('* AI-Uveso: ACUUpgradeList '..repr(ACUUpgradeList))
+            --LOG('* RNGAI: ACUUpgradeList '..repr(ACUUpgradeList))
             local NextEnhancement = false
             local HaveEcoForEnhancement = false
             for _,enhancement in ACUUpgradeList or {} do
@@ -1086,35 +1086,35 @@ function CDREnhancementsRNG(aiBrain, cdr)
                 local enhancementName = enhancement
                 --LOG('* RNGAI: wantedEnhancementBP '..repr(wantedEnhancementBP))
                 if not wantedEnhancementBP then
-                    SPEW('* RNGAI: ACUAttackAIUveso: no enhancement found for  = '..repr(enhancement))
+                    SPEW('* RNGAI: no enhancement found for  = '..repr(enhancement))
                 elseif cdr:HasEnhancement(enhancement) then
                     NextEnhancement = false
-                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Enhancement is already installed: '..enhancement)
+                    --LOG('* RNGAI: * BuildACUEnhancements: Enhancement is already installed: '..enhancement)
                 elseif EnhancementEcoCheckRNG(aiBrain, cdr, wantedEnhancementBP, enhancementName) then
-                    LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Eco is good for '..enhancement)
+                    LOG('* RNGAI: * BuildACUEnhancements: Eco is good for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
                         HaveEcoForEnhancement = true
-                        --LOG('* RNGAI: * ACUAttackAIUveso: *** Set as Enhancememnt: '..NextEnhancement)
+                        --LOG('* RNGAI: *** Set as Enhancememnt: '..NextEnhancement)
                     end
                 else
-                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements: Eco is bad for '..enhancement)
+                    --LOG('* RNGAI: * BuildACUEnhancements: Eco is bad for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
                         HaveEcoForEnhancement = false
                         -- if we don't have the eco for this ugrade, stop the search
-                        --LOG('* AI-Uveso: * ACUAttackAIUveso: canceled search. no eco available')
+                        --LOG('* RNGAI: canceled search. no eco available')
                         break
                     end
                 end
             end
             if NextEnhancement and HaveEcoForEnhancement then
-                --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements Building '..NextEnhancement)
+                --LOG('* RNGAI: * BuildACUEnhancements Building '..NextEnhancement)
                 if BuildEnhancement(aiBrain, cdr, NextEnhancement) then
-                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements returned true'..NextEnhancement)
+                    --LOG('* RNGAI: * BuildACUEnhancements returned true'..NextEnhancement)
                     return true
                 else
-                    --LOG('* RNGAI: * ACUAttackAIUveso: BuildACUEnhancements returned false'..NextEnhancement)
+                    --LOG('* RNGAI: * BuildACUEnhancements returned false'..NextEnhancement)
                     return false
                 end
             end
@@ -1135,7 +1135,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
         'RateOfFire'
     }
     if not enhancement.BuildTime then
-        WARN('* AI-Uveso: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
+        WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
     end
     LOG('Enhancement EcoCheck for '..enhancementName)
     for k, v in priorityUpgrades do
@@ -1145,11 +1145,11 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
             break
         end
     end
-    --LOG('* AI-Uveso: cdr:GetBuildRate() '..BuildRate..'')
+    --LOG('* RNGAI: cdr:GetBuildRate() '..BuildRate..'')
     local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
     local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
-    --LOG('* AI-Uveso: drain: m'..drainMass..'  e'..drainEnergy..'')
-    --LOG('* AI-Uveso: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
+    --LOG('* RNGAI: drain: m'..drainMass..'  e'..drainEnergy..'')
+    --LOG('* RNGAI: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
     if priorityUpgrade and cdr.GunUpgradeRequired then
         if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
          and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
@@ -1165,7 +1165,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
 end
 
 BuildEnhancement = function(aiBrain,cdr,enhancement)
-    --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement '..enhancement)
+    --LOG('* RNGAI: * BuildEnhancement '..enhancement)
     local priorityUpgrades = {
         'HeavyAntiMatterCannon',
         'HeatSink',
@@ -1184,18 +1184,18 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         -- Do we have already a enhancment in this slot ?
         if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
             -- remove the enhancement
-            --LOG('* AI-Uveso: * ACUAttackAIUveso: Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
+            --LOG('* RNGAI: * Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
             local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
             IssueScript({cdr}, order)
             coroutine.yield(10)
         end
-        --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        --LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
         local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
         IssueScript({cdr}, order)
     end
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
         if cdr:GetHealthPercent() < 0.40 then
-            --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            --LOG('* RNGAI: * BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
             cdr.Upgrading = false
@@ -1203,7 +1203,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         end
         coroutine.yield(10)
     end
-    --LOG('* RNGAI: * ACUAttackAIUveso: BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    --LOG('* RNGAI: * BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
     for k, v in priorityUpgrades do
         if enhancement == v then
             cdr.GunUpgradeRequired = false
