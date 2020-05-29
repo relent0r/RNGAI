@@ -228,11 +228,11 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 30 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * ( categories.TECH1 + categories.TECH2 ) - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
@@ -248,11 +248,11 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * ( categories.TECH1 + categories.TECH2 ) - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 150, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
@@ -268,11 +268,11 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 350 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * ( categories.TECH1 + categories.TECH2 ) - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 350, -500, 1, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
@@ -288,11 +288,11 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 1000 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilder12RNG',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * ( categories.TECH1 + categories.TECH2 ) - categories.COMMAND - categories.STATIONASSISTPOD }},
                 { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
                 { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 1, 0, 'AntiSurface', 1 }},
             },

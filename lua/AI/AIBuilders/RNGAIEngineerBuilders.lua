@@ -64,7 +64,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 750, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'StructuresNotMex' } },
+            { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 20, 2, 'AntiSurface' } },
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, 'ENGINEER TECH1' } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -678,6 +678,31 @@ BuilderGroup {
     },
 }
 
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Naval Assist',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Engineer Assist Factory Naval',
+        PlatoonTemplate = 'T12EconAssistRNG',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * ( categories.TECH1 + categories.TECH2 ) - categories.STATIONASSISTPOD } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                AssistUntilFinished = true,
+                AssisteeType = categories.FACTORY * categories.NAVAL,
+            },
+        }
+    },
+
+}
 BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reclaim Builders',
     BuildersType = 'EngineerBuilder',
