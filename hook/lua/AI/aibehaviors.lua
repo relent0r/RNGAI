@@ -67,7 +67,7 @@ function CommanderThreadRNG(cdr, platoon)
         -- Overcharge
         if (aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0) and (not cdr.GunUpgradePresent) and (GetGameTimeSeconds() < 1500) then
             if CDRGunCheck(aiBrain, cdr) then
-                LOG('ACU Requires Gun set upgrade flag to true')
+                --LOG('ACU Requires Gun set upgrade flag to true')
                 cdr.GunUpgradeRequired = true
             else
                 cdr.GunUpgradeRequired = false
@@ -317,7 +317,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         --LOG('* AI-RNG: Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
                         local result, newTarget = CDRGetUnitClump(aiBrain, cdrPos, weapon.Range)
                         if result then
-                            LOG('New Unit Found for OC')
+                            --LOG('New Unit Found for OC')
                             target = newTarget
                             targetPos = target:GetPosition()
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
@@ -407,7 +407,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
             if (aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0) and (not cdr.GunUpgradePresent) and (GetGameTimeSeconds() < 1500) then
                 if CDRGunCheck(aiBrain, cdr) then
-                    LOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
+                    --LOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
                     cdr.GunUpgradeRequired = true
                     continueFighting = false
                 else
@@ -588,12 +588,12 @@ end
 function CDRGetUnitClump(aiBrain, cdrPos, radius)
     -- Will attempt to get a unit clump rather than single unit targets for OC
     local unitList = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
-    LOG('Check for unit clump')
+    --LOG('Check for unit clump')
     for k, v in unitList do
         local unitPos = v:GetPosition()
         local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
         if unitCount > 1 then
-            LOG('Multiple Units found')
+            --LOG('Multiple Units found')
             return true, v
         end
     end
@@ -1046,11 +1046,11 @@ function CDREnhancementsRNG(aiBrain, cdr)
     else
         upgradeMode = 'Engineering'
     end
-    LOG('Enhancement Thread run at '..gameTime)
+    --LOG('Enhancement Thread run at '..gameTime)
     if (cdr:IsIdleState() and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway) or (cdr.GunUpgradeRequired and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) < distSqAway) then
-        LOG('ACU within base range for enhancements')
+        --LOG('ACU within base range for enhancements')
         if (GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired then
-            LOG('Economy good for ACU upgrade')
+            --LOG('Economy good for ACU upgrade')
             cdr.GoingHome = false
             cdr.Combat = false
             cdr.Upgrading = false
@@ -1091,7 +1091,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
                     NextEnhancement = false
                     --LOG('* RNGAI: * BuildACUEnhancements: Enhancement is already installed: '..enhancement)
                 elseif EnhancementEcoCheckRNG(aiBrain, cdr, wantedEnhancementBP, enhancementName) then
-                    LOG('* RNGAI: * BuildACUEnhancements: Eco is good for '..enhancement)
+                    --LOG('* RNGAI: * BuildACUEnhancements: Eco is good for '..enhancement)
                     if not NextEnhancement then
                         NextEnhancement = enhancement
                         HaveEcoForEnhancement = true
@@ -1137,11 +1137,11 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     if not enhancement.BuildTime then
         WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
     end
-    LOG('Enhancement EcoCheck for '..enhancementName)
+    --LOG('Enhancement EcoCheck for '..enhancementName)
     for k, v in priorityUpgrades do
         if enhancementName == v then
             priorityUpgrade = true
-            LOG('Priority Upgrade is true')
+            --LOG('Priority Upgrade is true')
             break
         end
     end
@@ -1153,7 +1153,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     if priorityUpgrade and cdr.GunUpgradeRequired then
         if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
          and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
-            LOG('* RNGAI: Gun Upgrade Eco Check True')
+            --LOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
     elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
@@ -1208,7 +1208,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         if enhancement == v then
             cdr.GunUpgradeRequired = false
             cdr.GunUpgradePresent = true
-            LOG('Gun upgrade completed, falgs set')
+            --LOG('Gun upgrade completed, falgs set')
             break
         end
     end

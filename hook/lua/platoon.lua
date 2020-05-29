@@ -1244,9 +1244,9 @@ Platoon = Class(RNGAIPlatoon) {
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             --LOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
-            LOG('NearPerimeterPoints')
+            --LOG('NearPerimeterPoints')
             reference, orient, buildpoint = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
-            LOG('referece is '..repr(reference))
+            --LOG('referece is '..repr(reference))
             relative = false
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             for k,v in reference do
@@ -1645,7 +1645,11 @@ Platoon = Class(RNGAIPlatoon) {
                         -- otherwise, go ahead and build the next structure there
                 --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                --LOG('whatToBuild is '..whatToBuild)
+                --local result = aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                
+                --if not result then
+                --    LOG('BuildStructure False for '..whatToBuild..' at location '..repr({buildLocation[1], buildLocation[3], 0}))
+                --end
                 if whatToBuild == 'ueb1103' or 'uab1103' or 'urb1103' or 'xsb1103' then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
