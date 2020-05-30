@@ -136,6 +136,19 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
+        PlatoonTemplate = 'RNGAIFighterGroupT2',
+        Priority = 10,
+        PriorityFunction = AirDefenseMode,
+        BuilderConditions = { 
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
         Priority = 910,
@@ -143,7 +156,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.3, 0.7 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
@@ -206,7 +219,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
@@ -214,6 +227,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Air Queue',
         PlatoonTemplate = 'RNGAIT3AirQueue',
         Priority = 850,
+        PriorityFunction = AirDefenseMode,
         BuilderType = 'Air',
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},

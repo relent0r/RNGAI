@@ -105,16 +105,37 @@ PlatoonTemplate {
     Name = 'RNGAIFighterGroup',
     FactionSquads = {
         UEF = {
-            { 'uea0102', 1, 3, 'attack', 'GrowthFormation' }
+            { 'uea0102', 1, 3, 'attack', 'None' }
         },
         Aeon = {
-            { 'uaa0102', 1, 3, 'attack', 'GrowthFormation' }
+            { 'uaa0102', 1, 3, 'attack', 'None' }
         },
         Cybran = {
-            { 'ura0102', 1, 3, 'attack', 'GrowthFormation' }
+            { 'ura0102', 1, 3, 'attack', 'None' }
         },
         Seraphim = {
-            { 'xsa0102', 1, 3, 'attack', 'GrowthFormation' }
+            { 'xsa0102', 1, 3, 'attack', 'None' }
+        },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAIFighterGroupT2',
+    FactionSquads = {
+        UEF = {
+            { 'uea0102', 1, 3, 'attack', 'None' },
+            { 'uea0102', 1, 1, 'attack', 'None' }
+        },
+        Aeon = {
+            { 'xaa0202', 1, 4, 'attack', 'None' },
+        },
+        Cybran = {
+            { 'ura0102', 1, 3, 'attack', 'None' },
+            { 'dra0202', 1, 2, 'attack', 'None' }
+        },
+        Seraphim = {
+            { 'xsa0102', 1, 3, 'attack', 'None' },
+            { 'xsa0202', 1, 2, 'attack', 'None' }
         },
     }
 }
