@@ -1622,9 +1622,17 @@ Platoon = Class(RNGAIPlatoon) {
         eng.ProcessBuildDone = false
         IssueClearCommands({eng})
         local commandDone = false
+        local PlatoonPos
         while not eng.Dead and not commandDone and table.getn(eng.EngineerBuildQueue) > 0  do
             local whatToBuild = eng.EngineerBuildQueue[1][1]
             local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
+            if GetTerrainHeight(buildLocation[1], buildLocation[2]) > GetSurfaceHeight(buildLocation[1], buildLocation[2]) then
+                --land
+                buildLocation[2] = GetTerrainHeight(buildLocation[1], buildLocation[2])
+            else
+                --water
+                buildLocation[2] = GetSurfaceHeight(buildLocation[1], buildLocation[2])
+            end
             local buildRelative = eng.EngineerBuildQueue[1][3]
             if not eng.NotBuildingThread then
                 eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
@@ -1633,28 +1641,44 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Check if we can move to location')
             --LOG('Unit is '..eng.UnitId)
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
+
+                aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                while not eng.Dead do
+                    PlatoonPos = eng:GetPosition()
+                    if VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0) < 12 then
+                        break
+                    end 
+                    if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                        if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
+                            local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
+                            local enemyEngPos = enemyEngineer[1]:GetPosition()
+                            if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                IssueStop({eng})
+                                IssueClearCommands({eng})
+                                IssueReclaim({eng}, enemyEngineer[1])
+                            end
+                        end
+                    end
+                    WaitTicks(5)
+                end
                 if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
                 end
-
+                -- cancel all commands, also the buildcommand for blocking mex to check for reclaim or capture
+                eng.PlatoonHandle:Stop()
                 -- check to see if we need to reclaim or capture...
                 RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
                     -- check to see if we can repair
                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
                 --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
+                --aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                --local result = aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                
-                --if not result then
-                --    LOG('BuildStructure False for '..whatToBuild..' at location '..repr({buildLocation[1], buildLocation[3], 0}))
-                --end
-                if whatToBuild == 'ueb1103' or 'uab1103' or 'urb1103' or 'xsb1103' then
+                --[[
+                if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
-                        --LOG('Entity is an engineer')
-                        local engpos = eng:GetPosition()
                         if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30, -500, 1, 0, 'AntiSurface', 1) then
                             --LOG('We can build on a mass marker within 30')
                             massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, buildLocation)
@@ -1667,7 +1691,7 @@ Platoon = Class(RNGAIPlatoon) {
                             --LOG('Cant find mass within distance')
                         end
                     end
-                end
+                end]]
                 if not eng.NotBuildingThread then
                     eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end

@@ -182,6 +182,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -386,6 +387,10 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'T1NavalDefense',
                 },
@@ -557,7 +562,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Sea - Perimeter Naval',
-        PlatoonTemplate = 'EngineerBuilder12RNG',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -593,7 +598,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Sea - Perimeter Naval',
-        PlatoonTemplate = 'EngineerBuilder12RNG',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -629,7 +634,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Naval',
-        PlatoonTemplate = 'EngineerBuilder12RNG',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -647,6 +652,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,

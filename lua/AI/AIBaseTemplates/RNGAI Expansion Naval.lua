@@ -5,7 +5,8 @@ BaseBuilderTemplate {
         'RNGAI Engineer Builder Expansion',
         'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
-        
+        'RNGAI Engineer Expansion Builders Large',
+
         -- Sea Builders --
         'RNGAI Factory Builder Sea Large',
         'RNGAI Sea Upgrade Builders',

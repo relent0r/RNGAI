@@ -37,6 +37,17 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 NoPath',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 750,
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Power',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
@@ -344,28 +355,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T2 Assist Builders',
     BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI T2 Engineer Assist Engineer',
-        PlatoonTemplate = 'T2EngineerAssist',
-        Priority = 100,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.ALLUNITS }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssistLocation = 'LocationType',
-                PermanentAssist = true,
-                AssisteeType = categories.ENGINEER,
-                Time = 45,
-            },
-        }
-    },
     Builder {
         BuilderName = 'RNGAI T2 Engineer Assist Factory',
         PlatoonTemplate = 'T12EconAssistRNG',
@@ -690,14 +679,14 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * ( categories.TECH1 + categories.TECH2 ) - categories.STATIONASSISTPOD } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
-                AssisteeType = categories.FACTORY * categories.NAVAL,
+                AssisteeType = categories.FACTORY,
             },
         }
     },
