@@ -1628,10 +1628,10 @@ Platoon = Class(RNGAIPlatoon) {
             local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
             if GetTerrainHeight(buildLocation[1], buildLocation[2]) > GetSurfaceHeight(buildLocation[1], buildLocation[2]) then
                 --land
-                buildLocation[2] = GetTerrainHeight(buildLocation[1], buildLocation[2])
+                buildLocation[2] = GetTerrainHeight(buildLocation[1], buildLocation[3])
             else
                 --water
-                buildLocation[2] = GetSurfaceHeight(buildLocation[1], buildLocation[2])
+                buildLocation[2] = GetSurfaceHeight(buildLocation[1], buildLocation[3])
             end
             local buildRelative = eng.EngineerBuildQueue[1][3]
             if not eng.NotBuildingThread then
