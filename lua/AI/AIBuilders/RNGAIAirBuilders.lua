@@ -390,7 +390,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'AirUnitRefit' },
         Priority = 900,
         InstanceCount = 2,
@@ -404,8 +403,8 @@ BuilderGroup {
             PrioritizedCategories = {
                 'MASSEXTRACTION',
                 'ENGINEER',
+                'ENERGYPRODUCTION',
             },
-            ThreatSupport = 5,
         },
     },
     Builder {

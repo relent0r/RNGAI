@@ -757,7 +757,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T2EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 100,
-        InstanceCount = 5,
+        InstanceCount = 1,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD }},
@@ -774,7 +774,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T3EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 100,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
