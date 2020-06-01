@@ -1269,7 +1269,7 @@ TargetControlThread = function (platoon)
             local artillerySquad = platoon:GetSquadUnits('Artillery')
             platoon:SetPrioritizedTargetList('Artillery', TargetControlTemplates.structureMode)
         end
-        LOG('TargetControlThread')
+        --LOG('TargetControlThread')
         WaitTicks(30)
     end
 end

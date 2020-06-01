@@ -43,7 +43,8 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },

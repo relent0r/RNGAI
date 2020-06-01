@@ -1246,7 +1246,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('Total land threat around base '..landThreatAroundBase)
+            --LOG('Total land threat around base '..landThreatAroundBase)
             if (gameTime < 900) and (landThreatAroundBase > 30) then
                 --LOG('BaseThreatCaution True')
                 self.BrainIntel.SelfThreat.BaseThreatCaution = true
@@ -1364,21 +1364,21 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
         end]]
-        LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
-        LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
-        LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
-        LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-        LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
-        LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
-        LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-        LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
+        --LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+        --LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+        --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        --LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+        --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+        --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
+        --LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
+        --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
     end,
 

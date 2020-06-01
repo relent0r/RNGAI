@@ -230,9 +230,9 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { EBC, 'GreaterThanEconEfficiency', { 1.0, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.50}},
-            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
+            { EBC, 'GreaterThanEconEfficiency', { 0.8, 0.8}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.DEFENSE) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
