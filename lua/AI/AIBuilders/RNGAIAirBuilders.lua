@@ -433,9 +433,19 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
+            AvoidBases = true,
+            TargetSearchPriorities = {
+                'ENGINEER',
+                'MASSEXTRACTION',
+                'RADAR STRUCTURE',
+                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION',
+                'ALLUNITS',
+            },
             PrioritizedCategories = {
+                'MOBILE LAND ANTIAIR',
                 'MOBILE LAND',
-                'ENGINEER TECH1',
+                'ENGINEER',
                 'MOBILE LAND ANTIAIR',
                 'MASSEXTRACTION',
                 'ALLUNITS',
@@ -453,10 +463,18 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
+            TargetSearchPriorities = {
+                'MOBILE LAND',
+                'MASSEXTRACTION',
+                'RADAR STRUCTURE',
+                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION',
+                'ALLUNITS',
+            },
             PrioritizedCategories = {
                 'MOBILE LAND ANTIAIR',
                 'MOBILE LAND',
-                'ENGINEER TECH1',
+                'ENGINEER',
                 'MASSEXTRACTION',
                 'RADAR STRUCTURE',
                 'ENERGYSTORAGE',
@@ -469,7 +487,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack Enemy',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 890,
-        InstanceCount = 5,
+        InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.daa0206 } },
@@ -478,9 +496,9 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 'RADAR STRUCTURE',
-                'MOBILE LAND',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'MOBILE LAND',
                 'MASSEXTRACTION',
                 'ALLUNITS',
             },
@@ -502,6 +520,8 @@ BuilderGroup {
                 'MASSEXTRACTION',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION',
                 'ALLUNITS',
             },
         },
@@ -510,7 +530,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 890,
-        InstanceCount = 5,
+        InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.daa0206 } },

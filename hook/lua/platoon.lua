@@ -1053,9 +1053,19 @@ Platoon = Class(RNGAIPlatoon) {
         local data = self.PlatoonData
         local categoryList = {}
         local atkPri = {}
+        if data.TargetSearchPriorities then
+            for k,v in data.TargetSearchPriorities do
+                table.insert(atkPri, v)
+            end
+        else
+            if data.PrioritizedCategories then
+                for k,v in data.PrioritizedCategories do
+                    table.insert(atkPri, v)
+                end
+            end
+        end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(atkPri, v)
                 table.insert(categoryList, ParseEntityCategory(v))
             end
         end

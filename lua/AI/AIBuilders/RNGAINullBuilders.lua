@@ -91,7 +91,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             Defensive = true,
             AttackEnemyStrength = 200,                              
-            TargetSearchCategory = categories.MOBILE * categories.AIR - categories.SCOUT - categories.WALL ,
+            TargetSearchPriorities = categories.MOBILE * categories.AIR - categories.SCOUT - categories.WALL ,
             PrioritizedCategories = {   
                 'MOBILE AIR GROUNDATTACK',
                 'MOBILE AIR BOMBER',
