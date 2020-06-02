@@ -135,14 +135,15 @@ AIBrain = Class(RNGAIBrainClass) {
             NUKE = 6,
         }
         self.EcoManager.MassPriorityTable = {
-            MASSEXTRACTION = 10,
+            MASSEXTRACTION = 8,
+            TML = 10,
             STATIONPODS = 11,
             ENGINEER = 12,
-            AIR = 6,
-            LAND = 5,
-            RADAR = 7,
-            MASSFABRICATION = 9,
-            NUKE = 8,
+            AIR = 5,
+            LAND = 4,
+            RADAR = 6,
+            MASSFABRICATION = 8,
+            NUKE = 7,
         }
         
 
@@ -1364,21 +1365,21 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
         end]]
-        --LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
-        --LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
-        --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        --LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
-        --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-        --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
-        --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        --LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
-        --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-        --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
+        LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+        LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+        LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+        LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+        LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
+        LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
+        LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
     end,
 
@@ -1504,6 +1505,18 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
+                        elseif priorityUnit == 'TML' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                table.insert(unitTypePaused, priorityUnit)
+                            end
+                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
                         WaitTicks(20)
                         massStateCaution = self:EcoManagerMassStateCheck()
@@ -1539,6 +1552,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'NUKE' then
                             local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'MASS')
+                        elseif v == 'TML' then
+                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
                     end
                     powerStateCaution = false
@@ -1837,6 +1853,19 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v:GetFractionComplete() ~= 1 then continue end
                 if v:IsPaused() then continue end
                 --LOG('pausing Nuke')
+                v:SetPaused(true)
+            elseif priorityUnit == 'TML' then
+                --LOG('Priority Unit Is Nuke')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    LOG('Unpausing TML')
+                    v:SetPaused(false)
+                    continue
+                end
+                if v.Dead then continue end
+                if v:GetFractionComplete() ~= 1 then continue end
+                if v:IsPaused() then continue end
+                LOG('pausing TML')
                 v:SetPaused(true)
             elseif priorityUnit == 'MASSEXTRACTION' and action == 'unpause' then
                 if not v:IsPaused() then continue end
