@@ -1216,6 +1216,58 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
     return true
 end
 
+PlatoonRetreat = function (platoon)
+    local aiBrain = platoon:GetBrain()
+    local platoonPos = platoon:GetPlatoonPosition()
+    local platoonThreatHigh = false
+    LOG('Start Retreat Behavior')
+    while aiBrain:PlatoonExists(platoon) do
+        LOG('Retreat loop Behavior')
+        local selfthreatAroundplatoon = 0
+        local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.COMMAND, platoonPos, 50, 'Ally')
+        local bp
+        for _,v in positionUnits do
+            if not v.Dead then
+                bp = __blueprints[v.UnitId].Defense
+                selfthreatAroundplatoon = selfthreatAroundplatoon + bp.SurfaceThreatLevel
+            end
+        end
+        LOG('Platoon Threat is '..selfthreatAroundplatoon)
+        WaitTicks(3)
+        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), platoonPos, 50, 'Enemy')
+        local enemythreatAroundplatoon = 0
+        for k,v in enemyUnits do
+            if not v.Dead then
+                --LOG('Unit ID is '..v.UnitId)
+                bp = __blueprints[v.UnitId].Defense
+                --LOG(repr(__blueprints[v.UnitId].Defense))
+                if bp.SurfaceThreatLevel ~= nil then
+                    enemythreatAroundplatoon = enemythreatAroundplatoon + bp.SurfaceThreatLevel
+                    if enemythreatAroundplatoon > selfthreatAroundplatoon then
+                        platoonThreatHigh = true
+                        break
+                    end
+                end
+            end
+        end
+        LOG('Enemy Platoon Threat is '..enemythreatAroundplatoon)
+        WaitTicks(3)
+        if platoonThreatHigh then
+            local actualRetreatPos = {}
+            local potentialRetreatPos = RUtils.GeneratePointsAroundPosition(platoonPos,50,10)
+            local platoonHeight = GetTerrainHeight(platoonPos[1], platoonPos[3])
+            for k, v in potentialRetreatPos do
+                if platoonHeight + GetTerrainHeight(v[1], v[2]) < 10 then
+                    actualRetreatPos = v
+                end
+            end
+            -- Do Retreat Stuff
+        end
+        WaitTicks(50)
+    end
+    
+end
+
 TargetControlThread = function (platoon)
     local aiBrain = platoon:GetBrain()
     

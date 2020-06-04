@@ -610,7 +610,10 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = categories.STRUCTURE * categories.LAND * categories.MOBILE,         -- Only find targets matching these categories.
+            TargetSearchPriorities = {
+                'STRUCTURE',
+                'LAND MOBILE'
+            },
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',
@@ -704,7 +707,9 @@ BuilderGroup {
             LocationType = 'LocationType',
             Defensive = true,
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = categories.MOBILE * categories.LAND - categories.SCOUT - categories.WALL ,         -- Only find targets matching these categories.
+            TargetSearchPriorities = {
+                'MOBILE LAND'
+            },
             PrioritizedCategories = {                                           -- Attack these targets.
                 'EXPERIMENTAL',
                 'MOBILE LAND INDIRECTFIRE',
@@ -737,7 +742,9 @@ BuilderGroup {
             LocationType = 'LocationType',
             Defensive = true,
             AttackEnemyStrength = 200,                              
-            TargetSearchPriorities = categories.MOBILE * categories.AIR - categories.SCOUT - categories.WALL ,
+            TargetSearchPriorities = { 
+                'MOBILE AIR'
+            },
             PrioritizedCategories = {   
                 'MOBILE AIR GROUNDATTACK',
                 'MOBILE AIR BOMBER',
@@ -880,7 +887,10 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * categories.LAND),         -- Only find targets matching these categories.
+            TargetSearchPriorities = {
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND'
+            },       
             PrioritizedCategories = {                                           -- Attack these targets.
                 'DEFENSE STRUCTURE',
                 'ANTIAIR STRUCTURE',
@@ -912,7 +922,10 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = (categories.STRUCTURE + categories.MOBILE ) * categories.LAND - categories.SCOUT,         -- Only find targets matching these categories.
+            TargetSearchPriorities = {
+                'STRUCTURE',
+                'MOBILE LAND'
+            },
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE DEFENSE',
                 'MASSEXTRACTION',
@@ -1013,7 +1026,10 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = (categories.MOBILE + categories.STRUCTURE) * categories.ANTIAIR,         -- Only find targets matching these categories.
+            TargetSearchPriorities = {
+                'MOBILE',
+                'STRUCTURE ANTIAIR'
+            },
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE ANTIAIR',
                 'MOBILE ANTIAIR',

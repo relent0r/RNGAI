@@ -74,33 +74,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Null Response Formers',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNGAI Null Response BaseMilitary ANTIAIR Area',
-        PlatoonTemplate = 'RNGAI Antiair Small',
-        Priority = 1000,
-        InstanceCount = 5,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.AIR * (categories.ANTIAIR + categories.BOMBER + categories.GROUNDATTACK) - categories.SCOUT }},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
-        },
-        BuilderData = {
-            SearchRadius = BaseMilitaryArea,
-            GetTargetsFromBase = true,
-            RequireTransport = false,
-            AggressiveMove = true,
-            LocationType = 'LocationType',
-            Defensive = true,
-            AttackEnemyStrength = 200,                              
-            TargetSearchPriorities = categories.MOBILE * categories.AIR - categories.SCOUT - categories.WALL ,
-            PrioritizedCategories = {   
-                'MOBILE AIR GROUNDATTACK',
-                'MOBILE AIR BOMBER',
-                'MOBILE AIR',
-            },
-            UseFormation = 'None',
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },

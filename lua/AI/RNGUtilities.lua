@@ -1082,8 +1082,12 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
         avoidbases = false
     end
     local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+    local category
     for _, v in atkPri do
-        local category = ParseEntityCategory(v)
+        category = v
+        if type(category) == 'string' then
+            category = ParseEntityCategory(category)
+        end
         local retUnit = false
         local distance = false
         local targetShields = 9999

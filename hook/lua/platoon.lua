@@ -1054,6 +1054,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         if data.TargetSearchPriorities then
+            LOG('TargetSearch present for '..self.BuilderName)
             for k,v in data.TargetSearchPriorities do
                 table.insert(atkPri, v)
             end
