@@ -3142,5 +3142,98 @@ Platoon = Class(RNGAIPlatoon) {
             RNGAIPlatoon.PlatoonDisband(self)
         end
     end,]]
+    PlatoonMergeRNG = function(self)
+        local aiBrain = self:GetBrain()
+        local destinationPlan = self.PlatoonData.PlatoonPlan
+        local location = self.PlatoonData.LocationType
+        if not destinationPlan then
+            return
+        end
+        local mergedPlatoon
+        local units = self:GetPlatoonUnits()
+        local platoonList = aiBrain:GetPlatoonsList()
+        for k, v in platoonList do
+            if v:GetPlan() == destinationPlan then
+                mergedPlatoon = valid
+                break
+            end
+        end
+        if not mergedPlatoon then
+            mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon', destinationPlan)
+            mergedPlatoon.PlanName = destinationPlan
+            mergedPlatoon.BuilderName = destinationPlan..'Platoon'
+            mergedPlatoon.CenterPosition = aiBrain.BuilderManagers[location].Position
+        end
+        aiBrain:AssignUnitsToPlatoon(mergedPlatoon, units, 'attack', 'none')
+        self:PlatoonDisbandNoAssign()
+    end
 
+    TMLAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+        local platoonUnits
+        local enemyTMD
+        local mapSizeX, mapSizeZ = GetMapSize()
+        
+        while aiBrain:PlatoonExists(self) do
+            platoonUnits = self:GetPlatoonUnits()
+            local missilesAvail = 0
+            WaitTicks(50)
+            for k, tml in platoonUnits do
+                -- Disband if dead launchers. Will reform platoon on next PFM cycle
+                if not tml or tml.Dead or tml.BeenDestroyed() then
+                    self:PlatoonDisbandNoAssign()
+                    return
+                end
+                tml:SetAutoMode(true)
+                IssueClearCommands({tml})
+            end
+            while not target do
+                WaitTicks(70)
+                --target = self:FindPrioritizedUnit('attack', 'enemy', true, self.CenterPosition, 256)
+                targetList = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, self.CenterPosition, 256, 'Enemy')
+                for _, v in atkPri do
+                    for num, unit in targetUnits do
+                        if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                            WaitTicks(10)
+                        end
+                    end
+                end
+                if target then
+                    break
+                end
+                WaitTicks(30)
+                if not PlatoonExists(aiBrain, self) then
+                    return
+                end
+            end
+            local readyTmlLaunchers = {}
+            local targetPosition = target:GetPosition()
+            for k, tml in platoonUnits do
+                -- Disband if dead launchers. Will reform platoon on next PFM cycle
+                local missileCount = tml:GetTacticalSiloAmmoCount()
+                local tmlMaxRange = __blueprints[tml.UnitId].Weapon.MaxRadius
+                local tmlPosition = tml:GetPosition()
+                if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
+                    table.insert(readyTmlLaunchers, tml)
+                end
+            end
+            if table.getn(readyTmlLaunchers) < 1 then
+                WaitTicks(20)
+                continue
+            end
+            local readyToFire = false
+            enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2), targetPosition, 20, 'Enemy')
+            if table.getn(enemyTMD) > 0 then
+                local enemyTMDCount = table.getn(enemyTMD)
+                local selfTMLCount = table.getn(readyTmlLaunchers)
+                if enemyTMDCount < selfTMLCount then
+                    readyToFire = true
+                else
+                    -- Could I add a flag for an air attack at the position here? or a builder condition to increase the TML count?
+                    WaitTicks(30)
+                    continue
+                end
+            end
+        end
+    end
 }

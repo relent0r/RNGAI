@@ -1220,6 +1220,7 @@ PlatoonRetreat = function (platoon)
     local aiBrain = platoon:GetBrain()
     local platoonPos = platoon:GetPlatoonPosition()
     local platoonThreatHigh = false
+    local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
     LOG('Start Retreat Behavior')
     while aiBrain:PlatoonExists(platoon) do
         LOG('Retreat loop Behavior')
@@ -1253,19 +1254,40 @@ PlatoonRetreat = function (platoon)
         LOG('Enemy Platoon Threat is '..enemythreatAroundplatoon)
         WaitTicks(3)
         if platoonThreatHigh then
+            LOG('PlatoonThreatHigh is true')
             local actualRetreatPos = {}
+            local baseDist = 1000
+            local height = 0
             local potentialRetreatPos = RUtils.GeneratePointsAroundPosition(platoonPos,50,10)
+            LOG('Platoon Circular points '..repr(potentialRetreatPos))
             local platoonHeight = GetTerrainHeight(platoonPos[1], platoonPos[3])
             for k, v in potentialRetreatPos do
+                height = GetTerrainHeight(v[1], v[2])
                 if platoonHeight + GetTerrainHeight(v[1], v[2]) < 10 then
-                    actualRetreatPos = v
+                    local retreatdistance = VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3])
+                    if VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3]) < baseDist then
+                        baseDist = retreatdistance
+                        actualRetreatPos = { v[1], height, v[2] }
+                    end
                 end
             end
-            -- Do Retreat Stuff
+            LOG('Best Retreat Position '..repr(actualRetreatPos))
+            if actualRetreatPos[1] then
+                local oldPlan = platoon:GetPlan()
+                if platoon.AiThread then
+                    platoon.AIThread:Destroy()
+                end
+                LOG('Moving Platoon to retreat position')
+                platoon:MoveToLocation(actualRetreatPos, false)
+                WaitTicks(50)
+                -- Do Retreat Stuff
+                platoon:SetAIPlan(oldPlan)
+            else
+                continue
+            end
         end
         WaitTicks(50)
     end
-    
 end
 
 TargetControlThread = function (platoon)
