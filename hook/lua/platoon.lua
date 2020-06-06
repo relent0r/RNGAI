@@ -3143,97 +3143,135 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,]]
     PlatoonMergeRNG = function(self)
+        LOG('Platoon Merge Started')
         local aiBrain = self:GetBrain()
         local destinationPlan = self.PlatoonData.PlatoonPlan
-        local location = self.PlatoonData.LocationType
+        local location = self.PlatoonData.Location
+        LOG('Location Type is '..location)
+        LOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
         if not destinationPlan then
             return
         end
         local mergedPlatoon
         local units = self:GetPlatoonUnits()
         local platoonList = aiBrain:GetPlatoonsList()
-        for k, v in platoonList do
-            if v:GetPlan() == destinationPlan then
-                mergedPlatoon = valid
+        for k, platoon in platoonList do
+            if platoon:GetPlan() == destinationPlan then
+                mergedPlatoon = platoon
                 break
             end
         end
         if not mergedPlatoon then
+            LOG('Platoon Merge is creating platoon for '..destinationPlan)
             mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon', destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
             mergedPlatoon.BuilderName = destinationPlan..'Platoon'
             mergedPlatoon.CenterPosition = aiBrain.BuilderManagers[location].Position
         end
+        LOG('Platoon Merge is assigning units to platoon')
         aiBrain:AssignUnitsToPlatoon(mergedPlatoon, units, 'attack', 'none')
         self:PlatoonDisbandNoAssign()
-    end
+    end,
 
     TMLAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local platoonUnits
         local enemyTMD
+        local targetHealth
         local mapSizeX, mapSizeZ = GetMapSize()
-        
+        local targetPosition = {}
+        local atkPri = {
+            categories.MASSEXTRACTION * categories.STRUCTURE * ( categories.TECH2 + categories.TECH3 ),
+            categories.COMMAND
+        }
+        LOG('Starting TML function')
         while aiBrain:PlatoonExists(self) do
             platoonUnits = self:GetPlatoonUnits()
-            local missilesAvail = 0
+            local readyTmlLaunchers
+            local inRangeTmlLaunchers = {}
+            local target = false
             WaitTicks(50)
+            LOG('Checking Through TML Platoon units and set automode')
             for k, tml in platoonUnits do
                 -- Disband if dead launchers. Will reform platoon on next PFM cycle
-                if not tml or tml.Dead or tml.BeenDestroyed() then
+                if not tml or tml.Dead or tml:BeenDestroyed() then
                     self:PlatoonDisbandNoAssign()
                     return
                 end
                 tml:SetAutoMode(true)
                 IssueClearCommands({tml})
             end
+            LOG('Checking for target')
             while not target do
+                local missileCount
+                local totalMissileCount
+                readyTmlLaunchers = {}
                 WaitTicks(70)
                 --target = self:FindPrioritizedUnit('attack', 'enemy', true, self.CenterPosition, 256)
-                targetList = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, self.CenterPosition, 256, 'Enemy')
-                for _, v in atkPri do
-                    for num, unit in targetUnits do
-                        if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
-                            WaitTicks(10)
-                        end
+                LOG('Target Find cycle start')
+                for k, tml in platoonUnits do
+                    missileCount = tml:GetTacticalSiloAmmoCount()
+                    if missileCount > 0 then
+                        table.insert(readyTmlLaunchers, tml)
                     end
                 end
-                if target then
-                    break
-                end
-                WaitTicks(30)
-                if not PlatoonExists(aiBrain, self) then
-                    return
+                -- TML range is 256, try 230 to account for TML placement around CenterPosition
+                local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, self.CenterPosition, 230, 'Enemy')
+                for _, v in atkPri do
+                    for num, unit in targetUnits do
+                        if not unit.Dead and EntityCategoryContains(v, unit) and self:CanAttackTarget('attack', unit) then
+                            -- 6000 damage for TML
+                            targetHealth = unit:GetHealth()
+                            
+                            LOG('Target Health is '..targetHealth)
+                            local missilesRequired = math.ceil(targetHealth / 6000)
+                            LOG('Missiles Required = '..missilesRequired)
+                            if (missileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (table.getn(readyTmlLaunchers) >= missilesRequired) then
+                                target = unit
+                                targetPosition = target:GetPosition()
+                                enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2), targetPosition, 20, 'Enemy')
+                                if table.getn(enemyTMD) > missileCount then
+                                    LOG('Target is too protected')
+                                    --Set flag for more TML
+                                    target = false
+                                    continue
+                                else
+                                    LOG('Target does not have enough defense')
+                                    for k, tml in readyTmlLaunchers do
+                                        local missileCount = tml:GetTacticalSiloAmmoCount()
+                                        LOG('Missile Count in Launcher is '..missileCount)
+                                        local tmlMaxRange = __blueprints[tml.UnitId].Weapon[1].MaxRadius
+                                        LOG('TML Max Range is '..tmlMaxRange)
+                                        local tmlPosition = tml:GetPosition()
+                                        if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
+                                            table.insert(inRangeTmlLaunchers, tml)
+                                        end
+                                    end
+                                    LOG('Have Target and number of in range ready launchers is '..table.getn(inRangeTmlLaunchers))
+                                    break
+                                end
+                            else
+                                LOG('Not Enough Missiles Available')
+                                target = false
+                                continue
+                            end
+                            WaitTicks(1)
+                        end
+                    end
+                    if target then
+                        LOG('We have target and can fire, breaking loop')
+                        break
+                    end
                 end
             end
-            local readyTmlLaunchers = {}
-            local targetPosition = target:GetPosition()
-            for k, tml in platoonUnits do
-                -- Disband if dead launchers. Will reform platoon on next PFM cycle
-                local missileCount = tml:GetTacticalSiloAmmoCount()
-                local tmlMaxRange = __blueprints[tml.UnitId].Weapon.MaxRadius
-                local tmlPosition = tml:GetPosition()
-                if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
-                    table.insert(readyTmlLaunchers, tml)
-                end
+            if table.getn(inRangeTmlLaunchers) > 0 then
+                LOG('Launching Tactical Missile')
+                IssueTactical(inRangeTmlLaunchers, target)
             end
-            if table.getn(readyTmlLaunchers) < 1 then
-                WaitTicks(20)
-                continue
-            end
-            local readyToFire = false
-            enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2), targetPosition, 20, 'Enemy')
-            if table.getn(enemyTMD) > 0 then
-                local enemyTMDCount = table.getn(enemyTMD)
-                local selfTMLCount = table.getn(readyTmlLaunchers)
-                if enemyTMDCount < selfTMLCount then
-                    readyToFire = true
-                else
-                    -- Could I add a flag for an air attack at the position here? or a builder condition to increase the TML count?
-                    WaitTicks(30)
-                    continue
-                end
+            WaitTicks(30)
+            if not PlatoonExists(aiBrain, self) then
+                return
             end
         end
-    end
+    end,
 }

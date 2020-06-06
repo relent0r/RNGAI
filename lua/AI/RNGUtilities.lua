@@ -1625,3 +1625,12 @@ function GetDirectionInDegrees( v1, v2 )
 	
 	return 360 - (LOUDACOS(vec[3]) * (360/(LOUDPI*2)))
 end
+
+function ComHealth(cdr)
+    local armorPercent = 100 / cdr:GetMaxHealth() * cdr:GetHealth()
+    local shieldPercent = armorPercent
+    if cdr.MyShield then
+        shieldPercent = 100 / cdr.MyShield:GetMaxHealth() * cdr.MyShield:GetHealth()
+    end
+    return ( armorPercent + shieldPercent ) / 2
+end

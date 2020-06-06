@@ -669,12 +669,31 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T2 TML Silo',
+        PlatoonTemplate = 'AddToTMLPlatoonRNG',
+        Priority = 1,
+        InstanceCount = 1000,
+        FormRadius = 10000,
+        BuilderConditions = {
+            -- Have we the eco to build it ?
+            -- When do we want to build this ?
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM * categories.TECH2 } },
+        },
+        BuilderData = {
+            PlatoonPlan = 'TMLAIRNG',
+            Location = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
+    --[[
+    Builder {
+        BuilderName = 'RNGAI T2 TML Silo',
         PlatoonTemplate = 'RNGAI T2 TML',
         Priority = 1,
         InstanceCount = 1000,
         FormRadius = 10000,
         BuilderType = 'Any',
-    },
+    },]]
+    
     Builder {
         BuilderName = 'RNGAI T2 Artillery',
         PlatoonTemplate = 'T2ArtilleryStructure',
