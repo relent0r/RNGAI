@@ -211,7 +211,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
 
     local attached = true
     repeat
-        WaitSeconds(2)
+        WaitTicks(20)
         local allDead = true
         local transDead = true
         for k, v in units do

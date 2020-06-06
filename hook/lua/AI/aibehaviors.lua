@@ -283,6 +283,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         target = false
                     end
+                    WaitTicks(1)
                     --LOG('No target found in sweep increasing search radius')
                 until target or searchRadius >= maxRadius
 
@@ -423,6 +424,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             if not aiBrain:PlatoonExists(plat) then
                 --LOG('* AI-RNG: CDRAttack platoon no longer exist, something disbanded it')
             end
+            WaitTicks(1)
         until not continueFighting or not aiBrain:PlatoonExists(plat)
         cdr.Combat = false
         cdr.GoingHome = true -- had to add this as the EM was assigning jobs between this and the returnhome function
