@@ -123,19 +123,19 @@ PlatoonTemplate {
     Name = 'RNGAIFighterGroupT2',
     FactionSquads = {
         UEF = {
-            { 'uea0102', 1, 3, 'attack', 'None' },
-            { 'uea0102', 1, 1, 'attack', 'None' }
+            { 'uea0102', 1, 3, 'attack', 'None' }, -- T1 Fighter
+            { 'dea0202', 1, 1, 'attack', 'None' } -- T2 FighterBomber
         },
         Aeon = {
-            { 'xaa0202', 1, 4, 'attack', 'None' },
+            { 'xaa0202', 1, 4, 'attack', 'None' }, -- T2 Fighter
         },
         Cybran = {
-            { 'ura0102', 1, 3, 'attack', 'None' },
-            { 'dra0202', 1, 2, 'attack', 'None' }
+            { 'ura0102', 1, 3, 'attack', 'None' }, -- T1 Fighter
+            { 'dra0202', 1, 1, 'attack', 'None' } -- T2 FighterBomber
         },
         Seraphim = {
-            { 'xsa0102', 1, 3, 'attack', 'None' },
-            { 'xsa0202', 1, 2, 'attack', 'None' }
+            { 'xsa0102', 1, 3, 'attack', 'None' }, -- T1 Fighter
+            { 'xsa0202', 1, 1, 'attack', 'None' } -- T2 FighterBomber
         },
     }
 }

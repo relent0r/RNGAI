@@ -232,7 +232,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
         },
     },
