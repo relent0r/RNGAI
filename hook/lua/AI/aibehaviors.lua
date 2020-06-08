@@ -1227,20 +1227,24 @@ PlatoonRetreat = function (platoon)
     while aiBrain:PlatoonExists(platoon) do
         LOG('Retreat loop Behavior')
         local selfthreatAroundplatoon = 0
-        local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.COMMAND, platoonPos, 50, 'Ally')
+        local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * (categories.LAND + categories.COMMAND) - categories.SCOUT - categories.ENGINEER, platoonPos, 50, 'Ally')
         local bp
         for _,v in positionUnits do
-            if not v.Dead then
+            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
+                selfthreatAroundplatoon = selfthreatAroundplatoon + 30
+            elseif not v.Dead then
                 bp = __blueprints[v.UnitId].Defense
                 selfthreatAroundplatoon = selfthreatAroundplatoon + bp.SurfaceThreatLevel
             end
         end
         LOG('Platoon Threat is '..selfthreatAroundplatoon)
         WaitTicks(3)
-        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), platoonPos, 50, 'Enemy')
+        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.COMMAND) - categories.SCOUT - categories.ENGINEER), platoonPos, 50, 'Enemy')
         local enemythreatAroundplatoon = 0
         for k,v in enemyUnits do
-            if not v.Dead then
+            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
+                enemythreatAroundplatoon = enemythreatAroundplatoon + 30
+            elseif not v.Dead then
                 --LOG('Unit ID is '..v.UnitId)
                 bp = __blueprints[v.UnitId].Defense
                 --LOG(repr(__blueprints[v.UnitId].Defense))

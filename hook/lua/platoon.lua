@@ -3228,7 +3228,17 @@ Platoon = Class(RNGAIPlatoon) {
                     for num, unit in targetUnits do
                         if not unit.Dead and EntityCategoryContains(v, unit) and self:CanAttackTarget('attack', unit) then
                             -- 6000 damage for TML
-                            targetHealth = unit:GetHealth()
+                            if EntityCategoryContains(categories.COMMAND, unit) then
+                                local armorHealth = unit:GetHealth()
+                                if unit.MyShield then
+                                    shieldHealth = unit.MyShield:GetHealth()
+                                else
+                                    shieldHealth = 0
+                                end
+                                targetHealth = armorHealth + shieldHealth
+                            else
+                                targetHealth = unit:GetHealth()
+                            end
                             
                             LOG('Target Health is '..targetHealth)
                             local missilesRequired = math.ceil(targetHealth / 6000)
@@ -3285,7 +3295,13 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if table.getn(inRangeTmlLaunchers) > 0 then
                 LOG('Launching Tactical Missile')
-                IssueTactical(inRangeTmlLaunchers, target)
+                if EntityCategoryContains(categories.MOBILE, target) then
+                    local firePos = RUtils.LeadTargetRNG(self.CenterPosition, target, 230, 30)
+                    IssueTactical(inRangeTmlLaunchers, firePos)
+                else
+                    IssueTactical(inRangeTmlLaunchers, target)
+                end
+
             end
             WaitTicks(30)
             if not PlatoonExists(aiBrain, self) then
