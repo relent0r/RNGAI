@@ -505,7 +505,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 for i = 1, 16 do
                     local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
                     local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-
                     if army and startPos then
                         if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
                             allyStarts['ARMY_' .. i] = startPos
