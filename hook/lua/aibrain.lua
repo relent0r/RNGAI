@@ -527,7 +527,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 LastScouted = 0,
                             }
                         )
-                        table.insert(startLocations, startPos)
+                        table.insert(startLocations, loc)
                     end
                 end
                 -- Set Start Locations for brain to reference

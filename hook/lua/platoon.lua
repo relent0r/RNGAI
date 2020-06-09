@@ -3185,7 +3185,8 @@ Platoon = Class(RNGAIPlatoon) {
         local atkPri = {
             categories.MASSEXTRACTION * categories.STRUCTURE * ( categories.TECH2 + categories.TECH3 ),
             categories.COMMAND,
-            categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 )
+            categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 ),
+            categories.MOBILE * categories.LAND * categories.EXPERIMENTAL
         }
         LOG('Starting TML function')
         while aiBrain:PlatoonExists(self) do
@@ -3243,6 +3244,8 @@ Platoon = Class(RNGAIPlatoon) {
                             LOG('Target Health is '..targetHealth)
                             local missilesRequired = math.ceil(targetHealth / 6000)
                             LOG('Missiles Required = '..missilesRequired)
+                            LOG('Ready TML Launchers is '..readyTmlLauncherCount)
+                            LOG('Total Missiles '..totalMissileCount)
                             if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
                                 target = unit
                                 targetPosition = target:GetPosition()
@@ -3296,8 +3299,12 @@ Platoon = Class(RNGAIPlatoon) {
             if table.getn(inRangeTmlLaunchers) > 0 then
                 LOG('Launching Tactical Missile')
                 if EntityCategoryContains(categories.MOBILE, target) then
-                    local firePos = RUtils.LeadTargetRNG(self.CenterPosition, target, 230, 30)
-                    IssueTactical(inRangeTmlLaunchers, firePos)
+                    local firePos = RUtils.LeadTargetRNG(self.CenterPosition, target, 15, 256)
+                    if firePos then
+                        IssueTactical(inRangeTmlLaunchers, firePos)
+                    else
+                        LOG('LeadTarget Returned False')
+                    end
                 else
                     IssueTactical(inRangeTmlLaunchers, target)
                 end
