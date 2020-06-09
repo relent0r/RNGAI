@@ -531,6 +531,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 -- Set Start Locations for brain to reference
+                LOG('Start Locations are '..repr(startLocations))
                 aiBrain.EnemyIntel.EnemyStartLocations = startLocations
             end
             
@@ -539,7 +540,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
         
             for _, start in startLocations do
-                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Mass', start, 30)
+                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Mass', start.Position, 30)
                 for _, marker in markersStartPos do
                     --LOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
                     table.insert(startPosMarkers, marker)
