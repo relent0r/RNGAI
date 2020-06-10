@@ -145,7 +145,7 @@ AIBrain = Class(RNGAIBrainClass) {
             MASSFABRICATION = 8,
             NUKE = 7,
         }
-        
+        self.DefensiveSupport = {}
 
         --Tactical Monitor
         self.TacticalMonitor = {

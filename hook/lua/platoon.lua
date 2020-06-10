@@ -3168,6 +3168,7 @@ Platoon = Class(RNGAIPlatoon) {
             mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon', destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
             mergedPlatoon.BuilderName = destinationPlan..'Platoon'
+            mergedPlatoon.Location = location
             mergedPlatoon.CenterPosition = aiBrain.BuilderManagers[location].Position
         end
         LOG('Platoon Merge is assigning units to platoon')
@@ -3267,7 +3268,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 LOG('Enemy Unit has '..enemyTmdCount.. 'TMD around it')
                                 LOG('Enemy Unit has '..enemyShieldCount.. 'Shields around it with a total health of '..enemyShieldHealth)
                                 LOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
-                                
+
                                 if enemyTmdCount >= readyTmlLauncherCount then
                                     LOG('Target is too protected')
                                     --Set flag for more TML or ping attack position with air/land
