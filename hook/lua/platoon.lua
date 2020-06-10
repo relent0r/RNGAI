@@ -3179,6 +3179,7 @@ Platoon = Class(RNGAIPlatoon) {
         local aiBrain = self:GetBrain()
         local platoonUnits
         local enemyTMD = 0
+        local enemyShield = 0
         local targetHealth
         local mapSizeX, mapSizeZ = GetMapSize()
         local targetPosition = {}
@@ -3211,6 +3212,7 @@ Platoon = Class(RNGAIPlatoon) {
                 local missileCount = 0
                 local totalMissileCount = 0
                 local enemyTmdCount = 0
+                local enemyShieldHealth = 0
                 readyTmlLaunchers = {}
                 WaitTicks(50)
                 --target = self:FindPrioritizedUnit('attack', 'enemy', true, self.CenterPosition, 256)
@@ -3243,6 +3245,7 @@ Platoon = Class(RNGAIPlatoon) {
                             
                             LOG('Target Health is '..targetHealth)
                             local missilesRequired = math.ceil(targetHealth / 6000)
+                            local shieldMissilesRequired = 0
                             LOG('Missiles Required = '..missilesRequired)
                             LOG('Ready TML Launchers is '..readyTmlLauncherCount)
                             LOG('Total Missiles '..totalMissileCount)
@@ -3250,8 +3253,21 @@ Platoon = Class(RNGAIPlatoon) {
                                 target = unit
                                 targetPosition = target:GetPosition()
                                 enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 20, 'Enemy')
+                                enemyShield = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 20, 'Enemy')
                                 enemyTmdCount = table.getn(enemyTMD)
+                                if table.getn(enemyShield) > 0 then
+                                    local shieldHealth = 0
+                                    for k, shield in enemyShield do
+                                        if not shield or shield.Dead then continue end
+                                        enemyShieldHealth = enemyShieldHealth + shield.MyShield:GetHealth()
+                                    end
+                                    shieldMissilesRequired = math.ceil(enemyShieldHealth / 6000)
+                                end
+
                                 LOG('Enemy Unit has '..enemyTmdCount.. 'TMD around it')
+                                LOG('Enemy Unit has '..enemyShieldCount.. 'Shields around it with a total health of '..enemyShieldHealth)
+                                LOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
+                                
                                 if enemyTmdCount >= readyTmlLauncherCount then
                                     LOG('Target is too protected')
                                     --Set flag for more TML or ping attack position with air/land
@@ -3266,13 +3282,14 @@ Platoon = Class(RNGAIPlatoon) {
                                         LOG('TML Max Range is '..tmlMaxRange)
                                         local tmlPosition = tml:GetPosition()
                                         if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
-                                            if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and missilesRequired == 1 then
+                                            if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
                                                 LOG('Only 1 missile required')
                                                 table.insert(inRangeTmlLaunchers, tml)
                                                 break
                                             else
                                                 table.insert(inRangeTmlLaunchers, tml)
-                                                if (table.getn(inRangeTmlLaunchers) >= missilesRequired) and (table.getn(inRangeTmlLaunchers) > enemyTmdCount) then
+                                                local readyTML = table.getn(inRangeTmlLaunchers)
+                                                if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount) and (readyTML > shieldMissilesRequired) then
                                                     LOG('inRangeTmlLaunchers table number is enough for kill')
                                                     break
                                                 end
