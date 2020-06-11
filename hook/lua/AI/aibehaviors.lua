@@ -139,7 +139,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local overCharge = {}
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
-    local acuThreatLimit = 18
+    local acuThreatLimit = 20
     
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
@@ -158,22 +158,22 @@ function CDROverChargeRNG(aiBrain, cdr)
     if factionIndex == 1 then
         if cdr:HasEnhancement('HeavyAntiMatterCannon') then
             weapon.Range = 30 - 3
-            acuThreatLimit = 32
+            acuThreatLimit = 34
         end
     elseif factionIndex == 2 then
         if cdr:HasEnhancement('CrysalisBeam') then
             weapon.Range = 35 - 3
-            acuThreatLimit = 32
+            acuThreatLimit = 34
         end
     elseif factionIndex == 3 then
         if cdr:HasEnhancement('CoolingUpgrade') then
             weapon.Range = 30 - 3
-            acuThreatLimit = 32
+            acuThreatLimit = 34
         end
     elseif factionIndex == 4 then
         if cdr:HasEnhancement('RateOfFire') then
             weapon.Range = 30 - 3
-            acuThreatLimit = 32
+            acuThreatLimit = 34
         end
     end
 

@@ -540,7 +540,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massLocations = RUtils.AIGetMassMarkerLocations(aiBrain, true)
         
             for _, start in startLocations do
-                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Mass', start.Position, 30)
+                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Mass', start, 30)
                 for _, marker in markersStartPos do
                     --LOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
                     table.insert(startPosMarkers, marker)

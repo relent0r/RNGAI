@@ -3165,9 +3165,9 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if not mergedPlatoon then
             LOG('Platoon Merge is creating platoon for '..destinationPlan)
-            mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon', destinationPlan)
+            mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon'..location, destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
-            mergedPlatoon.BuilderName = destinationPlan..'Platoon'
+            mergedPlatoon.BuilderName = destinationPlan..'Platoon'..location
             mergedPlatoon.Location = location
             mergedPlatoon.CenterPosition = aiBrain.BuilderManagers[location].Position
         end
@@ -3218,14 +3218,25 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(50)
                 --target = self:FindPrioritizedUnit('attack', 'enemy', true, self.CenterPosition, 256)
                 LOG('Target Find cycle start')
+                LOG('Number of units in platoon '..table.getn(platoonUnits))
                 for k, tml in platoonUnits do
-                    missileCount = tml:GetTacticalSiloAmmoCount()
-                    if missileCount > 0 then
-                        totalMissileCount = totalMissileCount + missileCount
-                        table.insert(readyTmlLaunchers, tml)
+                    if not tml or tml.Dead or tml:BeenDestroyed() then
+                        self:PlatoonDisbandNoAssign()
+                        return
+                    else
+                        missileCount = tml:GetTacticalSiloAmmoCount()
+                        if missileCount > 0 then
+                            totalMissileCount = totalMissileCount + missileCount
+                            table.insert(readyTmlLaunchers, tml)
+                        end
                     end
                 end
                 readyTmlLauncherCount = table.getn(readyTmlLaunchers)
+                LOG('Ready TML Launchers is '..readyTmlLauncherCount)
+                if readyTmlLauncherCount < 1 then
+                    WaitTicks(50)
+                    continue
+                end
                 -- TML range is 256, try 230 to account for TML placement around CenterPosition
                 local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, self.CenterPosition, 230, 'Enemy')
                 for _, v in atkPri do
@@ -3248,16 +3259,16 @@ Platoon = Class(RNGAIPlatoon) {
                             local missilesRequired = math.ceil(targetHealth / 6000)
                             local shieldMissilesRequired = 0
                             LOG('Missiles Required = '..missilesRequired)
-                            LOG('Ready TML Launchers is '..readyTmlLauncherCount)
                             LOG('Total Missiles '..totalMissileCount)
                             if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
                                 target = unit
                                 targetPosition = target:GetPosition()
                                 enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 20, 'Enemy')
-                                enemyShield = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 20, 'Enemy')
+                                enemyShield = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 20, 'Enemy')
                                 enemyTmdCount = table.getn(enemyTMD)
                                 if table.getn(enemyShield) > 0 then
                                     local shieldHealth = 0
+                                    LOG('There are '..table.getn(enemyShield)..'shields')
                                     for k, shield in enemyShield do
                                         if not shield or shield.Dead then continue end
                                         enemyShieldHealth = enemyShieldHealth + shield.MyShield:GetHealth()
@@ -3266,7 +3277,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
 
                                 LOG('Enemy Unit has '..enemyTmdCount.. 'TMD around it')
-                                LOG('Enemy Unit has '..enemyShieldCount.. 'Shields around it with a total health of '..enemyShieldHealth)
+                                LOG('Enemy Unit has '..table.getn(enemyShield).. 'Shields around it with a total health of '..enemyShieldHealth)
                                 LOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
 
                                 if enemyTmdCount >= readyTmlLauncherCount then
