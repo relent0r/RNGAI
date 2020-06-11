@@ -3216,7 +3216,7 @@ Platoon = Class(RNGAIPlatoon) {
                 local enemyShieldHealth = 0
                 readyTmlLaunchers = {}
                 WaitTicks(50)
-                --target = self:FindPrioritizedUnit('attack', 'enemy', true, self.CenterPosition, 256)
+                platoonUnits = self:GetPlatoonUnits()
                 LOG('Target Find cycle start')
                 LOG('Number of units in platoon '..table.getn(platoonUnits))
                 for k, tml in platoonUnits do
@@ -3301,7 +3301,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             else
                                                 table.insert(inRangeTmlLaunchers, tml)
                                                 local readyTML = table.getn(inRangeTmlLaunchers)
-                                                if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount) and (readyTML > shieldMissilesRequired) then
+                                                if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
                                                     LOG('inRangeTmlLaunchers table number is enough for kill')
                                                     break
                                                 end
