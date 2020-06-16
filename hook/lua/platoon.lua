@@ -1055,7 +1055,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         if data.TargetSearchPriorities then
-            LOG('TargetSearch present for '..self.BuilderName)
+            --LOG('TargetSearch present for '..self.BuilderName)
             for k,v in data.TargetSearchPriorities do
                 table.insert(atkPri, v)
             end
@@ -3145,12 +3145,12 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,]]
     PlatoonMergeRNG = function(self)
-        LOG('Platoon Merge Started')
+        --LOG('Platoon Merge Started')
         local aiBrain = self:GetBrain()
         local destinationPlan = self.PlatoonData.PlatoonPlan
         local location = self.PlatoonData.Location
-        LOG('Location Type is '..location)
-        LOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
+        --LOG('Location Type is '..location)
+        --LOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
         if not destinationPlan then
             return
         end
@@ -3164,14 +3164,14 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         if not mergedPlatoon then
-            LOG('Platoon Merge is creating platoon for '..destinationPlan)
+            --LOG('Platoon Merge is creating platoon for '..destinationPlan)
             mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon'..location, destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
             mergedPlatoon.BuilderName = destinationPlan..'Platoon'..location
             mergedPlatoon.Location = location
             mergedPlatoon.CenterPosition = aiBrain.BuilderManagers[location].Position
         end
-        LOG('Platoon Merge is assigning units to platoon')
+        --LOG('Platoon Merge is assigning units to platoon')
         aiBrain:AssignUnitsToPlatoon(mergedPlatoon, units, 'attack', 'none')
         self:PlatoonDisbandNoAssign()
     end,
@@ -3188,9 +3188,10 @@ Platoon = Class(RNGAIPlatoon) {
             categories.MASSEXTRACTION * categories.STRUCTURE * ( categories.TECH2 + categories.TECH3 ),
             categories.COMMAND,
             categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 ),
-            categories.MOBILE * categories.LAND * categories.EXPERIMENTAL
+            categories.MOBILE * categories.LAND * categories.EXPERIMENTAL,
+            categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 )
         }
-        LOG('Starting TML function')
+        --LOG('Starting TML function')
         while aiBrain:PlatoonExists(self) do
             platoonUnits = self:GetPlatoonUnits()
             local readyTmlLaunchers
@@ -3198,7 +3199,7 @@ Platoon = Class(RNGAIPlatoon) {
             local inRangeTmlLaunchers = {}
             local target = false
             WaitTicks(50)
-            LOG('Checking Through TML Platoon units and set automode')
+            --LOG('Checking Through TML Platoon units and set automode')
             for k, tml in platoonUnits do
                 -- Disband if dead launchers. Will reform platoon on next PFM cycle
                 if not tml or tml.Dead or tml:BeenDestroyed() then
@@ -3208,7 +3209,7 @@ Platoon = Class(RNGAIPlatoon) {
                 tml:SetAutoMode(true)
                 IssueClearCommands({tml})
             end
-            LOG('Checking for target')
+            --LOG('Checking for target')
             while not target do
                 local missileCount = 0
                 local totalMissileCount = 0
@@ -3217,8 +3218,8 @@ Platoon = Class(RNGAIPlatoon) {
                 readyTmlLaunchers = {}
                 WaitTicks(50)
                 platoonUnits = self:GetPlatoonUnits()
-                LOG('Target Find cycle start')
-                LOG('Number of units in platoon '..table.getn(platoonUnits))
+                --LOG('Target Find cycle start')
+                --LOG('Number of units in platoon '..table.getn(platoonUnits))
                 for k, tml in platoonUnits do
                     if not tml or tml.Dead or tml:BeenDestroyed() then
                         self:PlatoonDisbandNoAssign()
@@ -3232,7 +3233,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 readyTmlLauncherCount = table.getn(readyTmlLaunchers)
-                LOG('Ready TML Launchers is '..readyTmlLauncherCount)
+                --LOG('Ready TML Launchers is '..readyTmlLauncherCount)
                 if readyTmlLauncherCount < 1 then
                     WaitTicks(50)
                     continue
@@ -3255,11 +3256,11 @@ Platoon = Class(RNGAIPlatoon) {
                                 targetHealth = unit:GetHealth()
                             end
                             
-                            LOG('Target Health is '..targetHealth)
+                            --LOG('Target Health is '..targetHealth)
                             local missilesRequired = math.ceil(targetHealth / 6000)
                             local shieldMissilesRequired = 0
-                            LOG('Missiles Required = '..missilesRequired)
-                            LOG('Total Missiles '..totalMissileCount)
+                            --LOG('Missiles Required = '..missilesRequired)
+                            --LOG('Total Missiles '..totalMissileCount)
                             if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
                                 target = unit
                                 targetPosition = target:GetPosition()
@@ -3268,7 +3269,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 enemyTmdCount = table.getn(enemyTMD)
                                 if table.getn(enemyShield) > 0 then
                                     local shieldHealth = 0
-                                    LOG('There are '..table.getn(enemyShield)..'shields')
+                                    --LOG('There are '..table.getn(enemyShield)..'shields')
                                     for k, shield in enemyShield do
                                         if not shield or shield.Dead then continue end
                                         enemyShieldHealth = enemyShieldHealth + shield.MyShield:GetHealth()
@@ -3276,43 +3277,43 @@ Platoon = Class(RNGAIPlatoon) {
                                     shieldMissilesRequired = math.ceil(enemyShieldHealth / 6000)
                                 end
 
-                                LOG('Enemy Unit has '..enemyTmdCount.. 'TMD around it')
-                                LOG('Enemy Unit has '..table.getn(enemyShield).. 'Shields around it with a total health of '..enemyShieldHealth)
-                                LOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
+                                --LOG('Enemy Unit has '..enemyTmdCount.. 'TMD around it')
+                                --LOG('Enemy Unit has '..table.getn(enemyShield).. 'Shields around it with a total health of '..enemyShieldHealth)
+                                --LOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
 
                                 if enemyTmdCount >= readyTmlLauncherCount then
-                                    LOG('Target is too protected')
+                                    --LOG('Target is too protected')
                                     --Set flag for more TML or ping attack position with air/land
                                     target = false
                                     continue
                                 else
-                                    LOG('Target does not have enough defense')
+                                    --LOG('Target does not have enough defense')
                                     for k, tml in readyTmlLaunchers do
                                         local missileCount = tml:GetTacticalSiloAmmoCount()
-                                        LOG('Missile Count in Launcher is '..missileCount)
+                                        --LOG('Missile Count in Launcher is '..missileCount)
                                         local tmlMaxRange = __blueprints[tml.UnitId].Weapon[1].MaxRadius
-                                        LOG('TML Max Range is '..tmlMaxRange)
+                                        --LOG('TML Max Range is '..tmlMaxRange)
                                         local tmlPosition = tml:GetPosition()
                                         if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
                                             if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
-                                                LOG('Only 1 missile required')
+                                                --LOG('Only 1 missile required')
                                                 table.insert(inRangeTmlLaunchers, tml)
                                                 break
                                             else
                                                 table.insert(inRangeTmlLaunchers, tml)
                                                 local readyTML = table.getn(inRangeTmlLaunchers)
                                                 if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
-                                                    LOG('inRangeTmlLaunchers table number is enough for kill')
+                                                    --LOG('inRangeTmlLaunchers table number is enough for kill')
                                                     break
                                                 end
                                             end
                                         end
                                     end
-                                    LOG('Have Target and number of in range ready launchers is '..table.getn(inRangeTmlLaunchers))
+                                    --LOG('Have Target and number of in range ready launchers is '..table.getn(inRangeTmlLaunchers))
                                     break
                                 end
                             else
-                                LOG('Not Enough Missiles Available')
+                                --LOG('Not Enough Missiles Available')
                                 target = false
                                 continue
                             end
@@ -3320,19 +3321,19 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     if target then
-                        LOG('We have target and can fire, breaking loop')
+                        --LOG('We have target and can fire, breaking loop')
                         break
                     end
                 end
             end
             if table.getn(inRangeTmlLaunchers) > 0 then
-                LOG('Launching Tactical Missile')
+                --LOG('Launching Tactical Missile')
                 if EntityCategoryContains(categories.MOBILE, target) then
                     local firePos = RUtils.LeadTargetRNG(self.CenterPosition, target, 15, 256)
                     if firePos then
                         IssueTactical(inRangeTmlLaunchers, firePos)
                     else
-                        LOG('LeadTarget Returned False')
+                        --LOG('LeadTarget Returned False')
                     end
                 else
                     IssueTactical(inRangeTmlLaunchers, target)

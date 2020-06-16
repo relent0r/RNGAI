@@ -228,11 +228,33 @@ BuilderGroup {
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiency', { 0.8, 0.8}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.DEFENSE) } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2StrategicMissile',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2TMLEngineer 3rd',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 625,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'TACTICALMISSILEPLATFORM' } },
+            { EBC, 'GreaterThanEconEfficiency', { 0.8, 0.8}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',

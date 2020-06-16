@@ -1731,12 +1731,12 @@ function LeadTargetRNG(LauncherPos, target, minRadius, maxRadius)
     MissileImpactY = MissileImpactY + bLegScale
     -- Cancel firing if target is outside map boundries
     if MissileImpactX < 0 or MissileImpactY < 0 or MissileImpactX > ScenarioInfo.size[1] or MissileImpactY > ScenarioInfo.size[2] then
-        LOG('Target outside map boundries')
+        --LOG('Target outside map boundries')
         return false
     end
     local dist3 = VDist2(LauncherPos[1], LauncherPos[3], MissileImpactX, MissileImpactY)
     if dist3 < minRadius or dist3 > maxRadius then
-        LOG('Target outside max radius')
+        --LOG('Target outside max radius')
         return false
     end
     -- return extrapolated target position / missile impact coordinates
