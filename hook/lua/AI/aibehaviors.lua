@@ -285,7 +285,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     WaitTicks(1)
                     --LOG('No target found in sweep increasing search radius')
-                until target or searchRadius >= maxRadius
+                until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
 
                 if target then
                     --LOG('Target Found')
