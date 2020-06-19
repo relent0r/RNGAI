@@ -748,7 +748,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 1
+            MinimumReclaim = 4
         },
         BuilderType = 'Any',
     },
@@ -765,7 +765,8 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 80
+            ReclaimTime = 80,
+            MinimumReclaim = 4
         },
         BuilderType = 'Any',
     },
@@ -782,7 +783,8 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 80
+            ReclaimTime = 80,
+            MinimumReclaim = 4
         },
         BuilderType = 'Any',
     },
@@ -805,7 +807,8 @@ BuilderGroup {
             },
         BuilderData = {
             LocationType = 'LocationType',
-            ReclaimTime = 80
+            ReclaimTime = 80,
+            MinimumReclaim = 4
         },
         BuilderType = 'Any',
     },

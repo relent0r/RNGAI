@@ -724,10 +724,6 @@ Platoon = Class(RNGAIPlatoon) {
         while PlatoonExists(aiBrain, self) do
             
             target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.LAND - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
-            if EntityCategoryContains(categories.COMMAND, target) then
-                --LOG('Target is ACU')
-            end
-            local targetHealth = 0
             if target then
                 local threatAroundplatoon = 0
                 local targetPosition = target:GetPosition()
@@ -799,9 +795,6 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 blip = target:GetBlip(armyIndex)
-                if target and not target.Dead then
-                    targetHealth = target:GetHealth()
-                end
                 if attackUnits then
                     self:Stop('Attack')
                     self:AggressiveMoveToLocation(table.copy(target:GetPosition()), 'Attack')
@@ -811,10 +804,8 @@ Platoon = Class(RNGAIPlatoon) {
             end
             WaitTicks(170)
             if target and not target.Dead then
-                if targetHealth == target:GetHealth() then
-                    IssueClearCommands(self:GetSquadUnits('Attack'))
-                    local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
-                    self:MoveToLocation(position, false, 'Attack')
+                if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), target:GetPosition(), 'none') then
+                    self:MoveToLocation(target:GetPosition(), false)
                 end
             end
             WaitTicks(5)
@@ -952,7 +943,6 @@ Platoon = Class(RNGAIPlatoon) {
                             local dist
                             local Stuck = 0
                             local retreatCount = 2
-                            local targetHealth = 0
                             while PlatoonExists(aiBrain, self) do
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
@@ -984,10 +974,6 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     end
                                 end
-                                -- Do we move ?
-                                if target and not target.Dead then
-                                    targetHealth = target:GetHealth()
-                                end
                                 if Lastdist ~= dist then
                                     Stuck = 0
                                     Lastdist = dist
@@ -1000,10 +986,8 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     elseif Stuck > 5 then
                                         if target and not target.Dead then
-                                            if targetHealth == target:GetHealth() then
-                                                IssueClearCommands(self:GetSquadUnits('Attack'))
-                                                local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
-                                                self:MoveToLocation(position, false, 'Attack')
+                                            if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), target:GetPosition(), 'none') then
+                                                self:MoveToLocation(target:GetPosition(), false)
                                             end
                                         end
                                     end
@@ -1994,8 +1978,11 @@ Platoon = Class(RNGAIPlatoon) {
                 self:PlatoonDisband()
                 return
             end
-
-            self:AggressiveMoveToLocation(bestMarker.Position)
+            if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), bestMarker.Position, 'none') then
+                self:MoveToLocation(bestMarker.Position, false)
+            else
+                self:AggressiveMoveToLocation(bestMarker.Position)
+            end
 
             -- wait till we get there
             local oldPlatPos = GetPlatoonPosition(self)

@@ -805,7 +805,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -839,7 +839,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. 
         Priority = 500,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 50,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

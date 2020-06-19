@@ -7,6 +7,7 @@
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutAirBuilder',
@@ -28,6 +29,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.8}},
         },
         BuilderType = 'Air',
     },

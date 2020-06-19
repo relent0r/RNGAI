@@ -4,6 +4,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
 local lerpy = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').lerpy
 local SetArcPoints = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').SetArcPoints
+local GeneratePointsAroundPosition = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GeneratePointsAroundPosition
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
@@ -324,6 +325,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                            cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            WaitTicks(30)
+                            IssueClearCommands({cdr})
+                            continue
+                        end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
                         if target and not target.Dead and not target:BeenDestroyed() then
                             IssueOverCharge({cdr}, target)
@@ -331,6 +338,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                            cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            WaitTicks(30)
+                            IssueClearCommands({cdr})
+                            continue
+                        end
                         local cdrNewPos = {}
                         --LOG('* AI-RNG: Move Position is'..repr(movePos))
                         --LOG('* AI-RNG: Moving to movePos to attack')
@@ -378,7 +391,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 continueFighting = false
             end
             -- If com is down to yellow then dont keep fighting
-            if (cdr:GetHealthPercent() < 0.75) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+            if (cdr:GetHealthPercent() < 0.70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 continueFighting = false
             end
             if continueFighting == true then
@@ -1220,76 +1233,88 @@ end
 
 PlatoonRetreat = function (platoon)
     local aiBrain = platoon:GetBrain()
-    local platoonPos = platoon:GetPlatoonPosition()
     local platoonThreatHigh = false
     local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
     LOG('Start Retreat Behavior')
+    LOG('Home base location is '..repr(homeBaseLocation))
     while aiBrain:PlatoonExists(platoon) do
-        LOG('Retreat loop Behavior')
-        local selfthreatAroundplatoon = 0
-        local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * (categories.LAND + categories.COMMAND) - categories.SCOUT - categories.ENGINEER, platoonPos, 50, 'Ally')
-        local bp
-        for _,v in positionUnits do
-            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
-                selfthreatAroundplatoon = selfthreatAroundplatoon + 30
-            elseif not v.Dead then
-                bp = __blueprints[v.UnitId].Defense
-                selfthreatAroundplatoon = selfthreatAroundplatoon + bp.SurfaceThreatLevel
+        local platoonPos = platoon:GetPlatoonPosition()
+        if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) > 6400 then
+            LOG('Retreat loop Behavior')
+            local selfthreatAroundplatoon = 0
+            local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * (categories.LAND + categories.COMMAND) - categories.SCOUT - categories.ENGINEER, platoonPos, 50, 'Ally')
+            local bp
+            for _,v in positionUnits do
+                if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
+                    selfthreatAroundplatoon = selfthreatAroundplatoon + 30
+                elseif not v.Dead then
+                    bp = __blueprints[v.UnitId].Defense
+                    selfthreatAroundplatoon = selfthreatAroundplatoon + bp.SurfaceThreatLevel
+                end
             end
-        end
-        LOG('Platoon Threat is '..selfthreatAroundplatoon)
-        WaitTicks(3)
-        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.COMMAND) - categories.SCOUT - categories.ENGINEER), platoonPos, 50, 'Enemy')
-        local enemythreatAroundplatoon = 0
-        for k,v in enemyUnits do
-            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
-                enemythreatAroundplatoon = enemythreatAroundplatoon + 30
-            elseif not v.Dead then
-                --LOG('Unit ID is '..v.UnitId)
-                bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    enemythreatAroundplatoon = enemythreatAroundplatoon + bp.SurfaceThreatLevel
-                    if enemythreatAroundplatoon > selfthreatAroundplatoon then
-                        platoonThreatHigh = true
-                        break
+            LOG('Platoon Threat is '..selfthreatAroundplatoon)
+            WaitTicks(3)
+            local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.COMMAND) - categories.SCOUT - categories.ENGINEER), platoonPos, 50, 'Enemy')
+            local enemythreatAroundplatoon = 0
+            for k,v in enemyUnits do
+                if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
+                    enemythreatAroundplatoon = enemythreatAroundplatoon + 30
+                elseif not v.Dead then
+                    --LOG('Enemt Unit ID is '..v.UnitId)
+                    bp = __blueprints[v.UnitId].Defense
+                    --LOG(repr(__blueprints[v.UnitId].Defense))
+                    if bp.SurfaceThreatLevel ~= nil then
+                        enemythreatAroundplatoon = enemythreatAroundplatoon + (bp.SurfaceThreatLevel * 1.2)
+                        if enemythreatAroundplatoon > selfthreatAroundplatoon then
+                            platoonThreatHigh = true
+                            break
+                        end
                     end
                 end
             end
-        end
-        LOG('Enemy Platoon Threat is '..enemythreatAroundplatoon)
-        WaitTicks(3)
-        if platoonThreatHigh then
-            LOG('PlatoonThreatHigh is true')
-            local actualRetreatPos = {}
-            local baseDist = 1000
-            local height = 0
-            local potentialRetreatPos = RUtils.GeneratePointsAroundPosition(platoonPos,50,10)
-            LOG('Platoon Circular points '..repr(potentialRetreatPos))
-            local platoonHeight = GetTerrainHeight(platoonPos[1], platoonPos[3])
-            for k, v in potentialRetreatPos do
-                height = GetTerrainHeight(v[1], v[2])
-                if platoonHeight + GetTerrainHeight(v[1], v[2]) < 10 then
-                    local retreatdistance = VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3])
-                    if VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3]) < baseDist then
-                        baseDist = retreatdistance
-                        actualRetreatPos = { v[1], height, v[2] }
+            LOG('Enemy Platoon Threat is '..enemythreatAroundplatoon)
+            WaitTicks(3)
+            if platoonThreatHigh then
+                LOG('PlatoonThreatHigh is true')
+                local actualRetreatPos = {}
+                local baseDist = 4000000
+                local height = 0
+                local testHeight = 0
+                local potentialRetreatPos = GeneratePointsAroundPosition(platoonPos,50,10)
+                LOG('Platoon Circular points '..repr(potentialRetreatPos))
+                local platoonHeight = GetTerrainHeight(platoonPos[1], platoonPos[3])
+                for k, v in potentialRetreatPos do
+                    height = GetTerrainHeight(v[1], v[2])
+                    if platoonHeight >= height then
+                        testHeight = platoonHeight - height
+                    else
+                        testHeight = height - platoonHeight
+                    end
+                    if testHeight < 10 then
+                        LOG('Test Height is less than 10')
+                        local retreatdistance = VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3])
+                        if VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3]) < baseDist then
+                            baseDist = retreatdistance
+                            LOG('baseDist is '..baseDist)
+                            actualRetreatPos = { v[1], height, v[2] }
+                            LOG('Actual Retreat Pos is '..repr(actualRetreatPos))
+                        end
                     end
                 end
-            end
-            LOG('Best Retreat Position '..repr(actualRetreatPos))
-            if actualRetreatPos[1] then
-                local oldPlan = platoon:GetPlan()
-                if platoon.AiThread then
-                    platoon.AIThread:Destroy()
+                LOG('Best Retreat Position '..repr(actualRetreatPos))
+                if actualRetreatPos[1] then
+                    local oldPlan = platoon:GetPlan()
+                    if platoon.AiThread then
+                        platoon.AIThread:Destroy()
+                    end
+                    LOG('Moving Platoon to retreat position')
+                    platoon:MoveToLocation(actualRetreatPos, false)
+                    WaitTicks(60)
+                    -- Do Retreat Stuff
+                    platoon:SetAIPlan(oldPlan)
+                else
+                    continue
                 end
-                LOG('Moving Platoon to retreat position')
-                platoon:MoveToLocation(actualRetreatPos, false)
-                WaitTicks(50)
-                -- Do Retreat Stuff
-                platoon:SetAIPlan(oldPlan)
-            else
-                continue
             end
         end
         WaitTicks(50)
