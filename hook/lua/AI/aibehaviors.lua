@@ -16,6 +16,8 @@ local MakePlatoon = moho.aibrain_methods.MakePlatoon
 local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
+local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
 
 function CommanderBehaviorRNG(platoon)
@@ -158,21 +160,25 @@ function CDROverChargeRNG(aiBrain, cdr)
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     if factionIndex == 1 then
         if cdr:HasEnhancement('HeavyAntiMatterCannon') then
+            cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
             acuThreatLimit = 34
         end
     elseif factionIndex == 2 then
         if cdr:HasEnhancement('CrysalisBeam') then
+            cdr.GunUpgradePresent = true
             weapon.Range = 35 - 3
             acuThreatLimit = 34
         end
     elseif factionIndex == 3 then
         if cdr:HasEnhancement('CoolingUpgrade') then
+            cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
             acuThreatLimit = 34
         end
     elseif factionIndex == 4 then
         if cdr:HasEnhancement('RateOfFire') then
+            cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
             acuThreatLimit = 34
         end
@@ -393,6 +399,10 @@ function CDROverChargeRNG(aiBrain, cdr)
             -- If com is down to yellow then dont keep fighting
             if (cdr:GetHealthPercent() < 0.70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 continueFighting = false
+                if not cdr.GunUpgradePresent then
+                    LOG('ACU Low health and no gun upgrade, set required')
+                    cdr.GunUpgradeRequired = true
+                end
             end
             if continueFighting == true then
                 local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
@@ -461,14 +471,9 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         --LOG('CDR further than distSqAway')
         cdr.GoingHome = true
         local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
-        
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
         repeat
             CDRRevertPriorityChange(aiBrain, cdr)
-            if not aiBrain:PlatoonExists(plat) then
-                --LOG('CDRs plat vanished')
-                return
-            end
             IssueClearCommands({cdr})
             IssueStop({cdr})
             local acuPos1 = table.copy(cdrPos)
@@ -520,7 +525,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
                     end
                 end
             end
-        until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway
+        until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway or not aiBrain:PlatoonExists(plat)
 
         cdr.GoingHome = false
         IssueClearCommands({cdr})
@@ -1238,7 +1243,7 @@ PlatoonRetreat = function (platoon)
     LOG('Start Retreat Behavior')
     LOG('Home base location is '..repr(homeBaseLocation))
     while aiBrain:PlatoonExists(platoon) do
-        local platoonPos = platoon:GetPlatoonPosition()
+        local platoonPos = GetPlatoonPosition(platoon)
         if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) > 6400 then
             LOG('Retreat loop Behavior')
             local selfthreatAroundplatoon = 0
@@ -1276,44 +1281,87 @@ PlatoonRetreat = function (platoon)
             WaitTicks(3)
             if platoonThreatHigh then
                 LOG('PlatoonThreatHigh is true')
-                local actualRetreatPos = {}
-                local baseDist = 4000000
-                local height = 0
-                local testHeight = 0
-                local potentialRetreatPos = GeneratePointsAroundPosition(platoonPos,50,10)
-                LOG('Platoon Circular points '..repr(potentialRetreatPos))
-                local platoonHeight = GetTerrainHeight(platoonPos[1], platoonPos[3])
-                for k, v in potentialRetreatPos do
-                    height = GetTerrainHeight(v[1], v[2])
-                    if platoonHeight >= height then
-                        testHeight = platoonHeight - height
-                    else
-                        testHeight = height - platoonHeight
-                    end
-                    if testHeight < 10 then
-                        LOG('Test Height is less than 10')
-                        local retreatdistance = VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3])
-                        if VDist2Sq(v[1], v[2], homeBaseLocation[1], homeBaseLocation[3]) < baseDist then
-                            baseDist = retreatdistance
-                            LOG('baseDist is '..baseDist)
-                            actualRetreatPos = { v[1], height, v[2] }
-                            LOG('Actual Retreat Pos is '..repr(actualRetreatPos))
-                        end
+                local platoonList = aiBrain:GetPlatoonsList()
+                local remotePlatoonDistance = 100000
+                local remotePlatoonLocation = {}
+                local selfPlatoonPos = {}
+                local remotePlatoon
+                for k, v in platoonList do
+                    local remotePlatoonPos = GetPlatoonPosition(v)
+                    selfPlatoonPos = GetPlatoonPosition(platoon)
+                    local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[2], selfPlatoonPos[1], selfPlatoonPos[3])
+                    LOG('Remote Platoon distance is '..remotePlatoonDistance)
+                    if platDistance < remotePlatoonDistance then
+                        remotePlatoonDistance = platDistance
+                        remotePlatoonLocation = remotePlatoonPos
+                        remotePlatoon = v
                     end
                 end
-                LOG('Best Retreat Position '..repr(actualRetreatPos))
-                if actualRetreatPos[1] then
-                    local oldPlan = platoon:GetPlan()
-                    if platoon.AiThread then
-                        platoon.AIThread:Destroy()
+                if remotePlatoonDistance < 40000 then
+                    LOG('Best Retreat Platoon Position '..repr(remotePlatoonLocation))
+                    LOG('Best Retreat Platoon Distance '..remotePlatoonDistance)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, platoon.MovementLayer, selfPlatoonPos, remotePlatoonLocation, 100 , 200)
+                    if path then
+                        local position = GetPlatoonPosition(platoon)
+                        if VDist2Sq(position[1], position[3], remotePlatoonLocation[1], remotePlatoonLocation[3]) > 262144 then
+                            return platoon:ReturnToBaseAIRNG()
+                        end
+                        local pathLength = table.getn(path)
+                        for i=1, pathLength - 1 do
+                            --LOG('* AI-RNG: * PlatoonRetreat: moving to destination. i: '..i..' coords '..repr(path[i]))
+                            platoon:MoveToLocation(path[i], false)
+                            --LOG('* AI-RNG: * PlatoonRetreat: moving to Waypoint')
+                            local PlatoonPosition
+                            local remotePlatoonPos
+                            local remotePlatoonDist
+                            local Lastdist
+                            local dist
+                            local Stuck = 0
+                            PlatoonPosition = GetPlatoonPosition(platoon) or nil
+                            remotePlatoonPos = GetPlatoonPosition(remotePlatoon) or nil
+                            remotePlatoonDist = VDist2Sq(PlatoonPosition[1], PlatoonPosition[3], remotePlatoonPos[1], remotePlatoonPos[3])
+                            LOG('Current Distance to destination platoon '..remotePlatoonDist)
+                            if remotePlatoonDist < 900 then
+                                -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                LOG('We Should be at the other platoons position and about to merge')
+                                platoon:Stop()
+                                local planName = platoon:GetPlan()
+                                platoon:MergeWithNearbyPlatoonsRNG(planName, 30, 30)
+                                break
+                            end
+                            while PlatoonExists(aiBrain, platoon) do
+                                PlatoonPosition = GetPlatoonPosition(platoon) or nil
+                                if not PlatoonPosition then break end
+                                dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
+                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                                if (dist < 400) then
+                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                    platoon:Stop()
+                                    break
+                                end
+                                -- Do we move ?
+                                if Lastdist ~= dist then
+                                    Stuck = 0
+                                    Lastdist = dist
+                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                                else
+                                    Stuck = Stuck + 1
+                                    if Stuck > 15 then
+                                        LOG('* AI-RNG: * PlatoonRetreat: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                        platoon:Stop()
+                                        break
+                                    end
+                                end
+                                WaitTicks(15)
+                            end
+                        end
+                    else
+                        LOG('No Path continue')
+                        continue
                     end
-                    LOG('Moving Platoon to retreat position')
-                    platoon:MoveToLocation(actualRetreatPos, false)
-                    WaitTicks(60)
-                    -- Do Retreat Stuff
-                    platoon:SetAIPlan(oldPlan)
                 else
-                    continue
+                    LOG('No Platoons within range, return to base')
+                    return platoon:ReturnToBaseAIRNG()
                 end
             end
         end
