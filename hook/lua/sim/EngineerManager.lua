@@ -50,7 +50,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             --LOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
-            --LOG('CDR Combat Delay')
+            LOG('CDR Combat Delay')
             self:DelayAssign(unit, 50)
             return
         end

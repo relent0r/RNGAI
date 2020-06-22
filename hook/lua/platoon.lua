@@ -2995,6 +2995,9 @@ Platoon = Class(RNGAIPlatoon) {
         local eng = self:GetPlatoonUnits()[1]
         self:EconAssistBodyRNG()
         WaitTicks(10)
+        if eng.Upgrading or eng.Combat then
+            LOG('eng.Upgrading is True at start of assist function')
+        end
         -- do we assist until the building is finished ?
         if self.PlatoonData.Assist.AssistUntilFinished then
             local guardedUnit
@@ -3014,9 +3017,15 @@ Platoon = Class(RNGAIPlatoon) {
                     break
                 end
                 -- wait 1.5 seconds until we loop again
+                if eng.Upgrading or eng.Combat then
+                    LOG('eng.Upgrading is True inside Assist function for assistuntilfinished')
+                end
                 WaitTicks(30)
             end
         else
+            if eng.Upgrading or eng.Combat then
+                LOG('eng.Upgrading is True inside Assist function for assist time')
+            end
             WaitSeconds(self.PlatoonData.Assist.Time or 60)
         end
         if not PlatoonExists(aiBrain, self) then
@@ -3025,6 +3034,9 @@ Platoon = Class(RNGAIPlatoon) {
         self.AssistPlatoon = nil
         eng.UnitBeingAssist = nil
         self:Stop()
+        if eng.Upgrading then
+            LOG('eng.Upgrading is True')
+        end
         self:PlatoonDisband()
     end,
 
@@ -3096,6 +3108,9 @@ Platoon = Class(RNGAIPlatoon) {
         else
             self.AssistPlatoon = nil
             eng.UnitBeingAssist = nil
+            if eng.Upgrading then
+                LOG('eng.Upgrading is True')
+            end
             -- stop the platoon from endless assisting
             self:PlatoonDisband()
         end
@@ -3110,7 +3125,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.OldPlan = currentPlan
         self:ForkAIThread(self[plan])
     end,
---[[
+
     -- For Debugging
     PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
@@ -3130,7 +3145,7 @@ Platoon = Class(RNGAIPlatoon) {
         if aiBrain:PlatoonExists(self) then
             RNGAIPlatoon.PlatoonDisband(self)
         end
-    end,]]
+    end,
     PlatoonMergeRNG = function(self)
         --LOG('Platoon Merge Started')
         local aiBrain = self:GetBrain()

@@ -108,7 +108,7 @@ function CommanderThreadRNG(cdr, platoon)
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
         and not cdr:IsUnitState("Attacking") and not cdr:IsUnitState("Repairing")
         and not cdr:IsUnitState("Upgrading") and not cdr:IsUnitState("Enhancing") 
-        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior then
+        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior and not cdr.Upgrading and not cdr.Combat then
             -- if we have nothing to build...
             if not cdr.EngineerBuildQueue or table.getn(cdr.EngineerBuildQueue) == 0 then
                 -- check if the we have still a platton assigned to the CDR
@@ -235,7 +235,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
             if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
-                --LOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands "..cdr.PlatoonHandle.BuilderName)
+                LOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
                 
             end
@@ -542,7 +542,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 end
 
 function CDRUnitCompletion(aiBrain, cdr)
-    if cdr.UnitBeingBuiltBehavior then
+    if cdr.UnitBeingBuiltBehavior and not cdr.Combat and not cdr.Upgrading and not cdr.GoingHome then
         if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
             --LOG('* AI-RNG: Attempt unit Completion')
             IssueClearCommands( {cdr} )
@@ -1209,7 +1209,10 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             IssueScript({cdr}, order)
             coroutine.yield(10)
         end
-        --LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        if cdr.Upgrading then
+            LOG('cdr.Upgrading is set to true')
+        end
         local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
         IssueScript({cdr}, order)
     end
@@ -1321,11 +1324,15 @@ PlatoonRetreat = function (platoon)
                             remotePlatoonPos = GetPlatoonPosition(remotePlatoon) or nil
                             remotePlatoonDist = VDist2Sq(PlatoonPosition[1], PlatoonPosition[3], remotePlatoonPos[1], remotePlatoonPos[3])
                             LOG('Current Distance to destination platoon '..remotePlatoonDist)
+                            if not PlatoonExists(aiBrain, remotePlatoon) then
+                                LOG('Remote Platoon No Longer Exist, RTB')
+                                return platoon:ReturnToBaseAIRNG()
+                            end
                             if remotePlatoonDist < 900 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 LOG('We Should be at the other platoons position and about to merge')
                                 platoon:Stop()
-                                local planName = platoon:GetPlan()
+                                local planName = remotePlatoon:GetPlan()
                                 platoon:MergeWithNearbyPlatoonsRNG(planName, 30, 30)
                                 break
                             end

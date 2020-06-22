@@ -162,6 +162,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             self.lastYtarget = closestReclaim[3]
             StartMoveDestination(self, closestReclaim)
         end
+        --[[
         local brokenDistance = closestDistance / 8
         --LOG('* AI-RNG: One 6th of distance is '..brokenDistance)
         local moveWait = 0
@@ -173,7 +174,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             if moveWait == 10 then
                 break
             end
-        end
+        end]]
         --LOG('* AI-RNG: Attempting agressive move to furtherest reclaim')
         -- Clear Commands first
         IssueClearCommands({self})

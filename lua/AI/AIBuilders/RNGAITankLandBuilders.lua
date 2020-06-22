@@ -1122,6 +1122,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Medium',                          -- Template Name.
+        PlatoonAddBehaviors = { 'PlatoonRetreat' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
