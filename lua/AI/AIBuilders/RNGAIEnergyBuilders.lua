@@ -75,6 +75,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'EnergyToMassRatioIncome', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.0 } },
             { EBC, 'GreaterThanEconIncome',  { 0.6, 0.0}}, -- Absolut Base income
             { UCBC, 'HaveUnitRatioVersusCap', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
