@@ -1328,12 +1328,12 @@ PlatoonRetreat = function (platoon)
                                 LOG('Remote Platoon No Longer Exist, RTB')
                                 return platoon:ReturnToBaseAIRNG()
                             end
-                            if remotePlatoonDist < 900 then
+                            if remotePlatoonDist < 2500 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 LOG('We Should be at the other platoons position and about to merge')
                                 platoon:Stop()
                                 local planName = remotePlatoon:GetPlan()
-                                platoon:MergeWithNearbyPlatoonsRNG(planName, 30, 30)
+                                platoon:MergeWithNearbyPlatoonsRNG(planName, 50, 30)
                                 break
                             end
                             while PlatoonExists(aiBrain, platoon) do
