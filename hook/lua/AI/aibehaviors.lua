@@ -1247,7 +1247,7 @@ PlatoonRetreat = function (platoon)
     LOG('Home base location is '..repr(homeBaseLocation))
     while aiBrain:PlatoonExists(platoon) do
         local platoonPos = GetPlatoonPosition(platoon)
-        if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) > 6400 then
+        if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) > 14400 then
             LOG('Retreat loop Behavior')
             local selfthreatAroundplatoon = 0
             local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * (categories.LAND + categories.COMMAND) - categories.SCOUT - categories.ENGINEER, platoonPos, 50, 'Ally')
@@ -1290,14 +1290,16 @@ PlatoonRetreat = function (platoon)
                 local selfPlatoonPos = {}
                 local remotePlatoon
                 for k, v in platoonList do
-                    local remotePlatoonPos = GetPlatoonPosition(v)
-                    selfPlatoonPos = GetPlatoonPosition(platoon)
-                    local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[2], selfPlatoonPos[1], selfPlatoonPos[3])
-                    LOG('Remote Platoon distance is '..remotePlatoonDistance)
-                    if platDistance < remotePlatoonDistance then
-                        remotePlatoonDistance = platDistance
-                        remotePlatoonLocation = remotePlatoonPos
-                        remotePlatoon = v
+                    if table.getn(v) > 3 then
+                        local remotePlatoonPos = GetPlatoonPosition(v)
+                        selfPlatoonPos = GetPlatoonPosition(platoon)
+                        local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[2], selfPlatoonPos[1], selfPlatoonPos[3])
+                        LOG('Remote Platoon distance is '..remotePlatoonDistance)
+                        if platDistance < remotePlatoonDistance then
+                            remotePlatoonDistance = platDistance
+                            remotePlatoonLocation = remotePlatoonPos
+                            remotePlatoon = v
+                        end
                     end
                 end
                 if remotePlatoonDistance < 40000 then
@@ -1331,8 +1333,10 @@ PlatoonRetreat = function (platoon)
                             if remotePlatoonDist < 2500 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 LOG('We Should be at the other platoons position and about to merge')
+
                                 platoon:Stop()
                                 local planName = remotePlatoon:GetPlan()
+                                LOG('Trigger merge with '..table.getn(platoon:GetPlatoonUnits())..' units into a platoon with '..table.getn(remotePlatoon:GetPlatoonUnits())..' Units')
                                 platoon:MergeWithNearbyPlatoonsRNG(planName, 50, 30)
                                 break
                             end
