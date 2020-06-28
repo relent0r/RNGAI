@@ -2271,7 +2271,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if not bValidUnits then
                     continue
                 end
-                LOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
+                --LOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
                 aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
                 bMergedPlatoons = true
             end
@@ -2996,7 +2996,7 @@ Platoon = Class(RNGAIPlatoon) {
         self:EconAssistBodyRNG()
         WaitTicks(10)
         if eng.Upgrading or eng.Combat then
-            LOG('eng.Upgrading is True at start of assist function')
+            --LOG('eng.Upgrading is True at start of assist function')
         end
         -- do we assist until the building is finished ?
         if self.PlatoonData.Assist.AssistUntilFinished then
@@ -3018,13 +3018,13 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 -- wait 1.5 seconds until we loop again
                 if eng.Upgrading or eng.Combat then
-                    LOG('eng.Upgrading is True inside Assist function for assistuntilfinished')
+                    --LOG('eng.Upgrading is True inside Assist function for assistuntilfinished')
                 end
                 WaitTicks(30)
             end
         else
             if eng.Upgrading or eng.Combat then
-                LOG('eng.Upgrading is True inside Assist function for assist time')
+                --LOG('eng.Upgrading is True inside Assist function for assist time')
             end
             WaitSeconds(self.PlatoonData.Assist.Time or 60)
         end
@@ -3035,7 +3035,7 @@ Platoon = Class(RNGAIPlatoon) {
         eng.UnitBeingAssist = nil
         self:Stop()
         if eng.Upgrading then
-            LOG('eng.Upgrading is True')
+            --LOG('eng.Upgrading is True')
         end
         self:PlatoonDisband()
     end,
@@ -3109,7 +3109,7 @@ Platoon = Class(RNGAIPlatoon) {
             self.AssistPlatoon = nil
             eng.UnitBeingAssist = nil
             if eng.Upgrading then
-                LOG('eng.Upgrading is True')
+                --LOG('eng.Upgrading is True')
             end
             -- stop the platoon from endless assisting
             self:PlatoonDisband()

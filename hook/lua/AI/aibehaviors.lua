@@ -235,7 +235,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
             if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
-                LOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
+                --LOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
                 
             end
@@ -400,7 +400,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             if (cdr:GetHealthPercent() < 0.70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
                 continueFighting = false
                 if not cdr.GunUpgradePresent then
-                    LOG('ACU Low health and no gun upgrade, set required')
+                    --LOG('ACU Low health and no gun upgrade, set required')
                     cdr.GunUpgradeRequired = true
                 end
             end
@@ -1209,9 +1209,9 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             IssueScript({cdr}, order)
             coroutine.yield(10)
         end
-        LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        --LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
         if cdr.Upgrading then
-            LOG('cdr.Upgrading is set to true')
+            --LOG('cdr.Upgrading is set to true')
         end
         local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
         IssueScript({cdr}, order)
@@ -1243,12 +1243,12 @@ PlatoonRetreat = function (platoon)
     local aiBrain = platoon:GetBrain()
     local platoonThreatHigh = false
     local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
-    LOG('Start Retreat Behavior')
-    LOG('Home base location is '..repr(homeBaseLocation))
+    --LOG('Start Retreat Behavior')
+    --LOG('Home base location is '..repr(homeBaseLocation))
     while aiBrain:PlatoonExists(platoon) do
         local platoonPos = GetPlatoonPosition(platoon)
         if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) > 14400 then
-            LOG('Retreat loop Behavior')
+            --LOG('Retreat loop Behavior')
             local selfthreatAroundplatoon = 0
             local positionUnits = GetUnitsAroundPoint(aiBrain, categories.MOBILE * (categories.LAND + categories.COMMAND) - categories.SCOUT - categories.ENGINEER, platoonPos, 50, 'Ally')
             local bp
@@ -1260,7 +1260,7 @@ PlatoonRetreat = function (platoon)
                     selfthreatAroundplatoon = selfthreatAroundplatoon + bp.SurfaceThreatLevel
                 end
             end
-            LOG('Platoon Threat is '..selfthreatAroundplatoon)
+            --LOG('Platoon Threat is '..selfthreatAroundplatoon)
             WaitTicks(3)
             local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.COMMAND) - categories.SCOUT - categories.ENGINEER), platoonPos, 50, 'Enemy')
             local enemythreatAroundplatoon = 0
@@ -1280,10 +1280,10 @@ PlatoonRetreat = function (platoon)
                     end
                 end
             end
-            LOG('Enemy Platoon Threat is '..enemythreatAroundplatoon)
+            --LOG('Enemy Platoon Threat is '..enemythreatAroundplatoon)
             WaitTicks(3)
             if platoonThreatHigh then
-                LOG('PlatoonThreatHigh is true')
+                --LOG('PlatoonThreatHigh is true')
                 local platoonList = aiBrain:GetPlatoonsList()
                 local remotePlatoonDistance = 100000
                 local remotePlatoonLocation = {}
@@ -1294,7 +1294,7 @@ PlatoonRetreat = function (platoon)
                         local remotePlatoonPos = GetPlatoonPosition(v)
                         selfPlatoonPos = GetPlatoonPosition(platoon)
                         local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[2], selfPlatoonPos[1], selfPlatoonPos[3])
-                        LOG('Remote Platoon distance is '..remotePlatoonDistance)
+                        --LOG('Remote Platoon distance is '..remotePlatoonDistance)
                         if platDistance < remotePlatoonDistance then
                             remotePlatoonDistance = platDistance
                             remotePlatoonLocation = remotePlatoonPos
@@ -1303,8 +1303,8 @@ PlatoonRetreat = function (platoon)
                     end
                 end
                 if remotePlatoonDistance < 40000 then
-                    LOG('Best Retreat Platoon Position '..repr(remotePlatoonLocation))
-                    LOG('Best Retreat Platoon Distance '..remotePlatoonDistance)
+                    --LOG('Best Retreat Platoon Position '..repr(remotePlatoonLocation))
+                    --LOG('Best Retreat Platoon Distance '..remotePlatoonDistance)
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, platoon.MovementLayer, selfPlatoonPos, remotePlatoonLocation, 100 , 200)
                     if path then
                         local position = GetPlatoonPosition(platoon)
@@ -1325,18 +1325,18 @@ PlatoonRetreat = function (platoon)
                             PlatoonPosition = GetPlatoonPosition(platoon) or nil
                             remotePlatoonPos = GetPlatoonPosition(remotePlatoon) or nil
                             remotePlatoonDist = VDist2Sq(PlatoonPosition[1], PlatoonPosition[3], remotePlatoonPos[1], remotePlatoonPos[3])
-                            LOG('Current Distance to destination platoon '..remotePlatoonDist)
+                            --LOG('Current Distance to destination platoon '..remotePlatoonDist)
                             if not PlatoonExists(aiBrain, remotePlatoon) then
-                                LOG('Remote Platoon No Longer Exist, RTB')
+                                --LOG('Remote Platoon No Longer Exist, RTB')
                                 return platoon:ReturnToBaseAIRNG()
                             end
                             if remotePlatoonDist < 2500 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                LOG('We Should be at the other platoons position and about to merge')
+                                --LOG('We Should be at the other platoons position and about to merge')
 
                                 platoon:Stop()
                                 local planName = remotePlatoon:GetPlan()
-                                LOG('Trigger merge with '..table.getn(platoon:GetPlatoonUnits())..' units into a platoon with '..table.getn(remotePlatoon:GetPlatoonUnits())..' Units')
+                                --LOG('Trigger merge with '..table.getn(platoon:GetPlatoonUnits())..' units into a platoon with '..table.getn(remotePlatoon:GetPlatoonUnits())..' Units')
                                 platoon:MergeWithNearbyPlatoonsRNG(planName, 50, 30)
                                 break
                             end
@@ -1358,7 +1358,7 @@ PlatoonRetreat = function (platoon)
                                 else
                                     Stuck = Stuck + 1
                                     if Stuck > 15 then
-                                        LOG('* AI-RNG: * PlatoonRetreat: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                        --LOG('* AI-RNG: * PlatoonRetreat: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
                                         platoon:Stop()
                                         break
                                     end
@@ -1367,11 +1367,11 @@ PlatoonRetreat = function (platoon)
                             end
                         end
                     else
-                        LOG('No Path continue')
+                        --LOG('No Path continue')
                         continue
                     end
                 else
-                    LOG('No Platoons within range, return to base')
+                    --LOG('No Platoons within range, return to base')
                     return platoon:ReturnToBaseAIRNG()
                 end
             end
