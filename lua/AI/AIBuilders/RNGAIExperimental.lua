@@ -177,13 +177,14 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Novax',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',

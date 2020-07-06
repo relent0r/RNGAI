@@ -1038,6 +1038,8 @@ Platoon = Class(RNGAIPlatoon) {
         local data = self.PlatoonData
         local categoryList = {}
         local atkPri = {}
+        local basePosition = false
+
         if data.TargetSearchPriorities then
             --LOG('TargetSearch present for '..self.BuilderName)
             for k,v in data.TargetSearchPriorities do
@@ -3126,7 +3128,7 @@ Platoon = Class(RNGAIPlatoon) {
         self:ForkAIThread(self[plan])
     end,
 
-    -- For Debugging
+    --[[-- For Debugging
     PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
         if not aiBrain.RNG then
@@ -3146,6 +3148,8 @@ Platoon = Class(RNGAIPlatoon) {
             RNGAIPlatoon.PlatoonDisband(self)
         end
     end,
+]]
+
     PlatoonMergeRNG = function(self)
         --LOG('Platoon Merge Started')
         local aiBrain = self:GetBrain()
