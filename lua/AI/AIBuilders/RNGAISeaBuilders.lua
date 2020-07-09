@@ -93,7 +93,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T1',
         PlatoonTemplate = 'RNGAIT1SeaSubQueue',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
@@ -210,7 +210,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T2',
         PlatoonTemplate = 'RNGAIT2SeaSubQueue',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
@@ -235,7 +235,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T3',
         PlatoonTemplate = 'RNGAIT3SeaSubQueue',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},

@@ -426,7 +426,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Attack Heavy T3',
         PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = LandAttackHeavyMode,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -457,7 +457,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Attack Heavy T3 Large',
         PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = LandAttackHeavyMode,
         BuilderType = 'Land',
         BuilderConditions = {

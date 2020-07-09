@@ -22,7 +22,7 @@ local AirDefenseMode = function(self, aiBrain, manager)
     else
         --LOG('Disable Air Intie Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 10
+        return 0
     end
 end
 
@@ -36,7 +36,7 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     else
         --LOG('Disable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = false
-        return 10
+        return 0
     end
 end
 
@@ -70,7 +70,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat',
         PlatoonTemplate = 'RNGAIFighterGroup',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
@@ -109,7 +109,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Attack Queue T1',
         PlatoonTemplate = 'RNGAIT1AirQueue',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
@@ -126,7 +126,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Attack Queue T2',
         PlatoonTemplate = 'RNGAIT2AirQueue',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.6}},
@@ -138,7 +138,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
         PlatoonTemplate = 'RNGAIFighterGroupT2',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
@@ -239,7 +239,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Air Attack Queue',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
-        Priority = 10,
+        Priority = 0,
         PriorityFunction = AirAttackMode,
         BuilderType = 'Air',
         BuilderConditions = {

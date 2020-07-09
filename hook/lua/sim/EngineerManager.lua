@@ -43,6 +43,13 @@ EngineerManager = Class(RNGEngineerManager) {
         self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
+    ManagerLoopBody = function(self,builder,bType)
+        if not self.Brain.RNG then
+            return RNGEngineerManager.ManagerLoopBody(self,builder,bType)
+        end
+        BuilderManager.ManagerLoopBody(self,builder,bType)
+    end,
+
     AssignEngineerTask = function(self, unit)
         if not self.Brain.RNG then
             return RNGEngineerManager.AssignEngineerTask(self, unit)
