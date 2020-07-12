@@ -142,7 +142,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local overCharge = {}
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
-    local acuThreatLimit = 20
+    local acuThreatLimit = 23
     
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
@@ -162,25 +162,25 @@ function CDROverChargeRNG(aiBrain, cdr)
         if cdr:HasEnhancement('HeavyAntiMatterCannon') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 34
+            acuThreatLimit = 35
         end
     elseif factionIndex == 2 then
         if cdr:HasEnhancement('CrysalisBeam') then
             cdr.GunUpgradePresent = true
             weapon.Range = 35 - 3
-            acuThreatLimit = 34
+            acuThreatLimit = 35
         end
     elseif factionIndex == 3 then
         if cdr:HasEnhancement('CoolingUpgrade') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 34
+            acuThreatLimit = 35
         end
     elseif factionIndex == 4 then
         if cdr:HasEnhancement('RateOfFire') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 34
+            acuThreatLimit = 35
         end
     end
 
@@ -1262,7 +1262,7 @@ PlatoonRetreat = function (platoon)
             end
             --LOG('Platoon Threat is '..selfthreatAroundplatoon)
             WaitTicks(3)
-            local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.COMMAND) - categories.SCOUT - categories.ENGINEER), platoonPos, 50, 'Enemy')
+            local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.COMMAND) - categories.SCOUT - categories.ENGINEER), platoonPos, 60, 'Enemy')
             local enemythreatAroundplatoon = 0
             for k,v in enemyUnits do
                 if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
