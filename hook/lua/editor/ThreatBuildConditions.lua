@@ -60,3 +60,13 @@ function EnemyThreatGreaterThanAI(aiBrain, threatType)
     end
     return false
 end
+
+function EnemyACUCloseToBase(aiBrain)
+
+    if aiBrain.EnemyIntel.ACUEnemyClose then
+        return true
+    else
+        return false
+    end
+    return false
+end

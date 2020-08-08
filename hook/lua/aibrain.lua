@@ -160,6 +160,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         -- Intel Data
         self.EnemyIntel = {}
+        self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
@@ -777,6 +778,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local highStrength = strengthTable[myIndex].Strength
         local startX, startZ = self:GetArmyStartPos()
         local ACUDist = nil
+        self.EnemyIntel.ACUEnemyClose = false
         
         --LOG('* AI-RNG: My Own Strength is'..highStrength)
         for _, v in strengthTable do
@@ -789,6 +791,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if ACUDist < 180 then
                         --LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
+                        if ACUDist < 135 then
+                            self.EnemyIntel.ACUEnemyClose = true
+                            --LOG('Enemy ACU is within 135 of base')
+                        end
                         return returnEnemy
                     elseif v.Threat < 200 and ACUDist < 240 then
                         --LOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)

@@ -9,6 +9,7 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
 
 BuilderGroup {
@@ -129,6 +130,33 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T2AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer ACUClose Artillery',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 800,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { TBC, 'EnemyACUCloseToBase', {}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, 'DEFENSE TECH2 ARTILLERY' } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH2 ARTILLERY'}},
+        },
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = false,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
+                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 35,
+                BuildStructures = {
+                    'T2Artillery',
                 },
                 Location = 'LocationType',
             }

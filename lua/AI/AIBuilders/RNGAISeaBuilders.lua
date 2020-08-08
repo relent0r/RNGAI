@@ -14,7 +14,7 @@ local SeaDefenseMode = function(self, aiBrain, manager)
     else
         --LOG('Disable Sub Pool Builder')
         --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
-        return 10
+        return 0
     end
 end
 

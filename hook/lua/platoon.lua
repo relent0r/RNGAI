@@ -723,8 +723,13 @@ Platoon = Class(RNGAIPlatoon) {
         end
         while PlatoonExists(aiBrain, self) do
             
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.LAND - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
-            if target then
+            if aiBrain.EnemyIntel.ACUEnemyClose then
+                --LOG('HuntAI Enemy ACU Close, setting attack priority')
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.COMMAND)
+            else
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.LAND - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
+            end
+                if target then
                 local threatAroundplatoon = 0
                 local targetPosition = target:GetPosition()
                 local platoonPos = GetPlatoonPosition(self)
@@ -1039,22 +1044,27 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         local basePosition = false
-
-        if data.TargetSearchPriorities then
-            --LOG('TargetSearch present for '..self.BuilderName)
-            for k,v in data.TargetSearchPriorities do
-                table.insert(atkPri, v)
-            end
+        
+        if aiBrain.EnemyIntel.ACUEnemyClose then
+           --('Enemy ACU STRIKEFORCE Close, setting attack priority')
+            table.insert(atkPri, 'COMMAND')
         else
-            if data.PrioritizedCategories then
-                for k,v in data.PrioritizedCategories do
+            if data.TargetSearchPriorities then
+                --LOG('TargetSearch present for '..self.BuilderName)
+                for k,v in data.TargetSearchPriorities do
                     table.insert(atkPri, v)
                 end
+            else
+                if data.PrioritizedCategories then
+                    for k,v in data.PrioritizedCategories do
+                        table.insert(atkPri, v)
+                    end
+                end
             end
-        end
-        if data.PrioritizedCategories then
-            for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, ParseEntityCategory(v))
+            if data.PrioritizedCategories then
+                for k,v in data.PrioritizedCategories do
+                    table.insert(categoryList, ParseEntityCategory(v))
+                end
             end
         end
         table.insert(atkPri, 'ALLUNITS')
