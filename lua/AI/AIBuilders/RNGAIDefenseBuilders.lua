@@ -144,14 +144,14 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { TBC, 'EnemyACUCloseToBase', {}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, 'DEFENSE TECH2 ARTILLERY' } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH2 ARTILLERY'}},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'TECH2 ARTILLERY' } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'TECH2 ARTILLERY'}},
         },
         BuilderData = {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.STRUCTURE * categories.FACTORY),
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 35,

@@ -129,7 +129,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.6}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
@@ -161,14 +161,14 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory T2 FighterBomber',
+        BuilderName = 'RNGAI Factory T2 FighterBomber ACUClose',
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 800,
         BuilderType = 'Air',
         BuilderConditions = { 
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
+            { TBC, 'EnemyACUCloseToBase', {}},
+            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 8, categories.AIR * categories.ANTIAIR } },
         },
     },
     Builder {

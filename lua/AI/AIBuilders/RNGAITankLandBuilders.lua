@@ -11,20 +11,6 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
-function LandAttackCondition(aiBrain, locationType, targetNumber)
-    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-
-    local position = engineerManager.Location
-    local radius = engineerManager:GetLocationRadius()
-    
-    local poolThreat = pool:GetPlatoonThreat( 'Surface', categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, radius )
-    if poolThreat > targetNumber then
-        return true
-    end
-    return false
-end
-
 local LandAttackHeavyMode = function(self, aiBrain, builderManager)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
@@ -71,7 +57,7 @@ local LandNoEngMode = function(self, aiBrain, builderManager)
         --LOG('Setting T1 Queue to NoEng')
         return 750
     else
-        return 10
+        return 0
     end
 end
 
@@ -568,7 +554,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
-            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
         BuilderData = {
             NeverGuardBases = true,
@@ -590,7 +575,6 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
-            --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },
     Builder {
@@ -949,7 +933,6 @@ BuilderGroup {
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
-            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
         BuilderData = {
             NeverGuardBases = true,
@@ -1005,7 +988,6 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER - categories.EXPERIMENTAL } },
-            --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },
     Builder {

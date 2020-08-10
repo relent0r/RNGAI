@@ -616,7 +616,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER - categories.STATIONASSISTPOD } },
-                { MIBC, 'DamagedStructuresInAreaRNG', { 'LocationType', }},
+            { MIBC, 'DamagedStructuresInAreaRNG', { 'LocationType', }},
             },
         BuilderData = {
             LocationType = 'LocationType',
