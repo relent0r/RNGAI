@@ -75,6 +75,14 @@ local LandNoEngMode = function(self, aiBrain, builderManager)
     end
 end
 
+local ACUClosePriority = function(self, aiBrain)
+    if aiBrain.EnemyIntel.ACUEnemyClose then
+        return 800
+    else
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
@@ -765,7 +773,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {     
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER} },  	
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
             MarkerType = 'Start Location',            
@@ -784,7 +792,34 @@ BuilderGroup {
             UseFormation = 'AttackFormation',
             ThreatSupport = 5,
         },    
-    }, 
+    },
+    Builder {
+        BuilderName = 'RNGAI Start Location Attack Transport',
+        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        PriorityFunction = ACUClosePriority,
+        Priority = 0,
+        InstanceCount = 2,
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },
+            },
+        BuilderData = {
+            MarkerType = 'Start Location',            
+            MoveFirst = 'Threat',
+            MoveNext = 'Threat',
+            IgnoreFriendlyBase = true,
+            --ThreatType = '',
+            --SelfThreat = '',
+            --FindHighestThreat ='',
+            --ThreatThreshold = '',
+            AvoidBases = true,
+            AvoidBasesRadius = 30,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            GuardTimer = 10,              
+            UseFormation = 'AttackFormation',
+        },    
+    },  
     Builder {
         BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
