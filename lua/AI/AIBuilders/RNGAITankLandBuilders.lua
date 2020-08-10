@@ -11,20 +11,6 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
-function LandAttackCondition(aiBrain, locationType, targetNumber)
-    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-
-    local position = engineerManager.Location
-    local radius = engineerManager:GetLocationRadius()
-    
-    local poolThreat = pool:GetPlatoonThreat( 'Surface', categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, position, radius )
-    if poolThreat > targetNumber then
-        return true
-    end
-    return false
-end
-
 local LandAttackHeavyMode = function(self, aiBrain, builderManager)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
@@ -71,7 +57,15 @@ local LandNoEngMode = function(self, aiBrain, builderManager)
         --LOG('Setting T1 Queue to NoEng')
         return 750
     else
-        return 10
+        return 0
+    end
+end
+
+local ACUClosePriority = function(self, aiBrain)
+    if aiBrain.EnemyIntel.ACUEnemyClose then
+        return 800
+    else
+        return 0
     end
 end
 
@@ -474,6 +468,19 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    Builder {
+        BuilderName = 'RNGAI T3 Mobile Arty ACUClose',
+        PlatoonTemplate = 'T3LandArtillery',
+        PriorityFunction = ACUClosePriority,
+        Priority = 0,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY LAND TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
 }
 
 BuilderGroup {
@@ -576,7 +583,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
-            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
         BuilderData = {
             NeverGuardBases = true,
@@ -598,7 +604,6 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
-            --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },
     Builder {
@@ -821,6 +826,33 @@ BuilderGroup {
         },    
     },  
     Builder {
+        BuilderName = 'RNGAI Start Location Attack Transport',
+        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        PriorityFunction = ACUClosePriority,
+        Priority = 0,
+        InstanceCount = 2,
+        BuilderType = 'Any',
+        BuilderConditions = {     
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },
+            },
+        BuilderData = {
+            MarkerType = 'Start Location',            
+            MoveFirst = 'Threat',
+            MoveNext = 'Threat',
+            IgnoreFriendlyBase = true,
+            --ThreatType = '',
+            --SelfThreat = '',
+            --FindHighestThreat ='',
+            --ThreatThreshold = '',
+            AvoidBases = true,
+            AvoidBasesRadius = 30,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            GuardTimer = 10,              
+            UseFormation = 'AttackFormation',
+        },    
+    },
+    Builder {
         BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
@@ -984,7 +1016,6 @@ BuilderGroup {
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, 'FACTORY TECH2, FACTORY TECH3' }}, -- stop building after we decent reach tech2 capability
-            --{ LandAttackCondition, { 'LocationType', 10 } }, -- causing errors with expansions
         },
         BuilderData = {
             NeverGuardBases = true,
@@ -1040,7 +1071,6 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER - categories.EXPERIMENTAL } },
-            --{ LandAttackCondition, { 'LocationType', 50 } }, -- causing errors with expansions
         },
     },
     Builder {
