@@ -69,14 +69,6 @@ local ACUClosePriority = function(self, aiBrain)
     end
 end
 
-local ACUClosePriority = function(self, aiBrain)
-    if aiBrain.EnemyIntel.ACUEnemyClose then
-        return 800
-    else
-        return 0
-    end
-end
-
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
