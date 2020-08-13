@@ -74,7 +74,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.2, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
         },
@@ -85,9 +85,10 @@ BuilderGroup {
         PlatoonTemplate = 'T2RadarUpgrade',
         Priority = 700,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.2, 0.90}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.90}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
         BuilderType = 'Any',
