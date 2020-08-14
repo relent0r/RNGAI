@@ -99,6 +99,10 @@ BuilderGroup {
         BuilderData = {
             DesiresAssist = true,
             NumAssistees = 5,
+            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+            AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+            maxUnits = 1,
+            maxRadius = 5,
             Construction = {
                 BuildClose = true,
                 BuildStructures = {
@@ -126,6 +130,10 @@ BuilderGroup {
         BuilderData = {
             DesiresAssist = true,
             NumAssistees = 5,
+            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+            AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+            maxUnits = 1,
+            maxRadius = 5,
             Construction = {
                 BuildClose = true,
                 BuildStructures = {
@@ -151,7 +159,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.STRUCTURE * categories.FACTORY),
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 35,
@@ -180,6 +188,10 @@ BuilderGroup {
         BuilderData = {
             DesiresAssist = true,
             NumAssistees = 5,
+            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+            AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+            maxUnits = 1,
+            maxRadius = 5,
             Construction = {
                 BuildClose = true,
                 BuildStructures = {
@@ -266,6 +278,10 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2),
+                AvoidCategory = categories.STRUCTURE * categories.FACTORY,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
@@ -289,6 +305,10 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2),
+                AvoidCategory = categories.STRUCTURE * categories.FACTORY,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
@@ -312,6 +332,10 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2),
+                AvoidCategory = categories.STRUCTURE * categories.FACTORY,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
@@ -515,7 +539,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -546,7 +570,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -574,14 +598,14 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer',
+        BuilderName = 'RNGAI T2 Defence Engineer - Perimeter',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 750,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH2' } },

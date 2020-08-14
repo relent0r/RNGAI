@@ -807,7 +807,7 @@ Platoon = Class(RNGAIPlatoon) {
                     self:MoveToLocation(position, false, 'Attack')
                 end
             end
-            WaitTicks(170)
+            WaitTicks(120)
             if target and not target.Dead then
                 if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), target:GetPosition(), 'none') then
                     self:MoveToLocation(target:GetPosition(), false)

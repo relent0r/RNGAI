@@ -176,7 +176,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 500,
+        Priority = 700,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         BuilderConditions = {
@@ -184,7 +184,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.90 } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
@@ -272,7 +272,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = 6000,
-            PrioritizedCategories = { 'STRUCTURE STRATEGIC EXPERIMENTAL', 'EXPERIMENTAL ARTILLERY OVERLAYINDIRECTFIRE', 'STRUCTURE STRATEGIC TECH3', 'STRUCTURE NUKE TECH3', 'EXPERIMENTAL ORBITALSYSTEM', 'EXPERIMENTAL ENERGYPRODUCTION STRUCTURE', 'STRUCTURE ANTIMISSILE TECH3', 'TECH3 MASSFABRICATION', 'TECH3 ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE DEFENSE TECH3 ANTIAIR', 'COMMAND', 'STRUCTURE DEFENSE TECH3 DIRECTFIRE', 'STRUCTURE DEFENSE TECH3 SHIELD', 'STRUCTURE DEFENSE TECH2', 'STRUCTURE' },
+            PrioritizedCategories = { 'STRUCTURE STRATEGIC EXPERIMENTAL', 'EXPERIMENTAL ARTILLERY OVERLAYINDIRECTFIRE', 'STRUCTURE STRATEGIC TECH3', 'STRUCTURE NUKE TECH3', 'EXPERIMENTAL ORBITALSYSTEM', 'EXPERIMENTAL ENERGYPRODUCTION STRUCTURE', 'STRUCTURE ANTIMISSILE TECH3', 'TECH3 MASSFABRICATION', 'TECH3 ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE DEFENSE TECH3 ANTIAIR', 'COMMAND', 'STRUCTURE DEFENSE TECH3 DIRECTFIRE', 'STRUCTURE DEFENSE TECH3 SHIELD', 'STRUCTURE DEFENSE TECH2', 'MASSEXTRACTION STRUCTURE TECH3', 'MASSEXTRACTION STRUCTURE TECH2', 'MASSEXTRACTION STRUCTURE', 'STRUCTURE' },
         },
     },
 }

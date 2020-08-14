@@ -95,7 +95,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
@@ -110,7 +110,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.80}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
@@ -125,7 +125,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},
@@ -140,7 +140,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 2},
         InstanceCount = 5,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 2, categories.STRUCTURE * categories.SHIELD }},

@@ -112,7 +112,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH2, FACTORY AIR TECH3' }},
         },
@@ -129,7 +129,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, 'FACTORY AIR TECH3' }},
         },
@@ -155,7 +155,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.3, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.2, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
