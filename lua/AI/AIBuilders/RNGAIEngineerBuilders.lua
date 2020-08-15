@@ -445,6 +445,54 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T12 Engineer Unfinished Strategic',
+        PlatoonTemplate = 'T12EngineerAssistRNG',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.STRATEGIC }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = categories.STRUCTURE,
+                AssistRange = 100,
+                AssistClosestUnit = true,
+                BeingBuiltCategories = {'STRUCTURE STRATEGIC'},
+                Time = 120,
+            },
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Unfinished Novax',
+        PlatoonTemplate = 'T12EngineerAssistRNG',
+        Priority = 500,
+        InstanceCount = 8,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.STATIONASSISTPOD } },
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.ORBITALSYSTEM }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = categories.STRUCTURE,
+                AssistRange = 100,
+                AssistClosestUnit = true,
+                BeingBuiltCategories = {'EXPERIMENTAL ORBITALSYSTEM'},
+                Time = 120,
+            },
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T12EngineerAssistRNG',
         Priority = 550,

@@ -816,7 +816,7 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
             { UCBC, 'UnitsGreaterAtEnemy', { 1 , categories.STRUCTURE * categories.NUKE * categories.SILO } },

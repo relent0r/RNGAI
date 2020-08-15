@@ -12,7 +12,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.90 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.NUKE * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3 } },
