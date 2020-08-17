@@ -311,6 +311,14 @@ PlatoonTemplate {
     },
 }
 
+PlatoonTemplate {
+    Name = 'T4ExperimentalLandRNG',
+    Plan = 'ExperimentalAIHubRNG',
+    GlobalSquads = {
+        { categories.EXPERIMENTAL * categories.LAND * categories.MOBILE - categories.INSIGNIFICANTUNIT, 1, 1, 'attack', 'none' }
+    },
+}
+
 PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
     FactionSquads = {
         UEF = {

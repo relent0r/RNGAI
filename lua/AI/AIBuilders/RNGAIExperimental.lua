@@ -208,7 +208,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T4 Exp Land',
-        PlatoonTemplate = 'T4ExperimentalLand',
+        PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
         FormRadius = 10000,
         InstanceCount = 50,

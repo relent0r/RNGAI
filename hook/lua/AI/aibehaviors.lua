@@ -1438,3 +1438,148 @@ TargetControlThread = function (platoon)
     end
 end
 
+function FatBoyBehaviorRNG(self)
+    local aiBrain = self:GetBrain()
+    AssignExperimentalPriorities(self)
+
+    local unit = GetExperimentalUnit(self)
+    local targetUnit = false
+    local lastBase = false
+
+    local mainWeapon = unit:GetWeapon(1)
+    unit.MaxWeaponRange = mainWeapon:GetBlueprint().MaxRadius
+    unit.smartPos = {0,0,0}
+    unit.Platoons = unit.Platoons or {}
+    if mainWeapon.BallisticArc == 'RULEUBA_LowArc' then
+        unit.WeaponArc = 'low'
+    elseif mainWeapon.BallisticArc == 'RULEUBA_HighArc' then
+        unit.WeaponArc = 'high'
+    else
+        unit.WeaponArc = 'none'
+    end
+
+    -- Find target loop
+    while unit and not unit.Dead do
+        targetUnit, lastBase = FindExperimentalTarget(self)
+        if targetUnit then
+            IssueClearCommands({unit})
+
+            local useMove = InWaterCheck(self)
+            local targetPos = targetUnit:GetPosition()
+            if useMove then
+                IssueMove({unit}, targetPos)
+            else
+                IssueAttack({unit}, targetUnit)
+            end
+
+            -- Wait to get in range
+            local pos = unit:GetPosition()
+            while VDist2(pos[1], pos[3], lastBase.Position[1], lastBase.Position[3]) > unit.MaxWeaponRange + 10
+                and not unit.Dead do
+                    WaitTicks(50)
+                    --unit:SetCustomName('Moving to target')
+                    local inWater = InWaterCheck(self)
+                    if not inWater then
+                        --LOG('In water is false')
+                        local expPosition = unit:GetPosition()
+                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, expPosition, unit.MaxWeaponRange, 'Enemy')
+                        if enemyUnitCount > 0 then
+                            target = self:FindClosestUnit('attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                            while unit and not unit.Dead do
+                                if target and not target.Dead then
+                                    IssueClearCommands({unit})
+                                    targetPosition = target:GetPosition()
+                                    if unit.Dead then continue end
+                                    if not unit.MaxWeaponRange then
+                                        continue
+                                    end
+                                    unitPos = unit:GetPosition()
+                                    alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                                    x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange)
+                                    y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange)
+                                    smartPos = { x, GetTerrainHeight( x, y), y }
+                                    -- check if the move position is new or target has moved
+                                    if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                                        -- clear move commands if we have queued more than 4
+                                        if table.getn(unit:GetCommandQueue()) > 2 then
+                                            IssueClearCommands({unit})
+                                            coroutine.yield(3)
+                                        end
+                                        -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                                        IssueMove({unit}, smartPos )
+                                        if target.Dead then break end
+                                        IssueAttack({unit}, target)
+                                        --unit:SetCustomName('Fight micro moving')
+                                        unit.smartPos = smartPos
+                                        unit.TargetPos = targetPosition
+                                    -- in case we don't move, check if we can fire at the target
+                                    else
+                                        local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
+                                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                                            --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                            IssueMove({unit}, targetPosition )
+                                        else
+                                            --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                        end
+                                    end
+                                else
+                                    break
+                                end
+                            WaitTicks(20)
+                            end
+                        else
+                            --LOG('In water is false')
+                            IssueClearCommands({unit})
+                            IssueMove({unit}, {lastBase.Position[1], 0 ,lastBase.Position[3]})
+                            --LOG('Taret Position is'..repr(targetPos))
+                            WaitTicks(40)
+                        end
+                    else
+                        --LOG('In water is true')
+                        IssueClearCommands({unit})
+                        IssueMove({unit}, {lastBase.Position[1], 0 ,lastBase.Position[3]})
+                        --LOG('Taret Position is'..repr(targetPos))
+                        WaitTicks(40)
+                    end
+            end
+
+            IssueClearCommands({unit})
+
+            -- Send our homies to wreck this base
+            local goodList = {}
+            for _, platoon in unit.Platoons do
+                local platoonUnits = false
+
+                if aiBrain:PlatoonExists(platoon) then
+                    platoonUnits = platoon:GetPlatoonUnits()
+                end
+
+                if platoonUnits and table.getn(platoonUnits) > 0 then
+                    table.insert(goodList, platoon)
+                end
+            end
+
+            unit.Platoons = goodList
+            for _, platoon in goodList do
+                platoon:ForkAIThread(FatboyChildBehavior, unit, lastBase)
+            end
+
+            -- Setup shop outside this guy's base
+            while not unit.Dead and WreckBase(self, lastBase) do
+                -- Build stuff if we haven't hit the unit cap.
+                FatBoyBuildCheck(self)
+
+                -- Once we have 20 units, form them into a platoon and send them to attack the base we're attacking!
+                if unit.NewPlatoon and table.getn(unit.NewPlatoon:GetPlatoonUnits()) >= 8 then
+                    unit.NewPlatoon:ForkAIThread(FatboyChildBehavior, unit, lastBase)
+
+                    table.insert(unit.Platoons, unit.NewPlatoon)
+                    unit.NewPlatoon = nil
+                end
+                WaitSeconds(1)
+            end
+        end
+        WaitSeconds(1)
+    end
+end
+

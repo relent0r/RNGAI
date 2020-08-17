@@ -29,7 +29,7 @@ end
 local AirAttackMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-    if myAirThreat / 2 > enemyAirThreat then
+    if myAirThreat / 1.5 > enemyAirThreat then
         --LOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
         return 880

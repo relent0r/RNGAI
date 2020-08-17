@@ -705,7 +705,7 @@ Platoon = Class(RNGAIPlatoon) {
         local target
         local blip
         local platoonUnits = GetPlatoonUnits(self)
-        local enemyRadius = 30
+        local enemyRadius = 40
         local MaxPlatoonWeaponRange
         AIAttackUtils.GetMostRestrictiveLayer(self)
 
@@ -751,7 +751,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('HuntAI Enemy ACU Close, setting attack priority')
                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.COMMAND)
             else
-                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.LAND - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
             end
             if target then
                 local threatAroundplatoon = 0
@@ -776,7 +776,6 @@ Platoon = Class(RNGAIPlatoon) {
                         continue
                     end
                 end
-                if target.Dead or target:BeenDestroyed() then continue end
                 local attackUnits =  self:GetSquadUnits('Attack')
                 local attackUnitCount = table.getn(attackUnits)
                 local scoutUnits = self:GetSquadUnits('Scout')
@@ -823,7 +822,6 @@ Platoon = Class(RNGAIPlatoon) {
                         IssueGuard(guardUnits, attackUnits[guardedUnit])
                     end
                 end
-                blip = target:GetBlip(armyIndex)
                 if attackUnits then
                     self:Stop('Attack')
                     self:AggressiveMoveToLocation(table.copy(target:GetPosition()), 'Attack')
@@ -834,6 +832,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if not SquadPosition then break end
                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                 if enemyUnitCount > 0 then
+                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                     attackSquad = self:GetSquadUnits('Attack')
                     IssueClearCommands(attackSquad)
                     while PlatoonExists(aiBrain, self) do
@@ -844,16 +843,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 microCap = microCap - 1
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
-        --                      local FocussedUnit = unit:GetFocusUnit()
-        --                      if FocussedUnit and FocussedUnit ~= TargetInPlatoonRange then
-        --                          WARN('focussed unit is not TargetInPlatoonRange!')
-        --                      end
                                 if not unit.MaxWeaponRange then
-        --                              WARN('MaxWeaponRange unit ['..repr(unit.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-        --                              LOG('MaxWeaponRange Units inside this platoon:  - self.UsingTransport: '..repr( self.UsingTransport ))
-        --                          for k,v in self:GetPlatoonUnits() or {} do
-        --                              LOG('MaxWeaponRange ['..repr(v.UnitId)..'] - '..repr( v:GetBlueprint().Description ))
-        --                          end
                                     continue
                                 end
                                 unitPos = unit:GetPosition()
@@ -872,17 +862,17 @@ Platoon = Class(RNGAIPlatoon) {
                                     IssueMove({unit}, smartPos )
                                     if target.Dead then break end
                                     IssueAttack({unit}, target)
-                                    unit:SetCustomName('Fight micro moving')
+                                    --unit:SetCustomName('Fight micro moving')
                                     unit.smartPos = smartPos
                                     unit.TargetPos = targetPosition
                                 -- in case we don't move, check if we can fire at the target
                                 else
                                     local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
                                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
-                                        unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                        --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                                         IssueMove({unit}, targetPosition )
                                     else
-                                        unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                        --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                     end
                                 end
                             end
@@ -892,6 +882,7 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(10)
                     end
                 end
+                if target.Dead or target:BeenDestroyed() then continue end
             end
         WaitTicks(60)
         end
@@ -907,7 +898,7 @@ Platoon = Class(RNGAIPlatoon) {
         local blip
         local platoonUnits = GetPlatoonUnits(self)
         local maxPathDistance = 250
-        local enemyRadius = 30
+        local enemyRadius = 40
         local bAggroMove = self.PlatoonData.AggressiveMove
         local MaxPlatoonWeaponRange
         
@@ -950,7 +941,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         while PlatoonExists(aiBrain, self) do
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
             if target then
                 local targetPosition = target:GetPosition()
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
@@ -982,7 +973,6 @@ Platoon = Class(RNGAIPlatoon) {
                             continue
                         end
                     end
-                    if target.Dead or target:BeenDestroyed() then continue end
                     local attackUnits =  self:GetSquadUnits('Attack')
                     local attackUnitCount = table.getn(attackUnits)
                     local scoutUnits = self:GetSquadUnits('Scout')
@@ -1015,7 +1005,7 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, false)
                     end
-
+                    
                     if not usedTransports then
                         for i=1, table.getn(path) do
                             local PlatoonPosition
@@ -1071,25 +1061,20 @@ Platoon = Class(RNGAIPlatoon) {
                                 else
                                     Stuck = Stuck + 1
                                     if Stuck > 15 then
-                                        --LOG('* AI-RNG: * HuntAIPATH: Stucked while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                        --LOG('* AI-RNG: * HuntAIPATH: Stuck while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
                                         self:Stop()
                                         break
-                                    elseif Stuck > 5 then
-                                        if target and not target.Dead then
-                                            if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), target:GetPosition(), 'none') then
-                                                self:MoveToLocation(target:GetPosition(), false)
-                                            end
-                                        end
                                     end
                                 end
-                                if not target then
+                                if not target or target.Dead then
                                     --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. '..repr(path[i]))
                                     self:Stop()
                                     break
                                 end
                                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
-                                    attackSquad = self:GetSquadUnits('Attack')
+                                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                                    local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do
                                         if target and not target.Dead then
@@ -1099,16 +1084,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                 microCap = microCap - 1
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
-                    --                            local FocussedUnit = unit:GetFocusUnit()
-                    --                            if FocussedUnit and FocussedUnit ~= TargetInPlatoonRange then
-                    --                                WARN('focussed unit is not TargetInPlatoonRange!')
-                    --                            end
                                                 if not unit.MaxWeaponRange then
-                    --                                WARN('MaxWeaponRange unit ['..repr(unit.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                    --                                LOG('MaxWeaponRange Units inside this platoon:  - self.UsingTransport: '..repr( self.UsingTransport ))
-                    --                                for k,v in self:GetPlatoonUnits() or {} do
-                    --                                    LOG('MaxWeaponRange ['..repr(v.UnitId)..'] - '..repr( v:GetBlueprint().Description ))
-                    --                                end
                                                     continue
                                                 end
                                                 unitPos = unit:GetPosition()
@@ -1127,17 +1103,17 @@ Platoon = Class(RNGAIPlatoon) {
                                                     IssueMove({unit}, smartPos )
                                                     if target.Dead then break end
                                                     IssueAttack({unit}, target)
-                                                    unit:SetCustomName('Fight micro moving')
+                                                    --unit:SetCustomName('Fight micro moving')
                                                     unit.smartPos = smartPos
                                                     unit.TargetPos = targetPosition
                                                 -- in case we don't move, check if we can fire at the target
                                                 else
                                                     local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
                                                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
-                                                        unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                                        --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                                                         IssueMove({unit}, targetPosition )
                                                     else
-                                                        unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                                        --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                                     end
                                                 end
                                             end
@@ -3505,5 +3481,28 @@ Platoon = Class(RNGAIPlatoon) {
                 return
             end
         end
+    end,
+
+    ExperimentalAIHubRNG = function(self)
+
+        local behaviors = import('/lua/ai/AIBehaviors.lua')
+
+        local experimental = self:GetPlatoonUnits()[1]
+        if not experimental then
+            return
+        end
+        local ID = experimental.UnitId
+        --LOG('Starting experimental behaviour...' .. ID)
+        if ID == 'uel0401' then
+            return behaviors.FatBoyBehaviorRNG(self)
+        elseif ID == 'uaa0310' then
+            return behaviors.CzarBehavior(self)
+        elseif ID == 'xsa0402' then
+            return behaviors.AhwassaBehavior(self)
+        elseif ID == 'ura0401' then
+            return behaviors.TickBehavior(self)
+        end
+
+        return behaviors.BehemothBehavior(self)
     end,
 }

@@ -25,7 +25,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 DIRECTFIRE'}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -237,7 +237,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Defence Engineer TMD',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 7, 'DEFENSE TECH2 ANTIMISSILE'}},
@@ -267,6 +267,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2TMLEngineer',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
@@ -293,6 +294,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2TMLEngineer 3rd',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 625,
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
@@ -320,6 +322,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2TMLEngineer Close Enemy',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'TMLEnemyStartRangeCheck', {} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.TACTICALMISSILEPLATFORM}},
@@ -534,7 +537,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Defence Land - Perimeter',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
@@ -601,7 +604,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Defence Engineer - Perimeter',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 750,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
@@ -787,7 +790,7 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
@@ -814,7 +817,7 @@ BuilderGroup {
         BuilderName = 'RNGAI SMD Response',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
@@ -834,50 +837,6 @@ BuilderGroup {
                 maxRadius = 20,
                 BuildStructures = {
                     'T3StrategicMissileDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-}
-
-BuilderGroup { 
-    BuilderGroupName = 'RNGAI ENG PD1',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI T1 PD with Wall',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 980,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER } },
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, 'DEFENSE TECH1 DIRECTFIRE'}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = true,
-            NumAssistees = 5,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
-                BaseTemplate = 'T1PDTemplate',
-                BuildClose = true,
-                OrderedTemplate = true,
-                NearBasePatrolPoints = false,
-                BuildStructures = {
-                    'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
                 },
                 Location = 'LocationType',
             }
