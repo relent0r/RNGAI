@@ -641,7 +641,7 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
             { 'uel0202', 2, 2, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
-            { 'del0204', 1, 3, 'Attack', 'none' },      -- Gatling Bot
+            { 'del0204', 2, 3, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0111', 1, 2, 'Artillery', 'none' },   -- MML
             { 'uel0208', 1, 1, 'support', 'None' },      -- T2 Engineer
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -670,7 +670,7 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
             { 'url0202', 2, 2, 'Attack', 'none' },      -- Heavy Tank
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
-            { 'drl0204', 1, 3, 'Attack', 'none' },      -- Rocket Bot
+            { 'drl0204', 2, 3, 'Attack', 'none' },      -- Rocket Bot
             { 'url0111', 1, 2, 'Artillery', 'none' },   -- MML
             { 'url0208', 1, 1, 'support', 'None' },     -- T2 Engineer
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout

@@ -143,7 +143,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         self:AssignBuildOrder(factory,bType)
     end,
 
-    BuilderParamCheck = function(self,builder,params)
+    BuilderParamCheckOld = function(self,builder,params)
         -- Only use this with AI-Uveso
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.BuilderParamCheck(self,builder,params)
@@ -193,45 +193,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         return self.Brain:CanBuildPlatoon(template, params)
 
     end,
-
-    --[[BuilderParamCheck = function(self,builder,params)
-        if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.BuilderParamCheck(self,builder,params)
-        end
-        -- params[1] is factory, no other params
-        local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), params[1])
-        if not template then
-            WARN('*Factory Builder Error: Could not find template named: ' .. builder:GetPlatoonTemplate())
-            return false
-        end
-
-        -- This faction doesn't have unit of this type
-        if table.getn(template) == 2 then
-            return false
-        end
-
-        local personality = self.Brain:GetPersonality()
-        local ptnSize = personality:GetPlatoonSize()
-        RUtils.DebugArrayRNG(params)
-
-        if builder.Restriction then
-            LOG('Params'..params[1].UnitId)
-            LOG('Builder Data'..builder.Restriction)
-        end
-
-        if builder.Restriction then
-            if builder.Restriction == 'TECH1' and not EntityCategoryContains(categories.TECH1, params[1]) then
-                return false
-            elseif builder.Restriction == 'TECH2' and not EntityCategoryContains(categories.TECH2, params[1]) then
-                return false
-            elseif builder.Restriction == 'TECH3' and not EntityCategoryContains(categories.TECH3, params[1]) then
-                return false
-            end
-        end
-
-        -- This function takes a table of factories to determine if it can build
-        return self.Brain:CanBuildPlatoon(template, params)
-    end,]]
 
 }
 

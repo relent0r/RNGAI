@@ -1567,7 +1567,7 @@ function FatBoyBehaviorRNG(self)
             -- Setup shop outside this guy's base
             while not unit.Dead and WreckBase(self, lastBase) do
                 -- Build stuff if we haven't hit the unit cap.
-                FatBoyBuildCheck(self)
+                FatBoyBuildCheckRNG(self)
 
                 -- Once we have 20 units, form them into a platoon and send them to attack the base we're attacking!
                 if unit.NewPlatoon and table.getn(unit.NewPlatoon:GetPlatoonUnits()) >= 8 then
@@ -1580,6 +1580,38 @@ function FatBoyBehaviorRNG(self)
             end
         end
         WaitSeconds(1)
+    end
+end
+
+function FatBoyBuildCheckRNG(self)
+    local aiBrain = self:GetBrain()
+    local experimental = GetExperimentalUnit(self)
+
+    -- Randomly build T3 MMLs, siege bots, and percivals.
+    local buildUnits = {'uel0303', 'xel0305', 'xel0306', 'delk002'}
+    local unitToBuild = buildUnits[Random(1, table.getn(buildUnits))]
+
+    aiBrain:BuildUnit(experimental, unitToBuild, 1)
+    WaitTicks(1)
+
+    local unitBeingBuilt = false
+    repeat
+        unitBeingBuilt = unitBeingBuilt or experimental.UnitBeingBuilt
+        WaitSeconds(1)
+    until experimental.Dead or unitBeingBuilt or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
+
+    repeat
+        WaitSeconds(3)
+    until experimental.Dead or experimental:IsIdleState() or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
+
+    if not experimental.NewPlatoon or not aiBrain:PlatoonExists(experimental.NewPlatoon) then
+        experimental.NewPlatoon = aiBrain:MakePlatoon('', '')
+    end
+
+    if unitBeingBuilt and not unitBeingBuilt.Dead then
+        aiBrain:AssignUnitsToPlatoon(experimental.NewPlatoon, {unitBeingBuilt}, 'Attack', 'NoFormation')
+        IssueClearCommands({unitBeingBuilt})
+        IssueGuard({unitBeingBuilt}, experimental)
     end
 end
 

@@ -300,7 +300,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'TACTICALMISSILEPLATFORM' } },
             { EBC, 'GreaterThanEconEfficiency', { 0.8, 0.8}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.60}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
