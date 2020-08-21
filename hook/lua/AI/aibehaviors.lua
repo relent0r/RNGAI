@@ -142,7 +142,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local overCharge = {}
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
-    local acuThreatLimit = 22
+    local acuThreatLimit = 25
     
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
@@ -162,25 +162,25 @@ function CDROverChargeRNG(aiBrain, cdr)
         if cdr:HasEnhancement('HeavyAntiMatterCannon') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 35
+            acuThreatLimit = 40
         end
     elseif factionIndex == 2 then
         if cdr:HasEnhancement('CrysalisBeam') then
             cdr.GunUpgradePresent = true
             weapon.Range = 35 - 3
-            acuThreatLimit = 35
+            acuThreatLimit = 40
         end
     elseif factionIndex == 3 then
         if cdr:HasEnhancement('CoolingUpgrade') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 35
+            acuThreatLimit = 40
         end
     elseif factionIndex == 4 then
         if cdr:HasEnhancement('RateOfFire') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 35
+            acuThreatLimit = 40
         end
     end
 
@@ -332,6 +332,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                            if not PlatoonExists(aiBrain, plat) then
+                                local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
+                                plat.BuilderName = 'CDR Combat'
+                                aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
+                            end
                             cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                             WaitTicks(30)
                             IssueClearCommands({cdr})
@@ -353,6 +358,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                         local cdrNewPos = {}
                         --LOG('* AI-RNG: Move Position is'..repr(movePos))
                         --LOG('* AI-RNG: Moving to movePos to attack')
+                        if not PlatoonExists(aiBrain, plat) then
+                            local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
+                            plat.BuilderName = 'CDR Combat'
+                            aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
+                        end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
                         cdrNewPos[1] = movePos[1] + Random(-8, 8)
                         cdrNewPos[2] = movePos[2]
@@ -405,18 +415,26 @@ function CDROverChargeRNG(aiBrain, cdr)
                 end
             end
             if continueFighting == true then
-                local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
+                local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER ), cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
                     if not v.Dead then
-                        --LOG('Unit ID is '..v.UnitId)
-                        bp = __blueprints[v.UnitId].Defense
-                        --LOG(repr(__blueprints[v.UnitId].Defense))
-                        if bp.SurfaceThreatLevel ~= nil then
-                            enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
-                            if enemyUnitThreat > acuThreatLimit then
-                                break
+                        if EntityCategoryContains(categories.COMMAND, v) then
+                            if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
+                                enemyUnitThreat = enemyUnitThreat + 25
+                            else
+                                enemyUnitThreat = enemyUnitThreat + 15
+                            end
+                        else
+                            --LOG('Unit ID is '..v.UnitId)
+                            bp = __blueprints[v.UnitId].Defense
+                            --LOG(repr(__blueprints[v.UnitId].Defense))
+                            if bp.SurfaceThreatLevel ~= nil then
+                                enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
+                                if enemyUnitThreat > acuThreatLimit then
+                                    break
+                                end
                             end
                         end
                     end
@@ -479,6 +497,10 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             local acuPos1 = table.copy(cdrPos)
             --LOG('ACU Pos 1 :'..repr(acuPos1))
             --LOG('Home location is :'..repr(loc))
+            if not PlatoonExists(aiBrain, plat) then
+                local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
+                aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
+            end
             cdr.PlatoonHandle:MoveToLocation(loc, false)
             WaitTicks(40)
             local acuPos2 = table.copy(cdrPos)
@@ -489,8 +511,16 @@ function CDRReturnHomeRNG(aiBrain, cdr)
             IssueStop({cdr})
             --LOG('movePos Table '..repr(movePosTable[indexVar]))
             if movePosTable[indexVar] ~= nil then
+                if not PlatoonExists(aiBrain, plat) then
+                    local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
+                    aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
+                end
                 cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
             else
+                if not PlatoonExists(aiBrain, plat) then
+                    local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
+                    aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
+                end
                 cdr.PlatoonHandle:MoveToLocation(loc, false)
             end
             WaitTicks(20)

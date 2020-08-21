@@ -103,7 +103,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI SML Former',
-        PlatoonTemplate = 'T3NukeSorian',
+        PlatoonTemplate = 'T3NukeRNG',
         Priority = 500,
         InstanceCount = 10,
         FormRadius = 10000,

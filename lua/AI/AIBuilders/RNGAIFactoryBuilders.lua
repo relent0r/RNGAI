@@ -563,7 +563,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 1,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
+                { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},

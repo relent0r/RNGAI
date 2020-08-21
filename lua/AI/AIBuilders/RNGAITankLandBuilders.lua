@@ -120,7 +120,7 @@ BuilderGroup {
         Restriction = 'TECH1',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'tech1'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -135,7 +135,7 @@ BuilderGroup {
         PriorityFunction = LandNoEngMode,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'tech1'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
