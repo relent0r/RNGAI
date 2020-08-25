@@ -5,6 +5,7 @@ local Utils = import('/lua/utilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 -- TEMPORARY LOUD LOCALS
 local LOUDPOW = math.pow
@@ -1074,13 +1075,17 @@ function ExtractorsBeingUpgraded(aiBrain)
     return {TECH1 = tech1ExtNumBuilding, TECH2 = tech2ExtNumBuilding}
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases)
+function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat)
     local position = platoon:GetPlatoonPosition()
+    local enemyThreat
     if not aiBrain or not position or not maxRange then
         return false
     end
     if not avoidbases then
         avoidbases = false
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayer(platoon)
     end
     local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
     local category
@@ -1103,6 +1108,13 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                 continue
                             end
                         end
+                    end
+                end
+                if platoon.MovementLayer == 'Air' and platoonThreat then
+                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                    --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                    if enemyThreat > platoonThreat then
+                        continue
                     end
                 end
                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')

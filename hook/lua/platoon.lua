@@ -882,7 +882,6 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(10)
                     end
                 end
-                if target.Dead or target:BeenDestroyed() then continue end
             end
         WaitTicks(60)
         end
@@ -1164,6 +1163,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         local basePosition = false
+        local myThreat
         
         if aiBrain.EnemyIntel.ACUEnemyClose then
            --('Enemy ACU STRIKEFORCE Close, setting attack priority')
@@ -1203,6 +1203,9 @@ Platoon = Class(RNGAIPlatoon) {
                 basePosition = aiBrain:FindClosestBuilderManagerPosition(GetPlatoonPosition(self))
             end
         end
+        local myThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
+        --LOG('StrikeForceAI my threat is '..myThreat)
+        --LOG('StrikeForceAI my movement layer is '..self.MovementLayer)
         while PlatoonExists(aiBrain, self) do
             if not target or target.Dead then
                 if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
@@ -1212,11 +1215,11 @@ Platoon = Class(RNGAIPlatoon) {
                     target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
                 elseif data.AvoidBases then
                     --LOG('Avoid Bases is set to true')
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy(), data.AvoidBases)
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, data.AvoidBases)
                 else
                     local mult = { 1,10,25 }
                     for _,i in mult do
-                        target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', maxRadius * i, atkPri, aiBrain:GetCurrentEnemy())
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius * i, atkPri, false, myThreat)
                         if target then
                             break
                         end

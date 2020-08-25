@@ -142,7 +142,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local overCharge = {}
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
-    local acuThreatLimit = 25
+    local acuThreatLimit = 22
     
     for k, v in weapBPs do
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
@@ -162,25 +162,25 @@ function CDROverChargeRNG(aiBrain, cdr)
         if cdr:HasEnhancement('HeavyAntiMatterCannon') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 40
+            acuThreatLimit = 37
         end
     elseif factionIndex == 2 then
         if cdr:HasEnhancement('CrysalisBeam') then
             cdr.GunUpgradePresent = true
             weapon.Range = 35 - 3
-            acuThreatLimit = 40
+            acuThreatLimit = 37
         end
     elseif factionIndex == 3 then
         if cdr:HasEnhancement('CoolingUpgrade') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 40
+            acuThreatLimit = 37
         end
     elseif factionIndex == 4 then
         if cdr:HasEnhancement('RateOfFire') then
             cdr.GunUpgradePresent = true
             weapon.Range = 30 - 3
-            acuThreatLimit = 40
+            acuThreatLimit = 37
         end
     end
 
@@ -1525,8 +1525,8 @@ function FatBoyBehaviorRNG(self)
                                     end
                                     unitPos = unit:GetPosition()
                                     alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                                    x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange)
-                                    y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange)
+                                    x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - 15)
+                                    y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - 15)
                                     smartPos = { x, GetTerrainHeight( x, y), y }
                                     -- check if the move position is new or target has moved
                                     if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then

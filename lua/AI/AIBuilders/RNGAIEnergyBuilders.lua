@@ -28,7 +28,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+            AvoidCategory = categories.ENERGYPRODUCTION,
             AdjacencyDistance = 50,
+            maxUnits = 3,
+            maxRadius = 5,
             NeedGuard = false,
             BuildClose = true,
             DesiresAssist = true,
@@ -73,7 +76,7 @@ BuilderGroup {
         Priority = 700,
         InstanceCount = 1,
         BuilderConditions = {
-            { EBC, 'EnergyToMassRatioIncome', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
+            { EBC, 'EnergyToMassRatioIncomeRNG', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0 } },
             { EBC, 'GreaterThanEconIncome',  { 0.6, 0.0}}, -- Absolut Base income

@@ -638,10 +638,10 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
             { 'uel0202', 2, 4, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'uel0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'del0204', 2, 3, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0202', 2, 2, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
-            { 'del0204', 2, 3, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0111', 1, 2, 'Artillery', 'none' },   -- MML
             { 'uel0208', 1, 1, 'support', 'None' },      -- T2 Engineer
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -667,10 +667,10 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
             { 'url0202', 2, 4, 'Attack', 'none' },      -- Heavy Tank
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+            { 'drl0204', 2, 3, 'Attack', 'none' },      -- Rocket Bot
             { 'url0202', 2, 2, 'Attack', 'none' },      -- Heavy Tank
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
-            { 'drl0204', 2, 3, 'Attack', 'none' },      -- Rocket Bot
             { 'url0111', 1, 2, 'Artillery', 'none' },   -- MML
             { 'url0208', 1, 1, 'support', 'None' },     -- T2 Engineer
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -712,7 +712,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandResponse',
 PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'uel0303', 2, 4, 'Attack', 'none' },      -- Heavy Assault Bot
+            { 'uel0303', 2, 3, 'Attack', 'none' },      -- Heavy Assault Bot
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'delk002', 1, 1, 'Guard', 'none' },       -- AA
             { 'uel0309', 1, 1, 'support', 'None' },     -- T3 Engineer
@@ -721,6 +721,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'xel0305', 1, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0304', 1, 2, 'Artillery', 'none' },   -- Artillery
+            { 'xel0305', 1, 1, 'Attack', 'none' },      -- Armored Assault Bot
             { 'xel0306', 1, 1, 'Artillery', 'none' },   -- Artillery
             { 'delk002', 1, 1, 'Guard', 'none' },       -- AA
          },
@@ -738,7 +739,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'dalk003', 1, 1, 'Guard', 'none' },       -- AA
         },
         Cybran = {
-            { 'url0303', 1, 4, 'Attack', 'none' },      -- Siege Assault Bot
+            { 'url0303', 1, 3, 'Attack', 'none' },      -- Siege Assault Bot
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
             { 'url0309', 1, 1, 'support', 'None' },     -- T3 Engineer
@@ -747,6 +748,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'xrl0305', 2, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0304', 1, 2, 'Artillery', 'none' },   -- Artillery
+            { 'xrl0305', 2, 2, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'drlk001', 1, 1, 'Guard', 'none' },       -- AA
         },

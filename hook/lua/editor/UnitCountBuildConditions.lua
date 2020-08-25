@@ -87,15 +87,6 @@ function CanBuildOnMassGreaterThanLocationDistance(aiBrain, locationType, distan
     return false
 end
 
--- { UCBC, 'EnergyToMassRatioIncomeRNG', { 10.0, '>=',true } },  -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
-function EnergyToMassRatioIncomeRNG(aiBrain, ratio, compareType, DEBUG)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    if DEBUG then
-        --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( E:'..(econ.EnergyIncome*10)..' '..compareType..' M:'..(econ.MassIncome*10)..' ) -- R['..ratio..'] -- return '..repr(CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)))
-    end
-    return CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)
-end
-
 -- ##############################################################################################################
 -- # function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
 -- #

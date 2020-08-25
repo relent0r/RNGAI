@@ -136,14 +136,12 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.EcoManager.MassPriorityTable = {
             MASSEXTRACTION = 8,
-            TML = 10,
-            STATIONPODS = 11,
+            TML = 11,
+            STATIONPODS = 10,
             ENGINEER = 12,
-            AIR = 5,
-            LAND = 4,
-            RADAR = 6,
-            MASSFABRICATION = 8,
-            NUKE = 7,
+            AIR = 6,
+            LAND = 5,
+            NUKE = 9,
         }
         self.DefensiveSupport = {}
 
@@ -1413,7 +1411,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local unitTypePaused = false
                 
                 if massStateCaution then
-                    --LOG('Power State Caution is true')
+                    --LOG('massStateCaution State Caution is true')
                     local massCycle = 0
                     local unitTypePaused = {}
                     while massStateCaution do
@@ -1436,7 +1434,6 @@ AIBrain = Class(RNGAIBrainClass) {
                                 priorityUnit = k
                             end
                         end
-                        --LOG('Doing anti mass stall stuff for :'..priorityUnit)
                         if priorityUnit == 'ENGINEER' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -1472,7 +1469,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.AIR) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'LAND' then
                             local unitAlreadySet = false
@@ -1484,7 +1481,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                            local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
@@ -1673,6 +1670,18 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'RADAR' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                table.insert(unitTypePaused, priorityUnit)
+                            end
+                            local Radars = self:GetListOfUnits(categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, Radars, 'pause', 'ENERGY')
                         elseif priorityUnit == 'MASSFABRICATION' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -1772,7 +1781,6 @@ AIBrain = Class(RNGAIBrainClass) {
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --LOG('Eco selector manager for '..priorityUnit..' is '..action)
         
-
         for k, v in units do
             if v.Dead then continue end
             if priorityUnit == 'ENGINEER' then
@@ -1786,11 +1794,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.PlatoonHandle.PlatoonData.Assist.AssisteeType then continue end
                 if not v.UnitBeingAssist then continue end
                 if v:IsPaused() then continue end
-                if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
+                if type == 'ENERGY' and not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
                     --LOG('Pausing Engineer')
                     v:SetPaused(true)
+                    continue
                 elseif type == 'MASS' then
                     v:SetPaused(true)
+                    continue
                 end
             elseif priorityUnit == 'STATIONPODS' then
                 --LOG('Priority Unit Is STATIONPODS')
@@ -1806,6 +1816,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v:IsPaused() then continue end
                 --LOG('pausing STATIONPODS')
                 v:SetPaused(true)
+                continue
             elseif priorityUnit == 'AIR' then
                 --LOG('Priority Unit Is AIR')
                 if action == 'unpause' then
@@ -1815,11 +1826,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
-                if EntityCategoryContains(categories.ENGINEER * categories.TECH1, v.UnitBeingBuilt) then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if table.getn(units) == 1 then continue end
                 if v:IsPaused() then continue end
                 --LOG('pausing AIR')
                 v:SetPaused(true)
+                continue
             elseif priorityUnit == 'LAND' then
                 --LOG('Priority Unit Is LAND')
                 if action == 'unpause' then
@@ -1829,12 +1841,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
-                if EntityCategoryContains(categories.ENGINEER * categories.TECH1, v.UnitBeingBuilt) then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if table.getn(units) == 1 then continue end
                 if v:IsPaused() then continue end
                 --LOG('pausing LAND')
                 v:SetPaused(true)
-            elseif priorityUnit == 'MASSFABRICATION' or priorityUnit == 'SHIELD' then
+                continue
+            elseif priorityUnit == 'MASSFABRICATION' or priorityUnit == 'SHIELD' or priorityUnit == 'RADAR' then
                 --LOG('Priority Unit Is MASSFABRICATION or SHIELD')
                 if action == 'unpause' then
                     if v.MaintenanceConsumption then continue end
@@ -1860,6 +1873,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v:IsPaused() then continue end
                 --LOG('pausing Nuke')
                 v:SetPaused(true)
+                continue
             elseif priorityUnit == 'TML' then
                 --LOG('Priority Unit Is Nuke')
                 if action == 'unpause' then
@@ -1873,6 +1887,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v:IsPaused() then continue end
                 --LOG('pausing TML')
                 v:SetPaused(true)
+                continue
             elseif priorityUnit == 'MASSEXTRACTION' and action == 'unpause' then
                 if not v:IsPaused() then continue end
                 v:SetPaused( false )
