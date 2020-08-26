@@ -230,4 +230,3 @@ function AirAttackModeCheck(self, aiBrain)
     return false
 end
 
-

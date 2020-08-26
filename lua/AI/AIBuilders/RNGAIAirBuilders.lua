@@ -552,11 +552,25 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TransportFactoryBuilders Large',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Air Transport Large',
+        BuilderName = 'RNGAI T1 Air Transport Large Need',
         PlatoonTemplate = 'T1AirTransport',
         Priority = 900,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Air Transport Large Want',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 900,
+        BuilderConditions = {
+            { MIBC, 'ArmyWantsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
@@ -613,11 +627,25 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TransportFactoryBuilders Small',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Air Transport',
+        BuilderName = 'RNGAI T1 Air Transport Need',
         PlatoonTemplate = 'T1AirTransport',
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
+            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Air Transport Want',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 850,
+        BuilderConditions = {
+            { MIBC, 'ArmyWantsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
