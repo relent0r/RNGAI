@@ -635,6 +635,110 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI T1 Perimeter Defenses Expansions',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Land - Perimeter Expansion',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 650,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .6 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                NearPerimeterPoints = true,
+                Radius = 35,
+                BasePerimeterOrientation = 'FRONT',
+                BasePerimeterSelection = true,
+                BuildClose = false,
+                NearBasePatrolPoints = false,
+                BuildStructures = {
+                    'T1GroundDefense',
+                    'T1AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Sea - Perimeter Expansion',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 650,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .6 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = 'ExpansionBaseTemplates',
+                ExpansionBase = true,
+                NearMarkerType = 'Naval Area',
+                LocationRadius = 250,
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 1,
+                ThreatType = 'AntiSurface',
+                ExpansionRadius = 120,
+                BuildStructures = {
+                    'T1AADefense',
+                    'T1NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer - Perimeter Expansion',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 750,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND} },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH2' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                NearPerimeterPoints = true,
+                Radius = 30,
+                BasePerimeterOrientation = 'FRONT',
+                BasePerimeterSelection = true,
+                BuildClose = true,
+                BuildStructures = {
+                    'T2AADefense',
+                    'T2GroundDefense',
+                    'T2MissileDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI T12 Perimeter Defenses Naval',
     BuildersType = 'EngineerBuilder',
     Builder {

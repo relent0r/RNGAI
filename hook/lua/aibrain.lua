@@ -128,8 +128,9 @@ AIBrain = Class(RNGAIBrainClass) {
             STATIONPODS = 10,
             SHIELD = 8,
             AIR = 9,
-            LAND = 4,
-            RADAR = 5,
+            NAVAL = 5,
+            LAND = 3,
+            RADAR = 4,
             MASSEXTRACTION = 3,
             MASSFABRICATION = 7,
             NUKE = 6,
@@ -139,8 +140,9 @@ AIBrain = Class(RNGAIBrainClass) {
             TML = 11,
             STATIONPODS = 10,
             ENGINEER = 12,
-            AIR = 6,
-            LAND = 5,
+            AIR = 5,
+            NAVAL = 6,
+            LAND = 4,
             NUKE = 9,
         }
         self.DefensiveSupport = {}
@@ -1483,6 +1485,18 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'NAVAL' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                table.insert(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -1549,6 +1563,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'LAND' then
                             local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
+                        elseif v == 'NAVAL' then
+                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'MASS')
                         elseif v == 'MASSEXTRACTION' then
                             local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(v, Extractors, 'unpause', 'MASS')
@@ -1658,6 +1675,30 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'LAND' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                table.insert(unitTypePaused, priorityUnit)
+                            end
+                            local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'NAVAL' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                table.insert(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'SHIELD' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -1732,6 +1773,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'AIR' then
                             local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
+                        elseif v == 'LAND' then
+                            local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                            self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'ENERGY')
+                        elseif v == 'NAVAL' then
+                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'ENERGY')
                         elseif v == 'SHIELD' then
                             local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(v, Shields, 'unpause', 'ENERGY')
@@ -1830,6 +1877,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 if table.getn(units) == 1 then continue end
                 if v:IsPaused() then continue end
                 --LOG('pausing AIR')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'NAVAL' then
+                --LOG('Priority Unit Is NAVAL')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --LOG('Unpausing Naval Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
+                if table.getn(units) == 1 then continue end
+                if v:IsPaused() then continue end
+                --LOG('pausing NAVAL')
                 v:SetPaused(true)
                 continue
             elseif priorityUnit == 'LAND' then

@@ -161,7 +161,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.95}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.95}}, -- Ratio from 0 to 1. (1=100%)
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
             -- Respect UnitCap
@@ -197,7 +197,7 @@ BuilderGroup {
             --{ UCBC, 'HasNotParagon', {} },
             -- Have we the eco to build it ?
             { EBC, 'LessThanMassTrendRNG', { 50.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.00, 0.95}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.95}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
@@ -324,6 +324,34 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1, ENGINEER TECH2, ENGINEER TECH3' }},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.60}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3', 100, 'ueb1106' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = 'MASSEXTRACTION TECH3, MASSEXTRACTION TECH2',
+                AdjacencyDistance = 100,
+                BuildClose = false,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'MassStorage',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 400,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, 'ENGINEER TECH1, ENGINEER TECH2, ENGINEER TECH3' }},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 300, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.60}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3', 100, 'ueb1106' } },
