@@ -115,7 +115,7 @@ BuilderGroup {
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'NavalBaseCheckRNG', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
             { UCBC, 'NavalAreaNeedsEngineer', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
@@ -248,7 +248,7 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'NavalBaseCheckRNG', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
             { UCBC, 'NavalAreaNeedsEngineer', { 'LocationType', 350, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},

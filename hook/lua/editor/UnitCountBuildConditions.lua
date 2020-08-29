@@ -756,7 +756,7 @@ end
 function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end
-
+--[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.
     local checkNum = tonumber(ScenarioInfo.Options.NavalExpansionsAllowed) or 2
@@ -767,4 +767,4 @@ function NavalBaseCountRNG(aiBrain, compareType, checkNum)
     local expBaseCount = aiBrain:GetManagerCount('Naval Area')
     --LOG('*AI DEBUG: Naval base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
     return CompareBody(expBaseCount, checkNum, compareType)
-end
+end]]

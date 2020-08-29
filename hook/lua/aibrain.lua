@@ -124,14 +124,15 @@ AIBrain = Class(RNGAIBrainClass) {
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
         }
         self.EcoManager.PowerPriorityTable = {
-            ENGINEER = 11,
-            STATIONPODS = 10,
+            ENGINEER = 12,
+            STATIONPODS = 11,
+            TML = 10,
             SHIELD = 8,
             AIR = 9,
             NAVAL = 5,
             LAND = 3,
             RADAR = 4,
-            MASSEXTRACTION = 3,
+            MASSEXTRACTION = 2,
             MASSFABRICATION = 7,
             NUKE = 6,
         }
@@ -140,9 +141,9 @@ AIBrain = Class(RNGAIBrainClass) {
             TML = 11,
             STATIONPODS = 10,
             ENGINEER = 12,
-            AIR = 5,
-            NAVAL = 6,
-            LAND = 4,
+            AIR = 6,
+            NAVAL = 7,
+            LAND = 5,
             NUKE = 9,
         }
         self.DefensiveSupport = {}
@@ -1711,6 +1712,18 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'TML' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                table.insert(unitTypePaused, priorityUnit)
+                            end
+                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'ENERGY')
                         elseif priorityUnit == 'RADAR' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -1788,6 +1801,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'NUKE' then
                             local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'ENERGY')
+                        elseif v == 'TML' then
+                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'ENERGY')
                         end
                     end
                     powerStateCaution = false
@@ -1826,7 +1842,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
     
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
-        --LOG('Eco selector manager for '..priorityUnit..' is '..action)
+        LOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         
         for k, v in units do
             if v.Dead then continue end
@@ -1937,7 +1953,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 v:SetPaused(true)
                 continue
             elseif priorityUnit == 'TML' then
-                --LOG('Priority Unit Is Nuke')
+                --LOG('Priority Unit Is TML')
                 if action == 'unpause' then
                     if not v:IsPaused() then continue end
                     --LOG('Unpausing TML')
@@ -1990,6 +2006,33 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
     end,
+--[[
+    GetManagerCount = function(self, type)
+        if not self.RNG then
+            return RNGAIBrainClass.GetManagerCount(self, type)
+        end
+        local count = 0
+        for k, v in self.BuilderManagers do
+            if type then
+                LOG('BuilderManager Type is '..k)
+                if type == 'Start Location' and not (string.find(k, 'ARMY_') or string.find(k, 'Large Expansion')) then
+                    continue
+                elseif type == 'Naval Area' and not (string.find(k, 'Naval Area')) then
+                    continue
+                elseif type == 'Expansion Area' and (not (string.find(k, 'Expansion Area') or string.find(k, 'EXPANSION_AREA')) or string.find(k, 'Large Expansion')) then
+                    continue
+                end
+            end
+
+            if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
+                continue
+            end
+
+            count = count + 1
+        end
+        LOG('Type is '..type..' Count is '..count)
+        return count
+    end,]]
 
     
 }
