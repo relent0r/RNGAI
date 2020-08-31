@@ -1164,6 +1164,23 @@ Platoon = Class(RNGAIPlatoon) {
         local atkPri = {}
         local basePosition = false
         local myThreat
+        local platoonUnits = GetPlatoonUnits(self)
+        
+        if platoonUnits > 0 then
+            for k, v in platoonUnits do
+                if not v.Dead then
+                    if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                        v:SetScriptBit('RULEUTC_StealthToggle', false)
+                    end
+                    if v:TestToggleCaps('RULEUTC_CloakToggle') then
+                        v:SetScriptBit('RULEUTC_CloakToggle', false)
+                    end
+                    -- prevent units from reclaiming while attack moving
+                    v:RemoveCommandCap('RULEUCC_Reclaim')
+                    v:RemoveCommandCap('RULEUCC_Repair')
+                end
+            end
+        end
         
         if aiBrain.EnemyIntel.ACUEnemyClose then
            --('Enemy ACU STRIKEFORCE Close, setting attack priority')
@@ -3600,7 +3617,7 @@ Platoon = Class(RNGAIPlatoon) {
             return behaviors.TickBehavior(self)
         end
 
-        return behaviors.BehemothBehavior(self)
+        return behaviors.BehemothBehaviorRNG(self)
     end,
 
     NukeAIRNG = function(self)

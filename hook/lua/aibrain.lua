@@ -122,6 +122,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 TECH2 = 1
             },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
+            EcoMultiplier = 1,
         }
         self.EcoManager.PowerPriorityTable = {
             ENGINEER = 12,
@@ -161,6 +162,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         -- Intel Data
         self.EnemyIntel = {}
+        self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.EnemyStartLocations = {}
@@ -182,6 +184,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
 
         self.BrainIntel = {}
+        self.BrainIntel.AllyCount = 0
         self.BrainIntel.MassMarker = 0
         self.BrainIntel.AirAttackMode = false
         self.BrainIntel.SelfThreat = {}
@@ -203,7 +206,7 @@ AIBrain = Class(RNGAIBrainClass) {
             NavalNow = 0,
             NavalSubNow = 0,
         }
-
+        self.BrainIntel.ActiveExpansion = false
         -- Structure Upgrade properties
         self.UpgradeMode = 'Normal'
         self.UpgradeIssued = 0
@@ -580,24 +583,32 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyStrengthTable = {}
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
+        local allyCount = 0
+        local enemyCount = 0
+        local MainPos = self.BuilderManagers.MAIN.Position
         for _, v in ArmyBrains do
             local insertTable = {
                 Enemy = true,
                 Strength = 0,
                 Position = false,
+                Distance = false,
                 EconomicThreat = 0,
                 ACUPosition = {},
                 ACULastSpotted = 0,
                 Brain = v,
             }
             -- Share resources with friends but don't regard their strength
-            if IsAlly(selfIndex, v:GetArmyIndex()) then
+            if ArmyIsCivilian(v:GetArmyIndex()) then
+                continue
+            elseif IsAlly(selfIndex, v:GetArmyIndex()) then
                 self:SetResourceSharing(true)
+                allyCount = allyCount + 1
                 insertTable.Enemy = false
             elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
                 insertTable.Enemy = false
             end
             if insertTable.Enemy == true then
+                enemyCount = enemyCount + 1
                 table.insert(enemyBrains, v)
             end
             local acuPos = {}
@@ -636,7 +647,9 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
-
+        
+        self.EnemyIntel.EnemyCount = enemyCount
+        self.BrainIntel.AllyCount = allyCount
         local allyEnemy = self:GetAllianceEnemyRNG(armyStrengthTable)
         
         if allyEnemy  then
@@ -710,6 +723,26 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Random Enemy is'..enemy.Name)
                     self:SetCurrentEnemy(enemy)
                 end
+                
+            end
+        end
+        local selfEnemy = self:GetCurrentEnemy()
+        if selfEnemy then
+            local enemyIndex = selfEnemy:GetArmyIndex()
+            local closest = 9999999
+            for k, v in self.BuilderManagers do
+                LOG('build k is '..k)
+                if (string.find(k, 'Expansion Area')) then
+                    local exDistance = VDist2Sq(MainPos[1], MainPos[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+                    if exDistance < closest then
+                        LOG('Closest Base to Enemy is '..k)
+                        closest = k
+                    end
+                end
+            end
+            if closest < 9999999 then
+                self.BrainIntel.ActiveExpansion = closest
+                LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
         end
     end,
@@ -1361,6 +1394,19 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeMode = 'Normal'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
+        
+        if self.EcoManager.EcoMultiplier == 1 then
+            local ecoMultiplier = 1
+            if self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > 72 then
+                ecoMultiplier = 2
+            elseif self.BrainIntel.AllyCount < self.EnemyIntel.EnemyCount then
+                ecoMultiplier = 2
+            end
+            self.EcoManager.EcoMultiplier = ecoMultiplier
+        end
+        LOG('Ally Count is '..self.BrainIntel.AllyCount)
+        LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+        LOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
 
         --[[
         if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
@@ -1842,7 +1888,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
     
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
-        LOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
+        --LOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         
         for k, v in units do
             if v.Dead then continue end

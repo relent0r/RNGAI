@@ -11,7 +11,7 @@ local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 
-function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, tech)
+function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, mult)
     local econ = {}
     econ.MassStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
     econ.EnergyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
@@ -23,8 +23,8 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, t
         if econ.MassStorageRatio >= mStorageRatio * 1.5 and econ.EnergyStorageRatio >= eStorageRatio then
             return true
         end
-    elseif aiBrain.EnemyIntel.EnemyThreatCurrent.DefenseSurface > 72 and tech == 'tech1' then
-        if econ.MassStorageRatio >= mStorageRatio * 2 and econ.EnergyStorageRatio >= eStorageRatio then
+    elseif mult == true then
+        if econ.MassStorageRatio >= mStorageRatio * aiBrain.EcoManager.EcoMultiplier and econ.EnergyStorageRatio >= eStorageRatio then
             return true
         end
     elseif econ.MassStorageRatio >= mStorageRatio and econ.EnergyStorageRatio >= eStorageRatio then

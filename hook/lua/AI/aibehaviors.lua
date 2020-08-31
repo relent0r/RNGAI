@@ -1645,3 +1645,65 @@ function FatBoyBuildCheckRNG(self)
     end
 end
 
+function BehemothBehaviorRNG(self)
+    AssignExperimentalPriorities(self)
+
+    local experimental = GetExperimentalUnit(self)
+    local targetUnit = false
+    local lastBase = false
+    local airUnit = EntityCategoryContains(categories.AIR, experimental)
+    -- Find target loop
+    while experimental and not experimental.Dead do
+        if lastBase then
+            targetUnit, lastBase = WreckBase(self, lastBase)
+        elseif not lastBase then
+            targetUnit, lastBase = FindExperimentalTarget(self)
+        end
+
+        if targetUnit then
+            IssueClearCommands({experimental})
+            IssueAttack({experimental}, targetUnit)
+        end
+
+        -- Walk to and kill target loop
+        while not experimental.Dead and not experimental:IsIdleState() do
+            local nearCommander = CommanderOverrideCheck(self)
+            if nearCommander and nearCommander ~= targetUnit then
+                IssueClearCommands({experimental})
+                IssueAttack({experimental}, nearCommander)
+                targetUnit = nearCommander
+            end
+
+            -- If no target jump out
+            if not targetUnit then break end
+
+            -- Check if we or the target are under a shield
+            local closestBlockingShield = false
+            if not airUnit then
+                closestBlockingShield = GetClosestShieldProtectingTarget(experimental, experimental)
+            end
+            closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
+
+            -- Kill shields loop
+            while closestBlockingShield do
+                IssueClearCommands({experimental})
+                IssueAttack({experimental}, closestBlockingShield)
+
+                -- Wait for shield to die loop
+                while not closestBlockingShield.Dead and not experimental.Dead do
+                    WaitSeconds(1)
+                end
+
+                closestBlockingShield = false
+                if not airUnit then
+                    closestBlockingShield = GetClosestShieldProtectingTarget(experimental, experimental)
+                end
+                closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
+                WaitTicks(1)
+            end
+            WaitSeconds(1)
+        end
+        WaitSeconds(1)
+    end
+end
+
