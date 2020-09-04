@@ -776,12 +776,13 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     else
         multiplier = 1
     end
-    LOG('Multiplier is '..multiplier)
-    LOG('Initial Delay is '..(upgradeSpec.InitialDelay / multiplier))
-    LOG('Eco timeout for Tech '..unitTech..' Extractor is '..ecoTimeOut)
+    --LOG('Multiplier is '..multiplier)
+    --LOG('Initial Delay is before any multiplier is '..upgradeSpec.InitialDelay)
+    --LOG('Initial Delay is '..(upgradeSpec.InitialDelay / multiplier))
+    --LOG('Eco timeout for Tech '..unitTech..' Extractor is '..ecoTimeOut)
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < (upgradeSpec.InitialDelay / multiplier) do
-		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 1000 and unit:GetFractionComplete() == 1 then
+		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 100 and unit:GetFractionComplete() == 1 then
             initial_delay = initial_delay + 10
             unit.InitialDelay = true
             if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
@@ -828,7 +829,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             continue
         end
 
-        if UnitRatioCheckRNG( aiBrain, 1.5, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
+        if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
             --LOG('Too few tech2 extractors to go tech3')
             ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
             WaitTicks(10)
@@ -866,7 +867,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
             
             if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
-                or ((massStorageRatio > .60 and energyStorageRatio > .70))
+                or ((massStorageRatio > .60 and energyStorageRatio > .40))
                 or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .7 ) ) or bypasseco then
                     if bypasseco then
                         --LOG('Low Triggered bypasseco')

@@ -46,7 +46,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Intie T1',
         PlatoonTemplate = 'RNGAIFighterGroup',
-        Priority = 750,
+        Priority = 700,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
@@ -498,6 +498,7 @@ BuilderGroup {
                 'RADAR STRUCTURE',
                 'ENGINEER TECH1',
                 'MOBILE ANTIAIR',
+                'ENERGYPRODUCTION',
                 'MOBILE LAND',
                 'MASSEXTRACTION',
                 'ALLUNITS',
@@ -533,15 +534,16 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.daa0206 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 'RADAR STRUCTURE',
                 'ENERGYSTORAGE',
-                'ENERGYPRODUCTION TECH1',
+                'ENERGYPRODUCTION TECH3',
                 'ENERGYPRODUCTION TECH2',
+                'ENERGYPRODUCTION TECH1',
                 'ALLUNITS',
             },
         },

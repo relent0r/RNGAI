@@ -732,10 +732,10 @@ AIBrain = Class(RNGAIBrainClass) {
             local closest = 9999999
             local expansionName
             for k, v in self.BuilderManagers do
-                LOG('build k is '..k)
+                --LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) then
                     local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
-                    LOG('Distance to Enemy for '..k..' is '..exDistance)
+                    --LOG('Distance to Enemy for '..k..' is '..exDistance)
                     if exDistance < closest then
                         expansionName = k
                         closest = exDistance
@@ -743,9 +743,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if closest < 9999999 and expansionName then
-                LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
+                --LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
+                --LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
         end
     end,
@@ -1401,15 +1401,15 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.EcoManager.EcoMultiplier == 1 then
             local ecoMultiplier = 1
             if self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > 72 then
-                ecoMultiplier = 2
+                ecoMultiplier = 3
             elseif self.BrainIntel.AllyCount < self.EnemyIntel.EnemyCount then
                 ecoMultiplier = 2
             end
             self.EcoManager.EcoMultiplier = ecoMultiplier
         end
-        LOG('Ally Count is '..self.BrainIntel.AllyCount)
-        LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
-        LOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
+        --LOG('Ally Count is '..self.BrainIntel.AllyCount)
+        --LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+        --LOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
 
         --[[
         if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
@@ -1901,6 +1901,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not v:IsPaused() then continue end
                     --LOG('Unpausing Engineer')
                     v:SetPaused(false)
+                    continue
+                end
+                if EntityCategoryContains( categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM , v.UnitBeingBuilt) then
+                    v:SetPaused(true)
                     continue
                 end
                 if not v.PlatoonHandle.PlatoonData.Assist.AssisteeType then continue end

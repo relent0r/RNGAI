@@ -45,14 +45,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 900,
-        InstanceCount = 2,
+        Priority = 1050,
+        InstanceCount = 4,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 120.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.0}},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist

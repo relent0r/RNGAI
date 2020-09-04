@@ -373,6 +373,24 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Reclaim Enemy Walls',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ReclaimUnitsAI',
+        Priority = 400,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 } },
+            { UCBC, 'HaveUnitsWithCategoryAndAlliance', { true, 10, categories.WALL, 'Enemy'}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Radius = 1000,
+            Categories = {'WALL'},
+            ThreatMin = -10,
+            ThreatMax = 10000,
+            ThreatRings = 1,
+        },
+    },
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses Expansion',
