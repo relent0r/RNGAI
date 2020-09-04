@@ -730,18 +730,21 @@ AIBrain = Class(RNGAIBrainClass) {
         if selfEnemy then
             local enemyIndex = selfEnemy:GetArmyIndex()
             local closest = 9999999
+            local expansionName
             for k, v in self.BuilderManagers do
                 LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) then
-                    local exDistance = VDist2Sq(MainPos[1], MainPos[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+                    local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+                    LOG('Distance to Enemy for '..k..' is '..exDistance)
                     if exDistance < closest then
-                        LOG('Closest Base to Enemy is '..k)
-                        closest = k
+                        expansionName = k
+                        closest = exDistance
                     end
                 end
             end
-            if closest < 9999999 then
-                self.BrainIntel.ActiveExpansion = closest
+            if closest < 9999999 and expansionName then
+                LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
+                self.BrainIntel.ActiveExpansion = expansionName
                 LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
         end
@@ -1385,7 +1388,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
 
 
-        if self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 2 then
+        if self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2

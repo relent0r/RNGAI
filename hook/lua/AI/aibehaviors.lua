@@ -756,16 +756,31 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local upgradeNumLimit
     local extractorUpgradeLimit = 0
     local extractorClosest = false
-    
+    local multiplier
     local initial_delay = 0
     local ecoStartTime = GetGameTimeSeconds()
-    if unitTech == 'TECH1' then
-        ecoTimeOut = 420
-    elseif unitTech == 'TECH2' then
-        ecoTimeOut = 720
+
+    if aiBrain.CheatEnabled then
+        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+    else
+        multiplier = 1
     end
+
+    if unitTech == 'TECH1' then
+        ecoTimeOut = (420 / multiplier)
+    elseif unitTech == 'TECH2' then
+        ecoTimeOut = (720 / multiplier)
+    end
+    if aiBrain.CheatEnabled then
+        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+    else
+        multiplier = 1
+    end
+    LOG('Multiplier is '..multiplier)
+    LOG('Initial Delay is '..(upgradeSpec.InitialDelay / multiplier))
+    LOG('Eco timeout for Tech '..unitTech..' Extractor is '..ecoTimeOut)
     --LOG('* AI-RNG: Initial Variables set')
-    while initial_delay < upgradeSpec.InitialDelay do
+    while initial_delay < (upgradeSpec.InitialDelay / multiplier) do
 		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 1000 and unit:GetFractionComplete() == 1 then
             initial_delay = initial_delay + 10
             unit.InitialDelay = true
