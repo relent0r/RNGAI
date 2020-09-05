@@ -214,10 +214,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.UpgradeIssuedPeriod = 120
         local mapSizeX, mapSizeZ = GetMapSize()
         if mapSizeX < 1000 and mapSizeZ < 1000  then
-            self.UpgradeIssuedLimit = 1
+            self.UpgradeIssuedLimit = 2
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         else
-            self.UpgradeIssuedLimit = 2
+            self.UpgradeIssuedLimit = 3
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
 

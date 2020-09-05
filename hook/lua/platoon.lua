@@ -3514,8 +3514,8 @@ Platoon = Class(RNGAIPlatoon) {
                             if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
                                 target = unit
                                 targetPosition = target:GetPosition()
-                                enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 20, 'Enemy')
-                                enemyShield = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 20, 'Enemy')
+                                enemyTMD = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 25, 'Enemy')
+                                enemyShield = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
                                 enemyTmdCount = table.getn(enemyTMD)
                                 if table.getn(enemyShield) > 0 then
                                     local shieldHealth = 0
