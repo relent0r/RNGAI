@@ -208,17 +208,11 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.ActiveExpansion = false
         -- Structure Upgrade properties
-        local upgradeModeRNG = math.random(2)
-        if upgradeModeRNG == 1 then
-            self.UpgradeMode = 'Normal'
-        elseif upgradeModeRNG == 2 then
-            self.UpgradeMode = 'Caution'
-        end
-        LOG('Upgrade mode at game start is '..self.UpgradeMode)
         self.UpgradeIssued = 0
         
         self.UpgradeIssuedPeriod = 120
         local mapSizeX, mapSizeZ = GetMapSize()
+
         if mapSizeX < 1000 and mapSizeZ < 1000  then
             self.UpgradeIssuedLimit = 2
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
@@ -226,6 +220,16 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeIssuedLimit = 3
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
+
+        local upgradeModeRNG = math.random(2)
+        if upgradeModeRNG == 1 then
+            self.UpgradeMode = 'Normal'
+        elseif upgradeModeRNG == 2 then
+            self.UpgradeMode = 'Caution'
+            self.UpgradeIssuedLimit = 1
+        end
+        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
+        
 
         -- ACU Support Data
         self.ACUSupport = {}
@@ -891,12 +895,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 5
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 1.0
-                upgradeSpec.EnergyLowTrigger = 1.2
-                upgradeSpec.MassHighTrigger = 2.2
+                upgradeSpec.MassLowTrigger = 1.2
+                upgradeSpec.EnergyLowTrigger = 1.3
+                upgradeSpec.MassHighTrigger = 2.5
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 90
+                upgradeSpec.InitialDelay = 120
                 upgradeSpec.EnemyThreatLimit = 0
                 return upgradeSpec
             end
@@ -1162,10 +1166,11 @@ AIBrain = Class(RNGAIBrainClass) {
         local startX, startZ = self:GetArmyStartPos()
         local timeout = self.TacticalMonitor.TacticalTimeout
         local gameTime = GetGameTimeSeconds()
-
-        if gameTime > 480 and self.UpgradeMode == 'Caution' then
-            LOG('Setting UpgradeMode to Normal')
+        --LOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
+        if gameTime > 600 and self.UpgradeMode == 'Caution' then
+            --LOG('Setting UpgradeMode to Normal')
             self.UpgradeMode = 'Normal'
+            self.UpgradeIssuedLimit = 2
         end
 
         --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
@@ -1400,11 +1405,11 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
 
 
-        if self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
+        if gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
-        else
+        elseif gameTime > 1200 then
             --LOG('Switch to normal upgrade mode')
             self.UpgradeMode = 'Normal'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
