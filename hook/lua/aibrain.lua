@@ -208,7 +208,13 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.ActiveExpansion = false
         -- Structure Upgrade properties
-        self.UpgradeMode = 'Normal'
+        local upgradeModeRNG = math.random(2)
+        if upgradeModeRNG == 1 then
+            self.UpgradeMode = 'Normal'
+        elseif upgradeModeRNG == 2 then
+            self.UpgradeMode = 'Caution'
+        end
+        LOG('Upgrade mode at game start is '..self.UpgradeMode)
         self.UpgradeIssued = 0
         
         self.UpgradeIssuedPeriod = 120
@@ -1156,6 +1162,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local startX, startZ = self:GetArmyStartPos()
         local timeout = self.TacticalMonitor.TacticalTimeout
         local gameTime = GetGameTimeSeconds()
+
+        if gameTime > 480 and self.UpgradeMode == 'Caution' then
+            LOG('Setting UpgradeMode to Normal')
+            self.UpgradeMode = 'Normal'
+        end
+
         --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, v in self.EnemyIntel.EnemyThreatLocations do
