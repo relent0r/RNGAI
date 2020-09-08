@@ -836,12 +836,16 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-
-        if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
-            --LOG('Too few tech2 extractors to go tech3')
-            ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
-            WaitTicks(10)
-            continue
+        if not unit.MAINBASE then
+            if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
+                --LOG('Too few tech2 extractors to go tech3')
+                ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
+                WaitTicks(10)
+                continue
+            end
+        end
+        if unit.MAINBASE then
+            LOG('MAINBASE Extractor')
         end
         --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         
@@ -1088,6 +1092,10 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         -- Check for the nearest distance from mainbase
         UnitPos = v:GetPosition()
         DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
+        if DistanceToBase < 6400 then
+            LOG('Mainbase extractor set true')
+            v.MAINBASE = true
+        end
         if (not LowestDistanceToBase and v.InitialDelay == false) or (DistanceToBase < LowestDistanceToBase and v.InitialDelay == false) then
             -- see if we can find a upgrade
             LowestDistanceToBase = DistanceToBase

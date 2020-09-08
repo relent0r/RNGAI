@@ -3655,4 +3655,41 @@ Platoon = Class(RNGAIPlatoon) {
         end
         self:PlatoonDisband()
     end,
+
+    SatelliteAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+        local data = self.PlatoonData
+        local atkPri = {}
+        local atkPriTable = {}
+        if data.PrioritizedCategories then
+            for k,v in data.PrioritizedCategories do
+                table.insert(atkPri, v)
+                table.insert(atkPriTable, ParseEntityCategory(v))
+            end
+        end
+        table.insert(atkPri, 'ALLUNITS')
+        table.insert(atkPriTable, categories.ALLUNITS)
+        self:SetPrioritizedTargetList('Attack', atkPriTable)
+
+        local maxRadius = data.SearchRadius or 50
+        local oldTarget = false
+        local target = false
+        
+        while aiBrain:PlatoonExists(self) do
+            self:MergeWithNearbyPlatoonsSorian('SatelliteAIRNG', 50, true)
+            target = AIUtils.AIFindUndefendedBrainTargetInRangeSorian(aiBrain, self, 'Attack', maxRadius, atkPri)
+            local targetRotation = 0
+            if target and target != oldTarget and not target.Dead then
+                self:Stop()
+                self:AttackTarget(target)
+                while not target.Dead or targetRotation < 5 do
+                    LOG('Novax Target Rotation is '..targetRotation)
+                    targetRotation = targetRotation + 1
+                    WaitTicks(200)
+                end
+                oldTarget = target
+            end
+            WaitTicks(100)
+        end
+    end,
 }

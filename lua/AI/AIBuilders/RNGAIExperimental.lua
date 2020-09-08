@@ -262,7 +262,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Exp Satellite',
-        PlatoonTemplate = 'T4SatelliteExperimentalSorian',
+        PlatoonTemplate = 'T4SatelliteExperimentalRNG',
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.STRUCTURE * categories.EXPERIMENTAL * categories.ORBITALSYSTEM } },
