@@ -527,6 +527,28 @@ BuilderGroup {
             },
         },
     },
+    
+    Builder {
+        BuilderName = 'RNGAI Energy Attack ACUOnField',
+        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
+        Priority = 910,
+        InstanceCount = 2,
+        BuilderType = 'Any',        
+        BuilderConditions = { 
+            { UCBC, 'ACUOnField', {} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            ACUOnField = true,
+            PrioritizedCategories = {
+                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION TECH3',
+                'ENERGYPRODUCTION TECH2',
+                'ENERGYPRODUCTION TECH1',
+            },
+        },
+    },
     Builder {
         BuilderName = 'RNGAI Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',

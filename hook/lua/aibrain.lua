@@ -641,7 +641,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
             --LOG('* AI-RNG: Enemy Index is :'..enemyIndex)
-            local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
+            local acuPos, lastSpotted, gun = RUtils.GetLastACUPosition(self, enemyIndex)
             --LOG('* AI-RNG: ACU Position is has data'..repr(acuPos))
             insertTable.ACUPosition = acuPos
             insertTable.ACULastSpotted = lastSpotted
@@ -769,6 +769,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 Position = {},
                 LastSpotted = 0,
                 Threat = 0,
+                OnField = false,
+                Gun = false,
             }
         end
         while true do
@@ -828,25 +830,29 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACUEnemyClose = false
         
         --LOG('* AI-RNG: My Own Strength is'..highStrength)
-        for _, v in strengthTable do
+        for k, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
                 --LOG('* AI-RNG: ACU Position is :'..repr(v.ACUPosition))
                 if v.ACUPosition[1] then
                     ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
                     --LOG('* AI-RNG: Enemy ACU Distance in Alliance Check is'..ACUDist)
-                    if ACUDist < 180 then
+                    if ACUDist < 200 then
                         --LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
+                        self.EnemyIntel.ACU[k].OnField = true
                         if ACUDist < 135 then
                             self.EnemyIntel.ACUEnemyClose = true
                             --LOG('Enemy ACU is within 135 of base')
                         end
                         return returnEnemy
-                    elseif v.Threat < 200 and ACUDist < 240 then
+                    elseif v.Threat < 200 and ACUDist < 200 then
                         --LOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
+                    end
+                    if ACUDist > 200 then
+                        self.EnemyIntel.ACU[k].OnField = false
                     end
                 end
                 continue
@@ -1083,6 +1089,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(enemyBrains) > 0 then
             for k, enemy in enemyBrains do
 
+                local gunBool = false
+                local enemyIndex = enemy:GetArmyIndex()
                 local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
                 for _,v in enemyAir do
                     -- previous method of getting unit ID before the property was added.
@@ -1126,20 +1134,30 @@ AIBrain = Class(RNGAIBrainClass) {
                     if factionIndex == 1 then
                         if v:HasEnhancement('HeavyAntiMatterCannon') then
                             enemyACUGun = enemyACUGun + 1
+                            gunBool = true
                         end
                     elseif factionIndex == 2 then
                         if v:HasEnhancement('CrysalisBeam') then
                             enemyACUGun = enemyACUGun + 1
+                            gunBool = true
                         end
                     elseif factionIndex == 3 then
                         if v:HasEnhancement('CoolingUpgrade') then
                             enemyACUGun = enemyACUGun + 1
+                            gunBool = true
                         end
                     elseif factionIndex == 4 then
                         if v:HasEnhancement('RateOfFire') then
                             enemyACUGun = enemyACUGun + 1
+                            gunBool = true
                         end
                     end
+                end
+                if gunBool then
+                    self.EnemyIntel.ACU[enemyIndex].Gun = true
+                    LOG('Gun Upgrade Present on army '..enemy.Nickname)
+                else
+                    self.EnemyIntel.ACU[enemyIndex].Gun = false
                 end
             end
         end

@@ -756,6 +756,17 @@ end
 function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end
+
+function ACUOnField(aiBrain)
+    if aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 then
+        for k, v in aiBrain.EnemyIntel.ACU do
+            if v.OnField and v.Gun then
+                return true
+            end
+        end
+    end
+    return false
+end
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

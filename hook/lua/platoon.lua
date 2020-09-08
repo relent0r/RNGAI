@@ -1182,33 +1182,31 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         
-        if aiBrain.EnemyIntel.ACUEnemyClose then
-           --('Enemy ACU STRIKEFORCE Close, setting attack priority')
-            table.insert(atkPri, 'COMMAND')
-        else
-            if data.TargetSearchPriorities then
-                --LOG('TargetSearch present for '..self.BuilderName)
-                for k,v in data.TargetSearchPriorities do
-                    table.insert(atkPri, v)
-                end
-            else
-                if data.PrioritizedCategories then
-                    for k,v in data.PrioritizedCategories do
-                        table.insert(atkPri, v)
-                    end
-                end
+        if data.TargetSearchPriorities then
+            --LOG('TargetSearch present for '..self.BuilderName)
+            for k,v in data.TargetSearchPriorities do
+                table.insert(atkPri, v)
             end
+        else
             if data.PrioritizedCategories then
                 for k,v in data.PrioritizedCategories do
-                    table.insert(categoryList, ParseEntityCategory(v))
+                    table.insert(atkPri, v)
                 end
             end
         end
+        if data.PrioritizedCategories then
+            for k,v in data.PrioritizedCategories do
+                table.insert(categoryList, ParseEntityCategory(v))
+            end
+        end
+
         table.insert(atkPri, 'ALLUNITS')
         table.insert(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
         AIAttackUtils.GetMostRestrictiveLayer(self)
         local target
+        local acuTargeting = false
+        local acuTargetIndex = {}
         local blip = false
         local maxRadius = data.SearchRadius or 50
         local movingToScout = false
@@ -1223,26 +1221,43 @@ Platoon = Class(RNGAIPlatoon) {
         local myThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
         --LOG('StrikeForceAI my threat is '..myThreat)
         --LOG('StrikeForceAI my movement layer is '..self.MovementLayer)
+        if aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 and myThreat > 0 and self.MovementLayer == 'Air' then
+            for k, v in aiBrain.EnemyIntel.ACU do
+                if v.OnField and v.Gun then
+                    acuTargeting = true
+                    table.insert(acuTargetIndex, k)
+                end
+            end
+        end
         while PlatoonExists(aiBrain, self) do
             if not target or target.Dead then
                 if aiBrain:GetCurrentEnemy() and aiBrain:GetCurrentEnemy().Result == "defeat" then
                     aiBrain:PickEnemyLogicRNG()
                 end
-                if data.Defensive then
-                    target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
-                elseif data.AvoidBases then
-                    --LOG('Avoid Bases is set to true')
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, data.AvoidBases)
-                else
-                    local mult = { 1,10,25 }
-                    for _,i in mult do
-                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius * i, atkPri, false, myThreat)
-                        if target then
-                            break
-                        end
-                        WaitTicks(10) --DUNCAN - was 3
-                        if not PlatoonExists(aiBrain, self) then
-                            return
+                if acuTargeting and not data.ACUOnField then
+                    LOG('GUN ACU OnField LOOKING FOR TARGET')
+                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat)
+                end
+                if not target then
+                    if data.ACUOnField then
+                        LOG('Platoon has ACUOnField data, searching for energy to kill')
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, false, myThreat, acuTargetIndex)
+                    elseif data.Defensive then
+                        target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
+                    elseif data.AvoidBases then
+                        --LOG('Avoid Bases is set to true')
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, data.AvoidBases)
+                    else
+                        local mult = { 1,10,25 }
+                        for _,i in mult do
+                            target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius * i, atkPri, false, myThreat)
+                            if target then
+                                break
+                            end
+                            WaitTicks(10) --DUNCAN - was 3
+                            if not PlatoonExists(aiBrain, self) then
+                                return
+                            end
                         end
                     end
                 end
