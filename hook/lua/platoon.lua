@@ -3682,29 +3682,45 @@ Platoon = Class(RNGAIPlatoon) {
                 table.insert(atkPriTable, ParseEntityCategory(v))
             end
         end
-        table.insert(atkPri, 'ALLUNITS')
-        table.insert(atkPriTable, categories.ALLUNITS)
+        --table.insert(atkPri, 'ALLUNITS')
+        --table.insert(atkPriTable, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', atkPriTable)
 
         local maxRadius = data.SearchRadius or 50
         local oldTarget = false
         local target = false
+        LOG('Novax AI starting')
         
         while aiBrain:PlatoonExists(self) do
             self:MergeWithNearbyPlatoonsSorian('SatelliteAIRNG', 50, true)
             target = AIUtils.AIFindUndefendedBrainTargetInRangeSorian(aiBrain, self, 'Attack', maxRadius, atkPri)
             local targetRotation = 0
+            if target then
+                targetpos = target:GetPosition()
+                LOG('Target Position is '..repr(targetpos))
+            end
             if target and target != oldTarget and not target.Dead then
                 self:Stop()
                 self:AttackTarget(target)
-                while not target.Dead or targetRotation < 5 do
+                while (target and not target.Dead) or targetRotation < 6 do
                     LOG('Novax Target Rotation is '..targetRotation)
+                    local originalHealth = target:GetHealth()
+                    LOG('Targets health is '..originalHealth)
                     targetRotation = targetRotation + 1
-                    WaitTicks(200)
+                    WaitTicks(100)
                 end
-                oldTarget = target
+                if target and not target.Dead then
+                    local currentHealth = target:GetHealth()
+                    LOG('Target is not dead at end of loop with health '..currentHealth)
+                    if currentHealth == originalHealth then
+                        LOG('Enemy Unit Health no change, setting to old target')
+                        oldTarget = target
+                    end
+                end
             end
             WaitTicks(100)
+            self:Stop()
+            LOG('End of Satellite loop')
         end
     end,
 }

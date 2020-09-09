@@ -1092,8 +1092,8 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         -- Check for the nearest distance from mainbase
         UnitPos = v:GetPosition()
         DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-        if DistanceToBase < 6400 then
-            LOG('Mainbase extractor set true')
+        if DistanceToBase < 2500 then
+            --LOG('Mainbase extractor set true')
             v.MAINBASE = true
         end
         if (not LowestDistanceToBase and v.InitialDelay == false) or (DistanceToBase < LowestDistanceToBase and v.InitialDelay == false) then

@@ -624,7 +624,6 @@ function GetLastACUPosition(aiBrain, enemyIndex)
             if k == enemyIndex then
                 acuPos = v.Position
                 lastSpotted = v.LastSpotted
-                gun = v.Gun
                 --LOG('* AI-RNG: acuPos has data')
             else
                 --LOG('* AI-RNG: acuPos is currently false')
@@ -638,7 +637,7 @@ function GetLastACUPosition(aiBrain, enemyIndex)
         end]]
         end
     end
-    return acuPos, lastSpotted, gun
+    return acuPos, lastSpotted
 end
 
 

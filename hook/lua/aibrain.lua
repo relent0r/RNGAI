@@ -182,6 +182,15 @@ AIBrain = Class(RNGAIBrainClass) {
             DefenseSub = 0,
             ACUGunUpgrades = 0,
         }
+        for _, v in ArmyBrains do
+            self.EnemyIntel.ACU[v:GetArmyIndex()] = {
+                Position = {},
+                LastSpotted = 0,
+                Threat = 0,
+                OnField = false,
+                Gun = false,
+            }
+        end
 
         self.BrainIntel = {}
         self.BrainIntel.AllyCount = 0
@@ -641,7 +650,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             -- Doesn't exist yet!!. Check if the ACU's last position is known.
             --LOG('* AI-RNG: Enemy Index is :'..enemyIndex)
-            local acuPos, lastSpotted, gun = RUtils.GetLastACUPosition(self, enemyIndex)
+            local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
             --LOG('* AI-RNG: ACU Position is has data'..repr(acuPos))
             insertTable.ACUPosition = acuPos
             insertTable.ACULastSpotted = lastSpotted
@@ -763,15 +772,6 @@ AIBrain = Class(RNGAIBrainClass) {
     ParseIntelThreadRNG = function(self)
         if not self.InterestList or not self.InterestList.MustScout then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
-        end
-        for _, v in ArmyBrains do
-            self.EnemyIntel.ACU[v:GetArmyIndex()] = {
-                Position = {},
-                LastSpotted = 0,
-                Threat = 0,
-                OnField = false,
-                Gun = false,
-            }
         end
         while true do
             local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
