@@ -2910,7 +2910,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             end
-            if not target.Dead then
+            if target and not target.Dead then
                 --LOG('*AI DEBUG: Firing Tactical Missile at enemy swine!')
                 IssueTactical({unit}, target)
             end
