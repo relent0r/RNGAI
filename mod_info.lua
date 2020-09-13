@@ -14,4 +14,7 @@ requires = { }
 requiresNames = { }
 conflicts = { }
 before = { }
-after = { }
+after = { 
+    "62e2j64a-AIUV-0870-89465-146as555a8u3",
+    "a13ac591-b2d9-4d94-0212-3d4b3cce6b97"
+}

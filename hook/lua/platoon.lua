@@ -1067,6 +1067,8 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                                 if not target or target.Dead then
                                     --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. '..repr(path[i]))
+                                    self:MoveToLocation(targetPosition, false, 'Attack')
+                                    WaitTicks(30)
                                     self:Stop()
                                     break
                                 end
@@ -1274,7 +1276,7 @@ Platoon = Class(RNGAIPlatoon) {
                     target = newtarget
                 end
 
-                if target then
+                if target and not target.Dead then
                     self:Stop()
                     if data.AggressiveMove then
                         self:AggressiveMoveToLocation(table.copy(target:GetPosition()))
@@ -1283,23 +1285,18 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         self:MoveToLocation(table.copy(target:GetPosition()), false)
                     end
-                    movingToScout = false
-                elseif not movingToScout then
-                    if data.Defensive then
-                        --LOG('* AI-RNG: Defensive Platoon')
-                        return self:ReturnToBaseAIRNG(true)
-                    end
-                    movingToScout = true
-                    self:Stop()
-                    for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, GetPlatoonPosition(self)) do
-                        if v[1] < 0 or v[3] < 0 or v[1] > ScenarioInfo.size[1] or v[3] > ScenarioInfo.size[2] then
-                            --LOG('*AI-RNG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
-                        end
-                        self:MoveToLocation((v), false)
-                    end
+                elseif data.Defensive then 
+                    WaitTicks(30)
+                    return self:ReturnToBaseAIRNG(true)
+                elseif target.Dead then
+                    WaitTicks(10)
+                    continue
+                else
+                    WaitTicks(30)
+                    return self:ReturnToBaseAIRNG(true)
                 end
             end
-            WaitTicks(70)
+            WaitTicks(50)
         end
     end,
 
@@ -3704,10 +3701,11 @@ Platoon = Class(RNGAIPlatoon) {
                 self:AttackTarget(target)
                 while (target and not target.Dead) or targetRotation < 6 do
                     LOG('Novax Target Rotation is '..targetRotation)
-                    local originalHealth = target:GetHealth()
-                    LOG('Targets health is '..originalHealth)
                     targetRotation = targetRotation + 1
                     WaitTicks(100)
+                    if target.Dead then
+                        break
+                    end
                 end
                 if target and not target.Dead then
                     local currentHealth = target:GetHealth()

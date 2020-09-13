@@ -230,14 +230,14 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
 
-        local upgradeModeRNG = math.random(2)
-        if upgradeModeRNG == 1 then
+        local coinFlip = math.random(2)
+        if coinFlip == 1 then
             self.UpgradeMode = 'Normal'
-        elseif upgradeModeRNG == 2 then
+        elseif coinFlip == 2 then
             self.UpgradeMode = 'Caution'
             self.UpgradeIssuedLimit = 1
         end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
+        LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
         
 
         -- ACU Support Data
@@ -764,7 +764,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if closest < 9999999 and expansionName then
                 --LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                --LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
+                LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
         end
     end,
@@ -901,12 +901,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 5
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 1.1
-                upgradeSpec.EnergyLowTrigger = 1.2
+                upgradeSpec.MassLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 1.1
                 upgradeSpec.MassHighTrigger = 2.5
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 120
+                upgradeSpec.InitialDelay = 100
                 upgradeSpec.EnemyThreatLimit = 0
                 return upgradeSpec
             end
@@ -1938,7 +1938,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM , v.UnitBeingBuilt) then
+                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.MASSSTORAGE) , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end

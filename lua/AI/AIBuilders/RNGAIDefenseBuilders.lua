@@ -10,6 +10,22 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+
+local ActiveExpansion = function(self, aiBrain, manager)
+    local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
+    if aiBrain.BrainIntel.ActiveExpansion then
+        RUtils.DebugArrayRNG(manager)
+        --LOG('Active Expansion')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 900
+    else
+        --LOG('Disable Air Intie Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
 
 
 BuilderGroup {
@@ -658,13 +674,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence Land - Perimeter Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 650,
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.70}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -673,7 +690,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
-                Radius = 35,
+                Radius = 25,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
                 BuildClose = false,
@@ -725,12 +742,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer - Perimeter Expansion',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 750,
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.70}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH2' } },
@@ -741,7 +759,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
-                Radius = 30,
+                Radius = 20,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
                 BuildClose = true,

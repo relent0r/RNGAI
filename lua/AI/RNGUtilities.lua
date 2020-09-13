@@ -1100,7 +1100,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
         local targetShields = 9999
         for num, unit in targetUnits do
             if index then
-                for k, v in enemyIndex do
+                for k, v in index do
                     if unit:GetAIBrain():GetArmyIndex() == v then
                         if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                             local unitPos = unit:GetPosition()

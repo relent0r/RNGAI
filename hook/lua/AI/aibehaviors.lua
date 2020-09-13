@@ -775,9 +775,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (720 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (620 / multiplier)
+        ecoTimeOut = (520 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (920 / multiplier)
+        ecoTimeOut = (820 / multiplier)
     end
     if aiBrain.CheatEnabled then
         multiplier = tonumber(ScenarioInfo.Options.BuildMult)
