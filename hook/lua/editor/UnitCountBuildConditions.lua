@@ -767,6 +767,13 @@ function ACUOnField(aiBrain)
     end
     return false
 end
+
+function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, LocationType, compareType, numUnits, category)
+    local numEngineers = aiBrain.BuilderManagers[LocationType].EngineerManager:GetNumCategoryUnits('Engineers', category)
+    --LOG('* EngineerManagerUnitsAtLocation: '..LocationType..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- '..category..' return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
+    return CompareBody( numEngineers, numUnits, compareType )
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

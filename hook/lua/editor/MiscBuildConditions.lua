@@ -230,3 +230,11 @@ function AirAttackModeCheck(self, aiBrain)
     return false
 end
 
+function ExpansionIsActive(self, aiBrain)
+    local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
+    if activeExpansion then
+        return true
+    end
+    return false
+end
+    

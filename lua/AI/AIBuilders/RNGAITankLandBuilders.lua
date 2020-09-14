@@ -866,15 +866,33 @@ BuilderGroup {
         Priority = 550,                                                          -- Priority. 1000 is normal.
         PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
+            },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE'
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
             },
     },
     Builder {

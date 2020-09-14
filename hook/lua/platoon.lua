@@ -899,6 +899,7 @@ Platoon = Class(RNGAIPlatoon) {
         local maxPathDistance = 250
         local enemyRadius = 40
         local bAggroMove = self.PlatoonData.AggressiveMove
+        local maxRadius = data.SearchRadius or 200
         local MaxPlatoonWeaponRange
         
         if platoonUnits > 0 then
@@ -938,9 +939,32 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         end
+        if data.TargetSearchPriorities then
+            --LOG('TargetSearch present for '..self.BuilderName)
+            for k,v in data.TargetSearchPriorities do
+                table.insert(atkPri, v)
+            end
+        else
+            if data.PrioritizedCategories then
+                for k,v in data.PrioritizedCategories do
+                    table.insert(atkPri, v)
+                end
+            end
+        end
+        if data.PrioritizedCategories then
+            for k,v in data.PrioritizedCategories do
+                table.insert(categoryList, ParseEntityCategory(v))
+            end
+        end
+
+        table.insert(atkPri, 'ALLUNITS')
+        table.insert(categoryList, categories.ALLUNITS)
+        self:SetPrioritizedTargetList('Attack', categoryList)
+
         while PlatoonExists(aiBrain, self) do
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+            --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+            target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
             if target then
                 local targetPosition = target:GetPosition()
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
@@ -1006,7 +1030,8 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     
                     if not usedTransports then
-                        for i=1, table.getn(path) do
+                        local pathNodesCount = table.getn(path)
+                        for i=1, pathNodesCount do
                             local PlatoonPosition
                             if guardUnits then
                                 local guardedUnit = 1
@@ -1040,6 +1065,7 @@ Platoon = Class(RNGAIPlatoon) {
                             local dist
                             local Stuck = 0
                             local retreatCount = 2
+                            local attackFormation = false
                             while PlatoonExists(aiBrain, self) do
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
@@ -1073,6 +1099,13 @@ Platoon = Class(RNGAIPlatoon) {
                                     break
                                 end
                                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], SquadPosition[1], SquadPosition[3] )
+                                --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
+                                if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
+                                    attackFormation = true
+                                    --LOG('* AI-RNG: * MovePath: distEnd < 50 '..distEnd)
+                                    self:SetPlatoonFormationOverride('AttackFormation')
+                                end
                                 if enemyUnitCount > 0 then
                                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')

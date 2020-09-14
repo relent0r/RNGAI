@@ -861,5 +861,57 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+}
 
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Engineer Transfer To Active Expansion',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Eng Trans ActiveExpansion',
+        PlatoonTemplate = 'U1EngineerTransfer',
+        Priority = 500,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSeconds', { 60*20 } },
+            { MIBC, 'ExpansionIsActive', {} },
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 3,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
+        },
+        BuilderData = {
+            MoveToLocationType = 'MAIN',
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Eng Trans ActiveExpansion',
+        PlatoonTemplate = 'U2EngineerTransfer',
+        Priority = 510,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSeconds', { 60*20 } },
+            { MIBC, 'ExpansionIsActive', {} },
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 3,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
+        },
+        BuilderData = {
+            MoveToLocationType = 'MAIN',
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Eng Trans ActiveExpansion',
+        PlatoonTemplate = 'U3EngineerTransfer',
+        Priority = 520,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSeconds', { 60*30 } },
+            { MIBC, 'ExpansionIsActive', {} },
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 3,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
+        },
+        BuilderData = {
+            MoveToLocationType = 'MAIN',
+        },
+        BuilderType = 'Any',
+    },
 }
