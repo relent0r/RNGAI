@@ -12,7 +12,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
-local AirDefenseMode = function(self, aiBrain, manager)
+local AirDefenseMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
     if myAirThreat < enemyAirThreat then

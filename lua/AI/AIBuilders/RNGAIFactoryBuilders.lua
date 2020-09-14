@@ -1519,13 +1519,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Gate Builder',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 700,
+        Priority = 800,
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Gate' } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
             -- Don't build it if...
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             -- Respect UnitCap
             { UCBC, 'HaveUnitRatioVersusCap', { 0.02 , '<', categories.STRUCTURE * categories.GATE } },
         },

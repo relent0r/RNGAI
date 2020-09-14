@@ -8,7 +8,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI SACU Engineer',
         PlatoonTemplate = 'RNGAI SACU Engineer preset',
-        Priority = 500,
+        Priority = 400,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SUBCOMMANDER } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
@@ -20,9 +20,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI SACU RAS',
         PlatoonTemplate = 'RNGAI SACU RAS preset 123x5',
-        Priority = 500,
+        Priority = 700,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SUBCOMMANDER } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.SUBCOMMANDER } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.75}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},

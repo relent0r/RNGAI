@@ -12,12 +12,13 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
-local ActiveExpansion = function(self, aiBrain, manager)
+local ActiveExpansion = function(self, aiBrain, builderManager)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
-    if aiBrain.BrainIntel.ActiveExpansion then
+    LOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
         RUtils.DebugArrayRNG(manager)
-        --LOG('Active Expansion')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        LOG('Active Expansion is set'..builderManager.Location)
+        LOG('Active Expansion builders are set to 900')
         return 900
     else
         --LOG('Disable Air Intie Pool Builder')
@@ -669,7 +670,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T1 Perimeter Defenses Expansions',
+    BuilderGroupName = 'RNGAI Perimeter Defenses Expansions',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Land - Perimeter Expansion',

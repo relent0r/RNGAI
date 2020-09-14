@@ -1263,6 +1263,9 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 end
+                if not target then
+                    LOG('Strikeforce no target found')
+                end
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
                 -- Set to mass extraction, can't make experimentals without mass
@@ -1289,9 +1292,12 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(30)
                     return self:ReturnToBaseAIRNG(true)
                 elseif target.Dead then
+                    LOG('Strikeforce Target Dead performing loop')
+                    target = false
                     WaitTicks(10)
                     continue
                 else
+                    LOG('Strikeforce No Target we should be returning to base')
                     WaitTicks(30)
                     return self:ReturnToBaseAIRNG(true)
                 end

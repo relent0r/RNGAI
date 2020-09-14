@@ -1490,7 +1490,7 @@ AIBrain = Class(RNGAIBrainClass) {
     -- Watches for low power states
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
-                if GetGameTimeSeconds() < 300 then
+                if GetGameTimeSeconds() < 240 then
                     WaitTicks(50)
                     continue
                 end
