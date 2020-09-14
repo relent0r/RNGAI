@@ -3727,4 +3727,27 @@ Platoon = Class(RNGAIPlatoon) {
             LOG('End of Satellite loop')
         end
     end,
+
+    TransferAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+        if not aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType] then
+            --LOG('* AI-RNG: * TransferAIRNG: Location ('..self.PlatoonData.MoveToLocationType..') has no BuilderManager!')
+            self:PlatoonDisband()
+            return
+        end
+        local eng = self:GetPlatoonUnits()[1]
+        if eng and not eng.Dead and eng.BuilderManagerData.EngineerManager then
+            --LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
+            eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)
+            --LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..self.PlatoonData.MoveToLocationType..' - ' .. aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
+            aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType].EngineerManager:AddUnit(eng, true)
+            -- Move the unit to the desired base after transfering BuilderManagers to the new LocationType
+            local basePosition = aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType].Position
+            --LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. self.PlatoonData.MoveToLocationType)
+            AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, basePosition)
+        end
+        if aiBrain:PlatoonExists(self) then
+            self:PlatoonDisband()
+        end
+    end,
 }
