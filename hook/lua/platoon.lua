@@ -1314,13 +1314,35 @@ Platoon = Class(RNGAIPlatoon) {
                 end
 
                 if target and not target.Dead then
-                    self:Stop()
-                    if data.AggressiveMove then
-                        self:AggressiveMoveToLocation(table.copy(target:GetPosition()))
-                    elseif not data.UseMoveOrder then
+                    local targetPosition = target:GetPosition()
+                    local platoonPosition = GetPlatoonPosition(self)
+                    local targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
+                    local path = false
+                    if targetDistance < 10000 then
                         self:AttackTarget(target)
                     else
-                        self:MoveToLocation(table.copy(target:GetPosition()), false)
+                        local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 100 , 10000)
+                        self:Stop()
+                        if path then
+                            for k, node in path do
+                                self:MoveToLocation(node, false)
+                            end
+                            while PlatoonExists(aiBrain, self) do
+                                if not target or target.Dead then
+                                    target = false
+                                    break
+                                end
+                                targetPosition = target:GetPosition()
+                                targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
+                                if targetDistance < 10000 then
+                                    self:AttackTarget(target)
+                                    break
+                                end
+                                WaitTicks(10)
+                            end
+                        else
+                            self:AttackTarget(target)
+                        end
                     end
                 elseif data.Defensive then 
                     WaitTicks(30)
