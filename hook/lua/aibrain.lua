@@ -906,7 +906,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.MassHighTrigger = 2.5
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 100
+                upgradeSpec.InitialDelay = 90
                 upgradeSpec.EnemyThreatLimit = 0
                 return upgradeSpec
             end

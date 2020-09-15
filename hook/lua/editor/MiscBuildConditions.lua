@@ -185,10 +185,16 @@ function TMLEnemyStartRangeCheck(aiBrain)
     return false
 end
 
-function GreaterThanGameTimeRNG(aiBrain, num)
+function GreaterThanGameTimeRNG(aiBrain, num, caution)
     local time = GetGameTimeSeconds()
     local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
-    if aiBrain.CheatEnabled and (num / multiplier) < time then
+    if caution and aiBrain.UpgradeMode == 'caution' then
+        if aiBrain.CheatEnabled and ((num / multiplier) * 1.3) < time then
+            return true
+        elseif num * 1.3 < time then
+            return true
+        end
+    elseif aiBrain.CheatEnabled and (num / multiplier) < time then
         return true
     elseif num < time then
         return true
