@@ -886,7 +886,7 @@ BuilderGroup {
             PrioritizedCategories = {
                 'COMMAND',
                 'EXPERIMENTAL',
-                'STRUCTURE DEFENSE'
+                'STRUCTURE DEFENSE',
                 'MOBILE LAND ANTIAIR',
                 'MOBILE LAND',
                 'ENGINEER',
@@ -894,6 +894,7 @@ BuilderGroup {
                 'MASSEXTRACTION',
                 'ALLUNITS',
             },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib',                              -- Random Builder Name.

@@ -895,9 +895,12 @@ Platoon = Class(RNGAIPlatoon) {
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local blip
+        local categoryList = {}
+        local atkPri = {}
         local platoonUnits = GetPlatoonUnits(self)
         local maxPathDistance = 250
         local enemyRadius = 40
+        local data = self.PlatoonData
         local bAggroMove = self.PlatoonData.AggressiveMove
         local maxRadius = data.SearchRadius or 200
         local MaxPlatoonWeaponRange
@@ -1069,43 +1072,7 @@ Platoon = Class(RNGAIPlatoon) {
                             while PlatoonExists(aiBrain, self) do
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
-                                dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
-                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
-                                --LOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
-                                if dist < 400 then
-                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                    self:Stop()
-                                    break
-                                end
-                                
-                                
-                                if Lastdist ~= dist then
-                                    Stuck = 0
-                                    Lastdist = dist
-                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
-                                else
-                                    Stuck = Stuck + 1
-                                    if Stuck > 15 then
-                                        --LOG('* AI-RNG: * HuntAIPATH: Stuck while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
-                                        self:Stop()
-                                        break
-                                    end
-                                end
-                                if not target or target.Dead then
-                                    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. '..repr(path[i]))
-                                    self:MoveToLocation(targetPosition, false, 'Attack')
-                                    WaitTicks(30)
-                                    self:Stop()
-                                    break
-                                end
                                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
-                                distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], SquadPosition[1], SquadPosition[3] )
-                                --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
-                                if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
-                                    attackFormation = true
-                                    --LOG('* AI-RNG: * MovePath: distEnd < 50 '..distEnd)
-                                    self:SetPlatoonFormationOverride('AttackFormation')
-                                end
                                 if enemyUnitCount > 0 then
                                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
@@ -1156,6 +1123,40 @@ Platoon = Class(RNGAIPlatoon) {
                                         end
                                         WaitTicks(10)
                                     end
+                                end
+                                distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], SquadPosition[1], SquadPosition[3] )
+                                --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
+                                if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
+                                    attackFormation = true
+                                    --LOG('* AI-RNG: * MovePath: distEnd < 50 '..distEnd)
+                                    self:SetPlatoonFormationOverride('AttackFormation')
+                                end
+                                dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
+                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                                --LOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
+                                if dist < 400 then
+                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                    self:Stop()
+                                    break
+                                end
+                                if Lastdist ~= dist then
+                                    Stuck = 0
+                                    Lastdist = dist
+                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                                else
+                                    Stuck = Stuck + 1
+                                    if Stuck > 15 then
+                                        --LOG('* AI-RNG: * HuntAIPATH: Stuck while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                        self:Stop()
+                                        break
+                                    end
+                                end
+                                if not target or target.Dead then
+                                    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. '..repr(path[i]))
+                                    self:MoveToLocation(targetPosition, false, 'Attack')
+                                    WaitTicks(30)
+                                    self:Stop()
+                                    break
                                 end
                                 --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
                                 WaitTicks(15)
