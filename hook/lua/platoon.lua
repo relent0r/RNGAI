@@ -1324,8 +1324,9 @@ Platoon = Class(RNGAIPlatoon) {
                         local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 100 , 10000)
                         self:Stop()
                         if path then
-                            for k, node in path do
-                                self:MoveToLocation(node, false)
+                            local pathLength = table.getn(path)
+                            for i=1, pathLength-1 do
+                                self:MoveToLocation(path[i], false)
                             end
                             while PlatoonExists(aiBrain, self) do
                                 if not target or target.Dead then

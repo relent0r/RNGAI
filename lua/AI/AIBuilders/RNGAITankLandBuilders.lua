@@ -369,6 +369,7 @@ BuilderGroup {
         BuilderType = 'Land',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, 'FACTORY LAND TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, true}},
