@@ -14,11 +14,11 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 local ActiveExpansion = function(self, aiBrain, builderManager)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
-    LOG('LocationType is '..builderManager.LocationType)
+    --LOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
         RUtils.DebugArrayRNG(manager)
-        LOG('Active Expansion is set'..builderManager.Location)
-        LOG('Active Expansion builders are set to 900')
+        --LOG('Active Expansion is set'..builderManager.Location)
+        --LOG('Active Expansion builders are set to 900')
         return 900
     else
         --LOG('Disable Air Intie Pool Builder')

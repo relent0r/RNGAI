@@ -227,7 +227,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         return
     end
 
-    if numUnits > 0 or (not cdr.DistressCall and distressLoc and Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
+    if numUnits > 1 or (not cdr.DistressCall and distressLoc and Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
         --LOG('Num of units greater than zero or base distress')
         if cdr.UnitBeingBuilt then
             --LOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
@@ -775,9 +775,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (720 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (520 / multiplier)
+        ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (820 / multiplier)
+        ecoTimeOut = (720 / multiplier)
     end
     if aiBrain.CheatEnabled then
         multiplier = tonumber(ScenarioInfo.Options.BuildMult)
@@ -845,7 +845,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             end
         end
         if unit.MAINBASE then
-            LOG('MAINBASE Extractor')
+            --LOG('MAINBASE Extractor')
         end
         --LOG('Current Upgrade Limit is :'..upgradeNumLimit)
         
@@ -1677,13 +1677,14 @@ function FatBoyBuildCheckRNG(self)
     end
 end
 
-function BehemothBehaviorRNG(self)
+function BehemothBehaviorRNG(self, id)
     AssignExperimentalPriorities(self)
 
     local experimental = GetExperimentalUnit(self)
     local targetUnit = false
     local lastBase = false
     local airUnit = EntityCategoryContains(categories.AIR, experimental)
+    -- Don't forget we have the unit ID for specialized behaviors.
     -- Find target loop
     while experimental and not experimental.Dead do
         if lastBase then
@@ -1699,6 +1700,8 @@ function BehemothBehaviorRNG(self)
 
         -- Walk to and kill target loop
         while not experimental.Dead and not experimental:IsIdleState() do
+            local unitPos = self:GetPlatoonPosition()
+            local targetPos = targetUnit:GetPosition()
             local nearCommander = CommanderOverrideCheck(self)
             if nearCommander and nearCommander ~= targetUnit then
                 IssueClearCommands({experimental})
@@ -1708,6 +1711,11 @@ function BehemothBehaviorRNG(self)
 
             -- If no target jump out
             if not targetUnit then break end
+            if aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
+                --LOG('Experimental WEAPON BLOCKED, moving to better position')
+                IssueMove({experimental}, targetPos )
+                WaitTicks(50)
+            end
 
             -- Check if we or the target are under a shield
             local closestBlockingShield = false
@@ -1719,11 +1727,17 @@ function BehemothBehaviorRNG(self)
             -- Kill shields loop
             while closestBlockingShield do
                 IssueClearCommands({experimental})
+                local shieldPosition = closestBlockingShield:GetPosition()
+                IssueMove({experimental}, shieldPosition)
+                WaitTicks(30)
                 IssueAttack({experimental}, closestBlockingShield)
 
                 -- Wait for shield to die loop
                 while not closestBlockingShield.Dead and not experimental.Dead do
-                    WaitSeconds(1)
+                    WaitTicks(20)
+                    IssueMove({experimental}, shieldPosition)
+                    WaitTicks(30)
+                    IssueAttack({experimental}, closestBlockingShield)
                 end
 
                 closestBlockingShield = false
@@ -1733,9 +1747,9 @@ function BehemothBehaviorRNG(self)
                 closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
                 WaitTicks(1)
             end
-            WaitSeconds(1)
+            WaitTicks(10)
         end
-        WaitSeconds(1)
+        WaitTicks(10)
     end
 end
 

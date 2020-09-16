@@ -1305,12 +1305,12 @@ Platoon = Class(RNGAIPlatoon) {
                     aiBrain:PickEnemyLogicRNG()
                 end
                 if acuTargeting and not data.ACUOnField then
-                    LOG('GUN ACU OnField LOOKING FOR TARGET')
+                    --LOG('GUN ACU OnField LOOKING FOR TARGET')
                     target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat)
                 end
                 if not target then
                     if data.ACUOnField then
-                        LOG('Platoon has ACUOnField data, searching for energy to kill')
+                        --LOG('Platoon has ACUOnField data, searching for energy to kill')
                         target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, false, myThreat, acuTargetIndex)
                     elseif data.Defensive then
                         target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
@@ -1332,7 +1332,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 if not target then
-                    LOG('Strikeforce no target found')
+                    --LOG('Strikeforce no target found')
                 end
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
@@ -1354,23 +1354,29 @@ Platoon = Class(RNGAIPlatoon) {
                         local targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                         local path = false
                         if targetDistance < 10000 then
+                            self:Stop()
                             self:AttackTarget(target)
                         else
                             local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 100 , 10000)
                             self:Stop()
                             if path then
                                 local pathLength = table.getn(path)
+                                --LOG('StrikeForce air assigning path')
                                 for i=1, pathLength-1 do
                                     self:MoveToLocation(path[i], false)
                                 end
                                 while PlatoonExists(aiBrain, self) do
                                     if not target or target.Dead then
                                         target = false
+                                        --LOG('Target dead or lost during strikeforce air')
                                         break
                                     end
+                                    platoonPosition = GetPlatoonPosition(self)
                                     targetPosition = target:GetPosition()
                                     targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                                     if targetDistance < 10000 then
+                                        --LOG('strikeforce air attack command on target')
+                                        self:Stop()
                                         self:AttackTarget(target)
                                         break
                                     end
@@ -1387,6 +1393,7 @@ Platoon = Class(RNGAIPlatoon) {
                             if not SquadPosition then break end
                             local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                             if enemyUnitCount > 0 then
+                                --LOG('Strikeforce land detected close target starting micro')
                                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                 local attackSquad = self:GetSquadUnits('Attack')
                                 IssueClearCommands(attackSquad)
@@ -1447,12 +1454,12 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(30)
                     return self:ReturnToBaseAIRNG(true)
                 elseif target.Dead then
-                    LOG('Strikeforce Target Dead performing loop')
+                    --LOG('Strikeforce Target Dead performing loop')
                     target = false
                     WaitTicks(10)
                     continue
                 else
-                    LOG('Strikeforce No Target we should be returning to base')
+                    --LOG('Strikeforce No Target we should be returning to base')
                     WaitTicks(30)
                     return self:ReturnToBaseAIRNG(true)
                 end
@@ -3790,7 +3797,7 @@ Platoon = Class(RNGAIPlatoon) {
             return behaviors.TickBehavior(self)
         end
 
-        return behaviors.BehemothBehaviorRNG(self)
+        return behaviors.BehemothBehaviorRNG(self, ID)
     end,
 
     NukeAIRNG = function(self)
@@ -3840,14 +3847,14 @@ Platoon = Class(RNGAIPlatoon) {
                 table.insert(atkPriTable, ParseEntityCategory(v))
             end
         end
-        --table.insert(atkPri, 'ALLUNITS')
-        --table.insert(atkPriTable, categories.ALLUNITS)
+        table.insert(atkPri, 'ALLUNITS')
+        table.insert(atkPriTable, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', atkPriTable)
 
         local maxRadius = data.SearchRadius or 50
         local oldTarget = false
         local target = false
-        LOG('Novax AI starting')
+       --('Novax AI starting')
         
         while aiBrain:PlatoonExists(self) do
             self:MergeWithNearbyPlatoonsSorian('SatelliteAIRNG', 50, true)
@@ -3855,13 +3862,13 @@ Platoon = Class(RNGAIPlatoon) {
             local targetRotation = 0
             if target then
                 targetpos = target:GetPosition()
-                LOG('Target Position is '..repr(targetpos))
+                --LOG('Target Position is '..repr(targetpos))
             end
             if target and target != oldTarget and not target.Dead then
                 self:Stop()
                 self:AttackTarget(target)
                 while (target and not target.Dead) or targetRotation < 6 do
-                    LOG('Novax Target Rotation is '..targetRotation)
+                    --LOG('Novax Target Rotation is '..targetRotation)
                     targetRotation = targetRotation + 1
                     WaitTicks(100)
                     if target.Dead then
@@ -3870,23 +3877,24 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if target and not target.Dead then
                     local currentHealth = target:GetHealth()
-                    LOG('Target is not dead at end of loop with health '..currentHealth)
+                    --LOG('Target is not dead at end of loop with health '..currentHealth)
                     if currentHealth == originalHealth then
-                        LOG('Enemy Unit Health no change, setting to old target')
+                        --LOG('Enemy Unit Health no change, setting to old target')
                         oldTarget = target
                     end
                 end
             end
             WaitTicks(100)
             self:Stop()
-            LOG('End of Satellite loop')
+            --LOG('End of Satellite loop')
         end
     end,
 
     TransferAIRNG = function(self)
         local aiBrain = self:GetBrain()
-        if not aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType] then
-            --LOG('* AI-RNG: * TransferAIRNG: Location ('..self.PlatoonData.MoveToLocationType..') has no BuilderManager!')
+        local moveToLocation = aiBrain.BrainIntel.ActiveExpansion
+        if not aiBrain.BuilderManagers[moveToLocation] then
+            --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..') has no BuilderManager!')
             self:PlatoonDisband()
             return
         end
@@ -3894,11 +3902,11 @@ Platoon = Class(RNGAIPlatoon) {
         if eng and not eng.Dead and eng.BuilderManagerData.EngineerManager then
             --LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
             eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)
-            --LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..self.PlatoonData.MoveToLocationType..' - ' .. aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
-            aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType].EngineerManager:AddUnit(eng, true)
+            --LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..moveToLocation..' - ' .. aiBrain.BuilderManagers[moveToLocation].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
+            aiBrain.BuilderManagers[self.moveToLocation].EngineerManager:AddUnit(eng, true)
             -- Move the unit to the desired base after transfering BuilderManagers to the new LocationType
-            local basePosition = aiBrain.BuilderManagers[self.PlatoonData.MoveToLocationType].Position
-            --LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. self.PlatoonData.MoveToLocationType)
+            local basePosition = aiBrain.BuilderManagers[moveToLocation].Position
+            --LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. moveToLocation)
             AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, basePosition)
         end
         if aiBrain:PlatoonExists(self) then

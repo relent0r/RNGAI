@@ -237,7 +237,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeMode = 'Caution'
             self.UpgradeIssuedLimit = 1
         end
-        LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
+        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
         
 
         -- ACU Support Data
@@ -764,7 +764,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if closest < 9999999 and expansionName then
                 --LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
+                --LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
         end
     end,
@@ -902,11 +902,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
                 upgradeSpec.MassLowTrigger = 1.0
-                upgradeSpec.EnergyLowTrigger = 1.1
+                upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 2.5
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 90
+                upgradeSpec.InitialDelay = 80
                 upgradeSpec.EnemyThreatLimit = 0
                 return upgradeSpec
             end
@@ -1155,7 +1155,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if gunBool then
                     self.EnemyIntel.ACU[enemyIndex].Gun = true
-                    LOG('Gun Upgrade Present on army '..enemy.Nickname)
+                    --LOG('Gun Upgrade Present on army '..enemy.Nickname)
                 else
                     self.EnemyIntel.ACU[enemyIndex].Gun = false
                 end
