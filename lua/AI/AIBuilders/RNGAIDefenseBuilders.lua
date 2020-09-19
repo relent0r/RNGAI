@@ -16,8 +16,7 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
     --LOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
-        RUtils.DebugArrayRNG(manager)
-        --LOG('Active Expansion is set'..builderManager.Location)
+        LOG('Active Expansion is set'..builderManager.LocationType)
         --LOG('Active Expansion builders are set to 900')
         return 900
     else
@@ -682,7 +681,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -691,7 +690,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
-                Radius = 25,
+                Radius = 18,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
                 BuildClose = false,
@@ -749,7 +748,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND} },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, 'DEFENSE TECH2'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.70}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE TECH2' } },
@@ -760,7 +759,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
-                Radius = 20,
+                Radius = 14,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
                 BuildClose = true,

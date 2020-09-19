@@ -223,7 +223,7 @@ function MapSizeLessThan(aiBrain, size)
     return false
 end
 
-function AirAttackModeCheck(self, aiBrain)
+function AirAttackModeCheck(aiBrain)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     if myAirThreat and enemyAirThreat then
@@ -236,7 +236,7 @@ function AirAttackModeCheck(self, aiBrain)
     return false
 end
 
-function ExpansionIsActive(self, aiBrain)
+function ExpansionIsActive(aiBrain)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
     if activeExpansion then
         return true

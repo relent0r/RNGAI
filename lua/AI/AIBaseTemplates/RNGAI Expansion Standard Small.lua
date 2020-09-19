@@ -31,6 +31,7 @@ BaseBuilderTemplate {
 
                 -- Air Unit Formers --
                 'RNGAI Air Platoon Builder',
+                'RNGAI Perimeter Defenses Expansions',
         
                 -- Land Factory Builders --
                 --'RNGAI Factory Builder Land',

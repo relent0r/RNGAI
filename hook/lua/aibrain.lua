@@ -237,7 +237,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeMode = 'Caution'
             self.UpgradeIssuedLimit = 1
         end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
+        LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
         
 
         -- ACU Support Data
@@ -764,7 +764,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if closest < 9999999 and expansionName then
                 --LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                --LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
+                LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
         end
     end,

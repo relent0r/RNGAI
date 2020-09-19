@@ -868,14 +868,14 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Eng Trans ActiveExpansion',
-        PlatoonTemplate = 'U1EngineerTransfer',
+        PlatoonTemplate = 'T1EngineerTransferRNG',
         Priority = 500,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'GreaterThanGameTimeSeconds', { 60*20 } },
+            { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
             { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
-            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 3,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
             MoveToLocationType = 'MAIN',
@@ -884,14 +884,14 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Eng Trans ActiveExpansion',
-        PlatoonTemplate = 'U2EngineerTransfer',
+        PlatoonTemplate = 'T2EngineerTransferRNG',
         Priority = 510,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'GreaterThanGameTimeSeconds', { 60*20 } },
+            { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
             { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
-            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 3,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
             MoveToLocationType = 'MAIN',
@@ -900,14 +900,14 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Eng Trans ActiveExpansion',
-        PlatoonTemplate = 'U3EngineerTransfer',
+        PlatoonTemplate = 'T3EngineerTransferRNG',
         Priority = 520,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'GreaterThanGameTimeSeconds', { 60*30 } },
+            { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
             { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
-            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 3,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
             MoveToLocationType = 'MAIN',

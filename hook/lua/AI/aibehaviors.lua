@@ -1507,6 +1507,7 @@ function FatBoyBehaviorRNG(self)
     local unit = GetExperimentalUnit(self)
     local targetUnit = false
     local lastBase = false
+    
 
     local mainWeapon = unit:GetWeapon(1)
     unit.MaxWeaponRange = mainWeapon:GetBlueprint().MaxRadius
@@ -1519,16 +1520,22 @@ function FatBoyBehaviorRNG(self)
     else
         unit.WeaponArc = 'none'
     end
+    if not unit.Guards or not aiBrain:PlatoonExists(unit.Guards) then
+        unit.Guards = aiBrain:MakePlatoon('Guards', '')
+    end
 
     -- Find target loop
     while unit and not unit.Dead do
+        local guards = unit.Guards
+        local inWater = InWaterCheck(self)
+        if guards and (table.getn(guards:GetPlatoonUnits()) < 4) and not inWater then
+            FatBoyGuardsRNG(self)
+        end
         targetUnit, lastBase = FindExperimentalTarget(self)
         if targetUnit then
             IssueClearCommands({unit})
-
-            local useMove = InWaterCheck(self)
             local targetPos = targetUnit:GetPosition()
-            if useMove then
+            if inWater then
                 IssueMove({unit}, targetPos)
             else
                 IssueAttack({unit}, targetUnit)
@@ -1539,8 +1546,18 @@ function FatBoyBehaviorRNG(self)
             while VDist2(pos[1], pos[3], lastBase.Position[1], lastBase.Position[3]) > unit.MaxWeaponRange + 10
                 and not unit.Dead do
                     WaitTicks(50)
+                    if guards and (table.getn(guards:GetPlatoonUnits()) < 4) and not inWater then
+                        FatBoyGuardsRNG(self)
+                    end
+                    inWater = InWaterCheck(self)
                     --unit:SetCustomName('Moving to target')
-                    local inWater = InWaterCheck(self)
+                    if inWater then
+                        WaitTicks(10)
+                        if unit.Guards then
+                            unit.Guards:ReturnToBaseAIRNG()
+                        end
+                    end
+                    
                     if not inWater then
                         --LOG('In water is false')
                         local expPosition = unit:GetPosition()
@@ -1677,9 +1694,42 @@ function FatBoyBuildCheckRNG(self)
     end
 end
 
+function FatBoyGuardsRNG(self)
+    local aiBrain = self:GetBrain()
+    local experimental = GetExperimentalUnit(self)
+
+    -- Randomly build T3 MMLs, siege bots, and percivals.
+    local buildUnits = {'uel0205', 'delk002'}
+    local unitToBuild = buildUnits[Random(1, table.getn(buildUnits))]
+
+    aiBrain:BuildUnit(experimental, unitToBuild, 1)
+    WaitTicks(1)
+
+    local unitBeingBuilt = false
+    repeat
+        unitBeingBuilt = unitBeingBuilt or experimental.UnitBeingBuilt
+        WaitSeconds(1)
+    until experimental.Dead or unitBeingBuilt or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
+
+    repeat
+        WaitSeconds(3)
+    until experimental.Dead or experimental:IsIdleState() or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
+
+    if not experimental.Guards or not aiBrain:PlatoonExists(experimental.Guards) then
+        experimental.Guards = aiBrain:MakePlatoon('Guards', '')
+    end
+
+    if unitBeingBuilt and not unitBeingBuilt.Dead then
+        aiBrain:AssignUnitsToPlatoon(experimental.Guards, {unitBeingBuilt}, 'guard', 'NoFormation')
+        IssueClearCommands({unitBeingBuilt})
+        IssueGuard({unitBeingBuilt}, experimental)
+    end
+end
+
 function BehemothBehaviorRNG(self, id)
     AssignExperimentalPriorities(self)
 
+    local aiBrain = self:GetBrain()
     local experimental = GetExperimentalUnit(self)
     local targetUnit = false
     local lastBase = false
@@ -1713,6 +1763,7 @@ function BehemothBehaviorRNG(self, id)
             if not targetUnit then break end
             if aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
                 --LOG('Experimental WEAPON BLOCKED, moving to better position')
+                IssueClearCommands({experimental})
                 IssueMove({experimental}, targetPos )
                 WaitTicks(50)
             end

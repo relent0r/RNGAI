@@ -768,10 +768,16 @@ function ACUOnField(aiBrain)
     return false
 end
 
-function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, LocationType, compareType, numUnits, category)
-    local numEngineers = aiBrain.BuilderManagers[LocationType].EngineerManager:GetNumCategoryUnits('Engineers', category)
-    --LOG('* EngineerManagerUnitsAtLocation: '..LocationType..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- '..category..' return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
-    return CompareBody( numEngineers, numUnits, compareType )
+function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits, category)
+    local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
+    if activeExpansion then
+        if aiBrain.BuilderManagers[activeExpansion].EngineerManager then
+            local numEngineers = aiBrain.BuilderManagers[activeExpansion].EngineerManager:GetNumCategoryUnits('Engineers', category)
+            LOG('* EngineerManagerUnitsAtLocation: '..activeExpansion..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
+            return CompareBody( numEngineers, numUnits, compareType )
+        end
+    end
+    return false
 end
 
 --[[
