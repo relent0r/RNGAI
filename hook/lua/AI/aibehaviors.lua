@@ -1526,9 +1526,10 @@ function FatBoyBehaviorRNG(self)
 
     -- Find target loop
     while unit and not unit.Dead do
-        local guards = unit.Guards
+        local guards = unit.Guards:GetPlatoonUnits()
         local inWater = InWaterCheck(self)
-        if guards and (table.getn(guards:GetPlatoonUnits()) < 4) and not inWater then
+        LOG('Start of FATBOY Loop')
+        if guards and (table.getn(guards) < 4) and not inWater then
             FatBoyGuardsRNG(self)
         end
         targetUnit, lastBase = FindExperimentalTarget(self)
@@ -1538,18 +1539,30 @@ function FatBoyBehaviorRNG(self)
             if inWater then
                 IssueMove({unit}, targetPos)
             else
+                LOG('Attack Issued')
                 IssueAttack({unit}, targetUnit)
             end
 
             -- Wait to get in range
             local pos = unit:GetPosition()
-            while VDist2(pos[1], pos[3], lastBase.Position[1], lastBase.Position[3]) > unit.MaxWeaponRange + 10
+            LOG('About to start base distance loop')
+            while VDist2(pos[1], pos[3], lastBase.Position[1], lastBase.Position[3]) > (unit.MaxWeaponRange - 10)
                 and not unit.Dead do
+                    LOG('Start of fatboy move to target loop')
                     WaitTicks(50)
-                    if guards and (table.getn(guards:GetPlatoonUnits()) < 4) and not inWater then
+                    inWater = InWaterCheck(self)
+                    if guards and (table.getn(guards) < 4) and not inWater then
                         FatBoyGuardsRNG(self)
                     end
-                    inWater = InWaterCheck(self)
+                    LOG('FATBOY guard count :'..table.getn(guards))
+                    if unit:IsIdleState() and targetUnit and not targetUnit.Dead then
+                        if inWater then
+                            IssueMove({unit}, targetPos)
+                        else
+                            LOG('Attack Issued')
+                            IssueAttack({unit}, targetUnit)
+                        end
+                    end
                     --unit:SetCustomName('Moving to target')
                     if inWater then
                         WaitTicks(10)
@@ -1620,77 +1633,12 @@ function FatBoyBehaviorRNG(self)
                         --LOG('Taret Position is'..repr(targetPos))
                         WaitTicks(40)
                     end
+                LOG('End of fatboy moving to target loop')
             end
-
+            LOG('End of fatboy unit loop')
             IssueClearCommands({unit})
-
-            -- Send our homies to wreck this base
-            local goodList = {}
-            for _, platoon in unit.Platoons do
-                local platoonUnits = false
-
-                if aiBrain:PlatoonExists(platoon) then
-                    platoonUnits = platoon:GetPlatoonUnits()
-                end
-
-                if platoonUnits and table.getn(platoonUnits) > 0 then
-                    table.insert(goodList, platoon)
-                end
-            end
-
-            unit.Platoons = goodList
-            for _, platoon in goodList do
-                platoon:ForkAIThread(FatboyChildBehavior, unit, lastBase)
-            end
-
-            -- Setup shop outside this guy's base
-            while not unit.Dead and WreckBase(self, lastBase) do
-                -- Build stuff if we haven't hit the unit cap.
-                FatBoyBuildCheckRNG(self)
-
-                -- Once we have 20 units, form them into a platoon and send them to attack the base we're attacking!
-                if unit.NewPlatoon and table.getn(unit.NewPlatoon:GetPlatoonUnits()) >= 8 then
-                    unit.NewPlatoon:ForkAIThread(FatboyChildBehavior, unit, lastBase)
-
-                    table.insert(unit.Platoons, unit.NewPlatoon)
-                    unit.NewPlatoon = nil
-                end
-                WaitSeconds(1)
-            end
         end
         WaitSeconds(1)
-    end
-end
-
-function FatBoyBuildCheckRNG(self)
-    local aiBrain = self:GetBrain()
-    local experimental = GetExperimentalUnit(self)
-
-    -- Randomly build T3 MMLs, siege bots, and percivals.
-    local buildUnits = {'uel0303', 'xel0305', 'xel0306', 'delk002'}
-    local unitToBuild = buildUnits[Random(1, table.getn(buildUnits))]
-
-    aiBrain:BuildUnit(experimental, unitToBuild, 1)
-    WaitTicks(1)
-
-    local unitBeingBuilt = false
-    repeat
-        unitBeingBuilt = unitBeingBuilt or experimental.UnitBeingBuilt
-        WaitSeconds(1)
-    until experimental.Dead or unitBeingBuilt or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
-
-    repeat
-        WaitSeconds(3)
-    until experimental.Dead or experimental:IsIdleState() or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
-
-    if not experimental.NewPlatoon or not aiBrain:PlatoonExists(experimental.NewPlatoon) then
-        experimental.NewPlatoon = aiBrain:MakePlatoon('', '')
-    end
-
-    if unitBeingBuilt and not unitBeingBuilt.Dead then
-        aiBrain:AssignUnitsToPlatoon(experimental.NewPlatoon, {unitBeingBuilt}, 'Attack', 'NoFormation')
-        IssueClearCommands({unitBeingBuilt})
-        IssueGuard({unitBeingBuilt}, experimental)
     end
 end
 
@@ -1701,8 +1649,9 @@ function FatBoyGuardsRNG(self)
     -- Randomly build T3 MMLs, siege bots, and percivals.
     local buildUnits = {'uel0205', 'delk002'}
     local unitToBuild = buildUnits[Random(1, table.getn(buildUnits))]
-
+    IssueClearCommands({experimental})
     aiBrain:BuildUnit(experimental, unitToBuild, 1)
+    LOG('Guard loop pass')
     WaitTicks(1)
 
     local unitBeingBuilt = false

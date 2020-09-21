@@ -255,13 +255,15 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Response Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNGAI Air Intercept Response BaseRestrictedArea',
+        BuilderName = 'RNGAI Air Intercept MilitaryArea',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefit' },
-        Priority = 950,
-        InstanceCount = 5,
+        Priority = 800,
+        InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
+            Defensive = true,
+            SearchRadius = BaseMilitaryArea,
             NeverGuardEngineers = true,
             PrioritizedCategories = {
                 'BOMBER AIR',
@@ -270,7 +272,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR } },
         },
     },
     Builder {

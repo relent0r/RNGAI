@@ -26,6 +26,7 @@ Platoon = Class(RNGAIPlatoon) {
         local startX, startZ = aiBrain:GetArmyStartPos()
         homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
         local avoidBases = data.AvoidBases or false
+        local defensive = data.Defensive or false
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 table.insert(atkPri, v)
@@ -40,15 +41,26 @@ Platoon = Class(RNGAIPlatoon) {
         while PlatoonExists(aiBrain, self) do
             local currentPosition = GetPlatoonPosition(self)
             if not target or target.Dead then
-                local mult = { 1,10,25 }
-                for _,i in mult do
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius * i, atkPri, avoidBases)
+                if defensive then
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, avoidBases)
                     if target then
                         break
                     end
-                    WaitTicks(10) --DUNCAN - was 3
+                    WaitTicks(30) --DUNCAN - was 3
                     if not PlatoonExists(aiBrain, self) then
                         return
+                    end
+                else
+                    local mult = { 1,10,25 }
+                    for _,i in mult do
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius * i, atkPri, avoidBases)
+                        if target then
+                            break
+                        end
+                        WaitTicks(10) --DUNCAN - was 3
+                        if not PlatoonExists(aiBrain, self) then
+                            return
+                        end
                     end
                 end
             end
@@ -1280,6 +1292,7 @@ Platoon = Class(RNGAIPlatoon) {
         local blip = false
         local maxRadius = data.SearchRadius or 50
         local movingToScout = false
+        local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         if data.LocationType and data.LocationType != 'NOTMAIN' then
             basePosition = aiBrain.BuilderManagers[data.LocationType].Position
         else
@@ -1343,8 +1356,23 @@ Platoon = Class(RNGAIPlatoon) {
                 elseif AIAttackUtils.GetAirThreatOfUnits(self) > 0 then
                     newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR)
                 end
+                
                 if newtarget then
-                    target = newtarget
+                    local targetExpPos
+                    local targetExpThreat
+                    if self.MovementLayer == 'Air' then
+                        targetExpPos = newtarget:GetPosition()
+                        targetExpThreat = aiBrain:GetThreatAtPosition(targetExpPos, 1, true, 'AntiAir')
+                        LOG('Target Air Threat is '..targetExpThreat)
+                        LOG('My Air Threat is '..myThreat)
+                        if myThreat > targetExpThreat then
+                            target = newtarget
+                        elseif VDist2Sq(targetExpPos[1], targetExpPos[3], mainBasePos[1], mainBasePos[3]) < 22500 then
+                            target = newtarget
+                        end
+                    else
+                        target = newtarget
+                    end
                 end
 
                 if target and not target.Dead then
