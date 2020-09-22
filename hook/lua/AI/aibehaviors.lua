@@ -1507,6 +1507,7 @@ function FatBoyBehaviorRNG(self)
     local unit = GetExperimentalUnit(self)
     local targetUnit = false
     local lastBase = false
+    local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
     
 
     local mainWeapon = unit:GetWeapon(1)
@@ -1521,7 +1522,7 @@ function FatBoyBehaviorRNG(self)
         unit.WeaponArc = 'none'
     end
     if not unit.Guards or not aiBrain:PlatoonExists(unit.Guards) then
-        unit.Guards = aiBrain:MakePlatoon('Guards', '')
+        unit.Guards = aiBrain:MakePlatoon('', '')
     end
 
     -- Find target loop
@@ -1529,30 +1530,33 @@ function FatBoyBehaviorRNG(self)
         local guards = unit.Guards:GetPlatoonUnits()
         local inWater = InWaterCheck(self)
         LOG('Start of FATBOY Loop')
-        if guards and (table.getn(guards) < 4) and not inWater then
-            FatBoyGuardsRNG(self)
-        end
         targetUnit, lastBase = FindExperimentalTarget(self)
         if targetUnit then
+            LOG('We have target')
             IssueClearCommands({unit})
             local targetPos = targetUnit:GetPosition()
             if inWater then
+                LOG('We are in water and moving to targetPos')
                 IssueMove({unit}, targetPos)
             else
-                LOG('Attack Issued')
+                LOG('Attack Issued to targetUnit')
                 IssueAttack({unit}, targetUnit)
             end
-
             -- Wait to get in range
             local pos = unit:GetPosition()
             LOG('About to start base distance loop')
             while VDist2(pos[1], pos[3], lastBase.Position[1], lastBase.Position[3]) > (unit.MaxWeaponRange - 10)
                 and not unit.Dead do
                     LOG('Start of fatboy move to target loop')
-                    WaitTicks(50)
+                    WaitTicks(40)
                     inWater = InWaterCheck(self)
+                    guards = unit.Guards:GetPlatoonUnits()
                     if guards and (table.getn(guards) < 4) and not inWater then
-                        FatBoyGuardsRNG(self)
+                        if VDist2Sq(pos[1], pos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
+                            IssueClearCommands({unit})
+                            WaitTicks(1)
+                            FatBoyGuardsRNG(self)
+                        end
                     end
                     LOG('FATBOY guard count :'..table.getn(guards))
                     if unit:IsIdleState() and targetUnit and not targetUnit.Dead then
@@ -1567,6 +1571,7 @@ function FatBoyBehaviorRNG(self)
                     if inWater then
                         WaitTicks(10)
                         if unit.Guards then
+                            LOG('In water, disbanding guards')
                             unit.Guards:ReturnToBaseAIRNG()
                         end
                     end
@@ -1574,9 +1579,9 @@ function FatBoyBehaviorRNG(self)
                     if not inWater then
                         --LOG('In water is false')
                         local expPosition = unit:GetPosition()
-                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, expPosition, unit.MaxWeaponRange, 'Enemy')
+                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.TECH1, expPosition, unit.MaxWeaponRange, 'Enemy')
                         if enemyUnitCount > 0 then
-                            target = self:FindClosestUnit('attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                            target = self:FindClosestUnit('attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL - categories.TECH1)
                             while unit and not unit.Dead do
                                 if target and not target.Dead then
                                     IssueClearCommands({unit})
@@ -1649,27 +1654,43 @@ function FatBoyGuardsRNG(self)
     -- Randomly build T3 MMLs, siege bots, and percivals.
     local buildUnits = {'uel0205', 'delk002'}
     local unitToBuild = buildUnits[Random(1, table.getn(buildUnits))]
-    IssueClearCommands({experimental})
+    
     aiBrain:BuildUnit(experimental, unitToBuild, 1)
     LOG('Guard loop pass')
     WaitTicks(1)
 
     local unitBeingBuilt = false
+    local buildTimeout = 0
     repeat
         unitBeingBuilt = unitBeingBuilt or experimental.UnitBeingBuilt
-        WaitSeconds(1)
+        WaitTicks(20)
+        buildTimeout = buildTimeout + 1
+        if buildTimeout > 20 then
+            LOG('FATBOY has not built within 40 seconds, breaking out')
+            IssueClearCommands({experimental})
+            return
+        end
+        LOG('Waiting for unitBeingBuilt is be true')
     until experimental.Dead or unitBeingBuilt or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
-
+    
+    local idleTimeout = 0
     repeat
-        WaitSeconds(3)
+        WaitTicks(30)
+        idleTimeout = idleTimeout + 1
+        if idleTimeout > 15 then
+            LOG('FATBOY has not built within 40 seconds, breaking out')
+            IssueClearCommands({experimental})
+            return
+        end
+        LOG('Waiting for experimental to go idle')
     until experimental.Dead or experimental:IsIdleState() or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
 
     if not experimental.Guards or not aiBrain:PlatoonExists(experimental.Guards) then
-        experimental.Guards = aiBrain:MakePlatoon('Guards', '')
+        experimental.Guards = aiBrain:MakePlatoon('', '')
     end
 
     if unitBeingBuilt and not unitBeingBuilt.Dead then
-        aiBrain:AssignUnitsToPlatoon(experimental.Guards, {unitBeingBuilt}, 'guard', 'NoFormation')
+        aiBrain:AssignUnitsToPlatoon(experimental.Guards, {unitBeingBuilt}, 'Guard', 'NoFormation')
         IssueClearCommands({unitBeingBuilt})
         IssueGuard({unitBeingBuilt}, experimental)
     end
