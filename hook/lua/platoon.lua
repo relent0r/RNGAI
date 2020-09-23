@@ -921,6 +921,7 @@ Platoon = Class(RNGAIPlatoon) {
         local bAggroMove = self.PlatoonData.AggressiveMove
         local maxRadius = data.SearchRadius or 200
         local MaxPlatoonWeaponRange
+        local platoonThreat = false
         
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -985,8 +986,25 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
             --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
             target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
+            platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
+            local platoonCount = table.getn(GetPlatoonUnits(self))
             if target then
                 local targetPosition = target:GetPosition()
+                local platoonPos = GetPlatoonPosition(self)
+                local targetThreat
+                if platoonThreat and platoonCount < 15 then
+                    targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, self.MovementLayer)
+                    LOG('HuntAIPath targetThreat is '..targetThreat)
+                    if targetThreat > platoonThreat then
+                        LOG('HuntAIPath attempting merge and formation ')
+                        self:MergeWithNearbyPlatoonsRNG('HuntAIPATHRNG', 60, 15)
+                        self:SetPlatoonFormationOverride('AttackFormation')
+                        WaitTicks(30)
+                        LOG('HuntAIPath merge and formation completed')
+                        continue
+                    end
+                end
+
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
@@ -997,7 +1015,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local threatAroundplatoon = 0
                     --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                     if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
-                        local platoonPos = GetPlatoonPosition(self)
+                        platoonPos = GetPlatoonPosition(self)
                         positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
                         local bp
                         -- calculate my present land threat			
@@ -1329,7 +1347,7 @@ Platoon = Class(RNGAIPlatoon) {
                         target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri, aiBrain:GetCurrentEnemy())
                     elseif data.AvoidBases then
                         --LOG('Avoid Bases is set to true')
-                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, data.AvoidBases)
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius , atkPri, data.AvoidBases, myThreat)
                     else
                         local mult = { 1,10,25 }
                         for _,i in mult do
