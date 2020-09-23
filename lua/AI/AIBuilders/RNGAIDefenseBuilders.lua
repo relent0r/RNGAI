@@ -392,7 +392,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim Enemy Walls',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        PlatoonAIPlan = 'ReclaimUnitsAI',
+        PlatoonAIPlan = 'ReclaimUnitsAIRNG',
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 } },

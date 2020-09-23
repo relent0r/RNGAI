@@ -462,6 +462,68 @@ Platoon = Class(RNGAIPlatoon) {
         self:PlatoonDisband()
     end,
 
+    ReclaimUnitsAIRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local index = aiBrain:GetArmyIndex()
+        local data = self.PlatoonData
+        local pos = self:GetPlatoonPosition()
+        local radius = data.Radius or 500
+        local positionUnits = {}
+        if not data.Categories then
+            error('PLATOON.LUA ERROR- ReclaimUnitsAI requires Categories field',2)
+        end
+
+        local checkThreat = false
+        if data.ThreatMin and data.ThreatMax and data.ThreatRings then
+            checkThreat = true
+        end
+        while aiBrain:PlatoonExists(self) do
+            local target = AIAttackUtils.AIFindUnitRadiusThreat(aiBrain, 'Enemy', data.Categories, pos, radius, data.ThreatMin, data.ThreatMax, data.ThreatRings)
+            if target and not target.Dead then
+                local targetPos = target:GetPosition()
+                local blip = target:GetBlip(index)
+                local platoonUnits = self:GetPlatoonUnits()
+                if blip then
+                    IssueClearCommands(platoonUnits)
+                    positionUnits = aiBrain:GetUnitsAroundPoint(data.Categories, targetPos, 10, 'Enemy')
+                    if table.getn(positionUnits) > 1 then
+                        LOG('Reclaim Units AI got more than one at target position')
+                        for k, v in positionUnits do
+                            IssueReclaim(platoonUnits, v)
+                        end
+                    else
+                        LOG('Reclaim Units AI got a single target at position')
+                        IssueReclaim(platoonUnits, target)
+                    end
+                    -- Set ReclaimInProgress to prevent repairing (see RepairAI)
+                    target.ReclaimInProgress = true
+                    local allIdle
+                    repeat
+                        WaitTicks(20)
+                        if not aiBrain:PlatoonExists(self) then
+                            return
+                        end
+                        allIdle = true
+                        for k,v in self:GetPlatoonUnits() do
+                            if not v.Dead and not v:IsIdleState() then
+                                allIdle = false
+                                break
+                            end
+                        end
+                    until allIdle or blip:BeenDestroyed() or blip:IsKnownFake(index) or blip:IsMaybeDead(index)
+                else
+                    WaitTicks(20)
+                end
+            else
+                local location = AIUtils.RandomLocation(aiBrain:GetArmyStartPos())
+                self:MoveToLocation(location, false)
+                self:PlatoonDisband()
+            end
+            WaitTicks(10)
+        end
+    end,
+
     ScoutingAIRNG = function(self)
         AIAttackUtils.GetMostRestrictiveLayer(self)
 
@@ -845,6 +907,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
                     self:MoveToLocation(position, false, 'Attack')
                 end
+                WaitTicks(30)
                 SquadPosition = self:GetSquadPosition('Attack') or nil
                 if not SquadPosition then break end
                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
@@ -920,6 +983,7 @@ Platoon = Class(RNGAIPlatoon) {
         local data = self.PlatoonData
         local bAggroMove = self.PlatoonData.AggressiveMove
         local maxRadius = data.SearchRadius or 200
+        local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         local MaxPlatoonWeaponRange
         local platoonThreat = false
         
@@ -993,15 +1057,17 @@ Platoon = Class(RNGAIPlatoon) {
                 local platoonPos = GetPlatoonPosition(self)
                 local targetThreat
                 if platoonThreat and platoonCount < 15 then
-                    targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, self.MovementLayer)
-                    LOG('HuntAIPath targetThreat is '..targetThreat)
-                    if targetThreat > platoonThreat then
-                        LOG('HuntAIPath attempting merge and formation ')
-                        self:MergeWithNearbyPlatoonsRNG('HuntAIPATHRNG', 60, 15)
-                        self:SetPlatoonFormationOverride('AttackFormation')
-                        WaitTicks(30)
-                        LOG('HuntAIPath merge and formation completed')
-                        continue
+                    if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
+                        targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, self.MovementLayer)
+                        LOG('HuntAIPath targetThreat is '..targetThreat)
+                        if targetThreat > platoonThreat then
+                            LOG('HuntAIPath attempting merge and formation ')
+                            self:MergeWithNearbyPlatoonsRNG('HuntAIPATHRNG', 60, 15)
+                            self:SetPlatoonFormationOverride('AttackFormation')
+                            WaitTicks(30)
+                            LOG('HuntAIPath merge and formation completed')
+                            continue
+                        end
                     end
                 end
 
@@ -1187,7 +1253,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     end
                                 end
                                 if not target or target.Dead then
-                                    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. '..repr(path[i]))
+                                    LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
                                     self:MoveToLocation(targetPosition, false, 'Attack')
                                     WaitTicks(30)
                                     self:Stop()
@@ -1363,11 +1429,11 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 if not target then
-                    --LOG('Strikeforce no target found')
+                    LOG('Strikeforce no target found')
                 end
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
-                -- Set to mass extraction, can't make experimentals without mass
+                -- Check for experimentals but don't attack if they have strong antiair threat unless close to base.
                 local newtarget
                 if AIAttackUtils.GetSurfaceThreatOfUnits(self) > 0 then
                     newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * (categories.LAND + categories.NAVAL + categories.STRUCTURE))
@@ -1434,8 +1500,8 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     else
                         self:AttackTarget(target)
-                        SquadPosition = self:GetSquadPosition('Attack') or nil
                         while PlatoonExists(aiBrain, self) do
+                            SquadPosition = self:GetSquadPosition('Attack') or nil
                             if not SquadPosition then break end
                             local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                             if enemyUnitCount > 0 then
@@ -2539,7 +2605,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             -- merge with nearby platoons
-            self:MergeWithNearbyPlatoonsRNG('AttackForceAIRNG', 10, 15)
+            self:MergeWithNearbyPlatoonsRNG('AttackForceAIRNG', 20, 15)
 
             -- rebuild formation
             platoonUnits = GetPlatoonUnits(self)
@@ -2697,7 +2763,8 @@ Platoon = Class(RNGAIPlatoon) {
         -- if we're too close to a base, forget it
         if aiBrain.BuilderManagers then
             for baseName, base in aiBrain.BuilderManagers do
-                if VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3]) <= (3*radiusSq) then
+                if VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3]) <= (2*radiusSq) then
+                    LOG('Platoon too close to base, not merge happening')
                     return
                 end
             end
