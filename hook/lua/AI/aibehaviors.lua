@@ -675,10 +675,12 @@ function ACUDetection(platoon)
                         --LOG('* AI-RNG: Table Index is : '..k)
                         --LOG('* AI-RNG:'..c.LastSpotted)
                         --LOG('* AI-RNG:'..repr(c.Position))
-                        if currentGameTime - 60 > c.LastSpotted and k == enemyIndex then
+                        if currentGameTime - 30 > c.LastSpotted and k == enemyIndex then
                             --LOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                             c.Position = v:GetPosition()
-                            acuThreat = aiBrain:GetThreatAtPosition(c.Position, 0, true, 'Overall')
+                            c.Hp = v:GetHealth()
+                            LOG('AIRSCOUTACUDETECTION Enemy ACU of index '..enemyIndex..'has '..c.Hp..' health')
+                            acuThreat = aiBrain:GetThreatAtPosition(c.Position, 0, true, 'AntiAir')
                             --LOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                             c.Threat = acuThreat
                             c.LastSpotted = currentGameTime

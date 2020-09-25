@@ -187,6 +187,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Position = {},
                 LastSpotted = 0,
                 Threat = 0,
+                Hp = 0,
                 OnField = false,
                 Gun = false,
             }

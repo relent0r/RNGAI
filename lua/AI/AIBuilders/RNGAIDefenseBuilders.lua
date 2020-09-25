@@ -401,7 +401,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Radius = 1000,
-            Categories = {'WALL'},
+            Categories = {categories.WALL},
             ThreatMin = -10,
             ThreatMax = 10000,
             ThreatRings = 1,

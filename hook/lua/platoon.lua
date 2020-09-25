@@ -479,14 +479,15 @@ Platoon = Class(RNGAIPlatoon) {
             checkThreat = true
         end
         while aiBrain:PlatoonExists(self) do
-            local target = AIAttackUtils.AIFindUnitRadiusThreat(aiBrain, 'Enemy', data.Categories, pos, radius, data.ThreatMin, data.ThreatMax, data.ThreatRings)
+            local target = AIAttackUtils.AIFindUnitRadiusThreatRNG(aiBrain, 'Enemy', data.Categories, pos, radius, data.ThreatMin, data.ThreatMax, data.ThreatRings)
             if target and not target.Dead then
                 local targetPos = target:GetPosition()
                 local blip = target:GetBlip(index)
                 local platoonUnits = self:GetPlatoonUnits()
                 if blip then
                     IssueClearCommands(platoonUnits)
-                    positionUnits = aiBrain:GetUnitsAroundPoint(data.Categories, targetPos, 10, 'Enemy')
+                    positionUnits = aiBrain:GetUnitsAroundPoint(data.Categories[1], targetPos, 10, 'Enemy')
+                    LOG('Number of units found by reclaim ai is '..table.getn(positionUnits))
                     if table.getn(positionUnits) > 1 then
                         LOG('Reclaim Units AI got more than one at target position')
                         for k, v in positionUnits do
@@ -1058,15 +1059,19 @@ Platoon = Class(RNGAIPlatoon) {
                 local targetThreat
                 if platoonThreat and platoonCount < 15 then
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
-                        targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, self.MovementLayer)
+                        targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
                         LOG('HuntAIPath targetThreat is '..targetThreat)
                         if targetThreat > platoonThreat then
                             LOG('HuntAIPath attempting merge and formation ')
-                            self:MergeWithNearbyPlatoonsRNG('HuntAIPATHRNG', 60, 15)
-                            self:SetPlatoonFormationOverride('AttackFormation')
-                            WaitTicks(30)
-                            LOG('HuntAIPath merge and formation completed')
-                            continue
+                            local merged = self:MergeWithNearbyPlatoonsRNG('HuntAIPATHRNG', 60, 15)
+                            if merged then
+                                self:SetPlatoonFormationOverride('AttackFormation')
+                                WaitTicks(30)
+                                LOG('HuntAIPath merge and formation completed')
+                                continue
+                            else
+                                LOG('No merge done')
+                            end
                         end
                     end
                 end
@@ -1253,9 +1258,15 @@ Platoon = Class(RNGAIPlatoon) {
                                     end
                                 end
                                 if not target or target.Dead then
-                                    LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
-                                    self:MoveToLocation(targetPosition, false, 'Attack')
-                                    WaitTicks(30)
+                                    if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
+                                        LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
+                                        self:MoveToLocation(targetPosition, false, 'Attack')
+                                        WaitTicks(60)
+                                    else
+                                        LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
+                                        self:MoveToLocation(targetPosition, false, 'Attack')
+                                        WaitTicks(30)
+                                    end
                                     self:Stop()
                                     break
                                 end
@@ -1403,7 +1414,26 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if acuTargeting and not data.ACUOnField then
                     --LOG('GUN ACU OnField LOOKING FOR TARGET')
-                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat)
+                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, myThreat)
+                end
+                if not target and self.MovementLayer == 'Air' then
+                    LOG('Checking for possible acu snipe')
+                    local enemyACUIndexes = {}
+                    for k, v in aiBrain.EnemyIntel.ACU do
+                        if v.Hp != 0 and v.LastSpotted != 0 then
+                            LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted)
+                            if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
+                                table.insert(k, enemyACUIndexes)
+                            end
+                        end
+                    end
+                    if table.getn(enemyACUIndexes) > 0 then
+                        LOG('There is an ACU that could be sniped, look for targets')
+                        target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, myThreat, enemyACUIndexes)
+                        if target then
+                            LOG('ACU found that coule be sniped, set to target')
+                        end
+                    end
                 end
                 if not target then
                     if data.ACUOnField then
@@ -2818,7 +2848,7 @@ Platoon = Class(RNGAIPlatoon) {
         if bMergedPlatoons then
             self:StopAttack()
         end
-
+        return bMergedPlatoons
     end,
 
     ReturnToBaseAIRNG = function(self, mainBase)

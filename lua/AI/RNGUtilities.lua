@@ -1174,7 +1174,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
     return false
 end
 
-function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat)
+function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
     local enemyThreat
     if not aiBrain or not position or not maxRange then
@@ -1191,25 +1191,53 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
     local distance = false
     local targetShields = 9999
     for num, unit in targetUnits do
-        if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) then
-            local unitPos = unit:GetPosition()
-            local unitArmyIndex = unit:GetArmy()
-
-            if not aiBrain.EnemyIntel.ACU[unitArmyIndex].OnField then
-                continue
-            end
-            if platoon.MovementLayer == 'Air' and platoonThreat then
-                enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
-                --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
-                if enemyThreat > platoonThreat then
-                    continue
+        if index then
+            for k, v in index do
+                if unit:GetAIBrain():GetArmyIndex() == v then
+                    if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) then
+                        local unitPos = unit:GetPosition()
+                        local unitArmyIndex = unit:GetArmy()
+        
+                        if not aiBrain.EnemyIntel.ACU[unitArmyIndex].OnField then
+                            continue
+                        end
+                        if platoon.MovementLayer == 'Air' and platoonThreat then
+                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                            --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                            if enemyThreat > platoonThreat then
+                                continue
+                            end
+                        end
+                        local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                            retUnit = unit
+                            distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                            targetShields = numShields
+                        end
+                    end
                 end
             end
-            local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-            if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
-                retUnit = unit
-                distance = Utils.XZDistanceTwoVectors(position, unitPos)
-                targetShields = numShields
+        else
+            if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) then
+                local unitPos = unit:GetPosition()
+                local unitArmyIndex = unit:GetArmy()
+
+                if not aiBrain.EnemyIntel.ACU[unitArmyIndex].OnField then
+                    continue
+                end
+                if platoon.MovementLayer == 'Air' and platoonThreat then
+                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                    --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                    if enemyThreat > platoonThreat then
+                        continue
+                    end
+                end
+                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                    retUnit = unit
+                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                    targetShields = numShields
+                end
             end
         end
     end
