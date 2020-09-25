@@ -1091,74 +1091,87 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, enemy in enemyBrains do
 
                 local gunBool = false
+                local acuHealth = 0
+                local lastSpotted = 0
                 local enemyIndex = enemy:GetArmyIndex()
-                local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
-                for _,v in enemyAir do
-                    -- previous method of getting unit ID before the property was added.
-                    --local unitbpId = v:GetUnitId()
-                    --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
-                    bp = ALLBPS[v.UnitId].Defense
-        
-                    enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-                    enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
-                end
+                if not ArmyIsCivilian(enemyIndex) then
+                    local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
+                    for _,v in enemyAir do
+                        -- previous method of getting unit ID before the property was added.
+                        --local unitbpId = v:GetUnitId()
+                        --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
+                        bp = ALLBPS[v.UnitId].Defense
+            
+                        enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+                        enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
+                    end
 
-                local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
-                for _,v in enemyExtractors do
-                    bp = ALLBPS[v.UnitId].Defense
+                    local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+                    for _,v in enemyExtractors do
+                        bp = ALLBPS[v.UnitId].Defense
 
-                    enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
-                    enemyExtractorCount = enemyExtractorCount + 1
-                end
+                        enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
+                        enemyExtractorCount = enemyExtractorCount + 1
+                    end
 
-                local enemyNaval = GetListOfUnits( enemy, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
-                for _,v in enemyNaval do
-                    bp = ALLBPS[v.UnitId].Defense
-                    --LOG('NavyThreat unit is '..v.UnitId)
-                    --LOG('NavyThreat is '..bp.SubThreatLevel)
-                    enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-                    enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
-                end
+                    local enemyNaval = GetListOfUnits( enemy, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
+                    for _,v in enemyNaval do
+                        bp = ALLBPS[v.UnitId].Defense
+                        --LOG('NavyThreat unit is '..v.UnitId)
+                        --LOG('NavyThreat is '..bp.SubThreatLevel)
+                        enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+                        enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
+                    end
 
-                local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
-                for _,v in enemyDefense do
-                    bp = ALLBPS[v.UnitId].Defense
-                    --LOG('DefenseThreat unit is '..v.UnitId)
-                    --LOG('DefenseThreat is '..bp.SubThreatLevel)
-                    enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
-                    enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
-                    enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
-                end
-                local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
-                for _,v in enemyACU do
-                    local factionIndex = enemy:GetFactionIndex()
-                    if factionIndex == 1 then
-                        if v:HasEnhancement('HeavyAntiMatterCannon') then
-                            enemyACUGun = enemyACUGun + 1
-                            gunBool = true
+                    local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
+                    for _,v in enemyDefense do
+                        bp = ALLBPS[v.UnitId].Defense
+                        --LOG('DefenseThreat unit is '..v.UnitId)
+                        --LOG('DefenseThreat is '..bp.SubThreatLevel)
+                        enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
+                        enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
+                        enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
+                    end
+                    local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
+                    for _,v in enemyACU do
+                        local factionIndex = enemy:GetFactionIndex()
+                        if factionIndex == 1 then
+                            if v:HasEnhancement('HeavyAntiMatterCannon') then
+                                enemyACUGun = enemyACUGun + 1
+                                gunBool = true
+                            end
+                        elseif factionIndex == 2 then
+                            if v:HasEnhancement('CrysalisBeam') then
+                                enemyACUGun = enemyACUGun + 1
+                                gunBool = true
+                            end
+                        elseif factionIndex == 3 then
+                            if v:HasEnhancement('CoolingUpgrade') then
+                                enemyACUGun = enemyACUGun + 1
+                                gunBool = true
+                            end
+                        elseif factionIndex == 4 then
+                            if v:HasEnhancement('RateOfFire') then
+                                enemyACUGun = enemyACUGun + 1
+                                gunBool = true
+                            end
                         end
-                    elseif factionIndex == 2 then
-                        if v:HasEnhancement('CrysalisBeam') then
-                            enemyACUGun = enemyACUGun + 1
-                            gunBool = true
-                        end
-                    elseif factionIndex == 3 then
-                        if v:HasEnhancement('CoolingUpgrade') then
-                            enemyACUGun = enemyACUGun + 1
-                            gunBool = true
-                        end
-                    elseif factionIndex == 4 then
-                        if v:HasEnhancement('RateOfFire') then
-                            enemyACUGun = enemyACUGun + 1
-                            gunBool = true
+                        if self.CheatEnabled then
+                            acuHealth = v:GetHealth()
+                            lastSpotted = GetGameTimeSeconds()
                         end
                     end
-                end
-                if gunBool then
-                    self.EnemyIntel.ACU[enemyIndex].Gun = true
-                    --LOG('Gun Upgrade Present on army '..enemy.Nickname)
-                else
-                    self.EnemyIntel.ACU[enemyIndex].Gun = false
+                    if gunBool then
+                        self.EnemyIntel.ACU[enemyIndex].Gun = true
+                        --LOG('Gun Upgrade Present on army '..enemy.Nickname)
+                    else
+                        self.EnemyIntel.ACU[enemyIndex].Gun = false
+                    end
+                    if self.CheatEnabled then
+                        self.EnemyIntel.ACU[enemyIndex].Hp = acuHealth
+                        self.EnemyIntel.ACU[enemyIndex].LastSpotted = lastSpotted
+                        LOG('Cheat is enabled and acu has '..acuHealth..' Health '..'Brain intel says '..self.EnemyIntel.ACU[enemyIndex].Hp)
+                    end
                 end
             end
         end

@@ -6,7 +6,7 @@ PlatoonTemplate {
     Name = 'RNGAI AntiAirHunt',
     Plan = 'AirHuntAIRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 100, 'attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 100, 'Attack', 'none' },
     }
 }
 
@@ -30,7 +30,7 @@ PlatoonTemplate {
     Name = 'RNGAI AntiAir BaseGuard',
     Plan = 'GuardBaseRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 2, 50, 'attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 2, 50, 'Attack', 'none' },
     }
 }
 
@@ -38,7 +38,7 @@ PlatoonTemplate {
     Name = 'RNGAI Bomber BaseGuard',
     Plan = 'GuardBaseRNG',
     GlobalSquads = {
-        { categories.MOBILE * categories.AIR * categories.BOMBER * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.daa0206 - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'attack', 'none' },
+        { categories.MOBILE * categories.AIR * categories.BOMBER * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.daa0206 - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'Attack', 'none' },
     }
 }
 
@@ -46,7 +46,7 @@ PlatoonTemplate {
     Name = 'RNGAI Gunship BaseGuard',
     Plan = 'GuardBaseRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH1 + categories.TECH2) - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH1 + categories.TECH2) - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'Attack', 'none' },
     }
 }
 
@@ -97,7 +97,7 @@ PlatoonTemplate {
     Name = 'T2AirMissile',
     FactionSquads = {
         Aeon = {
-            { 'daa0206', 1, 4, 'attack', 'none' },
+            { 'daa0206', 1, 4, 'Attack', 'none' },
         },
     }
 }
@@ -105,16 +105,16 @@ PlatoonTemplate {
     Name = 'RNGAIFighterGroup',
     FactionSquads = {
         UEF = {
-            { 'uea0102', 1, 3, 'attack', 'None' }
+            { 'uea0102', 1, 3, 'Attack', 'None' }
         },
         Aeon = {
-            { 'uaa0102', 1, 3, 'attack', 'None' }
+            { 'uaa0102', 1, 3, 'Attack', 'None' }
         },
         Cybran = {
-            { 'ura0102', 1, 3, 'attack', 'None' }
+            { 'ura0102', 1, 3, 'Attack', 'None' }
         },
         Seraphim = {
-            { 'xsa0102', 1, 3, 'attack', 'None' }
+            { 'xsa0102', 1, 3, 'Attack', 'None' }
         },
     }
 }
@@ -123,19 +123,19 @@ PlatoonTemplate {
     Name = 'RNGAIFighterGroupT2',
     FactionSquads = {
         UEF = {
-            { 'uea0102', 1, 3, 'attack', 'None' }, -- T1 Fighter
-            { 'dea0202', 1, 1, 'attack', 'None' } -- T2 FighterBomber
+            { 'uea0102', 1, 3, 'Attack', 'None' }, -- T1 Fighter
+            { 'dea0202', 1, 1, 'Attack', 'None' } -- T2 FighterBomber
         },
         Aeon = {
-            { 'xaa0202', 1, 4, 'attack', 'None' }, -- T2 Fighter
+            { 'xaa0202', 1, 4, 'Attack', 'None' }, -- T2 Fighter
         },
         Cybran = {
-            { 'ura0102', 1, 3, 'attack', 'None' }, -- T1 Fighter
-            { 'dra0202', 1, 1, 'attack', 'None' } -- T2 FighterBomber
+            { 'ura0102', 1, 3, 'Attack', 'None' }, -- T1 Fighter
+            { 'dra0202', 1, 1, 'Attack', 'None' } -- T2 FighterBomber
         },
         Seraphim = {
-            { 'xsa0102', 1, 3, 'attack', 'None' }, -- T1 Fighter
-            { 'xsa0202', 1, 1, 'attack', 'None' } -- T2 FighterBomber
+            { 'xsa0102', 1, 3, 'Attack', 'None' }, -- T1 Fighter
+            { 'xsa0202', 1, 1, 'Attack', 'None' } -- T2 FighterBomber
         },
     }
 }
@@ -144,22 +144,22 @@ PlatoonTemplate {
     Name = 'RNGAIT1AirQueue',
     FactionSquads = {
         UEF = {
-            { 'uea0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
-            { 'uea0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+            { 'uea0102', 1, 1, 'Attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'uea0103', 1, 2, 'Attack', 'GrowthFormation' }, -- T1 Bomber
         },
         Aeon = {
-            { 'uaa0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
-            { 'uaa0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+            { 'uaa0102', 1, 1, 'Attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'uaa0103', 1, 2, 'Attack', 'GrowthFormation' }, -- T1 Bomber
         },
         Cybran = {
-            { 'ura0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
-            { 'ura0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
-            { 'xra0105', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Gunship
+            { 'ura0102', 1, 1, 'Attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'ura0103', 1, 2, 'Attack', 'GrowthFormation' }, -- T1 Bomber
+            { 'xra0105', 1, 1, 'Attack', 'GrowthFormation' }, -- T1 Gunship
             
         },
         Seraphim = {
-            { 'xsa0102', 1, 1, 'attack', 'GrowthFormation' }, -- T1 Fighter
-            { 'xsa0103', 1, 2, 'attack', 'GrowthFormation' }, -- T1 Bomber
+            { 'xsa0102', 1, 1, 'Attack', 'GrowthFormation' }, -- T1 Fighter
+            { 'xsa0103', 1, 2, 'Attack', 'GrowthFormation' }, -- T1 Bomber
         },
     }
 }
@@ -168,20 +168,20 @@ PlatoonTemplate {
     Name = 'RNGAIT2AirQueue',
     FactionSquads = {
         UEF = {
-            { 'dea0202', 1, 2, 'attack', 'None' }, -- FighterBomber
-            { 'uea0203', 1, 2, 'attack', 'None' }, -- Gunship
+            { 'dea0202', 1, 2, 'Attack', 'None' }, -- FighterBomber
+            { 'uea0203', 1, 2, 'Attack', 'None' }, -- Gunship
         },
         Aeon = {
-            { 'xaa0202', 1, 1, 'attack', 'None' },-- Fighter
-            { 'uaa0203', 1, 2, 'attack', 'None' },-- Gunship
+            { 'xaa0202', 1, 1, 'Attack', 'None' },-- Fighter
+            { 'uaa0203', 1, 2, 'Attack', 'None' },-- Gunship
         },
         Cybran = {
-            { 'dra0202', 1, 2, 'attack', 'None' },-- FighterBomber
-            { 'ura0203', 1, 2, 'attack', 'None' },-- Gunship
+            { 'dra0202', 1, 2, 'Attack', 'None' },-- FighterBomber
+            { 'ura0203', 1, 2, 'Attack', 'None' },-- Gunship
         },
         Seraphim = {
-            { 'xsa0202', 1, 2, 'attack', 'None' },-- FighterBomber
-            { 'xsa0203', 1, 2, 'attack', 'None' }, -- Gunship
+            { 'xsa0202', 1, 2, 'Attack', 'None' },-- FighterBomber
+            { 'xsa0203', 1, 2, 'Attack', 'None' }, -- Gunship
         },
     },
 }
@@ -190,16 +190,16 @@ PlatoonTemplate {
     Name = 'RNGAIT2FighterAeon',
     FactionSquads = {
         UEF = {
-            { 'dea0202', 1, 1, 'attack', 'None' },
+            { 'dea0202', 1, 1, 'Attack', 'None' },
         },
         Aeon = {
-            { 'xaa0202', 1, 1, 'attack', 'None' },
+            { 'xaa0202', 1, 1, 'Attack', 'None' },
         },
         Cybran = {
-            { 'dra0202', 1, 1, 'attack', 'None' },
+            { 'dra0202', 1, 1, 'Attack', 'None' },
         },
         Seraphim = {
-            { 'xsa0202', 1, 1, 'attack', 'None' },
+            { 'xsa0202', 1, 1, 'Attack', 'None' },
         },
     },
 }
@@ -216,7 +216,7 @@ PlatoonTemplate { Name = 'RNGAIT3AirResponse',
             { 'ura0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
         },
         Seraphim = {
-            { 'xsa0303', 1, 2, 'attack', 'none' },      -- Air Superiority Fighter
+            { 'xsa0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
         },
     }
 }
@@ -253,7 +253,7 @@ PlatoonTemplate {
         },
         Seraphim = {
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
-            { 'xsa0303', 1, 3, 'attack', 'none' },      -- Air Superiority Fighter
+            { 'xsa0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
             { 'xsa0304', 1, 1, 'Artillery', 'none' },       -- Strategic Bomber
             { 'xsa0303', 1, 2, 'Attack', 'none' },   -- Air Superiority Fighter
@@ -293,7 +293,7 @@ PlatoonTemplate {
         },
         Seraphim = {
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
-            { 'xsa0303', 1, 1, 'attack', 'none' },      -- Air Superiority Fighter
+            { 'xsa0303', 1, 1, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
             { 'xsa0304', 1, 2, 'Artillery', 'none' },       -- Strategic Bomber
             { 'xsa0303', 1, 1, 'Attack', 'none' },   -- Air Superiority Fighter

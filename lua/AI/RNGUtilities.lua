@@ -1180,9 +1180,6 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
     if not aiBrain or not position or not maxRange then
         return false
     end
-    if not avoidbases then
-        avoidbases = false
-    end
     if not platoon.MovementLayer then
         AIAttackUtils.GetMostRestrictiveLayer(platoon)
     end
@@ -1198,9 +1195,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                         local unitPos = unit:GetPosition()
                         local unitArmyIndex = unit:GetArmy()
         
-                        if not aiBrain.EnemyIntel.ACU[unitArmyIndex].OnField then
+                        --[[if not aiBrain.EnemyIntel.ACU[unitArmyIndex].OnField then
                             continue
-                        end
+                        end]]
                         if platoon.MovementLayer == 'Air' and platoonThreat then
                             enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
                             --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)

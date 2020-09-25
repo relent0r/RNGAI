@@ -1414,22 +1414,22 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if acuTargeting and not data.ACUOnField then
                     --LOG('GUN ACU OnField LOOKING FOR TARGET')
-                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, myThreat)
+                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, myThreat)
                 end
                 if not target and self.MovementLayer == 'Air' then
                     LOG('Checking for possible acu snipe')
                     local enemyACUIndexes = {}
                     for k, v in aiBrain.EnemyIntel.ACU do
                         if v.Hp != 0 and v.LastSpotted != 0 then
-                            LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted)
-                            if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
+                            LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..myThreat)
+                            -if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
                                 table.insert(k, enemyACUIndexes)
                             end
                         end
                     end
                     if table.getn(enemyACUIndexes) > 0 then
                         LOG('There is an ACU that could be sniped, look for targets')
-                        target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, myThreat, enemyACUIndexes)
+                        target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, myThreat, enemyACUIndexes)
                         if target then
                             LOG('ACU found that coule be sniped, set to target')
                         end
