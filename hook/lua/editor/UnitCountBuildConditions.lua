@@ -711,6 +711,30 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
         else
             return false
         end
+    elseif type == 'BOMBER' then
+        if currentTime < 480  then
+            if PoolGreaterAtLocation(aiBrain, locationType, 0, unitCategory) then
+                return true
+            end
+        elseif currentTime < 720 and aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+                return true
+            end
+        elseif currentTime < 900 and aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+                return true
+            end
+        elseif currentTime > 1200 and aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+                return true
+            end
+        elseif currentTime >= 900 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+                return true
+            end
+        else
+            return false
+        end
     elseif type == 'NAVAL' then
         if currentTime < 720  then
             if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then

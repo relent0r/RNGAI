@@ -1422,8 +1422,8 @@ Platoon = Class(RNGAIPlatoon) {
                     for k, v in aiBrain.EnemyIntel.ACU do
                         if v.Hp != 0 and v.LastSpotted != 0 then
                             LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..myThreat)
-                            -if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
-                                table.insert(k, enemyACUIndexes)
+                            if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
+                                table.insert(enemyACUIndexes, k)
                             end
                         end
                     end

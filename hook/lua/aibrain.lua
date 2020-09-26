@@ -1170,7 +1170,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.CheatEnabled then
                         self.EnemyIntel.ACU[enemyIndex].Hp = acuHealth
                         self.EnemyIntel.ACU[enemyIndex].LastSpotted = lastSpotted
-                        LOG('Cheat is enabled and acu has '..acuHealth..' Health '..'Brain intel says '..self.EnemyIntel.ACU[enemyIndex].Hp)
+                        --LOG('Cheat is enabled and acu has '..acuHealth..' Health '..'Brain intel says '..self.EnemyIntel.ACU[enemyIndex].Hp)
                     end
                 end
             end
