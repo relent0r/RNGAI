@@ -189,6 +189,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'ACUOnField', {false} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
@@ -537,7 +538,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ACUOnField', {} },
+            { UCBC, 'ACUOnField', {true} },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {

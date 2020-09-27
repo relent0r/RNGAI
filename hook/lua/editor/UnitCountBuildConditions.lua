@@ -781,10 +781,12 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end
 
-function ACUOnField(aiBrain)
+function ACUOnField(aiBrain, gun)
     if aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 then
         for k, v in aiBrain.EnemyIntel.ACU do
-            if v.OnField and v.Gun then
+            if v.OnField and v.Gun and gun then
+                return true
+            elseif v.OnField and not gun then
                 return true
             end
         end
@@ -797,7 +799,7 @@ function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits
     if activeExpansion then
         if aiBrain.BuilderManagers[activeExpansion].EngineerManager then
             local numEngineers = aiBrain.BuilderManagers[activeExpansion].EngineerManager:GetNumCategoryUnits('Engineers', category)
-            LOG('* EngineerManagerUnitsAtLocation: '..activeExpansion..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
+            --LOG('* EngineerManagerUnitsAtLocation: '..activeExpansion..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
             return CompareBody( numEngineers, numUnits, compareType )
         end
     end

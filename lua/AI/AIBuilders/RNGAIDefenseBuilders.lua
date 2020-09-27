@@ -16,7 +16,7 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
     --LOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
-        LOG('Active Expansion is set'..builderManager.LocationType)
+        --LOG('Active Expansion is set'..builderManager.LocationType)
         --LOG('Active Expansion builders are set to 900')
         return 900
     else

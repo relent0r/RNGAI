@@ -679,7 +679,7 @@ function ACUDetection(platoon)
                             --LOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                             c.Position = v:GetPosition()
                             c.Hp = v:GetHealth()
-                            LOG('AIRSCOUTACUDETECTION Enemy ACU of index '..enemyIndex..'has '..c.Hp..' health')
+                            --LOG('AIRSCOUTACUDETECTION Enemy ACU of index '..enemyIndex..'has '..c.Hp..' health')
                             acuThreat = aiBrain:GetThreatAtPosition(c.Position, 0, true, 'AntiAir')
                             --LOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                             c.Threat = acuThreat
@@ -1531,25 +1531,25 @@ function FatBoyBehaviorRNG(self)
     while unit and not unit.Dead do
         local guards = unit.Guards:GetPlatoonUnits()
         local inWater = InWaterCheck(self)
-        LOG('Start of FATBOY Loop')
+        --LOG('Start of FATBOY Loop')
         targetUnit, lastBase = FindExperimentalTarget(self)
         if targetUnit then
-            LOG('We have target')
+            --LOG('We have target')
             IssueClearCommands({unit})
             local targetPos = targetUnit:GetPosition()
             if inWater then
-                LOG('We are in water and moving to targetPos')
+                --LOG('We are in water and moving to targetPos')
                 IssueMove({unit}, targetPos)
             else
-                LOG('Attack Issued to targetUnit')
+                --LOG('Attack Issued to targetUnit')
                 IssueAttack({unit}, targetUnit)
             end
             -- Wait to get in range
             local pos = unit:GetPosition()
-            LOG('About to start base distance loop')
+            --LOG('About to start base distance loop')
             while VDist2(pos[1], pos[3], lastBase.Position[1], lastBase.Position[3]) > (unit.MaxWeaponRange - 10)
                 and not unit.Dead do
-                    LOG('Start of fatboy move to target loop')
+                    --LOG('Start of fatboy move to target loop')
                     WaitTicks(40)
                     inWater = InWaterCheck(self)
                     guards = unit.Guards:GetPlatoonUnits()
@@ -1560,12 +1560,12 @@ function FatBoyBehaviorRNG(self)
                             FatBoyGuardsRNG(self)
                         end
                     end
-                    LOG('FATBOY guard count :'..table.getn(guards))
+                    --LOG('FATBOY guard count :'..table.getn(guards))
                     if unit:IsIdleState() and targetUnit and not targetUnit.Dead then
                         if inWater then
                             IssueMove({unit}, targetPos)
                         else
-                            LOG('Attack Issued')
+                            --LOG('Attack Issued')
                             IssueAttack({unit}, targetUnit)
                         end
                     end
@@ -1573,7 +1573,7 @@ function FatBoyBehaviorRNG(self)
                     if inWater then
                         WaitTicks(10)
                         if unit.Guards then
-                            LOG('In water, disbanding guards')
+                            --LOG('In water, disbanding guards')
                             unit.Guards:ReturnToBaseAIRNG()
                         end
                     end
@@ -1640,9 +1640,9 @@ function FatBoyBehaviorRNG(self)
                         --LOG('Taret Position is'..repr(targetPos))
                         WaitTicks(40)
                     end
-                LOG('End of fatboy moving to target loop')
+                --LOG('End of fatboy moving to target loop')
             end
-            LOG('End of fatboy unit loop')
+            --LOG('End of fatboy unit loop')
             IssueClearCommands({unit})
         end
         WaitSeconds(1)
@@ -1658,7 +1658,7 @@ function FatBoyGuardsRNG(self)
     local unitToBuild = buildUnits[Random(1, table.getn(buildUnits))]
     
     aiBrain:BuildUnit(experimental, unitToBuild, 1)
-    LOG('Guard loop pass')
+    --LOG('Guard loop pass')
     WaitTicks(1)
 
     local unitBeingBuilt = false
@@ -1668,11 +1668,11 @@ function FatBoyGuardsRNG(self)
         WaitTicks(20)
         buildTimeout = buildTimeout + 1
         if buildTimeout > 20 then
-            LOG('FATBOY has not built within 40 seconds, breaking out')
+            --LOG('FATBOY has not built within 40 seconds, breaking out')
             IssueClearCommands({experimental})
             return
         end
-        LOG('Waiting for unitBeingBuilt is be true')
+        --LOG('Waiting for unitBeingBuilt is be true')
     until experimental.Dead or unitBeingBuilt or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
     
     local idleTimeout = 0
@@ -1680,11 +1680,11 @@ function FatBoyGuardsRNG(self)
         WaitTicks(30)
         idleTimeout = idleTimeout + 1
         if idleTimeout > 15 then
-            LOG('FATBOY has not built within 40 seconds, breaking out')
+            --LOG('FATBOY has not built within 40 seconds, breaking out')
             IssueClearCommands({experimental})
             return
         end
-        LOG('Waiting for experimental to go idle')
+        --LOG('Waiting for experimental to go idle')
     until experimental.Dead or experimental:IsIdleState() or aiBrain:GetArmyStat("UnitCap_MaxCap", 0.0).Value - aiBrain:GetArmyStat("UnitCap_Current", 0.0).Value < 10
 
     if not experimental.Guards or not aiBrain:PlatoonExists(experimental.Guards) then
@@ -1733,7 +1733,7 @@ function BehemothBehaviorRNG(self, id)
 
             -- If no target jump out
             if not targetUnit then break end
-            if aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
+            if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
                 --LOG('Experimental WEAPON BLOCKED, moving to better position')
                 IssueClearCommands({experimental})
                 IssueMove({experimental}, targetPos )
@@ -1760,7 +1760,9 @@ function BehemothBehaviorRNG(self, id)
                     WaitTicks(20)
                     IssueMove({experimental}, shieldPosition)
                     WaitTicks(30)
-                    IssueAttack({experimental}, closestBlockingShield)
+                    if closestBlockingShield and not closestBlockingShield.Dead then
+                        IssueAttack({experimental}, closestBlockingShield)
+                    end
                 end
 
                 closestBlockingShield = false

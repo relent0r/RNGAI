@@ -487,14 +487,14 @@ Platoon = Class(RNGAIPlatoon) {
                 if blip then
                     IssueClearCommands(platoonUnits)
                     positionUnits = aiBrain:GetUnitsAroundPoint(data.Categories[1], targetPos, 10, 'Enemy')
-                    LOG('Number of units found by reclaim ai is '..table.getn(positionUnits))
+                    --LOG('Number of units found by reclaim ai is '..table.getn(positionUnits))
                     if table.getn(positionUnits) > 1 then
-                        LOG('Reclaim Units AI got more than one at target position')
+                        --LOG('Reclaim Units AI got more than one at target position')
                         for k, v in positionUnits do
                             IssueReclaim(platoonUnits, v)
                         end
                     else
-                        LOG('Reclaim Units AI got a single target at position')
+                        --LOG('Reclaim Units AI got a single target at position')
                         IssueReclaim(platoonUnits, target)
                     end
                     -- Set ReclaimInProgress to prevent repairing (see RepairAI)
@@ -1060,17 +1060,17 @@ Platoon = Class(RNGAIPlatoon) {
                 if platoonThreat and platoonCount < 15 then
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
                         targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
-                        LOG('HuntAIPath targetThreat is '..targetThreat)
+                        --LOG('HuntAIPath targetThreat is '..targetThreat)
                         if targetThreat > platoonThreat then
-                            LOG('HuntAIPath attempting merge and formation ')
+                            --LOG('HuntAIPath attempting merge and formation ')
                             local merged = self:MergeWithNearbyPlatoonsRNG('HuntAIPATHRNG', 60, 15)
                             if merged then
                                 self:SetPlatoonFormationOverride('AttackFormation')
-                                WaitTicks(30)
-                                LOG('HuntAIPath merge and formation completed')
+                                WaitTicks(40)
+                                --LOG('HuntAIPath merge and formation completed')
                                 continue
                             else
-                                LOG('No merge done')
+                                --LOG('No merge done')
                             end
                         end
                     end
@@ -1259,13 +1259,13 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                                 if not target or target.Dead then
                                     if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
-                                        LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
+                                        --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
                                         self:MoveToLocation(targetPosition, false, 'Attack')
                                         WaitTicks(60)
                                     else
-                                        LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
+                                        --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
                                         self:MoveToLocation(targetPosition, false, 'Attack')
-                                        WaitTicks(30)
+                                        WaitTicks(40)
                                     end
                                     self:Stop()
                                     break
@@ -1417,21 +1417,21 @@ Platoon = Class(RNGAIPlatoon) {
                     target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, myThreat)
                 end
                 if not target and self.MovementLayer == 'Air' then
-                    LOG('Checking for possible acu snipe')
+                    --LOG('Checking for possible acu snipe')
                     local enemyACUIndexes = {}
                     for k, v in aiBrain.EnemyIntel.ACU do
                         if v.Hp != 0 and v.LastSpotted != 0 then
-                            LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..myThreat)
+                            --LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..myThreat)
                             if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
                                 table.insert(enemyACUIndexes, k)
                             end
                         end
                     end
                     if table.getn(enemyACUIndexes) > 0 then
-                        LOG('There is an ACU that could be sniped, look for targets')
+                        --LOG('There is an ACU that could be sniped, look for targets')
                         target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, myThreat, enemyACUIndexes)
                         if target then
-                            LOG('ACU found that coule be sniped, set to target')
+                            --LOG('ACU found that coule be sniped, set to target')
                         end
                     end
                 end
@@ -1459,7 +1459,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 if not target then
-                    LOG('Strikeforce no target found')
+                    --LOG('Strikeforce no target found')
                 end
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
@@ -1477,8 +1477,8 @@ Platoon = Class(RNGAIPlatoon) {
                     if self.MovementLayer == 'Air' then
                         targetExpPos = newtarget:GetPosition()
                         targetExpThreat = aiBrain:GetThreatAtPosition(targetExpPos, 1, true, 'AntiAir')
-                        LOG('Target Air Threat is '..targetExpThreat)
-                        LOG('My Air Threat is '..myThreat)
+                        --LOG('Target Air Threat is '..targetExpThreat)
+                        --LOG('My Air Threat is '..myThreat)
                         if myThreat > targetExpThreat then
                             target = newtarget
                         elseif VDist2Sq(targetExpPos[1], targetExpPos[3], mainBasePos[1], mainBasePos[3]) < 22500 then
@@ -2794,7 +2794,7 @@ Platoon = Class(RNGAIPlatoon) {
         if aiBrain.BuilderManagers then
             for baseName, base in aiBrain.BuilderManagers do
                 if VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3]) <= (2*radiusSq) then
-                    LOG('Platoon too close to base, not merge happening')
+                    --LOG('Platoon too close to base, not merge happening')
                     return
                 end
             end
@@ -4036,21 +4036,21 @@ Platoon = Class(RNGAIPlatoon) {
     TransferAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local moveToLocation = aiBrain.BrainIntel.ActiveExpansion
-        LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..')')
+        --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..')')
         if not aiBrain.BuilderManagers[moveToLocation] then
-            LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..') has no BuilderManager!')
+            --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..') has no BuilderManager!')
             self:PlatoonDisband()
             return
         end
         local eng = self:GetPlatoonUnits()[1]
         if eng and not eng.Dead and eng.BuilderManagerData.EngineerManager then
-            LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
+            --LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
             eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)
-            LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..moveToLocation..' - ' .. aiBrain.BuilderManagers[moveToLocation].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
+            --LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..moveToLocation..' - ' .. aiBrain.BuilderManagers[moveToLocation].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
             aiBrain.BuilderManagers[moveToLocation].EngineerManager:AddUnit(eng, true)
             -- Move the unit to the desired base after transfering BuilderManagers to the new LocationType
             local basePosition = aiBrain.BuilderManagers[moveToLocation].Position
-            LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. moveToLocation)
+            --LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. moveToLocation)
             AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, basePosition)
         end
         if aiBrain:PlatoonExists(self) then
