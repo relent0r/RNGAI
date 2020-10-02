@@ -1606,7 +1606,11 @@ Platoon = Class(RNGAIPlatoon) {
                     return self:ReturnToBaseAIRNG(true)
                 end
             end
-            WaitTicks(50)
+            WaitTicks(40)
+            if not target and self.MovementLayer == 'Air' then
+                --LOG('StrkeForce Air AI Attempting Merge')
+                self:MergeWithNearbyPlatoonsRNG('StrikeForceAIRNG', 60, 12, true)
+            end
         end
     end,
 
@@ -2111,7 +2115,10 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Check if we can move to location')
             --LOG('Unit is '..eng.UnitId)
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
-
+                if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
+                    if eng then eng.ProcessBuild = nil end
+                    return
+                end
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 while not eng.Dead do
                     PlatoonPos = eng:GetPosition()
@@ -2145,7 +2152,6 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 --aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                --[[
                 if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
@@ -2157,11 +2163,14 @@ Platoon = Class(RNGAIPlatoon) {
                             RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
                             AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                             aiBrain:BuildStructure(eng, whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative)
+                            local newEntry = {whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative}
+                            table.insert(eng.EngineerBuildQueue, newEntry)
+
                         else
                             --LOG('Cant find mass within distance')
                         end
                     end
-                end]]
+                end
                 if not eng.NotBuildingThread then
                     eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
@@ -2761,7 +2770,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
-    MergeWithNearbyPlatoonsRNG = function(self, planName, radius, maxMergeNumber)
+    MergeWithNearbyPlatoonsRNG = function(self, planName, radius, maxMergeNumber, ignoreBase)
         -- check to see we're not near an ally base
         local aiBrain = self:GetBrain()
         if not aiBrain then
@@ -2791,11 +2800,13 @@ Platoon = Class(RNGAIPlatoon) {
 
         local radiusSq = radius*radius
         -- if we're too close to a base, forget it
-        if aiBrain.BuilderManagers then
-            for baseName, base in aiBrain.BuilderManagers do
-                if VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3]) <= (2*radiusSq) then
-                    --LOG('Platoon too close to base, not merge happening')
-                    return
+        if not ignoreBase then
+            if aiBrain.BuilderManagers then
+                for baseName, base in aiBrain.BuilderManagers do
+                    if VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3]) <= (2*radiusSq) then
+                        --LOG('Platoon too close to base, not merge happening')
+                        return
+                    end
                 end
             end
         end

@@ -850,7 +850,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 5 minutes
@@ -866,7 +866,7 @@ BuilderGroup {
         Priority = 550,                                                          -- Priority. 1000 is normal.
         PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 10,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -1089,8 +1089,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Attack AntiAir Structures',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack AA Structures',                          -- Template Name.
-        Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        Priority = 700,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.LAND * categories.DIRECTFIRE * categories.MOBILE - categories.EXPERIMENTAL}},
@@ -1103,8 +1103,9 @@ BuilderGroup {
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchPriorities = {
-                'MOBILE',
-                'STRUCTURE ANTIAIR'
+                'STRUCTURE ANTIAIR',
+                'STRUCTURE DEFENSE',
+                'MOBILE'
             },
             PrioritizedCategories = {                                           -- Attack these targets.
                 'STRUCTURE ANTIAIR',

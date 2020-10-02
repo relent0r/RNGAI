@@ -1715,7 +1715,7 @@ function BehemothBehaviorRNG(self, id)
             targetUnit, lastBase = FindExperimentalTarget(self)
         end
 
-        if targetUnit then
+        if targetUnit and not targetUnit.Dead then
             IssueClearCommands({experimental})
             IssueAttack({experimental}, targetUnit)
         end
@@ -1753,7 +1753,9 @@ function BehemothBehaviorRNG(self, id)
                 local shieldPosition = closestBlockingShield:GetPosition()
                 IssueMove({experimental}, shieldPosition)
                 WaitTicks(30)
-                IssueAttack({experimental}, closestBlockingShield)
+                if closestBlockingShield and not closestBlockingShield.Dead then
+                    IssueAttack({experimental}, closestBlockingShield)
+                end
 
                 -- Wait for shield to die loop
                 while not closestBlockingShield.Dead and not experimental.Dead do
