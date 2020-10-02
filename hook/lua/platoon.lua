@@ -3855,7 +3855,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     local shieldHealth = 0
                                     --LOG('There are '..table.getn(enemyShield)..'shields')
                                     for k, shield in enemyShield do
-                                        if not shield or shield.Dead then continue end
+                                        if not shield or shield.Dead or not shield.MyShield then continue end
                                         enemyShieldHealth = enemyShieldHealth + shield.MyShield:GetHealth()
                                     end
                                     shieldMissilesRequired = math.ceil(enemyShieldHealth / 6000)

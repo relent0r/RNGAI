@@ -342,6 +342,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                             IssueClearCommands({cdr})
                             continue
                         end
+                        if not PlatoonExists(aiBrain, plat) then
+                            local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
+                            plat.BuilderName = 'CDR Combat'
+                            aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
+                        end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
                         if target and not target.Dead and not target:BeenDestroyed() then
                             IssueOverCharge({cdr}, target)
