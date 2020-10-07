@@ -1058,6 +1058,7 @@ Platoon = Class(RNGAIPlatoon) {
                 local platoonPos = GetPlatoonPosition(self)
                 local targetThreat
                 if platoonThreat and platoonCount < 15 then
+                    LOG('Merging with patoon count of '..platoonCount)
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
                         targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
                         --LOG('HuntAIPath targetThreat is '..targetThreat)
@@ -1459,7 +1460,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 if not target then
-                    --LOG('Strikeforce no target found')
+                    LOG('Strikeforce no target found')
                 end
                 --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
@@ -1510,7 +1511,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 while PlatoonExists(aiBrain, self) do
                                     if not target or target.Dead then
                                         target = false
-                                        --LOG('Target dead or lost during strikeforce air')
+                                        LOG('Target dead or lost during strikeforce air')
                                         break
                                     end
                                     platoonPosition = GetPlatoonPosition(self)
@@ -1608,7 +1609,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             WaitTicks(40)
             if not target and self.MovementLayer == 'Air' then
-                --LOG('StrkeForce Air AI Attempting Merge')
+                LOG('StrkeForce Air AI Attempting Merge')
                 self:MergeWithNearbyPlatoonsRNG('StrikeForceAIRNG', 60, 12, true)
             end
         end
@@ -2851,7 +2852,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if not bValidUnits then
                     continue
                 end
-                --LOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
+                LOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
                 aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
                 bMergedPlatoons = true
             end

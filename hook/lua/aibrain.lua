@@ -390,6 +390,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     )
                 end
             end
+            LOG('BaseMonitorPoints Threat Data '..repr(self.BaseMonitor.BaseMonitorPoints))
             -- Remove any points that we dont monitor anymore
             for k, v in self.BaseMonitor.BaseMonitorPoints do
                 local found = false
