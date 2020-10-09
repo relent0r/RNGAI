@@ -874,6 +874,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
+            PlatoonLimit = 18,
             AggressiveMove = true,
             ThreatSupport = 5,
             TargetSearchPriorities = {
@@ -910,6 +911,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             AggressiveMove = true,
+            PlatoonLimit = 15,
             ThreatSupport = 5,
             },
     },

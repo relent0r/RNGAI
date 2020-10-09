@@ -358,6 +358,30 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.TacticalMonitorInitializationRNG)
     end,
 
+    GetStructureVectorsRNG = function(self)
+        local structures = self:GetListOfUnits(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
+        -- Add all points around location
+        local tempGridPoints = {}
+        local indexChecker = {}
+
+        for k, v in structures do
+            if not v.Dead then
+                local pos = AIUtils.GetUnitBaseStructureVector(v)
+                if pos then
+                    if not indexChecker[pos[1]] then
+                        indexChecker[pos[1]] = {}
+                    end
+                    if not indexChecker[pos[1]][pos[3]] then
+                        indexChecker[pos[1]][pos[3]] = true
+                        table.insert(tempGridPoints, pos)
+                    end
+                end
+            end
+        end
+
+        return tempGridPoints
+    end,
+
     BaseMonitorCheckRNG = function(self)
         
         local gameTime = GetGameTimeSeconds()
@@ -368,7 +392,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.AlertLevel = 5
         end
 
-        local vecs = self:GetStructureVectors()
+        local vecs = self:GetStructureVectorsRNG()
         if table.getn(vecs) > 0 then
             -- Find new points to monitor
             for k, v in vecs do
@@ -942,6 +966,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
+        --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
@@ -990,6 +1015,7 @@ AIBrain = Class(RNGAIBrainClass) {
             return self.BaseMonitor.CDRDistress
         end
         if self.BaseMonitor.AlertSounded then
+            LOG('Base Alert Sounded')
             for k, v in self.BaseMonitor.AlertsTable do
                 local tempDist = Utilities.XZDistanceTwoVectors(position, v.Position)
 
@@ -1021,6 +1047,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if self.BaseMonitor.PlatoonAlertSounded then
+            LOG('Platoon Alert Sounded')
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
                     local platPos = v.Platoon:GetPlatoonPosition()

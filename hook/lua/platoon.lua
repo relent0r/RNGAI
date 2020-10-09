@@ -837,15 +837,9 @@ Platoon = Class(RNGAIPlatoon) {
                 local threatAroundplatoon = 0
                 local targetPosition = target:GetPosition()
                 local platoonPos = GetPlatoonPosition(self)
+                local platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
                 if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
-                    positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
-                    local bp
-                    -- calculate my present land threat			
-                    for _,v in positionUnits do
-                        bp = ALLBPS[v.UnitId].Defense
-                        threatAroundplatoon = threatAroundplatoon + bp.SurfaceThreatLevel
-                    end
-                    if threatAroundplatoon < 75 then
+                    if platoonThreat < 30 then
                         local retreatPos = RUtils.lerpy(platoonPos, targetPosition, {50, 1})
                         self:MoveToLocation(retreatPos, false)
                         --LOG('Target is ACU retreating')
@@ -982,6 +976,7 @@ Platoon = Class(RNGAIPlatoon) {
         local maxPathDistance = 250
         local enemyRadius = 40
         local data = self.PlatoonData
+        local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
         local maxRadius = data.SearchRadius or 200
         local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
@@ -1057,7 +1052,8 @@ Platoon = Class(RNGAIPlatoon) {
                 local targetPosition = target:GetPosition()
                 local platoonPos = GetPlatoonPosition(self)
                 local targetThreat
-                if platoonThreat and platoonCount < 15 then
+                if platoonThreat and platoonCount < platoonLimit then
+                    self.PlatoonFull = false
                     LOG('Merging with patoon count of '..platoonCount)
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
                         targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
@@ -1075,8 +1071,10 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     end
+                else
+                    LOG('Setting platoon to full as platoonCount is greater than 15')
+                    self.PlatoonFull = true
                 end
-
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
@@ -1088,20 +1086,11 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                     if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
                         platoonPos = GetPlatoonPosition(self)
-                        positionUnits = aiBrain:GetUnitsAroundPoint(categories.MOBILE * categories.LAND, platoonPos, 50, 'Ally')
-                        local bp
-                        -- calculate my present land threat			
-                        for _,v in positionUnits do
-                            bp = ALLBPS[v.UnitId].Defense
-                            threatAroundplatoon = threatAroundplatoon + bp.SurfaceThreatLevel
-                        end
-                        if threatAroundplatoon < 75 then
+                        targetPosition = target:GetPosition()
+                        if platoonThreat < 30 then
                             local retreatPos = RUtils.lerpy(platoonPos, targetPosition, {50, 1})
                             self:MoveToLocation(retreatPos, false)
                             --LOG('Target is ACU retreating')
-                            local platoonThreat = self:GetPlatoonThreat('Land', categories.MOBILE * categories.LAND)
-                            --LOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
-                            --LOG('Platoon Threat = '..platoonThreat)
                             WaitTicks(30)
                             continue
                         end
@@ -2826,6 +2815,11 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
 
+            if aPlat.PlatoonFull then
+                LOG('Remote platoon is full, skip')
+                continue
+            end
+
             local allyPlatPos = aPlat:GetPlatoonPosition()
             if not allyPlatPos or not aiBrain:PlatoonExists(aPlat) then
                 continue
@@ -3009,7 +3003,7 @@ Platoon = Class(RNGAIPlatoon) {
                 local threat = aiBrain:GetThreatAtPosition(pos, 1, true, 'AntiSurface')
                 --LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
-                    --LOG('*RNGAI Mass Extractor Platoon Calling for help')
+                    LOG('*RNGAI Mass Extractor Platoon Calling for help')
                     aiBrain:BaseMonitorPlatoonDistressRNG(self, threat)
                     self.DistressCall = true
                     aiBrain:AddScoutArea(pos)

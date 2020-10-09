@@ -717,6 +717,7 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
         extractorPlatoon.MovementLayer = 'Land'
         --LOG('* AI-RNG: Assigning Extractor to new platoon')
         AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
+        extractorPlatoon:ForkThread( extractorPlatoon.ExtractorCallForHelpAIRNG, aiBrain )
 
         if not finishedUnit.UpgradeThread then
             --LOG('* AI-RNG: Forking Upgrade Thread')
