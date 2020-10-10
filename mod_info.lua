@@ -1,6 +1,6 @@
 name = "RNGAI"
-uid = "faf0863e-9577-ba0d-9bd7-8d82b622f1c0"
-version = 53
+uid = "faf0863e-9577-ba0d-a5f9-8d82b622f1c0"
+version = 54
 copyright = "2019 relentless"
 description = "RNG Standard AI, this AI is designed for 5km and 10km ranked style maps. Now supports 20km maps. Requires Uveso AI to be enabled and generating land path makers."
 author = "relentless"

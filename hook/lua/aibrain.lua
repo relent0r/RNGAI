@@ -221,7 +221,19 @@ AIBrain = Class(RNGAIBrainClass) {
         self.UpgradeIssued = 0
         
         self.UpgradeIssuedPeriod = 120
+        self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
+        if  mapSizeX > 1000 and mapSizeZ > 1000 then
+            --LOG('20 KM Map Check true')
+            self.MapSize = 20
+        elseif mapSizeX > 500 and mapSizeZ > 500 then
+            --LOG('10 KM Map Check true')
+            self.MapSize = 10
+        elseif mapSizeX > 200 and mapSizeZ > 200 then
+            --LOG('5 KM Map Check true')
+            self.MapSize = 5
+        end
+
 
         if mapSizeX < 1000 and mapSizeZ < 1000  then
             self.UpgradeIssuedLimit = 2
@@ -414,7 +426,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     )
                 end
             end
-            LOG('BaseMonitorPoints Threat Data '..repr(self.BaseMonitor.BaseMonitorPoints))
+            --LOG('BaseMonitorPoints Threat Data '..repr(self.BaseMonitor.BaseMonitorPoints))
             -- Remove any points that we dont monitor anymore
             for k, v in self.BaseMonitor.BaseMonitorPoints do
                 local found = false
@@ -1015,7 +1027,7 @@ AIBrain = Class(RNGAIBrainClass) {
             return self.BaseMonitor.CDRDistress
         end
         if self.BaseMonitor.AlertSounded then
-            LOG('Base Alert Sounded')
+            --LOG('Base Alert Sounded')
             for k, v in self.BaseMonitor.AlertsTable do
                 local tempDist = Utilities.XZDistanceTwoVectors(position, v.Position)
 
@@ -1047,7 +1059,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if self.BaseMonitor.PlatoonAlertSounded then
-            LOG('Platoon Alert Sounded')
+            --LOG('Platoon Alert Sounded')
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
                     local platPos = v.Platoon:GetPlatoonPosition()

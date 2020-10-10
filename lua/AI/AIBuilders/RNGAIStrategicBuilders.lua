@@ -76,7 +76,38 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
             { EBC, 'GreaterThanEconTrendRNG', { 2.0, 200.0 } },
             { EBC, 'GreaterThanEconIncome', { 8.0, 700.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                DesiresAssist = true,
+                NumAssistees = 15,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 20,
+                BuildStructures = {
+                    'T3Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Artillery Lo Pri',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 600,
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { EBC, 'GreaterThanEconTrendRNG', { 2.0, 200.0 } },
+            { EBC, 'GreaterThanEconIncome', { 8.0, 700.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
         },
         BuilderType = 'Any',

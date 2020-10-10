@@ -93,13 +93,13 @@ BuilderGroup {
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
-        InstanceCount = 3,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD }},
@@ -125,12 +125,13 @@ BuilderGroup {
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
@@ -152,12 +153,13 @@ BuilderGroup {
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
