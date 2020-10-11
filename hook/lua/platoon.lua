@@ -43,10 +43,6 @@ Platoon = Class(RNGAIPlatoon) {
             if not target or target.Dead then
                 if defensive then
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, avoidBases)
-                    if target then
-                        break
-                    end
-                    WaitTicks(30) --DUNCAN - was 3
                     if not PlatoonExists(aiBrain, self) then
                         return
                     end
@@ -104,9 +100,6 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     WaitTicks(20)
-                    if not target then
-                        break
-                    end
                     if (target.Dead or not target or target:BeenDestroyed()) then
                         --LOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
                         break
@@ -946,6 +939,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
                                         --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                                         IssueMove({unit}, targetPosition )
+                                        WaitTicks(30)
                                     else
                                         --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                     end
@@ -3000,7 +2994,7 @@ Platoon = Class(RNGAIPlatoon) {
         local pos = GetPlatoonPosition(self)
         while PlatoonExists(aiBrain, self) and pos do
             if not self.DistressCall then
-                local threat = aiBrain:GetThreatAtPosition(pos, 1, true, 'AntiSurface')
+                local threat = aiBrain:GetThreatAtPosition(pos, 1, true, 'Land')
                 --LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
                     --LOG('*RNGAI Mass Extractor Platoon Calling for help')
@@ -3939,7 +3933,7 @@ Platoon = Class(RNGAIPlatoon) {
         if ID == 'uel0401' then
             return behaviors.FatBoyBehaviorRNG(self)
         elseif ID == 'uaa0310' then
-            return behaviors.CzarBehavior(self)
+            return behaviors.CzarBehaviorRNG(self)
         elseif ID == 'xsa0402' then
             return behaviors.AhwassaBehavior(self)
         elseif ID == 'ura0401' then

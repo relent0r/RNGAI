@@ -1703,6 +1703,58 @@ function FatBoyGuardsRNG(self)
     end
 end
 
+CzarBehaviorRNG = function(self)
+    local experimental = GetExperimentalUnit(self)
+    if not experimental then
+        return
+    end
+
+    if not EntityCategoryContains(categories.uaa0310, experimental) then
+        return
+    end
+
+    AssignExperimentalPriorities(self)
+    local cmd
+    local targetUnit, targetBase = FindExperimentalTarget(self)
+    local oldTargetUnit = nil
+    while not experimental.Dead do
+        if (targetUnit and targetUnit ~= oldTargetUnit) or not self:IsCommandsActive(cmd) then
+            if targetUnit and VDist3(targetUnit:GetPosition(), self:GetPlatoonPosition()) > 100 then
+                IssueClearCommands({experimental})
+                WaitTicks(5)
+
+                cmd = ExpPathToLocation(aiBrain, self, 'Air', targetUnit:GetPosition(), false, 62500)
+                cmd = self:AttackTarget(targetUnit)
+            else
+                IssueClearCommands({experimental})
+                WaitTicks(5)
+
+                cmd = self:AttackTarget(targetUnit)
+            end
+        end
+
+        local nearCommander = CommanderOverrideCheck(self)
+        local oldCommander = nil
+        while nearCommander and not experimental.Dead and not experimental:IsIdleState() do
+            if nearCommander and nearCommander ~= oldCommander and nearCommander ~= targetUnit then
+                IssueClearCommands({experimental})
+                WaitTicks(5)
+
+                cmd = self:AttackTarget(nearCommander)
+                targetUnit = nearCommander
+            end
+            WaitSeconds(1)
+
+            oldCommander = nearCommander
+            nearCommander = CommanderOverrideCheck(self)
+        end
+        WaitSeconds(1)
+
+        oldTargetUnit = targetUnit
+        targetUnit, targetBase = FindExperimentalTarget(self)
+    end
+end
+
 function BehemothBehaviorRNG(self, id)
     AssignExperimentalPriorities(self)
 
@@ -1710,6 +1762,7 @@ function BehemothBehaviorRNG(self, id)
     local experimental = GetExperimentalUnit(self)
     local targetUnit = false
     local lastBase = false
+    local cmd
     local airUnit = EntityCategoryContains(categories.AIR, experimental)
     -- Don't forget we have the unit ID for specialized behaviors.
     -- Find target loop
@@ -1722,7 +1775,7 @@ function BehemothBehaviorRNG(self, id)
 
         if targetUnit and not targetUnit.Dead then
             IssueClearCommands({experimental})
-            IssueAttack({experimental}, targetUnit)
+            cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', targetUnit:GetPosition(), false)
         end
 
         -- Walk to and kill target loop
