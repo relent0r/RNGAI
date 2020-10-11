@@ -420,7 +420,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     table.insert(self.BaseMonitor.BaseMonitorPoints,
                         {
                             Position = v,
-                            Threat = self:GetThreatAtPosition(v, 0, true, 'Overall'),
+                            Threat = self:GetThreatAtPosition(v, 0, true, 'Land'),
                             Alert = false
                         }
                     )
@@ -445,7 +445,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local alertThreat = self.BaseMonitor.AlertLevel
             for k, v in self.BaseMonitor.BaseMonitorPoints do
                 if not v.Alert then
-                    v.Threat = self:GetThreatAtPosition(v.Position, 0, true, 'Overall')
+                    v.Threat = self:GetThreatAtPosition(v.Position, 0, true, 'Land')
                     if v.Threat > alertThreat then
                         v.Alert = true
                         table.insert(self.BaseMonitor.AlertsTable,
