@@ -94,6 +94,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'T4ExperimentalAirRNG',
+    Plan = 'ExperimentalAIHubRNG',
+    GlobalSquads = {
+        { categories.AIR * categories.EXPERIMENTAL * categories.MOBILE - categories.SATELLITE, 1, 1, 'attack', 'none' },
+    },
+}
+
+PlatoonTemplate {
     Name = 'T2AirMissile',
     FactionSquads = {
         Aeon = {

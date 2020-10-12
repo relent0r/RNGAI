@@ -229,7 +229,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Exp Air',
-        PlatoonTemplate = 'T4ExperimentalAir',
+        PlatoonTemplate = 'T4ExperimentalAirRNG',
         Priority = 1000,
         FormRadius = 10000,
         InstanceCount = 50,

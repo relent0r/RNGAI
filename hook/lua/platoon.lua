@@ -3931,15 +3931,19 @@ Platoon = Class(RNGAIPlatoon) {
         local ID = experimental.UnitId
         --LOG('Starting experimental behaviour...' .. ID)
         if ID == 'uel0401' then
+            LOG('FATBOY Behavior')
             return behaviors.FatBoyBehaviorRNG(self)
         elseif ID == 'uaa0310' then
+            LOG('CZAR Behavior')
             return behaviors.CzarBehaviorRNG(self)
         elseif ID == 'xsa0402' then
+            LOG('Exp Bomber Behavior')
             return behaviors.AhwassaBehavior(self)
         elseif ID == 'ura0401' then
+            LOG('Exp Gunship Behavior')
             return behaviors.TickBehavior(self)
         end
-
+        LOG('Standard Behemoth')
         return behaviors.BehemothBehaviorRNG(self, ID)
     end,
 
