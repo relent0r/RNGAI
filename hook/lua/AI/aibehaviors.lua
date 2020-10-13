@@ -1705,6 +1705,7 @@ end
 
 CzarBehaviorRNG = function(self)
     local experimental = GetExperimentalUnit(self)
+    local aiBrain = self:GetBrain()
     if not experimental then
         return
     end
@@ -1791,11 +1792,13 @@ function BehemothBehaviorRNG(self, id)
 
             -- If no target jump out
             if not targetUnit then break end
-            if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
-                --LOG('Experimental WEAPON BLOCKED, moving to better position')
-                IssueClearCommands({experimental})
-                IssueMove({experimental}, targetPos )
-                WaitTicks(50)
+            if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
+                if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
+                    --LOG('Experimental WEAPON BLOCKED, moving to better position')
+                    IssueClearCommands({experimental})
+                    IssueMove({experimental}, targetPos )
+                    WaitTicks(50)
+                end
             end
 
             -- Check if we or the target are under a shield
@@ -1818,7 +1821,8 @@ function BehemothBehaviorRNG(self, id)
                 -- Wait for shield to die loop
                 while not closestBlockingShield.Dead and not experimental.Dead do
                     WaitTicks(20)
-                    IssueMove({experimental}, shieldPosition)
+                    IssueClearCommands({experimental})
+                    cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', shieldPosition, false)
                     WaitTicks(30)
                     if closestBlockingShield and not closestBlockingShield.Dead then
                         IssueAttack({experimental}, closestBlockingShield)
