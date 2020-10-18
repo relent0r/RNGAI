@@ -1,3 +1,4 @@
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
     if not GetPathGraphs()[platoonLayer] then
@@ -454,15 +455,18 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 platoon.LastAttackDestination = {attackPos}
             else
                 local pathSize = table.getn(path)
+                local prevpoint = platoon:GetPlatoonPosition() or false
                 # store path
                 platoon.LastAttackDestination = path
                 # move to new location
                 for wpidx,waypointPath in path do
+                    local direction = RUtils.GetDirectionInDegrees( prevpoint, waypointPath )
                     if wpidx == pathSize or bAggro then
-                        platoon:AggressiveMoveToLocation(waypointPath)
+                        IssueFormAggressiveMove( platoon, waypointPath, 'BlockFormation', direction)
                     else
-                        platoon:MoveToLocation(waypointPath, false)
+                        IssueFormMove( platoon, waypointPath, 'BlockFormation', direction)
                     end
+                    prevpoint = table.copy(waypointPath)
                 end
             end
         end
