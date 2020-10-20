@@ -660,11 +660,11 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 1,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
+                { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
                 { EBC, 'GreaterThanEconStorageCurrentRNG', { 1200, 8000 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.80}},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
             },

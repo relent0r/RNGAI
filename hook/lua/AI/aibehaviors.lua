@@ -1761,9 +1761,20 @@ function BehemothBehaviorRNG(self, id)
 
     local aiBrain = self:GetBrain()
     local experimental = GetExperimentalUnit(self)
+    local data = self.PlatoonData
     local targetUnit = false
     local lastBase = false
     local cmd
+    local categoryList = {}
+
+    if data.PrioritizedCategories then
+        for k,v in data.PrioritizedCategories do
+            table.insert(categoryList, ParseEntityCategory(v))
+        end
+        table.insert(categoryList, categories.ALLUNITS)
+        self:SetPrioritizedTargetList('Attack', categoryList)
+    end
+    
     local airUnit = EntityCategoryContains(categories.AIR, experimental)
     -- Don't forget we have the unit ID for specialized behaviors.
     -- Find target loop
@@ -1791,7 +1802,7 @@ function BehemothBehaviorRNG(self, id)
             end
 
             -- If no target jump out
-            if not targetUnit then break end
+            if not targetUnit or targetUnit.Dead then break end
             if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
                 if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
                     --LOG('Experimental WEAPON BLOCKED, moving to better position')
@@ -1809,10 +1820,10 @@ function BehemothBehaviorRNG(self, id)
             closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
 
             -- Kill shields loop
-            while closestBlockingShield do
+            while closestBlockingShield and not closestBlockingShield.Dead do
                 IssueClearCommands({experimental})
                 local shieldPosition = closestBlockingShield:GetPosition()
-                IssueMove({experimental}, shieldPosition)
+                cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', shieldPosition, false)
                 WaitTicks(30)
                 if closestBlockingShield and not closestBlockingShield.Dead then
                     IssueAttack({experimental}, closestBlockingShield)
@@ -1821,12 +1832,17 @@ function BehemothBehaviorRNG(self, id)
                 -- Wait for shield to die loop
                 while not closestBlockingShield.Dead and not experimental.Dead do
                     WaitTicks(20)
-                    IssueClearCommands({experimental})
-                    cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', shieldPosition, false)
-                    WaitTicks(30)
-                    if closestBlockingShield and not closestBlockingShield.Dead then
-                        IssueAttack({experimental}, closestBlockingShield)
+                    unitPos = self:GetPlatoonPosition()
+                    shieldPosition = closestBlockingShield:GetPosition()
+                    if VDist2Sq(unitPos[1], unitPos[3], shieldPosition[1], shieldPosition[3]) < 6400 then
+                        IssueClearCommands({experimental})
+                        IssueMove({experimental}, shieldPosition)
+                        if closestBlockingShield and not closestBlockingShield.Dead then
+                            IssueAttack({experimental}, closestBlockingShield)
+                        end
                     end
+                    WaitTicks(30)
+                    
                 end
 
                 closestBlockingShield = false

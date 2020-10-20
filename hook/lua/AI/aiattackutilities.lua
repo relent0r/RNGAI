@@ -1,4 +1,4 @@
-local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+--local GetDirectionInDegrees = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetDirectionInDegrees
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
     if not GetPathGraphs()[platoonLayer] then
@@ -377,6 +377,33 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
     return true
 end
 
+function NormalizeVector( v )
+	if v.x then
+		v = {v.x, v.y, v.z}
+    end
+    local length = math.sqrt( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
+
+    if length > 0 then
+        local invlength = 1 / length
+        return Vector( v[1] * invlength, v[2] * invlength, v[3] * invlength )
+    else
+        return Vector( 0,0,0 )
+    end
+end
+
+function GetDirectionVector( v1, v2 )
+    return NormalizeVector( Vector(v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]) )
+end
+
+function GetDirectionInDegrees( v1, v2 )
+	local vec = GetDirectionVector( v1, v2)
+
+	if vec[1] >= 0 then
+		return math.acos(vec[3]) * (360/(math.pi*2))
+	end
+	return 360 - (math.acos(vec[3]) * (360/(math.pi*2)))
+end
+
 function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
     --Engine handles whether or not we can occupy our vector now, so this should always be a valid, occupiable spot.
@@ -460,11 +487,13 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 platoon.LastAttackDestination = path
                 # move to new location
                 for wpidx,waypointPath in path do
-                    local direction = RUtils.GetDirectionInDegrees( prevpoint, waypointPath )
+                    local direction = GetDirectionInDegrees( prevpoint, waypointPath )
                     if wpidx == pathSize or bAggro then
-                        IssueFormAggressiveMove( platoon, waypointPath, 'BlockFormation', direction)
+                        --platoon:AggressiveMoveToLocation(waypointPath)
+                        IssueFormAggressiveMove( platoon:GetPlatoonUnits(), waypointPath, 'BlockFormation', direction)
                     else
-                        IssueFormMove( platoon, waypointPath, 'BlockFormation', direction)
+                        --platoon:MoveToLocation(waypointPath, false)
+                        IssueFormMove( platoon:GetPlatoonUnits(), waypointPath, 'BlockFormation', direction)
                     end
                     prevpoint = table.copy(waypointPath)
                 end

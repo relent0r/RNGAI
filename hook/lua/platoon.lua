@@ -514,7 +514,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self:MoveToLocation(location, false)
                 self:PlatoonDisband()
             end
-            WaitTicks(10)
+            WaitTicks(30)
         end
     end,
 
@@ -1406,7 +1406,8 @@ Platoon = Class(RNGAIPlatoon) {
                     for k, v in aiBrain.EnemyIntel.ACU do
                         if v.Hp != 0 and v.LastSpotted != 0 then
                             --LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..myThreat)
-                            if ((v.Hp / 275) < myThreat) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
+                            if ((v.Hp / 275) < myThreat or v.Hp < 2000) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
+                                --LOG('ACU Target valid, adding to index list')
                                 table.insert(enemyACUIndexes, k)
                             end
                         end
@@ -2975,7 +2976,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     self:AggressiveMoveToLocation(distressLocation)
                                 end
                             end
-                            WaitTicks(1)
+                            WaitTicks(10)
                         -- If no more calls or we are at the location; break out of the function
                         until not distressLocation or (distressLocation[1] == moveLocation[1] and distressLocation[3] == moveLocation[3])
 
@@ -2994,7 +2995,7 @@ Platoon = Class(RNGAIPlatoon) {
         local pos = GetPlatoonPosition(self)
         while PlatoonExists(aiBrain, self) and pos do
             if not self.DistressCall then
-                local threat = aiBrain:GetThreatAtPosition(pos, 1, true, 'Land')
+                local threat = aiBrain:GetThreatAtPosition(pos, 0, true, 'Land')
                 --LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
                     --LOG('*RNGAI Mass Extractor Platoon Calling for help')
@@ -3931,19 +3932,19 @@ Platoon = Class(RNGAIPlatoon) {
         local ID = experimental.UnitId
         --LOG('Starting experimental behaviour...' .. ID)
         if ID == 'uel0401' then
-            LOG('FATBOY Behavior')
+            --LOG('FATBOY Behavior')
             return behaviors.FatBoyBehaviorRNG(self)
         elseif ID == 'uaa0310' then
-            LOG('CZAR Behavior')
+            --LOG('CZAR Behavior')
             return behaviors.CzarBehaviorRNG(self)
         elseif ID == 'xsa0402' then
-            LOG('Exp Bomber Behavior')
+            --LOG('Exp Bomber Behavior')
             return behaviors.AhwassaBehavior(self)
         elseif ID == 'ura0401' then
-            LOG('Exp Gunship Behavior')
+            --LOG('Exp Gunship Behavior')
             return behaviors.TickBehavior(self)
         end
-        LOG('Standard Behemoth')
+        --LOG('Standard Behemoth')
         return behaviors.BehemothBehaviorRNG(self, ID)
     end,
 
