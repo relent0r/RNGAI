@@ -339,41 +339,48 @@ Platoon = Class(RNGAIPlatoon) {
             if path then
                 local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
+                    LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
+                    LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, false)
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
                     local prevpoint = position or false
+                    LOG('* AI-RNG: GuardMarkerRNG movement logic')
                     for i=1, pathLength-1 do
                         local direction = RUtils.GetDirectionInDegrees( prevpoint, path[i] )
+                        LOG('* AI-RNG: GuardMarkerRNG direction returned is '..direction)
+                        LOG('* AI-RNG: GuardMarkerRNG prevpoint is '..repr(prevpoint)..' path node is '..repr(path[i]))
                         if bAggroMove then
                             --self:AggressiveMoveToLocation(path[i])
-                            IssueFormAggressiveMove( platoon:GetPlatoonUnits(), path[i], 'AttackFormation', direction)
+                            IssueFormAggressiveMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
                         else
                             --self:MoveToLocation(path[i], false)
-                            IssueFormMove( platoon:GetPlatoonUnits(), path[i], 'AttackFormation', direction)
+                            IssueFormMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
                         end
                         prevpoint = table.copy(path[i])
                     end
                 end
             elseif (not path and reason == 'NoPath') then
-                --LOG('* AI-RNG: Guardmarker requesting transports')
+                LOG('* AI-RNG: Guardmarker NoPath requesting transports')
                 local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not foundTransport then
-                    --LOG('* AI-RNG: Guardmarker no transports')
+                    LOG('* AI-RNG: Guardmarker no transports available disbanding')
                     self:PlatoonDisband()
                     return
                 end
                 --LOG('* AI-RNG: Guardmarker found transports')
             else
+                LOG('* AI-RNG: GuardmarkerRNG bad path response disbanding')
                 self:PlatoonDisband()
                 return
             end
 
             if (not path or not success) and not usedTransports then
+                LOG('* AI-RNG: GuardmarkerRNG not path or not success and not usedTransports. Disbanding')
                 self:PlatoonDisband()
                 return
             end
@@ -400,6 +407,7 @@ Platoon = Class(RNGAIPlatoon) {
                     StuckCount = 0
                 end
                 if StuckCount > 5 then
+                    LOG('* AI-RNG: GuardmarkerRNG detected stuck. Restarting.')
                     return self:GuardMarkerRNG()
                 end
                 oldPlatPos = platLoc
@@ -433,6 +441,7 @@ Platoon = Class(RNGAIPlatoon) {
             return self:GuardMarkerRNG()
         else
             -- no marker found, disband!
+            LOG('* AI-RNG: GuardmarkerRNG No best marker. Disbanding.')
             self:PlatoonDisband()
         end
     end,
@@ -2684,6 +2693,7 @@ Platoon = Class(RNGAIPlatoon) {
             --Disband platoon if it's all air units, so they can be picked up by another platoon
             local mySurfaceThreat = AIAttackUtils.GetSurfaceThreatOfUnits(self)
             if mySurfaceThreat == 0 and AIAttackUtils.GetAirThreatOfUnits(self) > 0 then
+                LOG('* AI-RNG: AttackForceAIRNG surface threat low or air units present. Disbanding')
                 self:PlatoonDisband()
                 return
             end
@@ -2720,11 +2730,13 @@ Platoon = Class(RNGAIPlatoon) {
             -- if we have nothing to do, try finding something to do
             elseif table.getn(cmdQ) == 0 then
                 self:StopAttack()
+                LOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting from main function')
                 cmdQ = AIAttackUtils.AIPlatoonSquadAttackVectorRNG(aiBrain, self)
                 stuckCount = 0
             -- if we've been stuck and unable to reach next marker? Ignore nearby stuff and pick another target
             elseif self.LastPosition and VDist2Sq(self.LastPosition[1], self.LastPosition[3], pos[1], pos[3]) < (self.PlatoonData.StuckDistance or 16) then
                 stuckCount = stuckCount + 1
+                LOG('* AI-RNG: AttackForceAIRNG stuck count incremented, current is '..stuckCount)
                 if stuckCount >= 2 then
                     self:StopAttack()
                     cmdQ = AIAttackUtils.AIPlatoonSquadAttackVectorRNG(aiBrain, self)
@@ -2743,12 +2755,13 @@ Platoon = Class(RNGAIPlatoon) {
                     and not self.PlatoonData.NeverGuard
                     and not (self.PlatoonData.NeverGuardEngineers and self.PlatoonData.NeverGuardBases)
                 then
-                    --LOG('*DEBUG: Trying to guard')
+                    LOG('* AI-RNG: AttackForceAIRNG has returned guard engineer')
                     return self:GuardEngineer(self.AttackForceAIRNG)
                 end
 
                 -- we have nothing to do, so find the nearest base and disband
                 if not self.PlatoonData.NeverMerge then
+                    LOG('* AI-RNG: AttackForceAIRNG thinks it has nothing to do, return to base')
                     return self:ReturnToBaseAIRNG()
                 end
                 WaitTicks(50)

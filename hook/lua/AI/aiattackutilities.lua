@@ -408,11 +408,14 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
     --Engine handles whether or not we can occupy our vector now, so this should always be a valid, occupiable spot.
     local attackPos = GetBestThreatTarget(aiBrain, platoon)
+    LOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting')
 
     local bNeedTransports = false
-    # if no pathable attack spot found
+    local PlatoonFormation = platoon.PlatoonData.UseFormation
+    -- if no pathable attack spot found
     if not attackPos then
-        # try skipping pathability
+        -- try skipping pathability
+        LOG('* AI-RNG: AttackForceAIRNG No attack position found')
         attackPos = GetBestThreatTarget(aiBrain, platoon, true)
         bNeedTransports = true
         if not attackPos then
@@ -422,12 +425,12 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
     end
 
 
-    # avoid mountains by slowly moving away from higher areas
+    -- avoid mountains by slowly moving away from higher areas
     GetMostRestrictiveLayer(platoon)
     if platoon.MovementLayer == 'Land' then
         local bestPos = attackPos
         local attackPosHeight = GetTerrainHeight(attackPos[1], attackPos[3])
-        # if we're land
+        -- if we're land
         if attackPosHeight >= GetSurfaceHeight(attackPos[1], attackPos[3]) then
             local lookAroundTable = {1,0,-2,-1,2}
             local squareRadius = (ScenarioInfo.size[1] / 16) / table.getn(lookAroundTable)
@@ -449,25 +452,25 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
     local oldPathSize = table.getn(platoon.LastAttackDestination)
 
-    # if we don't have an old path or our old destination and new destination are different
+    -- if we don't have an old path or our old destination and new destination are different
     if oldPathSize == 0 or attackPos[1] != platoon.LastAttackDestination[oldPathSize][1] or
     attackPos[3] != platoon.LastAttackDestination[oldPathSize][3] then
 
         GetMostRestrictiveLayer(platoon)
-        # check if we can path to here safely... give a large threat weight to sort by threat first
+        -- check if we can path to here safely... give a large threat weight to sort by threat first
         local path, reason = PlatoonGenerateSafePathTo(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), attackPos, platoon.PlatoonData.NodeWeight or 10)
 
-        # clear command queue
+        -- clear command queue
         platoon:Stop()
 
         local usedTransports = false
         local position = platoon:GetPlatoonPosition()
         if (not path and reason == 'NoPath') or bNeedTransports then
             usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, true)
-        # Require transports over 500 away
+        -- Require transports over 500 away
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then
             usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, true)
-        # use if possible at 250
+        -- use if possible at 250
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 256*256 then
             usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, false)
         end
@@ -481,19 +484,22 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 # force reevaluation
                 platoon.LastAttackDestination = {attackPos}
             else
+                LOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
                 local pathSize = table.getn(path)
                 local prevpoint = platoon:GetPlatoonPosition() or false
-                # store path
+                -- store path
                 platoon.LastAttackDestination = path
-                # move to new location
+                -- move to new location
                 for wpidx,waypointPath in path do
                     local direction = GetDirectionInDegrees( prevpoint, waypointPath )
+                    LOG('* AI-RNG: AttackForceAIRNG direction is '..direction)
+                    LOG('* AI-RNG: AttackForceAIRNG prevpoint is '..repr(prevpoint)..' waypointPath is '..repr(waypointPath))
                     if wpidx == pathSize or bAggro then
                         --platoon:AggressiveMoveToLocation(waypointPath)
-                        IssueFormAggressiveMove( platoon:GetPlatoonUnits(), waypointPath, 'BlockFormation', direction)
+                        IssueFormAggressiveMove( platoon:GetPlatoonUnits(), waypointPath, PlatoonFormation, direction)
                     else
                         --platoon:MoveToLocation(waypointPath, false)
-                        IssueFormMove( platoon:GetPlatoonUnits(), waypointPath, 'BlockFormation', direction)
+                        IssueFormMove( platoon:GetPlatoonUnits(), waypointPath, PlatoonFormation, direction)
                     end
                     prevpoint = table.copy(waypointPath)
                 end
@@ -501,7 +507,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         end
     end
 
-    # return current command queue
+    -- return current command queue
     local cmd = {}
     for k,v in platoon:GetPlatoonUnits() do
         if not v.Dead then
