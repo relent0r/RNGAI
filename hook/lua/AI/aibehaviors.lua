@@ -1857,4 +1857,101 @@ function BehemothBehaviorRNG(self, id)
         WaitTicks(10)
     end
 end
+-------------------------------------------------------
+-- Function: GetHighestThreatClusterLocationRNG
+-- Modified specifically for nukes
+-- Args:
+-- aiBrain - aiBrain for experimental
+-- experimental - the unit itself
+-- Description:
+-- Finds the commander first, or a high economic threat that has a lot of units
+-- Good for AoE type attacks
+-- Returns:
+-- position of best place to attack, nil if nothing found
+-------------------------------------------------------
+GetHighestThreatClusterLocationRNG = function(aiBrain, experimental)
+    if not aiBrain or not experimental then
+        return nil
+    end
+
+    -- Look for commander first
+    local position = experimental:GetPosition()
+    local threatTable = aiBrain:GetThreatsAroundPosition(position, 16, true, 'Commander')
+    for _, threat in threatTable do
+        if threat[3] > 0 then
+            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(ParseEntityCategory('COMMAND'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+            local validUnit = false
+            for _, unit in unitsAtLocation do
+                if not unit.Dead then
+                    validUnit = unit
+                    break
+                end
+            end
+            if validUnit then
+                return table.copy(validUnit:GetPosition())
+            end
+        end
+    end
+
+    if not aiBrain.InterestList or not aiBrain.InterestList.HighPriority then
+        -- No target
+        return aiBrain:GetHighestThreatPosition(0, true, 'Economy')
+    end
+
+    -- Now look through the bases for the highest economic threat and largest cluster of units
+    local enemyBases = aiBrain.InterestList.HighPriority
+    local bestBaseThreat = nil
+    local maxBaseThreat = 0
+    for _, base in enemyBases do
+        local threatTable = aiBrain:GetThreatsAroundPosition(base.Position, 1, true, 'Economy')
+        if table.getn(threatTable) ~= 0 then
+            if threatTable[1][3] > maxBaseThreat then
+                maxBaseThreat = threatTable[1][3]
+                bestBaseThreat = threatTable
+            end
+        end
+    end
+
+    if not bestBaseThreat then
+        -- No threat
+        return
+    end
+
+    -- Look for a cluster of structures
+    local maxUnits = -1
+    local bestThreat = 1
+    for idx, threat in bestBaseThreat do
+        if threat[3] > 0 then
+            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(ParseEntityCategory('STRUCTURE'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+            local numunits = table.getn(unitsAtLocation)
+
+            if numunits > maxUnits then
+                maxUnits = numunits
+                bestThreat = idx
+            end
+        end
+    end
+
+    if bestBaseThreat[bestThreat] then
+        local bestPos = {0, 0, 0}
+        local maxUnits = 0
+        local lookAroundTable = {-2, -1, 0, 1, 2}
+        local squareRadius = (ScenarioInfo.size[1] / 16) / table.getn(lookAroundTable)
+        for ix, offsetX in lookAroundTable do
+            for iz, offsetZ in lookAroundTable do
+                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(ParseEntityCategory('STRUCTURE'), {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}, squareRadius, 'Enemy')
+                local numUnits = table.getn(unitsAtLocation)
+                if numUnits > maxUnits then
+                    maxUnits = numUnits
+                    bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                end
+            end
+        end
+        if bestPos[1] ~= 0 and bestPos[3] ~= 0 then
+            return bestPos
+        end
+    end
+
+    return nil
+end
 
