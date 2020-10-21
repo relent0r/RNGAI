@@ -345,12 +345,17 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
+                    local prevpoint = position or false
                     for i=1, pathLength-1 do
+                        local direction = RUtils.GetDirectionInDegrees( prevpoint, path[i] )
                         if bAggroMove then
-                            self:AggressiveMoveToLocation(path[i])
+                            --self:AggressiveMoveToLocation(path[i])
+                            IssueFormAggressiveMove( platoon:GetPlatoonUnits(), path[i], 'AttackFormation', direction)
                         else
-                            self:MoveToLocation(path[i], false)
+                            --self:MoveToLocation(path[i], false)
+                            IssueFormMove( platoon:GetPlatoonUnits(), path[i], 'AttackFormation', direction)
                         end
+                        prevpoint = table.copy(path[i])
                     end
                 end
             elseif (not path and reason == 'NoPath') then
