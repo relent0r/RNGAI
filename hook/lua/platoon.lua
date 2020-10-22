@@ -2737,7 +2737,7 @@ Platoon = Class(RNGAIPlatoon) {
             elseif self.LastPosition and VDist2Sq(self.LastPosition[1], self.LastPosition[3], pos[1], pos[3]) < (self.PlatoonData.StuckDistance or 16) then
                 stuckCount = stuckCount + 1
                 LOG('* AI-RNG: AttackForceAIRNG stuck count incremented, current is '..stuckCount)
-                if stuckCount >= 2 then
+                if stuckCount >= 3 then
                     self:StopAttack()
                     cmdQ = AIAttackUtils.AIPlatoonSquadAttackVectorRNG(aiBrain, self)
                     stuckCount = 0
