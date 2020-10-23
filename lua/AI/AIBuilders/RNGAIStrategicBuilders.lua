@@ -135,11 +135,26 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI SML Former',
         PlatoonTemplate = 'T3NukeRNG',
+        Priority = 400,
+        InstanceCount = 10,
+        FormRadius = 10000,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI SML Merger',
+        PlatoonTemplate = 'AddToSMLPlatoonRNG',
         Priority = 500,
         InstanceCount = 10,
         FormRadius = 10000,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL) } },
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
+        },
+        BuilderData = {
+            PlatoonPlan = 'NUKEAIRNG',
+            Location = 'LocationType'
         },
         BuilderType = 'Any',
     },

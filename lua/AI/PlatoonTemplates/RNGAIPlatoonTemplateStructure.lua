@@ -5,7 +5,13 @@ PlatoonTemplate {
         { categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM * categories.TECH2 , 1, 300, 'attack', 'none' }
     },
 }
-
+PlatoonTemplate {
+    Name = 'AddToSMLPlatoonRNG',
+    Plan = 'PlatoonMergeRNG',
+    GlobalSquads = {
+        { categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) , 1, 300, 'attack', 'none' }
+    },
+}
 PlatoonTemplate {
     Name = 'T3NukeRNG',
     Plan = 'NukeAIRNG',

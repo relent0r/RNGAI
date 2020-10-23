@@ -886,7 +886,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T2 TML Silo',
-        PlatoonTemplate = 'AddToTMLPlatoonRNG',
+        PlatoonTemplate = 'AddToPlatoonRNG',
         Priority = 1,
         InstanceCount = 1000,
         FormRadius = 10000,
