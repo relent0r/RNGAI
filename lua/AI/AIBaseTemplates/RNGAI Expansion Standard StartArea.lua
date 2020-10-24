@@ -58,6 +58,7 @@ BaseBuilderTemplate {
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',
                 'RNGAI Perimeter Defenses Expansions',
+                'RNGAI T2 Defense FormBuilders',
                 --'RNGAI T2 Expansion TML',
 		},
     NonCheatBuilders = { },

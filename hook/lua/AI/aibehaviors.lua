@@ -1862,34 +1862,48 @@ end
 -- Modified specifically for nukes
 -- Args:
 -- aiBrain - aiBrain for experimental
--- experimental - the unit itself
+-- experimental - platoon of nukes
 -- Description:
 -- Finds the commander first, or a high economic threat that has a lot of units
 -- Good for AoE type attacks
 -- Returns:
 -- position of best place to attack, nil if nothing found
 -------------------------------------------------------
-GetHighestThreatClusterLocationRNG = function(aiBrain, experimental)
-    if not aiBrain or not experimental then
+GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
+    if not aiBrain or not platoon then
         return nil
     end
 
     -- Look for commander first
-    local position = experimental:GetPosition()
-    local threatTable = aiBrain:GetThreatsAroundPosition(position, 16, true, 'Commander')
+    local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
+    local platoonPosition = GetPlatoonPosition(platoon)
+    local targetPositions = {}
+    local threatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'Commander')
+    local validPosition = false
     for _, threat in threatTable do
         if threat[3] > 0 then
-            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(ParseEntityCategory('COMMAND'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
-            local validUnit = false
+            local unitsAtLocation = GetUnitsAroundPoint(aiBrain, ParseEntityCategory('COMMAND'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+            
             for _, unit in unitsAtLocation do
                 if not unit.Dead then
-                    validUnit = unit
-                    break
+                    table.insert(targetPositions, {unit:GetPosition(), type = 'COMMAND'})
                 end
             end
-            if validUnit then
-                return table.copy(validUnit:GetPosition())
+        end
+    end
+    LOG(' ACUs detected are '..table.getn(targetPositions))
+
+    if table.getn(targetPositions) > 0 then
+        for _, pos in targetPositions do
+            local antinukes = AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, platoonPosition, pos[1], categories.ANTIMISSILE * categories.SILO, 90, 'Enemy')
+            if antinukes < 1 then
+                validPosition = pos[1]
+                break
             end
+        end
+        if validPosition then
+            LOG('Valid Nuke Target Position with no Anti Nukes is '..repr(validPosition))
+            return validPosition
         end
     end
 

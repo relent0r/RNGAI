@@ -1509,7 +1509,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 while PlatoonExists(aiBrain, self) do
                                     if not target or target.Dead then
                                         target = false
-                                        --LOG('Target dead or lost during strikeforce air')
+                                        --LOG('Target dead or lost during strikeforce')
                                         break
                                     end
                                     platoonPosition = GetPlatoonPosition(self)
@@ -3748,6 +3748,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local mergedPlatoon
         local units = self:GetPlatoonUnits()
+        --LOG('Number of units are '..table.getn(units))
         local platoonList = aiBrain:GetPlatoonsList()
         for k, platoon in platoonList do
             if platoon:GetPlan() == destinationPlan then
@@ -3783,7 +3784,7 @@ Platoon = Class(RNGAIPlatoon) {
             categories.MOBILE * categories.LAND * categories.EXPERIMENTAL,
             categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 )
         }
-        --LOG('Starting TML function')
+        LOG('Starting TML function')
         while aiBrain:PlatoonExists(self) do
             platoonUnits = self:GetPlatoonUnits()
             local readyTmlLaunchers
@@ -3966,7 +3967,7 @@ Platoon = Class(RNGAIPlatoon) {
         return behaviors.BehemothBehaviorRNG(self, ID)
     end,
 
-    NukeAIRNG = function(self)
+    NukeAIRNGOld = function(self)
         --self:Stop()
         local aiBrain = self:GetBrain()
         local platoonUnits = self:GetPlatoonUnits()
@@ -4078,6 +4079,66 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if aiBrain:PlatoonExists(self) then
             self:PlatoonDisband()
+        end
+    end,
+
+    NUKEAIRNG = function(self)
+        LOG('NukeAIRNG starting')
+        local aiBrain = self:GetBrain()
+        local missileCount
+        local unit
+        local readySmlLaunchers
+        local readySmlLauncherCount
+        WaitTicks(50)
+        LOG('NukeAIRNG initial wait complete')
+        local platoonUnits = self:GetPlatoonUnits()
+        for _, sml in platoonUnits do
+            if not sml or sml.Dead or sml:BeenDestroyed() then
+                self:PlatoonDisbandNoAssign()
+                return
+            end
+            sml:SetAutoMode(true)
+            IssueClearCommands({sml})
+        end
+        while aiBrain:PlatoonExists(self) do
+            LOG('NukeAIRNG main loop beginning')
+            readySmlLaunchers = {}
+            readySmlLauncherCount = 0
+            WaitTicks(50)
+            platoonUnits = self:GetPlatoonUnits()
+            for _, sml in platoonUnits do
+                if not sml or sml.Dead or sml:BeenDestroyed() then
+                    self:PlatoonDisbandNoAssign()
+                    return
+                end
+                sml:SetAutoMode(true)
+                IssueClearCommands({sml})
+                missileCount = sml:GetNukeSiloAmmoCount() or 0
+                LOG('NukeAIRNG : SML has '..missileCount..' missiles')
+                if missileCount > 0 then
+                    readySmlLauncherCount = readySmlLauncherCount + 1
+                    table.insert(readySmlLaunchers, sml)
+                end
+            end
+            LOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
+            if readySmlLauncherCount < 1 then
+                WaitTicks(100)
+                continue
+            end
+            local nukePos
+            nukePos = import('/lua/ai/aibehaviors.lua').GetHighestThreatClusterLocationRNG(aiBrain, self)
+            if nukePos then
+                for _, launcher in readySmlLaunchers do
+                    IssueNuke({launcher}, nukePos)
+                    LOG('NukeAIRNG : Launching Single Nuke')
+                    WaitTicks(120)
+                    IssueClearCommands({launcher})
+                    break
+                end
+            else
+                LOG('NukeAIRNG : No available targets or nukePos is null')
+            end
+            WaitTicks(10)
         end
     end,
 }

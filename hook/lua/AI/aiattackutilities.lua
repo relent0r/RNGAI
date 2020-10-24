@@ -1,4 +1,5 @@
 --local GetDirectionInDegrees = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetDirectionInDegrees
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
     if not GetPathGraphs()[platoonLayer] then
@@ -573,9 +574,7 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
     end
 end
 -- This is Sproutos function for finding SMD's between launcher and target.
-function AIFindNumberOfUnitsBetweenPoints( aiBrain, start, finish, unitCat, stepby, alliance)
-
-	local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, stepby, alliance)
 
     if type(unitCat) == 'string' then
         unitCat = ParseEntityCategory(unitCat)
@@ -594,9 +593,19 @@ function AIFindNumberOfUnitsBetweenPoints( aiBrain, start, finish, unitCat, step
 	xstep = (start[1] - finish[1]) / steps
 	ystep = (start[3] - finish[3]) / steps
 	
-	for i = 1, steps do
-		returnNum = returnNum + GetNumUnitsAroundPoint( aiBrain, unitCat, { start[1] - (xstep * i), 0, start[3] - (ystep * i) }, stepby, alliance )
+    for i = 1, steps do
+        local enemyAntiMissile = GetUnitsAroundPoint(aiBrain, categories.ANTIMISSILE * categories.SILO, { start[1] - (xstep * i), 0, start[3] - (ystep * i) }, stepby, alliance)
+        local siloCount = table.getn(enemyAntiMissile)
+        LOG('Total Anti Nuke Count '..siloCount..' completion is ')
+        if siloCount > 0 then
+            for _, silo in enemyAntiMissile do
+                LOG('Silo completed fraction is '..silo:GetFractionComplete())
+                if silo and not silo.Dead and silo:GetFractionComplete() == 1 then
+                    LOG('Completed Anti Nuke Detected')
+                    returnNum = returnNum + 1
+                end
+            end
+        end
 	end
-	
 	return returnNum
 end

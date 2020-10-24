@@ -886,10 +886,10 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T2 TML Silo',
-        PlatoonTemplate = 'AddToPlatoonRNG',
+        PlatoonTemplate = 'AddToTMLPlatoonRNG',
         Priority = 1,
         InstanceCount = 1000,
-        FormRadius = 10000,
+        FormRadius = 100,
         BuilderConditions = {
             -- Have we the eco to build it ?
             -- When do we want to build this ?
