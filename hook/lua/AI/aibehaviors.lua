@@ -1792,17 +1792,16 @@ function BehemothBehaviorRNG(self, id)
 
         -- Walk to and kill target loop
         while not experimental.Dead and not experimental:IsIdleState() do
-            local unitPos = self:GetPlatoonPosition()
-            local targetPos = targetUnit:GetPosition()
             local nearCommander = CommanderOverrideCheck(self)
             if nearCommander and nearCommander ~= targetUnit then
                 IssueClearCommands({experimental})
                 IssueAttack({experimental}, nearCommander)
                 targetUnit = nearCommander
             end
-
             -- If no target jump out
             if not targetUnit or targetUnit.Dead then break end
+            local unitPos = self:GetPlatoonPosition()
+            local targetPos = targetUnit:GetPosition()
             if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
                 if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
                     --LOG('Experimental WEAPON BLOCKED, moving to better position')

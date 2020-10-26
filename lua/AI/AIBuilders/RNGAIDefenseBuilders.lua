@@ -956,7 +956,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI SMD Response',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 900,
+        Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },

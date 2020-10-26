@@ -1503,7 +1503,7 @@ Platoon = Class(RNGAIPlatoon) {
                             if path then
                                 local pathLength = table.getn(path)
                                 --LOG('StrikeForce air assigning path')
-                                for i=1, pathLength-1 do
+                                for i=1, pathLength do
                                     self:MoveToLocation(path[i], false)
                                 end
                                 while PlatoonExists(aiBrain, self) do
