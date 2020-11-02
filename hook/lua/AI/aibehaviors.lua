@@ -680,7 +680,7 @@ function ACUDetection(platoon)
                         --LOG('* AI-RNG: Table Index is : '..k)
                         --LOG('* AI-RNG:'..c.LastSpotted)
                         --LOG('* AI-RNG:'..repr(c.Position))
-                        if currentGameTime - 30 > c.LastSpotted and k == enemyIndex then
+                        if k == enemyIndex then
                             --LOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                             c.Position = v:GetPosition()
                             c.Hp = v:GetHealth()
@@ -1703,6 +1703,74 @@ function FatBoyGuardsRNG(self)
     end
 end
 
+AssignCZARPriorities = function(platoon)
+    local experimental = GetExperimentalUnit(platoon)
+    local CZARPriorities = {
+        Air = {
+            'TECH3 MOBILE AIR ANTIAIR',
+            'TECH3 MOBILE AIR',
+            'MOBILE AIR',
+        },
+
+        Land = {
+            'COMMAND',
+            'EXPERIMENTAL ENERGYPRODUCTION STRUCTURE',
+            'EXPERIMENTAL STRATEGIC STRUCTURE',
+            'EXPERIMENTAL ARTILLERY OVERLAYINDIRECTFIRE',
+            'EXPERIMENTAL ORBITALSYSTEM',
+            'TECH3 STRATEGIC STRUCTURE',
+            'EXPERIMENTAL LAND',
+            'TECH2 STRATEGIC STRUCTURE',
+            'TECH3 DEFENSE STRUCTURE',
+            'TECH2 DEFENSE STRUCTURE',
+            'TECH3 ENERGYPRODUCTION STRUCTURE',
+            'TECH3 MASSFABRICATION STRUCTURE',
+            'TECH2 ENERGYPRODUCTION STRUCTURE',
+            'TECH3 MASSEXTRACTION STRUCTURE',
+            'TECH3 SHIELD STRUCTURE',
+            'TECH2 SHIELD STRUCTURE',
+            'TECH3 INTELLIGENCE STRUCTURE',
+            'TECH2 INTELLIGENCE STRUCTURE',
+            'TECH1 INTELLIGENCE STRUCTURE',
+            'TECH2 MASSEXTRACTION STRUCTURE',
+            'TECH3 FACTORY LAND STRUCTURE',
+            'TECH3 FACTORY AIR STRUCTURE',
+            'TECH3 FACTORY NAVAL STRUCTURE',
+            'TECH2 FACTORY LAND STRUCTURE',
+            'TECH2 FACTORY AIR STRUCTURE',
+            'TECH2 FACTORY NAVAL STRUCTURE',
+            'TECH1 FACTORY LAND STRUCTURE',
+            'TECH1 FACTORY AIR STRUCTURE',
+            'TECH1 FACTORY NAVAL STRUCTURE',
+            'TECH1 MASSEXTRACTION STRUCTURE',
+            'TECH3 STRUCTURE',
+            'TECH2 STRUCTURE',
+            'TECH1 STRUCTURE',
+            'TECH3 MOBILE LAND',
+            'TECH2 MOBILE LAND',
+            'TECH1 MOBILE LAND',
+            'ALLUNITS',
+            },
+        }
+    if experimental then
+        for i = 1, experimental:GetWeaponCount() do
+            local wep = experimental:GetWeapon(i)
+
+            for onLayer, targetLayers in wep:GetBlueprint().FireTargetLayerCapsTable do
+                if string.find(targetLayers, 'Land') then
+                    LOG('CZAR Set Land Priorities')
+                    wep:SetWeaponPriorities(CZARPriorities['Land'])
+                    break
+                elseif string.find(targetLayers, 'Air') then
+                    LOG('CZAR Set Air Priorities')
+                    wep:SetWeaponPriorities(priTable['Air'])
+                    break
+                end
+            end
+        end
+    end
+end
+
 CzarBehaviorRNG = function(self)
     local experimental = GetExperimentalUnit(self)
     local aiBrain = self:GetBrain()
@@ -1714,8 +1782,8 @@ CzarBehaviorRNG = function(self)
         return
     end
 
-    AssignExperimentalPriorities(self)
-    local cmd
+    AssignCZARPriorities(self)
+    local cmd = {}
     local targetUnit, targetBase = FindExperimentalTarget(self)
     local oldTargetUnit = nil
     while not experimental.Dead do
