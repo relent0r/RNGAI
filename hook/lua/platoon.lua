@@ -4027,11 +4027,10 @@ Platoon = Class(RNGAIPlatoon) {
             self:MergeWithNearbyPlatoonsSorian('SatelliteAIRNG', 50, true)
             target = AIUtils.AIFindUndefendedBrainTargetInRangeSorian(aiBrain, self, 'Attack', maxRadius, atkPri)
             local targetRotation = 0
-            if target then
-                targetpos = target:GetPosition()
-                --LOG('Target Position is '..repr(targetpos))
-            end
             if target and target != oldTarget and not target.Dead then
+                -- Pondering over if getting the target position would be useful for calling in air strike on target if shielded.
+                --local targetpos = target:GetPosition()
+                local originalHealth = target:GetHealth()
                 self:Stop()
                 self:AttackTarget(target)
                 while (target and not target.Dead) or targetRotation < 6 do
