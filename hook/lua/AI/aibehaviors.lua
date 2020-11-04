@@ -680,7 +680,7 @@ function ACUDetection(platoon)
                         --LOG('* AI-RNG: Table Index is : '..k)
                         --LOG('* AI-RNG:'..c.LastSpotted)
                         --LOG('* AI-RNG:'..repr(c.Position))
-                        if k == enemyIndex then
+                        if currentGameTime - 5 > c.LastSpotted and k == enemyIndex then
                             --LOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                             c.Position = v:GetPosition()
                             c.Hp = v:GetHealth()

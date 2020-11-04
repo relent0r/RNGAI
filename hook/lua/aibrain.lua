@@ -879,9 +879,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         self.EnemyIntel.ACU[k].OnField = true
-                        if ACUDist < 135 then
+                        if ACUDist < 140 then
                             self.EnemyIntel.ACUEnemyClose = true
-                            --LOG('Enemy ACU is within 135 of base')
+                            --LOG('Enemy ACU is within 145 of base')
                         end
                         return returnEnemy
                     elseif v.Threat < 200 and ACUDist < 200 then
