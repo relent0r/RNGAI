@@ -1812,8 +1812,48 @@ CzarBehaviorRNG = function(self)
     end
 end
 
+local SurfacePrioritiesRNG = {
+    'COMMAND',
+    'EXPERIMENTAL ENERGYPRODUCTION STRUCTURE',
+    'TECH3 ENERGYPRODUCTION STRUCTURE',
+    'TECH2 ENERGYPRODUCTION STRUCTURE',
+    'TECH3 MASSEXTRACTION STRUCTURE',
+    'TECH3 INTELLIGENCE STRUCTURE',
+    'TECH2 INTELLIGENCE STRUCTURE',
+    'EXPERIMENTAL LAND',
+    'TECH3 DEFENSE STRUCTURE',
+    'TECH2 DEFENSE STRUCTURE',
+    'TECH1 INTELLIGENCE STRUCTURE',
+    'TECH3 SHIELD STRUCTURE',
+    'TECH2 SHIELD STRUCTURE',
+    'TECH2 MASSEXTRACTION STRUCTURE',
+    'TECH3 FACTORY LAND STRUCTURE',
+    'TECH3 FACTORY AIR STRUCTURE',
+    'TECH3 FACTORY NAVAL STRUCTURE',
+    'TECH2 FACTORY LAND STRUCTURE',
+    'TECH2 FACTORY AIR STRUCTURE',
+    'TECH2 FACTORY NAVAL STRUCTURE',
+    'TECH1 FACTORY LAND STRUCTURE',
+    'TECH1 FACTORY AIR STRUCTURE',
+    'TECH1 FACTORY NAVAL STRUCTURE',
+    'TECH1 MASSEXTRACTION STRUCTURE',
+    'TECH3 STRUCTURE',
+    'TECH2 STRUCTURE',
+    'TECH1 STRUCTURE',
+    'TECH3 MOBILE LAND',
+    'TECH2 MOBILE LAND',
+    'TECH1 MOBILE LAND',
+}
+
+AssignExperimentalPrioritiesRNG = function(platoon)
+    local experimental = GetExperimentalUnit(platoon)
+    if experimental then
+        experimental:SetLandTargetPriorities(SurfacePrioritiesRNG)
+    end
+end
+
 function BehemothBehaviorRNG(self, id)
-    AssignExperimentalPriorities(self)
+    AssignExperimentalPrioritiesRNG(self)
 
     local aiBrain = self:GetBrain()
     local experimental = GetExperimentalUnit(self)
