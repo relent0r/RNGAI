@@ -1705,13 +1705,8 @@ end
 
 AssignCZARPriorities = function(platoon)
     local experimental = GetExperimentalUnit(platoon)
+    --LOG('Assign CZAR Priorities')
     local CZARPriorities = {
-        Air = {
-            'TECH3 MOBILE AIR ANTIAIR',
-            'TECH3 MOBILE AIR',
-            'MOBILE AIR',
-        },
-
         Land = {
             'COMMAND',
             'EXPERIMENTAL ENERGYPRODUCTION STRUCTURE',
@@ -1755,17 +1750,10 @@ AssignCZARPriorities = function(platoon)
     if experimental then
         for i = 1, experimental:GetWeaponCount() do
             local wep = experimental:GetWeapon(i)
-
-            for onLayer, targetLayers in wep:GetBlueprint().FireTargetLayerCapsTable do
-                if string.find(targetLayers, 'Land') then
-                    LOG('CZAR Set Land Priorities')
-                    wep:SetWeaponPriorities(CZARPriorities['Land'])
-                    break
-                elseif string.find(targetLayers, 'Air') then
-                    LOG('CZAR Set Air Priorities')
-                    wep:SetWeaponPriorities(priTable['Air'])
-                    break
-                end
+            if wep:GetBlueprint().DisplayName == 'Quantum Beam Generator' then
+                --LOG('CZAR main beam weapon found, set unique priorities')
+                wep:SetWeaponPriorities(CZARPriorities['Land'])
+                break
             end
         end
     end
@@ -1781,7 +1769,7 @@ CzarBehaviorRNG = function(self)
     if not EntityCategoryContains(categories.uaa0310, experimental) then
         return
     end
-
+    --LOG('Assign CZAR Priorities')
     AssignCZARPriorities(self)
     local cmd = {}
     local targetUnit, targetBase = FindExperimentalTarget(self)
@@ -1958,7 +1946,7 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
             end
         end
     end
-    LOG(' ACUs detected are '..table.getn(targetPositions))
+    --LOG(' ACUs detected are '..table.getn(targetPositions))
 
     if table.getn(targetPositions) > 0 then
         for _, pos in targetPositions do
@@ -1969,7 +1957,7 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
             end
         end
         if validPosition then
-            LOG('Valid Nuke Target Position with no Anti Nukes is '..repr(validPosition))
+            --LOG('Valid Nuke Target Position with no Anti Nukes is '..repr(validPosition))
             return validPosition
         end
     end

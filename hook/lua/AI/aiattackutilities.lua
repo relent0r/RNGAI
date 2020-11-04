@@ -409,14 +409,14 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
     --Engine handles whether or not we can occupy our vector now, so this should always be a valid, occupiable spot.
     local attackPos = GetBestThreatTarget(aiBrain, platoon)
-    LOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting')
+    --LOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting')
 
     local bNeedTransports = false
     local PlatoonFormation = platoon.PlatoonData.UseFormation
     -- if no pathable attack spot found
     if not attackPos then
         -- try skipping pathability
-        LOG('* AI-RNG: AttackForceAIRNG No attack position found')
+        --LOG('* AI-RNG: AttackForceAIRNG No attack position found')
         attackPos = GetBestThreatTarget(aiBrain, platoon, true)
         bNeedTransports = true
         if not attackPos then
@@ -485,7 +485,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 # force reevaluation
                 platoon.LastAttackDestination = {attackPos}
             else
-                LOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
+                --LOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
                 local pathSize = table.getn(path)
                 local prevpoint = platoon:GetPlatoonPosition() or false
                 -- store path
@@ -493,8 +493,8 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 -- move to new location
                 for wpidx,waypointPath in path do
                     local direction = GetDirectionInDegrees( prevpoint, waypointPath )
-                    LOG('* AI-RNG: AttackForceAIRNG direction is '..direction)
-                    LOG('* AI-RNG: AttackForceAIRNG prevpoint is '..repr(prevpoint)..' waypointPath is '..repr(waypointPath))
+                    --LOG('* AI-RNG: AttackForceAIRNG direction is '..direction)
+                    --LOG('* AI-RNG: AttackForceAIRNG prevpoint is '..repr(prevpoint)..' waypointPath is '..repr(waypointPath))
                     if wpidx == pathSize or bAggro then
                         --platoon:AggressiveMoveToLocation(waypointPath)
                         IssueFormAggressiveMove( platoon:GetPlatoonUnits(), waypointPath, PlatoonFormation, direction)
@@ -596,12 +596,12 @@ function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, s
     for i = 1, steps do
         local enemyAntiMissile = GetUnitsAroundPoint(aiBrain, categories.ANTIMISSILE * categories.SILO, { start[1] - (xstep * i), 0, start[3] - (ystep * i) }, stepby, alliance)
         local siloCount = table.getn(enemyAntiMissile)
-        LOG('Total Anti Nuke Count '..siloCount..' completion is ')
+        --LOG('Total Anti Nuke Count '..siloCount..' completion is ')
         if siloCount > 0 then
             for _, silo in enemyAntiMissile do
-                LOG('Silo completed fraction is '..silo:GetFractionComplete())
+                --LOG('Silo completed fraction is '..silo:GetFractionComplete())
                 if silo and not silo.Dead and silo:GetFractionComplete() == 1 then
-                    LOG('Completed Anti Nuke Detected')
+                    --LOG('Completed Anti Nuke Detected')
                     returnNum = returnNum + 1
                 end
             end
