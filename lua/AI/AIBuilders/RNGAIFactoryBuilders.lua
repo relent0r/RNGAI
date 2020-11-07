@@ -806,7 +806,7 @@ BuilderGroup {
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2 - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3'}},
                 { MIBC, 'GreaterThanGameTimeRNG', { 900 } },
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             },
         BuilderType = 'Any',

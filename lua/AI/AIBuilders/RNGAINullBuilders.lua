@@ -77,7 +77,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 900,
         InstanceCount = 1,
         BuilderType = 'Any',        

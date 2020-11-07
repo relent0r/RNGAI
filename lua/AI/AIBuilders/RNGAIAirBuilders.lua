@@ -258,7 +258,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Intercept MilitaryArea',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
@@ -322,7 +322,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
         InstanceCount = 5,
         BuilderType = 'Any',
@@ -343,7 +343,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Lockdown',
         PlatoonTemplate = 'AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
         InstanceCount = 8,
         BuilderType = 'Any',
@@ -364,7 +364,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Base Guard',
         PlatoonTemplate = 'RNGAI Bomber BaseGuard',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 890,
         InstanceCount = 5,
         BuilderType = 'Any',
@@ -388,7 +388,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 890,
         InstanceCount = 3,
         BuilderType = 'Any',        
@@ -410,7 +410,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddBehaviors = { 'AirUnitRefit' },
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 900,
         InstanceCount = 2,
         BuilderType = 'Any',        
