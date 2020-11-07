@@ -610,10 +610,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 WaitSeconds(patrolTime)
                 --LOG('* AI-RNG: Scout Returning to base : {'..startX..', 0, '..startZ..'}')
-                self:MoveToLocation({startX, 0, startZ}, false)
-                self:PlatoonDisband()
-                return
-                WaitTicks(5)
+                return self:ReturnToBaseAIRNG(true)
             end
         elseif acuSupport == true then
             while not scout.Dead and aiBrain.ACUSupport.Supported == true do

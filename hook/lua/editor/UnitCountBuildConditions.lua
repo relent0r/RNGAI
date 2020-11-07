@@ -716,20 +716,24 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
             if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
                 return true
             end
-        elseif currentTime < 780 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
-                return true
-            end
-        elseif currentTime < 960 and aiBrain.BrainIntel.AirAttackMode then
+        elseif currentTime < 780 then
             if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
                 return true
             end
-        elseif currentTime > 1260 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 5, unitCategory) then
+        elseif currentTime < 960 and not aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
                 return true
             end
-        elseif currentTime >= 480 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+        elseif currentTime > 1260 and not aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+                return true
+            end
+        elseif currentTime > 1800 and not aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 12, unitCategory) then
+                return true
+            end
+        elseif currentTime > 960 then
+            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
                 return true
             end
         else

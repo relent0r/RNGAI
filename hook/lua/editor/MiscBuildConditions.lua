@@ -163,6 +163,8 @@ function NumCloseMassMarkers(aiBrain, number)
     --LOG('Number of mass markers is :'..closeMarkers)
     if closeMarkers == number then
         return true
+    elseif closeMarkers > 4 and number > 4 then
+        return true
     else
         return false
     end
