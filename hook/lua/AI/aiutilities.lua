@@ -404,3 +404,32 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     --LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
     return retPos, retName
 end
+
+function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes)
+    local markerList = AIGetMarkerLocations(aiBrain, markerType)
+    if extraTypes then
+        for num, pType in extraTypes do
+            local moreMarkers = AIGetMarkerLocations(aiBrain, pType)
+            if table.getn(moreMarkers) > 0 then
+                for _, v in moreMarkers do
+                    table.insert(markerList, {Position = v.Position, Name = v.Name})
+                end
+            end
+        end
+    end
+
+    local loc, distance, lowest, name = nil
+    for _, v in markerList do
+        local x = v.Position[1]
+        local y = v.Position[2]
+        local z = v.Position[3]
+        distance = VDist2(startX, startZ, x, z)
+        if not lowest or distance < lowest then
+            loc = v.Position
+            name = v.Name
+            lowest = distance
+        end
+    end
+
+    return loc, name, lowest
+end
