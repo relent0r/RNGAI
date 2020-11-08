@@ -1,6 +1,7 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI SML Builders',
@@ -104,6 +105,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
             { EBC, 'GreaterThanEconTrendRNG', { 2.0, 200.0 } },
             { EBC, 'GreaterThanEconIncome', { 8.0, 700.0 }},

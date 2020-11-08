@@ -107,6 +107,12 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 WaitTicks(20)
             end
+            if not PlatoonExists(aiBrain, self) then
+                return
+            else
+                WaitTicks(2)
+                currentPosition = GetPlatoonPosition(self)
+            end
             if (target.Dead or not target or target:BeenDestroyed()) and VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
                 --LOG('* AI-RNG: No Target Returning to base')
                 if PlatoonExists(aiBrain, self) then
@@ -3779,7 +3785,9 @@ Platoon = Class(RNGAIPlatoon) {
             categories.COMMAND,
             categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 ),
             categories.MOBILE * categories.LAND * categories.EXPERIMENTAL,
-            categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 )
+            categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 ),
+            categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ),
+            categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 )
         }
         --LOG('Starting TML function')
         --LOG('TML Center Point'..repr(self.CenterPosition))

@@ -84,6 +84,9 @@ BaseBuilderTemplate {
         -- Land Factory Builders --
         'RNGAI Factory Builder Land Large',
 
+        -- Air Factory Builders --
+        'RNGAI Factory Builder Air Large',
+
         -- Land Upgrade Builders --
         'RNGAI Land Upgrade Builders',
 

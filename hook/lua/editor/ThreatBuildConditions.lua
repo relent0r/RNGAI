@@ -70,3 +70,23 @@ function EnemyACUCloseToBase(aiBrain)
     end
     return false
 end
+
+function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
+    local engineerManager = aiBrain.BuilderManagers[locationtype].EngineerManager
+    if not engineerManager then
+        return false
+    end
+    local start = engineerManager:GetLocationCoords()
+    local radius = 825
+    for k,v in ArmyBrains do
+        if not v.Result == "defeat" and not ArmyIsCivilian(v:GetArmyIndex()) and IsEnemy(v:GetArmyIndex(), aiBrain:GetArmyIndex()) then
+            local estartX, estartZ = v:GetArmyStartPos()
+            if (VDist2Sq(start[1], start[3], estartX, estartZ) <= radius * radius) and inrange then
+                return true
+            elseif (VDist2Sq(start[1], start[3], estartX, estartZ) > radius * radius) and not inrange then
+                return true
+            end
+        end
+    end
+    return false
+end
