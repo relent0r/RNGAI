@@ -29,7 +29,7 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 1, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },
     },
 }

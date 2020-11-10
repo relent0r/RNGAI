@@ -1868,3 +1868,33 @@ function LeadTargetRNG(LauncherPos, target, minRadius, maxRadius)
     -- return extrapolated target position / missile impact coordinates
     return {MissileImpactX, Target2SecPos[2], MissileImpactY}
 end
+
+function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
+    local startPositions = {}
+    local myArmy = ScenarioInfo.ArmySetup[self.Name]
+    local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
+
+    for i = 1, 16 do
+        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
+        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
+        local posThreat = 0
+        local posDistance = 0
+        if army and startPos then
+            if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
+                posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
+                if posThreat > 0 then
+                    posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
+                    LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
+                    table.insert(startPositions,
+                        {
+                            Position = startPos,
+                            Threat = posThreat,
+                            Distance = posDistance,
+                        }
+                    )
+                end
+            end
+        end
+    end
+    LOG('Potential Positions Table '..repr(startPositions))
+end
