@@ -163,8 +163,8 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.EnemyIntel.NavalRange = {
-            Position = {}
-            Range = 0
+            Position = {},
+            Range = 0,
         }
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false

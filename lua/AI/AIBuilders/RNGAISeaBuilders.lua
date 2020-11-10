@@ -18,6 +18,17 @@ local SeaDefenseMode = function(self, aiBrain, manager)
     end
 end
 
+local SeaRangedMode = function(self, aiBrain)
+    if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 130 then
+        LOG('Enable Ranged Naval Builder')
+        return 600
+    else
+        LOG('Disable Ranged Naval Builder')
+        return 0
+    end
+end
+
+
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Sea Builders T1',                               
@@ -226,6 +237,18 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
+    Builder { 
+        BuilderName = 'RNGAI Sea Ranged T2 Queue',
+        PlatoonTemplate = 'RNGAIT2SeaAttackRangedQueue',
+        Priority = 0,
+        PriorityFunction = SeaRangedMode,
+        BuilderConditions = {
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
