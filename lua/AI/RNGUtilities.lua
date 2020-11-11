@@ -1873,6 +1873,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     local startPositions = {}
     local myArmy = ScenarioInfo.ArmySetup[self.Name]
     local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
+    local platoonPosition = platoon:GetPlatoonPosition()
 
     for i = 1, 16 do
         local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
@@ -1897,4 +1898,25 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         end
     end
     LOG('Potential Positions Table '..repr(startPositions))
+    -- We sort the positions so the closest are first
+    LOUDSORT( startPositions, function(a,b) return a[3] < b[3] end )
+    LOG('Potential Positions Sorted by distance'..repr(startPositions))
+    local attackPosition = false
+    local targetStartPosition = false
+    --We look for the closest
+    for k, v in startPositions do
+        local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3])
+        if waterNodeDist and waterNodeDist < MaxPlatoonWeaponRange then
+            LOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
+            if AIAttackUtils.CanGraphTo(platoonPosition, waterNodePos, 'Water') then
+                attackPosition = waterNodePos
+                targetStartPosition = v.Position
+                break
+            end
+        end
+    end
+    if attackPosition then
+        LOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
+    end
+    return attackPosition, targetStartPosition
 end
