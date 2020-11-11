@@ -1323,6 +1323,9 @@ Platoon = Class(RNGAIPlatoon) {
         local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         local MaxPlatoonWeaponRange
         local platoonThreat = false
+        local rangedPosition = false
+        local SquadPosition = {}
+        local rangedPositionDistance = 99999999
         
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -1416,47 +1419,20 @@ Platoon = Class(RNGAIPlatoon) {
                     self.PlatoonFull = true
                 end
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
-                LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), rangedPosition, 100 , 1000)
-                local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, rangedPosition)
-                IssueClearCommands(GetPlatoonUnits(self))
-                if path then
-                    local threatAroundplatoon = 0
-                    --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
-                    local attackUnits =  self:GetSquadUnits('Attack')
-                    local attackUnitCount = table.getn(attackUnits)
-                    local scoutUnits = self:GetSquadUnits('Scout')
-                    local guardUnits = self:GetSquadUnits('Guard')
-                    if scoutUnits then
-                        local guardedUnit = 1
-                        if attackUnitCount > 0 then
-                            while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
-                                guardedUnit = guardedUnit + 1
-                                WaitTicks(3)
-                                if guardedUnit > attackUnitCount then
-                                    guardedUnit = false
-                                    break
-                                end
-                            end
-                        else
-                            return self:ReturnToBaseAIRNG()
-                        end
-                        IssueClearCommands(scoutUnits)
-                        if not guardedUnit then
-                            return self:ReturnToBaseAIRNG()
-                        else
-                            IssueGuard(scoutUnits, attackUnits[guardedUnit])
-                        end
-                    end
-                    --LOG('* AI-RNG: * HuntAIPATH: Path found')
-                    local position = GetPlatoonPosition(self)
-                    if not success then
-                        LOG('Cant path to target position')
-                    end
-                    local pathNodesCount = table.getn(path)
-                    for i=1, pathNodesCount do
-                        local PlatoonPosition
-                        if guardUnits then
+                rangedPositionDistance = VDist2Sq(platoonPos[1], platoonPos[3], rangedPosition[1], rangedPosition[3])
+                if rangedPositionDistance > 6400 then
+                    LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), rangedPosition, 100 , 1000)
+                    local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, rangedPosition)
+                    IssueClearCommands(GetPlatoonUnits(self))
+                    if path then
+                        local threatAroundplatoon = 0
+                        --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
+                        local attackUnits =  self:GetSquadUnits('Attack')
+                        local attackUnitCount = table.getn(attackUnits)
+                        local scoutUnits = self:GetSquadUnits('Scout')
+                        local guardUnits = self:GetSquadUnits('Guard')
+                        if scoutUnits then
                             local guardedUnit = 1
                             if attackUnitCount > 0 then
                                 while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
@@ -1470,137 +1446,244 @@ Platoon = Class(RNGAIPlatoon) {
                             else
                                 return self:ReturnToBaseAIRNG()
                             end
-                            IssueClearCommands(guardUnits)
+                            IssueClearCommands(scoutUnits)
                             if not guardedUnit then
                                 return self:ReturnToBaseAIRNG()
                             else
-                                IssueGuard(guardUnits, attackUnits[guardedUnit])
+                                IssueGuard(scoutUnits, attackUnits[guardedUnit])
                             end
                         end
-                        --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
-                        if bAggroMove and attackUnits then
-                            self:AggressiveMoveToLocation(path[i], 'Attack')
-                        elseif attackUnits then
-                            self:MoveToLocation(path[i], false, 'Attack')
+                        --LOG('* AI-RNG: * HuntAIPATH: Path found')
+                        local position = GetPlatoonPosition(self)
+                        if not success then
+                            LOG('Cant path to target position')
                         end
-                        --LOG('* AI-RNG: * HuntAIPATH:: moving to Waypoint')
-                        local Lastdist
-                        local dist
-                        local Stuck = 0
-                        local retreatCount = 2
-                        local attackFormation = false
-                        while PlatoonExists(aiBrain, self) do
-                            SquadPosition = self:GetSquadPosition('Attack') or nil
-                            if not SquadPosition then break end
-                            local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
-                            if enemyUnitCount > 0 then
-                                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL + categories.AIR) - categories.SCOUT - categories.WALL)
-                                local attackSquad = self:GetSquadUnits('Attack')
-                                IssueClearCommands(attackSquad)
-                                while PlatoonExists(aiBrain, self) do
-                                    if target and not target.Dead then
-                                        targetPosition = target:GetPosition()
-                                        microCap = 50
-                                        for _, unit in attackSquad do
-                                            microCap = microCap - 1
-                                            if microCap <= 0 then break end
-                                            if unit.Dead then continue end
-                                            if not unit.MaxWeaponRange then
-                                                continue
-                                            end
-                                            unitPos = unit:GetPosition()
-                                            alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                                            x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                                            y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                                            smartPos = { x, GetTerrainHeight( x, y), y }
-                                            -- check if the move position is new or target has moved
-                                            if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
-                                                -- clear move commands if we have queued more than 4
-                                                if table.getn(unit:GetCommandQueue()) > 2 then
-                                                    IssueClearCommands({unit})
-                                                    coroutine.yield(3)
-                                                end
-                                                -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
-                                                IssueMove({unit}, smartPos )
-                                                if target.Dead then break end
-                                                IssueAttack({unit}, target)
-                                                --unit:SetCustomName('Fight micro moving')
-                                                unit.smartPos = smartPos
-                                                unit.TargetPos = targetPosition
-                                            -- in case we don't move, check if we can fire at the target
-                                            else
-                                                local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
-                                                if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
-                                                    --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                                                    IssueMove({unit}, targetPosition )
-                                                else
-                                                    --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
-                                                end
-                                            end
+                        local pathNodesCount = table.getn(path)
+                        for i=1, pathNodesCount do
+                            local PlatoonPosition
+                            if guardUnits then
+                                local guardedUnit = 1
+                                if attackUnitCount > 0 then
+                                    while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
+                                        guardedUnit = guardedUnit + 1
+                                        WaitTicks(3)
+                                        if guardedUnit > attackUnitCount then
+                                            guardedUnit = false
+                                            break
                                         end
-                                    else
-                                        break
                                     end
-                                    WaitTicks(10)
+                                else
+                                    return self:ReturnToBaseAIRNG()
+                                end
+                                IssueClearCommands(guardUnits)
+                                if not guardedUnit then
+                                    return self:ReturnToBaseAIRNG()
+                                else
+                                    IssueGuard(guardUnits, attackUnits[guardedUnit])
                                 end
                             end
-                            distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], SquadPosition[1], SquadPosition[3] )
-                            --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
-                            if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
-                                attackFormation = true
-                                --LOG('* AI-RNG: * MovePath: distEnd < 50 '..distEnd)
-                                self:SetPlatoonFormationOverride('AttackFormation')
+                            --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
+                            if bAggroMove and attackUnits then
+                                self:AggressiveMoveToLocation(path[i])
+                            elseif attackUnits then
+                                self:MoveToLocation(path[i], false)
                             end
-                            dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
-                            -- are we closer then 15 units from the next marker ? Then break and move to the next marker
-                            --LOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
-                            if dist < 400 then
-                                -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                self:Stop()
-                                break
-                            end
-                            if Lastdist ~= dist then
-                                Stuck = 0
-                                Lastdist = dist
-                            -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
-                            else
-                                Stuck = Stuck + 1
-                                if Stuck > 15 then
-                                    --LOG('* AI-RNG: * HuntAIPATH: Stuck while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                            --LOG('* AI-RNG: * HuntAIPATH:: moving to Waypoint')
+                            local Lastdist
+                            local dist
+                            local Stuck = 0
+                            local retreatCount = 2
+                            local attackFormation = false
+                            rangedPositionDistance = 99999999
+                            while PlatoonExists(aiBrain, self) do
+                                platoonPos = GetPlatoonPosition(self)
+                                if not platoonPos then break end
+                                local targetPosition
+                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
+                                if enemyUnitCount > 0 then
+                                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL + categories.AIR) - categories.SCOUT - categories.WALL)
+                                    local attackSquad = self:GetSquadUnits('Attack')
+                                    IssueClearCommands(attackSquad)
+                                    while PlatoonExists(aiBrain, self) do
+                                        if target and not target.Dead then
+                                            targetPosition = target:GetPosition()
+                                            microCap = 50
+                                            for _, unit in attackSquad do
+                                                microCap = microCap - 1
+                                                if microCap <= 0 then break end
+                                                if unit.Dead then continue end
+                                                if not unit.MaxWeaponRange then
+                                                    continue
+                                                end
+                                                unitPos = unit:GetPosition()
+                                                alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                                                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
+                                                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
+                                                smartPos = { x, GetTerrainHeight( x, y), y }
+                                                -- check if the move position is new or target has moved
+                                                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                                                    -- clear move commands if we have queued more than 4
+                                                    if table.getn(unit:GetCommandQueue()) > 2 then
+                                                        IssueClearCommands({unit})
+                                                        coroutine.yield(3)
+                                                    end
+                                                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                                                    IssueMove({unit}, smartPos )
+                                                    if target.Dead then break end
+                                                    IssueAttack({unit}, target)
+                                                    --unit:SetCustomName('Fight micro moving')
+                                                    unit.smartPos = smartPos
+                                                    unit.TargetPos = targetPosition
+                                                -- in case we don't move, check if we can fire at the target
+                                                else
+                                                    local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
+                                                    if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                                                        --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                                        IssueMove({unit}, targetPosition )
+                                                    else
+                                                        --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                                    end
+                                                end
+                                            end
+                                        else
+                                            break
+                                        end
+                                        WaitTicks(10)
+                                    end
+                                end
+                                distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], platoonPos[1], platoonPos[3] )
+                                --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
+                                if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
+                                    attackFormation = true
+                                    --LOG('* AI-RNG: * MovePath: distEnd < 50 '..distEnd)
+                                    self:SetPlatoonFormationOverride('AttackFormation')
+                                end
+                                dist = VDist2Sq(path[i][1], path[i][3], platoonPos[1], platoonPos[3])
+                                -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                                --LOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
+                                if dist < 400 then
+                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                     self:Stop()
                                     break
                                 end
-                            end
-                            if not target or target.Dead then
-                                if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
-                                    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
-                                    self:MoveToLocation(targetPosition, false, 'Attack')
-                                    WaitTicks(60)
+                                if Lastdist ~= dist then
+                                    Stuck = 0
+                                    Lastdist = dist
+                                -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
                                 else
-                                    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
-                                    self:MoveToLocation(targetPosition, false, 'Attack')
-                                    WaitTicks(40)
+                                    Stuck = Stuck + 1
+                                    if Stuck > 15 then
+                                        --LOG('* AI-RNG: * HuntAIPATH: Stuck while moving to Waypoint. Stuck='..Stuck..' - '..repr(path[i]))
+                                        self:Stop()
+                                        break
+                                    end
                                 end
-                                self:Stop()
-                                break
+                                LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 20 ticks at :'..GetGameTimeSeconds())
+                                WaitTicks(20)
+                                rangedPositionDistance = VDist2Sq(platoonPos[1], platoonPos[3], rangedPosition[1], rangedPosition[3])
+                                if rangedPositionDistance < MaxPlatoonWeaponRange then
+                                    LOG('Within Range of End Position')
+                                    break
+                                end
                             end
-                            --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
-                            WaitTicks(15)
+                            --LOG('* AI-RNG: * HuntAIPATH: Ending Loop at :'..GetGameTimeSeconds())
                         end
-                        --LOG('* AI-RNG: * HuntAIPATH: Ending Loop at :'..GetGameTimeSeconds())
+                    elseif (not path and reason == 'NoPath') then
+                        LOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
+                    else
+                        LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
+                        self:PlatoonDisband()
+                        return
                     end
-                elseif (not path and reason == 'NoPath') then
-                    --LOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
-                else
-                    --LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
-                    self:PlatoonDisband()
-                    return
+                    if not path or not success then
+                        self:PlatoonDisband()
+                        return
+                    end
                 end
-
-                if (not path or not success) and not usedTransports then
-                    self:PlatoonDisband()
-                    return
+                if rangedPosition then
+                    LOG('Ranged position is true')
+                    SquadPosition = self:GetSquadPosition('Artillery') or nil
+                    if not SquadPosition then self:ReturnToBaseAIRNG() end
+                    rangedPositionDistance = VDist2Sq(SquadPosition[1], SquadPosition[3], rangedPosition[1], rangedPosition[3])
+                    if rangedPositionDistance < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange) then
+                        LOG('Within Range of End Position, looking for target')
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Artillery', maxRadius, atkPri)
+                        if target then
+                            LOG('Target Aquired by Artillery Squad')
+                            local artillerySquad = self:GetSquadUnits('Artillery')
+                            local attackUnits = self:GetSquadUnits('Attack')
+                            if artillerySquad then
+                                local guardedUnit = 1
+                                local artilleryUnitCount = table.getn(artillerySquad)
+                                if artilleryUnitCount > 0 then
+                                    while artillerySquad[guardedUnit].Dead or artillerySquad[guardedUnit]:BeenDestroyed() do
+                                        guardedUnit = guardedUnit + 1
+                                        WaitTicks(3)
+                                        if guardedUnit > artilleryUnitCount then
+                                            guardedUnit = false
+                                            break
+                                        end
+                                    end
+                                else
+                                    return self:ReturnToBaseAIRNG()
+                                end
+                                IssueClearCommands(attackUnits)
+                                if not guardedUnit then
+                                    return self:ReturnToBaseAIRNG()
+                                else
+                                    IssueGuard(attackUnits, artillerySquad[guardedUnit])
+                                end
+                            end
+                            while PlatoonExists(aiBrain, self) do
+                                if target and not target.Dead then
+                                    targetPosition = target:GetPosition()
+                                    microCap = 50
+                                    for _, unit in artillerySquad do
+                                        microCap = microCap - 1
+                                        if microCap <= 0 then break end
+                                        if unit.Dead then continue end
+                                        if not unit.MaxWeaponRange then
+                                            continue
+                                        end
+                                        unitPos = unit:GetPosition()
+                                        alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                                        x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - 10 or MaxPlatoonWeaponRange)
+                                        y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - 10 or MaxPlatoonWeaponRange)
+                                        smartPos = { x, GetTerrainHeight( x, y), y }
+                                        -- check if the move position is new or target has moved
+                                        if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                                            -- clear move commands if we have queued more than 4
+                                            if table.getn(unit:GetCommandQueue()) > 2 then
+                                                IssueClearCommands({unit})
+                                                coroutine.yield(3)
+                                            end
+                                            -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                                            IssueMove({unit}, smartPos )
+                                            if target.Dead then break end
+                                            IssueAttack({unit}, target)
+                                            --unit:SetCustomName('Fight micro moving')
+                                            unit.smartPos = smartPos
+                                            unit.TargetPos = targetPosition
+                                        -- in case we don't move, check if we can fire at the target
+                                        else
+                                            local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
+                                            if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                                                --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                                IssueMove({unit}, targetPosition )
+                                            else
+                                                --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                            end
+                                        end
+                                    end
+                                else
+                                    break
+                                end
+                                WaitTicks(10)
+                            end
+                        end
+                    end
                 end
+                
             end
             --LOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
             WaitTicks(50)

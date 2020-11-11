@@ -33,6 +33,18 @@ PlatoonTemplate {
         { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },
     },
 }
+
+PlatoonTemplate {
+    Name = 'RNGAI Sea Attack Ranged T123',
+    Plan = 'NavalRangedAIRNG',
+    GlobalSquads = {
+        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE, 0, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 0, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * categories.CRUISER, 1, 20, 'Artillery', 'GrowthFormation' },
+    },
+}
+
+
 PlatoonTemplate {
     Name = 'RNGAIT1SeaAttackQueue',
     FactionSquads = {

@@ -311,7 +311,7 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
-    },
+    },--[[
     Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T23',
         PlatoonTemplate = 'RNGAI Sea Attack T123',
@@ -337,7 +337,44 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
+    },]]
+    Builder {
+        BuilderName = 'RNGAI Ranged Sea Attack T23',
+        PlatoonTemplate = 'RNGAI Sea Attack Ranged T123',
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        Priority = 400,
+        InstanceCount = 20,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.CRUISER - categories.ENGINEER - categories.EXPERIMENTAL } },
+            --{ SeaAttackCondition, { 'LocationType', 14 } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            UseFormation = 'None',
+            PlatoonLimit = 18,
+            AggressiveMove = false,
+            ThreatSupport = 5,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
+            },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
+            },
+        },
+        BuilderType = 'Any',
     },
+
     Builder {
         BuilderName = 'RNGAI Sea Hunters',
         PlatoonTemplate = 'RNGAI Sea Hunt',

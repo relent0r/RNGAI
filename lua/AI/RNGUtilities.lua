@@ -1871,7 +1871,7 @@ end
 
 function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     local startPositions = {}
-    local myArmy = ScenarioInfo.ArmySetup[self.Name]
+    local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
     local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
     local platoonPosition = platoon:GetPlatoonPosition()
 
@@ -1908,7 +1908,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3])
         if waterNodeDist and waterNodeDist < MaxPlatoonWeaponRange then
             LOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
-            if AIAttackUtils.CanGraphTo(platoonPosition, waterNodePos, 'Water') then
+            if AIAttackUtils.CheckPlatoonPathingEx(platoon, waterNodePos) then
                 attackPosition = waterNodePos
                 targetStartPosition = v.Position
                 break
