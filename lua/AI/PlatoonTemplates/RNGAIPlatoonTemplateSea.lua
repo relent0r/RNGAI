@@ -40,7 +40,7 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * categories.CRUISER, 1, 20, 'Artillery', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * ( categories.CRUISER + categories.xas0306 + categories.NUKE ), 1, 20, 'Artillery', 'GrowthFormation' },
     },
 }
 
@@ -153,7 +153,8 @@ PlatoonTemplate {
             { 'xes0102', 1, 1, 'Attack', 'none' },       -- Torp Boat
          },
         Aeon = {
-            { 'uas0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
+            { 'uas0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
+            { 'uas0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
             { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
         },
         Cybran = {
@@ -163,6 +164,28 @@ PlatoonTemplate {
         },
         Seraphim = {
             { 'xss0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
+            { 'xss0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
+        },
+    }
+}
+
+PlatoonTemplate { 
+    Name = 'RNGAIT3SeaAttackRangedQueue',
+    FactionSquads = {
+        UEF = {
+            { 'ues0304', 1, 1, 'Artillery', 'None' },     -- Strat Sub
+            { 'xes0102', 1, 1, 'Attack', 'none' },       -- Torp Boat
+         },
+        Aeon = {
+            { 'xas0306', 1, 1, 'Artillery', 'none' },       -- Missile Boat
+            { 'uas0304', 1, 1, 'Artillery', 'None' },     -- Strat Sub
+            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+        },
+        Cybran = {
+            { 'urs0304', 1, 1, 'Artillery', 'none' },       -- Strat Sub
+            { 'xrs0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+        },
+        Seraphim = {
             { 'xss0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
         },
     }

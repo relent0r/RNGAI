@@ -1619,7 +1619,7 @@ Platoon = Class(RNGAIPlatoon) {
                             if attackUnits then
                                 LOG('Number of attack units is '..table.getn(attackUnits))
                             end
-                            if artillerySquad and attackUnits then
+                            if table.getn(artillerySquad) > 0 and table.getn(attackUnits) > 0 then
                                 LOG('Forking thread for artillery guard')
                                 self:ForkThread(self.GuardArtillerySquadRNG, aiBrain, target)
                             end
@@ -3851,6 +3851,9 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(2)
                 IssueGuard(attackUnits, artillerySquadPosition)
                 WaitTicks(100)
+                if table.getn(artillerySquad) < 1 then
+                    break
+                end
             else
                 return
             end

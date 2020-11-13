@@ -1956,7 +1956,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
                 posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
                 LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
-                if posThreat > 0 then
+                if posThreat > 5 then
                     posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
                     LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
                     table.insert(startPositions,

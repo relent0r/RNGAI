@@ -281,6 +281,20 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    Builder { 
+        BuilderName = 'RNGAI Sea Ranged T3 Queue',
+        PlatoonTemplate = 'RNGAIT3SeaAttackRangedQueue',
+        Priority = 450,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 1, 2, 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY NAVAL TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.NUKE } },
+            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+        },
+        BuilderType = 'Sea',
+    },
 }
 
 BuilderGroup {
@@ -345,7 +359,7 @@ BuilderGroup {
         Priority = 400,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.CRUISER - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ) * ( categories.CRUISER + categories.xas0306 + categories.NUKE ) - categories.EXPERIMENTAL } },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
@@ -355,9 +369,10 @@ BuilderGroup {
             AggressiveMove = false,
             ThreatSupport = 5,
             TargetSearchPriorities = {
-                'ENERGYPRODUCTION',
-                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION TECH3',
                 'MASSEXTRACTION',
+                'ENERGYSTORAGE',
+                'ENERGYPRODUCTION',
                 'MASSFABRICATION',
                 'STRUCTURE',
             },
