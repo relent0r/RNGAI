@@ -739,18 +739,12 @@ function InitialMassMarkersInWater(aiBrain)
     end
 end
 
-function PositionOnWater(aiBrain, positionX, positionZ)
+function PositionOnWater(positionX, positionZ)
     --Check if a position is under water. Used to identify if threat/unit position is over water
     -- Terrain >= Surface = Target is on land
     -- Terrain < Surface = Target is in water
 
-    local TerrainHeight = GetTerrainHeight( positionX, positionZ ) -- terran high
-    local SurfaceHeight = GetSurfaceHeight( positionX, positionZ ) -- water(surface) high
-    if TerrainHeight < SurfaceHeight then
-        return true
-    else
-        return false
-    end
+    return GetTerrainHeight( positionX, positionZ ) < GetSurfaceHeight( positionX, positionZ )
 end
 
 function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
@@ -1257,6 +1251,84 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
     end
 
     return false
+end
+
+function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, TargetSearchCategory, enemyBrain)
+    if type(TargetSearchCategory) == 'string' then
+        TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
+    end
+    local enemyIndex = false
+    local MyArmyIndex = aiBrain:GetArmyIndex()
+    if enemyBrain then
+        enemyIndex = enemyBrain:GetArmyIndex()
+    end
+    local RangeList = {
+        [1] = 10,
+        [2] = maxRange,
+        [3] = maxRange + 80,
+    }
+    local TargetUnit = false
+    local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
+    for _, range in RangeList do
+        if not position then
+            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: position is empty')
+            return false
+        end
+        if not range then
+            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: range is empty')
+            return false
+        end
+        if not TargetSearchCategory then
+            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            return false
+        end
+        TargetsInRange = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, position, range, 'Enemy')
+        --DrawCircle(position, range, '0000FF')
+        for _, v in TargetSearchCategory do
+            category = v
+            if type(category) == 'string' then
+                category = ParseEntityCategory(category)
+            end
+            distance = maxRange
+            --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..table.getn(TargetsInRange)..'  ')
+            for num, Target in TargetsInRange do
+                if Target.Dead or Target:BeenDestroyed() then
+                    continue
+                end
+                TargetPosition = Target:GetPosition()
+                EnemyStrength = 0
+                -- check if we have a special player as enemy
+                if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
+                -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
+                if not Target.Dead and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
+                    -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
+                    if not IsEnemy( MyArmyIndex, Target:GetAIBrain():GetArmyIndex() ) then continue end
+                    if Target.ReclaimInProgress then
+                        --WARN('* AIFindNearestCategoryTargetInRange: ReclaimInProgress !!! Ignoring the target.')
+                        continue
+                    end
+                    if Target.CaptureInProgress then
+                        --WARN('* AIFindNearestCategoryTargetInRange: CaptureInProgress !!! Ignoring the target.')
+                        continue
+                    end
+                    targetRange = VDist2(position[1],position[3],TargetPosition[1],TargetPosition[3])
+                    -- check if the target is in range of the unit and in range of the base
+                    if targetRange < distance then
+                        TargetUnit = Target
+                        distance = targetRange
+                    end
+                end
+            end
+            if TargetUnit then
+                LOG('Target Found in target aquisition function')
+                return TargetUnit
+            end
+           coroutine.yield(10)
+        end
+        coroutine.yield(1)
+    end
+    LOG('NO Target Found in target aquisition function')
+    return TargetUnit
 end
 
 function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, assisteeCategory)
@@ -1880,9 +1952,10 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
         local posThreat = 0
         local posDistance = 0
-        if army and startPos then
+        if startPos then
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
                 posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
+                LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 0 then
                     posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
                     LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
@@ -1899,7 +1972,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     end
     LOG('Potential Positions Table '..repr(startPositions))
     -- We sort the positions so the closest are first
-    LOUDSORT( startPositions, function(a,b) return a[3] < b[3] end )
+    LOUDSORT( startPositions, function(a,b) return a.Distance < b.Distance end )
     LOG('Potential Positions Sorted by distance'..repr(startPositions))
     local attackPosition = false
     local targetStartPosition = false

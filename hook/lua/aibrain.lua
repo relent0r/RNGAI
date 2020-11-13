@@ -1323,7 +1323,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
                         if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 10000 then
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            if RUtils.PositionOnWater(self, threat.posX, threat.posZ) then
+                            if RUtils.PositionOnWater(threat.posX, threat.posZ) then
                                 onWater = true
                             else
                                 onWater = false
@@ -1332,7 +1332,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             table.insert(phaseTwoThreats, threatLocation)
                         else
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            if RUtils.PositionOnWater(self, threat.posX, threat.posZ) then
+                            if RUtils.PositionOnWater(threat.posX, threat.posZ) then
                                 onWater = true
                             else
                                 onWater = false

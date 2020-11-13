@@ -1384,7 +1384,8 @@ Platoon = Class(RNGAIPlatoon) {
 
         table.insert(atkPri, 'ALLUNITS')
         table.insert(categoryList, categories.ALLUNITS)
-        self:SetPrioritizedTargetList('Attack', categoryList)
+        self:SetPrioritizedTargetList('Artillery', categoryList)
+        self:SetPrioritizedTargetList('Attack', {categories.MOBILE * categories.NAVAL, categories.ALLUNITS})
 
         while PlatoonExists(aiBrain, self) do
             --LOG('* AI-RNG: * NavalRangedAIRNG:: Check for target')
@@ -1578,10 +1579,11 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     end
                                 end
-                                LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 20 ticks at :'..GetGameTimeSeconds())
+                                --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 20 ticks at :'..GetGameTimeSeconds())
                                 WaitTicks(20)
                                 rangedPositionDistance = VDist2Sq(platoonPos[1], platoonPos[3], rangedPosition[1], rangedPosition[3])
-                                if rangedPositionDistance < MaxPlatoonWeaponRange then
+                                --LOG('MaxPlatoonWeaponRange is '..MaxPlatoonWeaponRange..' current distance is '..rangedPositionDistance)
+                                if rangedPositionDistance < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange) then
                                     LOG('Within Range of End Position')
                                     break
                                 end
@@ -1602,37 +1604,24 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if rangedPosition then
                     LOG('Ranged position is true')
-                    SquadPosition = self:GetSquadPosition('Artillery') or nil
-                    if not SquadPosition then self:ReturnToBaseAIRNG() end
-                    rangedPositionDistance = VDist2Sq(SquadPosition[1], SquadPosition[3], rangedPosition[1], rangedPosition[3])
+                    artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
+                    if not artillerySquadPosition then self:ReturnToBaseAIRNG() end
+                    rangedPositionDistance = VDist2Sq(artillerySquadPosition[1], artillerySquadPosition[3], rangedPosition[1], rangedPosition[3])
                     if rangedPositionDistance < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange) then
                         LOG('Within Range of End Position, looking for target')
-                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Artillery', maxRadius, atkPri)
+                        --target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Artillery', maxRadius, atkPri)
+                        LOG('Looking for target close range to rangedPosition')
+                        target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, rangedPosition, 'Artillery', MaxPlatoonWeaponRange + 30, atkPri, false)
                         if target then
                             LOG('Target Aquired by Artillery Squad')
                             local artillerySquad = self:GetSquadUnits('Artillery')
                             local attackUnits = self:GetSquadUnits('Attack')
-                            if artillerySquad then
-                                local guardedUnit = 1
-                                local artilleryUnitCount = table.getn(artillerySquad)
-                                if artilleryUnitCount > 0 then
-                                    while artillerySquad[guardedUnit].Dead or artillerySquad[guardedUnit]:BeenDestroyed() do
-                                        guardedUnit = guardedUnit + 1
-                                        WaitTicks(3)
-                                        if guardedUnit > artilleryUnitCount then
-                                            guardedUnit = false
-                                            break
-                                        end
-                                    end
-                                else
-                                    return self:ReturnToBaseAIRNG()
-                                end
-                                IssueClearCommands(attackUnits)
-                                if not guardedUnit then
-                                    return self:ReturnToBaseAIRNG()
-                                else
-                                    IssueGuard(attackUnits, artillerySquad[guardedUnit])
-                                end
+                            if attackUnits then
+                                LOG('Number of attack units is '..table.getn(attackUnits))
+                            end
+                            if artillerySquad and attackUnits then
+                                LOG('Forking thread for artillery guard')
+                                self:ForkThread(self.GuardArtillerySquadRNG, aiBrain, target)
                             end
                             while PlatoonExists(aiBrain, self) do
                                 if target and not target.Dead then
@@ -3851,6 +3840,22 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
+    GuardArtillerySquadRNG = function(self, aiBrain, target)
+        while target and not target.Dead do
+            local artillerySquad = self:GetSquadUnits('Artillery')
+            local attackUnits = self:GetSquadUnits('Attack')
+            local artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
+            if artillerySquad and attackUnits then
+                IssueClearCommands(attackUnits)
+                IssueMove(attackUnits, artillerySquadPosition)
+                WaitTicks(2)
+                IssueGuard(attackUnits, artillerySquadPosition)
+                WaitTicks(100)
+            else
+                return
+            end
+        end
+    end,
 
     EngineerAssistAIRNG = function(self)
         self:ForkThread(self.AssistBodyRNG)
