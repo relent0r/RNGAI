@@ -19,7 +19,7 @@ local SeaDefenseMode = function(self, aiBrain, manager)
 end
 
 local SeaRangedMode = function(self, aiBrain)
-    if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 130 then
+    if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
         LOG('Enable Ranged Naval Builder')
         return 600
     else

@@ -1431,29 +1431,6 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                         local attackUnits =  self:GetSquadUnits('Attack')
                         local attackUnitCount = table.getn(attackUnits)
-                        local scoutUnits = self:GetSquadUnits('Scout')
-                        local guardUnits = self:GetSquadUnits('Guard')
-                        if scoutUnits then
-                            local guardedUnit = 1
-                            if attackUnitCount > 0 then
-                                while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
-                                    guardedUnit = guardedUnit + 1
-                                    WaitTicks(3)
-                                    if guardedUnit > attackUnitCount then
-                                        guardedUnit = false
-                                        break
-                                    end
-                                end
-                            else
-                                return self:ReturnToBaseAIRNG()
-                            end
-                            IssueClearCommands(scoutUnits)
-                            if not guardedUnit then
-                                return self:ReturnToBaseAIRNG()
-                            else
-                                IssueGuard(scoutUnits, attackUnits[guardedUnit])
-                            end
-                        end
                         --LOG('* AI-RNG: * HuntAIPATH: Path found')
                         local position = GetPlatoonPosition(self)
                         if not success then
@@ -1462,27 +1439,6 @@ Platoon = Class(RNGAIPlatoon) {
                         local pathNodesCount = table.getn(path)
                         for i=1, pathNodesCount do
                             local PlatoonPosition
-                            if guardUnits then
-                                local guardedUnit = 1
-                                if attackUnitCount > 0 then
-                                    while attackUnits[guardedUnit].Dead or attackUnits[guardedUnit]:BeenDestroyed() do
-                                        guardedUnit = guardedUnit + 1
-                                        WaitTicks(3)
-                                        if guardedUnit > attackUnitCount then
-                                            guardedUnit = false
-                                            break
-                                        end
-                                    end
-                                else
-                                    return self:ReturnToBaseAIRNG()
-                                end
-                                IssueClearCommands(guardUnits)
-                                if not guardedUnit then
-                                    return self:ReturnToBaseAIRNG()
-                                else
-                                    IssueGuard(guardUnits, attackUnits[guardedUnit])
-                                end
-                            end
                             --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
                             if bAggroMove and attackUnits then
                                 self:AggressiveMoveToLocation(path[i])
@@ -1502,7 +1458,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 local targetPosition
                                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
-                                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL + categories.AIR) - categories.SCOUT - categories.WALL)
+                                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL) - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do

@@ -1979,7 +1979,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     --We look for the closest
     for k, v in startPositions do
         local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3])
-        if waterNodeDist and waterNodeDist < MaxPlatoonWeaponRange then
+        if waterNodeDist and waterNodeDist < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
             LOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
             if AIAttackUtils.CheckPlatoonPathingEx(platoon, waterNodePos) then
                 attackPosition = waterNodePos
