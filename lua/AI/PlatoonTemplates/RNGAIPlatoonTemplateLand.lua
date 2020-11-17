@@ -617,11 +617,9 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0203', 2, 4, 'Attack', 'none' },       -- Heavy Tank
-            
          },
         Aeon = {
             { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
-            
         },
         Cybran = {
             { 'url0203', 2, 4, 'Attack', 'none' },      -- Heavy Tank
@@ -637,7 +635,7 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
         UEF = {
             { 'uel0202', 2, 4, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'uel0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'del0204', 2, 3, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0202', 2, 2, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -652,7 +650,7 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
         Aeon = {
             { 'ual0202', 2, 4, 'Attack', 'none' },      -- Heavy Tank
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0202', 2, 2, 'Attack', 'none' },      -- Heavy Tank
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0205', 1, 1, 'Guard', 'none' },       -- AA
@@ -680,7 +678,7 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
         Seraphim = {
             { 'xsl0202', 2, 4, 'Attack', 'none' },      -- Assault Bot
             { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'xsl0202', 2, 3, 'Attack', 'none' },      -- Assault Bot
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0205', 1, 1, 'Guard', 'none' },       -- AA
@@ -705,6 +703,23 @@ PlatoonTemplate { Name = 'RNGAIT3LandResponse',
         },
         Seraphim = {
             { 'xsl0303', 1, 1, 'Attack', 'none' },       -- Siege Tank
+        },
+    }
+}
+
+PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueue',
+    FactionSquads = {
+        UEF = {
+            { 'xel0305', 2, 4, 'Attack', 'none' },       -- Armoured Assault Bot
+         },
+        Aeon = {
+            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+        },
+        Cybran = {
+            { 'xrl0305', 2, 4, 'Attack', 'none' },      -- Armoured Assault Bot
+        },
+        Seraphim = {
+            { 'xsl0303', 2, 4, 'Attack', 'none' },      -- Heavy Tank
         },
     }
 }

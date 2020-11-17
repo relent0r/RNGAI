@@ -156,6 +156,21 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
+        PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
+        Priority = 550, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    
 }
 
 BuilderGroup {
