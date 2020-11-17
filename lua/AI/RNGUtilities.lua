@@ -1253,7 +1253,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
     return false
 end
 
-function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, TargetSearchCategory, enemyBrain)
+function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
     if type(TargetSearchCategory) == 'string' then
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
@@ -1282,7 +1282,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
             return false
         end
-        TargetsInRange = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, position, range, 'Enemy')
+        TargetsInRange = aiBrain:GetUnitsAroundPoint(targetQueryCategory, position, range, 'Enemy')
         --DrawCircle(position, range, '0000FF')
         for _, v in TargetSearchCategory do
             category = v

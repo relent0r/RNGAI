@@ -1181,7 +1181,8 @@ Platoon = Class(RNGAIPlatoon) {
                                 if not SquadPosition then break end
                                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
-                                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                                    target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, SquadPosition, 'Attack', enemyRadius, categories.LAND * (categories.STRUCTURE + categories.MOBILE), atkPri, false)
+                                    --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do
@@ -1567,7 +1568,7 @@ Platoon = Class(RNGAIPlatoon) {
                         LOG('Within Range of End Position, looking for target')
                         --target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Artillery', maxRadius, atkPri)
                         LOG('Looking for target close range to rangedPosition')
-                        target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, rangedPosition, 'Artillery', MaxPlatoonWeaponRange + 30, atkPri, false)
+                        target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, rangedPosition, 'Artillery', MaxPlatoonWeaponRange + 30, categories.STRUCTURE, atkPri, false)
                         if target then
                             LOG('Target Aquired by Artillery Squad')
                             local artillerySquad = self:GetSquadUnits('Artillery')
