@@ -2084,7 +2084,17 @@ Platoon = Class(RNGAIPlatoon) {
             local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
             local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
 
-            if cons.NearMarkerType == 'Expansion Area' then
+            if cons.AggressiveExpansion then
+                --DUNCAN - pulled out and uses alt finder
+                LOG('Aggressive Expansion Triggered')
+                reference, refName = AIUtils.AIFindAggressiveBaseLocationRNG(aiBrain, cons.LocationType, cons.EnemyRange,
+                                                    cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
+                if not reference or not refName then
+                    LOG('No reference or refName from firebaselocaiton finder')
+                    self:PlatoonDisband()
+                    return
+                end
+            elseif cons.NearMarkerType == 'Expansion Area' then
                 reference, refName = AIUtils.AIFindExpansionAreaNeedsEngineer(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
@@ -2097,6 +2107,7 @@ Platoon = Class(RNGAIPlatoon) {
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
                 if not reference or not refName then
+                    LOG('No reference or refname for Naval Area Expansion')
                     self:PlatoonDisband()
                     return
                 end
@@ -2155,6 +2166,7 @@ Platoon = Class(RNGAIPlatoon) {
                 baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             end
             if cons.ExpansionBase and refName then
+                LOG('New Expansion Base being created')
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, eng, cons)
             end
             relative = false
@@ -4138,7 +4150,8 @@ Platoon = Class(RNGAIPlatoon) {
             categories.MOBILE * categories.LAND * categories.EXPERIMENTAL,
             categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 ),
             categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ),
-            categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 )
+            categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ),
+            categories.STRUCTURE * categories.RADAR * (categories.TECH2 + categories.TECH3)
         }
         --LOG('Starting TML function')
         --LOG('TML Center Point'..repr(self.CenterPosition))

@@ -100,3 +100,5 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
     return LastMassBOOL
 end
 
+
+

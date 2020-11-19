@@ -31,7 +31,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
-                'RNGAI Land FormBuilders Expansion',
+                'RNGAI Land FormBuilders Large',
         
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Unmarked Spam',
@@ -97,7 +97,7 @@ BaseBuilderTemplate {
             return 50
         elseif spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 100')
-            return 100
+            return 150
         end
         --LOG('* AI-RNG: Expansion return default 0')
         return -1

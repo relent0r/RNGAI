@@ -276,6 +276,41 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Aggressive Expansion 250 Large',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        Priority = 1000,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'LessThanGameTimeSeconds', { 600 } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.AIR}},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 - categories.COMMAND - categories.STATIONASSISTPOD }},
+            { MIBC, 'CanBuildAggressivebaseRNG', { 'LocationType', 250, -1000, 5, 1, 'AntiSurface'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                AggressiveExpansion = true, -- This is picked up so that a modified firebase function runs to pick the expansion closest to the enemy
+                EnemyRange = 250,
+                NearMarkerType = true, -- This is so the engineerbuildai will still pick up the expansion bool, the aggressive base check uses 3 types of expansion markers.
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 5,
+                ThreatRings = 0,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {                    
+                    'T1LandFactory',
+                    'T1LandFactory',
+                }
+            },
+            NeedGuard = false,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 500 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 750,

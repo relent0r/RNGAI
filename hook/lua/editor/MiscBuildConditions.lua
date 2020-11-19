@@ -151,6 +151,14 @@ function MassMarkersInWater(aiBrain)
     return false
 end
 
+function CanBuildAggressivebaseRNG( aiBrain, locationType, radius, tMin, tMax, tRings, tType)
+    local ref, refName = AIUtils.AIFindAggressiveBaseLocationRNG( aiBrain, locationType, radius, tMin, tMax, tRings, tType)
+    if not ref then
+        return false
+    end
+    return true
+end
+
 function NumCloseMassMarkers(aiBrain, number)
     massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
     engPos = aiBrain.BuilderManagers.MAIN.Position

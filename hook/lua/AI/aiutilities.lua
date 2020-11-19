@@ -433,3 +433,60 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
 
     return loc, name, lowest
 end
+
+function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType)
+    -- Get location of commander
+    local estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+    local threatPos = {estartX, 0, estartZ}
+
+    -- Get markers
+    local markerList = AIGetMarkerLocations(aiBrain, 'Expansion Area')
+    local largeMarkerList = AIGetMarkerLocations(aiBrain, 'Large Expansion Area')
+    for k, v in largeMarkerList do
+        table.insert(markerList, v)
+    end
+    local startMarkerList = AIGetMarkerLocations(aiBrain, 'Start Location')
+    for k, v in startMarkerList do
+        table.insert(markerList, v)
+    end
+    -- For each marker, check against threatpos. Save markers that are within the FireBaseRange
+    local inRangeList = {}
+    for _, marker in markerList do
+        local distSq = VDist2Sq(marker.Position[1], marker.Position[3], threatPos[1], threatPos[3])
+
+        if distSq < radius * radius  then
+            table.insert(inRangeList, marker)
+        end
+    end
+
+    -- Pick the closest, least-threatening position in range
+    local bestDistSq = 9999999999
+    local bestThreat = 9999999999
+    local bestMarker = false
+    local maxThreat = tMax or 1
+    local reference = false
+    local refName = false
+    
+    for _, marker in inRangeList do
+        local threat = aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'AntiSurface')
+        if threat < maxThreat then
+            if threat < bestThreat and threat < maxThreat then
+                bestDistSq = VDist2Sq(threatPos[1], threatPos[3], marker.Position[1], marker.Position[3])
+                bestThreat = threat
+                bestMarker = marker
+            elseif threat == bestThreat then
+                local distSq = VDist2Sq(threatPos[1], threatPos[3], marker.Position[1], marker.Position[3])
+                if distSq > bestDistSq then
+                    bestDistSq = distSq
+                    bestMarker = marker
+                end
+            end
+        end
+    end
+    if bestMarker then
+        reference = bestMarker.Position
+        refName = bestMarker.Name
+    end
+
+    return reference, refName
+end

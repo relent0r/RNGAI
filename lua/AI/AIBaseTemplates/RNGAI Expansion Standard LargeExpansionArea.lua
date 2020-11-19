@@ -28,7 +28,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
-                'RNGAI Land FormBuilders Expansion',
+                'RNGAI Land FormBuilders Expansion Large',
         
                 -- Land Factory Builders --
                 --'RNGAI Factory Builder Land',
