@@ -1053,10 +1053,17 @@ Platoon = Class(RNGAIPlatoon) {
         table.insert(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
 
+        --local debugloop = 0
+
         while PlatoonExists(aiBrain, self) do
             --LOG('* AI-RNG: * HuntAIPATH:: Check for target')
             --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
             target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
+            --[[if not target then
+                LOG('No target on huntaipath loop')
+                LOG('Max Radius is '..maxRadius)
+                debugloop = debugloop + 1
+            end]]
             platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
             local platoonCount = table.getn(GetPlatoonUnits(self))
             if target then
@@ -1177,6 +1184,8 @@ Platoon = Class(RNGAIPlatoon) {
                             local retreatCount = 2
                             local attackFormation = false
                             while PlatoonExists(aiBrain, self) do
+                                --LOG('Movement Loop '..debugloop)
+                                --debugloop = debugloop + 1
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
                                 local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
@@ -1186,6 +1195,8 @@ Platoon = Class(RNGAIPlatoon) {
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do
+                                        --LOG('Micro target Loop '..debugloop)
+                                        --debugloop = debugloop + 1
                                         if target and not target.Dead then
                                             targetPosition = target:GetPosition()
                                             microCap = 50
@@ -2106,6 +2117,12 @@ Platoon = Class(RNGAIPlatoon) {
                 reference, refName = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
+                if reference then
+                    LOG('Naval Reference '..repr(reference))
+                end
+                if refName then
+                    LOG('Naval Reference '..repr(refName))
+                end
                 if not reference or not refName then
                     LOG('No reference or refname for Naval Area Expansion')
                     self:PlatoonDisband()

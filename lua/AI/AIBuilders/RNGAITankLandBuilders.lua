@@ -770,9 +770,30 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
+            AggressiveMove = true,
             ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
             },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
+            },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon Expansion Large',                              -- Random Builder Name.
@@ -785,8 +806,30 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
+            AggressiveMove = true,
+            ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
             },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
+            },
+        },
     },
 }
 
@@ -983,6 +1026,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
             AggressiveMove = true,
             PlatoonLimit = 15,
@@ -1244,6 +1288,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             MarkerType = 'Start Location',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',
@@ -1272,6 +1317,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },
             },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             MarkerType = 'Start Location',            
             MoveFirst = 'Threat',
             MoveNext = 'Threat',
@@ -1337,11 +1383,30 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
             AggressiveMove = true,
             PlatoonLimit = 15,
             ThreatSupport = 5,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
             },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
+            },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon Large',                              -- Random Builder Name.
@@ -1581,10 +1646,30 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
             },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
+            },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Aeon Tanks Island',                              -- Random Builder Name.
@@ -1600,10 +1685,30 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
             },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
+            },
+        },
     },
 }
 BuilderGroup {
@@ -1619,6 +1724,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND - categories.ENGINEER } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
@@ -1646,6 +1752,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND - categories.ENGINEER } },
         },
         BuilderData = {
+            SearchRadius = BaseEnemyArea,
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan

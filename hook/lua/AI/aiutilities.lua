@@ -445,10 +445,6 @@ function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tM
     for k, v in largeMarkerList do
         table.insert(markerList, v)
     end
-    local startMarkerList = AIGetMarkerLocations(aiBrain, 'Start Location')
-    for k, v in startMarkerList do
-        table.insert(markerList, v)
-    end
     -- For each marker, check against threatpos. Save markers that are within the FireBaseRange
     local inRangeList = {}
     for _, marker in markerList do
