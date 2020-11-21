@@ -6,6 +6,7 @@ local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 -- TEMPORARY LOUD LOCALS
 local LOUDPOW = math.pow
@@ -1110,7 +1111,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                     continue
                                 end
                             end
-                            local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                            local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                             if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
                                 retUnit = unit
                                 distance = Utils.XZDistanceTwoVectors(position, unitPos)
@@ -1139,7 +1140,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                             continue
                         end
                     end
-                    local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                    local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                     if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
                         retUnit = unit
                         distance = Utils.XZDistanceTwoVectors(position, unitPos)
@@ -1200,7 +1201,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                                 continue
                             end
                         end
-                        local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                        local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                         if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
                             retUnit = unit
                             distance = Utils.XZDistanceTwoVectors(position, unitPos)
@@ -1224,7 +1225,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                         continue
                     end
                 end
-                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                 if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
                     retUnit = unit
                     distance = Utils.XZDistanceTwoVectors(position, unitPos)
@@ -1957,15 +1958,20 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
                 posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
                 LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 5 then
-                    posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
-                    LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
-                    table.insert(startPositions,
-                        {
-                            Position = startPos,
-                            Threat = posThreat,
-                            Distance = posDistance,
-                        }
-                    )
+                    if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, startPos, 50, 'Enemy') > 0 then
+                        LOG('Ranged attack position has structures within range')
+                        posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
+                        LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
+                        table.insert(startPositions,
+                            {
+                                Position = startPos,
+                                Threat = posThreat,
+                                Distance = posDistance,
+                            }
+                        )
+                    else
+                        LOG('Ranged attack position has threat but no structures within range')
+                    end
                 end
             end
         end

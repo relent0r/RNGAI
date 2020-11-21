@@ -10,6 +10,7 @@ local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
 local SUtils = import('/lua/AI/sorianutilities.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 RNGAIPlatoon = Platoon
 Platoon = Class(RNGAIPlatoon) {
@@ -432,10 +433,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             -- we're there... wait here until we're done
-            local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 WaitTicks(Random(50,100))
-                numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
 
             if not PlatoonExists(aiBrain, self) then
@@ -915,7 +916,7 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(30)
                 SquadPosition = self:GetSquadPosition('Attack') or nil
                 if not SquadPosition then break end
-                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                 if enemyUnitCount > 0 then
                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                     attackSquad = self:GetSquadUnits('Attack')
@@ -1188,7 +1189,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --debugloop = debugloop + 1
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, SquadPosition, 'Attack', enemyRadius, categories.LAND * (categories.STRUCTURE + categories.MOBILE), atkPri, false)
                                     --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
@@ -1468,7 +1469,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 platoonPos = GetPlatoonPosition(self)
                                 if not platoonPos then break end
                                 local targetPosition
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL) - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
@@ -1878,7 +1879,7 @@ Platoon = Class(RNGAIPlatoon) {
                         while PlatoonExists(aiBrain, self) do
                             SquadPosition = self:GetSquadPosition('Attack') or nil
                             if not SquadPosition then break end
-                            local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                            local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                             if enemyUnitCount > 0 then
                                 --LOG('Strikeforce land detected close target starting micro')
                                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
@@ -2489,7 +2490,7 @@ Platoon = Class(RNGAIPlatoon) {
                         break
                     end 
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                        if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
+                        if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
                             local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
                             local enemyEngPos = enemyEngineer[1]:GetPosition()
                             if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
@@ -2593,7 +2594,7 @@ Platoon = Class(RNGAIPlatoon) {
             WaitTicks(30)
 
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
                     local enemyEngPos = enemyEngineer[1]:GetPosition()
                     if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
@@ -2842,7 +2843,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                             end
                             if bAggroMove then
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, PlatoonPosition, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, PlatoonPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     local target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
@@ -2943,11 +2944,11 @@ Platoon = Class(RNGAIPlatoon) {
             until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 64 or not PlatoonExists(aiBrain, self)
 
             -- we're there... wait here until we're done
-            local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 WaitTicks(Random(50,100))
                 --LOG('Still enemy stuff around marker position')
-                numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
 
             if not PlatoonExists(aiBrain, self) then
@@ -3754,7 +3755,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     end
                                     if retreatCount < 5 then
-                                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                        local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                         --LOG('* AI-RNG: * SACUATTACKAIRNG: EnemyCount :'..enemyUnitCount)
                                         if enemyUnitCount > 2 and i > 2 then
                                             --LOG('* AI-RNG: * SACUATTACKAIRNG: Enemy Units Detected, retreating..')
@@ -3831,7 +3832,7 @@ Platoon = Class(RNGAIPlatoon) {
             local artillerySquad = self:GetSquadUnits('Artillery')
             local attackUnits = self:GetSquadUnits('Attack')
             local artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
-            if artillerySquad and attackUnits then
+            if table.getn(artillerySquad) > 0 and table.getn(attackUnits) > 0 then
                 IssueClearCommands(attackUnits)
                 IssueMove(attackUnits, artillerySquadPosition)
                 WaitTicks(2)
