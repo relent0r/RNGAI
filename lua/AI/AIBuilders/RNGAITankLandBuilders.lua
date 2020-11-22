@@ -74,7 +74,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     -- Opening Tank Build --
     Builder {
-        BuilderName = 'RNGAI Factory Tank Sera', -- Sera only because they don't get labs
+        BuilderName = 'RNGAI Factory Tank Sera Small', -- Sera only because they don't get labs
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 900, -- After First Engie Group and scout
         BuilderConditions = {
@@ -87,7 +87,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Initial Queue 10km',
+        BuilderName = 'RNGAI Factory Initial Queue 10km Small',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild10k',
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
@@ -100,7 +100,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Initial Queue 5km',
+        BuilderName = 'RNGAI Factory Initial Queue 5km Small',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild5k',
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
@@ -113,7 +113,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Land Attack',
+        BuilderName = 'RNGAI Factory Land Attack Small',
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
         PriorityFunction = LandEngMode,
@@ -129,7 +129,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Land Attack NoEng',
+        BuilderName = 'RNGAI Factory Land Attack NoEng Small',
         PlatoonTemplate = 'RNGAIT1LandAttackQueueNoEng',
         Priority = 0, -- After Second Engie Group
         PriorityFunction = LandNoEngMode,
@@ -143,7 +143,21 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory Amphib Attack Large',
+        BuilderName = 'RNGAI T2 Attack Small',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        Priority = 760,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, true}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
         Priority = 500, -- After Second Engie Group
         BuilderConditions = {
@@ -157,14 +171,14 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
+        BuilderName = 'RNGAI Factory T3 Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
         Priority = 550, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -274,6 +288,20 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T2 Attack Large',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        Priority = 760,
+        BuilderType = 'Land',
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, true}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
         Priority = 500, -- After Second Engie Group
@@ -283,6 +311,20 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50, true}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
 
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
+        PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
+        Priority = 550, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -373,51 +415,12 @@ BuilderGroup {
         BuilderType = 'Land',
     },
 }
--- Tech 2 Units
-BuilderGroup {
-    BuilderGroupName = 'RNGAI T2 TankLandBuilder',
-    BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI T2 Attack - Tech 2',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 760,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, true}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI T2 TankLandBuilder Large',
-    BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI T2 Attack T2 Large',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 780,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50, true}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-}
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Attack T3',
+        BuilderName = 'RNGAI Attack T3 Small',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 790,
         PriorityFunction = LandAttackMode,
@@ -431,7 +434,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI Attack Heavy T3',
+        BuilderName = 'RNGAI Attack Heavy T3 Small',
         PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
         Priority = 0,
         PriorityFunction = LandAttackHeavyMode,
@@ -440,6 +443,19 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.80 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.1}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Mobile Arty ACUClose Small',
+        PlatoonTemplate = 'T3LandArtillery',
+        PriorityFunction = ACUClosePriority,
+        Priority = 0,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY LAND TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -476,7 +492,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T3 Mobile Arty ACUClose',
+        BuilderName = 'RNGAI T3 Mobile Arty ACUClose Large',
         PlatoonTemplate = 'T3LandArtillery',
         PriorityFunction = ACUClosePriority,
         Priority = 0,
@@ -907,7 +923,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
-        BuilderName = 'RNGAI Start Location Attack Early',
+        BuilderName = 'RNGAI Start Location Attack',
         PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
         Priority = 700,
         --PlatoonAddBehaviors = { 'TacticalResponse' },
@@ -1069,40 +1085,6 @@ BuilderGroup {
             ThreatSupport = 2,
             },
     }, 
-    Builder {
-        BuilderName = 'RNGAI Ranged Defense Attack BaseDMZArea',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
-        Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBaseRNG', { 'MAIN', 5, 'Structures', 2 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
-        },
-        BuilderData = {
-            SearchRadius = BaseDMZArea,                                               -- Searchradius for new target.
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = {
-                'STRUCTURE DEFENSE',
-                'MOBILE LAND'
-            },       
-            PrioritizedCategories = {                                           -- Attack these targets.
-                'DEFENSE STRUCTURE',
-                'ANTIAIR STRUCTURE',
-                'MASSEXTRACTION',
-                'STRUCTURE',
-                'ENERGYPRODUCTION',
-                'COMMAND',
-                'MASSFABRICATION',
-                'SHIELD',
-                'ALLUNITS',
-            },
-            UseFormation = 'GrowthFormation',
-        },
-    },
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
@@ -1426,40 +1408,6 @@ BuilderGroup {
             ThreatSupport = 2,
             },
     }, 
-    Builder {
-        BuilderName = 'RNGAI Ranged Defense Attack BaseDMZArea Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
-        Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { TBC, 'EnemyThreatGreaterThanValueAtBaseRNG', { 'MAIN', 5, 'Structures', 2 , 'RNGAI Ranged Defense Attack BaseDMZArea'} },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE }},
-        },
-        BuilderData = {
-            SearchRadius = BaseDMZArea,                                               -- Searchradius for new target.
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = {
-                'STRUCTURE DEFENSE',
-                'MOBILE LAND'
-            },       
-            PrioritizedCategories = {                                           -- Attack these targets.
-                'DEFENSE STRUCTURE',
-                'ANTIAIR STRUCTURE',
-                'MASSEXTRACTION',
-                'STRUCTURE',
-                'ENERGYPRODUCTION',
-                'COMMAND',
-                'MASSFABRICATION',
-                'SHIELD',
-                'ALLUNITS',
-            },
-            UseFormation = 'GrowthFormation',
-        },
-    },
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2 Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
