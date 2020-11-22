@@ -10,6 +10,17 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
+local AggressiveExpansion = function(self, aiBrain, builderManager)
+    if aiBrain.coinFlip == 1 then
+        --LOG('Aggressive Expansion is true')
+        return 1000
+    else
+        --LOG('Aggressive Expansion is false')
+        return 0
+    end
+end
+
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Expansion Builders Small',
     BuildersType = 'EngineerBuilder',
@@ -278,7 +289,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Aggressive Expansion 250 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 1000,
+        Priority = 0,
+        PriorityFunction = AggressiveExpansion,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed

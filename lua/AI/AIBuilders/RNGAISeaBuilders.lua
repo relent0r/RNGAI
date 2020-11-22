@@ -20,10 +20,10 @@ end
 
 local SeaRangedMode = function(self, aiBrain)
     if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
-        LOG('Enable Ranged Naval Builder')
+        --LOG('Enable Ranged Naval Builder')
         return 600
     else
-        LOG('Disable Ranged Naval Builder')
+        --LOG('Disable Ranged Naval Builder')
         return 0
     end
 end
@@ -325,7 +325,7 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
-    },--[[
+    },
     Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T23',
         PlatoonTemplate = 'RNGAI Sea Attack T123',
@@ -351,13 +351,13 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI Ranged Sea Attack T23',
         PlatoonTemplate = 'RNGAI Sea Attack Ranged T123',
         --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 400,
-        InstanceCount = 20,
+        Priority = 300,
+        InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ) * ( categories.CRUISER + categories.xas0306 + categories.NUKE ) - categories.EXPERIMENTAL } },
             --{ SeaAttackCondition, { 'LocationType', 14 } },

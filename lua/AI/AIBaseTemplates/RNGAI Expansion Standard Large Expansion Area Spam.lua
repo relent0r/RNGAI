@@ -72,12 +72,15 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        LOG('Expansion Function for Large Expansion Spam')
+        --LOG('Expansion Function for Large Expansion Spam')
         if not aiBrain.RNG then
             return -1
         end
         if markerType ~= true then
-            LOG('* AI-RNG: Expansion MarkerType is', markerType)
+            --LOG('* AI-RNG: Expansion MarkerType is', markerType)
+            return -1
+        end
+        if not aiBrain.coinFlip == 1 then
             return -1
         end
         local spamBaseCheck
@@ -85,27 +88,27 @@ BaseBuilderTemplate {
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
         local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
         if mapSizeX < 1000 and mapSizeZ < 1000 then
-            LOG('* AI-RNG: Expansion map size is less than 1000')
+            --LOG('* AI-RNG: Expansion map size is less than 1000')
             return -1
         else
             spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
         end
-        LOG('* AI-RNG: Distance is ', distance)
-        LOG('* AI-RNG: Position is ', repr(location))
+        --LOG('* AI-RNG: Distance is ', distance)
+        --LOG('* AI-RNG: Position is ', repr(location))
         if not distance or distance > 1000 and spamBaseCheck then
-            LOG('* AI-RNG: Expansion return is 10')
+            --LOG('* AI-RNG: Expansion return is 10')
             return 10
         elseif distance > 500 and spamBaseCheck then
-            LOG('* AI-RNG: Expansion return is 25')
+            --LOG('* AI-RNG: Expansion return is 25')
             return 25
         elseif distance > 250 and spamBaseCheck then
-            LOG('* AI-RNG: Expansion return is 50')
+            --LOG('* AI-RNG: Expansion return is 50')
             return 50
         elseif spamBaseCheck then
-            LOG('* AI-RNG: Expansion return is 100')
+            --LOG('* AI-RNG: Expansion return is 100')
             return 150
         end
-        LOG('* AI-RNG: Expansion return default 0')
+        --LOG('* AI-RNG: Expansion return default 0')
         return -1
     end,
 }
