@@ -260,13 +260,14 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderType = 'Any',
         BuilderData = {
             Defensive = true,
             SearchRadius = BaseMilitaryArea,
             NeverGuardEngineers = true,
             PrioritizedCategories = {
+                'EXPERIMENTAL',
                 'BOMBER AIR',
                 'GUNSHIP AIR',
                 'ANTIAIR AIR',
