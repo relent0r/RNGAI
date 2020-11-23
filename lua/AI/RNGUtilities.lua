@@ -680,26 +680,56 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
         return false
     end
 
+    local RangeList = { [1] = maxRange }
+    if maxRange > 512 then
+        RangeList = {
+            [1] = 30,
+            [1] = 64,
+            [2] = 128,
+            [2] = 192,
+            [3] = 256,
+            [3] = 384,
+            [4] = 512,
+            [5] = maxRange,
+        }
+    elseif maxRange > 256 then
+        RangeList = {
+            [1] = 30,
+            [1] = 64,
+            [2] = 128,
+            [2] = 192,
+            [3] = 256,
+            [4] = maxRange,
+        }
+    elseif maxRange > 64 then
+        RangeList = {
+            [1] = 30,
+            [2] = maxRange,
+        }
+    end
+
     local enemyIndex = enemyBrain:GetArmyIndex()
-    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
-    for _, v in atkPri do
-        local category = v
-        if type(category) == 'string' then
-            category = ParseEntityCategory(category)
-        end
-        local retUnit = false
-        local distance = false
-        for num, unit in targetUnits do
-            if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
-                local unitPos = unit:GetPosition()
-                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
-                    retUnit = unit
-                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+    for _, range in RangeList do
+        local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+        for _, v in atkPri do
+            local category = v
+            if type(category) == 'string' then
+                category = ParseEntityCategory(category)
+            end
+            local retUnit = false
+            local distance = false
+            for num, unit in targetUnits do
+                if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
+                    local unitPos = unit:GetPosition()
+                    if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                        retUnit = unit
+                        distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                    end
                 end
             end
-        end
-        if retUnit then
-            return retUnit
+            if retUnit then
+                return retUnit
+            end
         end
     end
 
