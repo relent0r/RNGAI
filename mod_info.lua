@@ -1,8 +1,8 @@
 name = "RNGAI"
-uid = "faf0863e-9577-ba0d-b4bd-8d82b622f1c0"
-version = 60
-copyright = "2019 relentless"
-description = "RNG Standard AI, this AI is designed for 5km and 10km ranked style maps. Now supports 20km maps. Requires Uveso AI to be enabled and generating land path makers."
+uid = "faf0863e-9577-ba0d-958b-8d82b622f1c0"
+version = 62
+copyright = "2020 relentless"
+description = "RNG Standard AI. Requires Uveso AI to be installed and enabled. Not recommended to have any other sim mods enabled. For best experience all host game settings should be default. Recommended to set AI Map Marker Generator to Autogenerate Always in AI host game settings, recommend setting AI Naval Expansion Limit to zero on land maps and default on naval maps"
 author = "relentless"
 url = ""
 icon = "/mods/RNGAI/icon.jpg"

@@ -810,12 +810,12 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Water Path Node', armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             if waterNodePos then
-                LOG('Enemy Closest water node pos is '..repr(waterNodePos))
+                --LOG('Enemy Closest water node pos is '..repr(waterNodePos))
                 self.EnemyIntel.NavalRange.Position = waterNodePos
-                LOG('Enemy Closest water node pos distance is '..waterNodeDist)
+                --LOG('Enemy Closest water node pos distance is '..waterNodeDist)
                 self.EnemyIntel.NavalRange.Range = waterNodeDist
             end
-            LOG('Current Naval Range table is '..repr(self.EnemyIntel.NavalRange))
+            --LOG('Current Naval Range table is '..repr(self.EnemyIntel.NavalRange))
         end
     end,
 

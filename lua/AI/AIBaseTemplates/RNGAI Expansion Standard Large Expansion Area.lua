@@ -6,7 +6,7 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard LargeExpansionArea',
+    BaseTemplateName = 'RNGAI Expansion Standard Large Expansion Area',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders',
@@ -31,13 +31,13 @@ BaseBuilderTemplate {
                 'RNGAI Land FormBuilders Expansion Large',
         
                 -- Land Factory Builders --
-                --'RNGAI Factory Builder Land',
+                'RNGAI Factory Builder Land',
         
                 -- Land Factory Formers --
                 'RNGAI T1 Upgrade Builders Expansion',
         
                 -- Air Factory Builders --
-                --'RNGAI Factory Builder Air',
+                'RNGAI Factory Builder Air',
         
                 -- Air Unit Builders T1 --
                 'RNGAI ScoutAirBuilder',

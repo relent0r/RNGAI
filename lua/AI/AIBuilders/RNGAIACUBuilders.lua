@@ -693,6 +693,31 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri Large',
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 8, categories.FACTORY * categories.LAND * categories.TECH2 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,

@@ -10,6 +10,7 @@ local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
 local SUtils = import('/lua/AI/sorianutilities.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 RNGAIPlatoon = Platoon
 Platoon = Class(RNGAIPlatoon) {
@@ -432,10 +433,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             -- we're there... wait here until we're done
-            local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 WaitTicks(Random(50,100))
-                numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
 
             if not PlatoonExists(aiBrain, self) then
@@ -915,7 +916,7 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(30)
                 SquadPosition = self:GetSquadPosition('Attack') or nil
                 if not SquadPosition then break end
-                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                 if enemyUnitCount > 0 then
                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                     attackSquad = self:GetSquadUnits('Attack')
@@ -1188,7 +1189,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --debugloop = debugloop + 1
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, SquadPosition, 'Attack', enemyRadius, categories.LAND * (categories.STRUCTURE + categories.MOBILE), atkPri, false)
                                     --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
@@ -1317,7 +1318,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     NavalRangedAIRNG = function(self)
-        LOG('* AI-RNG: * NavalRangedAIRNG: Starting')
+        --LOG('* AI-RNG: * NavalRangedAIRNG: Starting')
         self:Stop()
         AIAttackUtils.GetMostRestrictiveLayer(self)
         local aiBrain = self:GetBrain()
@@ -1434,7 +1435,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 rangedPositionDistance = VDist2Sq(platoonPos[1], platoonPos[3], rangedPosition[1], rangedPosition[3])
                 if rangedPositionDistance > 6400 then
-                    LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
+                    --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), rangedPosition, 100 , 1000)
                     local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, rangedPosition)
                     IssueClearCommands(GetPlatoonUnits(self))
@@ -1446,7 +1447,7 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('* AI-RNG: * HuntAIPATH: Path found')
                         local position = GetPlatoonPosition(self)
                         if not success then
-                            LOG('Cant path to target position')
+                            --LOG('Cant path to target position')
                         end
                         local pathNodesCount = table.getn(path)
                         for i=1, pathNodesCount do
@@ -1468,7 +1469,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 platoonPos = GetPlatoonPosition(self)
                                 if not platoonPos then break end
                                 local targetPosition
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL) - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
@@ -1552,16 +1553,16 @@ Platoon = Class(RNGAIPlatoon) {
                                 rangedPositionDistance = VDist2Sq(platoonPos[1], platoonPos[3], rangedPosition[1], rangedPosition[3])
                                 --LOG('MaxPlatoonWeaponRange is '..MaxPlatoonWeaponRange..' current distance is '..rangedPositionDistance)
                                 if rangedPositionDistance < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange) then
-                                    LOG('Within Range of End Position')
+                                    --LOG('Within Range of End Position')
                                     break
                                 end
                             end
                             --LOG('* AI-RNG: * HuntAIPATH: Ending Loop at :'..GetGameTimeSeconds())
                         end
                     elseif (not path and reason == 'NoPath') then
-                        LOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
+                        --LOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
                     else
-                        LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
+                        --LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
                         self:PlatoonDisband()
                         return
                     end
@@ -1571,24 +1572,24 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 if rangedPosition then
-                    LOG('Ranged position is true')
+                    --LOG('Ranged position is true')
                     artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
                     if not artillerySquadPosition then self:ReturnToBaseAIRNG() end
                     rangedPositionDistance = VDist2Sq(artillerySquadPosition[1], artillerySquadPosition[3], rangedPosition[1], rangedPosition[3])
                     if rangedPositionDistance < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange) then
-                        LOG('Within Range of End Position, looking for target')
+                        --LOG('Within Range of End Position, looking for target')
                         --target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Artillery', maxRadius, atkPri)
-                        LOG('Looking for target close range to rangedPosition')
+                        --LOG('Looking for target close range to rangedPosition')
                         target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, rangedPosition, 'Artillery', MaxPlatoonWeaponRange + 30, categories.STRUCTURE, atkPri, false)
                         if target then
-                            LOG('Target Aquired by Artillery Squad')
+                            --LOG('Target Aquired by Artillery Squad')
                             local artillerySquad = self:GetSquadUnits('Artillery')
                             local attackUnits = self:GetSquadUnits('Attack')
                             if attackUnits then
-                                LOG('Number of attack units is '..table.getn(attackUnits))
+                                --LOG('Number of attack units is '..table.getn(attackUnits))
                             end
                             if table.getn(artillerySquad) > 0 and table.getn(attackUnits) > 0 then
-                                LOG('Forking thread for artillery guard')
+                                --LOG('Forking thread for artillery guard')
                                 self:ForkThread(self.GuardArtillerySquadRNG, aiBrain, target)
                             end
                             while PlatoonExists(aiBrain, self) do
@@ -1878,7 +1879,7 @@ Platoon = Class(RNGAIPlatoon) {
                         while PlatoonExists(aiBrain, self) do
                             SquadPosition = self:GetSquadPosition('Attack') or nil
                             if not SquadPosition then break end
-                            local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                            local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                             if enemyUnitCount > 0 then
                                 --LOG('Strikeforce land detected close target starting micro')
                                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
@@ -2097,11 +2098,11 @@ Platoon = Class(RNGAIPlatoon) {
 
             if cons.AggressiveExpansion then
                 --DUNCAN - pulled out and uses alt finder
-                LOG('Aggressive Expansion Triggered')
+                --LOG('Aggressive Expansion Triggered')
                 reference, refName = AIUtils.AIFindAggressiveBaseLocationRNG(aiBrain, cons.LocationType, cons.EnemyRange,
                                                     cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 if not reference or not refName then
-                    LOG('No reference or refName from firebaselocaiton finder')
+                    --LOG('No reference or refName from firebaselocaiton finder')
                     self:PlatoonDisband()
                     return
                 end
@@ -2117,14 +2118,8 @@ Platoon = Class(RNGAIPlatoon) {
                 reference, refName = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
-                if reference then
-                    LOG('Naval Reference '..repr(reference))
-                end
-                if refName then
-                    LOG('Naval Reference '..repr(refName))
-                end
                 if not reference or not refName then
-                    LOG('No reference or refname for Naval Area Expansion')
+                    --LOG('No reference or refname for Naval Area Expansion')
                     self:PlatoonDisband()
                     return
                 end
@@ -2183,7 +2178,7 @@ Platoon = Class(RNGAIPlatoon) {
                 baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             end
             if cons.ExpansionBase and refName then
-                LOG('New Expansion Base being created')
+                --LOG('New Expansion Base being created')
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, eng, cons)
             end
             relative = false
@@ -2489,7 +2484,7 @@ Platoon = Class(RNGAIPlatoon) {
                         break
                     end 
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                        if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
+                        if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
                             local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
                             local enemyEngPos = enemyEngineer[1]:GetPosition()
                             if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
@@ -2593,7 +2588,7 @@ Platoon = Class(RNGAIPlatoon) {
             WaitTicks(30)
 
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
                     local enemyEngPos = enemyEngineer[1]:GetPosition()
                     if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
@@ -2842,7 +2837,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                             end
                             if bAggroMove then
-                                local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, PlatoonPosition, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, PlatoonPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     local target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
@@ -2943,11 +2938,11 @@ Platoon = Class(RNGAIPlatoon) {
             until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 64 or not PlatoonExists(aiBrain, self)
 
             -- we're there... wait here until we're done
-            local numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 WaitTicks(Random(50,100))
                 --LOG('Still enemy stuff around marker position')
-                numGround = aiBrain:GetNumUnitsAroundPoint((categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
 
             if not PlatoonExists(aiBrain, self) then
@@ -3754,7 +3749,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     end
                                     if retreatCount < 5 then
-                                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                        local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                         --LOG('* AI-RNG: * SACUATTACKAIRNG: EnemyCount :'..enemyUnitCount)
                                         if enemyUnitCount > 2 and i > 2 then
                                             --LOG('* AI-RNG: * SACUATTACKAIRNG: Enemy Units Detected, retreating..')
@@ -3831,7 +3826,7 @@ Platoon = Class(RNGAIPlatoon) {
             local artillerySquad = self:GetSquadUnits('Artillery')
             local attackUnits = self:GetSquadUnits('Attack')
             local artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
-            if artillerySquad and attackUnits then
+            if table.getn(artillerySquad) > 0 and table.getn(attackUnits) > 0 then
                 IssueClearCommands(attackUnits)
                 IssueMove(attackUnits, artillerySquadPosition)
                 WaitTicks(2)

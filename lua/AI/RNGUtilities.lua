@@ -6,6 +6,7 @@ local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 -- TEMPORARY LOUD LOCALS
 local LOUDPOW = math.pow
@@ -1229,7 +1230,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                                 continue
                             end
                         end
-                        local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                        local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                         if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
                             retUnit = unit
                             distance = Utils.XZDistanceTwoVectors(position, unitPos)
@@ -1253,7 +1254,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                         continue
                     end
                 end
-                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                 if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
                     retUnit = unit
                     distance = Utils.XZDistanceTwoVectors(position, unitPos)
@@ -1349,14 +1350,14 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 end
             end
             if TargetUnit then
-                LOG('Target Found in target aquisition function')
+                --LOG('Target Found in target aquisition function')
                 return TargetUnit
             end
            coroutine.yield(10)
         end
         coroutine.yield(1)
     end
-    LOG('NO Target Found in target aquisition function')
+    --LOG('NO Target Found in target aquisition function')
     return TargetUnit
 end
 
@@ -1984,32 +1985,37 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         if startPos then
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
                 posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
-                LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
+                --LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 5 then
-                    posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
-                    LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
-                    table.insert(startPositions,
-                        {
-                            Position = startPos,
-                            Threat = posThreat,
-                            Distance = posDistance,
-                        }
-                    )
+                    if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, startPos, 50, 'Enemy') > 0 then
+                        --LOG('Ranged attack position has structures within range')
+                        posDistance = VDist2Sq(mainBasePos[1], mainBasePos[3], startPos[1], startPos[2])
+                        --LOG('Potential Naval Ranged attack position :'..repr(startPos)..' Threat at Position :'..posThreat..' Distance :'..posDistance)
+                        table.insert(startPositions,
+                            {
+                                Position = startPos,
+                                Threat = posThreat,
+                                Distance = posDistance,
+                            }
+                        )
+                    else
+                        --LOG('Ranged attack position has threat but no structures within range')
+                    end
                 end
             end
         end
     end
-    LOG('Potential Positions Table '..repr(startPositions))
+    --LOG('Potential Positions Table '..repr(startPositions))
     -- We sort the positions so the closest are first
     LOUDSORT( startPositions, function(a,b) return a.Distance < b.Distance end )
-    LOG('Potential Positions Sorted by distance'..repr(startPositions))
+    --LOG('Potential Positions Sorted by distance'..repr(startPositions))
     local attackPosition = false
     local targetStartPosition = false
     --We look for the closest
     for k, v in startPositions do
         local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3])
         if waterNodeDist and waterNodeDist < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
-            LOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
+            --LOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
             if AIAttackUtils.CheckPlatoonPathingEx(platoon, waterNodePos) then
                 attackPosition = waterNodePos
                 targetStartPosition = v.Position
@@ -2018,7 +2024,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         end
     end
     if attackPosition then
-        LOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
+        --LOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
     end
     return attackPosition, targetStartPosition
 end
