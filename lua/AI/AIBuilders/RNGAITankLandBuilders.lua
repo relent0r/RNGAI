@@ -924,7 +924,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Start Location Attack',
-        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        PlatoonTemplate = 'RNGAI Guard Marker Small',
         Priority = 700,
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
@@ -936,7 +936,7 @@ BuilderGroup {
             },
         BuilderData = {
             MarkerType = 'Start Location',            
-            MoveFirst = 'Random',
+            MoveFirst = 'Threat',
             MoveNext = 'Threat',
             IgnoreFriendlyBase = true,
             --ThreatType = '',
@@ -954,7 +954,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Start Location Attack Transport',
-        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        PlatoonTemplate = 'RNGAI Guard Marker Small',
         PriorityFunction = ACUClosePriority,
         Priority = 0,
         InstanceCount = 2,
@@ -1259,7 +1259,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Start Location Attack Early Large',
-        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        PlatoonTemplate = 'RNGAI Guard Marker Small',
         Priority = 700,
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
@@ -1290,7 +1290,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Start Location Attack Transport Large',
-        PlatoonTemplate = 'RNGAI T1 Guard Marker Small',
+        PlatoonTemplate = 'RNGAI Guard Marker Small',
         PriorityFunction = ACUClosePriority,
         Priority = 0,
         InstanceCount = 2,
