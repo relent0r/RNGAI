@@ -1272,7 +1272,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             MarkerType = 'Start Location',            
-            MoveFirst = 'Random',
+            MoveFirst = 'Threat',
             MoveNext = 'Threat',
             IgnoreFriendlyBase = true,
             --ThreatType = '',
