@@ -235,7 +235,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
         },
     },
     Builder {
@@ -247,8 +247,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
         },
     },
 }
@@ -424,8 +424,10 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 'MASSEXTRACTION',
-                'ENGINEER',
+                'ENGINEER TECH2',
+                'ENGINEER TECH3',
                 'ENERGYPRODUCTION',
+                'STRUCTURE DEFENSE',
                 'STRUCTURE',
             },
         },

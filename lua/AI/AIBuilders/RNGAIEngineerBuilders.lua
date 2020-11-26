@@ -281,11 +281,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Assist Factory T3 Upgrade',
         PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 500,
+        Priority = 550,
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
@@ -298,7 +298,7 @@ BuilderGroup {
                 PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
-                BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH3'},
+                BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH3', 'STRUCTURE AIR FACTORY TECH3' },
             },
         }
     },
@@ -401,7 +401,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 550,
+        Priority = 560,
         InstanceCount = 5,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.ENGINEER - categories.COMMAND }},

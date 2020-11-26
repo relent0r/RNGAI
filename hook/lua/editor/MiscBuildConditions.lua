@@ -204,7 +204,7 @@ function GreaterThanGameTimeRNG(aiBrain, num, caution)
         elseif num * 1.3 < time then
             return true
         end
-    elseif aiBrain.CheatEnabled and (num / multiplier) < time then
+    elseif aiBrain.CheatEnabled and ((num / multiplier) * 1.2) < time then
         return true
     elseif num < time then
         return true
