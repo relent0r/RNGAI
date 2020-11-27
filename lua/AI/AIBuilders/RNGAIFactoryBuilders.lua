@@ -746,7 +746,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Factory Upgrade HQ',
         PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 700,
+        Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
@@ -777,7 +777,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Factory Upgrade Support',
         PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 600,
+        Priority = 700,
         InstanceCount = 1,
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9502', 'zab9502', 'zrb9502', 'zsb9502', 'znb9502' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -796,14 +796,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Factory Upgrade HQ',
         PlatoonTemplate = 'T2AirFactoryUpgrade',
-        Priority = 700,
+        Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2 - categories.SUPPORTFACTORY } },
                 --{ UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3'}},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
                 { MIBC, 'GreaterThanGameTimeRNG', { 900 } },
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
@@ -813,7 +813,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Factory Upgrade Support UEF',
         PlatoonTemplate = 'T2AirSupFactoryUpgrade1',
-        Priority = 650,
+        Priority = 750,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -832,7 +832,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Factory Upgrade Support Aeon',
         PlatoonTemplate = 'T2AirSupFactoryUpgrade2',
-        Priority = 650,
+        Priority = 750,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -851,7 +851,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Factory Upgrade Support Cybran',
         PlatoonTemplate = 'T2AirSupFactoryUpgrade3',
-        Priority = 650,
+        Priority = 750,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -870,7 +870,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Factory Upgrade Support Seraphim',
         PlatoonTemplate = 'T2AirSupFactoryUpgrade4',
-        Priority = 650,
+        Priority = 750,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories

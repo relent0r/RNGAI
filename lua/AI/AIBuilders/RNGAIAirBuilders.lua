@@ -26,6 +26,20 @@ local AirDefenseMode = function(self, aiBrain, builderManager)
     end
 end
 
+local AirDefenseScramble = function(self, aiBrain, builderManager)
+    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    if myAirThreat < enemyAirThreat then
+        LOG('Enable Air ASF Scramble Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 870
+    else
+        --LOG('Disable Air ASF Scramble Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
 local AirAttackMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
@@ -222,6 +236,17 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory ASF Scramble',
+        PlatoonTemplate = 'RNGAIT3AirResponse',
+        Priority = 0,
+        PriorityFunction = AirDefenseScramble,
+        BuilderConditions = { 
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY AIR TECH3' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.7 }},
         },
         BuilderType = 'Air',
     },

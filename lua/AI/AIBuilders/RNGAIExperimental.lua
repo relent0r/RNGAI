@@ -122,7 +122,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Experimental1 Air',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 500,
+        Priority = 550,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
@@ -130,7 +130,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',

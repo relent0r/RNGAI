@@ -2150,8 +2150,8 @@ function AirStagingThreadRNG(unit)
                     v.Loading = false
                     local plat
                     if not v.PlanName then
-                        --LOG('Air Refuel unit has no plan, assigning HuntAI ')
-                        plat = aiBrain:MakePlatoon('', 'HuntAI')
+                        --LOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                        plat = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
                     else
                         --LOG('Air Refuel unit has plan name of '..v.PlanName)
                         plat = aiBrain:MakePlatoon('', v.PlanName)
