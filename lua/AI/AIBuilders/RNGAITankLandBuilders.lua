@@ -225,6 +225,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, true}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
             { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -238,6 +240,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, true}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -304,11 +308,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
-        Priority = 500, -- After Second Engie Group
+        Priority = 525, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { MIBC, 'FactionIndex', { 1, 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50, true}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, true}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
 
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -323,7 +327,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -931,7 +935,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderConditions = {     
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
+            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
@@ -950,6 +954,14 @@ BuilderGroup {
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
             ThreatSupport = 5,
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MASSEXTRACTION',
+            },
         },    
     },
     Builder {
@@ -977,6 +989,14 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MASSEXTRACTION',
+            },
         },    
     },
     Builder {
@@ -1258,15 +1278,15 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders Large',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
-        BuilderName = 'RNGAI Start Location Attack Early Large',
+        BuilderName = 'RNGAI Start Location Attack Large',
         PlatoonTemplate = 'RNGAI Guard Marker Small',
         Priority = 700,
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {     
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
+            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
@@ -1286,6 +1306,14 @@ BuilderGroup {
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
             ThreatSupport = 5,
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MASSEXTRACTION',
+            },
         },    
     },
     Builder {
@@ -1314,6 +1342,15 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
+            PrioritizedCategories = {
+                'STRUCTURE ENERGYPRODUCTION',
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MASSEXTRACTION',
+            },
         },    
     },
     Builder {

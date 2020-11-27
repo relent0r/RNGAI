@@ -306,7 +306,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 300.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
