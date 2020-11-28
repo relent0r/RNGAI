@@ -485,10 +485,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             -- we're there... wait here until we're done
-            LOG('Checking if GuardMarker platoon has enemy units around marker position')
+            --LOG('Checking if GuardMarker platoon has enemy units around marker position')
             local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 30, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
-                LOG('GuardMarker has enemy units around marker position, looking for target')
+                --LOG('GuardMarker has enemy units around marker position, looking for target')
                 local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, bestMarker.Position, 'Attack', enemyRadius, (categories.LAND + categories.NAVAL + categories.STRUCTURE), atkPri, false)
                 --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                 local attackSquad = self:GetSquadUnits('Attack')
@@ -497,7 +497,7 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('Micro target Loop '..debugloop)
                     --debugloop = debugloop + 1
                     if target and not target.Dead then
-                        LOG('Activating GuardMarker Micro')
+                        --LOG('Activating GuardMarker Micro')
                         local targetPosition = target:GetPosition()
                         local microCap = 50
                         for _, unit in attackSquad do
