@@ -1381,10 +1381,12 @@ Platoon = Class(RNGAIPlatoon) {
                                 if not target or target.Dead then
                                     if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
                                         --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
+                                        IssueClearCommands(GetPlatoonUnits(self))
                                         self:MoveToLocation(targetPosition, false, 'Attack')
                                         WaitTicks(60)
                                     else
                                         --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
+                                        IssueClearCommands(GetPlatoonUnits(self))
                                         self:MoveToLocation(targetPosition, false, 'Attack')
                                         WaitTicks(40)
                                     end
@@ -2205,7 +2207,7 @@ Platoon = Class(RNGAIPlatoon) {
 
             if cons.AggressiveExpansion then
                 --DUNCAN - pulled out and uses alt finder
-                --LOG('Aggressive Expansion Triggered')
+                LOG('Aggressive Expansion Triggered')
                 reference, refName = AIUtils.AIFindAggressiveBaseLocationRNG(aiBrain, cons.LocationType, cons.EnemyRange,
                                                     cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 if not reference or not refName then

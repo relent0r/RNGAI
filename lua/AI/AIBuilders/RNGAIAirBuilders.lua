@@ -293,7 +293,7 @@ BuilderGroup {
             SearchRadius = BaseMilitaryArea,
             NeverGuardEngineers = true,
             PrioritizedCategories = {
-                'EXPERIMENTAL',
+                'EXPERIMENTAL AIR',
                 'BOMBER AIR',
                 'GUNSHIP AIR',
                 'ANTIAIR AIR',
@@ -357,6 +357,7 @@ BuilderGroup {
             AvoidBases = true,
             NeverGuardEngineers = true,
             PrioritizedCategories = {
+                'EXPERIMENTAL AIR',
                 'GUNSHIP AIR',
                 'BOMBER AIR',
                 'ANTIAIR AIR',
@@ -662,11 +663,10 @@ BuilderGroup {
         Priority = 910,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.9 }},
         },
         BuilderType = 'Air',
     },

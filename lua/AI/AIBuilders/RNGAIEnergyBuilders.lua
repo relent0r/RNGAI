@@ -22,8 +22,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -78,11 +77,10 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'EnergyToMassRatioIncomeRNG', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.0 } },
             { EBC, 'GreaterThanEconIncome',  { 0.6, 0.0}}, -- Absolut Base income
             { UCBC, 'HaveUnitRatioVersusCap', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
         },
         InstanceCount = 1,
         BuilderType = 'Any',
@@ -106,8 +104,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
@@ -136,7 +133,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'ENERGYPRODUCTION TECH2, ENERGYPRODUCTION TECH3' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
@@ -167,7 +164,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.20}},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -197,7 +194,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.50}},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -222,37 +219,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 15,
-            DesiresAssist = true,
-            NumAssistees = 10,
-            Construction = {
-                BuildStructures = {
-                    'T3EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T3 Power Engineer 2nd',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 850,
-        InstanceCount = 1,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.30}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'ENERGYPRODUCTION TECH3' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
@@ -309,7 +276,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, 'ENERGYPRODUCTION TECH3' }},
         },
         BuilderType = 'Any',
@@ -338,7 +305,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendRNG', { 800.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.0}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, 'ENERGYPRODUCTION TECH3' }},
         },
         BuilderType = 'Any',
@@ -372,8 +339,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }}, -- Don't build after 1 T2 Pgens Exist
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }}, -- Don't build after 1 T3 Pgen Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -398,7 +364,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},

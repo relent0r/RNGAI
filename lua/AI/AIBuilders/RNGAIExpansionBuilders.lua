@@ -12,10 +12,10 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 local AggressiveExpansion = function(self, aiBrain, builderManager)
     if aiBrain.coinFlip == 1 then
-        --LOG('Aggressive Expansion is true')
+        LOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
         return 1000
     else
-        --LOG('Aggressive Expansion is false')
+        LOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
         return 0
     end
 end

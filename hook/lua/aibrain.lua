@@ -247,14 +247,14 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
 
-        local coinFlip = math.random(2)
-        if coinFlip == 1 then
+        self.coinFlip = math.random(2)
+        if self.coinFlip == 1 then
             self.UpgradeMode = 'Normal'
-        elseif coinFlip == 2 then
+        elseif self.coinFlip == 2 then
             self.UpgradeMode = 'Caution'
             self.UpgradeIssuedLimit = 1
         end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
+        LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
         
 
         -- ACU Support Data

@@ -262,7 +262,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -285,7 +285,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -308,7 +308,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -328,7 +328,7 @@ BuilderGroup {
         Priority = 400,
         InstanceCount = 4,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}}, 
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, 
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR} },
         },
@@ -377,6 +377,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
                 { UCBC, 'GreaterThanMassTrend', { 0.0 } },
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
             },
@@ -483,27 +484,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T2 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 550,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
-                Time = 30,
-            },
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T12 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T12EngineerAssistRNG',
         Priority = 550,
@@ -511,7 +491,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 300.0 } },
         },
         BuilderType = 'Any',
         BuilderData = {
