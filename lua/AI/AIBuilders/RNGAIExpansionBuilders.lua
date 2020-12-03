@@ -12,10 +12,10 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 local AggressiveExpansion = function(self, aiBrain, builderManager)
     if aiBrain.coinFlip == 1 then
-        LOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
+        --LOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
         return 1000
     else
-        LOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
+        --LOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
         return 0
     end
 end
@@ -124,7 +124,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'NavalAreaNeedsEngineer', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -247,13 +247,13 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Expansion Builders Large',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area 350 Large',
+        BuilderName = 'RNGAI T1 Naval Expansion Area 450 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'NavalAreaNeedsEngineer', { 'LocationType', 350, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 450, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -264,7 +264,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
-                LocationRadius = 350, -- radius from LocationType to build
+                LocationRadius = 450, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 100,

@@ -358,6 +358,16 @@ function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, 
     return false
 end
 
+function NavalAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    local pos, name = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        --LOG('NavalAreaNeedsEngineerRNG is TRUE at range'..locationRadius)
+        return true
+    end
+    --LOG('NavalAreaNeedsEngineerRNG is FALSE at range'..locationRadius)
+    return false
+end
+
 function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then

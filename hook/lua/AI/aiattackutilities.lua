@@ -216,6 +216,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             #  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransports(platoon) == false then
                 aiBrain.WantTransports = true
+                LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
@@ -262,6 +263,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     if aiBrain.NeedTransports < 0 then
                         aiBrain.NeedTransports = 0
                     end
+                    LOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
                     return false
                 end
 
@@ -283,6 +285,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
             -- couldn't use transports...
             if bUsedTransports == false then
+                LOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
                 return false
             end
         end
@@ -312,8 +315,10 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         if transportLocation then
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
+            LOG('Transport Location minThreat is '..minThreat)
             if minThreat > 0 then
                 local threatTable = aiBrain:GetThreatsAroundPosition(transportLocation, 1, true, 'Overall')
+                LOG('Threat table around transport location is  '..repr(threatTable))
                 for threatIdx,threatEntry in threatTable do
                     if threatEntry[3] < minThreat then
                         -- if it's land...
@@ -344,6 +349,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         -- check to see we're still around
         if not platoon or not aiBrain:PlatoonExists(platoon) then
+            LOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
             return false
         end
 
@@ -372,9 +378,10 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
         end
     else
+        LOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
         return false
     end
-
+    LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
 end
 
@@ -467,13 +474,13 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         local usedTransports = false
         local position = platoon:GetPlatoonPosition()
         if (not path and reason == 'NoPath') or bNeedTransports then
-            usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
         -- Require transports over 500 away
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then
-            usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
         -- use if possible at 250
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 256*256 then
-            usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, false)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false)
         end
 
         if not usedTransports then
