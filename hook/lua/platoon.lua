@@ -31,7 +31,11 @@ Platoon = Class(RNGAIPlatoon) {
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 table.insert(atkPri, v)
-                table.insert(categoryList, ParseEntityCategory(v))
+                if type(v) == 'string' then
+                    table.insert(categoryList, ParseEntityCategory(v))
+                else
+                    table.insert(categoryList, v)
+                end
             end
         else
             table.insert(atkPri, 'MOBILE AIR')
@@ -227,6 +231,8 @@ Platoon = Class(RNGAIPlatoon) {
 
         local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
 
+        local safeZone = self.PlatoonData.SafeZone or false
+
         -----------------------------------------------------------------------
         local markerLocations
 
@@ -398,11 +404,17 @@ Platoon = Class(RNGAIPlatoon) {
             if path then
                 local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
-                    --LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true)
+                    LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
+                    if safeZone then
+                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                    end
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
-                    --LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false)
+                    LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
+                    if safeZone then
+                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                    end
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, safeZone)
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
@@ -423,8 +435,11 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             elseif (not path and reason == 'NoPath') then
-                --LOG('* AI-RNG: Guardmarker NoPath requesting transports')
-                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true)
+                LOG('* AI-RNG: Guardmarker NoPath requesting transports')
+                if safeZone then
+                    LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                end
+                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not foundTransport then
                     --LOG('* AI-RNG: Guardmarker no transports available disbanding')

@@ -7,17 +7,19 @@ local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 
 -- TEMPORARY LOUD LOCALS
-local LOUDPOW = math.pow
-local LOUDSQRT = math.sqrt
-local LOUDGETN = table.getn
-local LOUDINSERT = table.insert
-local LOUDREMOVE = table.remove
-local LOUDSORT = table.sort
-local LOUDFLOOR = math.floor
-local LOUDCEIL = math.ceil
-local LOUDPI = math.pi
+local RNGPOW = math.pow
+local RNGSQRT = math.sqrt
+local RNGGETN = table.getn
+local RNGINSERT = table.insert
+local RNGREMOVE = table.remove
+local RNGSORT = table.sort
+local RNGFLOOR = math.floor
+local RNGCEIL = math.ceil
+local RNGPI = math.pi
+local RNGCAT = table.cat
 
 --[[
 Valid Threat Options:
@@ -1598,14 +1600,14 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 	local Mz = ScenarioInfo.size[2]	
 	
 	if orientation then
-		local Sx = LOUDCEIL(location[1])
-		local Sz = LOUDCEIL(location[3])
+		local Sx = RNGCEIL(location[1])
+		local Sz = RNGCEIL(location[3])
 	
 		if not Orient then
 			-- tracks if we used threat to determine Orientation
 			local Direction = false
 			local threats = aiBrain:GetThreatsAroundPosition( location, 32, true, 'Economy' )
-			LOUDSORT( threats, function(a,b) return VDist2(a[1],a[2],location[1],location[3]) + a[3] < VDist2(b[1],b[2],location[1],location[3]) + b[3] end )
+			RNGSORT( threats, function(a,b) return VDist2(a[1],a[2],location[1],location[3]) + a[3] < VDist2(b[1],b[2],location[1],location[3]) + b[3] end )
 			for _,v in threats do
 				Direction = GetDirectionInDegrees( {v[1],location[2],v[2]}, location )
 				break	-- process only the first one
@@ -1715,7 +1717,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 			if not (x == 0 and y == 0)	and	(x == lowlimit or y == lowlimit or x == highlimit or y == highlimit)
 			and not ((x == lowlimit and y == lowlimit) or (x == lowlimit and y == highlimit)
 			or ( x == highlimit and y == highlimit) or ( x == highlimit and y == lowlimit)) then
-				locList[counter+1] = { LOUDCEIL(location[1] + x), GetSurfaceHeight(location[1] + x, location[3] + y), LOUDCEIL(location[3] + y) }
+				locList[counter+1] = { RNGCEIL(location[1] + x), GetSurfaceHeight(location[1] + x, location[3] + y), RNGCEIL(location[3] + y) }
 				counter = counter + 1
 			end
 		end
@@ -1818,7 +1820,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 				lastX = pos[1]
 				lastZ = pos[3]
 			end
-			LOUDREMOVE(locList, key)
+			RNGREMOVE(locList, key)
 		end
 	else
 		sortedList = locList
@@ -1846,7 +1848,7 @@ function XZDistanceTwoVectors( v1, v2 )
 end
 
 function GetVectorLength( v )
-    return LOUDSQRT( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
+    return RNGSQRT( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
 end
 
 function NormalizeVector( v )
@@ -1855,7 +1857,7 @@ function NormalizeVector( v )
 		v = {v.x, v.y, v.z}
 	end
 	
-    local length = LOUDSQRT( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
+    local length = RNGSQRT( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
 	
     if length > 0 then
         local invlength = 1 / length
@@ -1874,14 +1876,14 @@ function GetDirectionVector( v1, v2 )
 end
 
 function GetDirectionInDegrees( v1, v2 )
-    local LOUDACOS = math.acos
+    local RNGACOS = math.acos
 	local vec = GetDirectionVector( v1, v2)
 	
 	if vec[1] >= 0 then
-		return LOUDACOS(vec[3]) * (360/(LOUDPI*2))
+		return RNGACOS(vec[3]) * (360/(RNGPI*2))
 	end
 	
-	return 360 - (LOUDACOS(vec[3]) * (360/(LOUDPI*2)))
+	return 360 - (RNGACOS(vec[3]) * (360/(RNGPI*2)))
 end
 
 function ComHealthRNG(cdr)
@@ -2037,7 +2039,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     end
     --LOG('Potential Positions Table '..repr(startPositions))
     -- We sort the positions so the closest are first
-    LOUDSORT( startPositions, function(a,b) return a.Distance < b.Distance end )
+    RNGSORT( startPositions, function(a,b) return a.Distance < b.Distance end )
     --LOG('Potential Positions Sorted by distance'..repr(startPositions))
     local attackPosition = false
     local targetStartPosition = false
@@ -2058,3 +2060,4 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     end
     return attackPosition, targetStartPosition
 end
+

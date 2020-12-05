@@ -54,6 +54,20 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     end
 end
 
+local SeaTorpMode = function(self, aiBrain, manager)
+    local myNavalThreat = aiBrain.BrainIntel.SelfThreat.NavalNow
+    local enemyNavalThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
+    if myNavalThreat < enemyNavalThreat then
+        --LOG('Enable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 870
+    else
+        --LOG('Disable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
@@ -213,10 +227,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
-        Priority = 750,
+        Priority = 870,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.04, 0.50 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.MOBILE * categories.AIR * categories.ANTINAVY }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.AIR * categories.ANTINAVY, '<',categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.GROUNDATTACK - categories.BOMBER } },
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
@@ -330,14 +345,16 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
-                'COMMAND',
-                'EXPERIMENTAL',
-                'NAVAL',
-                'AMPHIBIOUS',
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.NAVAL * categories.TECH3 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.NAVAL * categories.TECH2 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.NAVAL * categories.TECH1 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.STRUCTURE * categories.SONAR,
+                categories.AMPHIBIOUS - categories.HOVER,
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.NAVAL * categories.MOBILE }},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL } },
         },
     },
