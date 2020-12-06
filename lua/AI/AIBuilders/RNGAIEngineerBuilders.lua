@@ -87,7 +87,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 800, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
         },
         BuilderType = 'All',
@@ -119,7 +119,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 300, -- low factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.00}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
@@ -154,7 +154,7 @@ BuilderGroup {
         Priority = 300, -- low factory priority
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.00}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
@@ -399,8 +399,8 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = {
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
-                { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-                { EBC, 'LessThanEnergyTrendRNG', { 50.0 } },
+                { UCBC, 'GreaterThanMassTrend', { 0.0 }, true },
+                { EBC, 'LessThanEnergyTrendRNG', { 50.0 }, true },
             },
         BuilderData = {
             Assist = {
@@ -422,7 +422,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -490,8 +490,8 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 300.0 } },
+            { UCBC, 'GreaterThanMassTrend', { 0.0 }, true },
+            { EBC, 'LessThanEnergyTrendRNG', { 300.0 }, true },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -511,8 +511,8 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
+            { UCBC, 'GreaterThanMassTrend', { 0.0 }, true },
+            { EBC, 'LessThanEnergyTrendRNG', { 500.0 }, true },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -580,10 +580,10 @@ BuilderGroup {
         PlatoonTemplate = 'UEFT2EngineerBuilder',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'ENGINEERSTATION' }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.85}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.4 }},
         },
         BuilderType = 'Any',
@@ -603,10 +603,10 @@ BuilderGroup {
         PlatoonTemplate = 'CybranT2EngineerBuilder',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, 'ENGINEERSTATION' }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
             { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.85}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.4 }},
         },
         BuilderType = 'Any',
