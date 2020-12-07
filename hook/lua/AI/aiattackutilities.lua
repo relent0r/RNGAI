@@ -335,7 +335,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             LOG('initial transport location is '..repr(transportLocation))
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
             LOG('Transport Location minThreat is '..minThreat)
-            if minThreat > 0 then
+            if minThreat > 0 or safeZone then
                 if platoon.MovementLayer == 'Amphibious' then
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 else
