@@ -422,7 +422,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {

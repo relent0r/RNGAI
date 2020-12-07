@@ -234,7 +234,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             #  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransports(platoon) == false then
                 aiBrain.WantTransports = true
-                LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
+                --LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
@@ -281,7 +281,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     if aiBrain.NeedTransports < 0 then
                         aiBrain.NeedTransports = 0
                     end
-                    LOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
+                    --LOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
                     return false
                 end
 
@@ -303,7 +303,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
             -- couldn't use transports...
             if bUsedTransports == false then
-                LOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
+                --LOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
                 return false
             end
         end
@@ -332,9 +332,9 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         end
 
         if transportLocation then
-            LOG('initial transport location is '..repr(transportLocation))
+            --LOG('initial transport location is '..repr(transportLocation))
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
-            LOG('Transport Location minThreat is '..minThreat)
+            --LOG('Transport Location minThreat is '..minThreat)
             if minThreat > 0 then
                 if platoon.MovementLayer == 'Amphibious' then
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
@@ -342,11 +342,11 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 end
             end
-            LOG('Decided transport location is '..repr(transportLocation))
+            --LOG('Decided transport location is '..repr(transportLocation))
         end
 
         if not transportLocation then
-            LOG('No transport location or threat at location too high')
+            --LOG('No transport location or threat at location too high')
             return false
         end
 
@@ -366,7 +366,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         -- check to see we're still around
         if not platoon or not aiBrain:PlatoonExists(platoon) then
-            LOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
+            --LOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
             return false
         end
 
@@ -395,10 +395,10 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
         end
     else
-        LOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
+        --LOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
         return false
     end
-    LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
+    --LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
 end
 
@@ -451,7 +451,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
     
         markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
     end
-    LOG('Marker List is '..repr(markerlist))
+    --LOG('Marker List is '..repr(markerlist))
     
     -- sort the markers by closest distance to final destination
     if not safeZone then
@@ -466,7 +466,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
 
         -- test the real values for that position
         local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        LOG('stest is '..stest..'atest is '..atest)
+        --LOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then
         
@@ -477,7 +477,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             -- can the platoon path safely from this marker to the final destination 
             local landpath, reason = PlatoonGenerateSafePathTo(aiBrain, layer, v.Position, destination, threatMax, 160 )
             if not landpath then
-                LOG('No path to transport location from selected position')
+                --LOG('No path to transport location from selected position')
             end
 
             -- can the transports reach that marker ?
@@ -486,7 +486,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             end
         end
     end
-    LOG('Safe landing Location returning false')
+    --LOG('Safe landing Location returning false')
     return false, nil
 end
 

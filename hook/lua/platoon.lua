@@ -404,15 +404,15 @@ Platoon = Class(RNGAIPlatoon) {
             if path then
                 local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
-                    LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
+                    --LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
                     if safeZone then
-                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                        --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
-                    LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
+                    --LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
                     if safeZone then
-                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                        --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, safeZone)
                 end
@@ -435,9 +435,9 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             elseif (not path and reason == 'NoPath') then
-                LOG('* AI-RNG: Guardmarker NoPath requesting transports')
+                --LOG('* AI-RNG: Guardmarker NoPath requesting transports')
                 if safeZone then
-                    LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                    --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                 end
                 local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
@@ -2222,7 +2222,7 @@ Platoon = Class(RNGAIPlatoon) {
 
             if cons.AggressiveExpansion then
                 --DUNCAN - pulled out and uses alt finder
-                LOG('Aggressive Expansion Triggered')
+                --LOG('Aggressive Expansion Triggered')
                 reference, refName = AIUtils.AIFindAggressiveBaseLocationRNG(aiBrain, cons.LocationType, cons.EnemyRange,
                                                     cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 if not reference or not refName then
@@ -2924,7 +2924,7 @@ Platoon = Class(RNGAIPlatoon) {
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false)
                 end
                 if usedTransports then
-                    LOG('usedTransports is true')
+                    --LOG('usedTransports is true')
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
@@ -3026,22 +3026,22 @@ Platoon = Class(RNGAIPlatoon) {
                 usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
-                    LOG('MASSRAID no transports')
+                    --LOG('MASSRAID no transports')
                     self:PlatoonDisband()
                     return
                 end
                 --LOG('Guardmarker found transports')
             else
-                LOG('Path error in MASSRAID')
+                --LOG('Path error in MASSRAID')
                 self:PlatoonDisband()
                 return
             end
             if usedTransports then
-                LOG('usedTransports is true')
+                --LOG('usedTransports is true')
             end
 
             if (not path or not success) and not usedTransports then
-                LOG('not path or not success or not usedTransports MASSRAID')
+                --LOG('not path or not success or not usedTransports MASSRAID')
                 self:PlatoonDisband()
                 return
             end
@@ -3085,7 +3085,7 @@ Platoon = Class(RNGAIPlatoon) {
             return self:MassRaidRNG()
         else
             -- no marker found, disband!
-            LOG('no marker found, disband MASSRAID')
+            --LOG('no marker found, disband MASSRAID')
             self:PlatoonDisband()
         end
     end,

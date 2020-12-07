@@ -254,7 +254,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeMode = 'Caution'
             self.UpgradeIssuedLimit = 1
         end
-        LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
+        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
         
 
         -- ACU Support Data
