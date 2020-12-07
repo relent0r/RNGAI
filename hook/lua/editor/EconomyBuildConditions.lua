@@ -75,7 +75,7 @@ end
 function LessThanEnergyTrendRNG(aiBrain, eTrend, DEBUG)
     local EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
     if DEBUG then
-        LOG('Energy Trend is'..EnergyTrend)
+        --LOG('Energy Trend is'..EnergyTrend)
     end
     if EnergyTrend < eTrend then
         return true

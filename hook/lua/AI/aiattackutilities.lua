@@ -332,10 +332,12 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         end
 
         if transportLocation then
-            LOG('initial transport location is '..repr(transportLocation))
+            --LOG('initial transport location is '..repr(transportLocation))
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
             LOG('Transport Location minThreat is '..minThreat)
             if minThreat > 0 or safeZone then
+            LOG('Transport Location minThreat is '..minThreat)
+            if minThreat > 0 then
                 if platoon.MovementLayer == 'Amphibious' then
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 else
@@ -451,7 +453,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
     
         markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
     end
-    LOG('Marker List is '..repr(markerlist))
+    --LOG('Marker List is '..repr(markerlist))
     
     -- sort the markers by closest distance to final destination
     if not safeZone then
@@ -466,7 +468,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
 
         -- test the real values for that position
         local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        LOG('stest is '..stest..'atest is '..atest)
+        --LOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then
         
@@ -477,7 +479,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             -- can the platoon path safely from this marker to the final destination 
             local landpath, reason = PlatoonGenerateSafePathTo(aiBrain, layer, v.Position, destination, threatMax, 160 )
             if not landpath then
-                LOG('No path to transport location from selected position')
+                --LOG('No path to transport location from selected position')
             end
 
             -- can the transports reach that marker ?
@@ -486,7 +488,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             end
         end
     end
-    LOG('Safe landing Location returning false')
+    --LOG('Safe landing Location returning false')
     return false, nil
 end
 
