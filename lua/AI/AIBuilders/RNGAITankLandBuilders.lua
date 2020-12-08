@@ -1064,10 +1064,28 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             UseFormation = 'None',
+            PlatoonLimit = 18,
             AggressiveMove = true,
-            PlatoonLimit = 15,
             ThreatSupport = 5,
+            TargetSearchPriorities = {
+                'ENERGYPRODUCTION',
+                'ENERGYSTORAGE',
+                'MASSEXTRACTION',
+                'MASSFABRICATION',
+                'ALLUNITS',
             },
+            PrioritizedCategories = {
+                'COMMAND',
+                'EXPERIMENTAL',
+                'STRUCTURE DEFENSE',
+                'MOBILE LAND ANTIAIR',
+                'MOBILE LAND',
+                'ENGINEER',
+                'MOBILE LAND ANTIAIR',
+                'MASSEXTRACTION',
+                'ALLUNITS',
+            },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
