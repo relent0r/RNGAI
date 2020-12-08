@@ -406,13 +406,13 @@ Platoon = Class(RNGAIPlatoon) {
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
                     if safeZone then
-                        --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
                     if safeZone then
-                        --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, safeZone)
                 end
@@ -437,7 +437,7 @@ Platoon = Class(RNGAIPlatoon) {
             elseif (not path and reason == 'NoPath') then
                 --LOG('* AI-RNG: Guardmarker NoPath requesting transports')
                 if safeZone then
-                    --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                    LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                 end
                 local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband

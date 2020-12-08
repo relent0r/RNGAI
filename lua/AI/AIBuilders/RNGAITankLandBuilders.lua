@@ -1311,6 +1311,7 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             MarkerType = 'Start Location',            
             MoveFirst = 'Threat',
+            SafeZone = true,
             MoveNext = 'Threat',
             IgnoreFriendlyBase = true,
             --ThreatType = '',

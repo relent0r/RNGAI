@@ -415,6 +415,30 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
+        BuilderName = 'RNGAI T12 Engineer Unfinished SMD',
+        PlatoonTemplate = 'T123EngineerAssistRNG',
+        Priority = 700,
+        InstanceCount = 10,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 }},
+            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.60}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = categories.STRUCTURE,
+                AssistRange = 100,
+                AssistClosestUnit = true,
+                BeingBuiltCategories = {'STRUCTURE DEFENSE ANTIMISSILE TECH3'},
+                Time = 120,
+            },
+        }
+    },
+    
+    Builder {
         BuilderName = 'RNGAI T12 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T12EngineerAssistRNG',
         Priority = 540,

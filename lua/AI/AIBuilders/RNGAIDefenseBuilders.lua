@@ -501,6 +501,66 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Land Expansion',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * (categories.LAND + categories.NAVAL) - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE TECH2 DIRECTFIRE'}},
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+            AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+            maxUnits = 1,
+            maxRadius = 5,
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2GroundDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Air Expansion',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, 'DEFENSE TECH2 ANTIAIR'}},
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, 'DEFENSE' } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+            AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+            maxUnits = 1,
+            maxRadius = 5,
+            Construction = {
+                BuildClose = true,
+                BuildStructures = {
+                    'T2AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2TMLEngineer Close Enemy Expansion',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
@@ -943,7 +1003,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitsGreaterAtEnemy', { 1 , categories.STRUCTURE * categories.NUKE * categories.SILO } },
         },
         BuilderType = 'Any',
