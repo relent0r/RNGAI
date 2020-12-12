@@ -34,6 +34,17 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory AirScout T3',
+        PlatoonTemplate = 'T3AirScout',
+        Priority = 900,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.7 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.SCOUT * categories.AIR}},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
+        },
+        BuilderType = 'Air',
+    },
 }
 
 BuilderGroup {
@@ -59,7 +70,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Air Excess',
         PlatoonTemplate = 'RNGAI AirScoutForm',
         PlatoonAddBehaviors = {'ACUDetection',},
-        InstanceCount = 12,
+        InstanceCount = 15,
         Priority = 890,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
@@ -90,7 +101,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Patrol',
         PlatoonTemplate = 'RNGAI AirScoutForm',
-        InstanceCount = 2,
+        InstanceCount = 1,
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },

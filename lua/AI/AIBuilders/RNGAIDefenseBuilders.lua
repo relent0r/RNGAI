@@ -975,7 +975,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
         },
         BuilderType = 'Any',
         BuilderData = {

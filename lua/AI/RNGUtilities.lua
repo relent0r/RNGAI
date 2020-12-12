@@ -1327,7 +1327,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     local RangeList = {
         [1] = 10,
         [2] = maxRange,
-        [3] = maxRange + 80,
+        [3] = maxRange + 30,
     }
     local TargetUnit = false
     local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack

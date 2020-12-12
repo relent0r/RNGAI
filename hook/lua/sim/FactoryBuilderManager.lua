@@ -92,7 +92,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         return true
     end,
 
-    FactoryDestroyed = function(self, factory)
+    --[[FactoryDestroyed = function(self, factory)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
         end
@@ -118,7 +118,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         self.LocationActive = false
         self.Brain:RemoveConsumption(self.LocationType, factory)
-    end,
+    end,]]
 
     DelayBuildOrder = function(self,factory,bType,time)
         if not self.Brain.RNG then
@@ -143,8 +143,66 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         self:AssignBuildOrder(factory,bType)
     end,
 
+    FactoryFinishBuilding = function(self,factory,finishedUnit)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
+        end
+        LOG('RNG FactorFinishedbuilding')
+        if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
+            self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
+        elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
+            LOG('Factory Built by factory, attempting to kill factory.')
+			if finishedUnit:GetFractionComplete() == 1 then
+				self:AddFactory(finishedUnit )			
+				factory.Dead = true
+                factory.Trash:Destroy()
+                LOG('Destroy Factory')
+				return self:FactoryDestroyed(factory)
+			end
+		end
+        self.Brain:RemoveConsumption(self.LocationType, factory)
+        self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)
+    end,
+
+    FactoryDestroyed = function(self, factory)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
+        end
+        LOG('Factory Destroyed '..factory.UnitId)
+        --LOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
+        local guards = factory:GetGuards()
+        local factoryDestroyed = false
+        for k,v in guards do
+            if not v.Dead and v.AssistPlatoon then
+                if self.Brain:PlatoonExists(v.AssistPlatoon) then
+                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBody)
+                else
+                    v.AssistPlatoon = nil
+                end
+            end
+        end
+        for k,v in self.FactoryList do
+            if (not v.Sync.id) or v.Dead then
+                LOG('Removing factory from FactoryList'..v.UnitId)
+                self.FactoryList[k] = nil
+                factoryDestroyed = true
+            end
+        end
+        if factoryDestroyed then
+            LOG('Performing table rebuild')
+            self.FactoryList = self:RebuildTable(self.FactoryList)
+        end
+        --LOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')
+        for k,v in self.FactoryList do
+            if not v.Dead then
+                return
+            end
+        end
+        self.LocationActive = false
+        self.Brain:RemoveConsumption(self.LocationType, factory)
+    end,
+
     BuilderParamCheckOld = function(self,builder,params)
-        -- Only use this with AI-Uveso
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.BuilderParamCheck(self,builder,params)
         end

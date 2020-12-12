@@ -754,9 +754,8 @@ BuilderGroup {
         Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
@@ -768,7 +767,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.8}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
