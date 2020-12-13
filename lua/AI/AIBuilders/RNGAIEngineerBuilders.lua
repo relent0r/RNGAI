@@ -10,7 +10,19 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
 
-
+local AirDefenseScramble = function(self, aiBrain, builderManager)
+    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    if myAirThreat < enemyAirThreat then
+        --LOG('Enable Air ASF Scramble Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 870
+    else
+        --LOG('Disable Air ASF Scramble Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
@@ -323,13 +335,13 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI Assist Factory Air AA T12',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 400,
-        InstanceCount = 4,
+        BuilderName = 'RNGAI Assist Factory Air AA T123',
+        PlatoonTemplate = 'T123EngineerAssistRNG',
+        Priority = 0,
+        PriorityFunction = AirDefenseScramble,
+        InstanceCount = 12,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, 
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR} },
         },
         BuilderData = {
