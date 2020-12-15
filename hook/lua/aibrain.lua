@@ -381,6 +381,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
         self:ForkThread(self.TacticalMonitorInitializationRNG)
+        self:ForkThread(self.TacticalAnalysisThreadRNG)
     end,
 
     GetStructureVectorsRNG = function(self)
@@ -1128,6 +1129,16 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    TacticalAnalysisThreadRNG = function(self)
+        local ALLBPS = __blueprints
+        while true do
+            if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
+                self:TacticalThreatAnalysisRNG(ALLBPS)
+            end
+            WaitTicks(600)
+        end
+    end,
+
     EnemyThreatCheckRNG = function(self, ALLBPS)
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
@@ -1334,7 +1345,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,]]
 
     TacticalThreatAnalysisRNG = function(self, ALLBPS)
-        local tempImapLocation = {false,false}
+
+        self.EnemyIntel.DirectorData = {}
         local energyUnits = {}
         local strategicUnits = {}
         local defensiveUnits = {}
@@ -1376,7 +1388,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             LOG('Energy Unit table '..repr(energyUnits))
+            table.insert(self.EnemyIntel.DirectorData, energyUnits)
         end
+        WaitTicks(1)
         if table.getn(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
@@ -1389,7 +1403,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             LOG('Defensive Unit table '..repr(defensiveUnits))
+            table.insert(self.EnemyIntel.DirectorData, defensiveUnits)
         end
+        WaitTicks(1)
         if table.getn(strategicUnits) > 0 then
             for k, unit in strategicUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
@@ -1402,7 +1418,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             LOG('Strategic Unit table '..repr(strategicUnits))
+            table.insert(self.EnemyIntel.DirectorData, defensiveUnits)
         end
+        WaitTicks(1)
     end,
 
 
