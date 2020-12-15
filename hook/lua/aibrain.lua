@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/AIUtilities.lua')
+local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
@@ -1248,7 +1249,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
-    TacticalThreatAnalysisRNG = function(self, ALLBPS)
+    --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
 
         -- set the OgridRadius according to mapsize
@@ -1330,6 +1331,78 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
+    end,]]
+
+    TacticalThreatAnalysisRNG = function(self, ALLBPS)
+        local tempImapLocation = {false,false}
+        local energyUnits = {}
+        local strategicUnits = {}
+        local defensiveUnits = {}
+        
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            LOG('Enemy Threat Locations is greater than 0')
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                for s, unit in unitsAtLocation do
+                    if EntityCategoryContains( categories.ENERGYPRODUCTION * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                        local threat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
+                        local blockingShield = RUtils.ShieldProtectingTargetRNG(self, retUnit)
+                        LOG('Inserting Enemy Energy Structure')
+                        table.insert(energyUnits, { Value = threat, Object = unit, Shielded = blockingShield, IMAP = threat.Position, Air = 0, Land = 0 })
+                    elseif EntityCategoryContains( categories.DEFENSE * (categores.TECH2 + categories.TECH3), unit) then
+                        local threat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
+                        local blockingShield = RUtils.ShieldProtectingTargetRNG(self, retUnit)
+                        LOG('Inserting Enemy Defensive Structure')
+                        table.insert(defensiveUnits, { Value = threat, Object = unit, Shielded = blockingShield, IMAP = threat.Position, Air = 0, Land = 0 })
+                    elseif EntityCategoryContains( categories.STRATEGIC * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                        local threat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
+                        local blockingShield = RUtils.ShieldProtectingTargetRNG(self, retUnit)
+                        LOG('Inserting Enemy Strategic Structure')
+                        table.insert(strategicUnits, { Value = threat, Object = unit, Shielded = blockingShield, IMAP = threat.Position, Air = 0, Land = 0 })
+                    end
+                end
+                WaitTicks(1)
+            end
+        end
+        if table.getn(energyUnits) > 0 then
+            for k, unit in energyUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Air = threat.Threat
+                    end
+                end
+            end
+            LOG('Energy Unit table '..repr(energyUnits))
+        end
+        if table.getn(defensiveUnits) > 0 then
+            for k, unit in defensiveUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Air = threat.Threat
+                    end
+                end
+            end
+            LOG('Defensive Unit table '..repr(defensiveUnits))
+        end
+        if table.getn(strategicUnits) > 0 then
+            for k, unit in strategicUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Air = threat.Threat
+                    end
+                end
+            end
+            LOG('Strategic Unit table '..repr(strategicUnits))
+        end
     end,
 
 

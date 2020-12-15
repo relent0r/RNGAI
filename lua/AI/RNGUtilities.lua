@@ -2089,3 +2089,31 @@ function GetEnemyUnitsInRect( aiBrain, x1, z1, x2, z2 )
     return {}, 0
 end
 
+function GetShieldRadiusAboveGroundSquaredRNG(shield)
+    local BP = shield:GetBlueprint().Defense.Shield
+    local width = BP.ShieldSize
+    local height = BP.ShieldVerticalOffset
+
+    return width * width - height * height
+end
+
+function ShieldProtectingTargetRNG(aiBrain, targetUnit)
+    if not targetUnit then
+        return false
+    end
+
+    -- If targetUnit is within the radius of any shields return true
+    local tPos = targetUnit:GetPosition()
+    local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
+    for _, shield in shields do
+        if not shield.Dead then
+            local shieldPos = shield:GetPosition()
+            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
+            if VDist2Sq(tPos[1], tPos[3], shieldPos[1], shieldPos[3]) < shieldSizeSq then
+                return true
+            end
+        end
+    end
+    return false
+end
+
