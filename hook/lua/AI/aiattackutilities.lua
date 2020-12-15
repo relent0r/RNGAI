@@ -209,8 +209,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
     local units = platoon:GetPlatoonUnits()
     local transportplatoon = false
-    local markerRange = 75
-    local maxThreat = 5000
+    local markerRange = 125
+    local maxThreat = 200
     local airthreatMax = 20
 
     # only get transports for land (or partial land) movement
@@ -451,7 +451,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
     
         markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
     end
-    --LOG('Marker List is '..repr(markerlist))
+    LOG('Marker List is '..repr(markerlist))
     
     -- sort the markers by closest distance to final destination
     if not safeZone then
@@ -466,13 +466,13 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
 
         -- test the real values for that position
         local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        --LOG('stest is '..stest..'atest is '..atest)
+        LOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then
         
-            --LOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
-            --LOG("*AI DEBUG "..aiBrain.Nickname.." "..self.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
-            --LOG("*AI DEBUG "..aiBrain.Nickname.." "..self.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
+            LOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
 
             -- can the platoon path safely from this marker to the final destination 
             local landpath, reason = PlatoonGenerateSafePathTo(aiBrain, layer, v.Position, destination, threatMax, 160 )
@@ -482,6 +482,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
 
             -- can the transports reach that marker ?
             if landpath then
+                LOG('Selected Position')
                 return v.Position, v.Name
             end
         end

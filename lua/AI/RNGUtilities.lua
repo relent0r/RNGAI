@@ -721,7 +721,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
             local retUnit = false
             local distance = false
             for num, unit in targetUnits do
-                if not unit.Dead and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
+                if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
                     local unitPos = unit:GetPosition()
                     if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
                         retUnit = unit
@@ -1159,7 +1159,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                 if index then
                     for k, v in index do
                         if unit:GetAIBrain():GetArmyIndex() == v then
-                            if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                            if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                 local unitPos = unit:GetPosition()
                                 if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
                                     retUnit = unit
@@ -1362,7 +1362,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 -- check if we have a special player as enemy
                 if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
                 -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
-                if not Target.Dead and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
+                if not Target.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
                     -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
                     if not IsEnemy( MyArmyIndex, Target:GetAIBrain():GetArmyIndex() ) then continue end
                     if Target.ReclaimInProgress then
@@ -2059,5 +2059,33 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         --LOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
     end
     return attackPosition, targetStartPosition
+end
+-- Another of Sproutos functions
+function GetEnemyUnitsInRect( aiBrain, x1, z1, x2, z2 )
+    
+    local units = GetUnitsInRect(x1, z1, x2, z2)
+    
+    if units then
+	
+        local enemyunits = {}
+		local counter = 0
+		
+        local IsEnemy = IsEnemy
+		local GetAIBrain = moho.entity_methods.GetAIBrain
+		
+        for _,v in units do
+		
+            if not v.Dead and IsEnemy( GetAIBrain(v).ArmyIndex, aiBrain.ArmyIndex) then
+                enemyunits[counter+1] =  v
+				counter = counter + 1
+            end
+        end 
+		
+        if counter > 0 then
+            return enemyunits, counter
+        end
+    end
+    
+    return {}, 0
 end
 

@@ -169,6 +169,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
+        self.EnemyIntel.DirectorData = {}
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
@@ -194,6 +195,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 Hp = 0,
                 OnField = false,
                 Gun = false,
+            }
+            self.EnemyIntel.DirectorData[v:GetArmyIndex()] = {
+                Strategic = {},
+                Energy = {},
+                Mass = {},
+                Factory = {},
+                Combat = {},
             }
         end
 
@@ -1240,6 +1248,90 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
+    TacticalThreatAnalysisRNG = function(self, ALLBPS)
+        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+
+        -- set the OgridRadius according to mapsize
+        -- it controls the size of the query when seeking the epicentre of a threat
+        -- and the ability to 'merge' two points that might be in the same, or adjacent
+        -- IMAP blocks
+        local OgridRadius, IMAPsize, ResolveBlocks, Rings, ThresholdMult
+        local units, counter, x1,x2,x3, unitPos, dupe
+
+        if maxmapdimension == 256 then
+            OgridRadius = 11.5
+            IMAPSize = 16
+            ResolveBlocks = 0
+            ThresholdMult = .33
+            Rings = 3
+        elseif maxmapdimension == 512 then
+            OgridRadius = 22.5
+            IMAPSize = 32
+            ResolveBlocks = 0
+            ThresholdMult = .66
+            Rings = 2
+        elseif maxmapdimension == 1024 then
+            OgridRadius = 45.0
+            IMAPSize = 64
+            ResolveBlocks = 0
+            ThresholdMult = 1
+            Rings = 1
+        elseif maxmapdimension == 2048 then
+            OgridRadius = 89.5
+            IMAPSize = 128
+            ResolveBlocks = 4
+            ThresholdMult = 1
+            Rings = 0
+        else
+            OgridRadius = 180.0
+            IMAPSize = 256
+            ResolveBlocks = 16
+            ThresholdMult = 1.5
+            Rings = 0
+        end
+        local IMAPRadius = IMAPSize * .5
+		
+		local numchecks = 0
+        local usedticks = 0
+        local checkspertick = 1
+        local tempImapLocation = {false,false}
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                if (tempImapLocation[1] ~= threat[1] and tempImapLocation[2] ~= threat[2]) and VDist2Sq(tempImapLocation[1], tempImapLocation[2], threat[1], threat[2]) < 10000 then
+                    continue
+                end
+                if threat.Threat > 100 and ThreatType == 'StructuresNotMex' then
+                    numchecks = numchecks + 1
+                    if numchecks > checkspertick then
+                        WaitTicks(1)
+                        usedticks = usedticks + 1
+                        numchecks = 0
+                    end
+                    units = RUtils.GetEnemyUnitsInRect( self, threat.Position[1]-IMAPRadius, threa.Position[2]-IMAPRadius, threat.Position[1]+IMAPRadius, threat.Position[2]+IMAPRadius)
+                    counter = 0
+                    x1 = 0
+                    x2 = 0
+                    x3 = 0
+                    for _,v in EntityCategoryFilterDown( categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, units ) do
+                        counter = counter + 1
+                        unitPos = GetPosition(v)
+                        if unitPos and not v.Dead then
+                            x1 = x1 + unitPos[1]
+                            x2 = x2 + unitPos[2]
+                            x3 = x3 + unitPos[3]
+                        end
+                    end
+                    if counter > 0 then
+                        dupe = false
+                        -- divide the position values by the counter to get average position (gives you the heart of the real cluster)
+                        newPos = { x1/counter, x2/counter, x3/counter }
+                        tempImapLocation = {newPos[1], newPos[2]}
+                        units = GetUnitsAroundPoint( aiBrain, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, newPos, 100, 'Enemy')
+                    end
+                end
+            end
+    end,
+
 
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
@@ -1249,6 +1341,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
         local timeout = self.TacticalMonitor.TacticalTimeout
+
         local gameTime = GetGameTimeSeconds()
         --LOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
         if gameTime > 600 and self.UpgradeMode == 'Caution' then
@@ -1378,6 +1471,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         WaitTicks(2)
+
         local landThreatAroundBase = 0
         --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
@@ -1401,6 +1495,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.BrainIntel.SelfThreat.BaseThreatCaution = false
             end
         end
+
         -- Get AI strength
         local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
         local airthreat = 0
