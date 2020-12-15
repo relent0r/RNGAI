@@ -31,7 +31,11 @@ Platoon = Class(RNGAIPlatoon) {
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 table.insert(atkPri, v)
-                table.insert(categoryList, ParseEntityCategory(v))
+                if type(v) == 'string' then
+                    table.insert(categoryList, ParseEntityCategory(v))
+                else
+                    table.insert(categoryList, v)
+                end
             end
         else
             table.insert(atkPri, 'MOBILE AIR')
@@ -227,6 +231,8 @@ Platoon = Class(RNGAIPlatoon) {
 
         local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
 
+        local safeZone = self.PlatoonData.SafeZone or false
+
         -----------------------------------------------------------------------
         local markerLocations
 
@@ -399,10 +405,16 @@ Platoon = Class(RNGAIPlatoon) {
                 local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                    if safeZone then
+                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                    end
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, false)
+                    if safeZone then
+                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                    end
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, safeZone)
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
@@ -424,7 +436,10 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --LOG('* AI-RNG: Guardmarker NoPath requesting transports')
-                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                if safeZone then
+                    LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                end
+                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not foundTransport then
                     --LOG('* AI-RNG: Guardmarker no transports available disbanding')
@@ -1249,9 +1264,9 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('* AI-RNG: * HuntAIPATH: Path found')
                     local position = GetPlatoonPosition(self)
                     if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
+                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                     elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, false)
+                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false)
                     end
                     
                     if not usedTransports then
@@ -1379,16 +1394,18 @@ Platoon = Class(RNGAIPlatoon) {
                                     end
                                 end
                                 if not target or target.Dead then
-                                    if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
+                                    --if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
                                         --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
-                                        self:MoveToLocation(targetPosition, false, 'Attack')
-                                        WaitTicks(60)
-                                    else
-                                        --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
-                                        self:MoveToLocation(targetPosition, false, 'Attack')
-                                        WaitTicks(40)
-                                    end
-                                    self:Stop()
+                                    --    IssueClearCommands(GetPlatoonUnits(self))
+                                    --    self:MoveToLocation(targetPosition, false, 'Attack')
+                                    --    WaitTicks(60)
+                                    --else
+                                    --    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
+                                    --    IssueClearCommands(GetPlatoonUnits(self))
+                                    --    self:MoveToLocation(targetPosition, false, 'Attack')
+                                    --    WaitTicks(40)
+                                    --end
+                                    --self:Stop()
                                     break
                                 end
                                 --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
@@ -1400,7 +1417,7 @@ Platoon = Class(RNGAIPlatoon) {
                 elseif (not path and reason == 'NoPath') then
                     --LOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --LOG('Guardmarker requesting transports')
-                    local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
+                    local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not foundTransport then
                         --LOG('Guardmarker no transports')
@@ -2902,9 +2919,12 @@ Platoon = Class(RNGAIPlatoon) {
             if path then
                 local position = GetPlatoonPosition(self)
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, false)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false)
+                end
+                if usedTransports then
+                    --LOG('usedTransports is true')
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
@@ -3003,23 +3023,29 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --LOG('Guardmarker requesting transports')
-                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, bestMarker.Position, true)
+                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
-                if not foundTransport then
-                    --LOG('Guardmarker no transports')
+                if not usedTransports then
+                    --LOG('MASSRAID no transports')
                     self:PlatoonDisband()
                     return
                 end
                 --LOG('Guardmarker found transports')
             else
+                --LOG('Path error in MASSRAID')
                 self:PlatoonDisband()
                 return
+            end
+            if usedTransports then
+                --LOG('usedTransports is true')
             end
 
             if (not path or not success) and not usedTransports then
+                --LOG('not path or not success or not usedTransports MASSRAID')
                 self:PlatoonDisband()
                 return
             end
+            
             if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), bestMarker.Position, 'none') then
                 self:MoveToLocation(bestMarker.Position, false)
             else
@@ -3059,6 +3085,7 @@ Platoon = Class(RNGAIPlatoon) {
             return self:MassRaidRNG()
         else
             -- no marker found, disband!
+            --LOG('no marker found, disband MASSRAID')
             self:PlatoonDisband()
         end
     end,
@@ -3805,9 +3832,9 @@ Platoon = Class(RNGAIPlatoon) {
                         local position = GetPlatoonPosition(self)
                         local usedTransports = false
                         if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
-                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
+                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                         elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
-                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, false)
+                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false)
                         end
                         if not usedTransports then
                             for i=1, table.getn(path) do
@@ -3902,7 +3929,7 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif (not path and reason == 'NoPath') then
                         --LOG('* AI-RNG: * SACUATTACKAIRNG: NoPath reason from path')
                         --LOG('Guardmarker requesting transports')
-                        local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheck(aiBrain, self, targetPosition, true)
+                        local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                         --DUNCAN - if we need a transport and we cant get one the disband
                         if not foundTransport then
                             --LOG('Guardmarker no transports')

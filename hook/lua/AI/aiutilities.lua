@@ -436,6 +436,9 @@ end
 
 function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType)
     -- Get location of commander
+    if not aiBrain:GetCurrentEnemy() then
+        return false
+    end
     local estartX, estartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
     local threatPos = {estartX, 0, estartZ}
 

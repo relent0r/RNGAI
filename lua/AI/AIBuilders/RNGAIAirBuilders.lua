@@ -54,6 +54,20 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     end
 end
 
+local SeaTorpMode = function(self, aiBrain, manager)
+    local myNavalThreat = aiBrain.BrainIntel.SelfThreat.NavalNow
+    local enemyNavalThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
+    if myNavalThreat < enemyNavalThreat then
+        --LOG('Enable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 870
+    else
+        --LOG('Disable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
@@ -213,10 +227,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
-        Priority = 750,
+        Priority = 870,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatio', { 0.04, 0.50 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.MOBILE * categories.AIR * categories.ANTINAVY }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.AIR * categories.ANTINAVY, '<',categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.GROUNDATTACK - categories.BOMBER } },
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
@@ -293,7 +308,7 @@ BuilderGroup {
             SearchRadius = BaseMilitaryArea,
             NeverGuardEngineers = true,
             PrioritizedCategories = {
-                'EXPERIMENTAL',
+                'EXPERIMENTAL AIR',
                 'BOMBER AIR',
                 'GUNSHIP AIR',
                 'ANTIAIR AIR',
@@ -330,14 +345,16 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
             PrioritizedCategories = {
-                'COMMAND',
-                'EXPERIMENTAL',
-                'NAVAL',
-                'AMPHIBIOUS',
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.NAVAL * categories.TECH3 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.NAVAL * categories.TECH2 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.NAVAL * categories.TECH1 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.STRUCTURE * categories.SONAR,
+                categories.AMPHIBIOUS - categories.HOVER,
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.NAVAL * categories.MOBILE }},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL } },
         },
     },
@@ -357,6 +374,7 @@ BuilderGroup {
             AvoidBases = true,
             NeverGuardEngineers = true,
             PrioritizedCategories = {
+                'EXPERIMENTAL AIR',
                 'GUNSHIP AIR',
                 'BOMBER AIR',
                 'ANTIAIR AIR',
@@ -551,16 +569,19 @@ BuilderGroup {
         InstanceCount = 20,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
-                'MASSEXTRACTION',
-                'ENGINEER TECH1',
-                'MOBILE ANTIAIR',
+                'TECH3 ANTIMISSILES SILO STRUCTURE',
+                'TECH3 NUKE SILO STRUCTURE',
+                'TECH3 ARTILLERY STRUCTURE',
                 'ENERGYSTORAGE',
                 'ENERGYPRODUCTION',
+                'MASSEXTRACTION',
+                'ENGINEER MOBILE',
+                'MOBILE ANTIAIR',
                 'STRUCTURE',
                 'ALLUNITS',
             },
@@ -620,7 +641,6 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
@@ -662,7 +682,6 @@ BuilderGroup {
         Priority = 910,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
@@ -737,9 +756,8 @@ BuilderGroup {
         Priority = 860,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, 'TRANSPORTFOCUS' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
@@ -751,7 +769,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.8}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, 'TRANSPORTFOCUS' } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'TRANSPORTFOCUS' } },

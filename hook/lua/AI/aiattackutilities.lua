@@ -1,5 +1,19 @@
 --local GetDirectionInDegrees = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetDirectionInDegrees
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local AIUtils = import('/lua/ai/AIUtilities.lua')
+local RNGPOW = math.pow
+local RNGSQRT = math.sqrt
+local RNGGETN = table.getn
+local RNGINSERT = table.insert
+local RNGREMOVE = table.remove
+local RNGSORT = table.sort
+local RNGFLOOR = math.floor
+local RNGCEIL = math.ceil
+local RNGPI = math.pi
+local RNGCAT = table.cat
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
     if not GetPathGraphs()[platoonLayer] then
@@ -189,11 +203,15 @@ function CanGraphToRNG(startPos, destPos, layer)
     end
 end
 
-function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove)
+function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
 
     GetMostRestrictiveLayer(platoon)
 
     local units = platoon:GetPlatoonUnits()
+    local transportplatoon = false
+    local markerRange = 125
+    local maxThreat = 200
+    local airthreatMax = 20
 
     # only get transports for land (or partial land) movement
     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
@@ -216,6 +234,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             #  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransports(platoon) == false then
                 aiBrain.WantTransports = true
+                LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
@@ -262,6 +281,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     if aiBrain.NeedTransports < 0 then
                         aiBrain.NeedTransports = 0
                     end
+                    LOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
                     return false
                 end
 
@@ -283,6 +303,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
             -- couldn't use transports...
             if bUsedTransports == false then
+                LOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
                 return false
             end
         end
@@ -311,21 +332,22 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         end
 
         if transportLocation then
+            --LOG('initial transport location is '..repr(transportLocation))
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
-            if minThreat > 0 then
-                local threatTable = aiBrain:GetThreatsAroundPosition(transportLocation, 1, true, 'Overall')
-                for threatIdx,threatEntry in threatTable do
-                    if threatEntry[3] < minThreat then
-                        -- if it's land...
-                        local terrain = GetTerrainHeight(threatEntry[1], threatEntry[2])
-                        local surface = GetSurfaceHeight(threatEntry[1], threatEntry[2])
-                        if terrain >= surface  then
-                           minThreat = threatEntry[3]
-                           transportLocation = {threatEntry[1], 0, threatEntry[2]}
-                       end
-                    end
+            LOG('Transport Location minThreat is '..minThreat)
+            if minThreat > 0 or safeZone then
+                if platoon.MovementLayer == 'Amphibious' then
+                    transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
+                else
+                    transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 end
             end
+            LOG('Decided transport location is '..repr(transportLocation))
+        end
+
+        if not transportLocation then
+            LOG('No transport location or threat at location too high')
+            return false
         end
 
         -- path from transport drop off to end location
@@ -344,6 +366,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         -- check to see we're still around
         if not platoon or not aiBrain:PlatoonExists(platoon) then
+            LOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
             return false
         end
 
@@ -372,10 +395,100 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
         end
     else
+        LOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
         return false
     end
-
+    LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
+end
+
+-- Sproutos work
+
+function GetRealThreatAtPosition(aiBrain, position, range )
+
+    local sfake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiSurface' )
+    local afake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiAir' )
+    
+    airthreat = 0
+    surthreat = 0
+
+    local eunits = GetUnitsAroundPoint( aiBrain, categories.ALLUNITS - categories.FACTORY - categories.ECONOMIC - categories.SHIELD - categories.WALL , position, range,  'Enemy')
+
+    if eunits then
+
+        for _,u in eunits do
+    
+            if not u.Dead then
+        
+                local bp = __blueprints[u.UnitId].Defense
+            
+                airthreat = airthreat + bp.AirThreatLevel
+                surthreat = surthreat + bp.SurfaceThreatLevel
+            end
+        end
+    end
+    
+    -- if there is IMAP threat and it's greater than what we actually see
+    -- use the sum of both * .5
+    if sfake > 0 and sfake > surthreat then
+        surthreat = (surthreat + sfake) * .5
+    end
+    
+    if afake > 0 and afake > airthreat then
+        airthreat = (airthreat + afake) * .5
+    end
+
+    return surthreat, airthreat
+end
+
+-- Sproutos work
+function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
+
+    local markerlist = {}
+
+    -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
+    for _,v in markerTypes do
+    
+        markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
+    end
+    LOG('Marker List is '..repr(markerlist))
+    
+    -- sort the markers by closest distance to final destination
+    if not safeZone then
+        RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) < VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
+    else
+        RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) > VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
+    end
+   
+    -- loop thru each marker -- see if you can form a safe path on the surface 
+    -- and a safe path for the transports -- use the first one that satisfies both
+    for _, v in markerlist do
+
+        -- test the real values for that position
+        local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
+        LOG('stest is '..stest..'atest is '..atest)
+
+        if stest <= threatMax and atest <= airthreatMax then
+        
+            LOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
+
+            -- can the platoon path safely from this marker to the final destination 
+            local landpath, reason = PlatoonGenerateSafePathTo(aiBrain, layer, v.Position, destination, threatMax, 160 )
+            if not landpath then
+                --LOG('No path to transport location from selected position')
+            end
+
+            -- can the transports reach that marker ?
+            if landpath then
+                LOG('Selected Position')
+                return v.Position, v.Name
+            end
+        end
+    end
+    --LOG('Safe landing Location returning false')
+    return false, nil
 end
 
 function NormalizeVector( v )
@@ -467,13 +580,13 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         local usedTransports = false
         local position = platoon:GetPlatoonPosition()
         if (not path and reason == 'NoPath') or bNeedTransports then
-            usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
         -- Require transports over 500 away
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then
-            usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
         -- use if possible at 250
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 256*256 then
-            usedTransports = SendPlatoonWithTransportsNoCheck(aiBrain, platoon, attackPos, false)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false)
         end
 
         if not usedTransports then

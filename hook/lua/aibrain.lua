@@ -169,6 +169,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
+        self.EnemyIntel.DirectorData = {}
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
@@ -194,6 +195,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 Hp = 0,
                 OnField = false,
                 Gun = false,
+            }
+            self.EnemyIntel.DirectorData[v:GetArmyIndex()] = {
+                Strategic = {},
+                Energy = {},
+                Mass = {},
+                Factory = {},
+                Combat = {},
             }
         end
 
@@ -247,14 +255,14 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
 
-        local coinFlip = math.random(2)
-        if coinFlip == 1 then
+        self.coinFlip = math.random(2)
+        if self.coinFlip == 1 then
             self.UpgradeMode = 'Normal'
-        elseif coinFlip == 2 then
+        elseif self.coinFlip == 2 then
             self.UpgradeMode = 'Caution'
             self.UpgradeIssuedLimit = 1
         end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname)
+        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
         
 
         -- ACU Support Data
@@ -1244,7 +1252,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
         WaitTicks(Random(1,7))
-        --LOG('* AI-RNG: Tactical Monitor Threat Pass')
+        LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
@@ -1291,8 +1299,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialThreats = {}
         local threatTypes = {
             'Land',
-            'Air',
+            'AntiAir',
             'Naval',
+            'StructuresNotMex',
             --'AntiSurface'
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
@@ -1369,15 +1378,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
+            local currentGameTime = GetGameTimeSeconds()
             for _, threat in phaseTwoThreats do
-                if threat.EnemyBaseRadius == false then
-                    threat.InsertTime = GetGameTimeSeconds()
-                    table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
-                else
-                    --LOG('* AI-RNG: Removing Threat within Enemy Base Radius')
-                end
+                threat.InsertTime = currentGameTime
+                table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
             end
-            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         WaitTicks(2)
         local landThreatAroundBase = 0

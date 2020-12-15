@@ -358,6 +358,16 @@ function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, 
     return false
 end
 
+function NavalAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    local pos, name = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        --LOG('NavalAreaNeedsEngineerRNG is TRUE at range'..locationRadius)
+        return true
+    end
+    --LOG('NavalAreaNeedsEngineerRNG is FALSE at range'..locationRadius)
+    return false
+end
+
 function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
@@ -693,19 +703,19 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
                 return true
             end
         elseif currentTime < 780 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 5, unitCategory) then
                 return true
             end
         elseif currentTime < 960 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 7, unitCategory) then
                 return true
             end
         elseif currentTime > 1260 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 9, unitCategory) then
                 return true
             end
         elseif currentTime >= 480 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end
         else

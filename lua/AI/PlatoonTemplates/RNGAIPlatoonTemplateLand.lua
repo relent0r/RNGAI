@@ -632,13 +632,13 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueNoEng',
 PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Heavy Tank
+            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
          },
         Aeon = {
             { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
         },
         Cybran = {
-            { 'url0203', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+            { 'url0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
         },
         Seraphim = {
             { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank

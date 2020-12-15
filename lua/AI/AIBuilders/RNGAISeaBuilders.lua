@@ -234,7 +234,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI Sea T2 Queue',
         PlatoonTemplate = 'RNGAIT2SeaAttackQueue',
-        Priority = 400,
+        Priority = 500,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
@@ -271,7 +271,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
-        Priority = 450,
+        Priority = 500,
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY NAVAL TECH3' }},
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
@@ -284,7 +284,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI Sea Ranged T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackRangedQueue',
-        Priority = 450,
+        Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1, 2, 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, 'FACTORY NAVAL TECH3' }},
