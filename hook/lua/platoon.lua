@@ -10536,7 +10536,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 success = AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild)
                 if not success then
                     table.remove(markerTable,curindex) 
-                    eng.EngineerBuildQueue = {}
                     --RNGLOG('No path to currentmexpos')
                     coroutine.yield(1)
                     continue 
