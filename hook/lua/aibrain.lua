@@ -1350,6 +1350,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local energyUnits = {}
         local strategicUnits = {}
         local defensiveUnits = {}
+        local intelUnits = {}
         
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             LOG('Enemy Threat Locations is greater than 0')
@@ -1357,20 +1358,17 @@ AIBrain = Class(RNGAIBrainClass) {
                 local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
                 for s, unit in unitsAtLocation do
                     if EntityCategoryContains( categories.ENERGYPRODUCTION * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        local threat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
-                        local blockingShield = RUtils.ShieldProtectingTargetRNG(self, retUnit)
                         LOG('Inserting Enemy Energy Structure')
-                        table.insert(energyUnits, { Value = threat, Object = unit, Shielded = blockingShield, IMAP = threat.Position, Air = 0, Land = 0 })
+                        table.insert(energyUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                     elseif EntityCategoryContains( categories.DEFENSE * (categores.TECH2 + categories.TECH3), unit) then
-                        local threat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
-                        local blockingShield = RUtils.ShieldProtectingTargetRNG(self, retUnit)
                         LOG('Inserting Enemy Defensive Structure')
-                        table.insert(defensiveUnits, { Value = threat, Object = unit, Shielded = blockingShield, IMAP = threat.Position, Air = 0, Land = 0 })
+                        table.insert(defensiveUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                     elseif EntityCategoryContains( categories.STRATEGIC * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        local threat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
-                        local blockingShield = RUtils.ShieldProtectingTargetRNG(self, retUnit)
                         LOG('Inserting Enemy Strategic Structure')
-                        table.insert(strategicUnits, { Value = threat, Object = unit, Shielded = blockingShield, IMAP = threat.Position, Air = 0, Land = 0 })
+                        table.insert(strategicUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                    elseif EntityCategoryContains( categories.INTELLIGENCE * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                        LOG('Inserting Enemy Intel Structure')
+                        table.insert(intelUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                     end
                 end
                 WaitTicks(1)
@@ -1418,9 +1416,23 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             LOG('Strategic Unit table '..repr(strategicUnits))
-            table.insert(self.EnemyIntel.DirectorData, defensiveUnits)
+            table.insert(self.EnemyIntel.DirectorData, strategicUnits)
         end
         WaitTicks(1)
+        if table.getn(intelUnits) > 0 then
+            for k, unit in intelUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Air = threat.Threat
+                    end
+                end
+            end
+            LOG('Intel Unit table '..repr(intelUnits))
+            table.insert(self.EnemyIntel.DirectorData, intelUnits)
+        end
     end,
 
 
