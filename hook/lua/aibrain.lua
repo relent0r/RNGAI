@@ -1,6 +1,7 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibrain.lua' )
 
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 
@@ -1355,19 +1356,19 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             LOG('Enemy Threat Locations is greater than 0')
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                local unitsAtLocation = self:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
                 for s, unit in unitsAtLocation do
-                    if EntityCategoryContains( categories.ENERGYPRODUCTION * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        LOG('Inserting Enemy Energy Structure')
+                    if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                        LOG('Inserting Enemy Energy Structure '..unit.UnitId)
                         table.insert(energyUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    elseif EntityCategoryContains( categories.DEFENSE * (categores.TECH2 + categories.TECH3), unit) then
-                        LOG('Inserting Enemy Defensive Structure')
+                    elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
+                        LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
                         table.insert(defensiveUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    elseif EntityCategoryContains( categories.STRATEGIC * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        LOG('Inserting Enemy Strategic Structure')
+                    elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                        LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
                         table.insert(strategicUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    elseif EntityCategoryContains( categories.INTELLIGENCE * (categores.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        LOG('Inserting Enemy Intel Structure')
+                    elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                        LOG('Inserting Enemy Intel Structure '..unit.UnitId)
                         table.insert(intelUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                     end
                 end
@@ -1385,7 +1386,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('Energy Unit table '..repr(energyUnits))
             table.insert(self.EnemyIntel.DirectorData, energyUnits)
         end
         WaitTicks(1)
@@ -1400,7 +1400,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('Defensive Unit table '..repr(defensiveUnits))
             table.insert(self.EnemyIntel.DirectorData, defensiveUnits)
         end
         WaitTicks(1)
@@ -1415,7 +1414,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('Strategic Unit table '..repr(strategicUnits))
             table.insert(self.EnemyIntel.DirectorData, strategicUnits)
         end
         WaitTicks(1)
@@ -1430,7 +1428,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            LOG('Intel Unit table '..repr(intelUnits))
             table.insert(self.EnemyIntel.DirectorData, intelUnits)
         end
     end,
@@ -1571,7 +1568,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 threat.InsertTime = currentGameTime
                 table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
             end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         WaitTicks(2)
 
