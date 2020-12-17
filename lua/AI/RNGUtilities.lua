@@ -355,14 +355,14 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
     end
     local Reclaiming = false
     --Temporary for troubleshooting
-    local GetBlueprint = moho.entity_methods.GetBlueprint
+    --local GetBlueprint = moho.entity_methods.GetBlueprint
     -- Check if enemy units are at location
     local checkUnits = aiBrain:GetUnitsAroundPoint( (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 15, 'Enemy')
     -- reclaim units near our building place.
     if checkUnits and table.getn(checkUnits) > 0 then
         for num, unit in checkUnits do
             --temporary for troubleshooting
-            unitdesc = GetBlueprint(unit).Description
+            --unitdesc = GetBlueprint(unit).Description
             if unit.Dead or unit:BeenDestroyed() then
                 continue
             end
