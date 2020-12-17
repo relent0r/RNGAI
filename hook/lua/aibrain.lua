@@ -198,9 +198,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 OnField = false,
                 Gun = false,
             }
-            self.EnemyIntel.DirectorData[v:GetArmyIndex()] = {
+            self.EnemyIntel.DirectorData = {
                 Strategic = {},
                 Energy = {},
+                Intel = {},
+                Defense = {},
                 Mass = {},
                 Factory = {},
                 Combat = {},
@@ -1123,8 +1125,10 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
-                self:TacticalMonitorRNG(ALLBPS)
+                self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
+                self:TacticalMonitorRNG(ALLBPS)
+                
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -1132,6 +1136,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalAnalysisThreadRNG = function(self)
         local ALLBPS = __blueprints
+        WaitTicks(200)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 self:TacticalThreatAnalysisRNG(ALLBPS)
@@ -1178,7 +1183,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
                     end
-
+                    WaitTicks(1)
                     local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                     for _,v in enemyExtractors do
                         bp = ALLBPS[v.UnitId].Defense
@@ -1186,7 +1191,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
                         enemyExtractorCount = enemyExtractorCount + 1
                     end
-
+                    WaitTicks(1)
                     local enemyNaval = GetListOfUnits( enemy, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
                     for _,v in enemyNaval do
                         bp = ALLBPS[v.UnitId].Defense
@@ -1195,7 +1200,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
                     end
-
+                    WaitTicks(1)
                     local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
                     for _,v in enemyDefense do
                         bp = ALLBPS[v.UnitId].Defense
@@ -1205,6 +1210,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
                         enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
                     end
+                    WaitTicks(1)
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
                     for _,v in enemyACU do
                         local factionIndex = enemy:GetFactionIndex()
@@ -1259,6 +1265,95 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.DefenseSurface = enemyDefenseSurface
         self.EnemyIntel.EnemyThreatCurrent.DefenseSub = enemyDefenseSub
         --LOG('Completing Threat Check'..GetGameTick())
+    end,
+
+    SelfThreatCheckRNG = function(self, ALLBPS)
+        -- Get AI strength
+
+        local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
+        local airthreat = 0
+        local antiAirThreat = 0
+        local bp
+
+		-- calculate my present airvalue			
+		for _,v in brainAirUnits do
+            -- previous method of getting unit ID before the property was added.
+            --local unitbpId = v:GetUnitId()
+            --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
+			bp = ALLBPS[v.UnitId].Defense
+
+            airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+            antiAirThreat = antiAirThreat + bp.AirThreatLevel
+        end
+        --LOG('My Air Threat is'..airthreat)
+        self.BrainIntel.SelfThreat.AirNow = airthreat
+        self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
+
+        if airthreat > 0 then
+            local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
+            table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
+            --LOG('Total Air Unit Threat :'..airthreat)
+            --LOG('Current Self Air Threat Table :'..repr(self.BrainIntel.SelfThreat.Air))
+            local averageSelfThreat = 0
+            for k, v in self.BrainIntel.SelfThreat.Air do
+                averageSelfThreat = averageSelfThreat + v.Threat
+            end
+            self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
+            --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
+        end
+        WaitTicks(1)
+        local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+        local selfExtractorCount = 0
+        local selfExtractorThreat = 0
+        local exBp
+
+        for _,v in brainExtractors do
+            exBp = ALLBPS[v.UnitId].Defense
+            selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
+            selfExtractorCount = selfExtractorCount + 1
+        end
+        self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
+        self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
+        local allyBrains = {}
+        for index, brain in ArmyBrains do
+            if index ~= self:GetArmyIndex() then
+                if IsAlly(selfIndex, brain:GetArmyIndex()) then
+                    table.insert(allyBrains, brain)
+                end
+            end
+        end
+        local allyExtractorCount = 0
+        local allyExtractorthreat = 0
+        --LOG('Number of Allies '..table.getn(allyBrains))
+        WaitTicks(1)
+        if table.getn(allyBrains) > 0 then
+            for k, ally in allyBrains do
+                local allyExtractors = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+                for _,v in allyExtractors do
+                    bp = ALLBPS[v.UnitId].Defense
+                    allyExtractorthreat = allyExtractorthreat + bp.EconomyThreatLevel
+                    allyExtractorCount = allyExtractorCount + 1
+                end
+            end
+            
+        end
+        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
+        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
+        --LOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
+        --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
+        --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
+        --LOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
+        WaitTicks(1)
+        local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
+        local navalThreat = 0
+        local navalSubThreat = 0
+        for _,v in brainNavalUnits do
+            bp = ALLBPS[v.UnitId].Defense
+            navalThreat = navalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
+            navalSubThreat = navalSubThreat + bp.SubThreatLevel
+        end
+        self.BrainIntel.SelfThreat.NavalNow = navalThreat
+        self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
     end,
 
     --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
@@ -1344,94 +1439,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
     end,]]
-
-    TacticalThreatAnalysisRNG = function(self, ALLBPS)
-
-        self.EnemyIntel.DirectorData = {}
-        local energyUnits = {}
-        local strategicUnits = {}
-        local defensiveUnits = {}
-        local intelUnits = {}
-        
-        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            LOG('Enemy Threat Locations is greater than 0')
-            for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                local unitsAtLocation = self:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
-                for s, unit in unitsAtLocation do
-                    if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        LOG('Inserting Enemy Energy Structure '..unit.UnitId)
-                        table.insert(energyUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
-                        LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
-                        table.insert(defensiveUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
-                        table.insert(strategicUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                        LOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                        table.insert(intelUnits, { Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                    end
-                end
-                WaitTicks(1)
-            end
-        end
-        if table.getn(energyUnits) > 0 then
-            for k, unit in energyUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
-                        unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
-                        unit.Air = threat.Threat
-                    end
-                end
-            end
-            table.insert(self.EnemyIntel.DirectorData, energyUnits)
-        end
-        WaitTicks(1)
-        if table.getn(defensiveUnits) > 0 then
-            for k, unit in defensiveUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
-                        unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
-                        unit.Air = threat.Threat
-                    end
-                end
-            end
-            table.insert(self.EnemyIntel.DirectorData, defensiveUnits)
-        end
-        WaitTicks(1)
-        if table.getn(strategicUnits) > 0 then
-            for k, unit in strategicUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
-                        unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
-                        unit.Air = threat.Threat
-                    end
-                end
-            end
-            table.insert(self.EnemyIntel.DirectorData, strategicUnits)
-        end
-        WaitTicks(1)
-        if table.getn(intelUnits) > 0 then
-            for k, unit in intelUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
-                        unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
-                        unit.Air = threat.Threat
-                    end
-                end
-            end
-            table.insert(self.EnemyIntel.DirectorData, intelUnits)
-        end
-    end,
-
 
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
@@ -1595,93 +1602,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.BrainIntel.SelfThreat.BaseThreatCaution = false
             end
         end
-
-        -- Get AI strength
-        local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
-        local airthreat = 0
-        local antiAirThreat = 0
-        local bp
-
-		-- calculate my present airvalue			
-		for _,v in brainAirUnits do
-            -- previous method of getting unit ID before the property was added.
-            --local unitbpId = v:GetUnitId()
-            --LOG('Unit blueprint id test only on dev branch:'..v.UnitId)
-			bp = ALLBPS[v.UnitId].Defense
-
-            airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-            antiAirThreat = antiAirThreat + bp.AirThreatLevel
-        end
-        --LOG('My Air Threat is'..airthreat)
-        self.BrainIntel.SelfThreat.AirNow = airthreat
-        self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
-
-        if airthreat > 0 then
-            local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
-            table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
-            --LOG('Total Air Unit Threat :'..airthreat)
-            --LOG('Current Self Air Threat Table :'..repr(self.BrainIntel.SelfThreat.Air))
-            local averageSelfThreat = 0
-            for k, v in self.BrainIntel.SelfThreat.Air do
-                averageSelfThreat = averageSelfThreat + v.Threat
-            end
-            self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
-            --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
-        end
-        WaitTicks(2)
-        local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
-        local selfExtractorCount = 0
-        local selfExtractorThreat = 0
-        local exBp
-
-        for _,v in brainExtractors do
-            exBp = ALLBPS[v.UnitId].Defense
-            selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
-            selfExtractorCount = selfExtractorCount + 1
-        end
-        self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
-        self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
-        local allyBrains = {}
-        for index, brain in ArmyBrains do
-            if index ~= self:GetArmyIndex() then
-                if IsAlly(selfIndex, brain:GetArmyIndex()) then
-                    table.insert(allyBrains, brain)
-                end
-            end
-        end
-        local allyExtractorCount = 0
-        local allyExtractorthreat = 0
-        --LOG('Number of Allies '..table.getn(allyBrains))
-        if table.getn(allyBrains) > 0 then
-            for k, ally in allyBrains do
-                local allyExtractors = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
-                for _,v in allyExtractors do
-                    bp = ALLBPS[v.UnitId].Defense
-                    allyExtractorthreat = allyExtractorthreat + bp.EconomyThreatLevel
-                    allyExtractorCount = allyExtractorCount + 1
-                end
-            end
-            
-        end
-        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
-        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
-        --LOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
-        --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
-        --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
-        --LOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
-        WaitTicks(2)
-        local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
-        local navalThreat = 0
-        local navalSubThreat = 0
-        for _,v in brainNavalUnits do
-            bp = ALLBPS[v.UnitId].Defense
-            navalThreat = navalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-            navalSubThreat = navalSubThreat + bp.SubThreatLevel
-        end
-        self.BrainIntel.SelfThreat.NavalNow = navalThreat
-        self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
-
-
+        
         if gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
@@ -1704,17 +1625,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Ally Count is '..self.BrainIntel.AllyCount)
         --LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
         --LOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
-
-        --[[
-        if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
-            local totalAirThreat = 0
-            for k, v in self.EnemyIntel.EnemyThreatRaw do
-                if v.rThreatType == 'Air' then
-                    totalAirThreat = totalAirThreat + v.rThreat
-                end
-            end
-            self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
-        end]]
         --LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
         --LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
         --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
@@ -1731,6 +1641,100 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
+    end,
+
+    TacticalThreatAnalysisRNG = function(self, ALLBPS)
+
+        self.EnemyIntel.DirectorData = {}
+        local energyUnits = {}
+        local strategicUnits = {}
+        local defensiveUnits = {}
+        local intelUnits = {}
+        local gameTime = GetGameTimeSeconds()
+        
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            LOG('Enemy Threat Locations is greater than 0')
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                if (gameTime - threat.InsertTime) < 25 then
+                    local unitsAtLocation = self:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                    for s, unit in unitsAtLocation do
+                        if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                            LOG('Inserting Enemy Energy Structure '..unit.UnitId)
+                            table.insert(energyUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                        elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
+                            LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
+                            table.insert(defensiveUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                        elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                            LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
+                            table.insert(strategicUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                        elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                            LOG('Inserting Enemy Intel Structure '..unit.UnitId)
+                            table.insert(intelUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                        end
+                    end
+                    WaitTicks(1)
+                end
+            end
+        end
+        if table.getn(energyUnits) > 0 then
+            for k, unit in energyUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                LOG('Enemy Energy Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Energy, energyUnits)
+        end
+        WaitTicks(1)
+        if table.getn(defensiveUnits) > 0 then
+            for k, unit in defensiveUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Defense, defensiveUnits)
+        end
+        WaitTicks(1)
+        if table.getn(strategicUnits) > 0 then
+            for k, unit in strategicUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                LOG('Enemy Strategic Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Strategic, strategicUnits)
+        end
+        WaitTicks(1)
+        if table.getn(intelUnits) > 0 then
+            for k, unit in intelUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                        unit.Air = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                LOG('Enemy Intel Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Intel, intelUnits)
+        end
     end,
 
     EcoExtractorUpgradeCheckRNG = function(self)
