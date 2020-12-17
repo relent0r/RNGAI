@@ -9,6 +9,8 @@ local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
 
@@ -437,7 +439,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     table.insert(self.BaseMonitor.BaseMonitorPoints,
                         {
                             Position = v,
-                            Threat = self:GetThreatAtPosition(v, 0, true, 'Land'),
+                            Threat = GetThreatAtPosition(self, v, 0, true, 'Land'),
                             Alert = false
                         }
                     )
@@ -462,7 +464,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local alertThreat = self.BaseMonitor.AlertLevel
             for k, v in self.BaseMonitor.BaseMonitorPoints do
                 if not v.Alert then
-                    v.Threat = self:GetThreatAtPosition(v.Position, 0, true, 'Land')
+                    v.Threat = GetThreatAtPosition(self, v.Position, 0, true, 'Land')
                     if v.Threat > alertThreat then
                         v.Alert = true
                         table.insert(self.BaseMonitor.AlertsTable,
@@ -837,7 +839,7 @@ AIBrain = Class(RNGAIBrainClass) {
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
         while true do
-            local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             for _, struct in structures do
                 local dupe = false
                 local newPos = {struct[1], 0, struct[2]}
@@ -1012,8 +1014,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
-                    local threat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
-                    local myThreat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
+                    local threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
+                    local myThreat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
                     --LOG('* AI-RNG: Threat of attacker'..threat)
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
@@ -1498,7 +1500,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
         for _, t in threatTypes do
-            rawThreats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, t)
+            rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
                 local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 table.insert(potentialThreats, threatRow)

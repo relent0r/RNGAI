@@ -11,6 +11,7 @@ local ALLBPS = __blueprints
 local SUtils = import('/lua/AI/sorianutilities.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 RNGAIPlatoon = Platoon
 Platoon = Class(RNGAIPlatoon) {
@@ -344,9 +345,9 @@ Platoon = Class(RNGAIPlatoon) {
             for _,marker in markerLocations do
                 local markerThreat
                 if bSelfThreat then
-                    markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, threatType, aiBrain:GetArmyIndex())
+                    markerThreat = GetThreatAtPosition(aiBrain, marker.Position, 0, true, threatType, aiBrain:GetArmyIndex())
                 else
-                    markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, threatType)
+                    markerThreat = GetThreatAtPosition(aiBrain, marker.Position, 0, true, threatType)
                 end
                 local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
 
@@ -1197,7 +1198,7 @@ Platoon = Class(RNGAIPlatoon) {
                     self.PlatoonFull = false
                     --LOG('Merging with patoon count of '..platoonCount)
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
-                        targetThreat = aiBrain:GetThreatAtPosition(targetPosition, 0, true, 'Land')
+                        targetThreat = GetThreatAtPosition(aiBrain, targetPosition, 0, true, 'Land')
                         --LOG('HuntAIPath targetThreat is '..targetThreat)
                         if targetThreat > platoonThreat then
                             --LOG('HuntAIPath attempting merge and formation ')
@@ -1537,7 +1538,7 @@ Platoon = Class(RNGAIPlatoon) {
                     self.PlatoonFull = false
                     --LOG('Merging with patoon count of '..platoonCount)
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
-                        positionThreat = aiBrain:GetThreatAtPosition(rangedPosition, 0, true, 'Naval')
+                        positionThreat = GetThreatAtPosition(aiBrain, rangedPosition, 0, true, 'Naval')
                         --LOG('NavalRangedAIRNG targetThreat is '..targetThreat)
                         if positionThreat > platoonThreat then
                             --LOG('NavalRangedAIRNG attempting merge and formation ')
@@ -1946,7 +1947,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local targetExpThreat
                     if self.MovementLayer == 'Air' then
                         targetExpPos = newtarget:GetPosition()
-                        targetExpThreat = aiBrain:GetThreatAtPosition(targetExpPos, 1, true, 'AntiAir')
+                        targetExpThreat = GetThreatAtPosition(aiBrain, targetExpPos, 1, true, 'AntiAir')
                         --LOG('Target Air Threat is '..targetExpThreat)
                         --LOG('My Air Threat is '..myThreat)
                         if myThreat > targetExpThreat then
@@ -2306,7 +2307,7 @@ Platoon = Class(RNGAIPlatoon) {
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, eng, cons)
             end
             relative = false
-            if reference and aiBrain:GetThreatAtPosition(reference , 1, true, 'AntiSurface') > 0 then
+            if reference and GetThreatAtPosition(aiBrain, reference , 1, true, 'AntiSurface') > 0 then
                 --aiBrain:ExpansionHelp(eng, reference)
             end
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
@@ -2370,7 +2371,7 @@ Platoon = Class(RNGAIPlatoon) {
             if cons.ExpansionBase and refName then
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, (cons.ExpansionRadius or 100), cons.ExpansionTypes, nil, cons)
             end
-            if reference and aiBrain:GetThreatAtPosition(reference, 1, true) > 0 then
+            if reference and GetThreatAtPosition(aiBrain, reference, 1, true) > 0 then
                 --aiBrain:ExpansionHelp(eng, reference)
             end
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
@@ -2851,8 +2852,8 @@ Platoon = Class(RNGAIPlatoon) {
         for _,marker in markerLocations do
             local markerThreat
             local enemyThreat
-            markerThreat = aiBrain:GetThreatAtPosition(marker.Position, 0, true, 'Economy', enemyIndex)
-            enemyThreat = aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'AntiSurface', enemyIndex)
+            markerThreat = GetThreatAtPosition(aiBrain, marker.Position, 0, true, 'Economy', enemyIndex)
+            enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSurface', enemyIndex)
             --LOG('Best pre calculation marker threat is '..markerThreat..' at position'..repr(marker.Position))
             --LOG('Surface Threat at marker is '..enemyThreat..' at position'..repr(marker.Position))
             if enemyThreat > 1 and markerThreat then
@@ -3476,7 +3477,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 if not PlatoonExists(aiBrain, self) then
                                     return
                                 end
-                            until not self:IsCommandsActive(cmd) or aiBrain:GetThreatAtPosition(moveLocation, 0, true, 'Overall') <= threatThreshold
+                            until not self:IsCommandsActive(cmd) or GetThreatAtPosition(aiBrain, moveLocation, 0, true, 'Overall') <= threatThreshold
                             --LOG('Initial Distress Response Loop finished')
 
                             platoonPos = GetPlatoonPosition(self)
@@ -3506,7 +3507,7 @@ Platoon = Class(RNGAIPlatoon) {
         local pos = GetPlatoonPosition(self)
         while PlatoonExists(aiBrain, self) and pos do
             if not self.DistressCall then
-                local threat = aiBrain:GetThreatAtPosition(pos, 0, true, 'Land')
+                local threat = GetThreatAtPosition(aiBrain, pos, 0, true, 'Land')
                 --LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
                     --LOG('*RNGAI Mass Extractor Platoon Calling for help')
