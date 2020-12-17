@@ -147,7 +147,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
         end
-        LOG('RNG FactorFinishedbuilding')
+        --LOG('RNG FactorFinishedbuilding')
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
             self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then

@@ -311,6 +311,7 @@ BuilderGroup {
                 'EXPERIMENTAL AIR',
                 'BOMBER AIR',
                 'GUNSHIP AIR',
+                'TRANSPORT AIR',
                 'ANTIAIR AIR',
             },
         },
