@@ -1937,7 +1937,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoManagerPowerStateCheck = function(self)
 
-        local energyIncome = self:GetEconomyIncome('ENERGY')
+        local energyIncome = GetEconomyIncome(self, 'ENERGY')
         local energyRequest = self:GetEconomyRequested('ENERGY')
         local energyStorage = self:GetEconomyStored('ENERGY')
         local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
@@ -2162,25 +2162,6 @@ AIBrain = Class(RNGAIBrainClass) {
             WaitTicks(30)
         end
     end,
-
-    --[[
-    EcoManagerMassStateCheck = function(self)
-
-        local massIncome = self:GetEconomyIncome('MASS')
-        local massRequest = self:GetEconomyRequested('MASS')
-        local massStorage = self:GetEconomyStored('MASS')
-        local stallTime = massStorage / ((massRequest * 10) - (massIncome * 10))
-        --LOG('Mass Income :'..(massIncome * 10)..' Mass Requested :'..(massRequest * 10)..' Mass Storage :'..massStorage)
-        --LOG('Time to stall for '..stallTime)
-        if stallTime >= 0.0 then
-            if stallTime < 20 then
-                return true
-            elseif stallTime > 20 then
-                return false
-            end
-        end
-        return false
-    end,]]
 
     EcoManagerMassStateCheck = function(self)
         if self:GetEconomyTrend('MASS') <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
