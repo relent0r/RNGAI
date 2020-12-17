@@ -11,6 +11,7 @@ local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
 
@@ -390,7 +391,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     GetStructureVectorsRNG = function(self)
-        local structures = self:GetListOfUnits(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
+        local structures = GetListOfUnits(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
         -- Add all points around location
         local tempGridPoints = {}
         local indexChecker = {}
@@ -694,7 +695,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local ecoThreat = 0
 
             if insertTable.Enemy == false then
-                local ecoStructures = self:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
+                local ecoStructures = GetUnitsAroundPoint(self, categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
                 local GetBlueprint = moho.entity_methods.GetBlueprint
                 for _, v in ecoStructures do
                     local bp = v:GetBlueprint()
@@ -1658,7 +1659,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Enemy Threat Locations is greater than 0')
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if (gameTime - threat.InsertTime) < 25 then
-                    local unitsAtLocation = self:GetUnitsAroundPoint(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
                     for s, unit in unitsAtLocation do
                         if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                             LOG('Inserting Enemy Energy Structure '..unit.UnitId)
@@ -1797,7 +1798,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -1809,7 +1810,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'MASS')
                         elseif priorityUnit == 'AIR' then
                             local unitAlreadySet = false
@@ -1821,7 +1822,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.AIR) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'LAND' then
                             local unitAlreadySet = false
@@ -1833,7 +1834,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'NAVAL' then
                             local unitAlreadySet = false
@@ -1845,7 +1846,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
@@ -1857,7 +1858,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
+                            local Extractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                             --LOG('Number of mass extractors'..table.getn(Extractors))
                             self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause', 'MASS')
                         elseif priorityUnit == 'NUKE' then
@@ -1870,7 +1871,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
@@ -1882,7 +1883,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
                         WaitTicks(20)
@@ -1902,28 +1903,28 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'MASS')
                         elseif v == 'STATIONPODS' then
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'MASS')
                         elseif v == 'AIR' then
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'MASS')
                         elseif v == 'LAND' then
-                            local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
                         elseif v == 'NAVAL' then
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'MASS')
                         elseif v == 'MASSEXTRACTION' then
-                            local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
+                            local Extractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(v, Extractors, 'unpause', 'MASS')
                         elseif v == 'NUKE' then
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'MASS')
                         elseif v == 'TML' then
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
                     end
@@ -1999,7 +2000,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'ENERGY')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -2011,7 +2012,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'ENERGY')
                         elseif priorityUnit == 'AIR' then
                             local unitAlreadySet = false
@@ -2023,7 +2024,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'LAND' then
                             local unitAlreadySet = false
@@ -2035,7 +2036,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NAVAL' then
                             local unitAlreadySet = false
@@ -2047,7 +2048,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'SHIELD' then
                             local unitAlreadySet = false
@@ -2059,7 +2060,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
+                            local Shields = GetListOfUnits(self, categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
@@ -2071,7 +2072,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'ENERGY')
                         elseif priorityUnit == 'RADAR' then
                             local unitAlreadySet = false
@@ -2083,7 +2084,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Radars = self:GetListOfUnits(categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Radars, 'pause', 'ENERGY')
                         elseif priorityUnit == 'MASSFABRICATION' then
                             local unitAlreadySet = false
@@ -2095,7 +2096,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local MassFabricators = self:GetListOfUnits(categories.STRUCTURE * categories.MASSFABRICATION, false, false)
+                            local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, MassFabricators, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NUKE' then
                             local unitAlreadySet = false
@@ -2107,7 +2108,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                         end
                         WaitTicks(20)
@@ -2127,31 +2128,31 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'ENERGY')
                         elseif v == 'STATIONPODS' then
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'ENERGY')
                         elseif v == 'AIR' then
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
                         elseif v == 'LAND' then
-                            local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'ENERGY')
                         elseif v == 'NAVAL' then
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'ENERGY')
                         elseif v == 'SHIELD' then
-                            local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
+                            local Shields = GetListOfUnits(self, categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(v, Shields, 'unpause', 'ENERGY')
                         elseif v == 'MASSFABRICATION' then
-                            local MassFabricators = self:GetListOfUnits(categories.STRUCTURE * categories.MASSFABRICATION, false, false)
+                            local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
                             self:EcoSelectorManagerRNG(v, MassFabricators, 'unpause', 'ENERGY')
                         elseif v == 'NUKE' then
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'ENERGY')
                         elseif v == 'TML' then
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'ENERGY')
                         end
                     end
