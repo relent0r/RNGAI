@@ -39,7 +39,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         else
-            table.insert(atkPri, 'MOBILE AIR')
+            table.insert(atkPri, categories.MOBILE * categories.AIR)
             table.insert(categoryList, categories.MOBILE * categories.AIR)
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
@@ -1173,7 +1173,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
 
-        table.insert(atkPri, 'ALLUNITS')
+        table.insert(atkPri, categories.ALLUNITS)
         table.insert(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
 
@@ -1847,7 +1847,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
 
-        table.insert(atkPri, 'ALLUNITS')
+        table.insert(atkPri, categories.ALLUNITS)
         table.insert(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
         AIAttackUtils.GetMostRestrictiveLayer(self)
