@@ -174,7 +174,17 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
-        self.EnemyIntel.DirectorData = {}
+        self.EnemyIntel.DirectorData = {
+            Strategic = {},
+            Energy = {},
+            Intel = {},
+            Defense = {},
+            Mass = {},
+            Factory = {},
+            Combat = {},
+        }
+        LOG('Director Data'..repr(self.EnemyIntel.DirectorData))
+        LOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
@@ -200,15 +210,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 Hp = 0,
                 OnField = false,
                 Gun = false,
-            }
-            self.EnemyIntel.DirectorData = {
-                Strategic = {},
-                Energy = {},
-                Intel = {},
-                Defense = {},
-                Mass = {},
-                Factory = {},
-                Combat = {},
             }
         end
 
@@ -1272,6 +1273,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     SelfThreatCheckRNG = function(self, ALLBPS)
         -- Get AI strength
+        local selfIndex = self:GetArmyIndex()
 
         local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
         local airthreat = 0
@@ -1648,7 +1650,15 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalThreatAnalysisRNG = function(self, ALLBPS)
 
-        self.EnemyIntel.DirectorData = {}
+        self.EnemyIntel.DirectorData = {
+            Strategic = {},
+            Energy = {},
+            Intel = {},
+            Defense = {},
+            Mass = {},
+            Factory = {},
+            Combat = {},
+        }
         local energyUnits = {}
         local strategicUnits = {}
         local defensiveUnits = {}
@@ -1658,21 +1668,21 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             LOG('Enemy Threat Locations is greater than 0')
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                if (gameTime - threat.InsertTime) < 25 then
+                if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
                     local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
                     for s, unit in unitsAtLocation do
                         if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                             LOG('Inserting Enemy Energy Structure '..unit.UnitId)
-                            table.insert(energyUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            table.insert(energyUnits, {EnemyIndex = unit:GetAIBrain():GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                         elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
                             LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
-                            table.insert(defensiveUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            table.insert(defensiveUnits, {EnemyIndex = unit:GetAIBrain():GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                         elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                             LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
-                            table.insert(strategicUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            table.insert(strategicUnits, {EnemyIndex = unit:GetAIBrain():GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                         elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                             LOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                            table.insert(intelUnits, {EnemyIndex = unit:GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            table.insert(intelUnits, {EnemyIndex = unit:GetAIBrain():GetArmyIndex(), Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                         end
                     end
                     WaitTicks(1)

@@ -310,8 +310,8 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR,
                 categories.BOMBER * categories.AIR,
-                categories.GUNSHIP * categories.AIR,
-                categories.TRANSPORT * categories.AIR,
+                categories.GROUNDATTACK * categories.AIR,
+                categories.TRANSPORTFOCUS * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
             },
         },
@@ -376,7 +376,7 @@ BuilderGroup {
             NeverGuardEngineers = true,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR,
-                categories.GUNSHIP * categories.AIR,
+                categories.GROUNDATTACK * categories.AIR,
                 categories.BOMBER * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
             },
@@ -398,7 +398,7 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR,
                 categories.BOMBER * categories.AIR,
-                categories.GUNSHIP * categories.AIR,
+                categories.GROUNDATTACK * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
             },
         },
@@ -575,7 +575,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
-                categories.TECH3 * categories.ANTIMISSILES * categories.SILO * categories.STRUCTURE,
+       --         categories.TECH3 * categories.ANTIMISSILE * categories.SILO * categories.STRUCTURE,
                 categories.TECH3 * categories.NUKE * categories.SILO * categories.STRUCTURE,
                 categories.TECH3 * categories.ARTILLERY * categories.STRUCTURE,
                 categories.ENERGYSTORAGE,

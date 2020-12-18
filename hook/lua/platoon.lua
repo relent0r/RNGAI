@@ -1169,7 +1169,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, ParseEntityCategory(v))
+                table.insert(categoryList, v)
             end
         end
 
@@ -1516,7 +1516,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, ParseEntityCategory(v))
+                table.insert(categoryList, v)
             end
         end
 
@@ -1843,12 +1843,13 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, ParseEntityCategory(v))
+                table.insert(categoryList, v)
             end
         end
 
         table.insert(atkPri, categories.ALLUNITS)
         table.insert(categoryList, categories.ALLUNITS)
+        --LOG('Platoon is '..self.BuilderName..' table'..repr(categoryList))
         self:SetPrioritizedTargetList('Attack', categoryList)
         AIAttackUtils.GetMostRestrictiveLayer(self)
         local target
@@ -4525,10 +4526,10 @@ Platoon = Class(RNGAIPlatoon) {
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 table.insert(atkPri, v)
-                table.insert(atkPriTable, ParseEntityCategory(v))
+                table.insert(atkPriTable, v)
             end
         end
-        table.insert(atkPri, 'ALLUNITS')
+        table.insert(atkPri, categories.ALLUNITS)
         table.insert(atkPriTable, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', atkPriTable)
 
@@ -4539,7 +4540,7 @@ Platoon = Class(RNGAIPlatoon) {
         
         while aiBrain:PlatoonExists(self) do
             self:MergeWithNearbyPlatoonsSorian('SatelliteAIRNG', 50, true)
-            target = AIUtils.AIFindUndefendedBrainTargetInRangeSorian(aiBrain, self, 'Attack', maxRadius, atkPri)
+            target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
             local targetRotation = 0
             if target and target != oldTarget and not target.Dead then
                 -- Pondering over if getting the target position would be useful for calling in air strike on target if shielded.

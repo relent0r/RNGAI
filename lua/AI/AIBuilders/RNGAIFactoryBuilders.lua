@@ -784,10 +784,10 @@ BuilderGroup {
         },
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-                { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3}},
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, 'MASSEXTRACTION TECH2, MASSEXTRACTION TECH3'}},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2}},
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             },
