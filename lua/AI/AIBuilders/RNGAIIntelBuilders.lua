@@ -84,7 +84,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.90}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},

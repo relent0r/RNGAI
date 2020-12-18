@@ -639,8 +639,8 @@ BuilderGroup {
         PlatoonTemplate = 'CybranT2EngineerBuilder',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
-            { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, 'ENGINEER TECH2' } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.ENGINEERSTATION }},
+            { UCBC, 'EngineerGreaterAtLocation', { 'LocationType', 3, categories.ENGINEER * categories.TECH2 } },
             { EBC, 'GreaterThanEconIncome',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.4 }},

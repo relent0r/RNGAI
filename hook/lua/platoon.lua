@@ -2371,9 +2371,6 @@ Platoon = Class(RNGAIPlatoon) {
             if cons.ExpansionBase and refName then
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, (cons.ExpansionRadius or 100), cons.ExpansionTypes, nil, cons)
             end
-            if reference and GetThreatAtPosition(aiBrain, reference, 1, true) > 0 then
-                --aiBrain:ExpansionHelp(eng, reference)
-            end
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             buildFunction = AIBuildStructures.AIExecuteBuildStructure
         elseif cons.AvoidCategory then
