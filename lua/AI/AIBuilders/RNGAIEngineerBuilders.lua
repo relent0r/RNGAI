@@ -27,7 +27,7 @@ end
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Engineer Initial',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 1000, -- Top factory priority
@@ -36,7 +36,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 3 of them.
         },
         BuilderType = 'All',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Mass',
         PlatoonTemplate = 'T1BuildEngineer',
@@ -45,17 +45,6 @@ BuilderGroup {
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 180, -500, 0, 0, 'AntiSurface', 1}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
-        },
-        BuilderType = 'All',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Engineer T1 NoPath',
-        PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 700,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
         },
         BuilderType = 'All',
     },
