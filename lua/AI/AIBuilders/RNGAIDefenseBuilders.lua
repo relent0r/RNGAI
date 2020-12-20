@@ -757,7 +757,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },

@@ -742,6 +742,12 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
             if PoolGreaterAtLocation(aiBrain, locationType, 12, unitCategory) then
                 return true
             end
+        elseif currentTime > 960 and (aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 10, unitCategory) then
+                return true
+            else
+                return false
+            end
         elseif currentTime > 960 then
             if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
                 return true

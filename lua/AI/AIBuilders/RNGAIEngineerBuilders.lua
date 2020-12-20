@@ -51,7 +51,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 NoPath',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 750,
+        Priority = 700,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
@@ -68,7 +68,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendRNG', { 20.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
-        BuilderType = 'All',
+        BuilderType = 'Land',
     },
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
