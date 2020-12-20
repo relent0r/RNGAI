@@ -8,7 +8,7 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
-BuilderGroup {
+--[[BuilderGroup {
     BuilderGroupName = 'RNGAI LabLandBuilder',
     BuildersType = 'FactoryBuilder',
     -- Opening Lab Build --
@@ -24,7 +24,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-}
+}]]
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Hunter Labs FormBuilders',

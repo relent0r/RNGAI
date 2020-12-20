@@ -1547,7 +1547,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             else
                                 onWater = false
                             end
-                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = true, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater}
+                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = true, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
                             table.insert(phaseTwoThreats, threatLocation)
                         else
                             --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
@@ -1556,7 +1556,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             else
                                 onWater = false
                             end
-                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater}
+                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
                             table.insert(phaseTwoThreats, threatLocation)
                         end
                     end
@@ -1664,6 +1664,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalThreatAnalysisRNG = function(self, ALLBPS)
 
         self.EnemyIntel.DirectorData = {
+            DefenseCluster = {},
             Strategic = {},
             Energy = {},
             Intel = {},
@@ -1710,6 +1711,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
                     if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
                         unit.Air = threat.Threat
+                        threat.
                     end
                     if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
@@ -1722,12 +1724,19 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(1)
         if table.getn(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                for q, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' and (gameTime - threat.InsertTime) < 25 then
                         unit.Air = threat.Threat
                     end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' and (gameTime - threat.InsertTime) < 25 then
                         unit.Land = threat.Threat
+                    end
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'StructuresNotMex' and (gameTime - threat.InsertTime) < 25 then
+                        if ALLBPS[unit.UnitId].Defense.AirThreatLevel > 0 then
+                            self.EnemyIntel.EnemyThreatLocations[q]AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q]AirDefStructureCount + 1
+                        elseif ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel > 0 then
+                            self.EnemyIntel.EnemyThreatLocations[q]LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q]LandDefStructureCount + 1
+                        end
                     end
                 end
                 LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)

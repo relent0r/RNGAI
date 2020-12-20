@@ -190,7 +190,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Large',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Arty Sera Early Large', -- Sera cause floaty
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 900, -- After First Engie Group and scout
@@ -217,7 +217,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Arty Sera Large', -- Sera cause floaty
         PlatoonTemplate = 'T1LandArtillery',
