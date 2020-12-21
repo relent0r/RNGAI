@@ -73,7 +73,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     -- Opening Tank Build --
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Tank Sera Small', -- Sera only because they don't get labs
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 900, -- After First Engie Group and scout
@@ -85,7 +85,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Initial Queue 10km Small',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild10k',
@@ -93,7 +93,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 1000 } },
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -106,7 +105,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 500 } },
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -255,7 +253,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 2000 } },
             { UCBC, 'LessThanGameTimeSeconds', { 360 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

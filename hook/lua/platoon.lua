@@ -2615,9 +2615,9 @@ Platoon = Class(RNGAIPlatoon) {
                         Lastdist = dist
                     else
                         engStuckCount = engStuckCount + 1
-                        LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one')
-                        if engStuckCount > 15 then
-                            LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..Stuck)
+                        LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                        if engStuckCount > 30 then
+                            LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
                             break
                         end
                     end

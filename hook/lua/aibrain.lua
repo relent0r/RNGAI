@@ -162,7 +162,7 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalMonitorStatus = 'ACTIVE',
             TacticalLocationFound = false,
             TacticalLocations = {},
-            TacticalTimeout = 53,
+            TacticalTimeout = 37,
             TacticalMonitorTime = 180,
             TacticalMassLocations = {},
             TacticalUnmarkedMassGroups = {},
@@ -1465,7 +1465,6 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
-        local timeout = self.TacticalMonitor.TacticalTimeout
 
         local gameTime = GetGameTimeSeconds()
         --LOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
@@ -1479,7 +1478,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, v in self.EnemyIntel.EnemyThreatLocations do
                 --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if (gameTime - v.InsertTime) > timeout then
+                if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
                     self.EnemyIntel.EnemyThreatLocations[k] = nil
                 end
             end
@@ -1493,7 +1492,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.BrainIntel.SelfThreat then
             for k, v in self.BrainIntel.SelfThreat.Air do
                 --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if (gameTime - v.InsertTime) > timeout then
+                if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
                     self.BrainIntel.SelfThreat.Air[k] = nil
                 end
             end
@@ -1709,9 +1708,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(energyUnits) > 0 then
             for k, unit in energyUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' then
                         unit.Air = threat.Threat
-                        threat.
                     end
                     if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
@@ -1724,8 +1722,13 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(1)
         if table.getn(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
+                LOG('Defensive Units IMAP Position'..repr(unit.IMAP))
                 for q, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' and (gameTime - threat.InsertTime) < 25 then
+                    LOG('EnemyThreatLocation Position'..repr(threat.Position))
+                    LOG('EnemyThreatLocation Threat Type'..threat.ThreatType)
+                    LOG('EnemyThreatLocation Threat'..threat.Threat)
+                    LOG('EnemyThreatLocation gametime'..gameTime..' Insert time '..threat.InsertTime..' against 25 is '..(gameTime - threat.InsertTime))
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' and (gameTime - threat.InsertTime) < 25 then
                         unit.Air = threat.Threat
                     end
                     if unit.IMAP == threat.Position and threat.ThreatType == 'Land' and (gameTime - threat.InsertTime) < 25 then
@@ -1733,9 +1736,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if unit.IMAP == threat.Position and threat.ThreatType == 'StructuresNotMex' and (gameTime - threat.InsertTime) < 25 then
                         if ALLBPS[unit.UnitId].Defense.AirThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q]AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q]AirDefStructureCount + 1
+                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
                         elseif ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q]LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q]LandDefStructureCount + 1
+                            self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + 1
                         end
                     end
                 end
@@ -1747,7 +1750,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(strategicUnits) > 0 then
             for k, unit in strategicUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' then
                         unit.Air = threat.Threat
                     end
                     if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
@@ -1762,7 +1765,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(intelUnits) > 0 then
             for k, unit in intelUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Air' then
+                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' then
                         unit.Air = threat.Threat
                     end
                     if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
