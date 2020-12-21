@@ -83,7 +83,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Former Scout ACU Support',
-        PlatoonTemplate = 'RNGAI AirScoutForm',
+        PlatoonTemplate = 'RNGAI AirScoutSingle',
         InstanceCount = 1,
         Priority = 950,
         BuilderConditions = {
@@ -100,7 +100,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Former Scout Patrol',
-        PlatoonTemplate = 'RNGAI AirScoutForm',
+        PlatoonTemplate = 'RNGAI AirScoutSingle',
         InstanceCount = 1,
         Priority = 900,
         BuilderConditions = {

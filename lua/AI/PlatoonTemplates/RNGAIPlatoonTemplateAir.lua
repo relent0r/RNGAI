@@ -19,6 +19,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI AirScoutSingle',
+    Plan = 'ScoutingAIRNG',
+    GlobalSquads = {
+        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 1, 'scout', 'None' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI AntiAir BaseGuard',
     Plan = 'GuardBaseRNG',
     GlobalSquads = {
