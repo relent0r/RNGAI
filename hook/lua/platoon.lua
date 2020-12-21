@@ -2601,11 +2601,27 @@ Platoon = Class(RNGAIPlatoon) {
                     return
                 end
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                local engStuckCount = 0
+                local Lastdist
+                local dist
                 while not eng.Dead do
                     PlatoonPos = eng:GetPosition()
-                    if VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0) < 12 then
+                    dist = VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0)
+                    if dist < 12 then
                         break
-                    end 
+                    end
+                    if Lastdist ~= dist then
+                        engStuckCount = 0
+                        Lastdist = dist
+                    else
+                        engStuckCount = engStuckCount + 1
+                        LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one')
+                        if engStuckCount > 15 then
+                            LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..Stuck)
+                            break
+                        end
+                    end
+
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
                             local enemyEngineer = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
