@@ -408,6 +408,8 @@ function GetRealThreatAtPosition(aiBrain, position, range )
 
     local sfake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiSurface' )
     local afake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiAir' )
+    local bp
+    local ALLBPS = __blueprints
     
     airthreat = 0
     surthreat = 0
@@ -420,7 +422,7 @@ function GetRealThreatAtPosition(aiBrain, position, range )
     
             if not u.Dead then
         
-                local bp = __blueprints[u.UnitId].Defense
+                bp = ALLBPS[u.UnitId].Defense
             
                 airthreat = airthreat + bp.AirThreatLevel
                 surthreat = surthreat + bp.SurfaceThreatLevel
