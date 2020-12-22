@@ -1307,7 +1307,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.AirNow = airthreat
         self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
 
-        if airthreat > 0 then
+        --[[if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
             --LOG('Total Air Unit Threat :'..airthreat)
@@ -1318,7 +1318,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
             --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
-        end
+        end]]
         WaitTicks(1)
         local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
         local selfExtractorCount = 0
@@ -1473,9 +1473,11 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeMode = 'Normal'
             self.UpgradeIssuedLimit = 2
         end
+        self.EnemyIntel.EnemyThreatLocations = {}
+        
 
         --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
-        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+        --[[if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, v in self.EnemyIntel.EnemyThreatLocations do
                 --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
                 if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
@@ -1485,11 +1487,11 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EnemyIntel.EnemyThreatLocations then
                 self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
             end
-        end
+        end]]
         -- Rebuild the self threat tables
         --LOG('SelfThreat Table count:'..table.getn(self.BrainIntel.SelfThreat))
         --LOG('SelfThreat Table present:'..repr(self.BrainIntel.SelfThreat))
-        if self.BrainIntel.SelfThreat then
+        --[[if self.BrainIntel.SelfThreat then
             for k, v in self.BrainIntel.SelfThreat.Air do
                 --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
                 if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
@@ -1499,7 +1501,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.BrainIntel.SelfThreat.Air then
                 self.BrainIntel.SelfThreat.Air = self:RebuildTable(self.BrainIntel.SelfThreat.Air)
             end
-        end
+        end]]
         -- debug, remove later on
         if enemyStarts then
             --LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
@@ -1537,32 +1539,26 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, threat in potentialThreats do
                 --LOG('* AI-RNG: Threat is'..repr(threat))
                 if threat.rThreat > threatLimit then
-                    for _, pos in enemyStarts do
-                        --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
-                        if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 10000 then
-                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            if RUtils.PositionOnWater(threat.posX, threat.posZ) then
-                                onWater = true
-                            else
-                                onWater = false
-                            end
-                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = true, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
-                            table.insert(phaseTwoThreats, threatLocation)
-                        else
-                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            if RUtils.PositionOnWater(threat.posX, threat.posZ) then
-                                onWater = true
-                            else
-                                onWater = false
-                            end
-                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
-                            table.insert(phaseTwoThreats, threatLocation)
-                        end
+                    --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                    if RUtils.PositionOnWater(threat.posX, threat.posZ) then
+                        onWater = true
+                    else
+                        onWater = false
                     end
+                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
+                    table.insert(phaseTwoThreats, threatLocation)
                 end
             end
             --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
-            for Index_1, value_1 in phaseTwoThreats do
+            for _, threat in phaseTwoThreats do
+                for q, pos in enemyStarts do
+                    --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
+                    if VDist2Sq(threat.Position[1], threat.Position[2], pos[1], pos[3]) < 10000 then
+                        threat.EnemyBaseRadius = true
+                    end
+                end
+            end
+            --[[for Index_1, value_1 in phaseTwoThreats do
                 for Index_2, value_2 in phaseTwoThreats do
                     -- no need to check against self
                     if Index_1 == Index_2 then 
@@ -1585,7 +1581,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-            end
+            end]]
             --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             local currentGameTime = GetGameTimeSeconds()
             for _, threat in phaseTwoThreats do
@@ -1679,7 +1675,6 @@ AIBrain = Class(RNGAIBrainClass) {
         local gameTime = GetGameTimeSeconds()
         
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            LOG('Enemy Threat Locations is greater than 0')
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
                     local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
@@ -1708,10 +1703,9 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(energyUnits) > 0 then
             for k, unit in energyUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' then
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
                         unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
                     end
                 end
@@ -1722,19 +1716,12 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(1)
         if table.getn(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
-                LOG('Defensive Units IMAP Position'..repr(unit.IMAP))
                 for q, threat in self.EnemyIntel.EnemyThreatLocations do
-                    LOG('EnemyThreatLocation Position'..repr(threat.Position))
-                    LOG('EnemyThreatLocation Threat Type'..threat.ThreatType)
-                    LOG('EnemyThreatLocation Threat'..threat.Threat)
-                    LOG('EnemyThreatLocation gametime'..gameTime..' Insert time '..threat.InsertTime..' against 25 is '..(gameTime - threat.InsertTime))
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' and (gameTime - threat.InsertTime) < 25 then
-                        unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' and (gameTime - threat.InsertTime) < 25 then
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
+                            unit.Air = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'StructuresNotMex' and (gameTime - threat.InsertTime) < 25 then
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
                         if ALLBPS[unit.UnitId].Defense.AirThreatLevel > 0 then
                             self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
                         elseif ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel > 0 then
@@ -1750,10 +1737,9 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(strategicUnits) > 0 then
             for k, unit in strategicUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' then
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
                         unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
                     end
                 end
@@ -1765,10 +1751,9 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(intelUnits) > 0 then
             for k, unit in intelUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'AntiAir' then
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
                         unit.Air = threat.Threat
-                    end
-                    if unit.IMAP == threat.Position and threat.ThreatType == 'Land' then
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
                     end
                 end

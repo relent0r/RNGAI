@@ -48,7 +48,7 @@ function EnemyThreatGreaterThanAI(aiBrain, threatType)
     local aiThreat
     if threatType == 'Air' then
         enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-        aiThreat = aiBrain.BrainIntel.SelfThreat.Air
+        aiThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     elseif threatType == 'Land' then
         enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Land
         aiThreat = aiBrain.BrainIntel.SelfThreat.Land
