@@ -564,7 +564,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
         },
         BuilderType = 'Any',
@@ -589,7 +589,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 15.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, 'ENERGYPRODUCTION TECH2' }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
         },
         BuilderType = 'Any',
@@ -940,7 +940,7 @@ BuilderGroup {
                 AssisteeType = categories.ENGINEER,
                 AssistRange = 30,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},
                 Time = 30,
             },
         }
@@ -958,7 +958,7 @@ BuilderGroup {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 40,
-                BeingBuiltCategories = {'STRUCTURE HYDROCARBON'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.HYDROCARBON},
                 AssistUntilFinished = true,
                 Time = 0,
             },
@@ -978,7 +978,7 @@ BuilderGroup {
                 AssisteeType = 'Factory',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'ALLUNITS'},
+                BeingBuiltCategories = {categories.ALLUNITS},
                 Time = 30,
             },
         }
@@ -996,7 +996,7 @@ BuilderGroup {
                 AssisteeType = 'Structure',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {'ENERGYPRODUCTION', 'FACTORY', 'STRUCTURE DEFENSE'},
+                BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},
                 Time = 30,
             },
         }

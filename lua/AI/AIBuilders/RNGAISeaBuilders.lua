@@ -21,7 +21,7 @@ end
 local SeaRangedMode = function(self, aiBrain)
     if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
         --LOG('Enable Ranged Naval Builder')
-        return 600
+        return 500
     else
         --LOG('Disable Ranged Naval Builder')
         return 0

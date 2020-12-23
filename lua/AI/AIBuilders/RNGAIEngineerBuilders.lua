@@ -64,7 +64,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 600, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -77,7 +77,7 @@ BuilderGroup {
         Priority = 750, -- low factory priority
         BuilderConditions = {
             { UCBC, 'StartLocationNeedsEngineer', { 'LocationType', 1000, -1000, 20, 2, 'AntiSurface' } },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, 'ENGINEER TECH1' } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.ENGINEER * categories.TECH1 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -89,7 +89,7 @@ BuilderGroup {
         Priority = 800, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
     },
@@ -98,8 +98,8 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH2'}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
     },
@@ -109,20 +109,7 @@ BuilderGroup {
         Priority = 400, -- low factory priority
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8} },
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
-            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'All',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Engineer T2 Excess',
-        PlatoonTemplate = 'T2BuildEngineer',
-        Priority = 300, -- low factory priority
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.00}},
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -133,8 +120,8 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 850, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
@@ -143,9 +130,9 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.30 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
@@ -154,7 +141,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 300, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.00}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
@@ -209,7 +196,7 @@ BuilderGroup {
         Priority = 450, -- low factory priority
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.1} },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH2' } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -220,8 +207,8 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, 'FACTORY TECH3'}},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, 'ENGINEER TECH3' } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH3 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
         },
         BuilderType = 'All',
@@ -273,7 +260,7 @@ BuilderGroup {
                 PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
-                BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH2'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.LAND * categories.FACTORY * categories.TECH2},
             },
         }
     },
@@ -296,7 +283,7 @@ BuilderGroup {
                 PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
-                BeingBuiltCategories = {'STRUCTURE LAND FACTORY TECH3', 'STRUCTURE AIR FACTORY TECH3' },
+                BeingBuiltCategories = {categories.STRUCTURE * categories.LAND * categories.FACTORY * categories.TECH3, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH3 },
             },
         }
     },
@@ -319,7 +306,7 @@ BuilderGroup {
                 PermanentAssist = true,
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 80,
-                BeingBuiltCategories = {'STRUCTURE ARTILLERY STRATEGIC'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC},
             },
         }
     },
@@ -338,7 +325,7 @@ BuilderGroup {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.FACTORY,
                 AssistRange = 120,
-                BeingBuiltCategories = {'AIR MOBILE ANTIAIR'},                   
+                BeingBuiltCategories = {categories.AIR * categories.MOBILE * categories.ANTIAIR},                   
                 PermanentAssist = true,
                 AssistClosestUnit = false,                                       
                 AssistUntilFinished = true,
@@ -387,7 +374,7 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
-                BeingBuiltCategories = {'STRUCTURE FACTORY, STRUCTURE'},
+                BeingBuiltCategories = { categories.STRUCTURE * categories.FACTORY, categories.STRUCTURE },
                 Time = 20,
             },
         },
@@ -409,7 +396,7 @@ BuilderGroup {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
-                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
                 AssistClosestUnit = true,
             },
         },
@@ -433,7 +420,7 @@ BuilderGroup {
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {'STRUCTURE DEFENSE ANTIMISSILE TECH3'},
+                BeingBuiltCategories = { categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3},
                 Time = 120,
             },
         }
@@ -457,7 +444,7 @@ BuilderGroup {
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {'EXPERIMENTAL MOBILE'},
+                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.MOBILE},
                 Time = 120,
             },
         }
@@ -480,7 +467,7 @@ BuilderGroup {
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {'STRUCTURE STRATEGIC'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.STRATEGIC},
                 Time = 120,
             },
         }
@@ -503,7 +490,7 @@ BuilderGroup {
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {'EXPERIMENTAL ORBITALSYSTEM'},
+                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.ORBITALSYSTEM},
                 Time = 120,
             },
         }
@@ -524,7 +511,7 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
-                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
                 Time = 60,
             },
         }
@@ -545,7 +532,7 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.ENGINEER,
-                BeingBuiltCategories = {'STRUCTURE ENERGYPRODUCTION'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
                 Time = 60,
             },
         }
@@ -567,7 +554,7 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
-                BeingBuiltCategories = {'EXPERIMENTAL MOBILE'},
+                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.MOBILE},
                 Time = 120,
             },
         }
@@ -590,7 +577,7 @@ BuilderGroup {
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {'STRUCTURE MASSEXTRACTION'},
+                BeingBuiltCategories = {categories.STRUCTURE * categories.MASSEXTRACTION},
                 Time = 60,
             },
         }
@@ -614,7 +601,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = 'FACTORY',
+                AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
                 FactionIndex = 1,
                 BuildStructures = {
@@ -637,7 +624,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = 'FACTORY',
+                AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
                 FactionIndex = 3,
                 BuildStructures = {

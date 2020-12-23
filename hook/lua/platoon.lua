@@ -2616,7 +2616,7 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         engStuckCount = engStuckCount + 1
                         LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
-                        if engStuckCount > 30 then
+                        if engStuckCount > 30 and not eng:IsUnitState('Building') then
                             LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
                             break
                         end
@@ -4174,16 +4174,15 @@ Platoon = Class(RNGAIPlatoon) {
         local assistee = false
         local assistRange = assistData.AssistRange or 80
         local platoonPos = self:GetPlatoonPosition()
-        local beingBuilt = assistData.BeingBuiltCategories or { 'ALLUNITS' }
+        local beingBuilt = assistData.BeingBuiltCategories or { categories.ALLUNITS }
         local assisteeCat = assistData.AssisteeCategory or categories.ALLUNITS
         if type(assisteeCat) == 'string' then
             assisteeCat = ParseEntityCategory(assisteeCat)
         end
 
         -- loop through different categories we are looking for
-        for _,catString in beingBuilt do
+        for _,category in beingBuilt do
             -- Track all valid units in the assist list so we can load balance for builders
-            local category = ParseEntityCategory(catString)
             local assistList = RUtils.GetAssisteesRNG(aiBrain, assistData.AssistLocation, assistData.AssisteeType, category, assisteeCat)
             if table.getn(assistList) > 0 then
                 -- only have one unit in the list; assist it

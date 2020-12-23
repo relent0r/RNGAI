@@ -684,14 +684,15 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'uel0202', 2, 4, 'Attack', 'none' },       -- Heavy Tank
+            { 'uel0202', 2, 3, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
-            { 'del0204', 2, 3, 'Attack', 'none' },      -- Gatling Bot
+            { 'del0204', 2, 2, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0202', 2, 2, 'Attack', 'none' },       -- Heavy Tank
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'uel0111', 1, 2, 'Artillery', 'none' },   -- MML
+            { 'del0204', 2, 2, 'Attack', 'none' },      -- Gatling Bot
             { 'uel0208', 1, 1, 'support', 'None' },      -- T2 Engineer
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0205', 1, 1, 'Guard', 'none' },       -- AA
@@ -713,14 +714,15 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
             
         },
         Cybran = {
-            { 'url0202', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+            { 'url0202', 2, 3, 'Attack', 'none' },      -- Heavy Tank
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
-            { 'drl0204', 2, 3, 'Attack', 'none' },      -- Rocket Bot
+            { 'drl0204', 2, 2, 'Attack', 'none' },      -- Rocket Bot
             { 'url0202', 2, 2, 'Attack', 'none' },      -- Heavy Tank
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
             { 'url0111', 1, 2, 'Artillery', 'none' },   -- MML
+            { 'drl0204', 2, 2, 'Attack', 'none' },      -- Rocket Bot
             { 'url0208', 1, 1, 'support', 'None' },     -- T2 Engineer
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0205', 1, 1, 'Guard', 'none' },       -- AA
