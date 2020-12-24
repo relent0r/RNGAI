@@ -42,10 +42,18 @@ Platoon = Class(RNGAIPlatoon) {
             table.insert(atkPri, categories.MOBILE * categories.AIR)
             table.insert(categoryList, categories.MOBILE * categories.AIR)
         end
+        local platoonUnits = GetPlatoonUnits(self)
+        for k, v in platoonUnits do
+            if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
+                v:EnableUnitIntel('Toggle', 'Cloak')
+            end
+        end
         self:SetPrioritizedTargetList('Attack', categoryList)
         local maxRadius = data.SearchRadius or 1000
+        local threatCountLimit = 0
         while PlatoonExists(aiBrain, self) do
             local currentPosition = GetPlatoonPosition(self)
+            local platoonThreat = self:CalculatePlatoonThreat('AntiAir', categories.ALLUNITS)
             if not target or target.Dead then
                 if defensive then
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, avoidBases)
@@ -70,6 +78,15 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
             if target then
                 local targetPos = target:GetPosition()
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 10000) and (GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir') > platoonThreat) then
+                    LOG('Target air threat too high')
+                    LOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir')..' platoon threat is '..platoonThreat)
+                    threatCountLimit = threatCountLimit + 1
+                    WaitTicks(80)
+                    self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 15)
+                    continue
+                end
+                LOG('threatCountLimit is'..threatCountLimit)
                 self:Stop()
                 --LOG('* AI-RNG: Attacking Target')
                 --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
@@ -141,9 +158,6 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             end
-
-            local merged = self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 15)
-
             WaitTicks(25)
         end
     end,
