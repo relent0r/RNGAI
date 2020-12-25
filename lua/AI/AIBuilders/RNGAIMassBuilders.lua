@@ -282,7 +282,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 1000 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
@@ -362,7 +362,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Excess',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
+        Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION}},

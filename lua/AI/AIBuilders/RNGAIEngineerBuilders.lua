@@ -88,7 +88,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 800, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
@@ -850,7 +850,7 @@ BuilderGroup {
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
-            MoveToLocationType = 'MAIN',
+            MoveToLocationType = 'ActiveExpansion',
         },
         BuilderType = 'Any',
     },
@@ -866,12 +866,65 @@ BuilderGroup {
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
-            MoveToLocationType = 'MAIN',
+            MoveToLocationType = 'ActiveExpansion',
         },
         BuilderType = 'Any',
     },
     Builder {
         BuilderName = 'RNGAI T3 Eng Trans ActiveExpansion',
+        PlatoonTemplate = 'T3EngineerTransferRNG',
+        Priority = 520,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+            { MIBC, 'ExpansionIsActive', {} },
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
+        },
+        BuilderData = {
+            MoveToLocationType = 'ActiveExpansion',
+        },
+        BuilderType = 'Any',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Engineer Transfer To Main From Expansion',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Eng Trans Main',
+        PlatoonTemplate = 'T1EngineerTransferRNG',
+        Priority = 500,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+            { MIBC, 'ExpansionIsActive', {} },
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
+        },
+        BuilderData = {
+            MoveToLocationType = 'MAIN',
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Eng Trans Main',
+        PlatoonTemplate = 'T2EngineerTransferRNG',
+        Priority = 510,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
+            { MIBC, 'ExpansionIsActive', {} },
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
+        },
+        BuilderData = {
+            MoveToLocationType = 'MAIN',
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Eng Trans Main',
         PlatoonTemplate = 'T3EngineerTransferRNG',
         Priority = 520,
         InstanceCount = 1,

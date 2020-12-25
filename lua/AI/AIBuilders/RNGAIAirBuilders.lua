@@ -15,7 +15,7 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local AirDefenseMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
-    if myAirThreat < enemyAirThreat then
+    if myAirThreat < (enemyAirThreat * 1.2) then
         --LOG('Enable Air Intie Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 890

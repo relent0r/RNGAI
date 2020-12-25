@@ -79,14 +79,15 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
             if target then
                 local targetPos = target:GetPosition()
-                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 10000) and (GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir') > platoonThreat) then
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir') > platoonThreat) then
                     LOG('Target air threat too high')
-                    LOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir')..' platoon threat is '..platoonThreat)
                     threatCountLimit = threatCountLimit + 1
+                    self:MoveToLocation(homeBaseLocation, false)
                     WaitTicks(80)
                     self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 15)
                     continue
                 end
+                LOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir')..' platoon threat is '..platoonThreat)
                 LOG('threatCountLimit is'..threatCountLimit)
                 self:Stop()
                 --LOG('* AI-RNG: Attacking Target')
@@ -424,13 +425,13 @@ Platoon = Class(RNGAIPlatoon) {
                     if safeZone then
                         LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
                     if safeZone then
                         LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, safeZone)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false, safeZone)
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
@@ -455,7 +456,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if safeZone then
                     LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                 end
-                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, safeZone)
+                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not foundTransport then
                     --LOG('* AI-RNG: Guardmarker no transports available disbanding')
@@ -2648,7 +2649,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     end
-                    WaitTicks(5)
+                    WaitTicks(7)
                 end
                 if not eng or eng.Dead or not eng.PlatoonHandle or not PlatoonExists(aiBrain, eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
@@ -4567,7 +4568,12 @@ Platoon = Class(RNGAIPlatoon) {
 
     TransferAIRNG = function(self)
         local aiBrain = self:GetBrain()
-        local moveToLocation = aiBrain.BrainIntel.ActiveExpansion
+        local moveToLocation = false
+        if self.PlatoonData.MoveToLocationType == 'ActiveExpansion' then
+            moveToLocation = aiBrain.BrainIntel.ActiveExpansion
+        else
+            moveToLocation = self.PlatoonData.MoveToLocationType
+        end
         --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..')')
         if not aiBrain.BuilderManagers[moveToLocation] then
             --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..') has no BuilderManager!')

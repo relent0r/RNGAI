@@ -135,6 +135,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
+                ExpansionRadius = 80,
                 LocationRadius = 250, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -264,6 +265,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
+                ExpansionRadius = 60,
                 LocationRadius = 450, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -443,7 +445,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 2000 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 700,
+        Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed

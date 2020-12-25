@@ -214,6 +214,9 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
     local airthreatMax = 20
 
     # only get transports for land (or partial land) movement
+    if safeZone then
+        LOG('Transport function using safeZone')
+    end
     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
 
         -- DUNCAN - commented out, why check it?
@@ -447,6 +450,9 @@ end
 function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
 
     local markerlist = {}
+    if safeZone then
+        LOG('FindSafeDropZone using safeZone')
+    end
 
     -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
     for _,v in markerTypes do
@@ -460,6 +466,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
         RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) < VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
     else
         RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) > VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
+        LOG('SafeZone Sorted marker list '..repr(markerlist))
     end
    
     -- loop thru each marker -- see if you can form a safe path on the surface 

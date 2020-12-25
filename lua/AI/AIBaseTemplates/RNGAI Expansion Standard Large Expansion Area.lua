@@ -11,6 +11,7 @@ BaseBuilderTemplate {
                 -- Intel Builders --
                 'RNGAI RadarBuilders',
                 'RNGAI RadarUpgrade T1 Expansion',
+                'RNGAI Engineer Transfer To Main From Expansion',
         
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
