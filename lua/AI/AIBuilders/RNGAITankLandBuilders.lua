@@ -92,7 +92,7 @@ BuilderGroup {
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 1000 } },
-            { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 6 minutes
+            { UCBC, 'LessThanGameTimeSeconds', { 270 } }, -- don't build after 6 minutes
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -104,7 +104,7 @@ BuilderGroup {
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 500 } },
-            { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 6 minutes
+            { UCBC, 'LessThanGameTimeSeconds', { 270 } }, -- don't build after 6 minutes
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

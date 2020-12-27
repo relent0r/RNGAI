@@ -415,7 +415,6 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
          },
         Aeon = {
@@ -433,7 +432,6 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
@@ -450,7 +448,6 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
-            { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
         },

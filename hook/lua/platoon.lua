@@ -79,16 +79,16 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
             if target then
                 local targetPos = target:GetPosition()
-                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir') > platoonThreat) then
-                    LOG('Target air threat too high')
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, 1, true, 'AntiAir') > platoonThreat) then
+                    --LOG('Target air threat too high')
                     threatCountLimit = threatCountLimit + 1
                     self:MoveToLocation(homeBaseLocation, false)
                     WaitTicks(80)
                     self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 15)
                     continue
                 end
-                LOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir')..' platoon threat is '..platoonThreat)
-                LOG('threatCountLimit is'..threatCountLimit)
+                --LOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, 0, true, 'AntiAir')..' platoon threat is '..platoonThreat)
+                --LOG('threatCountLimit is'..threatCountLimit)
                 self:Stop()
                 --LOG('* AI-RNG: Attacking Target')
                 --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
@@ -423,14 +423,11 @@ Platoon = Class(RNGAIPlatoon) {
                 if not success or VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 512 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 512')
                     if safeZone then
-                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
+                        --LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
                     --LOG('* AI-RNG: GuardMarkerRNG marker position > 256')
-                    if safeZone then
-                        LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
-                    end
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false, safeZone)
                 end
                 if not usedTransports then
@@ -453,25 +450,22 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --LOG('* AI-RNG: Guardmarker NoPath requesting transports')
-                if safeZone then
-                    LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
-                end
                 local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
-                    LOG('* AI-RNG: Guardmarker no transports available disbanding')
+                    --LOG('* AI-RNG: Guardmarker no transports available disbanding')
                     self:PlatoonDisband()
                     return
                 end
                 --LOG('* AI-RNG: Guardmarker found transports')
             else
-                LOG('* AI-RNG: GuardmarkerRNG bad path response disbanding')
+                --LOG('* AI-RNG: GuardmarkerRNG bad path response disbanding')
                 self:PlatoonDisband()
                 return
             end
 
             if (not path or not success) and not usedTransports then
-                LOG('* AI-RNG: GuardmarkerRNG not path or not success and not usedTransports. Disbanding')
+                --LOG('* AI-RNG: GuardmarkerRNG not path or not success and not usedTransports. Disbanding')
                 self:PlatoonDisband()
                 return
             end
@@ -508,7 +502,7 @@ Platoon = Class(RNGAIPlatoon) {
             if moveNext == 'None' then
                 -- this won't be 0... see above
                 WaitSeconds(guardTimer)
-                LOG('Move Next set to None, disbanding')
+                --LOG('Move Next set to None, disbanding')
                 self:PlatoonDisband()
                 return
             end
@@ -588,7 +582,7 @@ Platoon = Class(RNGAIPlatoon) {
             return self:GuardMarkerRNG()
         else
             -- no marker found, disband!
-            LOG('* AI-RNG: GuardmarkerRNG No best marker. Disbanding.')
+            --LOG('* AI-RNG: GuardmarkerRNG No best marker. Disbanding.')
             self:PlatoonDisband()
         end
     end,
@@ -2632,9 +2626,9 @@ Platoon = Class(RNGAIPlatoon) {
                         Lastdist = dist
                     else
                         engStuckCount = engStuckCount + 1
-                        LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
-                        if engStuckCount > 30 and not eng:IsUnitState('Building') then
-                            LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                        --LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                        if engStuckCount > 40 and not eng:IsUnitState('Building') then
+                            --LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
                             break
                         end
                     end

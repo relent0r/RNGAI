@@ -186,8 +186,8 @@ AIBrain = Class(RNGAIBrainClass) {
             Factory = {},
             Combat = {},
         }
-        LOG('Director Data'..repr(self.EnemyIntel.DirectorData))
-        LOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
+        --LOG('Director Data'..repr(self.EnemyIntel.DirectorData))
+        --LOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
@@ -1135,7 +1135,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                if true then
+                --[[if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1145,7 +1145,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiencyOverTime..'Energy Efficiency :'..EnergyEfficiencyOverTime)
-                end
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -1461,7 +1461,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
         WaitTicks(Random(1,7))
-        LOG('* AI-RNG: Tactical Monitor Threat Pass')
+        --LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
@@ -1682,16 +1682,16 @@ AIBrain = Class(RNGAIBrainClass) {
                         local unitIndex = unit:GetAIBrain():GetArmyIndex()
                         if not ArmyIsCivilian(unitIndex) then
                             if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                LOG('Inserting Enemy Energy Structure '..unit.UnitId)
+                                --LOG('Inserting Enemy Energy Structure '..unit.UnitId)
                                 table.insert(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
-                                LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
+                                --LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
                                 table.insert(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
+                                --LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
                                 table.insert(strategicUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                LOG('Inserting Enemy Intel Structure '..unit.UnitId)
+                                --LOG('Inserting Enemy Intel Structure '..unit.UnitId)
                                 table.insert(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             end
                         end
@@ -1709,7 +1709,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Energy Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Energy Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             table.insert(self.EnemyIntel.DirectorData.Energy, energyUnits)
         end
@@ -1729,7 +1729,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-                LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             table.insert(self.EnemyIntel.DirectorData.Defense, defensiveUnits)
         end
@@ -1743,7 +1743,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Strategic Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Strategic Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             table.insert(self.EnemyIntel.DirectorData.Strategic, strategicUnits)
         end
@@ -1757,7 +1757,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Intel Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Intel Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             table.insert(self.EnemyIntel.DirectorData.Intel, intelUnits)
         end
