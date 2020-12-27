@@ -1261,11 +1261,11 @@ BuilderGroup {
             { MIBC, 'AirAttackModeCheck', {} },
         },
         BuilderData = {
-            SearchRadius = 10000,                                               -- Searchradius for new target.
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            SearchRadius = BaseEnemyArea,
+            UseFormation = 'None',
+            AggressiveMove = true,
+            ThreatSupport = 5,
+            PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.STRUCTURE * categories.ANTIAIR,
                 categories.STRUCTURE * categories.DEFENSE,
@@ -1602,11 +1602,11 @@ BuilderGroup {
             { MIBC, 'AirAttackModeCheck', {} },
         },
         BuilderData = {
-            SearchRadius = 10000,                                               -- Searchradius for new target.
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            SearchRadius = BaseEnemyArea,
+            UseFormation = 'None',
+            AggressiveMove = true,
+            ThreatSupport = 5,
+            PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.STRUCTURE * categories.ANTIAIR,
                 categories.STRUCTURE * categories.DEFENSE,

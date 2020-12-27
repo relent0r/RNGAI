@@ -185,7 +185,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack AA Structures',
-    Plan = 'StrikeForceAIRNG', -- The platoon function to use.
+    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           4, -- Min number of units.
@@ -348,7 +348,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'uel0104', 1, 2, 'Guard', 'none' },		-- AA
             { 'uel0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'uel0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'uel0103', 1, 3, 'Artillery', 'none' },	-- Artillery
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
          },
@@ -363,7 +363,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'ual0104', 1, 2, 'Guard', 'none' },		-- AA
             { 'ual0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'ual0103', 1, 3, 'Artillery', 'none' },	-- Artillery
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
@@ -377,7 +377,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0104', 1, 2, 'Guard', 'none' },		-- AA
             { 'url0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+            { 'url0103', 1, 3, 'Artillery', 'none' },	-- arty
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
@@ -392,7 +392,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'xsl0104', 1, 2, 'Guard', 'none' },		-- AA
             { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'xsl0103', 1, 3, 'Artillery', 'none' },	-- Artillery
             { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
         },
     }
@@ -668,15 +668,19 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
+            { 'uel0111', 1, 1, 'Artillery', 'none' },   -- MML
          },
         Aeon = {
             { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'ual0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
         Cybran = {
             { 'url0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'url0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
         Seraphim = {
             { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xsl0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
     }
 }
@@ -764,15 +768,19 @@ PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueue',
     FactionSquads = {
         UEF = {
             { 'xel0305', 2, 4, 'Attack', 'none' },       -- Armoured Assault Bot
+            { 'uel0304', 1, 1, 'Artillery', 'none' },   -- Artillery
          },
         Aeon = {
             { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'ual0304', 1, 1, 'Artillery', 'none' },   -- Artillery
         },
         Cybran = {
             { 'xrl0305', 2, 4, 'Attack', 'none' },      -- Armoured Assault Bot
+            { 'url0304', 1, 1, 'Artillery', 'none' },   -- Artillery
         },
         Seraphim = {
             { 'xsl0303', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+            { 'xsl0304', 1, 1, 'Artillery', 'none' },   -- Artillery
         },
     }
 }

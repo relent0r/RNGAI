@@ -456,22 +456,22 @@ Platoon = Class(RNGAIPlatoon) {
                 if safeZone then
                     LOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                 end
-                local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
+                local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
-                if not foundTransport then
-                    --LOG('* AI-RNG: Guardmarker no transports available disbanding')
+                if not usedTransports then
+                    LOG('* AI-RNG: Guardmarker no transports available disbanding')
                     self:PlatoonDisband()
                     return
                 end
                 --LOG('* AI-RNG: Guardmarker found transports')
             else
-                --LOG('* AI-RNG: GuardmarkerRNG bad path response disbanding')
+                LOG('* AI-RNG: GuardmarkerRNG bad path response disbanding')
                 self:PlatoonDisband()
                 return
             end
 
             if (not path or not success) and not usedTransports then
-                --LOG('* AI-RNG: GuardmarkerRNG not path or not success and not usedTransports. Disbanding')
+                LOG('* AI-RNG: GuardmarkerRNG not path or not success and not usedTransports. Disbanding')
                 self:PlatoonDisband()
                 return
             end
@@ -508,6 +508,7 @@ Platoon = Class(RNGAIPlatoon) {
             if moveNext == 'None' then
                 -- this won't be 0... see above
                 WaitSeconds(guardTimer)
+                LOG('Move Next set to None, disbanding')
                 self:PlatoonDisband()
                 return
             end
@@ -587,7 +588,7 @@ Platoon = Class(RNGAIPlatoon) {
             return self:GuardMarkerRNG()
         else
             -- no marker found, disband!
-            --LOG('* AI-RNG: GuardmarkerRNG No best marker. Disbanding.')
+            LOG('* AI-RNG: GuardmarkerRNG No best marker. Disbanding.')
             self:PlatoonDisband()
         end
     end,
