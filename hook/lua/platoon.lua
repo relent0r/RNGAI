@@ -450,7 +450,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --LOG('* AI-RNG: Guardmarker NoPath requesting transports')
-                local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
+                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true, false, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     --LOG('* AI-RNG: Guardmarker no transports available disbanding')
@@ -688,6 +688,7 @@ Platoon = Class(RNGAIPlatoon) {
         local patrol = self.PlatoonData.Patrol or false
         local acuSupport = self.PlatoonData.ACUSupport or false
         local scout = GetPlatoonUnits(self)[1]
+        local unknownLoop = 0
         if not scout then
             return
         end
@@ -750,7 +751,7 @@ Platoon = Class(RNGAIPlatoon) {
                     IssuePatrol(patrolunits, {v[1],0,v[3]})
                 end
                 WaitSeconds(patrolTime)
-                --LOG('* AI-RNG: Scout Returning to base : {'..startX..', 0, '..startZ..'}')
+                --LOG('* AI-RNG: Scout Returning to base after patrol : {'..startX..', 0, '..startZ..'}')
                 return self:ReturnToBaseAIRNG(true)
             end
         elseif acuSupport == true then
@@ -765,6 +766,7 @@ Platoon = Class(RNGAIPlatoon) {
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
                 WaitSeconds(patrolTime)
                 self:Stop()
+                --LOG('* AI-RNG: Scout looping ACU support movement')
                 WaitTicks(2)
             end
         else
@@ -794,6 +796,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --3) Every time we scout NumOpponents number of high priority locations, scout a low priority location
                 elseif aiBrain.IntelData.AirLowPriScouts < 1 and table.getn(aiBrain.InterestList.LowPriority) > 0 then
                     aiBrain.IntelData.AirHiPriScouts = 0
+                    --LOG('Increase AirlowPriScouts')
                     aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
                     targetData = aiBrain.InterestList.LowPriority[1]
                     targetData.LastScouted = GetGameTimeSeconds()
@@ -801,10 +804,13 @@ Platoon = Class(RNGAIPlatoon) {
                     aiBrain:SortScoutingAreas(aiBrain.InterestList.LowPriority)
 
                 --4) Scout "unknown threat" areas with a threat higher than 25
-                elseif table.getn(unknownThreats) > 0 and unknownThreats[1][3] > 25 then
+                elseif table.getn(unknownThreats) > 0 and unknownThreats[1][3] > 25 and unknownLoop < 3 then
+                    --LOG('Unknown Threats adding to scouts')
                     aiBrain:AddScoutArea({unknownThreats[1][1], 0, unknownThreats[1][2]})
+                    unknownLoop = unknownLoop + 1
                 
                 else
+                    --LOG('Reset scout priorities')
                     --Reset number of scoutings and start over
                     aiBrain.IntelData.AirLowPriScouts = 0
                     aiBrain.IntelData.AirHiPriScouts = 0
@@ -838,11 +844,18 @@ Platoon = Class(RNGAIPlatoon) {
                         end
 
                         WaitTicks(50)
+                        --LOG('* AI-RNG: Scout looping position < 25 to targetArea')
                     end
                 else
+                    --LOG('No targetArea found')
+                    --LOG('No target area, number of high pri scouts is '..aiBrain.IntelData.AirHiPriScouts)
+                    --LOG('Num opponents is '..aiBrain.NumOpponents)
+                    --LOG('Low pri scouts '..aiBrain.IntelData.AirLowPriScouts)
+                    --LOG('HighPri Interest table scout is '..table.getn(aiBrain.InterestList.HighPriority))
                     WaitTicks(10)
                 end
                 WaitTicks(10)
+                --LOG('* AI-RNG: Scout looping end of scouting interest table')
             end
         end
         startX, startZ = aiBrain:GetArmyStartPos()
@@ -926,6 +939,7 @@ Platoon = Class(RNGAIPlatoon) {
         local blip
         local platoonUnits = GetPlatoonUnits(self)
         local enemyRadius = 40
+        local movingToScout = false
         local MaxPlatoonWeaponRange
         local unitPos
         local alpha
@@ -1102,6 +1116,15 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     WaitTicks(10)
                     end
+                end
+            elseif not movingToScout then
+                movingToScout = true
+                self:Stop()
+                for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, GetPlatoonPosition(self)) do
+                    if v[1] < 0 or v[3] < 0 or v[1] > ScenarioInfo.size[1] or v[3] > ScenarioInfo.size[2] then
+                        --LOG('*AI DEBUG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
+                    end
+                    self:MoveToLocation((v), false)
                 end
             end
         WaitTicks(60)
@@ -1444,6 +1467,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
 
                 if (not path or not success) and not usedTransports then
+                    --LOG('* AI-RNG: * HuntAIPATH: No Path found, no transports used')
                     self:PlatoonDisband()
                     return
                 end
@@ -4499,7 +4523,7 @@ Platoon = Class(RNGAIPlatoon) {
             return behaviors.CzarBehaviorRNG(self)
         elseif ID == 'xsa0402' then
             --LOG('Exp Bomber Behavior')
-            return behaviors.AhwassaBehavior(self)
+            return behaviors.AhwassaBehaviorRNG(self)
         elseif ID == 'ura0401' then
             --LOG('Exp Gunship Behavior')
             return behaviors.TickBehavior(self)

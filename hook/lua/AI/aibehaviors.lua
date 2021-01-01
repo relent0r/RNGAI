@@ -2128,6 +2128,34 @@ function AirUnitRefitThreadRNG(unit, plan, data)
     end
 end
 
+AhwassaBehaviorRNG = function(self)
+    local aiBrain = self:GetBrain()
+    local experimental = GetExperimentalUnit(self)
+    if not experimental then
+        return
+    end
+
+    if not EntityCategoryContains(categories.xsa0402, experimental) then
+        return
+    end
+
+    AssignExperimentalPriorities(self)
+
+    local targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
+    local oldTargetLocation = nil
+    while not experimental.Dead do
+        if targetLocation and targetLocation ~= oldTargetLocation then
+            IssueClearCommands({experimental})
+            IssueAttack({experimental}, targetLocation)
+            WaitSeconds(25)
+        end
+        WaitSeconds(1)
+
+        oldTargetLocation = targetLocation
+        targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
+    end
+end
+
 function AirStagingThreadRNG(unit)
     local aiBrain = unit:GetAIBrain()
     while not unit.Dead do

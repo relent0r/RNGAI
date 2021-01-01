@@ -120,7 +120,7 @@ PlatoonTemplate {
     Name = 'EngineerRepairRNG',
     Plan = 'RepairAI',
     GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
+        { categories.ENGINEER * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) , 1, 1, 'support', 'None' }
     },
 }
 

@@ -443,6 +443,36 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Vacant Starting Area 800 Large',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        Priority = 750,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 800, -1000, 0, 2, 'AntiSurface' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                NearMarkerType = 'Start Location',
+                LocationRadius = 800, -- radius from LocationType to build
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 5,
+                ThreatRings = 0,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {                    
+                    'T1LandFactory',
+                }
+            },
+            NeedGuard = true,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 2000 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 650,

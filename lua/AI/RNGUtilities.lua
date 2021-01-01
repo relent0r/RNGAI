@@ -2117,3 +2117,13 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit)
     return false
 end
 
+function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
+
+
+    
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+    end
+
+end
+

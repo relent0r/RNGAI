@@ -16,7 +16,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
     if myAirThreat < enemyAirThreat then
         --LOG('Enable Air ASF Scramble Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 870
+        return 750
     else
         --LOG('Disable Air ASF Scramble Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
@@ -220,28 +220,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Assist Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Assist Engineer',
-        PlatoonTemplate = 'T1EngineerAssistRNG',
-        Priority = 500,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssistLocation = 'LocationType',
-                PermanentAssist = true,
-                AssistRange = 100,
-                AssisteeType = categories.ENGINEER,
-                Time = 45,
-            },
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Engineer Assist Factory T2 Upgrade',
         PlatoonTemplate = 'T12EngineerAssistRNG',
         Priority = 500,
@@ -318,7 +296,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, 
-            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR} },
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.BOMBER} },
         },
         BuilderData = {
             Assist = {
@@ -434,7 +412,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -453,7 +431,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T12 Engineer Unfinished Strategic',
         PlatoonTemplate = 'T12EngineerAssistRNG',
         Priority = 500,
-        InstanceCount = 8,
+        InstanceCount = 10,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.STRATEGIC }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
@@ -476,7 +454,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T12 Engineer Unfinished Novax',
         PlatoonTemplate = 'T12EngineerAssistRNG',
         Priority = 500,
-        InstanceCount = 8,
+        InstanceCount = 10,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.ORBITALSYSTEM }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
@@ -823,6 +801,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },

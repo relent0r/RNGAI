@@ -362,7 +362,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Excess',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 600,
+        Priority = 400,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION}},

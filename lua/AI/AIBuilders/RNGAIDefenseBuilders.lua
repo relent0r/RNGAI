@@ -750,41 +750,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Sea - Perimeter Large',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 650,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .6 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NumAssistees = 2,
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = 'ExpansionBaseTemplates',
-                ExpansionBase = true,
-                NearMarkerType = 'Naval Area',
-                LocationRadius = 250,
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 1,
-                ThreatType = 'AntiSurface',
-                ExpansionRadius = 120,
-                BuildStructures = {
-                    'T1AADefense',
-                    'T1NavalDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer - Perimeter Large',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 750,
