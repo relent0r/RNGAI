@@ -894,7 +894,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 1, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
@@ -910,7 +910,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 2, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 1, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {

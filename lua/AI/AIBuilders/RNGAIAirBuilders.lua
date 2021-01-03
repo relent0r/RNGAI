@@ -345,6 +345,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
+            UnitType = 'TORPEDO',
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
@@ -443,6 +444,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,
+            UnitType = 'BOMBER',
             PrioritizedCategories = {
                 categories.MASSEXTRACTION,
                 categories.ENGINEER,
@@ -466,6 +468,7 @@ BuilderGroup {
         BuilderData = {
             AvoidBases = true,
             SearchRadius = BaseEnemyArea,
+            UnitType = 'BOMBER',
             PrioritizedCategories = {
                 categories.MASSEXTRACTION,
                 categories.ENGINEER * categories.TECH2,
@@ -473,6 +476,7 @@ BuilderGroup {
                 categories.ENERGYPRODUCTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
+                categories.NAVAL * categories.CRUISER,
             },
         },
     },
@@ -489,6 +493,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             AvoidBases = true,
+            UnitType = 'GUNSHIP',
             TargetSearchPriorities = {
                 categories.ENGINEER,
                 categories.MASSEXTRACTION,
@@ -518,6 +523,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            UnitType = 'GUNSHIP',
             TargetSearchPriorities = {
                 categories.MOBILE * categories.LAND,
                 categories.MASSEXTRACTION,
@@ -550,6 +556,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            UnitType = 'BOMBER',
             PrioritizedCategories = {
                 categories.RADAR * categories.STRUCTURE,
                 categories.ENGINEER * categories.TECH1,
@@ -574,6 +581,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            UnitType = 'BOMBER',
             PrioritizedCategories = {
        --         categories.TECH3 * categories.ANTIMISSILE * categories.SILO * categories.STRUCTURE,
                 categories.TECH3 * categories.NUKE * categories.SILO * categories.STRUCTURE,
@@ -621,6 +629,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            UnitType = 'BOMBER',
             PrioritizedCategories = {
                 categories.RADAR * categories.STRUCTURE,
                 categories.ENERGYSTORAGE,

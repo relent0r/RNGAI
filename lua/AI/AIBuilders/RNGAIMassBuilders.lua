@@ -366,10 +366,9 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 300, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 150, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {

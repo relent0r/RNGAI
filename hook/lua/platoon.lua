@@ -1452,9 +1452,9 @@ Platoon = Class(RNGAIPlatoon) {
                 elseif (not path and reason == 'NoPath') then
                     --LOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --LOG('Guardmarker requesting transports')
-                    local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
+                    local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
-                    if not foundTransport then
+                    if not usedTransports then
                         --LOG('Guardmarker no transports')
                         self:PlatoonDisband()
                         return
@@ -2440,7 +2440,6 @@ Platoon = Class(RNGAIPlatoon) {
                 cat = ParseEntityCategory(cat)
             end
             local radius = (cons.AdjacencyDistance or 50)
-            local radius = (cons.AdjacencyDistance or 50)
             if not pos or not pos then
                 WaitTicks(1)
                 self:PlatoonDisband()
@@ -3367,6 +3366,10 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
 
+            if self.PlatoonData.UnitType and self.PlatoonData.UnitType ~= aPlat.PlatoonData.UnitType then
+                continue
+            end
+
             if aPlat.UsingTransport then
                 continue
             end
@@ -3979,9 +3982,9 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif (not path and reason == 'NoPath') then
                         --LOG('* AI-RNG: * SACUATTACKAIRNG: NoPath reason from path')
                         --LOG('Guardmarker requesting transports')
-                        local foundTransport = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
+                        local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                         --DUNCAN - if we need a transport and we cant get one the disband
-                        if not foundTransport then
+                        if not usedTransports then
                             --LOG('Guardmarker no transports')
                             self:PlatoonDisband()
                             return
