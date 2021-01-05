@@ -355,7 +355,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Enemy',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -438,7 +438,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Enemy Large',
-        PlatoonTemplate = 'EngineerBuilder',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {

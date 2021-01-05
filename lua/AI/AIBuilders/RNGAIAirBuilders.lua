@@ -79,7 +79,6 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.AIR * categories.ANTIAIR * categories.TECH3} },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
         },
         BuilderType = 'Air',
@@ -90,7 +89,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.3, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
@@ -102,23 +101,8 @@ BuilderGroup {
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Bomber T1 Response',
-        PlatoonTemplate = 'T1AirBomber',
-        Priority = 850,
-        BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH2 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.3, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
-            { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },
         },
         BuilderType = 'Air',
     },
@@ -128,7 +112,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
         },
@@ -219,7 +203,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'ACUOnField', {false} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
@@ -231,7 +215,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.MOBILE * categories.AIR * categories.ANTINAVY }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.5}},
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.AIR * categories.ANTINAVY, '<',categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.GROUNDATTACK - categories.BOMBER } },
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
@@ -249,7 +233,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
@@ -652,7 +636,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
@@ -666,7 +650,7 @@ BuilderGroup {
             { MIBC, 'ArmyWantsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.8}},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },

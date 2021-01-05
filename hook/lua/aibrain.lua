@@ -1135,7 +1135,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                --[[if true then
+                if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1145,7 +1145,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiencyOverTime..'Energy Efficiency :'..EnergyEfficiencyOverTime)
-                end]]
+                end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -1209,23 +1209,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyExtractorCount = enemyExtractorCount + 1
                     end
                     WaitTicks(1)
-                    local enemyNaval = GetListOfUnits( enemy, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
+                    local enemyNaval = GetListOfUnits( enemy, categories.NAVAL * ( categories.MOBILE + categories.DEFENSE ), false, false )
                     for _,v in enemyNaval do
                         bp = ALLBPS[v.UnitId].Defense
                         --LOG('NavyThreat unit is '..v.UnitId)
                         --LOG('NavyThreat is '..bp.SubThreatLevel)
                         enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
-                    end
-                    WaitTicks(1)
-                    local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
-                    for _,v in enemyDefense do
-                        bp = ALLBPS[v.UnitId].Defense
-                        --LOG('DefenseThreat unit is '..v.UnitId)
-                        --LOG('DefenseThreat is '..bp.SubThreatLevel)
-                        enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
-                        enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
-                        enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
                     end
                     WaitTicks(1)
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
@@ -1278,9 +1268,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
         self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
-        self.EnemyIntel.EnemyThreatCurrent.DefenseAir = enemyDefenseAir
-        self.EnemyIntel.EnemyThreatCurrent.DefenseSurface = enemyDefenseSurface
-        self.EnemyIntel.EnemyThreatCurrent.DefenseSub = enemyDefenseSub
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -1626,15 +1613,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
         
-        if self.EcoManager.EcoMultiplier == 1 then
-            local ecoMultiplier = 1
-            if self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > 72 then
-                ecoMultiplier = 3
-            elseif self.BrainIntel.AllyCount < self.EnemyIntel.EnemyCount then
-                ecoMultiplier = 2
-            end
-            self.EcoManager.EcoMultiplier = ecoMultiplier
-        end
         --LOG('Ally Count is '..self.BrainIntel.AllyCount)
         --LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
         --LOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
@@ -1650,7 +1628,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        --LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)

@@ -10,8 +10,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
@@ -38,8 +40,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 MultiBuild',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -65,8 +69,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Excess',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 300,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 3,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -95,14 +101,13 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
-            -- Have we the eco to build it ?
-            { UCBC, 'UnitCapCheckLess', { 0.99 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -127,6 +132,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },

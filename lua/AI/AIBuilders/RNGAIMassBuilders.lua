@@ -339,42 +339,16 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 300, -3, 0, 0}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.60}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
                 AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
-                AdjacencyDistance = 100,
-                BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'MassStorage',
-                }
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNG T1 Mass Adjacency Excess',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 400,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 300, -3, 0, 0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION,
-                AdjacencyDistance = 100,
+                AdjacencyDistance = 500,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,

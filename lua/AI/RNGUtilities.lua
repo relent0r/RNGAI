@@ -251,104 +251,6 @@ function GetMOARadii(bool)
     return BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea
 end
 
-function AirScoutPatrolRNGAIThread(self, aiBrain)
-    
-    local scout = self:GetPlatoonUnits()[1]
-    if not scout then
-        return
-    end
-
-    -- build scoutlocations if not already done.
-    if not aiBrain.InterestList then
-        aiBrain:BuildScoutLocations()
-    end
-
-    --If we have Stealth (are cybran), then turn on our Stealth
-    if scout:TestToggleCaps('RULEUTC_CloakToggle') then
-        scout:EnableUnitIntel('Toggle', 'Cloak')
-    end
-
-    while not scout.Dead do
-        local targetArea = false
-        local highPri = false
-
-        local mustScoutArea, mustScoutIndex = aiBrain:GetUntaggedMustScoutArea()
-        local unknownThreats = aiBrain:GetThreatsAroundPosition(scout:GetPosition(), 16, true, 'Unknown')
-
-        --1) If we have any "must scout" (manually added) locations that have not been scouted yet, then scout them
-        if mustScoutArea then
-            mustScoutArea.TaggedBy = scout
-            targetArea = mustScoutArea.Position
-
-        --2) Scout "unknown threat" areas with a threat higher than 25
-        elseif table.getn(unknownThreats) > 0 and unknownThreats[1][3] > 25 then
-            aiBrain:AddScoutArea({unknownThreats[1][1], 0, unknownThreats[1][2]})
-
-        --3) Scout high priority locations
-        elseif aiBrain.IntelData.AirHiPriScouts < aiBrain.NumOpponents and aiBrain.IntelData.AirLowPriScouts < 1
-        and table.getn(aiBrain.InterestList.HighPriority) > 0 then
-            aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
-
-            highPri = true
-
-            targetData = aiBrain.InterestList.HighPriority[1]
-            targetData.LastScouted = GetGameTimeSeconds()
-            targetArea = targetData.Position
-
-            aiBrain:SortScoutingAreas(aiBrain.InterestList.HighPriority)
-
-        --4) Every time we scout NumOpponents number of high priority locations, scout a low priority location
-        elseif aiBrain.IntelData.AirLowPriScouts < 1 and table.getn(aiBrain.InterestList.LowPriority) > 0 then
-            aiBrain.IntelData.AirHiPriScouts = 0
-            aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
-
-            targetData = aiBrain.InterestList.LowPriority[1]
-            targetData.LastScouted = GetGameTimeSeconds()
-            targetArea = targetData.Position
-
-            aiBrain:SortScoutingAreas(aiBrain.InterestList.LowPriority)
-        else
-            --Reset number of scoutings and start over
-            aiBrain.IntelData.AirLowPriScouts = 0
-            aiBrain.IntelData.AirHiPriScouts = 0
-        end
-
-        --Air scout do scoutings.
-        if targetArea then
-            self:Stop()
-
-            local vec = self:DoAirScoutVecs(scout, targetArea)
-
-            while not scout.Dead and not scout:IsIdleState() do
-
-                --If we're close enough...
-                if VDist2Sq(vec[1], vec[3], scout:GetPosition()[1], scout:GetPosition()[3]) < 15625 then
-                    if mustScoutArea then
-                        --Untag and remove
-                        for idx,loc in aiBrain.InterestList.MustScout do
-                            if loc == mustScoutArea then
-                               table.remove(aiBrain.InterestList.MustScout, idx)
-                               break
-                            end
-                        end
-                    end
-                    --Break within 125 ogrids of destination so we don't decelerate trying to stop on the waypoint.
-                    break
-                end
-
-                if VDist3(scout:GetPosition(), targetArea) < 25 then
-                    break
-                end
-
-                WaitTicks(50)
-            end
-        else
-            WaitTicks(10)
-        end
-        WaitTicks(5)
-    end
-end
-
 function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
     if not pos then
         return false
@@ -357,7 +259,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
     --Temporary for troubleshooting
     --local GetBlueprint = moho.entity_methods.GetBlueprint
     -- Check if enemy units are at location
-    local checkUnits = aiBrain:GetUnitsAroundPoint( (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 15, 'Enemy')
+    local checkUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 15, 'Enemy')
     -- reclaim units near our building place.
     if checkUnits and table.getn(checkUnits) > 0 then
         for num, unit in checkUnits do
@@ -403,7 +305,7 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     end
 
     local structureCat = ParseEntityCategory(whatToBuild)
-    local checkUnits = aiBrain:GetUnitsAroundPoint(structureCat, pos, 1, 'Ally')
+    local checkUnits = GetUnitsAroundPoint(aiBrain, structureCat, pos, 1, 'Ally')
     if checkUnits and table.getn(checkUnits) > 0 then
         for num, unit in checkUnits do
             IssueRepair({eng}, unit)
@@ -712,7 +614,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
 
     local enemyIndex = enemyBrain:GetArmyIndex()
     for _, range in RangeList do
-        local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+        local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, maxRange, 'Enemy')
         for _, v in atkPri do
             local category = v
             if type(category) == 'string' then
@@ -1106,6 +1008,9 @@ end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
+    if platoon.PlatoonData.GetTargetsFromBase then
+        position = aiBrain.BuilderManagers['MAIN'].Position
+    end
     local enemyThreat, targetUnits, category
     local RangeList = { [1] = maxRange }
     if not aiBrain or not position or not maxRange then
@@ -1146,7 +1051,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
     end
 
     for _, range in RangeList do
-        targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, range, 'Enemy')
+        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, range, 'Enemy')
         for _, v in atkPri do
             category = v
             if type(category) == 'string' then
@@ -1240,7 +1145,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
     if not platoon.MovementLayer then
         AIAttackUtils.GetMostRestrictiveLayer(platoon)
     end
-    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.COMMAND, position, maxRange, 'Enemy')
+    local targetUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, position, maxRange, 'Enemy')
     local retUnit = false
     local distance = false
     local targetShields = 9999
@@ -1344,7 +1249,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
             return false
         end
-        TargetsInRange = aiBrain:GetUnitsAroundPoint(targetQueryCategory, position, range, 'Enemy')
+        TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
         --DrawCircle(position, range, '0000FF')
         for _, v in TargetSearchCategory do
             category = v
@@ -2104,7 +2009,7 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit)
 
     -- If targetUnit is within the radius of any shields return true
     local tPos = targetUnit:GetPosition()
-    local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
+    local shields = GetUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
     for _, shield in shields do
         if not shield.Dead then
             local shieldPos = shield:GetPosition()

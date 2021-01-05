@@ -114,7 +114,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Small',
-    Plan = 'StrikeForceAIRNG', -- The platoon function to use.
+    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           3, -- Min number of units.
@@ -254,7 +254,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Small Ranged',
-    Plan = 'StrikeForceAIRNG', -- The platoon function to use.
+    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           3, -- Min number of units.

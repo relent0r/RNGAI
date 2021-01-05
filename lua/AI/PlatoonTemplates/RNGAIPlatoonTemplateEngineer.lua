@@ -10,7 +10,7 @@ PlatoonTemplate {
     Name = 'T123EngineerAssistRNG',
     Plan = 'ManagerEngineerAssistAIRNG',
     GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH2), 1, 1, 'support', 'None' }
+        { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
     },
 }
 
@@ -143,5 +143,21 @@ PlatoonTemplate {
     Plan = 'TransferAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD, 1, 1, 'support', 'none' },
+    },
+}
+
+PlatoonTemplate {
+    Name = 'UEFT2EngineerBuilderRNG',
+    Plan = 'EngineerBuildAIRNG',
+    GlobalSquads = {
+        { categories.UEF * categories.ENGINEER * categories.TECH2, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'CybranT2EngineerBuilderRNG',
+    Plan = 'EngineerBuildAIRNG',
+    GlobalSquads = {
+        { categories.CYBRAN * categories.ENGINEER * categories.TECH2 - categories.ENGINEERSTATION, 1, 1, 'support', 'None' }
     },
 }
