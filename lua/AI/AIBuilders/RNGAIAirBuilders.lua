@@ -118,6 +118,20 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },
+    Builder {	
+        BuilderName = 'RNGAI Factory Bomber T1 Response',	
+        PlatoonTemplate = 'T1AirBomber',	
+        Priority = 850,	
+        BuilderConditions = {	
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH2 }},	
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},	
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.3, 0.5}},	
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},	
+            { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },	
+        },	
+        BuilderType = 'Air',	
+    },
     Builder {
         BuilderName = 'RNGAI Air Attack Queue T1',
         PlatoonTemplate = 'RNGAIT1AirQueue',
