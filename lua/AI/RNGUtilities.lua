@@ -1009,7 +1009,8 @@ end
 function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
     if platoon.PlatoonData.GetTargetsFromBase then
-        position = aiBrain.BuilderManagers['MAIN'].Position
+        --LOG('Looking for targets from position '..platoon.PlatoonData.LocationType)
+        position = aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Position
     end
     local enemyThreat, targetUnits, category
     local RangeList = { [1] = maxRange }

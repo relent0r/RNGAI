@@ -251,7 +251,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 2000 } },
+            { MIBC, 'MapSizeLessThan', { 4000 } },
             { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 6 minutes
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -1050,7 +1050,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
-        Priority = 550,                                                          -- Priority. 1000 is normal.
+        Priority = 560,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
@@ -1137,6 +1137,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            LocationType = 'LocationType',
             TargetSearchPriorities = {
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND
@@ -1409,10 +1410,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
-        Priority = 550,                                                          -- Priority. 1000 is normal.
+        Priority = 560,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 6,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -1478,6 +1479,7 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
+            LocationType = 'LocationType',
             TargetSearchPriorities = {
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND,

@@ -2029,6 +2029,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         self:AttackTarget(target)
                                         break
                                     end
+                                    --LOG('Waiting to reach target loop')
                                     WaitTicks(10)
                                 end
                             else
