@@ -1056,6 +1056,7 @@ BuilderGroup {
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
@@ -1416,6 +1417,7 @@ BuilderGroup {
         InstanceCount = 6,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {

@@ -4308,6 +4308,7 @@ Platoon = Class(RNGAIPlatoon) {
         local location = self.PlatoonData.Location
         --LOG('Location Type is '..location)
         --LOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
+        --LOG('Destiantion Plan is '..destinationPlan)
         if not destinationPlan then
             return
         end
@@ -4316,13 +4317,14 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('Number of units are '..table.getn(units))
         local platoonList = aiBrain:GetPlatoonsList()
         for k, platoon in platoonList do
-            if platoon:GetPlan() == destinationPlan then
+            if platoon:GetPlan() == destinationPlan and platoon.Location == location then
+                --LOG('Setting mergedPlatoon to platoon')
                 mergedPlatoon = platoon
                 break
             end
         end
         if not mergedPlatoon then
-            --LOG('Platoon Merge is creating platoon for '..destinationPlan)
+            --LOG('Platoon Merge is creating platoon for '..destinationPlan..' at location '..repr(aiBrain.BuilderManagers[location].Position))
             mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon'..location, destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
             mergedPlatoon.BuilderName = destinationPlan..'Platoon'..location
