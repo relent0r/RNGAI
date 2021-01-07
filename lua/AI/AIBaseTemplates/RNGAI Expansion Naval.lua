@@ -3,6 +3,7 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval',
     Builders = {
         'RNGAI Engineer Builder Expansion',
+        'RNGAI Engineer Transfer To Main From Expansion',
         'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
 
@@ -30,9 +31,9 @@ BaseBuilderTemplate {
             Gate = 0,
         },
         EngineerCount = {
-            Tech1 = 8,
-            Tech2 = 6,
-            Tech3 = 2,
+            Tech1 = 4,
+            Tech2 = 3,
+            Tech3 = 1,
             SCU = 0,
         },
         MassToFactoryValues = {

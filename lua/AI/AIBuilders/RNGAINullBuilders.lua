@@ -74,7 +74,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Null Response Formers',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNGAI Bomber Attack MassRaid',
+        BuilderName = 'RNGAI Bomber Attack MassRaid NULL',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },

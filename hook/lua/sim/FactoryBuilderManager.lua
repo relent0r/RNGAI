@@ -147,16 +147,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
         end
-        LOG('RNG FactorFinishedbuilding')
+        --LOG('RNG FactorFinishedbuilding')
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
             self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
-            LOG('Factory Built by factory, attempting to kill factory.')
+            --LOG('Factory Built by factory, attempting to kill factory.')
 			if finishedUnit:GetFractionComplete() == 1 then
 				self:AddFactory(finishedUnit )			
 				factory.Dead = true
                 factory.Trash:Destroy()
-                LOG('Destroy Factory')
+                --LOG('Destroy Factory')
 				return self:FactoryDestroyed(factory)
 			end
 		end
@@ -168,7 +168,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
         end
-        LOG('Factory Destroyed '..factory.UnitId)
+        --LOG('Factory Destroyed '..factory.UnitId)
         --LOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
         local guards = factory:GetGuards()
         local factoryDestroyed = false
@@ -183,13 +183,13 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         for k,v in self.FactoryList do
             if (not v.Sync.id) or v.Dead then
-                LOG('Removing factory from FactoryList'..v.UnitId)
+                --LOG('Removing factory from FactoryList'..v.UnitId)
                 self.FactoryList[k] = nil
                 factoryDestroyed = true
             end
         end
         if factoryDestroyed then
-            LOG('Performing table rebuild')
+            --LOG('Performing table rebuild')
             self.FactoryList = self:RebuildTable(self.FactoryList)
         end
         --LOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')

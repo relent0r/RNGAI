@@ -12,13 +12,6 @@ PlatoonTemplate {
         { categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) , 1, 300, 'attack', 'none' }
     },
 }
-PlatoonTemplate {
-    Name = 'T3NukeRNG',
-    Plan = 'NukeAIRNGOld',
-    GlobalSquads = {
-        { categories.NUKE * categories.STRUCTURE * categories.TECH3, 1, 1, 'attack', 'none' },
-    }
-}
 
 PlatoonTemplate {
     Name = 'T4SatelliteExperimentalRNG',

@@ -216,7 +216,10 @@ end
 function MapSizeLessThan(aiBrain, size)
     local mapSizeX, mapSizeZ = GetMapSize()
     if mapSizeX < size and mapSizeZ < size then
-        if size == 2000 and mapSizeX > 1000 and mapSizeZ > 1000 then
+        if size == 4000 and mapSizeX > 2000 and mapSizeZ > 2000 then
+            --LOG('40 KM Map Check true')
+            return true
+        elseif size == 2000 and mapSizeX > 1000 and mapSizeZ > 1000 then
             --LOG('20 KM Map Check true')
             return true
         elseif size == 1000 and mapSizeX > 500 and mapSizeZ > 500 then
@@ -250,6 +253,15 @@ end
 function ExpansionIsActive(aiBrain)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
     if activeExpansion then
+        return true
+    end
+    return false
+end
+
+function ArmyNeedOrWantTransports(aiBrain)
+    if aiBrain and aiBrain:GetNoRushTicks() <= 0 and aiBrain.NeedTransports and aiBrain.NeedTransports > 0  then
+        return true
+    elseif aiBrain and aiBrain:GetNoRushTicks() <= 0 and aiBrain.WantTransports then
         return true
     end
     return false

@@ -149,22 +149,24 @@ PlatoonTemplate {
     Name = 'RNGAIT2SeaAttackRangedQueue',
     FactionSquads = {
         UEF = {
-            { 'ues0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
             { 'xes0102', 1, 1, 'Attack', 'none' },       -- Torp Boat
+            { 'ues0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
          },
         Aeon = {
+            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
             { 'uas0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
             { 'uas0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            
         },
         Cybran = {
+            { 'xrs0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
             { 'urs0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
             { 'urs0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xrs0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            
         },
         Seraphim = {
-            { 'xss0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
             { 'xss0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
+            { 'xss0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
         },
     }
 }
@@ -173,17 +175,17 @@ PlatoonTemplate {
     Name = 'RNGAIT3SeaAttackRangedQueue',
     FactionSquads = {
         UEF = {
-            { 'ues0304', 1, 1, 'Artillery', 'None' },     -- Strat Sub
             { 'xes0102', 1, 1, 'Attack', 'none' },       -- Torp Boat
+            { 'ues0304', 1, 1, 'Artillery', 'None' },     -- Strat Sub
          },
         Aeon = {
+            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
             { 'xas0306', 1, 1, 'Artillery', 'none' },       -- Missile Boat
             { 'uas0304', 1, 1, 'Artillery', 'None' },     -- Strat Sub
-            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
         },
         Cybran = {
-            { 'urs0304', 1, 1, 'Artillery', 'none' },       -- Strat Sub
             { 'xrs0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            { 'urs0304', 1, 1, 'Artillery', 'none' },       -- Strat Sub
         },
         Seraphim = {
             { 'xss0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer

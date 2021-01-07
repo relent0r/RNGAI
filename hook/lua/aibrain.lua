@@ -1,14 +1,22 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibrain.lua' )
 
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
+local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
+
+local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 
 local RNGAIBrainClass = AIBrain
 AIBrain = Class(RNGAIBrainClass) {
@@ -154,7 +162,7 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalMonitorStatus = 'ACTIVE',
             TacticalLocationFound = false,
             TacticalLocations = {},
-            TacticalTimeout = 53,
+            TacticalTimeout = 37,
             TacticalMonitorTime = 180,
             TacticalMassLocations = {},
             TacticalUnmarkedMassGroups = {},
@@ -169,7 +177,17 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
-        self.EnemyIntel.DirectorData = {}
+        self.EnemyIntel.DirectorData = {
+            Strategic = {},
+            Energy = {},
+            Intel = {},
+            Defense = {},
+            Mass = {},
+            Factory = {},
+            Combat = {},
+        }
+        --LOG('Director Data'..repr(self.EnemyIntel.DirectorData))
+        --LOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
@@ -380,10 +398,11 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
         self:ForkThread(self.TacticalMonitorInitializationRNG)
+        --self:ForkThread(self.TacticalAnalysisThreadRNG)
     end,
 
     GetStructureVectorsRNG = function(self)
-        local structures = self:GetListOfUnits(categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
+        local structures = GetListOfUnits(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
         -- Add all points around location
         local tempGridPoints = {}
         local indexChecker = {}
@@ -432,7 +451,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     table.insert(self.BaseMonitor.BaseMonitorPoints,
                         {
                             Position = v,
-                            Threat = self:GetThreatAtPosition(v, 0, true, 'Land'),
+                            Threat = GetThreatAtPosition(self, v, 0, true, 'Land'),
                             Alert = false
                         }
                     )
@@ -457,7 +476,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local alertThreat = self.BaseMonitor.AlertLevel
             for k, v in self.BaseMonitor.BaseMonitorPoints do
                 if not v.Alert then
-                    v.Threat = self:GetThreatAtPosition(v.Position, 0, true, 'Land')
+                    v.Threat = GetThreatAtPosition(self, v.Position, 0, true, 'Land')
                     if v.Threat > alertThreat then
                         v.Alert = true
                         table.insert(self.BaseMonitor.AlertsTable,
@@ -687,7 +706,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local ecoThreat = 0
 
             if insertTable.Enemy == false then
-                local ecoStructures = self:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
+                local ecoStructures = GetUnitsAroundPoint(self, categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
                 local GetBlueprint = moho.entity_methods.GetBlueprint
                 for _, v in ecoStructures do
                     local bp = v:GetBlueprint()
@@ -802,7 +821,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local expansionName
             for k, v in self.BuilderManagers do
                 --LOG('build k is '..k)
-                if (string.find(k, 'Expansion Area')) then
+                if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
                     local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
                     --LOG('Distance to Enemy for '..k..' is '..exDistance)
                     if exDistance < closest then
@@ -832,7 +851,7 @@ AIBrain = Class(RNGAIBrainClass) {
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
         while true do
-            local structures = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             for _, struct in structures do
                 local dupe = false
                 local newPos = {struct[1], 0, struct[2]}
@@ -1007,8 +1026,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
-                    local threat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
-                    local myThreat = self:GetThreatAtPosition(v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
+                    local threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
+                    local myThreat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
                     --LOG('* AI-RNG: Threat of attacker'..threat)
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
@@ -1120,10 +1139,33 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
-                self:TacticalMonitorRNG(ALLBPS)
+                self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
+                self:TacticalMonitorRNG(ALLBPS)
+                --[[if true then
+                    local EnergyIncome = GetEconomyIncome(self,'ENERGY')
+                    local MassIncome = GetEconomyIncome(self,'MASS')
+                    local EnergyRequested = GetEconomyRequested(self,'ENERGY')
+                    local MassRequested = GetEconomyRequested(self,'MASS')
+                    local EnergyEfficiencyOverTime = math.min(EnergyIncome / EnergyRequested, 2)
+                    local MassEfficiencyOverTime = math.min(MassIncome / MassRequested, 2)
+                    LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
+                    LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
+                    LOG('Mass Efficiency :'..MassEfficiencyOverTime..'Energy Efficiency :'..EnergyEfficiencyOverTime)
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
+        end
+    end,
+
+    TacticalAnalysisThreadRNG = function(self)
+        local ALLBPS = __blueprints
+        WaitTicks(200)
+        while true do
+            if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
+                self:TacticalThreatAnalysisRNG(ALLBPS)
+            end
+            WaitTicks(600)
         end
     end,
 
@@ -1165,7 +1207,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
                     end
-
+                    WaitTicks(1)
                     local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                     for _,v in enemyExtractors do
                         bp = ALLBPS[v.UnitId].Defense
@@ -1173,8 +1215,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
                         enemyExtractorCount = enemyExtractorCount + 1
                     end
-
-                    local enemyNaval = GetListOfUnits( enemy, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false )
+                    WaitTicks(1)
+                    local enemyNaval = GetListOfUnits( enemy, categories.NAVAL * ( categories.MOBILE + categories.DEFENSE ), false, false )
                     for _,v in enemyNaval do
                         bp = ALLBPS[v.UnitId].Defense
                         --LOG('NavyThreat unit is '..v.UnitId)
@@ -1182,16 +1224,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
                     end
-
-                    local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
-                    for _,v in enemyDefense do
-                        bp = ALLBPS[v.UnitId].Defense
-                        --LOG('DefenseThreat unit is '..v.UnitId)
-                        --LOG('DefenseThreat is '..bp.SubThreatLevel)
-                        enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
-                        enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
-                        enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
-                    end
+                    WaitTicks(1)
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
                     for _,v in enemyACU do
                         local factionIndex = enemy:GetFactionIndex()
@@ -1242,175 +1275,14 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
         self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
-        self.EnemyIntel.EnemyThreatCurrent.DefenseAir = enemyDefenseAir
-        self.EnemyIntel.EnemyThreatCurrent.DefenseSurface = enemyDefenseSurface
-        self.EnemyIntel.EnemyThreatCurrent.DefenseSub = enemyDefenseSub
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
-
-    TacticalMonitorRNG = function(self, ALLBPS)
-        -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
-        WaitTicks(Random(1,7))
-        LOG('* AI-RNG: Tactical Monitor Threat Pass')
-        local enemyBrains = {}
-        local enemyStarts = self.EnemyIntel.EnemyStartLocations
-        local startX, startZ = self:GetArmyStartPos()
-        local timeout = self.TacticalMonitor.TacticalTimeout
-        local gameTime = GetGameTimeSeconds()
-        --LOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
-        if gameTime > 600 and self.UpgradeMode == 'Caution' then
-            --LOG('Setting UpgradeMode to Normal')
-            self.UpgradeMode = 'Normal'
-            self.UpgradeIssuedLimit = 2
-        end
-
-        --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
-        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for k, v in self.EnemyIntel.EnemyThreatLocations do
-                --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if (gameTime - v.InsertTime) > timeout then
-                    self.EnemyIntel.EnemyThreatLocations[k] = nil
-                end
-            end
-            if self.EnemyIntel.EnemyThreatLocations then
-                self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
-            end
-        end
-        -- Rebuild the self threat tables
-        --LOG('SelfThreat Table count:'..table.getn(self.BrainIntel.SelfThreat))
-        --LOG('SelfThreat Table present:'..repr(self.BrainIntel.SelfThreat))
-        if self.BrainIntel.SelfThreat then
-            for k, v in self.BrainIntel.SelfThreat.Air do
-                --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if (gameTime - v.InsertTime) > timeout then
-                    self.BrainIntel.SelfThreat.Air[k] = nil
-                end
-            end
-            if self.BrainIntel.SelfThreat.Air then
-                self.BrainIntel.SelfThreat.Air = self:RebuildTable(self.BrainIntel.SelfThreat.Air)
-            end
-        end
-        -- debug, remove later on
-        if enemyStarts then
-            --LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
-        end
-        local selfIndex = self:GetArmyIndex()
-        local potentialThreats = {}
-        local threatTypes = {
-            'Land',
-            'AntiAir',
-            'Naval',
-            'StructuresNotMex',
-            --'AntiSurface'
-        }
-        -- Get threats for each threat type listed on the threatTypes table. Full map scan.
-        for _, t in threatTypes do
-            rawThreats = self:GetThreatsAroundPosition(self.BuilderManagers.MAIN.Position, 16, true, t)
-            for _, raw in rawThreats do
-                local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
-                table.insert(potentialThreats, threatRow)
-            end
-        end
-        --LOG('Potential Threats :'..repr(potentialThreats))
-        WaitTicks(2)
-        local phaseTwoThreats = {}
-        local threatLimit = 20
-        -- Set a raw threat table that is replaced on each loop so we can get a snapshot of current enemy strength across the map.
-        self.EnemyIntel.EnemyThreatRaw = potentialThreats
-
-        -- Remove threats that are too close to the enemy base so we are focused on whats happening in the battlefield.
-        -- Also set if the threat is on water or not
-        -- Set the time the threat was identified so we can flush out old entries
-        -- If you want the full map thats what EnemyThreatRaw is for.
-        if table.getn(potentialThreats) > 0 then
-            local threatLocation = {}
-            for _, threat in potentialThreats do
-                --LOG('* AI-RNG: Threat is'..repr(threat))
-                if threat.rThreat > threatLimit then
-                    for _, pos in enemyStarts do
-                        --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
-                        if VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]) < 10000 then
-                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            if RUtils.PositionOnWater(threat.posX, threat.posZ) then
-                                onWater = true
-                            else
-                                onWater = false
-                            end
-                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = true, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater}
-                            table.insert(phaseTwoThreats, threatLocation)
-                        else
-                            --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                            if RUtils.PositionOnWater(threat.posX, threat.posZ) then
-                                onWater = true
-                            else
-                                onWater = false
-                            end
-                            threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater}
-                            table.insert(phaseTwoThreats, threatLocation)
-                        end
-                    end
-                end
-            end
-            --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
-            for Index_1, value_1 in phaseTwoThreats do
-                for Index_2, value_2 in phaseTwoThreats do
-                    -- no need to check against self
-                    if Index_1 == Index_2 then 
-                        continue
-                    end
-                    -- check if we have the same position
-                    --LOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
-                    if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
-                        --LOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
-                        if value_1.EnemyBaseRadius == false then
-                            --LOG('* AI-RNG: deleating '..repr(value_1))
-                            phaseTwoThreats[Index_1] = nil
-                            break
-                        elseif value_2.EnemyBaseRadius == false then
-                            --LOG('* AI-RNG: deleating '..repr(value_2))
-                            phaseTwoThreats[Index_2] = nil
-                            break
-                        else
-                            --LOG('* AI-RNG: Both entires have true, deleting nothing')
-                        end
-                    end
-                end
-            end
-            --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
-            local currentGameTime = GetGameTimeSeconds()
-            for _, threat in phaseTwoThreats do
-                threat.InsertTime = currentGameTime
-                table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
-            end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
-        end
-        WaitTicks(2)
-        local landThreatAroundBase = 0
-        --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
-        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for _, threat in self.EnemyIntel.EnemyThreatLocations do
-                if threat.ThreatType == 'Land' then
-                    local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
-                    if threatDistance < 32400 then
-                        landThreatAroundBase = landThreatAroundBase + threat.Threat
-                    end
-                end
-            end
-            --LOG('Total land threat around base '..landThreatAroundBase)
-            if (gameTime < 900) and (landThreatAroundBase > 30) then
-                --LOG('BaseThreatCaution True')
-                self.BrainIntel.SelfThreat.BaseThreatCaution = true
-            elseif (gameTime > 900) and (landThreatAroundBase > 60) then
-                --LOG('BaseThreatCaution True')
-                self.BrainIntel.SelfThreat.BaseThreatCaution = true
-            else
-                --LOG('BaseThreatCaution False')
-                self.BrainIntel.SelfThreat.BaseThreatCaution = false
-            end
-        end
+    SelfThreatCheckRNG = function(self, ALLBPS)
         -- Get AI strength
-        local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
+        local selfIndex = self:GetArmyIndex()
+
+        local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.EXPERIMENTAL, false, false)
         local airthreat = 0
         local antiAirThreat = 0
         local bp
@@ -1429,7 +1301,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.AirNow = airthreat
         self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
 
-        if airthreat > 0 then
+        --[[if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             table.insert(self.BrainIntel.SelfThreat.Air, airSelfThreat)
             --LOG('Total Air Unit Threat :'..airthreat)
@@ -1440,8 +1312,8 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.BrainIntel.Average.Air = averageSelfThreat / table.getn(self.BrainIntel.SelfThreat.Air)
             --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
-        end
-        WaitTicks(2)
+        end]]
+        WaitTicks(1)
         local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
@@ -1465,6 +1337,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyExtractorCount = 0
         local allyExtractorthreat = 0
         --LOG('Number of Allies '..table.getn(allyBrains))
+        WaitTicks(1)
         if table.getn(allyBrains) > 0 then
             for k, ally in allyBrains do
                 local allyExtractors = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
@@ -1482,7 +1355,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
         --LOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
-        WaitTicks(2)
+        WaitTicks(1)
         local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
         local navalThreat = 0
         local navalSubThreat = 0
@@ -1493,8 +1366,250 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.NavalNow = navalThreat
         self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
+    end,
 
+    --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
+        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
 
+        -- set the OgridRadius according to mapsize
+        -- it controls the size of the query when seeking the epicentre of a threat
+        -- and the ability to 'merge' two points that might be in the same, or adjacent
+        -- IMAP blocks
+        local OgridRadius, IMAPsize, ResolveBlocks, Rings, ThresholdMult
+        local units, counter, x1,x2,x3, unitPos, dupe
+
+        if maxmapdimension == 256 then
+            OgridRadius = 11.5
+            IMAPSize = 16
+            ResolveBlocks = 0
+            ThresholdMult = .33
+            Rings = 3
+        elseif maxmapdimension == 512 then
+            OgridRadius = 22.5
+            IMAPSize = 32
+            ResolveBlocks = 0
+            ThresholdMult = .66
+            Rings = 2
+        elseif maxmapdimension == 1024 then
+            OgridRadius = 45.0
+            IMAPSize = 64
+            ResolveBlocks = 0
+            ThresholdMult = 1
+            Rings = 1
+        elseif maxmapdimension == 2048 then
+            OgridRadius = 89.5
+            IMAPSize = 128
+            ResolveBlocks = 4
+            ThresholdMult = 1
+            Rings = 0
+        else
+            OgridRadius = 180.0
+            IMAPSize = 256
+            ResolveBlocks = 16
+            ThresholdMult = 1.5
+            Rings = 0
+        end
+        local IMAPRadius = IMAPSize * .5
+		
+		local numchecks = 0
+        local usedticks = 0
+        local checkspertick = 1
+        local tempImapLocation = {false,false}
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                if (tempImapLocation[1] ~= threat[1] and tempImapLocation[2] ~= threat[2]) and VDist2Sq(tempImapLocation[1], tempImapLocation[2], threat[1], threat[2]) < 10000 then
+                    continue
+                end
+                if threat.Threat > 100 and ThreatType == 'StructuresNotMex' then
+                    numchecks = numchecks + 1
+                    if numchecks > checkspertick then
+                        WaitTicks(1)
+                        usedticks = usedticks + 1
+                        numchecks = 0
+                    end
+                    units = RUtils.GetEnemyUnitsInRect( self, threat.Position[1]-IMAPRadius, threa.Position[2]-IMAPRadius, threat.Position[1]+IMAPRadius, threat.Position[2]+IMAPRadius)
+                    counter = 0
+                    x1 = 0
+                    x2 = 0
+                    x3 = 0
+                    for _,v in EntityCategoryFilterDown( categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, units ) do
+                        counter = counter + 1
+                        unitPos = GetPosition(v)
+                        if unitPos and not v.Dead then
+                            x1 = x1 + unitPos[1]
+                            x2 = x2 + unitPos[2]
+                            x3 = x3 + unitPos[3]
+                        end
+                    end
+                    if counter > 0 then
+                        dupe = false
+                        -- divide the position values by the counter to get average position (gives you the heart of the real cluster)
+                        newPos = { x1/counter, x2/counter, x3/counter }
+                        tempImapLocation = {newPos[1], newPos[2]}
+                        units = GetUnitsAroundPoint( aiBrain, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, newPos, 100, 'Enemy')
+                    end
+                end
+            end
+    end,]]
+
+    TacticalMonitorRNG = function(self, ALLBPS)
+        -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
+        WaitTicks(Random(1,7))
+        LOG('* AI-RNG: Tactical Monitor Threat Pass')
+        local enemyBrains = {}
+        local enemyStarts = self.EnemyIntel.EnemyStartLocations
+        local startX, startZ = self:GetArmyStartPos()
+
+        local gameTime = GetGameTimeSeconds()
+        --LOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
+        if gameTime > 600 and self.UpgradeMode == 'Caution' then
+            --LOG('Setting UpgradeMode to Normal')
+            self.UpgradeMode = 'Normal'
+            self.UpgradeIssuedLimit = 2
+        end
+        self.EnemyIntel.EnemyThreatLocations = {}
+        
+
+        --LOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
+        --[[if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for k, v in self.EnemyIntel.EnemyThreatLocations do
+                --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
+                if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
+                    self.EnemyIntel.EnemyThreatLocations[k] = nil
+                end
+            end
+            if self.EnemyIntel.EnemyThreatLocations then
+                self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
+            end
+        end]]
+        -- Rebuild the self threat tables
+        --LOG('SelfThreat Table count:'..table.getn(self.BrainIntel.SelfThreat))
+        --LOG('SelfThreat Table present:'..repr(self.BrainIntel.SelfThreat))
+        --[[if self.BrainIntel.SelfThreat then
+            for k, v in self.BrainIntel.SelfThreat.Air do
+                --LOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
+                if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
+                    self.BrainIntel.SelfThreat.Air[k] = nil
+                end
+            end
+            if self.BrainIntel.SelfThreat.Air then
+                self.BrainIntel.SelfThreat.Air = self:RebuildTable(self.BrainIntel.SelfThreat.Air)
+            end
+        end]]
+        -- debug, remove later on
+        if enemyStarts then
+            --LOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
+        end
+        local selfIndex = self:GetArmyIndex()
+        local potentialThreats = {}
+        local threatTypes = {
+            'Land',
+            'AntiAir',
+            'Naval',
+            'StructuresNotMex',
+            --'AntiSurface'
+        }
+        -- Get threats for each threat type listed on the threatTypes table. Full map scan.
+        for _, t in threatTypes do
+            rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
+            for _, raw in rawThreats do
+                local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
+                table.insert(potentialThreats, threatRow)
+            end
+        end
+        --LOG('Potential Threats :'..repr(potentialThreats))
+        WaitTicks(2)
+        local phaseTwoThreats = {}
+        local threatLimit = 20
+        -- Set a raw threat table that is replaced on each loop so we can get a snapshot of current enemy strength across the map.
+        self.EnemyIntel.EnemyThreatRaw = potentialThreats
+
+        -- Remove threats that are too close to the enemy base so we are focused on whats happening in the battlefield.
+        -- Also set if the threat is on water or not
+        -- Set the time the threat was identified so we can flush out old entries
+        -- If you want the full map thats what EnemyThreatRaw is for.
+        if table.getn(potentialThreats) > 0 then
+            local threatLocation = {}
+            for _, threat in potentialThreats do
+                --LOG('* AI-RNG: Threat is'..repr(threat))
+                if threat.rThreat > threatLimit then
+                    --LOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                    if RUtils.PositionOnWater(threat.posX, threat.posZ) then
+                        onWater = true
+                    else
+                        onWater = false
+                    end
+                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
+                    table.insert(phaseTwoThreats, threatLocation)
+                end
+            end
+            --LOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
+            for _, threat in phaseTwoThreats do
+                for q, pos in enemyStarts do
+                    --LOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
+                    if VDist2Sq(threat.Position[1], threat.Position[2], pos[1], pos[3]) < 10000 then
+                        threat.EnemyBaseRadius = true
+                    end
+                end
+            end
+            --[[for Index_1, value_1 in phaseTwoThreats do
+                for Index_2, value_2 in phaseTwoThreats do
+                    -- no need to check against self
+                    if Index_1 == Index_2 then 
+                        continue
+                    end
+                    -- check if we have the same position
+                    --LOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                    if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
+                        --LOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
+                        if value_1.EnemyBaseRadius == false then
+                            --LOG('* AI-RNG: deleating '..repr(value_1))
+                            phaseTwoThreats[Index_1] = nil
+                            break
+                        elseif value_2.EnemyBaseRadius == false then
+                            --LOG('* AI-RNG: deleating '..repr(value_2))
+                            phaseTwoThreats[Index_2] = nil
+                            break
+                        else
+                            --LOG('* AI-RNG: Both entires have true, deleting nothing')
+                        end
+                    end
+                end
+            end]]
+            --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
+            local currentGameTime = GetGameTimeSeconds()
+            for _, threat in phaseTwoThreats do
+                threat.InsertTime = currentGameTime
+                table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
+            end
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+        end
+        WaitTicks(2)
+
+        local landThreatAroundBase = 0
+        --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for _, threat in self.EnemyIntel.EnemyThreatLocations do
+                if threat.ThreatType == 'Land' then
+                    local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
+                    if threatDistance < 32400 then
+                        landThreatAroundBase = landThreatAroundBase + threat.Threat
+                    end
+                end
+            end
+            --LOG('Total land threat around base '..landThreatAroundBase)
+            if (gameTime < 900) and (landThreatAroundBase > 30) then
+                --LOG('BaseThreatCaution True')
+                self.BrainIntel.SelfThreat.BaseThreatCaution = true
+            elseif (gameTime > 900) and (landThreatAroundBase > 60) then
+                --LOG('BaseThreatCaution True')
+                self.BrainIntel.SelfThreat.BaseThreatCaution = true
+            else
+                --LOG('BaseThreatCaution False')
+                self.BrainIntel.SelfThreat.BaseThreatCaution = false
+            end
+        end
+        
         if gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
@@ -1505,29 +1620,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
         
-        if self.EcoManager.EcoMultiplier == 1 then
-            local ecoMultiplier = 1
-            if self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > 72 then
-                ecoMultiplier = 3
-            elseif self.BrainIntel.AllyCount < self.EnemyIntel.EnemyCount then
-                ecoMultiplier = 2
-            end
-            self.EcoManager.EcoMultiplier = ecoMultiplier
-        end
         --LOG('Ally Count is '..self.BrainIntel.AllyCount)
         --LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
         --LOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
-
-        --[[
-        if table.getn(self.EnemyIntel.EnemyThreatRaw) > 0 then
-            local totalAirThreat = 0
-            for k, v in self.EnemyIntel.EnemyThreatRaw do
-                if v.rThreatType == 'Air' then
-                    totalAirThreat = totalAirThreat + v.rThreat
-                end
-            end
-            self.EnemyIntel.EnemyThreatCurrent.Air = totalAirThreat
-        end]]
         --LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
         --LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
         --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
@@ -1540,10 +1635,116 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        --LOG('Current Defense Surface Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
+    end,
+
+    TacticalThreatAnalysisRNG = function(self, ALLBPS)
+
+        self.EnemyIntel.DirectorData = {
+            DefenseCluster = {},
+            Strategic = {},
+            Energy = {},
+            Intel = {},
+            Defense = {},
+            Mass = {},
+            Factory = {},
+            Combat = {},
+        }
+        local energyUnits = {}
+        local strategicUnits = {}
+        local defensiveUnits = {}
+        local intelUnits = {}
+        local gameTime = GetGameTimeSeconds()
+        
+        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
+                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                    for s, unit in unitsAtLocation do
+                        local unitIndex = unit:GetAIBrain():GetArmyIndex()
+                        if not ArmyIsCivilian(unitIndex) then
+                            if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                                --LOG('Inserting Enemy Energy Structure '..unit.UnitId)
+                                table.insert(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
+                                --LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
+                                table.insert(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                                --LOG('Inserting Enemy Strategic Structure '..unit.UnitId)
+                                table.insert(strategicUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
+                                --LOG('Inserting Enemy Intel Structure '..unit.UnitId)
+                                table.insert(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            end
+                        end
+                    end
+                    WaitTicks(1)
+                end
+            end
+        end
+        if table.getn(energyUnits) > 0 then
+            for k, unit in energyUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
+                        unit.Air = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                --LOG('Enemy Energy Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Energy, energyUnits)
+        end
+        WaitTicks(1)
+        if table.getn(defensiveUnits) > 0 then
+            for k, unit in defensiveUnits do
+                for q, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
+                            unit.Air = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
+                        if ALLBPS[unit.UnitId].Defense.AirThreatLevel > 0 then
+                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
+                        elseif ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel > 0 then
+                            self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + 1
+                        end
+                    end
+                end
+                --LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Defense, defensiveUnits)
+        end
+        WaitTicks(1)
+        if table.getn(strategicUnits) > 0 then
+            for k, unit in strategicUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
+                        unit.Air = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                --LOG('Enemy Strategic Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Strategic, strategicUnits)
+        end
+        WaitTicks(1)
+        if table.getn(intelUnits) > 0 then
+            for k, unit in intelUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
+                        unit.Air = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                --LOG('Enemy Intel Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            table.insert(self.EnemyIntel.DirectorData.Intel, intelUnits)
+        end
     end,
 
     EcoExtractorUpgradeCheckRNG = function(self)
@@ -1604,7 +1805,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -1616,7 +1817,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'MASS')
                         elseif priorityUnit == 'AIR' then
                             local unitAlreadySet = false
@@ -1628,7 +1829,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.AIR) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'LAND' then
                             local unitAlreadySet = false
@@ -1640,7 +1841,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'NAVAL' then
                             local unitAlreadySet = false
@@ -1652,7 +1853,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
@@ -1664,7 +1865,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
+                            local Extractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                             --LOG('Number of mass extractors'..table.getn(Extractors))
                             self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause', 'MASS')
                         elseif priorityUnit == 'NUKE' then
@@ -1677,7 +1878,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
@@ -1689,7 +1890,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
                         WaitTicks(20)
@@ -1709,28 +1910,28 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'MASS')
                         elseif v == 'STATIONPODS' then
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'MASS')
                         elseif v == 'AIR' then
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'MASS')
                         elseif v == 'LAND' then
-                            local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
                         elseif v == 'NAVAL' then
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'MASS')
                         elseif v == 'MASSEXTRACTION' then
-                            local Extractors = self:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
+                            local Extractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(v, Extractors, 'unpause', 'MASS')
                         elseif v == 'NUKE' then
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'MASS')
                         elseif v == 'TML' then
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
                     end
@@ -1743,7 +1944,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoManagerPowerStateCheck = function(self)
 
-        local energyIncome = self:GetEconomyIncome('ENERGY')
+        local energyIncome = GetEconomyIncome(self, 'ENERGY')
         local energyRequest = self:GetEconomyRequested('ENERGY')
         local energyStorage = self:GetEconomyStored('ENERGY')
         local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
@@ -1806,7 +2007,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'ENERGY')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -1818,7 +2019,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'ENERGY')
                         elseif priorityUnit == 'AIR' then
                             local unitAlreadySet = false
@@ -1830,7 +2031,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'LAND' then
                             local unitAlreadySet = false
@@ -1842,7 +2043,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = self:GetListOfUnits((categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NAVAL' then
                             local unitAlreadySet = false
@@ -1854,7 +2055,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'SHIELD' then
                             local unitAlreadySet = false
@@ -1866,7 +2067,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
+                            local Shields = GetListOfUnits(self, categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
@@ -1878,7 +2079,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'ENERGY')
                         elseif priorityUnit == 'RADAR' then
                             local unitAlreadySet = false
@@ -1890,7 +2091,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Radars = self:GetListOfUnits(categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Radars, 'pause', 'ENERGY')
                         elseif priorityUnit == 'MASSFABRICATION' then
                             local unitAlreadySet = false
@@ -1902,7 +2103,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local MassFabricators = self:GetListOfUnits(categories.STRUCTURE * categories.MASSFABRICATION, false, false)
+                            local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, MassFabricators, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NUKE' then
                             local unitAlreadySet = false
@@ -1914,7 +2115,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 table.insert(unitTypePaused, priorityUnit)
                             end
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                         end
                         WaitTicks(20)
@@ -1934,31 +2135,31 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = self:GetListOfUnits(categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'ENERGY')
                         elseif v == 'STATIONPODS' then
-                            local StationPods = self:GetListOfUnits(categories.STATIONASSISTPOD, false, false)
+                            local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'ENERGY')
                         elseif v == 'AIR' then
-                            local AirFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
                         elseif v == 'LAND' then
-                            local LandFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'ENERGY')
                         elseif v == 'NAVAL' then
-                            local NavalFactories = self:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
                             self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'ENERGY')
                         elseif v == 'SHIELD' then
-                            local Shields = self:GetListOfUnits(categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
+                            local Shields = GetListOfUnits(self, categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
                             self:EcoSelectorManagerRNG(v, Shields, 'unpause', 'ENERGY')
                         elseif v == 'MASSFABRICATION' then
-                            local MassFabricators = self:GetListOfUnits(categories.STRUCTURE * categories.MASSFABRICATION, false, false)
+                            local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
                             self:EcoSelectorManagerRNG(v, MassFabricators, 'unpause', 'ENERGY')
                         elseif v == 'NUKE' then
-                            local Nukes = self:GetListOfUnits(categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
+                            local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'ENERGY')
                         elseif v == 'TML' then
-                            local TMLs = self:GetListOfUnits(categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
+                            local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'ENERGY')
                         end
                     end
@@ -1968,25 +2169,6 @@ AIBrain = Class(RNGAIBrainClass) {
             WaitTicks(30)
         end
     end,
-
-    --[[
-    EcoManagerMassStateCheck = function(self)
-
-        local massIncome = self:GetEconomyIncome('MASS')
-        local massRequest = self:GetEconomyRequested('MASS')
-        local massStorage = self:GetEconomyStored('MASS')
-        local stallTime = massStorage / ((massRequest * 10) - (massIncome * 10))
-        --LOG('Mass Income :'..(massIncome * 10)..' Mass Requested :'..(massRequest * 10)..' Mass Storage :'..massStorage)
-        --LOG('Time to stall for '..stallTime)
-        if stallTime >= 0.0 then
-            if stallTime < 20 then
-                return true
-            elseif stallTime > 20 then
-                return false
-            end
-        end
-        return false
-    end,]]
 
     EcoManagerMassStateCheck = function(self)
         if self:GetEconomyTrend('MASS') <= 0.0 and self:GetEconomyStored('MASS') <= 200 then

@@ -48,7 +48,7 @@ function EnemyThreatGreaterThanAI(aiBrain, threatType)
     local aiThreat
     if threatType == 'Air' then
         enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-        aiThreat = aiBrain.BrainIntel.SelfThreat.Air
+        aiThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     elseif threatType == 'Land' then
         enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Land
         aiThreat = aiBrain.BrainIntel.SelfThreat.Land
@@ -79,7 +79,7 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
     local start = engineerManager:GetLocationCoords()
     local radius = 825
     for k,v in ArmyBrains do
-        if not v.Result == "defeat" and not ArmyIsCivilian(v:GetArmyIndex()) and IsEnemy(v:GetArmyIndex(), aiBrain:GetArmyIndex()) then
+        if v.Result ~= "defeat" and not ArmyIsCivilian(v:GetArmyIndex()) and IsEnemy(v:GetArmyIndex(), aiBrain:GetArmyIndex()) then
             local estartX, estartZ = v:GetArmyStartPos()
             if (VDist2Sq(start[1], start[3], estartX, estartZ) <= radius * radius) and inrange then
                 return true

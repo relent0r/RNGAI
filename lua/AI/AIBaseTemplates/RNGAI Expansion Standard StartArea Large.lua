@@ -22,6 +22,7 @@ BaseBuilderTemplate {
                 'RNGAI Engineer Builder Expansion',
                 --'RNGAI Engineering Support Builder',
                 'RNGAI T1 Reclaim Builders Expansion',
+                'RNGAI Engineer Transfer To Main From Expansion',
                 --'RNGAI T1 Assist Builders',
                 --'RNGAI T2 Assist Builders',
         
@@ -127,17 +128,17 @@ BaseBuilderTemplate {
         end
         --LOG('* AI-RNG: Distance is ', distance)
         if not distance or distance > 1000 and not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 10')
-            return 10
-        elseif distance > 500 and not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 25')
-            return 25
-        elseif distance > 250 and not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 50')
-            return 50
-        elseif not spamBaseCheck then
             --LOG('* AI-RNG: Expansion return is 100')
             return 100
+        elseif distance > 500 and not spamBaseCheck then
+            --LOG('* AI-RNG: Expansion return is 50')
+            return 50
+        elseif distance > 250 and not spamBaseCheck then
+            --LOG('* AI-RNG: Expansion return is 25')
+            return 25
+        elseif not spamBaseCheck then
+            --LOG('* AI-RNG: Expansion return is 10')
+            return 10
         end
         --LOG('* AI-RNG: Expansion return default 0')
         return -1

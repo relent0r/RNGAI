@@ -10,8 +10,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
@@ -38,8 +40,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 MultiBuild',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -65,8 +69,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Excess',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 300,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 3,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -95,14 +101,13 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
-            -- Have we the eco to build it ?
-            { UCBC, 'UnitCapCheckLess', { 0.99 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -127,6 +132,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
@@ -274,7 +280,27 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = 6000,
-            PrioritizedCategories = { 'MASSEXTRACTION STRUCTURE TECH3', 'MASSEXTRACTION STRUCTURE TECH2', 'MASSEXTRACTION STRUCTURE', 'STRUCTURE STRATEGIC EXPERIMENTAL', 'EXPERIMENTAL ARTILLERY OVERLAYINDIRECTFIRE', 'STRUCTURE STRATEGIC TECH3', 'STRUCTURE NUKE TECH3', 'EXPERIMENTAL ORBITALSYSTEM', 'EXPERIMENTAL ENERGYPRODUCTION STRUCTURE', 'STRUCTURE ANTIMISSILE TECH3', 'TECH3 MASSFABRICATION', 'TECH3 ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE DEFENSE TECH3 ANTIAIR', 'COMMAND', 'STRUCTURE DEFENSE TECH3 DIRECTFIRE', 'STRUCTURE DEFENSE TECH3 SHIELD', 'STRUCTURE DEFENSE TECH2', 'STRUCTURE' },
+            PrioritizedCategories = { 
+                categories.MASSEXTRACTION * categories.STRUCTURE * categories.TECH3,
+                categories.MASSEXTRACTION * categories.STRUCTURE * categories.TECH2, 
+                categories.MASSEXTRACTION * categories.STRUCTURE, 
+                categories.STRUCTURE * categories.STRATEGIC * categories.EXPERIMENTAL, 
+                categories.EXPERIMENTAL * categories.ARTILLERY * categories.OVERLAYINDIRECTFIRE, 
+                categories.STRUCTURE * categories.STRATEGIC * categories.TECH3, 
+                categories.STRUCTURE * categories.NUKE * categories.TECH3, 
+                categories.EXPERIMENTAL * categories.ORBITALSYSTEM, 
+                categories.EXPERIMENTAL * categories.ENERGYPRODUCTION * categories.STRUCTURE, 
+                categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH3, 
+                categories.TECH3 * categories.MASSFABRICATION, 
+                categories.TECH3 * categories.ENERGYPRODUCTION, 
+                categories.STRUCTURE * categories.STRATEGIC, 
+                categories.STRUCTURE * categories.DEFENSE * categories.TECH3 * categories.ANTIAIR, 
+                categories.COMMAND, 
+                categories.STRUCTURE * categories.DEFENSE * categories.TECH3 * categories.DIRECTFIRE, 
+                categories.STRUCTURE * categories.DEFENSE * categories.TECH3 * categories.SHIELD, 
+                categories.STRUCTURE * categories.DEFENSE * categories.TECH2, 
+                categories.STRUCTURE,
+            },
         },
     },
 }

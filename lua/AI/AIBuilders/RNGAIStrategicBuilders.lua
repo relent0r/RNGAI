@@ -129,6 +129,100 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI T4 Mavor Exp Nuke',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        Priority = 600,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { EBC, 'GreaterThanEconIncome', {40, 1500}},
+            { EBC, 'GreaterThanEconEfficiency', { 1.2, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            MinNumAssistees = 3,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                BuildStructures = {
+                    'T4Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 RapidFire',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        Priority = 600,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { EBC, 'GreaterThanEconIncome', {40, 1500}},
+            { EBC, 'GreaterThanEconEfficiency', { 1.2, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            MinNumAssistees = 3,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                BuildStructures = {
+                    'T3RapidArtillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Scathis',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        Priority = 600,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { EBC, 'GreaterThanEconIncome', {40, 1500}},
+            { EBC, 'GreaterThanEconEfficiency', { 1.2, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            MinNumAssistees = 3,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                BuildStructures = {
+                    'T4LandExperimental2',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+
 }
 
 BuilderGroup {

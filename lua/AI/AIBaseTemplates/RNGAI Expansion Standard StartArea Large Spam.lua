@@ -106,7 +106,7 @@ BaseBuilderTemplate {
         --LOG('* AI-RNG: Position is ', repr(location))
         if not distance or distance > 1000 and spamBaseCheck then
             --LOG('* AI-RNG: Start Area Spam Expansion return is 10')
-            return 10
+            return 100
         elseif distance > 500 and spamBaseCheck then
             --LOG('* AI-RNG: Start Area Spam Expansion return is 25')
             return 25

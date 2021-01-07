@@ -62,9 +62,9 @@ function GreaterThanEnergyTrendRNG(aiBrain, eTrend, DEBUG)
 end
 
 function LessThanMassTrendRNG(aiBrain, mTrend)
-    local econ = {}
-    econ.MassTrend = GetEconomyTrend(aiBrain, 'MASS')
-    if econ.MassTrend < mTrend then
+    local MassTrend = GetEconomyTrend(aiBrain, 'MASS')
+    --LOG('Mass Trend is'..MassTrend)
+    if MassTrend < mTrend then
         return true
     else
         return false
