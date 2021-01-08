@@ -102,17 +102,6 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI T1 Mass Hunters Transport',
-    Plan = 'GuardMarkerRNG',    
-    GlobalSquads = {
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 5, 'attack', 'none' },
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 3, 'attack', 'none' },
-        { categories.LAND * categories.ENGINEER - categories.COMMAND, 1, 1, 'support', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
-    }
-}
-
-PlatoonTemplate {
     Name = 'RNGAI LandAttack Small',
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
@@ -665,6 +654,23 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
     FactionSquads = {
         UEF = {
             { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
+         },
+        Aeon = {
+            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+        },
+        Cybran = {
+            { 'url0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+        },
+        Seraphim = {
+            { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+        },
+    }
+}
+
+PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueueSiege',
+    FactionSquads = {
+        UEF = {
+            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
             { 'uel0111', 1, 1, 'Artillery', 'none' },   -- MML
          },
         Aeon = {
@@ -762,6 +768,23 @@ PlatoonTemplate { Name = 'RNGAIT3LandResponse',
 }
 
 PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueue',
+    FactionSquads = {
+        UEF = {
+            { 'xel0305', 2, 4, 'Attack', 'none' },       -- Armoured Assault Bot
+         },
+        Aeon = {
+            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+        },
+        Cybran = {
+            { 'xrl0305', 2, 4, 'Attack', 'none' },      -- Armoured Assault Bot
+        },
+        Seraphim = {
+            { 'xsl0303', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+        },
+    }
+}
+
+PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueueSiege',
     FactionSquads = {
         UEF = {
             { 'xel0305', 2, 4, 'Attack', 'none' },       -- Armoured Assault Bot

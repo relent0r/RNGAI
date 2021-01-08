@@ -417,8 +417,8 @@ BuilderGroup {
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {  
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
-                { MIBC, 'MassMarkersInWater', {} },
+            { MIBC, 'MassMarkersInWater', {} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
             },
         BuilderData = {
             MarkerType = 'Mass',            
@@ -432,7 +432,17 @@ BuilderGroup {
             AvoidBases = false,
             AvoidBasesRadius = 75,
             AggressiveMove = true,      
-            AvoidClosestRadius = 50, 
+            AvoidClosestRadius = 50,
+            TargetSearchPriorities = { 
+                categories.MOBILE * categories.NAVAL
+            },
+            PrioritizedCategories = {   
+                categories.MOBILE * categories.NAVAL,
+                categories.STRUCTURE * categories.ANTINAVY,
+                categories.STRUCTURE * categories.NAVAL,
+                categories.COMMAND,
+                categories.EXPERIMENTAL * categories.MOBILE
+            },
         },    
         BuilderType = 'Any',
     },

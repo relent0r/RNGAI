@@ -49,7 +49,15 @@ BuilderGroup {
             AvoidBases = false,
             AvoidBasesRadius = 75,
             AggressiveMove = true,      
-            AvoidClosestRadius = 50,  
+            AvoidClosestRadius = 50,
+            TargetSearchPriorities = { 
+                categories.MOBILE * categories.LAND
+            },
+            PrioritizedCategories = {   
+                categories.MOBILE * categories.LAND,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.STRUCTURE,
+            },
         },    
         InstanceCount = 2,
         BuilderType = 'Any',
