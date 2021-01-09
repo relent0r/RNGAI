@@ -209,35 +209,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 950,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = true,
-            NumAssistees = 5,
-            Construction = {
-                BuildClose = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
-                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
-                maxUnits = 1,
-                maxRadius = 5,
-                BuildStructures = {
-                    'T1NavalDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer TMD',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
@@ -757,7 +728,7 @@ BuilderGroup {
                 Radius = 45,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2AADefense',
                     'T2GroundDefense',
@@ -846,7 +817,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
@@ -860,7 +831,7 @@ BuilderGroup {
                 Radius = 14,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2AADefense',
                     'T2GroundDefense',
@@ -901,7 +872,7 @@ BuilderGroup {
                 ThreatMax = 100,
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
-                ExpansionRadius = 120,
+                ExpansionRadius = 80,
                 BuildStructures = {
                     'T1AADefense',
                     'T1NavalDefense',
@@ -936,26 +907,26 @@ BuilderGroup {
                 ThreatMax = 100,
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
-                ExpansionRadius = 120,
+                ExpansionRadius = 60,
                 BuildStructures = {
                     'T2AADefense',
                     'T2NavalDefense',
+                    'T2MissileDefense',
                 },
                 Location = 'LocationType',
             }
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Naval',
+        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, categories.DEFENSE } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -970,6 +941,64 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildStructures = {
                     'T1NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Restricted Breach Sea',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.NAVAL}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildStructures = {
+                    'T2NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Restricted Breach Cruisers',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.CRUISER * (categories.UEF + categories.SERAPHIM) - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildStructures = {
+                    'T2MissileDefense',
                 },
                 Location = 'LocationType',
             }
