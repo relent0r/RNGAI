@@ -27,6 +27,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
+                BuildClose = false,
                 BuildStructures = {
                     'T1Radar',
                 },
@@ -53,6 +54,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.STRUCTURE * categories.NAVAL,
                 AdjacencyDistance = 50,
+                BuildClose = false,
                 BuildStructures = {
                     'T1Sonar',
                 },
