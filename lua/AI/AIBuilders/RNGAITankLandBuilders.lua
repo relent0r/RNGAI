@@ -265,7 +265,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, true}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -462,7 +462,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Mobile AA Response',
-        PlatoonTemplate = 'T2LandAA',
+        PlatoonTemplate = 'T3LandAA',
         Priority = 920,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},

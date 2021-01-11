@@ -334,7 +334,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 400,
         InstanceCount = 2,
         BuilderConditions = {
