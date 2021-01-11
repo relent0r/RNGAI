@@ -2550,7 +2550,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
     EngineerCaptureDoneRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         --LOG("*AI DEBUG: Capture done" .. unit.Sync.id)
         if not unit.ProcessBuild then
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
@@ -2558,7 +2558,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
     EngineerReclaimDoneRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         --LOG("*AI DEBUG: Reclaim done" .. unit.Sync.id)
         if not unit.ProcessBuild then
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
@@ -2566,7 +2566,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
     EngineerFailedToBuildRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         if unit.ProcessBuildDone and unit.ProcessBuild then
             KillThread(unit.ProcessBuild)
             unit.ProcessBuild = nil
