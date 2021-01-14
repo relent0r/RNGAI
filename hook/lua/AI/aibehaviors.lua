@@ -786,11 +786,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (720 / multiplier)
     end
-    if aiBrain.CheatEnabled then
-        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
-    else
-        multiplier = 1
-    end
+
     --LOG('Multiplier is '..multiplier)
     --LOG('Initial Delay is before any multiplier is '..upgradeSpec.InitialDelay)
     --LOG('Initial Delay is '..(upgradeSpec.InitialDelay / multiplier))
@@ -2139,7 +2135,7 @@ AhwassaBehaviorRNG = function(self)
         return
     end
 
-    AssignExperimentalPriorities(self)
+    AssignExperimentalPrioritiesSorian(self)
 
     local targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
     local oldTargetLocation = nil

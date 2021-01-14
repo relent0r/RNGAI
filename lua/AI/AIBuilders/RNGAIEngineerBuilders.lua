@@ -295,7 +295,7 @@ BuilderGroup {
         PriorityFunction = AirDefenseScramble,
         InstanceCount = 12,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, 
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.BOMBER} },
         },
         BuilderData = {
@@ -386,6 +386,7 @@ BuilderGroup {
         Priority = 650,
         InstanceCount = 10,
         BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.60}},
