@@ -780,17 +780,13 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (720 / multiplier)
+        ecoTimeOut = (750 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (720 / multiplier)
+        ecoTimeOut = (750 / multiplier)
     end
-    if aiBrain.CheatEnabled then
-        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
-    else
-        multiplier = 1
-    end
+
     --LOG('Multiplier is '..multiplier)
     --LOG('Initial Delay is before any multiplier is '..upgradeSpec.InitialDelay)
     --LOG('Initial Delay is '..(upgradeSpec.InitialDelay / multiplier))
@@ -820,7 +816,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('Eco Bypass is True')
             bypasseco = true
         end
-        if bypasseco then
+        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > massNeeded and GetEconomyStored( aiBrain, 'ENERGY') > energyNeeded ) then
             upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
             if unitTech == 'TECH1' then
                 extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
@@ -833,6 +829,10 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 WaitTicks(10)
                 continue
             end
+        else
+            --LOG('Not Bypass Eco')
+            --LOG('Mass Storage is : '..GetEconomyStored( aiBrain, 'MASS')..' Storage needed is : '..(massNeeded * .7))
+            --LOG('Energy Storage is : '..GetEconomyStored( aiBrain, 'ENERGY')..' Energy needed is : '..(energyNeeded * .7 ))
         end
 
 
@@ -2139,7 +2139,7 @@ AhwassaBehaviorRNG = function(self)
         return
     end
 
-    AssignExperimentalPriorities(self)
+    AssignExperimentalPrioritiesSorian(self)
 
     local targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
     local oldTargetLocation = nil

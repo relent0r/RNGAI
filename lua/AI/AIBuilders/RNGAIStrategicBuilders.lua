@@ -44,7 +44,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncome', { 9.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.90 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.NUKE * categories.STRUCTURE}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.ENERGYPRODUCTION * categories.TECH3 } },
         },
         BuilderType = 'Any',
@@ -133,7 +133,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Mavor Exp Nuke',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         DelayEqualBuildPlattons = {'Artillery', 20},
-        Priority = 600,
+        Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -164,7 +164,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 RapidFire',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         DelayEqualBuildPlattons = {'Artillery', 20},
-        Priority = 600,
+        Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -195,7 +195,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Scathis',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         DelayEqualBuildPlattons = {'Artillery', 20},
-        Priority = 600,
+        Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads

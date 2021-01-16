@@ -430,31 +430,6 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Bomber Attack',
-        PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
-        Priority = 890,
-        InstanceCount = 3,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = BaseMilitaryArea,
-            UnitType = 'BOMBER',
-            PrioritizedCategories = {
-                categories.MASSEXTRACTION,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND,
-                categories.MOBILE * categories.ANTIAIR,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.STRUCTURE,
-                categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
@@ -653,7 +628,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH1 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
         },

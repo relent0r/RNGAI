@@ -37,9 +37,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.DIRECTFIRE}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.DIRECTFIRE}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -74,9 +74,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.ANTIAIR}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.ANTIAIR}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -99,9 +99,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * (categories.LAND + categories.NAVAL) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * (categories.LAND + categories.NAVAL) - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -128,9 +128,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -184,9 +184,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -209,43 +209,14 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 950,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = true,
-            NumAssistees = 5,
-            Construction = {
-                BuildClose = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
-                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
-                maxUnits = 1,
-                maxRadius = 5,
-                BuildStructures = {
-                    'T1NavalDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer TMD',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -381,7 +352,6 @@ BuilderGroup {
         PlatoonAIPlan = 'ReclaimUnitsAIRNG',
         Priority = 400,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.ENGINEER * categories.TECH1 } },
             { UCBC, 'HaveUnitsWithCategoryAndAlliance', { true, 10, categories.WALL, 'Enemy'}},
         },
         BuilderType = 'Any',
@@ -403,9 +373,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.DIRECTFIRE}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.DIRECTFIRE}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -417,7 +387,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
                 BaseTemplate = 'T1PDTemplate',
-                BuildClose = true,
+                BuildClose = false,
                 OrderedTemplate = true,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
@@ -441,9 +411,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.ANTIAIR}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.ANTIAIR}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -452,7 +422,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T1AADefense',
                 },
@@ -466,9 +436,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -477,7 +447,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 maxUnits = 1,
@@ -510,7 +480,7 @@ BuilderGroup {
             maxUnits = 1,
             maxRadius = 5,
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2GroundDefense',
                 },
@@ -539,32 +509,9 @@ BuilderGroup {
             maxUnits = 1,
             maxRadius = 5,
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2AADefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2TMLEngineer Close Enemy Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 825,
-        BuilderConditions = {
-            { MIBC, 'TMLEnemyStartRangeCheck', {} },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.TACTICALMISSILEPLATFORM}},
-            { EBC, 'GreaterThanEconEfficiency', { 0.7, 1.0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.70}},
-            { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = true,
-                BuildStructures = {
-                    'T2StrategicMissile',
                 },
                 Location = 'LocationType',
             }
@@ -589,7 +536,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
@@ -676,9 +623,9 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -742,9 +689,9 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -757,7 +704,7 @@ BuilderGroup {
                 Radius = 45,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2AADefense',
                     'T2GroundDefense',
@@ -947,7 +894,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
@@ -961,7 +908,7 @@ BuilderGroup {
                 Radius = 14,
                 BasePerimeterOrientation = 'FRONT',
                 BasePerimeterSelection = true,
-                BuildClose = true,
+                BuildClose = false,
                 BuildStructures = {
                     'T2AADefense',
                     'T2GroundDefense',
@@ -1002,7 +949,7 @@ BuilderGroup {
                 ThreatMax = 100,
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
-                ExpansionRadius = 120,
+                ExpansionRadius = 80,
                 BuildStructures = {
                     'T1AADefense',
                     'T1NavalDefense',
@@ -1037,26 +984,26 @@ BuilderGroup {
                 ThreatMax = 100,
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
-                ExpansionRadius = 120,
+                ExpansionRadius = 60,
                 BuildStructures = {
                     'T2AADefense',
                     'T2NavalDefense',
+                    'T2MissileDefense',
                 },
                 Location = 'LocationType',
             }
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Naval',
+        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH1 * categories.NAVAL}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 2, categories.DEFENSE } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -1071,6 +1018,64 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildStructures = {
                     'T1NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Restricted Breach Sea',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.NAVAL}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildStructures = {
+                    'T2NavalDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Restricted Breach Cruisers',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.CRUISER * (categories.UEF + categories.SERAPHIM) - categories.SCOUT }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildStructures = {
+                    'T2MissileDefense',
                 },
                 Location = 'LocationType',
             }
@@ -1155,10 +1160,10 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitsGreaterAtEnemy', { 1 , categories.STRUCTURE * categories.NUKE * categories.SILO } },
+            { UCBC, 'UnitsGreaterAtEnemy', { 2 , categories.STRUCTURE * categories.NUKE * categories.SILO } },
         },
         BuilderType = 'Any',
         BuilderData = {

@@ -1147,8 +1147,14 @@ Platoon = Class(RNGAIPlatoon) {
         local data = self.PlatoonData
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
+        local LocationType = self.PlatoonData.LocationType
         local maxRadius = data.SearchRadius or 200
-        local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
+        local mainBasePos
+        if LocationType then
+            mainBasePos = aiBrain.BuilderManagers[LocationType].Position
+        else
+            mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
+        end
         local MaxPlatoonWeaponRange
         local platoonThreat = false
         
@@ -1452,10 +1458,10 @@ Platoon = Class(RNGAIPlatoon) {
                 elseif (not path and reason == 'NoPath') then
                     --LOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --LOG('Guardmarker requesting transports')
-                    local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not usedTransports then
-                        --LOG('Guardmarker no transports')
+                        --LOG('* AI-RNG: * HuntAIPATH: not used transports')
                         self:PlatoonDisband()
                         return
                     end
@@ -2544,7 +2550,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
     EngineerCaptureDoneRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         --LOG("*AI DEBUG: Capture done" .. unit.Sync.id)
         if not unit.ProcessBuild then
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
@@ -2552,7 +2558,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
     EngineerReclaimDoneRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         --LOG("*AI DEBUG: Reclaim done" .. unit.Sync.id)
         if not unit.ProcessBuild then
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
@@ -2560,7 +2566,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
     EngineerFailedToBuildRNG = function(unit, params)
         if not unit.PlatoonHandle then return end
-        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAI' then return end
+        if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         if unit.ProcessBuildDone and unit.ProcessBuild then
             KillThread(unit.ProcessBuild)
             unit.ProcessBuild = nil
@@ -2830,6 +2836,8 @@ Platoon = Class(RNGAIPlatoon) {
         local markerLocations
         local enemyRadius = 40
         local MaxPlatoonWeaponRange
+        local atkPri = {}
+        local categoryList = {}
 
         AIAttackUtils.GetMostRestrictiveLayer(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
@@ -2872,6 +2880,24 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
 
+        if self.PlatoonData.TargetSearchPriorities then
+            --LOG('TargetSearch present for '..self.BuilderName)
+            for k,v in self.PlatoonData.TargetSearchPriorities do
+                table.insert(atkPri, v)
+            end
+        else
+            if self.PlatoonData.PrioritizedCategories then
+                for k,v in self.PlatoonData.PrioritizedCategories do
+                    table.insert(atkPri, v)
+                end
+            end
+        end
+        if self.PlatoonData.PrioritizedCategories then
+            for k,v in self.PlatoonData.PrioritizedCategories do
+                table.insert(categoryList, v)
+            end
+        end
+
         markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
         
         local bestMarker = false
@@ -2892,17 +2918,16 @@ Platoon = Class(RNGAIPlatoon) {
         end
 
         local bestDistSq = 99999999
-
-        if aiBrain:GetCurrentEnemy() then
-            enemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
-            --LOG('Enemy Index is '..enemyIndex)
-        end
         -- find best threat at the closest distance
         for _,marker in markerLocations do
             local markerThreat
             local enemyThreat
-            markerThreat = GetThreatAtPosition(aiBrain, marker.Position, 0, true, 'Economy', enemyIndex)
-            enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSurface', enemyIndex)
+            markerThreat = GetThreatAtPosition(aiBrain, marker.Position, 0, true, 'Economy')
+            if self.MovementLayer == 'Water' then
+                enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSub')
+            else
+                enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSurface')
+            end
             --LOG('Best pre calculation marker threat is '..markerThreat..' at position'..repr(marker.Position))
             --LOG('Surface Threat at marker is '..enemyThreat..' at position'..repr(marker.Position))
             if enemyThreat > 1 and markerThreat then
@@ -2927,10 +2952,19 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         end
+        --[[
+        if waterOnly then
+            if bestMarker then
+                LOG('Water based best marker is  '..repr(bestMarker))
+                LOG('Best marker threat is '..bestMarkerThreat)
+            else
+                LOG('Water based no best marker')
+            end
+        end]]
 
         --LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
-        if bestMarker.Position == nil and GetGameTimeSeconds() > 900 then
+        if bestMarker.Position == nil and GetGameTimeSeconds() > 900 and self.MovementLayer ~= 'Water' then
             --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
             return self:HuntAIPATHRNG()
         elseif bestMarker.Position == nil then
@@ -3016,7 +3050,8 @@ Platoon = Class(RNGAIPlatoon) {
                             if bAggroMove then
                                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, PlatoonPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
-                                    local target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                                    -- local target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                                    local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', enemyRadius, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL, atkPri, false)
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do
@@ -3593,7 +3628,7 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- POOL DISTRESS RESPONSE ---')
 
                         -- Grab the units at the location
-                        local group = self:GetPlatoonUnitsAroundPoint(categories.MOBILE - categories.ENGINEER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, position, radius)
+                        local group = self:GetPlatoonUnitsAroundPoint(categories.MOBILE - categories.ENGINEER - categories.TRANSPORTFOCUS - categories.SONAR - categories.EXPERIMENTAL, position, radius)
 
                         -- Move the group to the distress location and then back to the location of the base
                         IssueClearCommands(group)

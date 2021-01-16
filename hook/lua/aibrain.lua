@@ -1149,6 +1149,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local MassRequested = GetEconomyRequested(self,'MASS')
                     local EnergyEfficiencyOverTime = math.min(EnergyIncome / EnergyRequested, 2)
                     local MassEfficiencyOverTime = math.min(MassIncome / MassRequested, 2)
+                    LOG('Eco Stats for :'..self.Nickname)
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiencyOverTime..'Energy Efficiency :'..EnergyEfficiencyOverTime)
