@@ -483,7 +483,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'GreaterThanMassTrend', { 0.0 }, true },
-            { EBC, 'LessThanEnergyTrendRNG', { 300.0 }, true },
+            { EBC, 'LessThanEnergyTrendRNG', { 100.0 }, true },
         },
         BuilderType = 'Any',
         BuilderData = {

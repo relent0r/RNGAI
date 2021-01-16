@@ -816,7 +816,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('Eco Bypass is True')
             bypasseco = true
         end
-        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > (massNeeded * .8) and GetEconomyStored( aiBrain, 'ENERGY') > (energyNeeded * .8 ) ) then
+        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > massNeeded and GetEconomyStored( aiBrain, 'ENERGY') > energyNeeded ) then
             upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
             if unitTech == 'TECH1' then
                 extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
