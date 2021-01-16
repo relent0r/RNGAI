@@ -182,7 +182,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Scale Extra',
         PlatoonTemplate = 'EngineerBuilderT23RNG',
-        Priority = 500,
+        Priority = 800,
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 6},
         BuilderConditions = {
@@ -294,7 +294,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Power Engineer Scale Extra',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 500,
+        Priority = 800,
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
@@ -384,9 +384,9 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Hydro Builder',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Hydro 30',
+        BuilderName = 'RNGAI T1Engineer Hydro 50',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 920,
+        Priority = 1000,
         InstanceCount = 1,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 50, -1000, 100, 1, 'AntiSurface', 1 }},
@@ -407,7 +407,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Hydro 250',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 850,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 256, -1000, 100, 1, 'AntiSurface', 1 }},
         },

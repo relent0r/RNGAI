@@ -278,6 +278,18 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
+            { MIBC, 'MapSizeLessThan', { 2000 } },
+            { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 6 minutes
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Initial Queue 40km',
+        PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 4000 } },
             { UCBC, 'LessThanGameTimeSeconds', { 300 } }, -- don't build after 6 minutes
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
@@ -294,7 +306,6 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, true}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

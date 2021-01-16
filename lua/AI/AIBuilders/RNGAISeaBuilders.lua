@@ -369,6 +369,7 @@ BuilderGroup {
             AggressiveMove = false,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.STRUCTURE * categories.NAVAL * categories.FACTORY,
                 categories.ENERGYPRODUCTION * categories.TECH3,
                 categories.MASSEXTRACTION,
                 categories.ENERGYSTORAGE,
