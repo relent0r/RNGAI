@@ -33,7 +33,7 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
-function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
+function GreaterThanMassTrendRNG(aiBrain, mTrend, DEBUG)
     local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
     if DEBUG then
         --LOG('Current Energy Trend is : ', econ.MassTrend)

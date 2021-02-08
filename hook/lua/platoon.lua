@@ -4568,6 +4568,8 @@ Platoon = Class(RNGAIPlatoon) {
         elseif ID == 'ura0401' then
             --LOG('Exp Gunship Behavior')
             return behaviors.TickBehavior(self)
+        elseif ID == 'url0401' then
+            return behaviors.ScathisBehaviorSorian(self)
         end
         --LOG('Standard Behemoth')
         return behaviors.BehemothBehaviorRNG(self, ID)

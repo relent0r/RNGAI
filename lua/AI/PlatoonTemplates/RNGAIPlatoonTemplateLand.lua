@@ -752,6 +752,27 @@ PlatoonTemplate { Name = 'RNGAIT2LandAttackQueue',
     }
 }
 
+PlatoonTemplate { Name = 'RNGAIT1LandResponse',
+    FactionSquads = {
+        UEF = {
+            { 'uel0201', 1, 1, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+        },
+        Aeon = {
+            { 'ual0201', 1, 1, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+        },
+        Cybran = {
+            { 'url0107', 1, 1, 'Attack', 'none' },		-- Mantis
+            { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
+        },
+        Seraphim = {
+            { 'xsl0201', 1, 1, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+        },
+    }
+}
+
 PlatoonTemplate { Name = 'RNGAIT3LandResponse',
     FactionSquads = {
         UEF = {

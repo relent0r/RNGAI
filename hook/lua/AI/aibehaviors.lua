@@ -33,6 +33,7 @@ function SetCDRDefaults(aiBrain, cdr, plat)
     aiBrain.ACUSupport.ACUMaxSearchRadius = 80
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
+    DrawCircle(cdr.CDRHome, 100, 'ffff0000')
 end
 
 function CDRGunCheck(aiBrain, cdr)
@@ -145,17 +146,16 @@ function CDROverChargeRNG(aiBrain, cdr)
     local acuThreatLimit = 22
     
     for k, v in weapBPs do
+        if v.Label == 'OverCharge' then
+            overCharge = v
+            continue
+        end
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             weapon = v
             weapon.Range = v.MaxRadius - 3
             --LOG('* AI-RNG: ACU Weapon Range is :'..weaponRange)
-            continue
-        end
-        if v.Label == 'OverCharge' then
-            overCharge = v
             break
         end
-
     end
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     if factionIndex == 1 then
@@ -205,6 +205,12 @@ function CDROverChargeRNG(aiBrain, cdr)
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
         maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        if maxRadius < 60 then 
+            maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
+        end
+        aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
+    elseif cdr:GetHealthPercent() > 0.8 and GetGameTimeSeconds() > 260 then
+        maxRadius = 130 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
@@ -312,7 +318,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         --LOG('enemyCDR is '..enemyCdrThreat)
                         friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                         --LOG('friendlyThreat is'..friendlyThreat)
-                        if enemyThreat - enemyCdrThreat >= friendlyThreat + (cdrThreat / 1.5) then
+                        if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.5)) then
                             --LOG('Enemy Threat too high')
                             break
                         end

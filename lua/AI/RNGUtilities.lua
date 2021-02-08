@@ -237,8 +237,8 @@ function GetMOARadii(bool)
     -- Restricted Area is half the BaseMilitaryArea. That's a little less than 1/4 of a 10x10 map
     local BaseRestrictedArea = BaseMilitaryArea / 2
     -- Make sure the Restricted Area is not smaller than 50 or greater than 100
-    BaseRestrictedArea = math.max( 50, BaseRestrictedArea )
-    BaseRestrictedArea = math.min( 100, BaseRestrictedArea )
+    BaseRestrictedArea = math.max( 60, BaseRestrictedArea )
+    BaseRestrictedArea = math.min( 120, BaseRestrictedArea )
     -- The rest of the map is enemy area
     local BaseEnemyArea = math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) * 1.5
     -- "bool" is only true if called from "AIBuilders/Mobile Land.lua", so we only print this once.
