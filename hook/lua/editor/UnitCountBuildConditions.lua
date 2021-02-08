@@ -850,6 +850,22 @@ function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits
     return false
 end
 
+-- { UCBC, 'ExistingBasesHaveGreaterThanFactory', { 3, 'Land', categories.FACTORY * categories.STRUCTURE * categories.TECH3 }},
+function ExistingExpansionFactoryGreaterRNG( aiBrain, basetype, numReq, category )
+
+	for k,v in aiBrain.BuilderManagers do
+	
+		if (basetype == 'All' or basetype == v.BaseType) and v.FactoryManager.FactoryList and v.CountedBase then
+
+			if numReq > EntityCategoryCount( category, v.FactoryManager.FactoryList ) then
+				return false
+			end	
+		end
+	end
+
+	return true
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.
