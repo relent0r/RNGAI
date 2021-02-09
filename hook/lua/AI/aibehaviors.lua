@@ -33,7 +33,6 @@ function SetCDRDefaults(aiBrain, cdr, plat)
     aiBrain.ACUSupport.ACUMaxSearchRadius = 80
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
-    DrawCircle(cdr.CDRHome, 100, 'ffff0000')
 end
 
 function CDRGunCheck(aiBrain, cdr)

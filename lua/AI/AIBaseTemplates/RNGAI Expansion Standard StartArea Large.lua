@@ -64,12 +64,6 @@ BaseBuilderTemplate {
                 'RNGAI ScoutAirFormer',
                 'RNGAI Air Platoon Builder',
 
-                -- Sea Factory Builders --
-                --'RNGAI Factory Builder Sea Large Expansion',
-
-                -- Sea Factory Formers
-                --'RNGAI Sea Upgrade Builders Expansion',
-
                 -- Sea Unit Builders --
                 --'RNGAI Sea Builders T1',
                 --'RNGAI Sea Builders T23',

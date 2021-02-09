@@ -973,7 +973,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
-                AssisteeType = 'Factory',
+                AssisteeType = categories.FACTORY,
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {categories.ALLUNITS},
@@ -991,7 +991,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
-                AssisteeType = 'Structure',
+                AssisteeType = categories.STRUCTURE',
                 AssistRange = 60,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},

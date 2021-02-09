@@ -92,34 +92,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         return true
     end,
 
-    --[[FactoryDestroyed = function(self, factory)
-        if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
-        end
-        local guards = factory:GetGuards()
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
-        for k,v in self.FactoryList do
-            if v == factory then
-                self.FactoryList[k] = nil
-            end
-        end
-        for k,v in self.FactoryList do
-            if not v.Dead then
-                return
-            end
-        end
-        self.LocationActive = false
-        self.Brain:RemoveConsumption(self.LocationType, factory)
-    end,]]
-
     DelayBuildOrder = function(self,factory,bType,time)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
@@ -175,7 +147,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
                 if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBody)
+                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
                 end
