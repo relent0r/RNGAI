@@ -35,7 +35,6 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 10, categories.FACTORY * categories.LAND }},
          },
         BuilderType = 'Any',
         BuilderData = {

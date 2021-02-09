@@ -468,7 +468,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.09, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -522,7 +521,6 @@ BuilderGroup {
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
-            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'FACTORY AIR TECH1' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
