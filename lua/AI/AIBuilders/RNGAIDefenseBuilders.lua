@@ -244,7 +244,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -273,7 +273,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.TACTICALMISSILEPLATFORM } },
             { EBC, 'GreaterThanEconEfficiency', { 0.8, 0.8}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.60}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',

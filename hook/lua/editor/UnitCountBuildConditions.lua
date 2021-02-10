@@ -243,6 +243,9 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
             continue
         end
+        if EntityCategoryContains(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3), v) then
+            LOG('Energy Engineer Assist has '..table.getn(retUnits)..' units in return table')
+        end
         table.insert(retUnits, v)
     end
     return retUnits
@@ -855,12 +858,12 @@ function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, c
     for k,v in aiBrain.BuilderManagers do
         if markerType == v.BaseType and v.FactoryManager.FactoryList then
             if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
-                LOG('ExistingExpansionFactoryGreater = false')
+                --LOG('ExistingExpansionFactoryGreater = false')
 				return false
             end
         end
 	end
-    LOG('ExistingExpansionFactoryGreater = true')
+    --LOG('ExistingExpansionFactoryGreater = true')
 	return true
 end
 

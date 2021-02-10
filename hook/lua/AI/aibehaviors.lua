@@ -785,11 +785,11 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (750 / multiplier)
+        ecoTimeOut = (780 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (750 / multiplier)
+        ecoTimeOut = (780 / multiplier)
     end
 
     --LOG('Multiplier is '..multiplier)
