@@ -772,11 +772,15 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
                 return true
             end
         elseif currentTime > 1200 and aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+                return true
+            end
+        elseif currentTime < 900 then
             if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
                 return true
             end
         elseif currentTime >= 900 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
                 return true
             end
         else
@@ -865,6 +869,20 @@ function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, c
 	end
     --LOG('ExistingExpansionFactoryGreater = true')
 	return true
+end
+
+--            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.MASSEXTRACTION} },
+function HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, compareType)
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    local numUnits = poolPlatoon:GetNumCategoryUnits(unitCategory)
+    --LOG('* HavePoolUnitInArmy: numUnits= '..numUnits) 
+    return CompareBody(numUnits, unitCount, compareType)
+end
+function HaveLessThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
+    return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '<')
+end
+function HaveGreaterThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
+    return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '>')
 end
 
 --[[

@@ -61,9 +61,9 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Mass Raiders Small',
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 8, 'attack', 'none' },
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'Artillery', 'none' },
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 8, 'attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'Artillery', 'none' },
+        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
     }
 }
@@ -106,7 +106,7 @@ PlatoonTemplate {
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          3, -- Min number of units.
+          1, -- Min number of units.
           8, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',

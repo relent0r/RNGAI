@@ -235,7 +235,7 @@ BuilderGroup {
         InstanceCount = 10,
         FormRadius = 10000,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
         BuilderType = 'Any',
     },]]
@@ -246,7 +246,7 @@ BuilderGroup {
         InstanceCount = 1,
         FormRadius = 10000,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
         BuilderData = {
             PlatoonPlan = 'NUKEAIRNG',
@@ -261,7 +261,7 @@ BuilderGroup {
         InstanceCount = 10,
         FormRadius = 10000,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * (categories.TECH3 + categories.EXPERIMENTAL) } },
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.ARTILLERY * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
         BuilderType = 'Any',
     },

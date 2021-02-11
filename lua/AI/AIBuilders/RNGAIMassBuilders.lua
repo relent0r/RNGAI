@@ -191,7 +191,7 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             --{ UCBC, 'HasNotParagon', {} },
             -- Have we the eco to build it ?
-            { EBC, 'LessThanMassTrendRNG', { 50.0 } },
+            { EBC, 'LessThanMassTrendRNG', { 10.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             -- Don't build it if...
@@ -256,28 +256,6 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Resource',
                 }
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 350 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 660,
-        InstanceCount = 4,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 350, -500, 10, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                RepeatBuild = true,
-                Distance = 30,
-                Type = 'Mass',
-                BuildStructures = {
-                    'T1Resource',
-                },
             }
         }
     },

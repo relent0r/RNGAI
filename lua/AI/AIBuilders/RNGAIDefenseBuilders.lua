@@ -985,7 +985,7 @@ BuilderGroup {
         BuilderConditions = {
             -- Have we the eco to build it ?
             -- When do we want to build this ?
-            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM * categories.TECH2 } },
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM * categories.TECH2 } },
         },
         BuilderData = {
             PlatoonPlan = 'TMLAIRNG',
@@ -1009,6 +1009,11 @@ BuilderGroup {
         Priority = 1,
         InstanceCount = 1000,
         FormRadius = 10000,
+        BuilderConditions = {
+            -- Have we the eco to build it ?
+            -- When do we want to build this ?
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.INDIRECTFIRE * categories.TECH2 } },
+        },
         BuilderType = 'Any',
     },
 }
