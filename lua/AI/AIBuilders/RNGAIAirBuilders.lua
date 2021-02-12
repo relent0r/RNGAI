@@ -639,8 +639,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
         },
         BuilderType = 'Air',

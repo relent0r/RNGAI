@@ -529,7 +529,7 @@ BuilderGroup {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 2400, 6000 } },
+                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1600, 4000 } },
             },
         BuilderType = 'Any',
     },

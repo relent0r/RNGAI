@@ -671,7 +671,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH1 }},
@@ -722,7 +721,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH1 }},
@@ -767,7 +765,6 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2 }},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -790,7 +787,6 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 120 } },
             { EBC, 'LessThanEnergyTrendRNG', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2 }},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
         },
         BuilderType = 'Any',
         BuilderData = {

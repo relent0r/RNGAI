@@ -494,6 +494,10 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local distSqAway = 2025
     local loc = cdr.CDRHome
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
+    if GetGameTimeSeconds() < 300 then
+        distSqAway = 4225
+    end
+
     local acuThreatLimit = 15
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         --LOG('CDR further than distSqAway')

@@ -431,6 +431,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
+                ExpansionRadius = 70,
                 LocationRadius = 500, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
