@@ -245,6 +245,8 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
         if EntityCategoryContains(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3), v) then
             LOG('Energy Engineer Assist has '..table.getn(retUnits)..' units in return table')
+        elseif EntityCategoryContains(categories.EXPERIMENTAL) then
+            LOG('Experimental Engineer Assist has '..table.getn(retUnits)..' units in return table')
         end
         table.insert(retUnits, v)
     end

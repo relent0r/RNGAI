@@ -1631,6 +1631,7 @@ function FatBoyBehaviorRNG(self)
                                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
                                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                                             IssueMove({unit}, targetPosition )
+                                            WaitTicks(30)
                                         else
                                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                         end

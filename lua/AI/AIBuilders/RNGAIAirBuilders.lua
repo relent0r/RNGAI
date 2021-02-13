@@ -678,7 +678,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 850,
+        Priority = 880,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},

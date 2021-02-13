@@ -271,7 +271,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
             if not IsEnemy( aiBrain:GetArmyIndex(), unit:GetAIBrain():GetArmyIndex() ) then
                 continue
             end
-            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * categories.MOBILE, unit) then 
+            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * (categories.MOBILE + categories.WALL), unit) then 
                 --LOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
