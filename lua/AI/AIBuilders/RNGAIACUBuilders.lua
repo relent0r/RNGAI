@@ -584,7 +584,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { MIBC, 'GreaterThanGameTimeRNG', { 140 } },
-            { UCBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 5.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
@@ -925,7 +925,7 @@ BuilderGroup {
         Priority = 800,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8}},
-            { UCBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
         },
         BuilderType = 'Any',
         BuilderData = {

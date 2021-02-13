@@ -33,19 +33,7 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
-function GreaterThanMassTrendRNG(aiBrain, mTrend, DEBUG)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    if DEBUG then
-        --LOG('Current Energy Trend is : ', econ.MassTrend)
-    end
-    if econ.MassTrend < mTrend then
-        --LOG('Less Than Mass Trend Returning True : '..econ.MassTrend)
-        return true
-    else
-        --LOG('Less Than Mass Trend Returning False : '..econ.MassTrend)
-        return false
-    end
-end
+
 
 
 
@@ -139,6 +127,7 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, location
         numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
     end
     if numUnits > numReq then
+        --LOG('HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG returning true')
         return true
     end
     return false
@@ -218,6 +207,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
     end
     if not baseposition then
+        --LOG('No Base Position for GetUnitsBeingBuildlocation')
         return false
     end
     local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
@@ -243,13 +233,9 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
             continue
         end
-        if EntityCategoryContains(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3), v) then
-            LOG('Energy Engineer Assist has '..table.getn(retUnits)..' units in return table')
-        elseif EntityCategoryContains(categories.EXPERIMENTAL) then
-            LOG('Experimental Engineer Assist has '..table.getn(retUnits)..' units in return table')
-        end
         table.insert(retUnits, v)
     end
+    --LOG('Engineer Assist has '..table.getn(retUnits)..' units in return table')
     return retUnits
 end
 
