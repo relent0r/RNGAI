@@ -19,7 +19,7 @@ BaseBuilderTemplate {
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
                 'RNGAI T1 Reclaim Builders Expansion',
-                'RNGAI T1 Assist Builders',
+                'RNGAI Assist Builders',
                 'RNGAI Engineer Transfer To Main From Expansion',
         
                 -- Land Unit Builders T1 --

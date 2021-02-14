@@ -217,7 +217,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI T1 Assist Builders',
+    BuilderGroupName = 'RNGAI Assist Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Engineer Assist Factory T2 Upgrade',
@@ -226,7 +226,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 , categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH1 * ( categories.LAND + categories.AIR ) }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
@@ -312,30 +312,6 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI T2 Assist Builders',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI T2 Engineer Assist Factory',
-        PlatoonTemplate = 'T12EconAssistRNG',
-        Priority = 500,
-        InstanceCount = 8,
-        BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssistLocation = 'LocationType',
-                AssistUntilFinished = true,
-                AssisteeType = categories.FACTORY,
-            },
-        }
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished Structures',

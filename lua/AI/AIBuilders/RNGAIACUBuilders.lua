@@ -934,7 +934,7 @@ BuilderGroup {
                 AssistRange = 30,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},
-                Time = 30,
+                Time = 45,
             },
         }
     },

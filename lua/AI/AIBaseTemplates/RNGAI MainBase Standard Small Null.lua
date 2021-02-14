@@ -32,8 +32,7 @@ BaseBuilderTemplate {
         --'RNGAI Factory Builder Sea',
         'RNGAI Land Upgrade Builders',
         'RNGAI Land AA 2',
-        'RNGAI T1 Assist Builders',
-        'RNGAI T2 Assist Builders',
+        'RNGAI Assist Builders',
         --Strategic Builders
         'RNGAI SML Builders',
         'RNGAI Strategic Artillery Builders',
