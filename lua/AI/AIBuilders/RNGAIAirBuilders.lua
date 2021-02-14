@@ -385,7 +385,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Air Lockdown',
-        PlatoonTemplate = 'AntiAirHunt',
+        PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
         InstanceCount = 8,
@@ -442,9 +442,11 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
             PrioritizedCategories = {
+                categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 categories.MASSEXTRACTION,
                 categories.ENGINEER * categories.TECH2,
                 categories.ENGINEER * categories.TECH3,
+                categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3),
                 categories.ENERGYPRODUCTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
