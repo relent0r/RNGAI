@@ -266,6 +266,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
 
+        self.MapWaterRatio = self:GetMapWaterRatio()
+        LOG('Water Ratio is '..self.MapWaterRatio)
+
         self.coinFlip = math.random(2)
         if self.coinFlip == 1 then
             self.UpgradeMode = 'Normal'

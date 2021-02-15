@@ -266,8 +266,8 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Assist Artillery',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
+        BuilderName = 'RNGAI Engineer Assist Artillery',
+        PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
@@ -314,7 +314,7 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Unfinished Structures',
+        BuilderName = 'RNGAI Engineer Unfinished Structures',
         PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 700,
         InstanceCount = 3,
@@ -549,7 +549,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Repair',
+        BuilderName = 'RNGAI Engineer Repair',
         PlatoonTemplate = 'EngineerRepairRNG',
         PlatoonAIPlan = 'RepairAI',
         Priority = 900,
@@ -651,7 +651,7 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T1 ',
+        BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 900,

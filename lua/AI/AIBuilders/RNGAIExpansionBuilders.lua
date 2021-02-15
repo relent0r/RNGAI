@@ -20,6 +20,25 @@ local AggressiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+local NavalExpansionAdjust = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio < 0.20 then
+        LOG('NavalExpansionAdjust return 0')
+        return 0
+    elseif aiBrain.MapWaterRatio < 0.30 then
+        LOG('NavalExpansionAdjust return 200')
+        return 200
+    elseif aiBrain.MapWaterRatio < 0.40 then
+        LOG('NavalExpansionAdjust return 400')
+        return 400
+    elseif aiBrain.MapWaterRatio < 0.60 then
+        LOG('NavalExpansionAdjust return 650')
+        return 650
+    else
+        LOG('NavalExpansionAdjust return 750')
+        return 750
+    end
+end
+
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Expansion Builders Small',
@@ -122,6 +141,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Naval Expansion Area 250 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 650,
+        PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
@@ -253,6 +273,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 650 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PriorityFunction = NavalExpansionAdjust,
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {

@@ -971,7 +971,7 @@ BuilderGroup {
         },
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-                { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 7, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENGINEER * categories.TECH2}},
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},

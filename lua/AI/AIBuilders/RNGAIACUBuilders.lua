@@ -922,9 +922,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Engineer',
         PlatoonTemplate = 'CommanderAssistRNG',
-        Priority = 800,
+        Priority = 750,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0}},
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
         },
         BuilderType = 'Any',

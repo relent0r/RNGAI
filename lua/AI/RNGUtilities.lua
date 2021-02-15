@@ -1338,12 +1338,13 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
             --LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
             --local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
-            --LOG('Path reason is '..reason)
+            
             if reason then
                 --LOG('Path position is is '..reason)
             end
             WaitTicks(2)
             if path then
+                --LOG('Path reason is '..reason)
                 --LOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
                 validLocation = true
                 break

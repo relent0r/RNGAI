@@ -97,7 +97,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Experimental1 Megabot',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 400,
+        Priority = 500,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {
