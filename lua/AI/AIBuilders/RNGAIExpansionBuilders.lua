@@ -22,19 +22,19 @@ end
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio < 0.20 then
-        LOG('NavalExpansionAdjust return 0')
+        --LOG('NavalExpansionAdjust return 0')
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
-        LOG('NavalExpansionAdjust return 200')
+        --LOG('NavalExpansionAdjust return 200')
         return 200
     elseif aiBrain.MapWaterRatio < 0.40 then
-        LOG('NavalExpansionAdjust return 400')
+        --LOG('NavalExpansionAdjust return 400')
         return 400
     elseif aiBrain.MapWaterRatio < 0.60 then
-        LOG('NavalExpansionAdjust return 650')
+        --LOG('NavalExpansionAdjust return 650')
         return 650
     else
-        LOG('NavalExpansionAdjust return 750')
+        --LOG('NavalExpansionAdjust return 750')
         return 750
     end
 end

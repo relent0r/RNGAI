@@ -179,7 +179,7 @@ BuilderGroup {
             }
         }
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T2 Power Engineer Scale Extra',
         PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 800,
@@ -207,7 +207,7 @@ BuilderGroup {
                 },
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Power Engineer 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
@@ -291,7 +291,7 @@ BuilderGroup {
             }
         }
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T3 Power Engineer Scale Extra',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
@@ -319,7 +319,7 @@ BuilderGroup {
                 },
             }
         }
-    },
+    },]]
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder Expansion',

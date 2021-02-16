@@ -943,14 +943,14 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 860,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,55, categories.STRUCTURE * categories.HYDROCARBON, }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,50, categories.STRUCTURE * categories.HYDROCARBON, }},
         },
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
-                AssistRange = 55,
+                AssistRange = 50,
                 BeingBuiltCategories = {categories.STRUCTURE * categories.HYDROCARBON},
                 AssistUntilFinished = true,
                 Time = 0,
