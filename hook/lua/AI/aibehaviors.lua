@@ -65,6 +65,8 @@ function CommanderThreadRNG(cdr, platoon)
     cdr.UnitBeingBuiltBehavior = false
     -- Added to ensure we know the start locations (thanks to Sorian).
     SetCDRDefaults(aiBrain, cdr, platoon)
+    -- Check starting reclaim
+    GetStartingReclaim(aiBrain)
 
     while not cdr.Dead do
         -- Overcharge
@@ -1295,8 +1297,11 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         IssueScript({cdr}, order)
     end
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
+        if cdr.Upgrading then
+            --LOG('cdr.Upgrading is set to true')
+        end
         if cdr:GetHealthPercent() < 0.40 then
-            --LOG('* RNGAI: * BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
             cdr.Upgrading = false
@@ -1304,7 +1309,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         end
         coroutine.yield(10)
     end
-    --LOG('* RNGAI: * BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
     for k, v in priorityUpgrades do
         if enhancement == v then
             cdr.GunUpgradeRequired = false
@@ -2204,5 +2209,42 @@ function AirStagingThreadRNG(unit)
         end
         WaitSeconds(10)
     end
+end
+
+GetStartingReclaim = function(aiBrain)
+    LOG('Reclaim Start Check')
+    local startReclaim
+    local posX, posZ = aiBrain:GetArmyStartPos()
+    LOG('Start Positions X'..posX..' Z '..posZ)
+    local minRec = 70
+    local reclaimTable = {}
+    local reclaimScanArea = math.max(ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40) / 4
+    LOG('Reclaim Scan Area is '..reclaimScanArea)
+    reclaimScanArea = math.max(50, reclaimScanArea)
+    reclaimScanArea = math.min(120, reclaimScanArea)
+    --Wait 10 seconds for the wrecks to become reclaim
+    --WaitTicks(100)
+    
+    startReclaim = GetReclaimablesInRect(posX - reclaimScanArea, posZ - reclaimScanArea, posX + reclaimScanArea, posZ + reclaimScanArea)
+    LOG('Initial Reclaim Table size is '..table.getn(startReclaim))
+    if startReclaim and table.getn(startReclaim) > 0 then
+        for k,v in startReclaim do
+            if not IsProp(v) then continue end
+            if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
+                LOG('High Value Reclaim is worth '..v.MaxMassReclaim)
+                local rpos = v:GetCachePosition()
+                table.insert(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
+                LOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
+            end
+        end
+        LOG('Sorting Reclaim table by distance ')
+        table.sort(reclaimTable, function(a,b) return a.Distance < b.Distance end)
+        LOG('Final Reclaim Table size is '..table.getn(reclaimTable))
+        aiBrain.StartReclaimTable = reclaimTable
+        for k, v in aiBrain.StartReclaimTable do
+            LOG('Table entry distance is '..v.Distance)
+        end
+    end
+    LOG('Complete Get Starting Reclaim')
 end
 

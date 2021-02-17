@@ -269,6 +269,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.MapWaterRatio = self:GetMapWaterRatio()
         --LOG('Water Ratio is '..self.MapWaterRatio)
 
+        -- Table to holding the starting reclaim
+        self.StartReclaimTable = {}
+        self.StartReclaimTaken = false
+
         self.coinFlip = math.random(2)
         if self.coinFlip == 1 then
             self.UpgradeMode = 'Normal'
@@ -330,6 +334,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoMassManagerRNG)
+        --self:ForkThread(self.GetStartingReclaim)
     end,
     
     CalculateMassMarkersRNG = function(self)
@@ -2345,6 +2350,9 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
     end,
+
+
+
 --[[
     GetManagerCount = function(self, type)
         if not self.RNG then

@@ -4320,21 +4320,21 @@ Platoon = Class(RNGAIPlatoon) {
         if not aiBrain.RNG then
             return RNGAIPlatoon.PlatoonDisband(self)
         end
-        WARN('* AI-Uveso: PlatoonDisband: PlanName '..repr(self.PlanName)..'  -  BuilderName: '..repr(self.BuilderName)..'.' )
+        WARN('* AI-RNG: PlatoonDisband: PlanName '..repr(self.PlanName)..'  -  BuilderName: '..repr(self.BuilderName)..'.' )
         if not self.PlanName or not self.BuilderName then
-            WARN('* AI-Uveso: PlatoonDisband: PlatoonData = '..repr(self.PlatoonData))
+            WARN('* AI-RNG: PlatoonDisband: PlatoonData = '..repr(self.PlatoonData))
         end
         local FuncData = debug.getinfo(2)
         if FuncData.name and FuncData.name ~= "" then
-            WARN('* AI-Uveso: PlatoonDisband: Called from '..FuncData.name..'.')
+            WARN('* AI-RNG: PlatoonDisband: Called from '..FuncData.name..'.')
         else
-            WARN('* AI-Uveso: PlatoonDisband: Called from '..FuncData.source..' - line: '..FuncData.currentline.. '  -  (Offset AI-Uveso: ['..(FuncData.currentline - 6543)..'])')
+            WARN('* AI-RNG: PlatoonDisband: Called from '..FuncData.source..' - line: '..FuncData.currentline.. '  -  (Offset AI-RNG: ['..(FuncData.currentline - 6543)..'])')
         end
         if aiBrain:PlatoonExists(self) then
             RNGAIPlatoon.PlatoonDisband(self)
         end
-    end,
-]]
+    end,]]
+
 
     PlatoonMergeRNG = function(self)
         --LOG('Platoon Merge Started')

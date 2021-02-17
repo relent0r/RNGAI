@@ -17,7 +17,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1EngineerReclaimer',
     Plan = 'ReclaimAIRNG',
     GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
+        { categories.ENGINEER * categories.TECH1 - categories.COMMAND, 1, 1, 'support', 'None' }
     },
 }
 
