@@ -48,6 +48,7 @@ BaseBuilderTemplate {
         if markerType ~= 'Naval Area' then
             return -1
         end
+        LOG('Returning naval expansion')
         return 100, 'RNGStandard'
     end,
 }

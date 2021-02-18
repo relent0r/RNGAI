@@ -44,8 +44,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 1050,
-        InstanceCount = 4,
+        Priority = 990,
+        InstanceCount = 3,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
@@ -162,7 +162,7 @@ BuilderGroup {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.00}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
         },
         BuilderType = 'Any',
         BuilderData = {

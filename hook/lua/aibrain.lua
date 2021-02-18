@@ -267,7 +267,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.MapWaterRatio = self:GetMapWaterRatio()
-        --LOG('Water Ratio is '..self.MapWaterRatio)
+        LOG('Water Ratio is '..self.MapWaterRatio)
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}

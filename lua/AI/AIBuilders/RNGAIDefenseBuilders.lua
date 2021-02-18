@@ -26,7 +26,24 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
-
+local NavalExpansionAdjust = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio < 0.20 then
+        LOG('NavalExpansionAdjust return 0')
+        return 0
+    elseif aiBrain.MapWaterRatio < 0.30 then
+        --LOG('NavalExpansionAdjust return 200')
+        return 200
+    elseif aiBrain.MapWaterRatio < 0.40 then
+        --LOG('NavalExpansionAdjust return 400')
+        return 400
+    elseif aiBrain.MapWaterRatio < 0.60 then
+        --LOG('NavalExpansionAdjust return 650')
+        return 650
+    else
+        --LOG('NavalExpansionAdjust return 750')
+        return 750
+    end
+end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses',
@@ -577,6 +594,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence Sea - Perimeter',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PriorityFunction = NavalExpansionAdjust,
         Priority = 650,
         InstanceCount = 2,
         BuilderConditions = {
@@ -591,8 +609,6 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                BaseTemplate = 'ExpansionBaseTemplates',
-                ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 250,
                 LocationType = 'LocationType',
@@ -745,6 +761,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence Sea - Perimeter Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PriorityFunction = NavalExpansionAdjust,
         Priority = 650,
         InstanceCount = 2,
         BuilderConditions = {
@@ -759,8 +776,6 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                BaseTemplate = 'ExpansionBaseTemplates',
-                ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 250,
                 LocationType = 'LocationType',
@@ -817,6 +832,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence Sea - Perimeter Naval',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PriorityFunction = NavalExpansionAdjust,
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -831,8 +847,6 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                BaseTemplate = 'ExpansionBaseTemplates',
-                ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 250,
                 LocationType = 'LocationType',
@@ -852,6 +866,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Sea - Perimeter Naval',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PriorityFunction = NavalExpansionAdjust,
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -866,8 +881,6 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                BaseTemplate = 'ExpansionBaseTemplates',
-                ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 250,
                 LocationType = 'LocationType',

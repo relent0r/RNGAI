@@ -640,7 +640,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 7, categories.MOBILE * categories.ENGINEER}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
                 
             },
         BuilderData = {
