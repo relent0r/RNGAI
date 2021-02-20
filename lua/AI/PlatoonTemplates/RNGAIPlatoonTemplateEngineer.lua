@@ -15,6 +15,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'T23EngineerAssistRNG',
+    Plan = 'ManagerEngineerAssistAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * (categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
     Name = 'T12EngineerAssistRNG',
     Plan = 'ManagerEngineerAssistAIRNG',
     GlobalSquads = {

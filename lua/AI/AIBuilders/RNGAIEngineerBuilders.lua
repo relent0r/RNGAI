@@ -16,7 +16,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
     if myAirThreat < enemyAirThreat then
         --LOG('Enable Air ASF Scramble Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 650
+        return 550
     else
         --LOG('Disable Air ASF Scramble Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
@@ -381,7 +381,29 @@ BuilderGroup {
             },
         }
     },
-    
+    Builder {
+        BuilderName = 'RNGAI T123 Unfinished Experimental Small',
+        PlatoonTemplate = 'T23EngineerAssistRNG',
+        Priority = 800,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Assist = {
+                AssistUntilFinished = true,
+                AssistLocation = 'LocationType',
+                AssisteeType = categories.STRUCTURE,
+                AssistRange = 100,
+                AssistClosestUnit = true,
+                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.MOBILE},
+                Time = 120,
+            },
+        }
+    },
+
     Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T123EngineerAssistRNG',
