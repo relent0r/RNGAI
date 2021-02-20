@@ -51,8 +51,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     --LOG('* AI-RNG: Start Reclaim Function')
     if aiBrain.StartReclaimTaken then
-        LOG('StartReclaimTaken set to true')
-        LOG('Start Reclaim Table has '..table.getn(aiBrain.StartReclaimTable)..' items in it')
+        --LOG('StartReclaimTaken set to true')
+        --LOG('Start Reclaim Table has '..table.getn(aiBrain.StartReclaimTable)..' items in it')
     end
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
@@ -65,7 +65,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local engPos = self:GetPosition()
         if not aiBrain.StartReclaimTaken then
-            LOG('Reclaim Function - Starting reclaim is false')
+            --LOG('Reclaim Function - Starting reclaim is false')
             local sortedReclaimTable = {}
             if table.getn(aiBrain.StartReclaimTable) > 0 then
                 
@@ -75,39 +75,39 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 for k, r in aiBrain.StartReclaimTable do
                     if r.Reclaim and not IsDestroyed(r.Reclaim) then
                         reclaimCount = reclaimCount + 1
-                        LOG('Reclaim Function - Issuing reclaim')
-                        LOG('Reclaim distance is '..r.Distance)
+                        --LOG('Reclaim Function - Issuing reclaim')
+                        --LOG('Reclaim distance is '..r.Distance)
                         IssueReclaim({self}, r.Reclaim)
                         WaitTicks(20)
                         local reclaimTimeout = 0
-                        while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 15) do
+                        while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
                             reclaimTimeout = reclaimTimeout + 1
-                            LOG('Waiting for reclaim to no longer exist')
+                            --LOG('Waiting for reclaim to no longer exist')
                             WaitTicks(20)
                         end
-                        LOG('Reclaim Count is '..reclaimCount)
+                        --LOG('Reclaim Count is '..reclaimCount)
                         if reclaimCount > 10 then
                             break
                         end
                     else
-                        LOG('Reclaim is no longer valid')
+                        --LOG('Reclaim is no longer valid')
                     end
-                    LOG('Set key to nil')
+                    --LOG('Set key to nil')
                     aiBrain.StartReclaimTable[k] = nil
                 end
-                LOG('Pre Rebuild Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                --LOG('Pre Rebuild Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
                 aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
-                LOG('Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                --LOG('Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
                 
                 if table.getn(aiBrain.StartReclaimTable) == 0 then
-                    LOG('Start Reclaim Taken set to true')
+                    --LOG('Start Reclaim Taken set to true')
                     aiBrain.StartReclaimTaken = true
                 else
-                    LOG('Start Reclaim table not empty, set StartReclaimTaken to false')
+                    --LOG('Start Reclaim table not empty, set StartReclaimTaken to false')
                     aiBrain.StartReclaimTaken = false
                 end
                 for i=1, 10 do
-                    LOG('Waiting Ticks '..i)
+                    --LOG('Waiting Ticks '..i)
                     WaitTicks(20)
                 end
             end
