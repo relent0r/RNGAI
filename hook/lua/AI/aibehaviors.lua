@@ -256,6 +256,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
         plat:Stop()
         local priList = {
+            categories.COMMAND,
             categories.EXPERIMENTAL,
             categories.TECH3 * categories.INDIRECTFIRE,
             categories.TECH3 * categories.MOBILE,
@@ -271,6 +272,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local counter = 0
         local cdrThreat = cdr:GetBlueprint().Defense.SurfaceThreatLevel or 75
         local enemyThreat
+        LOG('MaxRadius is '..maxRadius)
         repeat
             overCharging = false
             if counter >= 5 or not target or target.Dead or Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) > maxRadius then
@@ -309,16 +311,18 @@ function CDROverChargeRNG(aiBrain, cdr)
                     aiBrain.BaseMonitor.CDRThreatLevel = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                     --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                    LOG('Target Distance is '..targetDistance..' from acu to target')
+
                     
 
                     -- If inside base dont check threat, just shoot!
                     if Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 45 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
-                        --LOG('enemyThreat is '..enemyThreat)
+                        LOG('enemyThreat is '..enemyThreat)
                         enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
-                        --LOG('enemyCDR is '..enemyCdrThreat)
+                        LOG('enemyCDR is '..enemyCdrThreat)
                         friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
-                        --LOG('friendlyThreat is'..friendlyThreat)
+                        LOG('friendlyThreat is'..friendlyThreat)
                         if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.5)) then
                             --LOG('Enemy Threat too high')
                             break
@@ -327,6 +331,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         --LOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
+                        LOG('Target is '..target.UnitId)
                         overCharging = true
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
@@ -338,7 +343,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < weapon.Range then
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
                                 plat.BuilderName = 'CDR Combat'
@@ -360,6 +365,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
+                        LOG('Target is '..target.UnitId)
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
                             cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
@@ -381,6 +387,10 @@ function CDROverChargeRNG(aiBrain, cdr)
                         cdrNewPos[3] = movePos[3] + Random(-8, 8)
                         cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
+                    if not target then
+                        LOG('No longer have target')
+                    end
+
                 elseif distressLoc then
                     --LOG('* AI-RNG: ACU Detected Distress Location')
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
@@ -454,8 +464,10 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Total Enemy Threat '..enemyUnitThreat)
                 --LOG('ACU Cutoff Threat '..acuThreatLimit)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
-                if (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
+                if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
+                    LOG('Enemy ACU is under HP limit we can draw')
+                elseif (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
                     continueFighting = false
                 end
             end
@@ -500,7 +512,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         distSqAway = 4225
     end
 
-    local acuThreatLimit = 15
+    local acuThreatLimit = 22
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         --LOG('CDR further than distSqAway')
         cdr.GoingHome = true
@@ -560,11 +572,11 @@ function CDRReturnHomeRNG(aiBrain, cdr)
                             end
                         end
                     end
-                    --LOG('Total Enemy Threat '..enemyUnitThreat)
-                    --LOG('ACU Cutoff Threat '..acuThreatLimit)
+                    LOG('Total Enemy Threat '..enemyUnitThreat)
+                    LOG('ACU Cutoff Threat '..acuThreatLimit)
                     --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                     if (enemyUnitThreat < acuThreatLimit) then
-                        --LOG('* AI-RNG: Enemy unit threat low enough to return to fighting :'..enemyUnitThreat)
+                        LOG('* AI-RNG: Enemy unit threat low enough to return to fighting :'..enemyUnitThreat)
                         cdr.GoingHome = false
                         IssueStop({cdr})
                         return CDROverChargeRNG(aiBrain, cdr)
