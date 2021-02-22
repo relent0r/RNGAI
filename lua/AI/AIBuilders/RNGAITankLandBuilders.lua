@@ -670,52 +670,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders Expansion',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T1 Expansion',
-        PlatoonTemplate = 'RNGAI LandAttack Medium',
-        Priority = 600,
-        InstanceCount = 4,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-        },
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = false,
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsIfWeakerThan = 10, -- If the platoon is weaker than this threat level
-                IgnoreStrongerTargetsRatio = 5, -- If platoon is weaker than the above threat then ignore stronger threats if stronger by this ratio. (so if they are 100?) 
-                PrimaryThreatTargetType = 'StructuresNotMex', -- Primary type of threat to find targets
-                SecondaryThreatTargetType = 'Land', -- Secondary type of threat to find targets
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 2, -- If the platoon is weaker than the target threat then decrease by this factor
-                StrongAttackThreatWeight = 5, -- If the platoon is stronger than the target threat then increase by this factor
-                VeryNearThreatWeight = 20, -- If the target is very close increase by this factor, default radius is 25
-                NearThreatWeight = 10, -- If the target is close increase by this factor, default radius is 75
-                MidThreatWeight = 5, -- If the target is mid range increase by this factor, default radius is 150
-                FarThreatWeight = 1, -- if the target is far awat increase by this factor default radius is 300. There is also a VeryFar which is -1
-                TargetCurrentEnemy = false, -- Take the current enemy into account when finding targets
-                IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
-            },
-        },         
-    },
-    Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T2 Expansion',
-        PlatoonTemplate = 'RNGAI LandAttack Large T2',
-        Priority = 600,
-        InstanceCount = 4,
-        BuilderType = 'Any',
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = true,
-            UseFormation = 'AttackFormation',
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Mass Raid Expansions',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
         Priority = 600,                                                          -- Priority. 1000 is normal.
@@ -749,7 +703,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Expansion',                          -- Template Name. 
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
@@ -815,21 +769,6 @@ BuilderGroup {
                 IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
             },
         },         
-    },
-    Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T2 Expansion Large',
-        PlatoonTemplate = 'RNGAI LandAttack Large T2',
-        Priority = 600,
-        InstanceCount = 4,
-        BuilderType = 'Any',
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = true,
-            UseFormation = 'AttackFormation',
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER} },
-        },
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions Large',                              -- Random Builder Name.
@@ -1290,36 +1229,6 @@ BuilderGroup {
         },         
     },
     Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T2',
-        PlatoonTemplate = 'RNGAI LandAttack Large T2',
-        Priority = 700,
-        InstanceCount = 30,
-        BuilderType = 'Any',
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = true,
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsIfWeakerThan = 10, -- If the platoon is weaker than this threat level
-                IgnoreStrongerTargetsRatio = 5, -- If platoon is weaker than the above threat then ignore stronger threats if stronger by this ratio. (so if they are 100?) 
-                PrimaryThreatTargetType = 'StructuresNotMex', -- Primary type of threat to find targets
-                SecondaryThreatTargetType = 'Land', -- Secondary type of threat to find targets
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 2, -- If the platoon is weaker than the target threat then decrease by this factor
-                StrongAttackThreatWeight = 5, -- If the platoon is stronger than the target threat then increase by this factor
-                VeryNearThreatWeight = 20, -- If the target is very close increase by this factor, default radius is 25
-                NearThreatWeight = 10, -- If the target is close increase by this factor, default radius is 75
-                MidThreatWeight = 5, -- If the target is mid range increase by this factor, default radius is 150
-                FarThreatWeight = 1, -- if the target is far awat increase by this factor default radius is 300. There is also a VeryFar which is -1
-                TargetCurrentEnemy = false, -- Take the current enemy into account when finding targets
-                IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Attack AntiAir Structures',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack AA Structures',                          -- Template Name.
         Priority = 700,                                                          -- Priority. 1000 is normal.
@@ -1568,36 +1477,6 @@ BuilderGroup {
                 IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
             },
         },         
-    },
-    Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T2 Large',
-        PlatoonTemplate = 'RNGAI LandAttack Large T2',
-        Priority = 700,
-        InstanceCount = 30,
-        BuilderType = 'Any',
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = true,
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsIfWeakerThan = 10, -- If the platoon is weaker than this threat level
-                IgnoreStrongerTargetsRatio = 5, -- If platoon is weaker than the above threat then ignore stronger threats if stronger by this ratio. (so if they are 100?) 
-                PrimaryThreatTargetType = 'StructuresNotMex', -- Primary type of threat to find targets
-                SecondaryThreatTargetType = 'Land', -- Secondary type of threat to find targets
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 2, -- If the platoon is weaker than the target threat then decrease by this factor
-                StrongAttackThreatWeight = 5, -- If the platoon is stronger than the target threat then increase by this factor
-                VeryNearThreatWeight = 20, -- If the target is very close increase by this factor, default radius is 25
-                NearThreatWeight = 10, -- If the target is close increase by this factor, default radius is 75
-                MidThreatWeight = 5, -- If the target is mid range increase by this factor, default radius is 150
-                FarThreatWeight = 1, -- if the target is far awat increase by this factor default radius is 300. There is also a VeryFar which is -1
-                TargetCurrentEnemy = false, -- Take the current enemy into account when finding targets
-                IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH2 - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
     },
     Builder {
         BuilderName = 'RNGAI Attack AntiAir Structures Large',                              -- Random Builder Name.

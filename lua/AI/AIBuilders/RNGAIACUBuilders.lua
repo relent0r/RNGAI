@@ -439,7 +439,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 800,
+        Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
@@ -487,7 +487,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 800,
+        Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},

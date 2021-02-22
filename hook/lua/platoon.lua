@@ -2592,7 +2592,7 @@ Platoon = Class(RNGAIPlatoon) {
     -------------------------------------------------------
     ProcessBuildCommandRNG = function(eng, removeLastBuild)
         --DUNCAN - Trying to stop commander leaving projects
-        if not eng or eng.Dead or not eng.PlatoonHandle then
+        if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Upgrading or eng.GoingHome then
             return
         end
 

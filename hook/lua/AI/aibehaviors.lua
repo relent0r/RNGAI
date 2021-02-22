@@ -323,8 +323,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                         LOG('enemyCDR is '..enemyCdrThreat)
                         friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                         LOG('friendlyThreat is'..friendlyThreat)
-                        if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.5)) then
-                            --LOG('Enemy Threat too high')
+                        if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.3)) then
+                            LOG('Enemy Threat too high')
                             break
                         end
                     end
@@ -343,7 +343,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < weapon.Range then
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
                                 plat.BuilderName = 'CDR Combat'
@@ -367,7 +367,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         IssueClearCommands({cdr})
                         LOG('Target is '..target.UnitId)
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                             WaitTicks(30)
                             IssueClearCommands({cdr})
@@ -461,9 +461,10 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     end
                 end
-                --LOG('Total Enemy Threat '..enemyUnitThreat)
-                --LOG('ACU Cutoff Threat '..acuThreatLimit)
-                --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
+                LOG('Continue Fighting is set to true')
+                LOG('Total Enemy Threat '..enemyUnitThreat)
+                LOG('ACU Cutoff Threat '..acuThreatLimit)
+                LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     LOG('Enemy ACU is under HP limit we can draw')
                 elseif (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
@@ -600,14 +601,14 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 end
 
 function CDRUnitCompletion(aiBrain, cdr)
-    if cdr.UnitBeingBuiltBehavior and not cdr.Combat and not cdr.Upgrading and not cdr.GoingHome then
-        if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
+    if cdr.UnitBeingBuiltBehavior and (not cdr.Combat) and (not cdr.Upgrading) and (not cdr.GoingHome) then
+        if (not cdr.UnitBeingBuiltBehavior:BeenDestroyed()) and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
             --LOG('* AI-RNG: Attempt unit Completion')
             IssueClearCommands( {cdr} )
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
             WaitTicks(60)
         end
-        if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
+        if (not cdr.UnitBeingBuiltBehavior:BeenDestroyed()) then
             --LOG('* AI-RNG: Unit Completion is :'..cdr.UnitBeingBuiltBehavior:GetFractionComplete())
             if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
                 --LOG('* AI-RNG: Unit is completed set UnitBeingBuiltBehavior to false')

@@ -85,7 +85,7 @@ EngineerManager = Class(RNGEngineerManager) {
 
         local builder = self:GetHighestBuilder('Any', {unit})
 
-        if builder and (not unit.Combat or not unit.GoingHome) then
+        if builder and ((not unit.Combat) or (not unit.GoingHome) or (not unit.Upgrading)) then
             -- Fork off the platoon here
             local template = self:GetEngineerPlatoonTemplate(builder:GetPlatoonTemplate())
             local hndl = self.Brain:MakePlatoon(template[1], template[2])
