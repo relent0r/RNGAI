@@ -52,7 +52,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 120.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },

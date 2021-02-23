@@ -2641,6 +2641,9 @@ Platoon = Class(RNGAIPlatoon) {
                     if eng then eng.ProcessBuild = nil end
                     return
                 end
+                if (not aiBrain:CanBuildStructureAt('ueb1103', buildLocation)) then
+                    --LOG('Cant build at mass location')
+                end
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 local engStuckCount = 0
                 local Lastdist

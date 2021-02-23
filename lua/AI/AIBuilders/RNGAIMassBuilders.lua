@@ -319,7 +319,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.60}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },

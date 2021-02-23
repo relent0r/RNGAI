@@ -584,7 +584,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { MIBC, 'GreaterThanGameTimeRNG', { 140 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.0 }},
             { EBC, 'LessThanEnergyTrendRNG', { 5.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},

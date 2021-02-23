@@ -673,7 +673,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Expansions',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
         Priority = 600,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
@@ -702,7 +702,7 @@ BuilderGroup {
             },
     },
     Builder {
-        BuilderName = 'RNGAI Spam Common Expansion',                              -- Random Builder Name.
+        BuilderName = 'RNGAI Spam Common Expansion Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
@@ -710,14 +710,36 @@ BuilderGroup {
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
         },
         BuilderData = {
-            UseFormation = 'None',
+            SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
+            UseFormation = 'None',
+            AggressiveMove = true,
             ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSEXTRACTION,
+                categories.MASSFABRICATION,
+                categories.ALLUNITS,
             },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.STRUCTURE * categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MASSEXTRACTION,
+                categories.ALLUNITS,
+            },
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon Expansion',                              -- Random Builder Name.

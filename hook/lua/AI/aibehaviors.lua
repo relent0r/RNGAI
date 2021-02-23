@@ -202,7 +202,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() > 260
+        and GetGameTimeSeconds() > 230
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
         maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
@@ -307,6 +307,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --LOG('Target Found')
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
+                    local cdrNewPos = {}
                     aiBrain.BaseMonitor.CDRDistress = targetPos
                     aiBrain.BaseMonitor.CDRThreatLevel = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                     --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
@@ -342,7 +343,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetPos = target:GetPosition()
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
-                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
+                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (weapon.Range - 5)})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
@@ -360,9 +361,21 @@ function CDROverChargeRNG(aiBrain, cdr)
                             aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        if target and not target.Dead and not target:BeenDestroyed() then
+                        WaitTicks(3)
+                        targetPos = target:GetPosition()
+                        if VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range then
+                            LOG('Target In Range for OC, should fire now')
+                            LOG('Distance is '..VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]))
+                            LOG('Weapon Range is '..weapon.Range)
+                        end
+                        if target and not target.Dead and not target:BeenDestroyed() and ( VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range ) then
+                            IssueClearCommands({cdr})
                             IssueOverCharge({cdr}, target)
                         end
+                        cdrNewPos[1] = movePos[1] + Random(-8, 8)
+                        cdrNewPos[2] = movePos[2]
+                        cdrNewPos[3] = movePos[3] + Random(-8, 8)
+                        cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
                         LOG('Target is '..target.UnitId)
@@ -373,7 +386,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             IssueClearCommands({cdr})
                             continue
                         end
-                        local cdrNewPos = {}
+                        
                         --LOG('* AI-RNG: Move Position is'..repr(movePos))
                         --LOG('* AI-RNG: Moving to movePos to attack')
                         if not PlatoonExists(aiBrain, plat) then
