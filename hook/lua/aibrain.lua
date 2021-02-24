@@ -1064,6 +1064,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
                 and self.BaseMonitor.CDRThreatLevel > threshold then
             -- Commander scared and nearby; help it
+            LOG('Assist ACU')
             return self.BaseMonitor.CDRDistress
         end
         if self.BaseMonitor.AlertSounded then

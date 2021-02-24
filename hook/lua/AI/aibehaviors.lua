@@ -191,6 +191,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     if GetGameTimeSeconds() < 120 then
         return
     end
+    LOG('ACU Health is '..cdr:GetHealthPercent())
+    
 
     -- Increase distress on non-water maps
     local distressRange = 60
@@ -205,7 +207,11 @@ function CDROverChargeRNG(aiBrain, cdr)
         and GetGameTimeSeconds() > 230
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
-        maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        if cdr.GunUpgradePresent then
+            maxRadius = 290 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        else
+            maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        end
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
@@ -217,6 +223,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
+    LOG('MaxRadius is '..maxRadius)
     
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
@@ -272,7 +279,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local counter = 0
         local cdrThreat = cdr:GetBlueprint().Defense.SurfaceThreatLevel or 75
         local enemyThreat
-        LOG('MaxRadius is '..maxRadius)
+        
         repeat
             overCharging = false
             if counter >= 5 or not target or target.Dead or Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) > maxRadius then
@@ -304,7 +311,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
 
                 if target then
-                    --LOG('Target Found')
+                    LOG('Target Found')
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local cdrNewPos = {}
@@ -361,7 +368,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        WaitTicks(3)
+                        WaitTicks(10)
                         targetPos = target:GetPosition()
                         if VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range then
                             LOG('Target In Range for OC, should fire now')
@@ -369,6 +376,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             LOG('Weapon Range is '..weapon.Range)
                         end
                         if target and not target.Dead and not target:BeenDestroyed() and ( VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range ) then
+                            LOG('Firing Overcharge')
                             IssueClearCommands({cdr})
                             IssueOverCharge({cdr}, target)
                         end
@@ -427,7 +435,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     counter = counter + 0.5
                 end
             else
-                WaitTicks(50)
+                WaitTicks(40)
                 counter = counter + 5
             end
 
@@ -510,6 +518,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.ReturnHome = true
         aiBrain.ACUSupport.TargetPosition = false
         aiBrain.ACUSupport.Supported = false
+        LOG('Setting CDRDistress to false')
         aiBrain.BaseMonitor.CDRDistress = false
         aiBrain.BaseMonitor.CDRThreatLevel = 0
         --LOG('* AI-RNG: ACUSupport.Supported set to false')
@@ -608,6 +617,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     end
     cdr.GoingHome = false
     if aiBrain.BaseMonitor.CDRDistress then
+        LOG('Setting CDRDistress is false')
         aiBrain.BaseMonitor.CDRDistress = false
         aiBrain.BaseMonitor.CDRThreatLevel = 0
     end

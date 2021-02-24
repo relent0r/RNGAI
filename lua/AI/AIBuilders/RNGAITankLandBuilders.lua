@@ -716,6 +716,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
+            DistressRange = 100,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
@@ -839,6 +840,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
+            DistressRange = 100,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
@@ -919,6 +921,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
+            DistressRange = 100,
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -936,7 +939,7 @@ BuilderGroup {
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.STRUCTURE * categories.ANTIAIR,
-                categories.ALLUNITS,
+                categories.ALLUNITS - categories.AIR - categories.NAVAL,
             },
             UseFormation = 'AttackFormation',
             ThreatSupport = 1,
@@ -989,6 +992,7 @@ BuilderGroup {
             },
         BuilderData = {
             MarkerType = 'Start Location',            
+            DistressRange = 100,
             SafeZone = true,
             MoveFirst = 'Threat',
             LocationType = 'LocationType',
@@ -1080,6 +1084,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
+            DistressRange = 100,
             UseFormation = 'None',
             PlatoonLimit = 18,
             AggressiveMove = true,
@@ -1153,11 +1158,12 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 6, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
         },
         BuilderData = {
             UseFormation = 'None',
+            DistressRange = 100,
             ThreatSupport = 2,
             LocationType = 'LocationType',
             },
@@ -1659,7 +1665,7 @@ BuilderGroup {
                 categories.STRUCTURE,
             },
             },
-            DistressRange = 200,
+            DistressRange = 100,
             DistressReactionTime = 8,
             ThreatSupport = 10,
     },
