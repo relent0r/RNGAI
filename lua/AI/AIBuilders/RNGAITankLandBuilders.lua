@@ -1115,7 +1115,7 @@ BuilderGroup {
         Priority = 560,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
@@ -1384,7 +1384,7 @@ BuilderGroup {
         Priority = 560,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },

@@ -683,9 +683,11 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
             end
         elseif currentTime > 900 then
             if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+                LOG('Amphib pool greater than 8 land true')
                 return true
             end
         else
+            LOG('Amphib pool greater returning false')
             return false
         end
     elseif type == 'AIR' then

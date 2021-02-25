@@ -145,7 +145,6 @@ function CDROverChargeRNG(aiBrain, cdr)
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
     local acuThreatLimit = 22
-    
     for k, v in weapBPs do
         if v.Label == 'OverCharge' then
             overCharge = v
@@ -155,7 +154,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             weapon = v
             weapon.Range = v.MaxRadius - 3
             --LOG('* AI-RNG: ACU Weapon Range is :'..weaponRange)
-            break
+            continue
         end
     end
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -191,7 +190,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     if GetGameTimeSeconds() < 120 then
         return
     end
-    LOG('ACU Health is '..cdr:GetHealthPercent())
+    --LOG('ACU Health is '..cdr:GetHealthPercent())
     
 
     -- Increase distress on non-water maps
@@ -223,7 +222,6 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
-    LOG('MaxRadius is '..maxRadius)
     
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
@@ -350,7 +348,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetPos = target:GetPosition()
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
-                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (weapon.Range - 5)})
+                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (weapon.Range - 3 )})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
@@ -368,18 +366,14 @@ function CDROverChargeRNG(aiBrain, cdr)
                             aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        WaitTicks(10)
+                        WaitTicks(20)
                         targetPos = target:GetPosition()
-                        if VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range then
-                            LOG('Target In Range for OC, should fire now')
-                            LOG('Distance is '..VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]))
-                            LOG('Weapon Range is '..weapon.Range)
-                        end
                         if target and not target.Dead and not target:BeenDestroyed() and ( VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range ) then
                             LOG('Firing Overcharge')
                             IssueClearCommands({cdr})
                             IssueOverCharge({cdr}, target)
                         end
+                        WaitTicks(10)
                         cdrNewPos[1] = movePos[1] + Random(-8, 8)
                         cdrNewPos[2] = movePos[2]
                         cdrNewPos[3] = movePos[3] + Random(-8, 8)
@@ -403,6 +397,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
+                        WaitTicks(30)
                         cdrNewPos[1] = movePos[1] + Random(-8, 8)
                         cdrNewPos[2] = movePos[2]
                         cdrNewPos[3] = movePos[3] + Random(-8, 8)

@@ -116,7 +116,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             WaitTicks(20)
                                             target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, avoidBases)
                                             if target then
-                                                return self:AirHuntAIRNG()
+                                                return self:SetAIPlan('AirHuntAIRNG')
                                             end
                                         end
                                     end
@@ -155,7 +155,7 @@ Platoon = Class(RNGAIPlatoon) {
                         WaitTicks(20)
                         target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, avoidBases)
                         if target then
-                            return self:AirHuntAIRNG()
+                            self:SetAIPlan('AirHuntAIRNG')
                         end
                     end
                 end
@@ -493,7 +493,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if StuckCount > 5 then
                     --LOG('* AI-RNG: GuardmarkerRNG detected stuck. Restarting.')
-                    return self:GuardMarkerRNG()
+                    return self:SetAIPlan('GuardMarkerRNG')
                 end
                 oldPlatPos = platLoc
             until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 900 or not PlatoonExists(aiBrain, self)
@@ -505,10 +505,6 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('Move Next set to None, disbanding')
                 self:PlatoonDisband()
                 return
-            end
-
-            if moveNext == 'Guard Base' then
-                return self:GuardBase()
             end
 
             -- we're there... wait here until we're done
@@ -752,7 +748,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 WaitSeconds(patrolTime)
                 --LOG('* AI-RNG: Scout Returning to base after patrol : {'..startX..', 0, '..startZ..'}')
-                return self:ReturnToBaseAIRNG(true)
+                return self:SetAIPlan('ReturnToBaseAIRNG')
             end
         elseif acuSupport == true then
             while not scout.Dead and aiBrain.ACUSupport.Supported == true do
@@ -1025,11 +1021,11 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     else
-                        return self:ReturnToBaseAIRNG()
+                        return self:SetAIPlan('ReturnToBaseAIRNG')
                     end
                     IssueClearCommands(scoutUnits)
                     if not guardedUnit then
-                        return self:ReturnToBaseAIRNG()
+                        return self:SetAIPlan('ReturnToBaseAIRNG')
                     else
                         IssueGuard(scoutUnits, attackUnits[guardedUnit])
                     end
@@ -1046,11 +1042,11 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     else
-                        return self:ReturnToBaseAIRNG()
+                        return self:SetAIPlan('ReturnToBaseAIRNG')
                     end
                     IssueClearCommands(guardUnits)
                     if not guardedUnit then
-                        return self:ReturnToBaseAIRNG()
+                        return self:SetAIPlan('ReturnToBaseAIRNG')
                     else
                         IssueGuard(guardUnits, attackUnits[guardedUnit])
                     end
@@ -1293,11 +1289,11 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                             end
                         else
-                            return self:ReturnToBaseAIRNG()
+                            return self:SetAIPlan('ReturnToBaseAIRNG')
                         end
                         IssueClearCommands(scoutUnits)
                         if not guardedUnit then
-                            return self:ReturnToBaseAIRNG()
+                            return self:SetAIPlan('ReturnToBaseAIRNG')
                         else
                             IssueGuard(scoutUnits, attackUnits[guardedUnit])
                         end
@@ -1326,11 +1322,11 @@ Platoon = Class(RNGAIPlatoon) {
                                         end
                                     end
                                 else
-                                    return self:ReturnToBaseAIRNG()
+                                    return self:SetAIPlan('ReturnToBaseAIRNG')
                                 end
                                 IssueClearCommands(guardUnits)
                                 if not guardedUnit then
-                                    return self:ReturnToBaseAIRNG()
+                                    return self:SetAIPlan('ReturnToBaseAIRNG')
                                 else
                                     IssueGuard(guardUnits, attackUnits[guardedUnit])
                                 end
@@ -2108,7 +2104,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 elseif data.Defensive then 
                     WaitTicks(30)
-                    return self:ReturnToBaseAIRNG(true)
+                    return self:SetAIPlan('ReturnToBaseAIRNG', true)
                 elseif target.Dead then
                     --LOG('Strikeforce Target Dead performing loop')
                     target = false
@@ -2117,7 +2113,7 @@ Platoon = Class(RNGAIPlatoon) {
                 else
                     --LOG('Strikeforce No Target we should be returning to base')
                     WaitTicks(30)
-                    return self:ReturnToBaseAIRNG(true)
+                    return self:SetAIPlan('ReturnToBaseAIRNG', true)
                 end
             end
             WaitTicks(40)
@@ -2973,7 +2969,7 @@ Platoon = Class(RNGAIPlatoon) {
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 900 and self.MovementLayer ~= 'Water' then
             --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
-            return self:HuntAIPATHRNG()
+            return self:SetAIPlan('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
             --LOG('Best Marker position was nil, select random')
             if table.getn(markerLocations) <= 2 then
@@ -3157,7 +3153,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if StuckCount > 5 then
                     --LOG('MassRaidAI stuck count over 5, restarting')
-                    return self:MassRaidRNG()
+                    return self:SetAIPlan('MassRaidRNG')
                 end
                 oldPlatPos = platLoc
             until VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) < 64 or not PlatoonExists(aiBrain, self)
@@ -3347,7 +3343,7 @@ Platoon = Class(RNGAIPlatoon) {
                 -- we have nothing to do, so find the nearest base and disband
                 if not self.PlatoonData.NeverMerge then
                     --LOG('* AI-RNG: AttackForceAIRNG thinks it has nothing to do, return to base')
-                    return self:ReturnToBaseAIRNG()
+                    return self:SetAIPlan('ReturnToBaseAIRNG')
                 end
                 WaitTicks(50)
             else
@@ -3702,7 +3698,7 @@ Platoon = Class(RNGAIPlatoon) {
                     self:AggressiveMoveToLocation(target:GetPosition())
                 end
             else
-                return self:ReturnToBaseAIRNG(true)
+                return self:SetAIPlan('ReturnToBaseAIRNG', true)
                 --local PlatoonPosition = GetPlatoonPosition(self)
                 --if PlatoonPosition and VDist3(basePosition, PlatoonPosition) > homeRadius then
                     --DUNCAN - still try to move closer to the base if outside the radius
@@ -3913,11 +3909,11 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                             end
                         else
-                            return self:ReturnToBaseAIRNG()
+                            return self:SetAIPlan('ReturnToBaseAIRNG')
                         end
                         IssueClearCommands(guardUnits)
                         if not guardedUnit then
-                            return self:ReturnToBaseAIRNG()
+                            return self:SetAIPlan('ReturnToBaseAIRNG')
                         else
                             IssueGuard(guardUnits, attackUnits[guardedUnit])
                         end
@@ -3951,11 +3947,11 @@ Platoon = Class(RNGAIPlatoon) {
                                             end
                                         end
                                     else
-                                        return self:ReturnToBaseAIRNG()
+                                        return self:SetAIPlan('ReturnToBaseAIRNG')
                                     end
                                     IssueClearCommands(guardUnits)
                                     if not guardedUnit then
-                                        return self:ReturnToBaseAIRNG()
+                                        return self:SetAIPlan('ReturnToBaseAIRNG')
                                     else
                                         IssueGuard(guardUnits, attackUnits[guardedUnit])
                                     end

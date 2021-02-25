@@ -26,7 +26,7 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                AdjacencyDistance = 50,
+                AdjacencyDistance = 70,
                 BuildClose = false,
                 BuildStructures = {
                     'T1Radar',
