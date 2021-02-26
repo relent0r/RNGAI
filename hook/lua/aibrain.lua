@@ -28,7 +28,6 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --LOG('* AI-RNG: This is RNG')
             self.RNG = true
-
         end
     end,
 
@@ -1064,7 +1063,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
                 and self.BaseMonitor.CDRThreatLevel > threshold then
             -- Commander scared and nearby; help it
-            LOG('Assist ACU')
             return self.BaseMonitor.CDRDistress
         end
         if self.BaseMonitor.AlertSounded then
@@ -1144,7 +1142,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                if true then
+                --[[if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1155,7 +1153,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiencyOverTime..'Energy Efficiency :'..EnergyEfficiencyOverTime)
-                end
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end

@@ -3534,7 +3534,6 @@ Platoon = Class(RNGAIPlatoon) {
         while PlatoonExists(aiBrain, self) do
             if aiBrain.BaseMonitor.AlertSounded or aiBrain.BaseMonitor.CDRDistress or aiBrain.BaseMonitor.PlatoonAlertSounded then
                 -- In the loop so they may be changed by other platoon things
-                LOG('Distress Response Triggered')
                 local distressRange = self.PlatoonData.DistressRange or aiBrain.BaseMonitor.DefaultDistressRange
                 local reactionTime = self.PlatoonData.DistressReactionTime or aiBrain.BaseMonitor.PlatoonDefaultReactionTime
                 local threatThreshold = self.PlatoonData.ThreatSupport or 1
@@ -3550,9 +3549,6 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('Distress response activated')
                         --LOG('PlatoonDistressTable'..repr(aiBrain.BaseMonitor.PlatoonDistressTable))
                         --LOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
-                        if aiBrain.BaseMonitor.CDRDistress then
-                            LOG('ACUAlertTable'..repr(aiBrain.BaseMonitor.CDRDistress))
-                        end
                         -- Backups old ai plan
                         local oldPlan = self:GetPlan()
                         if self.AiThread then
@@ -3563,7 +3559,6 @@ Platoon = Class(RNGAIPlatoon) {
                         repeat
                             moveLocation = distressLocation
                             self:Stop()
-                            LOG('Aggressive Move to :'..repr(distressLocation))
                             local cmd = self:AggressiveMoveToLocation(distressLocation)
                             repeat
                                 WaitSeconds(reactionTime)
@@ -3588,8 +3583,6 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('*AI DEBUG: '..aiBrain.Name..' DISTRESS RESPONSE AI DEACTIVATION - oldPlan: '..oldPlan)
                         self:Stop()
                         self:SetAIPlan(oldPlan)
-                    else
-                        LOG('distressLocation came back false')
                     end
                 end
             end

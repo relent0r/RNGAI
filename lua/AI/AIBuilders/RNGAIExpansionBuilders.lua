@@ -326,8 +326,9 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 AggressiveExpansion = true, -- This is picked up so that a modified firebase function runs to pick the expansion closest to the enemy
+                NearMarkerType = 'Aggressive',
                 EnemyRange = 250,
-                NearMarkerType = true, -- This is so the engineerbuildai will still pick up the expansion bool, the aggressive base check uses 3 types of expansion markers.
+                --NearMarkerType = true, -- This is so the engineerbuildai will still pick up the expansion bool, the aggressive base check uses 3 types of expansion markers.
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,
