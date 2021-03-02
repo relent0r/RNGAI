@@ -123,12 +123,10 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirBomber',	
         Priority = 850,	
         BuilderConditions = {	
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH2 }},	
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},	
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},	
             { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.BOMBER * categories.TECH2} },	
         },	
         BuilderType = 'Air',	
     },
@@ -387,7 +385,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Air Lockdown',
-        PlatoonTemplate = 'AntiAirHunt',
+        PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
         InstanceCount = 8,
@@ -444,9 +442,11 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
             PrioritizedCategories = {
+                categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 categories.MASSEXTRACTION,
                 categories.ENGINEER * categories.TECH2,
                 categories.ENGINEER * categories.TECH3,
+                categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3),
                 categories.ENERGYPRODUCTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
@@ -528,7 +528,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.daa0206 } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -554,7 +554,7 @@ BuilderGroup {
         InstanceCount = 20,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.daa0206 } },
+            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -641,8 +641,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
         },
         BuilderType = 'Air',
@@ -680,13 +680,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
-        Priority = 850,
+        Priority = 880,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
         },
         BuilderType = 'Air',
     },

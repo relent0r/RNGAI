@@ -26,7 +26,7 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                AdjacencyDistance = 50,
+                AdjacencyDistance = 70,
                 BuildClose = false,
                 BuildStructures = {
                     'T1Radar',
@@ -138,7 +138,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TECH2 * categories.RADAR }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.5, 0.80}},

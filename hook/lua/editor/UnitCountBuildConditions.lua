@@ -33,19 +33,7 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
-function GreaterThanMassTrend(aiBrain, mTrend, DEBUG)
-    local econ = AIUtils.AIGetEconomyNumbers(aiBrain)
-    if DEBUG then
-        --LOG('Current Energy Trend is : ', econ.MassTrend)
-    end
-    if econ.MassTrend < mTrend then
-        --LOG('Less Than Mass Trend Returning True : '..econ.MassTrend)
-        return true
-    else
-        --LOG('Less Than Mass Trend Returning False : '..econ.MassTrend)
-        return false
-    end
-end
+
 
 
 
@@ -139,6 +127,7 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, location
         numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
     end
     if numUnits > numReq then
+        --LOG('HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG returning true')
         return true
     end
     return false
@@ -218,6 +207,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
     end
     if not baseposition then
+        --LOG('No Base Position for GetUnitsBeingBuildlocation')
         return false
     end
     local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
@@ -245,6 +235,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
         table.insert(retUnits, v)
     end
+    --LOG('Engineer Assist has '..table.getn(retUnits)..' units in return table')
     return retUnits
 end
 
@@ -650,16 +641,34 @@ function HaveThreatRatioVersusEnemyRNG(aiBrain, ratio, compareType)
     return false
 end
 
-function HaveUnitRatioVersusEnemy(aiBrain, ratio, categoryOwn, compareType, categoryEnemy)
-    -- in case we don't have omni view, return always true. We cant count units without omni
-    if not aiBrain.CheatEnabled or ScenarioInfo.Options.OmniCheat ~= "on" then
-        --LOG('* HaveUnitRatioVersusEnemy: AI is not Cheating or Omni is Off')
-        return true
+function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOwn, compareType, categoryEnemy)
+    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    elseif aiBrain:PBMHasPlatoonList() then
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == locType then
+                baseposition = v.Location
+                radius = v.Radius
+                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
+                break
+            end
+        end
     end
-    local numOwnUnits = aiBrain:GetCurrentUnits(categoryOwn)
+    if not baseposition then
+        return false
+    end
+    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryOwn, baseposition, radius , 'Ally')
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..numEnemyUnits..' ) -- ['..ratio..'] -- return '..repr(CompareBody(numOwnUnits / numEnemyUnits, ratio, compareType)))
-    return CompareBody(numOwnUnits / numEnemyUnits, ratio, compareType)
+    return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
 function GetEnemyUnits(aiBrain, unitCount, categoryEnemy, compareType)
@@ -769,11 +778,15 @@ function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
                 return true
             end
         elseif currentTime > 1200 and aiBrain.BrainIntel.AirAttackMode then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+                return true
+            end
+        elseif currentTime < 900 then
             if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
                 return true
             end
         elseif currentTime >= 900 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
                 return true
             end
         else
@@ -848,6 +861,34 @@ function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits
         end
     end
     return false
+end
+
+-- { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE * categories.TECH3 }},
+function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, category )
+    for k,v in aiBrain.BuilderManagers do
+        if markerType == v.BaseType and v.FactoryManager.FactoryList then
+            if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
+                --LOG('ExistingExpansionFactoryGreater = false')
+				return false
+            end
+        end
+	end
+    --LOG('ExistingExpansionFactoryGreater = true')
+	return true
+end
+
+--            { UCBC, 'HaveGreaterThanArmyPoolWithCategory', { 0, categories.MASSEXTRACTION} },
+function HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, compareType)
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    local numUnits = poolPlatoon:GetNumCategoryUnits(unitCategory)
+    --LOG('* HavePoolUnitInArmy: numUnits= '..numUnits) 
+    return CompareBody(numUnits, unitCount, compareType)
+end
+function HaveLessThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
+    return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '<')
+end
+function HaveGreaterThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
+    return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '>')
 end
 
 --[[

@@ -61,6 +61,18 @@ function GreaterThanEnergyTrendRNG(aiBrain, eTrend, DEBUG)
     end
 end
 
+function GreaterThanMassTrendRNG(aiBrain, mTrend, DEBUG)
+    local MassTrend = GetEconomyTrend(aiBrain, 'MASS')
+    if DEBUG then
+        --LOG('Current Energy Trend is : ', econ.MassTrend)
+    end
+    if MassTrend > mTrend then
+        return true
+    else
+        return false
+    end
+end
+
 function LessThanMassTrendRNG(aiBrain, mTrend)
     local MassTrend = GetEconomyTrend(aiBrain, 'MASS')
     --LOG('Mass Trend is'..MassTrend)
@@ -110,7 +122,6 @@ function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
     unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt(testCat)
     
     local massTotal = unitCount * t1Drain
-
     -- T2 Test
     testCat = categories.TECH2 * categories.FACTORY
     unitCount = aiBrain:GetCurrentUnits( testCat )
@@ -124,10 +135,8 @@ function GreaterThanMassIncomeToFactory(aiBrain, t1Drain, t2Drain, t3Drain)
     massTotal = massTotal + ( unitCount * t3Drain )    
     
     if not CompareBody( (econTime.MassIncome * 10), massTotal, '>' ) then
-        --LOG('Mass income to factory is false')
         return false
     end
-    --LOG('Mass income to factory is true')
     return true
 end
 

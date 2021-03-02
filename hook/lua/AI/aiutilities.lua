@@ -486,7 +486,7 @@ function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tM
         reference = bestMarker.Position
         refName = bestMarker.Name
     end
-
+    
     return reference, refName
 end
 

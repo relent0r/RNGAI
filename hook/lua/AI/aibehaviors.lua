@@ -65,6 +65,8 @@ function CommanderThreadRNG(cdr, platoon)
     cdr.UnitBeingBuiltBehavior = false
     -- Added to ensure we know the start locations (thanks to Sorian).
     SetCDRDefaults(aiBrain, cdr, platoon)
+    -- Check starting reclaim
+    GetStartingReclaim(aiBrain)
 
     while not cdr.Dead do
         -- Overcharge
@@ -143,19 +145,16 @@ function CDROverChargeRNG(aiBrain, cdr)
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
     local acuThreatLimit = 22
-    
     for k, v in weapBPs do
+        if v.Label == 'OverCharge' then
+            overCharge = v
+            continue
+        end
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             weapon = v
             weapon.Range = v.MaxRadius - 3
             --LOG('* AI-RNG: ACU Weapon Range is :'..weaponRange)
-            continue
         end
-        if v.Label == 'OverCharge' then
-            overCharge = v
-            break
-        end
-
     end
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     if factionIndex == 1 then
@@ -190,6 +189,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     if GetGameTimeSeconds() < 120 then
         return
     end
+    --LOG('ACU Health is '..cdr:GetHealthPercent())
+    
 
     -- Increase distress on non-water maps
     local distressRange = 60
@@ -201,10 +202,20 @@ function CDROverChargeRNG(aiBrain, cdr)
     local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() > 260
+        and GetGameTimeSeconds() > 230
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
-        maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        if cdr.GunUpgradePresent then
+            maxRadius = 290 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        else
+            maxRadius = 260 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        end
+        if maxRadius < 60 then 
+            maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
+        end
+        aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
+    elseif cdr:GetHealthPercent() > 0.8 and GetGameTimeSeconds() > 260 then
+        maxRadius = 130 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
@@ -249,6 +260,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
         plat:Stop()
         local priList = {
+            categories.COMMAND,
             categories.EXPERIMENTAL,
             categories.TECH3 * categories.INDIRECTFIRE,
             categories.TECH3 * categories.MOBILE,
@@ -256,7 +268,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             categories.MOBILE * categories.TECH2,
             categories.TECH1 * categories.INDIRECTFIRE,
             categories.TECH1 * categories.MOBILE,
-            categories.ALLUNITS
+            categories.ALLUNITS - categories.WALL
         }
 
         local target
@@ -264,6 +276,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local counter = 0
         local cdrThreat = cdr:GetBlueprint().Defense.SurfaceThreatLevel or 75
         local enemyThreat
+        
         repeat
             overCharging = false
             if counter >= 5 or not target or target.Dead or Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) > maxRadius then
@@ -298,10 +311,13 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --LOG('Target Found')
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
+                    local cdrNewPos = {}
                     aiBrain.BaseMonitor.CDRDistress = targetPos
                     aiBrain.BaseMonitor.CDRThreatLevel = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                     --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                    --LOG('Target Distance is '..targetDistance..' from acu to target')
+
                     
 
                     -- If inside base dont check threat, just shoot!
@@ -312,7 +328,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         --LOG('enemyCDR is '..enemyCdrThreat)
                         friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                         --LOG('friendlyThreat is'..friendlyThreat)
-                        if enemyThreat - enemyCdrThreat >= friendlyThreat + (cdrThreat / 1.5) then
+                        if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.3)) then
                             --LOG('Enemy Threat too high')
                             break
                         end
@@ -320,6 +336,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         --LOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
+                        --LOG('Target is '..target.UnitId)
                         overCharging = true
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
@@ -330,8 +347,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetPos = target:GetPosition()
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
-                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (weapon.Range - 3 )})
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
                                 plat.BuilderName = 'CDR Combat'
@@ -348,19 +365,29 @@ function CDROverChargeRNG(aiBrain, cdr)
                             aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
-                        if target and not target.Dead and not target:BeenDestroyed() then
+                        WaitTicks(20)
+                        targetPos = target:GetPosition()
+                        if target and not target.Dead and not target:BeenDestroyed() and ( VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range ) then
+                            --LOG('Firing Overcharge')
+                            IssueClearCommands({cdr})
                             IssueOverCharge({cdr}, target)
                         end
+                        WaitTicks(10)
+                        cdrNewPos[1] = movePos[1] + Random(-8, 8)
+                        cdrNewPos[2] = movePos[2]
+                        cdrNewPos[3] = movePos[3] + Random(-8, 8)
+                        cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
+                        --LOG('Target is '..target.UnitId)
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') then
+                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                             WaitTicks(30)
                             IssueClearCommands({cdr})
                             continue
                         end
-                        local cdrNewPos = {}
+                        
                         --LOG('* AI-RNG: Move Position is'..repr(movePos))
                         --LOG('* AI-RNG: Moving to movePos to attack')
                         if not PlatoonExists(aiBrain, plat) then
@@ -369,11 +396,16 @@ function CDROverChargeRNG(aiBrain, cdr)
                             aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
+                        WaitTicks(30)
                         cdrNewPos[1] = movePos[1] + Random(-8, 8)
                         cdrNewPos[2] = movePos[2]
                         cdrNewPos[3] = movePos[3] + Random(-8, 8)
                         cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                     end
+                    if not target then
+                        --LOG('No longer have target')
+                    end
+
                 elseif distressLoc then
                     --LOG('* AI-RNG: ACU Detected Distress Location')
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
@@ -397,7 +429,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     counter = counter + 0.5
                 end
             else
-                WaitTicks(50)
+                WaitTicks(40)
                 counter = counter + 5
             end
 
@@ -444,11 +476,14 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     end
                 end
+                --LOG('Continue Fighting is set to true')
                 --LOG('Total Enemy Threat '..enemyUnitThreat)
                 --LOG('ACU Cutoff Threat '..acuThreatLimit)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
-                if (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
+                if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
+                    --LOG('Enemy ACU is under HP limit we can draw')
+                elseif (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
                     continueFighting = false
                 end
             end
@@ -489,7 +524,11 @@ function CDRReturnHomeRNG(aiBrain, cdr)
     local distSqAway = 2025
     local loc = cdr.CDRHome
     local maxRadius = aiBrain.ACUSupport.ACUMaxSearchRadius
-    local acuThreatLimit = 15
+    if GetGameTimeSeconds() < 300 then
+        distSqAway = 4225
+    end
+
+    local acuThreatLimit = 22
     if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) > distSqAway then
         --LOG('CDR further than distSqAway')
         cdr.GoingHome = true
@@ -577,14 +616,14 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 end
 
 function CDRUnitCompletion(aiBrain, cdr)
-    if cdr.UnitBeingBuiltBehavior and not cdr.Combat and not cdr.Upgrading and not cdr.GoingHome then
-        if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
+    if cdr.UnitBeingBuiltBehavior and (not cdr.Combat) and (not cdr.Upgrading) and (not cdr.GoingHome) then
+        if (not cdr.UnitBeingBuiltBehavior:BeenDestroyed()) and cdr.UnitBeingBuiltBehavior:GetFractionComplete() < 1 then
             --LOG('* AI-RNG: Attempt unit Completion')
             IssueClearCommands( {cdr} )
             IssueRepair( {cdr}, cdr.UnitBeingBuiltBehavior )
             WaitTicks(60)
         end
-        if not cdr.UnitBeingBuiltBehavior:BeenDestroyed() then
+        if (not cdr.UnitBeingBuiltBehavior:BeenDestroyed()) then
             --LOG('* AI-RNG: Unit Completion is :'..cdr.UnitBeingBuiltBehavior:GetFractionComplete())
             if cdr.UnitBeingBuiltBehavior:GetFractionComplete() == 1 then
                 --LOG('* AI-RNG: Unit is completed set UnitBeingBuiltBehavior to false')
@@ -780,11 +819,11 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (750 / multiplier)
+        ecoTimeOut = (780 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (750 / multiplier)
+        ecoTimeOut = (780 / multiplier)
     end
 
     --LOG('Multiplier is '..multiplier)
@@ -816,7 +855,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('Eco Bypass is True')
             bypasseco = true
         end
-        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > massNeeded and GetEconomyStored( aiBrain, 'ENERGY') > energyNeeded ) then
+        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > ( massNeeded * 1.8 ) and GetEconomyStored( aiBrain, 'ENERGY') > energyNeeded ) then
             upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
             if unitTech == 'TECH1' then
                 extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
@@ -1286,8 +1325,11 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         IssueScript({cdr}, order)
     end
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
+        if cdr.Upgrading then
+            --LOG('cdr.Upgrading is set to true')
+        end
         if cdr:GetHealthPercent() < 0.40 then
-            --LOG('* RNGAI: * BuildEnhancement: '..platoon:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
             cdr.Upgrading = false
@@ -1295,7 +1337,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         end
         coroutine.yield(10)
     end
-    --LOG('* RNGAI: * BuildEnhancement: '..platoon:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
     for k, v in priorityUpgrades do
         if enhancement == v then
             cdr.GunUpgradeRequired = false
@@ -1622,6 +1664,7 @@ function FatBoyBehaviorRNG(self)
                                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
                                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                                             IssueMove({unit}, targetPosition )
+                                            WaitTicks(30)
                                         else
                                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                         end
@@ -2194,5 +2237,42 @@ function AirStagingThreadRNG(unit)
         end
         WaitSeconds(10)
     end
+end
+
+GetStartingReclaim = function(aiBrain)
+    --LOG('Reclaim Start Check')
+    local startReclaim
+    local posX, posZ = aiBrain:GetArmyStartPos()
+    --LOG('Start Positions X'..posX..' Z '..posZ)
+    local minRec = 70
+    local reclaimTable = {}
+    local reclaimScanArea = math.max(ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40) / 4
+    --LOG('Reclaim Scan Area is '..reclaimScanArea)
+    reclaimScanArea = math.max(50, reclaimScanArea)
+    reclaimScanArea = math.min(120, reclaimScanArea)
+    --Wait 10 seconds for the wrecks to become reclaim
+    --WaitTicks(100)
+    
+    startReclaim = GetReclaimablesInRect(posX - reclaimScanArea, posZ - reclaimScanArea, posX + reclaimScanArea, posZ + reclaimScanArea)
+    --LOG('Initial Reclaim Table size is '..table.getn(startReclaim))
+    if startReclaim and table.getn(startReclaim) > 0 then
+        for k,v in startReclaim do
+            if not IsProp(v) then continue end
+            if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
+                --LOG('High Value Reclaim is worth '..v.MaxMassReclaim)
+                local rpos = v:GetCachePosition()
+                table.insert(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
+                --LOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
+            end
+        end
+        --LOG('Sorting Reclaim table by distance ')
+        table.sort(reclaimTable, function(a,b) return a.Distance < b.Distance end)
+        --LOG('Final Reclaim Table size is '..table.getn(reclaimTable))
+        aiBrain.StartReclaimTable = reclaimTable
+        for k, v in aiBrain.StartReclaimTable do
+            --LOG('Table entry distance is '..v.Distance)
+        end
+    end
+    --LOG('Complete Get Starting Reclaim')
 end
 

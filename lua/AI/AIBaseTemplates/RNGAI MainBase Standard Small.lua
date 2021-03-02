@@ -35,8 +35,7 @@ BaseBuilderTemplate {
         'RNGAI Engineer Builder',
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Builders',
-        'RNGAI T1 Assist Builders',
-        'RNGAI T2 Assist Builders',
+        'RNGAI Assist Builders',
         'RNGAI Energy Production Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
 

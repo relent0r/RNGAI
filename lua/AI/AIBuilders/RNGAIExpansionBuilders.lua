@@ -20,6 +20,25 @@ local AggressiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+local NavalExpansionAdjust = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio < 0.20 then
+        --LOG('NavalExpansionAdjust return 0')
+        return 0
+    elseif aiBrain.MapWaterRatio < 0.30 then
+        --LOG('NavalExpansionAdjust return 200')
+        return 200
+    elseif aiBrain.MapWaterRatio < 0.40 then
+        --LOG('NavalExpansionAdjust return 400')
+        return 400
+    elseif aiBrain.MapWaterRatio < 0.60 then
+        --LOG('NavalExpansionAdjust return 650')
+        return 650
+    else
+        --LOG('NavalExpansionAdjust return 750')
+        return 750
+    end
+end
+
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Expansion Builders Small',
@@ -104,6 +123,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
+                ExpansionRadius = 70,
                 LocationRadius = 250, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -121,9 +141,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Naval Expansion Area 250 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 650,
+        PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE }},
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -198,6 +220,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
+                ExpansionRadius = 70,
                 LocationRadius = 1000, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -250,11 +273,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 650 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PriorityFunction = NavalExpansionAdjust,
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 650, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3, categories.FACTORY * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -301,8 +326,9 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 AggressiveExpansion = true, -- This is picked up so that a modified firebase function runs to pick the expansion closest to the enemy
+                NearMarkerType = 'Aggressive',
                 EnemyRange = 250,
-                NearMarkerType = true, -- This is so the engineerbuildai will still pick up the expansion bool, the aggressive base check uses 3 types of expansion markers.
+                --NearMarkerType = true, -- This is so the engineerbuildai will still pick up the expansion bool, the aggressive base check uses 3 types of expansion markers.
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,
@@ -429,6 +455,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
+                ExpansionRadius = 70,
                 LocationRadius = 500, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,

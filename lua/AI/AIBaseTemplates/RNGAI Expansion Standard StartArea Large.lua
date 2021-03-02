@@ -23,8 +23,7 @@ BaseBuilderTemplate {
                 --'RNGAI Engineering Support Builder',
                 'RNGAI T1 Reclaim Builders Expansion',
                 'RNGAI Engineer Transfer To Main From Expansion',
-                --'RNGAI T1 Assist Builders',
-                --'RNGAI T2 Assist Builders',
+                --'RNGAI Assist Builders',
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
@@ -63,12 +62,6 @@ BaseBuilderTemplate {
                 -- Air Unit Formers T1 --
                 'RNGAI ScoutAirFormer',
                 'RNGAI Air Platoon Builder',
-
-                -- Sea Factory Builders --
-                --'RNGAI Factory Builder Sea Large Expansion',
-
-                -- Sea Factory Formers
-                --'RNGAI Sea Upgrade Builders Expansion',
 
                 -- Sea Unit Builders --
                 --'RNGAI Sea Builders T1',

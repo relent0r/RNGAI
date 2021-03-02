@@ -48,8 +48,12 @@ Valid Threat Options:
 local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
-    -- Caution this is extremely barebones and probably will break stuff or reclaim stuff it shouldn't
+
     --LOG('* AI-RNG: Start Reclaim Function')
+    if aiBrain.StartReclaimTaken then
+        --LOG('StartReclaimTaken set to true')
+        --LOG('Start Reclaim Table has '..table.getn(aiBrain.StartReclaimTable)..' items in it')
+    end
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
     local initialRange = 40
@@ -59,11 +63,59 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     self.BadReclaimables = self.BadReclaimables or {}
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
+        local engPos = self:GetPosition()
+        if not aiBrain.StartReclaimTaken then
+            --LOG('Reclaim Function - Starting reclaim is false')
+            local sortedReclaimTable = {}
+            if table.getn(aiBrain.StartReclaimTable) > 0 then
+                
+                --WaitTicks(10)
+                local reclaimCount = 0
+                aiBrain.StartReclaimTaken = true
+                for k, r in aiBrain.StartReclaimTable do
+                    if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                        reclaimCount = reclaimCount + 1
+                        --LOG('Reclaim Function - Issuing reclaim')
+                        --LOG('Reclaim distance is '..r.Distance)
+                        IssueReclaim({self}, r.Reclaim)
+                        WaitTicks(20)
+                        local reclaimTimeout = 0
+                        while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
+                            reclaimTimeout = reclaimTimeout + 1
+                            --LOG('Waiting for reclaim to no longer exist')
+                            WaitTicks(20)
+                        end
+                        --LOG('Reclaim Count is '..reclaimCount)
+                        if reclaimCount > 10 then
+                            break
+                        end
+                    else
+                        --LOG('Reclaim is no longer valid')
+                    end
+                    --LOG('Set key to nil')
+                    aiBrain.StartReclaimTable[k] = nil
+                end
+                --LOG('Pre Rebuild Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
+                --LOG('Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                
+                if table.getn(aiBrain.StartReclaimTable) == 0 then
+                    --LOG('Start Reclaim Taken set to true')
+                    aiBrain.StartReclaimTaken = true
+                else
+                    --LOG('Start Reclaim table not empty, set StartReclaimTaken to false')
+                    aiBrain.StartReclaimTaken = false
+                end
+                for i=1, 10 do
+                    --LOG('Waiting Ticks '..i)
+                    WaitTicks(20)
+                end
+            end
+        end
         local furtherestReclaim = nil
         local closestReclaim = nil
         local closestDistance = 10000
         local furtherestDistance = 0
-        local engPos = self:GetPosition()
         local minRec = platoon.PlatoonData.MinimumReclaim
         local x1 = engPos[1] - initialRange
         local x2 = engPos[1] + initialRange
@@ -166,19 +218,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             self.lastYtarget = closestReclaim[3]
             StartMoveDestination(self, closestReclaim)
         end
-        --[[
-        local brokenDistance = closestDistance / 8
-        --LOG('* AI-RNG: One 6th of distance is '..brokenDistance)
-        local moveWait = 0
-        while VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3]) > brokenDistance do
-            --LOG('* AI-RNG: Waiting for engineer to get close, current distance : '..VDist2(engPos[1], engPos[3], closestReclaim[1], closestReclaim[3])..'closestDistance'..closestDistance)
-            WaitTicks(20)
-            moveWait = moveWait + 1
-            engPos = self:GetPosition()
-            if moveWait == 10 then
-                break
-            end
-        end]]
+
         --LOG('* AI-RNG: Attempting agressive move to furtherest reclaim')
         -- Clear Commands first
         IssueClearCommands({self})
@@ -237,8 +277,8 @@ function GetMOARadii(bool)
     -- Restricted Area is half the BaseMilitaryArea. That's a little less than 1/4 of a 10x10 map
     local BaseRestrictedArea = BaseMilitaryArea / 2
     -- Make sure the Restricted Area is not smaller than 50 or greater than 100
-    BaseRestrictedArea = math.max( 50, BaseRestrictedArea )
-    BaseRestrictedArea = math.min( 100, BaseRestrictedArea )
+    BaseRestrictedArea = math.max( 60, BaseRestrictedArea )
+    BaseRestrictedArea = math.min( 120, BaseRestrictedArea )
     -- The rest of the map is enemy area
     local BaseEnemyArea = math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) * 1.5
     -- "bool" is only true if called from "AIBuilders/Mobile Land.lua", so we only print this once.
@@ -271,7 +311,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
             if not IsEnemy( aiBrain:GetArmyIndex(), unit:GetAIBrain():GetArmyIndex() ) then
                 continue
             end
-            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * categories.MOBILE, unit) then 
+            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * (categories.MOBILE + categories.WALL), unit) then 
                 --LOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
@@ -1338,12 +1378,13 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
             --LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
             --local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
-            --LOG('Path reason is '..reason)
+            
             if reason then
                 --LOG('Path position is is '..reason)
             end
             WaitTicks(2)
             if path then
+                --LOG('Path reason is '..reason)
                 --LOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
                 validLocation = true
                 break
@@ -2032,4 +2073,3 @@ function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
     end
 
 end
-

@@ -3,7 +3,6 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval',
     Builders = {
         'RNGAI Engineer Builder Expansion',
-        'RNGAI Engineer Transfer To Main From Expansion',
         'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
 
@@ -27,12 +26,12 @@ BaseBuilderTemplate {
         FactoryCount = {
             Land = 0,
             Air = 0,
-            Sea = 6,
+            Sea = 8,
             Gate = 0,
         },
         EngineerCount = {
-            Tech1 = 4,
-            Tech2 = 3,
+            Tech1 = 3,
+            Tech2 = 2,
             Tech3 = 1,
             SCU = 0,
         },
@@ -49,6 +48,7 @@ BaseBuilderTemplate {
         if markerType ~= 'Naval Area' then
             return -1
         end
+        --LOG('Returning naval expansion')
         return 100, 'RNGStandard'
     end,
 }

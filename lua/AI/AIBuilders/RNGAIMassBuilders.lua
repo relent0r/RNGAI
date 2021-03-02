@@ -156,7 +156,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'LessThanEconStorageRatio', { 0.50, 2 } },
+            { EBC, 'LessThanEconStorageRatio', { 0.10, 2 } },
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
             -- Respect UnitCap
@@ -191,7 +191,7 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             --{ UCBC, 'HasNotParagon', {} },
             -- Have we the eco to build it ?
-            { EBC, 'LessThanMassTrendRNG', { 50.0 } },
+            { EBC, 'LessThanMassTrendRNG', { 5.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
             -- Don't build it if...
@@ -260,28 +260,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 350 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 660,
-        InstanceCount = 4,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 350, -500, 10, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                RepeatBuild = true,
-                Distance = 30,
-                Type = 'Mass',
-                BuildStructures = {
-                    'T1Resource',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 1000 Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 550,
@@ -335,13 +313,13 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 400,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.60}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },

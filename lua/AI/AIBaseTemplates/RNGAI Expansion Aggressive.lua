@@ -6,7 +6,7 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Unmarked Expansion Standard Small',
+    BaseTemplateName = 'RNGAI Expansion Standard Aggressive',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders',
@@ -15,7 +15,6 @@ BaseBuilderTemplate {
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',
                 'RNGAI Mass Builder Expansion',
-                'RNGAI Mass Storage Builder',
         
                 -- Engineer Builders --
                 'RNGAI Engineer Builder Expansion',
@@ -24,11 +23,15 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI Reaction Tanks',
+                'RNGAI TankLandBuilder Small Expansions',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
                 'RNGAI Land FormBuilders Expansion',
+
+                -- Air Unit Formers --
+                'RNGAI Air Platoon Builder',
+                'RNGAI Perimeter Defenses Expansions',
         
                 -- Land Factory Builders --
                 --'RNGAI Factory Builder Land',
@@ -38,6 +41,9 @@ BaseBuilderTemplate {
                
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',
+                'RNGAI Perimeter Defenses Small',
+                'RNGAI T2 Defense FormBuilders',
+                'RNGAI T2 Expansion TML',
 		},
     NonCheatBuilders = { },
     BaseSettings = {
@@ -63,35 +69,26 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        --LOG('Expansion Function for Small Unmarked')
         if not aiBrain.RNG then
             return -1
         end
-        if markerType ~= 'Unmarked Expansion' then
-            --LOG('* AI-RNG: Expansion MarkerType is', markerType)
+        if markerType ~= 'Aggressive' then
             return -1
         end
-        local spamBaseCheck
-        local mapSizeX, mapSizeZ = GetMapSize()
+        
         local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
         local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
-        if mapSizeX < 1000 and mapSizeZ < 1000 then
-            spamBaseCheck = false
-        else
-            spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
-        end
-
         --LOG('* AI-RNG: Distance is ', distance)
-        if not distance or distance > 1000 and not spamBaseCheck then
+        if not distance or distance > 1000 then
             --LOG('* AI-RNG: Expansion return is 10')
             return 10
-        elseif distance > 500 and not spamBaseCheck then
+        elseif distance > 500 then
             --LOG('* AI-RNG: Expansion return is 25')
             return 25
-        elseif distance > 250 and not spamBaseCheck then
+        elseif distance > 250 then
             --LOG('* AI-RNG: Expansion return is 50')
             return 50
-        elseif not spamBaseCheck then
+        else
             --LOG('* AI-RNG: Expansion return is 100')
             return 100
         end

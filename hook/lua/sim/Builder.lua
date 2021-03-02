@@ -6,7 +6,7 @@ PlatoonBuilder = Class(RNGPlatoonBuilder) {
     CalculatePriority = function(self, builderManager)
        -- Only use this with RNG
         if not self.Brain.RNG then
-            return TheOldPlatoonBuilder.CalculatePriority(self, builderManager)
+            return RNGPlatoonBuilder.CalculatePriority(self, builderManager)
         end
         self.PriorityAltered = false
         if Builders[self.BuilderName].PriorityFunction then
