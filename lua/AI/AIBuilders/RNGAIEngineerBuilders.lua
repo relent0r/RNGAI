@@ -315,22 +315,17 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Structures',
-        PlatoonTemplate = 'T1EngineerAssistRNG',
+        PlatoonTemplate = 'T1EngineerFinishRNG',
         Priority = 700,
         InstanceCount = 3,
         BuilderConditions = {
-                { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
-                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             },
         BuilderData = {
             Assist = {
-                AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                BeingBuiltCategories = { categories.STRUCTURE * categories.FACTORY, categories.STRUCTURE },
-                Time = 20,
+                BeingBuiltCategories = categories.STRUCTURE * categories.FACTORY,
             },
         },
         BuilderType = 'Any',

@@ -6,6 +6,33 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Shield Builder',                   
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNGAI T2 Shield Single',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 700,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 4,
+                BuildClose = false,
+                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH2) + (categories.STRUCTURE * categories.FACTORY),
+                AvoidCategory = categories.STRUCTURE * categories.SHIELD,
+                maxUnits = 1,
+                maxRadius = 35,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T2ShieldDefense',
+                },
+            },
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Shield Ratio',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 625,

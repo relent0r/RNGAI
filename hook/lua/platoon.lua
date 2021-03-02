@@ -4304,6 +4304,45 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
+    FinishStructureAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+
+        if not self.PlatoonData or not self.PlatoonData.Assist then
+            WARN('* AI-RNG: FinishStructureAIRNG missing data' )
+            self:PlatoonDisband()
+            return
+        end
+        local assistData = self.PlatoonData.Assist
+        local eng = self:GetPlatoonUnits()[1]
+        local engineerManager = aiBrain.BuilderManagers[assistData.AssistLocation].EngineerManager
+        if not engineerManager then
+            WARN('* AI-RNG: FinishStructureAIRNG cant find engineer manager' )
+            self:PlatoonDisband()
+            return
+        end
+        local unfinishedUnits = aiBrain:GetUnitsAroundPoint(assistData.BeingBuiltCategories, engineerManager.Location, engineerManager.Radius, 'Ally')
+        for k,v in unfinishedUnits do
+            local FractionComplete = v:GetFractionComplete()
+            if FractionComplete < 1 and table.getn(v:GetGuards()) < 1 then
+                self:Stop()
+                if not v.Dead and not v:BeenDestroyed() then
+                    IssueRepair(self:GetPlatoonUnits(), v)
+                end
+                break
+            end
+        end
+        local count = 0
+        repeat
+            coroutine.yield(20)
+            if not aiBrain:PlatoonExists(self) then
+                return
+            end
+            count = count + 1
+            if eng:IsIdleState() then break end
+        until count >= 30
+        self:PlatoonDisband()
+    end,
+
     SetAIPlanRNG = function(self, plan, currentPlan)
         if not self[plan] then return end
         if self.AIThread then

@@ -730,7 +730,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 local highestEnemyThreat = 0
                 local threatPos = {}
                 local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', enemyIndex)
-                LOG('enemyStructureThreat table is '..repr(enemyStructureThreat))
                 for _, threat in enemyStructureThreat do
                     enemyTotalStrength = enemyTotalStrength + threat[3]
                     if threat[3] > highestEnemyThreat then
@@ -1084,6 +1083,7 @@ AIBrain = Class(RNGAIBrainClass) {
             else
                 self.BaseMonitor.PlatoonAlertSounded = false
             end
+            self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
@@ -1092,9 +1092,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local returnPos = false
         local highThreat = false
         local distance
-        if self.BaseMonitor.CDRDistress
-                and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
-                and self.BaseMonitor.CDRThreatLevel > threshold then
+        
+        if self.BaseMonitor.CDRDistress and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
+            and self.BaseMonitor.CDRThreatLevel > threshold then
             -- Commander scared and nearby; help it
             return self.BaseMonitor.CDRDistress
         end
@@ -1135,6 +1135,10 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
                     local platPos = v.Platoon:GetPlatoonPosition()
+                    if not platPos then
+                        self.BaseMonitor.PlatoonDistressTable[k] = nil
+                        continue
+                    end
                     local tempDist = Utilities.XZDistanceTwoVectors(position, platPos)
 
                     -- Platoon too far away to help
