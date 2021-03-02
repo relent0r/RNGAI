@@ -268,7 +268,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             categories.MOBILE * categories.TECH2,
             categories.TECH1 * categories.INDIRECTFIRE,
             categories.TECH1 * categories.MOBILE,
-            categories.ALLUNITS
+            categories.ALLUNITS - categories.WALL
         }
 
         local target

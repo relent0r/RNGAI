@@ -594,6 +594,9 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH1,
+                maxUnits = 1,
+                maxRadius = 3,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },

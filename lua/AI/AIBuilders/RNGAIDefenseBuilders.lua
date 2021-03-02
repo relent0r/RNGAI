@@ -759,6 +759,34 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Artillery Counter',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
+        InstanceCount = 1,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  140, 'LocationType', 0, categories.TECH2 * categories.DEFENSE }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TECH2 * categories.ARTILLERY}},
+        },
+        BuilderData = {
+            NumAssistees = 2,
+            Construction = {
+                BuildClose = false,
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 35,
+                BuildStructures = {
+                    'T2Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Defence Sea - Perimeter Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         PriorityFunction = NavalExpansionAdjust,
@@ -1070,12 +1098,12 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitsGreaterAtEnemy', { 2 , categories.STRUCTURE * categories.NUKE * categories.SILO } },
+            { UCBC, 'HaveUnitRatioAtLocationRadiusVersusEnemy', { 0.80, 'LocationType', 180, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, '<', categories.SILO * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 10,

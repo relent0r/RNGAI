@@ -641,16 +641,34 @@ function HaveThreatRatioVersusEnemyRNG(aiBrain, ratio, compareType)
     return false
 end
 
-function HaveUnitRatioVersusEnemy(aiBrain, ratio, categoryOwn, compareType, categoryEnemy)
-    -- in case we don't have omni view, return always true. We cant count units without omni
-    if not aiBrain.CheatEnabled or ScenarioInfo.Options.OmniCheat ~= "on" then
-        --LOG('* HaveUnitRatioVersusEnemy: AI is not Cheating or Omni is Off')
-        return true
+function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOwn, compareType, categoryEnemy)
+    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    elseif aiBrain:PBMHasPlatoonList() then
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == locType then
+                baseposition = v.Location
+                radius = v.Radius
+                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
+                break
+            end
+        end
     end
-    local numOwnUnits = aiBrain:GetCurrentUnits(categoryOwn)
+    if not baseposition then
+        return false
+    end
+    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryOwn, baseposition, radius , 'Ally')
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..numEnemyUnits..' ) -- ['..ratio..'] -- return '..repr(CompareBody(numOwnUnits / numEnemyUnits, ratio, compareType)))
-    return CompareBody(numOwnUnits / numEnemyUnits, ratio, compareType)
+    return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
 function GetEnemyUnits(aiBrain, unitCount, categoryEnemy, compareType)
