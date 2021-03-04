@@ -26,15 +26,15 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-            AvoidCategory = categories.ENERGYPRODUCTION,
-            AdjacencyDistance = 50,
-            maxUnits = 3,
-            maxRadius = 5,
             NeedGuard = false,
-            BuildClose = true,
             DesiresAssist = true,
             Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                AvoidCategory = categories.ENERGYPRODUCTION,
+                AdjacencyDistance = 50,
+                maxUnits = 3,
+                maxRadius = 5,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -58,11 +58,11 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-            AdjacencyDistance = 50,
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                AdjacencyDistance = 50,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -109,13 +109,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 10,
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 10,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -137,13 +137,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 10,
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 10,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -166,13 +166,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 4,
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 4,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -221,13 +221,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 15,
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 15,
                 BuildStructures = {
                     'T3EnergyProduction',
                 },
@@ -249,13 +249,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 15,
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 15,
                 BuildStructures = {
                     'T3EnergyProduction',
                 },
@@ -278,13 +278,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 15,
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 15,
                 BuildStructures = {
                     'T3EnergyProduction',
                 },
@@ -340,11 +340,11 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-            AdjacencyDistance = 50,
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                AdjacencyDistance = 50,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -367,11 +367,11 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 10,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 10,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },

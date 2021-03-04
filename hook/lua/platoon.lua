@@ -3532,57 +3532,59 @@ Platoon = Class(RNGAIPlatoon) {
     DistressResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
         while PlatoonExists(aiBrain, self) do
-            if aiBrain.BaseMonitor.AlertSounded or aiBrain.BaseMonitor.CDRDistress or aiBrain.BaseMonitor.PlatoonAlertSounded then
-                -- In the loop so they may be changed by other platoon things
-                local distressRange = self.PlatoonData.DistressRange or aiBrain.BaseMonitor.DefaultDistressRange
-                local reactionTime = self.PlatoonData.DistressReactionTime or aiBrain.BaseMonitor.PlatoonDefaultReactionTime
-                local threatThreshold = self.PlatoonData.ThreatSupport or 1
-                local platoonPos = GetPlatoonPosition(self)
-                if platoonPos and not self.DistressCall then
-                    -- Find a distress location within the platoons range
-                    local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold)
-                    local moveLocation
+            if not self.UsingTransport then
+                if aiBrain.BaseMonitor.AlertSounded or aiBrain.BaseMonitor.CDRDistress or aiBrain.BaseMonitor.PlatoonAlertSounded then
+                    -- In the loop so they may be changed by other platoon things
+                    local distressRange = self.PlatoonData.DistressRange or aiBrain.BaseMonitor.DefaultDistressRange
+                    local reactionTime = self.PlatoonData.DistressReactionTime or aiBrain.BaseMonitor.PlatoonDefaultReactionTime
+                    local threatThreshold = self.PlatoonData.ThreatSupport or 1
+                    local platoonPos = GetPlatoonPosition(self)
+                    if platoonPos and not self.DistressCall then
+                        -- Find a distress location within the platoons range
+                        local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold)
+                        local moveLocation
 
-                    -- We found a location within our range! Activate!
-                    if distressLocation then
-                        --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
-                        --LOG('Distress response activated')
-                        --LOG('PlatoonDistressTable'..repr(aiBrain.BaseMonitor.PlatoonDistressTable))
-                        --LOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
-                        -- Backups old ai plan
-                        local oldPlan = self:GetPlan()
-                        if self.AiThread then
-                            self.AIThread:Destroy()
-                        end
-
-                        -- Continue to position until the distress call wanes
-                        repeat
-                            moveLocation = distressLocation
-                            self:Stop()
-                            local cmd = self:AggressiveMoveToLocation(distressLocation)
-                            repeat
-                                WaitSeconds(reactionTime)
-                                if not PlatoonExists(aiBrain, self) then
-                                    return
-                                end
-                            until not self:IsCommandsActive(cmd) or GetThreatAtPosition(aiBrain, moveLocation, 0, true, 'Overall') <= threatThreshold
-                            --LOG('Initial Distress Response Loop finished')
-
-                            platoonPos = GetPlatoonPosition(self)
-                            if platoonPos then
-                                -- Now that we have helped the first location, see if any other location needs the help
-                                distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange)
-                                if distressLocation then
-                                    self:AggressiveMoveToLocation(distressLocation)
-                                end
+                        -- We found a location within our range! Activate!
+                        if distressLocation then
+                            --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
+                            --LOG('Distress response activated')
+                            --LOG('PlatoonDistressTable'..repr(aiBrain.BaseMonitor.PlatoonDistressTable))
+                            --LOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
+                            -- Backups old ai plan
+                            local oldPlan = self:GetPlan()
+                            if self.AiThread then
+                                self.AIThread:Destroy()
                             end
-                            WaitTicks(10)
-                        -- If no more calls or we are at the location; break out of the function
-                        until not distressLocation or (distressLocation[1] == moveLocation[1] and distressLocation[3] == moveLocation[3])
 
-                        --LOG('*AI DEBUG: '..aiBrain.Name..' DISTRESS RESPONSE AI DEACTIVATION - oldPlan: '..oldPlan)
-                        self:Stop()
-                        self:SetAIPlan(oldPlan)
+                            -- Continue to position until the distress call wanes
+                            repeat
+                                moveLocation = distressLocation
+                                self:Stop()
+                                local cmd = self:AggressiveMoveToLocation(distressLocation)
+                                repeat
+                                    WaitSeconds(reactionTime)
+                                    if not PlatoonExists(aiBrain, self) then
+                                        return
+                                    end
+                                until not self:IsCommandsActive(cmd) or GetThreatAtPosition(aiBrain, moveLocation, 0, true, 'Overall') <= threatThreshold
+                                --LOG('Initial Distress Response Loop finished')
+
+                                platoonPos = GetPlatoonPosition(self)
+                                if platoonPos then
+                                    -- Now that we have helped the first location, see if any other location needs the help
+                                    distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange)
+                                    if distressLocation then
+                                        self:AggressiveMoveToLocation(distressLocation)
+                                    end
+                                end
+                                WaitTicks(10)
+                            -- If no more calls or we are at the location; break out of the function
+                            until not distressLocation or (distressLocation[1] == moveLocation[1] and distressLocation[3] == moveLocation[3])
+
+                            --LOG('*AI DEBUG: '..aiBrain.Name..' DISTRESS RESPONSE AI DEACTIVATION - oldPlan: '..oldPlan)
+                            self:Stop()
+                            self:SetAIPlan(oldPlan)
+                        end
                     end
                 end
             end

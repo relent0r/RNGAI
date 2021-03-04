@@ -819,13 +819,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 10,
             DesiresAssist = true,
             NumAssistees = 10,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 10,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -847,13 +847,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 10,
             DesiresAssist = true,
             NumAssistees = 10,
             Construction = {
+                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 10,
                 BuildStructures = {
                     'T3EnergyProduction',
                 },
@@ -927,6 +927,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Assist T1 Engineer',
         PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 750,
+        DelayEqualBuildPlattons = {'ACUAssist', 3},
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0}},
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },

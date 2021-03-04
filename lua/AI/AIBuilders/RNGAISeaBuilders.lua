@@ -41,7 +41,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 20,  categories.MOBILE * categories.NAVAL } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
         },
         BuilderType = 'Sea',
     },
@@ -52,7 +53,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 20,  categories.MOBILE * categories.NAVAL } },
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
         },
         BuilderType = 'Sea',
     },
@@ -63,7 +65,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }}, -- LocationType, categoryUnits
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, 
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70 } },
             { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
         },
@@ -76,7 +78,7 @@ BuilderGroup {
         BuilderConditions = {
             -- Have we the eco to build it ?
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             -- When do we want to build this ?
             --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
@@ -92,7 +94,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             --{ UCBC, 'HaveUnitRatioVersusEnemy', { 1.0, categories.MOBILE * categories.NAVAL, '<=', categories.MOBILE * categories.NAVAL } },
             --{ UCBC, 'NavalBaseWithLeastUnitsRNG', {  60, 'LocationType', categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, categoryUnits
@@ -126,7 +128,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.DESTROYER } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -138,7 +140,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.DESTROYER }}, -- radius, LocationType, unitCount, categoryEnemy
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -151,7 +153,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.CRUISER } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -163,7 +165,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.AIR * (categories.ANTINAVY + categories.GROUNDATTACK) }}, -- radius, LocationType, unitCount, categoryEnemy
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -176,7 +178,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.T2SUBMARINE } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -188,7 +190,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -200,7 +202,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.SHIELD } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -212,7 +214,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.COUNTERINTELLIGENCE } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -226,7 +228,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.6}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
@@ -237,7 +239,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -249,7 +251,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = SeaRangedMode,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -275,7 +277,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
@@ -289,7 +291,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 1, 2, 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.NUKE } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },

@@ -355,7 +355,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         -- path from transport drop off to end location
         local path, reason = PlatoonGenerateSafePathTo(aiBrain, useGraph, transportLocation, destination, 200)
         -- use the transport!
-        AIUtils.UseTransports(units, platoon:GetSquadUnits('Scout'), transportLocation, platoon)
+        AIUtils.UseTransportsRNG(units, platoon:GetSquadUnits('Scout'), transportLocation, platoon)
 
         -- just in case we're still landing...
         for _,v in units do

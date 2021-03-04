@@ -266,10 +266,16 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
                 end
             end
         else
+            if transportPlatoon then
+                transportPlatoon.UsingTransport = false
+            end
             return true
         end
     else
         -- If no transports return false
+        if transportPlatoon then
+            transportPlatoon.UsingTransport = false
+        end
         return false
     end
 

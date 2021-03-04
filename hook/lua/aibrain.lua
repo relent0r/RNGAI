@@ -742,13 +742,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     insertTable.Position = threatPos
                 end
 
-                --insertTable.Position, insertTable.Strength = self:GetHighestThreatPosition(16, true, 'Structures', enemyIndex)
-                LOG('Enemy Index is '..enemyIndex)
-                LOG('Enemy name is '..v.Nickname)
-                LOG('* AI-RNG: First Enemy Pass Strength is :'..insertTable.Strength)
-                LOG('* AI-RNG: First Enemy Pass Position is :'..repr(insertTable.Position))
+                --LOG('Enemy Index is '..enemyIndex)
+                --LOG('Enemy name is '..v.Nickname)
+                --LOG('* AI-RNG: First Enemy Pass Strength is :'..insertTable.Strength)
+                --LOG('* AI-RNG: First Enemy Pass Position is :'..repr(insertTable.Position))
                 if insertTable.Strength == 0 then
-                    LOG('Enemy Strength is zero, using enemy start pos')
+                    --LOG('Enemy Strength is zero, using enemy start pos')
                     insertTable.Position = {startX, 0 ,startZ}
                 end
             else
@@ -843,19 +842,13 @@ AIBrain = Class(RNGAIBrainClass) {
             local closest = 9999999
             local expansionName
             local mainDist = VDist2Sq(self.BuilderManagers['MAIN'].Position[1], self.BuilderManagers['MAIN'].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
-            LOG('Main base Position '..repr(self.BuilderManagers['MAIN'].Position))
-            LOG('Enemy base position '..repr(armyStrengthTable[enemyIndex].Position))
+            --LOG('Main base Position '..repr(self.BuilderManagers['MAIN'].Position))
+            --LOG('Enemy base position '..repr(armyStrengthTable[enemyIndex].Position))
             for k, v in self.BuilderManagers do
                 --LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
                     local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
                     --LOG('Distance to Enemy for '..k..' is '..exDistance)
-                    if mainDist < exDistance then
-                        LOG('Main Base is closer than active expansion test')
-                        LOG('Expansion Test name is '..k)
-                        LOG('Main Base distance to enemy is '..mainDist)
-                        LOG('Expansion distance is enemy is '..exDistance)
-                    end
                     if (exDistance < closest) and (mainDist > exDistance) then
                         expansionName = k
                         closest = exDistance
@@ -863,9 +856,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if closest < 9999999 and expansionName then
-                LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
+                --LOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
+                --LOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
             local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Water Path Node', armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             if waterNodePos then

@@ -10,6 +10,7 @@ BuilderGroup {
         BuilderName = 'RNGAI SML Hi Pri',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
+        DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
@@ -39,6 +40,7 @@ BuilderGroup {
         BuilderName = 'RNGAI SML Low Pri',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
+        DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconIncome', { 9.0, 800.0 }},
