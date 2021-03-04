@@ -1,6 +1,6 @@
 name = "RNGAI"
-uid = "faf0863e-9577-ba0d-b34e-8d82b622f1c0"
-version = 77
+uid = "faf0863e-9577-ba0d-b759-8d82b622f1c0"
+version = 78
 copyright = "2020 relentless"
 description = "RNG Standard AI. Requires Uveso AI to be installed and enabled. Not recommended to have any other sim mods enabled. For best experience all host game settings should be default. Recommended to set AI Map Marker Generator to Autogenerate Always in AI host game settings, recommend setting AI Naval Expansion Limit to zero on land maps and default on naval maps. Best played with OMNI cheat disabled. Updated often so check your versions when using in multiplayer to avoid desyncs."
 author = "relentless"
