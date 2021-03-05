@@ -1331,8 +1331,21 @@ Platoon = Class(RNGAIPlatoon) {
                                     IssueGuard(guardUnits, attackUnits[guardedUnit])
                                 end
                             end
+                            local currentLayerSeaBed = false
+                            for _, v in attackUnits do
+                                if v and not v.Dead then
+                                    if v:GetCurrentLayer() ~= 'Seabed' then
+                                        currentLayerSeaBed = false
+                                        break
+                                    else
+                                        --LOG('Setting currentLayerSeaBed to true')
+                                        currentLayerSeaBed = true
+                                        break
+                                    end
+                                end
+                            end
                             --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
-                            if bAggroMove and attackUnits then
+                            if bAggroMove and attackUnits and (not currentLayerSeaBed) then
                                 self:AggressiveMoveToLocation(path[i], 'Attack')
                             elseif attackUnits then
                                 self:MoveToLocation(path[i], false, 'Attack')
@@ -1349,7 +1362,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
                                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
-                                if enemyUnitCount > 0 then
+                                if enemyUnitCount > 0 and (not currentLayerSeaBed) then
                                     target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, SquadPosition, 'Attack', enemyRadius, categories.LAND * (categories.STRUCTURE + categories.MOBILE), atkPri, false)
                                     --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')

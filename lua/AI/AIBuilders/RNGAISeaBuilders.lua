@@ -18,6 +18,20 @@ local SeaDefenseMode = function(self, aiBrain, manager)
     end
 end
 
+local SeaDefenseForm = function(self, aiBrain, manager)
+    local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
+    local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
+    if mySubThreat < enemySubThreat then
+        --LOG('Enable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 350
+    else
+        --LOG('Disable Sub Pool Builder')
+        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        return 300
+    end
+end
+
 local SeaRangedMode = function(self, aiBrain)
     if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
         --LOG('Enable Ranged Naval Builder')
@@ -398,6 +412,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI Sea Hunt',
         --PlatoonAddPlans = {'DistressResponseAI'},
         Priority = 300,
+        PriorityFunction = SeaDefenseForm,
         InstanceCount = 20,
         BuilderType = 'Any',
         BuilderData = {
