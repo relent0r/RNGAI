@@ -317,9 +317,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     --LOG('Target Distance is '..targetDistance..' from acu to target')
-
-                    
-
                     -- If inside base dont check threat, just shoot!
                     if Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 45 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
@@ -333,7 +330,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                             break
                         end
                     end
-
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         --LOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
                         --LOG('Target is '..target.UnitId)
