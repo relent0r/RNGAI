@@ -398,7 +398,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
         self:ForkThread(self.TacticalMonitorInitializationRNG)
-        --self:ForkThread(self.TacticalAnalysisThreadRNG)
+        self:ForkThread(self.TacticalAnalysisThreadRNG)
     end,
 
     GetStructureVectorsRNG = function(self)
@@ -1724,9 +1724,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Energy Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            table.insert(self.EnemyIntel.DirectorData.Energy, energyUnits)
+            self.EnemyIntel.DirectorData.Energy = energyUnits
         end
         WaitTicks(1)
         if table.getn(defensiveUnits) > 0 then
@@ -1744,9 +1744,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-                --LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            table.insert(self.EnemyIntel.DirectorData.Defense, defensiveUnits)
+            self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
         WaitTicks(1)
         if table.getn(strategicUnits) > 0 then
@@ -1758,9 +1758,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Strategic Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Enemy Strategic Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            table.insert(self.EnemyIntel.DirectorData.Strategic, strategicUnits)
+            self.EnemyIntel.DirectorData.Strategic = strategicUnits
         end
         WaitTicks(1)
         if table.getn(intelUnits) > 0 then
@@ -1772,10 +1772,35 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Intel Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Enemy Intel Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex.. ' Unit ID is '..unit.Object.UnitId)
             end
-            table.insert(self.EnemyIntel.DirectorData.Intel, intelUnits)
+            self.EnemyIntel.DirectorData.Intel = intelUnits
         end
+    end,
+
+    CheckDirectorTargetAvailable = function(self, threatType)
+        local potentialTarget = false
+        local potentialTargetValue = 0
+
+        if self.EnemyIntel.DirectorData.Intel and table.getn(self.EnemyIntel.DirectorData.Intel) > 0 then
+            LOG('Intel Table size is '..table.getn(self.EnemyIntel.DirectorData.Intel))
+            for k, v in self.EnemyIntel.DirectorData.Intel do
+                LOG('Intel Target Data ')
+                LOG('Air Threat Around unit is '..v.Air)
+                LOG('Land Threat Around unit is '..v.Land)
+                LOG('Enemy Index of unit is '..v.EnemyIndex)
+                LOG('Unit ID is '..v.Object.UnitId)
+                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead then
+                    potentialTargetValue = v.Value
+                    potentialTarget = v.Object
+                end
+            end
+        end
+        if potentialTarget and not potentialTarget.Dead then
+            LOG('Target being returned is '..potentialTarget.UnitId)
+            return potentialTarget
+        end
+        return false
     end,
 
     EcoExtractorUpgradeCheckRNG = function(self)

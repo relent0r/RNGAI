@@ -4771,4 +4771,59 @@ Platoon = Class(RNGAIPlatoon) {
             WaitTicks(10)
         end
     end,
+
+    ArtilleryAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+        local target = false
+        LOG('Initialize atkPri table')
+        local atkPri = { categories.STRUCTURE * categories.STRATEGIC,
+                         categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                         categories.STRUCTURE * categories.FACTORY,
+                         categories.EXPERIMENTAL * categories.LAND,
+                         categories.STRUCTURE * categories.SHIELD,
+                         categories.COMMAND,
+                         categories.STRUCTURE * categories.DEFENSE,
+                         categories.ALLUNITS,
+                        }
+        local atkPriTable = {}
+        LOG('Adding Target Priorities')
+        for k,v in atkPri do
+            table.insert(atkPriTable, v)
+        end
+        LOG('Setting artillery priorities')
+        self:SetPrioritizedTargetList('artillery', atkPriTable)
+
+        -- Set priorities on the unit so if the target has died it will reprioritize before the platoon does
+        local unit = false
+        for k,v in self:GetPlatoonUnits() do
+            if not v.Dead then
+                unit = v
+                break
+            end
+        end
+        if not unit then
+            return
+        end
+        LOG('Set unit priorities')
+        unit:SetTargetPriorities(atkPriTable)
+        local bp = unit:GetBlueprint()
+        local weapon = bp.Weapon[1]
+        local maxRadius = weapon.MaxRadius
+        LOG('Starting Platoon Loop')
+
+        while aiBrain:PlatoonExists(self) do
+            target = aiBrain:CheckDirectorTargetAvailable(false)
+            if not target then
+                LOG('No Director Target, checking for normal target')
+                target = self:FindPrioritizedUnit('artillery', 'Enemy', true, self:GetPlatoonPosition(), maxRadius)
+            end
+            if target and not target.Dead then
+                self:Stop()
+                LOG('Target Found..Attacking')
+                self:AttackTarget(target)
+            end
+            LOG('Waiting 20 seconds')
+            WaitTicks(200)
+        end
+    end,
 }

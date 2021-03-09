@@ -244,7 +244,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI SML Merger',
         PlatoonTemplate = 'AddToSMLPlatoonRNG',
-        Priority = 500,
+        Priority = 10,
         InstanceCount = 1,
         FormRadius = 10000,
         BuilderConditions = {
@@ -258,9 +258,9 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Artillery Former',
-        PlatoonTemplate = 'T3ArtilleryStructure',
-        Priority = 500,
-        InstanceCount = 10,
+        PlatoonTemplate = 'T3ArtilleryStructureRNG',
+        Priority = 10,
+        InstanceCount = 100,
         FormRadius = 10000,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.ARTILLERY * (categories.TECH3 + categories.EXPERIMENTAL) } },

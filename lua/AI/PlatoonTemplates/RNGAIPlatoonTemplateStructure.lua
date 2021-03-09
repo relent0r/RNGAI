@@ -20,3 +20,11 @@ PlatoonTemplate {
         { categories.SATELLITE, 1, 1, 'attack', 'none' },
     }
 }
+
+PlatoonTemplate {
+    Name = 'T3ArtilleryStructureRNG',
+    Plan = 'ArtilleryAIRNG',
+    GlobalSquads = {
+        { categories.ARTILLERY * categories.STRUCTURE * categories.TECH3, 1, 1, 'artillery', 'none' }
+    }
+}
