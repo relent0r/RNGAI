@@ -4,6 +4,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
+local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
 
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
@@ -190,6 +191,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
+        self.EnemyIntel.ChokePoints = {}
         self.EnemyIntel.EnemyThreatCurrent = {
             Air = 0,
             AntiAir = 0,
@@ -235,6 +237,7 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseThreatCaution = false,
             AntiAirNow = 0,
             AirNow = 0,
+            LandNow = 0,
             NavalNow = 0,
             NavalSubNow = 0,
         }
@@ -333,7 +336,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoMassManagerRNG)
-        --self:ForkThread(self.GetStartingReclaim)
+        self:ForkThread(self.EnemyChokePointTestRNG)
     end,
     
     CalculateMassMarkersRNG = function(self)
@@ -1206,6 +1209,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyAirThreat = 0
         local enemyAntiAirThreat = 0
         local enemyNavalThreat = 0
+        local enemyLandThreat = 0
         local enemyNavalSubThreat = 0
         local enemyExtractorthreat = 0
         local enemyExtractorCount = 0
@@ -1254,6 +1258,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('NavyThreat is '..bp.SubThreatLevel)
                         enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
+                    end
+                    WaitTicks(1)
+                    local enemyLand = GetListOfUnits( enemy, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+                    for _,v in enemyLand do
+                        bp = ALLBPS[v.UnitId].Defense
+                        enemyLandThreat = enemyLandThreat + bp.SurfaceThreatLevel
                     end
                     WaitTicks(1)
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
@@ -1306,6 +1316,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
         self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
+        self.EnemyIntel.EnemyThreatCurrent.Land = enemyLandThreat
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -1397,6 +1408,16 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.NavalNow = navalThreat
         self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
+
+        WaitTicks(1)
+        local brainLandUnits = GetListOfUnits( self, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+        local landThreat = 0
+        for _,v in brainLandUnits do
+            bp = ALLBPS[v.UnitId].Defense
+            landThreat = landThreat + bp.SurfaceThreatLevel
+        end
+        self.BrainIntel.SelfThreat.LandNow = landThreat
+        LOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
     end,
 
     --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
@@ -1667,6 +1688,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        LOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
     end,
@@ -2405,7 +2427,56 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    EnemyChokePointTestRNG = function(self)
+        local selfIndex = self:GetArmyIndex()
+        local selfStartPos = self.BuilderManagers['MAIN'].Position
+        local enemyTestTable = {}
 
+        WaitTicks(100)
+        if self.EnemyIntel.EnemyCount > 0 then
+            LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+            for index, brain in ArmyBrains do
+                LOG('Index is '..index)
+                LOG('Brain is '..brain.Name)
+                if IsEnemy(selfIndex, index) and not ArmyIsCivilian(index) then
+                    local posX, posZ = brain:GetArmyStartPos()
+                    self.EnemyIntel.ChokePoints[index] = {
+                        CurrentPathThreat = 0,
+                        NoPath = false,
+                        StartPosition = {posX, 0, posZ},
+                    }
+                end
+            end
+            LOG('Enemy Chokepoint table at game start'..repr(self.EnemyIntel.ChokePoints))
+        end
+
+        while true do
+            if self.EnemyIntel.EnemyCount > 0 then
+                LOG('EnemyCount greater than 0 in loop')
+                for k, v in self.EnemyIntel.ChokePoints do
+                    LOG('Loop through ChokePoints Table')
+                    if not v.NoPath then
+                        local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1)
+                        if path then
+                            LOG('Total Threat for path is '..totalThreat)
+                            self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / table.getn(path))
+                            LOG('We have a path to the enemy start position with an average of '..(totalThreat / table.getn(path)..' threat'))
+                        elseif (not path and reason) then
+                            LOG('We dont have a path to the enemy start position, setting NoPath to true')
+                            LOG('Reason is '..reason)
+                            self.EnemyIntel.ChokePoints[k].NoPath = true
+                        else
+                            WARN('AI-RNG : Chokepoint test has unexpected return')
+                        end
+                    end
+                    LOG('Current enemy chokepoint data for index '..k)
+                    LOG(repr(self.EnemyIntel.ChokePoints[k]))
+                    WaitTicks(20)
+                end
+            end
+            WaitTicks(1200)
+        end
+    end,
 
 --[[
     GetManagerCount = function(self, type)

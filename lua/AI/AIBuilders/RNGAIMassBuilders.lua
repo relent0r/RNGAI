@@ -152,7 +152,9 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Fab',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
+        DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassFab' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
@@ -184,8 +186,9 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Fab Adja',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 400,
+        DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
-            -- When do we want to build this ?
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassFab' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             -- Do we need additional conditions to build it ?
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
@@ -288,8 +291,10 @@ BuilderGroup {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 800,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
@@ -315,8 +320,10 @@ BuilderGroup {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 400,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},

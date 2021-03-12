@@ -58,7 +58,7 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     end
     -- path wit AI markers from our base to the enemy base
     --LOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
-    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
+    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
     -- if we have a path generated with AI path markers then....
     if path then
         --LOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)

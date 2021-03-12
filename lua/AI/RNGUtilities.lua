@@ -1376,7 +1376,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --LOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             --LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', location, startloc, 10)
             --local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
             
             if reason then

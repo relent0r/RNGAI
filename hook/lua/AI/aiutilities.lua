@@ -259,7 +259,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
     if table.getn(transports) ~= 0 then
         -- If no location then we have loaded transports then return true
         if location then
-            local safePath = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Air', transports[1]:GetPosition(), location, 200)
+            local safePath = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Air', transports[1]:GetPosition(), location, 200)
             if safePath then
                 for _, p in safePath do
                     IssueMove(transports, p)

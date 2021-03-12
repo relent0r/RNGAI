@@ -811,15 +811,15 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Aggressive' then
         ecoTimeOut = (320 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Aggressive' then
-        ecoTimeOut = (520 / multiplier)
+        ecoTimeOut = (620 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (780 / multiplier)
+        ecoTimeOut = (840 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (780 / multiplier)
+        ecoTimeOut = (840 / multiplier)
     end
 
     --LOG('Multiplier is '..multiplier)
@@ -1412,7 +1412,7 @@ PlatoonRetreat = function (platoon)
                 if remotePlatoonDistance < 40000 then
                     --LOG('Best Retreat Platoon Position '..repr(remotePlatoonLocation))
                     --LOG('Best Retreat Platoon Distance '..remotePlatoonDistance)
-                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, platoon.MovementLayer, selfPlatoonPos, remotePlatoonLocation, 100 , 200)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, platoon.MovementLayer, selfPlatoonPos, remotePlatoonLocation, 100 , 200)
                     if path then
                         local position = GetPlatoonPosition(platoon)
                         if VDist2Sq(position[1], position[3], remotePlatoonLocation[1], remotePlatoonLocation[3]) > 262144 then

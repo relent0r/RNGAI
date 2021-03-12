@@ -53,6 +53,7 @@ BaseBuilderTemplate {
                 'RNGAI Perimeter Defenses Small',
                 'RNGAI T2 Defense FormBuilders',
                 'RNGAI T2 Expansion TML',
+                'RNGAI Shield Builder Expansion',
 		},
     NonCheatBuilders = { },
     BaseSettings = {

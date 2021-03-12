@@ -577,7 +577,7 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
             --LOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
+            path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --LOG('reason'..repr(reason))
             if path then
                 --LOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))

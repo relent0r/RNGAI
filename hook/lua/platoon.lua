@@ -415,7 +415,7 @@ Platoon = Class(RNGAIPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG('* AI-RNG: GuardMarker: Attacking '' .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10, maxPathDistance)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10, maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
@@ -904,7 +904,7 @@ Platoon = Class(RNGAIPlatoon) {
             --Is there someplace we should scout?
             if targetData then
                 --Can we get there safely?
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, scout:GetPosition(), targetData.Position, 400) --DUNCAN - Increase threatwieght from 100
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), targetData.Position, 50) --DUNCAN - Increase threatwieght from 100
 
                 IssueClearCommands(self)
 
@@ -1255,7 +1255,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 --LOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
                 local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
                 IssueClearCommands(GetPlatoonUnits(self))
                 local usedTransports = false
@@ -1611,7 +1611,7 @@ Platoon = Class(RNGAIPlatoon) {
                 rangedPositionDistance = VDist2Sq(platoonPos[1], platoonPos[3], rangedPosition[1], rangedPosition[3])
                 if rangedPositionDistance > 6400 then
                     --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
-                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), rangedPosition, 100 , 1000)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), rangedPosition, 10 , 1000)
                     local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, rangedPosition)
                     IssueClearCommands(GetPlatoonUnits(self))
                     if path then
@@ -2021,7 +2021,7 @@ Platoon = Class(RNGAIPlatoon) {
                             self:Stop()
                             self:AttackTarget(target)
                         else
-                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 100 , 10000)
+                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
                             self:Stop()
                             if path then
                                 local pathLength = table.getn(path)
@@ -3013,7 +3013,7 @@ Platoon = Class(RNGAIPlatoon) {
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --LOG("GuardMarker: Attacking " .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 100 , maxPathDistance)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10 , maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
@@ -3512,7 +3512,7 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(15)
                 end
             else
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestBase.Position, 200)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestBase.Position, 10)
                 IssueClearCommands(self)
                 if path then
                     local pathLength = table.getn(path)
@@ -3928,7 +3928,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     --LOG('* AI-RNG: * SACUAIPATH: Performing Path Check')
                     --LOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
-                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 100 , maxPathDistance)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
                     local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, targetPosition)
                     IssueClearCommands(GetPlatoonUnits(self))
                     if path then

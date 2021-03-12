@@ -2,6 +2,19 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
+local ActiveExpansion = function(self, aiBrain, builderManager)
+    --LOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
+        --LOG('Active Expansion is set'..builderManager.LocationType)
+        --LOG('Active Expansion builders are set to 900')
+        return 700
+    else
+        --LOG('Disable Air Intie Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Shield Builder',                   
     BuildersType = 'EngineerBuilder',
@@ -14,6 +27,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
         },
         BuilderType = 'Any',
@@ -97,6 +111,40 @@ BuilderGroup {
                 }
             }
         }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Shield Builder Expansion',                   
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T2 Shield Single Expansion Active',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
+        DelayEqualBuildPlattons = {'Shield', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 4,
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY,
+                AvoidCategory = categories.STRUCTURE * categories.SHIELD,
+                maxUnits = 1,
+                maxRadius = 35,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T2ShieldDefense',
+                },
+            },
+        },
     },
 }
 

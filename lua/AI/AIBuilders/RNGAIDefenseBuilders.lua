@@ -13,7 +13,6 @@ local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 local ActiveExpansion = function(self, aiBrain, builderManager)
-    local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
     --LOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
         --LOG('Active Expansion is set'..builderManager.LocationType)
@@ -1127,7 +1126,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
-            { UCBC, 'HaveUnitRatioVersusEnemyRNG', { 0.80, 'LocationType', 180, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, '<', categories.SILO * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
+            { UCBC, 'HaveUnitRatioVersusEnemyRNG', { 0.50, 'LocationType', 180, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, '<', categories.SILO * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
         BuilderType = 'Any',
         BuilderData = {
