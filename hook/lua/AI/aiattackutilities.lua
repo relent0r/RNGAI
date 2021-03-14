@@ -349,9 +349,6 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                         aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
                         fork.pathLength = table.getn(fork.path)
                         -- return the path
-                        LOG('Path Length is '..fork.pathLength)
-                        LOG('Average Threat is '..(fork.totalThreat / fork.pathLength))
-                        LOG('Cost of path is '..fork.cost..' for '..aiBrain.Name)
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode

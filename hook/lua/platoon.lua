@@ -1956,7 +1956,15 @@ Platoon = Class(RNGAIPlatoon) {
                             --LOG('ACU found that coule be sniped, set to target')
                         end
                     end
+                    if not target then
+                        LOG('Checking for director target')
+                        target = aiBrain:CheckDirectorTargetAvailable('AntiAir')
+                        if target then
+                            LOG('Target ID is '..target.UnitId)
+                        end
+                    end
                 end
+                
                 if not target then
                     if data.ACUOnField then
                         --LOG('Platoon has ACUOnField data, searching for energy to kill')

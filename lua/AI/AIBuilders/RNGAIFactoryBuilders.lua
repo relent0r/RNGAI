@@ -1131,25 +1131,6 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Land Factory Upgrade Support Expansions Active',
-        PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
-        InstanceCount = 1,
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50}},
-                { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Expansions',
         PlatoonTemplate = 'T2LandFactoryUpgrade',
         Priority = 850,
@@ -1328,6 +1309,25 @@ BuilderGroup {
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.FACTORY * (categories.TECH2 + categories.TECH3) } },
                 { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.FACTORY * (categories.TECH2 + categories.TECH3) } },
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+                { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Land Factory Upgrade Support Expansions Active',
+        PlatoonTemplate = 'T1LandFactoryUpgrade',
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
+        InstanceCount = 1,
+        BuilderData = {
+            OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
+        },
+        BuilderConditions = {
+                { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
+                { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
+                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgraded', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
                 { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             },
         BuilderType = 'Any',

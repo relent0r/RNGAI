@@ -15,7 +15,10 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local AirDefenseMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
-    if myAirThreat < (enemyAirThreat * 1.2) then
+    if aiBrain.EnemyIntel.EnemyCount > 0 then
+        enemyCount = aiBrain.EnemyIntel.EnemyCount
+    end
+    if myAirThreat < (enemyAirThreat * 1.2 / enemyCount) then
         --LOG('Enable Air Intie Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 890
@@ -29,7 +32,11 @@ end
 local AirDefenseScramble = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-    if myAirThreat < enemyAirThreat then
+    local enemyCount = 1
+    if aiBrain.EnemyIntel.EnemyCount > 0 then
+        enemyCount = aiBrain.EnemyIntel.EnemyCount
+    end
+    if myAirThreat < (enemyAirThreat / enemyCount) then
         --LOG('Enable Air ASF Scramble Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 870
@@ -43,7 +50,10 @@ end
 local AirAttackMode = function(self, aiBrain, builderManager)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
-    if myAirThreat / 1.5 > enemyAirThreat then
+    if aiBrain.EnemyIntel.EnemyCount > 0 then
+        enemyCount = aiBrain.EnemyIntel.EnemyCount
+    end
+    if myAirThreat / 1.5 > (enemyAirThreat / enemyCount) then
         --LOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
         return 880

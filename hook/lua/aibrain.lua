@@ -269,7 +269,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.MapWaterRatio = self:GetMapWaterRatio()
-        --LOG('Water Ratio is '..self.MapWaterRatio)
+        LOG('Water Ratio is '..self.MapWaterRatio)
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
@@ -1710,11 +1710,31 @@ AIBrain = Class(RNGAIBrainClass) {
         local defensiveUnits = {}
         local intelUnits = {}
         local gameTime = GetGameTimeSeconds()
+        local scanRadius = 0
+        local IMAPSize = 0
+        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+
+        if maxmapdimension == 256 then
+            scanRadius = 11.5
+            IMAPSize = 16
+        elseif maxmapdimension == 512 then
+            scanRadius = 22.5
+            IMAPSize = 32
+        elseif maxmapdimension == 1024 then
+            scanRadius = 45.0
+            IMAPSize = 64
+        elseif maxmapdimension == 2048 then
+            scanRadius = 89.5
+            IMAPSize = 128
+        else
+            scanRadius = 180.0
+            IMAPSize = 256
+        end
         
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
-                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, scanRadius, 'Enemy')
                     for s, unit in unitsAtLocation do
                         local unitIndex = unit:GetAIBrain():GetArmyIndex()
                         if not ArmyIsCivilian(unitIndex) then
@@ -1802,6 +1822,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     CheckDirectorTargetAvailable = function(self, threatType)
         local potentialTarget = false
+        local targetType = false
         local potentialTargetValue = 0
 
         if self.EnemyIntel.DirectorData.Intel and table.getn(self.EnemyIntel.DirectorData.Intel) > 0 then
@@ -1812,7 +1833,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 LOG('Land Threat Around unit is '..v.Land)
                 LOG('Enemy Index of unit is '..v.EnemyIndex)
                 LOG('Unit ID is '..v.Object.UnitId)
-                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead then
+                if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
+                    potentialTargetValue = v.Value
+                    potentialTarget = v.Object
+                end
+            end
+        end
+        if self.EnemyIntel.DirectorData.Energy and table.getn(self.EnemyIntel.DirectorData.Energy) > 0 then
+            LOG('Energy Table size is '..table.getn(self.EnemyIntel.DirectorData.Energy))
+            for k, v in self.EnemyIntel.DirectorData.Energy do
+                LOG('Energy Target Data ')
+                LOG('Air Threat Around unit is '..v.Air)
+                LOG('Land Threat Around unit is '..v.Land)
+                LOG('Enemy Index of unit is '..v.EnemyIndex)
+                LOG('Unit ID is '..v.Object.UnitId)
+                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
                     potentialTargetValue = v.Value
                     potentialTarget = v.Object
                 end
@@ -2452,9 +2487,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         while true do
             if self.EnemyIntel.EnemyCount > 0 then
-                LOG('EnemyCount greater than 0 in loop')
                 for k, v in self.EnemyIntel.ChokePoints do
-                    LOG('Loop through ChokePoints Table')
                     if not v.NoPath then
                         local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1)
                         if path then
