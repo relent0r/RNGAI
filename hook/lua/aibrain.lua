@@ -1820,7 +1820,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    CheckDirectorTargetAvailable = function(self, threatType)
+    CheckDirectorTargetAvailable = function(self, threatType, platoonThreat)
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
@@ -1834,6 +1834,17 @@ AIBrain = Class(RNGAIBrainClass) {
                 LOG('Enemy Index of unit is '..v.EnemyIndex)
                 LOG('Unit ID is '..v.Object.UnitId)
                 if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
+                    if threatType and platoonThreat then
+                        if threatType == 'AntiAir' then
+                            if v.Air > platoonThreat then
+                                continue
+                            end
+                        elseif threatType == 'Land' then
+                            if v.Land > platoonThreat then
+                                continue
+                            end
+                        end
+                    end
                     potentialTargetValue = v.Value
                     potentialTarget = v.Object
                 end
@@ -1848,6 +1859,17 @@ AIBrain = Class(RNGAIBrainClass) {
                 LOG('Enemy Index of unit is '..v.EnemyIndex)
                 LOG('Unit ID is '..v.Object.UnitId)
                 if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    if threatType and platoonThreat then
+                        if threatType == 'AntiAir' then
+                            if v.Air > platoonThreat then
+                                continue
+                            end
+                        elseif threatType == 'Land' then
+                            if v.Land > platoonThreat then
+                                continue
+                            end
+                        end
+                    end
                     potentialTargetValue = v.Value
                     potentialTarget = v.Object
                 end

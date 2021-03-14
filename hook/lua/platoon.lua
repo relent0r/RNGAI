@@ -1831,6 +1831,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         local basePosition = false
+        local mergeRequired = false
         local myThreat
         local unitPos
         local alpha
@@ -1958,7 +1959,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     if not target then
                         LOG('Checking for director target')
-                        target = aiBrain:CheckDirectorTargetAvailable('AntiAir')
+                        target = aiBrain:CheckDirectorTargetAvailable('AntiAir', myThreat)
                         if target then
                             LOG('Target ID is '..target.UnitId)
                         end
@@ -1988,10 +1989,6 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 end
-                if not target then
-                    --LOG('Strikeforce no target found')
-                end
-                --target = self:FindPrioritizedUnit('Attack', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
                 
                 -- Check for experimentals but don't attack if they have strong antiair threat unless close to base.
                 local newtarget
@@ -2000,7 +1997,7 @@ Platoon = Class(RNGAIPlatoon) {
                 elseif AIAttackUtils.GetAirThreatOfUnits(self) > 0 then
                     newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR)
                 end
-                
+
                 if newtarget then
                     local targetExpPos
                     local targetExpThreat
@@ -2019,6 +2016,10 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
 
+                if not target then
+                    mergeRequired = true
+                end
+
                 if target and not target.Dead then
                     if self.MovementLayer == 'Air' then
                         local targetPosition = target:GetPosition()
@@ -2029,31 +2030,41 @@ Platoon = Class(RNGAIPlatoon) {
                             self:Stop()
                             self:AttackTarget(target)
                         else
-                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
+                            local path, reason, totalThreat = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
                             self:Stop()
                             if path then
                                 local pathLength = table.getn(path)
-                                --LOG('StrikeForce air assigning path')
-                                for i=1, pathLength do
-                                    self:MoveToLocation(path[i], false)
-                                end
-                                while PlatoonExists(aiBrain, self) do
-                                    if not target or target.Dead then
-                                        target = false
-                                        --LOG('Target dead or lost during strikeforce')
-                                        break
+                                local averageThreat = totalThreat / pathLength
+                                LOG('StrikeForceAI average path threat is '..averageThreat)
+                                LOG('StrikeForceAI platoon threat is '..myThreat)
+                                if averageThreat < myThreat then
+                                    --LOG('StrikeForce air assigning path')
+                                    for i=1, pathLength do
+                                        self:MoveToLocation(path[i], false)
                                     end
-                                    platoonPosition = GetPlatoonPosition(self)
-                                    targetPosition = target:GetPosition()
-                                    targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
-                                    if targetDistance < 10000 then
-                                        --LOG('strikeforce air attack command on target')
-                                        self:Stop()
-                                        self:AttackTarget(target)
-                                        break
+                                    while PlatoonExists(aiBrain, self) do
+                                        if not target or target.Dead then
+                                            target = false
+                                            --LOG('Target dead or lost during strikeforce')
+                                            break
+                                        end
+                                        platoonPosition = GetPlatoonPosition(self)
+                                        targetPosition = target:GetPosition()
+                                        targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
+                                        if targetDistance < 10000 then
+                                            --LOG('strikeforce air attack command on target')
+                                            self:Stop()
+                                            self:AttackTarget(target)
+                                            break
+                                        end
+                                        --LOG('Waiting to reach target loop')
+                                        WaitTicks(10)
                                     end
-                                    --LOG('Waiting to reach target loop')
-                                    WaitTicks(10)
+                                else
+                                    LOG('StrikeForceAI Path threat is too high, waiting and merging')
+                                    mergeRequired = true
+                                    target = false
+                                    WaitTicks(30)
                                 end
                             else
                                 self:AttackTarget(target)
@@ -2138,7 +2149,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             WaitTicks(40)
-            if not target and self.MovementLayer == 'Air' then
+            if not target and self.MovementLayer == 'Air' and mergeRequired then
                 --LOG('StrkeForce Air AI Attempting Merge')
                 self:MergeWithNearbyPlatoonsRNG('StrikeForceAIRNG', 60, 12, true)
             end

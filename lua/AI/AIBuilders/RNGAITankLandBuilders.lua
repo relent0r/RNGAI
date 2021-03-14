@@ -1675,7 +1675,7 @@ BuilderGroup {
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
-            AggressiveMove = true,      
+            AggressiveMove = false,      
             AvoidClosestRadius = 50,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 
