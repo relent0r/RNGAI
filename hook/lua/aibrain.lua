@@ -857,6 +857,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             expansionName = k
                             closest = exDistance
                         end
+                    else
+                        LOG('Active Expansion. No Factories in factory manager')
                     end
                 end
             end
