@@ -850,11 +850,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BuilderManagers do
                 --LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
-                    local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
-                    --LOG('Distance to Enemy for '..k..' is '..exDistance)
-                    if (exDistance < closest) and (mainDist > exDistance) then
-                        expansionName = k
-                        closest = exDistance
+                    if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
+                        local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+                        --LOG('Distance to Enemy for '..k..' is '..exDistance)
+                        if (exDistance < closest) and (mainDist > exDistance) then
+                            expansionName = k
+                            closest = exDistance
+                        end
                     end
                 end
             end
