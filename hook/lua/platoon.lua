@@ -27,8 +27,9 @@ Platoon = Class(RNGAIPlatoon) {
         local target
         local blip
         local startX, startZ = aiBrain:GetArmyStartPos()
-        homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
+        local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
         local avoidBases = data.AvoidBases or false
+        local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local defensive = data.Defensive or false
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
@@ -79,7 +80,8 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
             if target then
                 local targetPos = target:GetPosition()
-                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, 1, true, 'AntiAir') > platoonThreat) then
+                local platoonCount = table.getn(GetPlatoonUnits(self))
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, 1, true, 'AntiAir') > platoonThreat) and platoonCount < platoonLimit then
                     --LOG('Target air threat too high')
                     threatCountLimit = threatCountLimit + 1
                     self:MoveToLocation(homeBaseLocation, false)
@@ -1831,6 +1833,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         local basePosition = false
+        local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local mergeRequired = false
         local myThreat
         local unitPos
@@ -2024,6 +2027,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if self.MovementLayer == 'Air' then
                         local targetPosition = target:GetPosition()
                         local platoonPosition = GetPlatoonPosition(self)
+                        local platoonCount = table.getn(GetPlatoonUnits(self))
                         local targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                         local path = false
                         if targetDistance < 10000 then
@@ -2037,7 +2041,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 local averageThreat = totalThreat / pathLength
                                 LOG('StrikeForceAI average path threat is '..averageThreat)
                                 LOG('StrikeForceAI platoon threat is '..myThreat)
-                                if averageThreat < myThreat then
+                                if averageThreat < myThreat or platoonCount >= platoonLimit then
                                     --LOG('StrikeForce air assigning path')
                                     for i=1, pathLength do
                                         self:MoveToLocation(path[i], false)

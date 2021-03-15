@@ -313,6 +313,7 @@ BuilderGroup {
             Defensive = true,
             SearchRadius = BaseMilitaryArea,
             NeverGuardEngineers = true,
+            PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR,
                 categories.BOMBER * categories.AIR,
@@ -381,6 +382,7 @@ BuilderGroup {
         BuilderData = {
             AvoidBases = true,
             NeverGuardEngineers = true,
+            PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR,
                 categories.GROUNDATTACK * categories.AIR,
@@ -451,6 +453,7 @@ BuilderGroup {
             AvoidBases = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 categories.MASSEXTRACTION,
@@ -480,6 +483,7 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             AvoidBases = true,
             UnitType = 'GUNSHIP',
+            PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.ENGINEER,
                 categories.MASSEXTRACTION,
@@ -510,6 +514,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             UnitType = 'GUNSHIP',
+            PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.MOBILE * categories.LAND,
                 categories.MASSEXTRACTION,
@@ -543,6 +548,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.RADAR * categories.STRUCTURE,
                 categories.ENGINEER * categories.TECH1,
@@ -569,6 +575,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            PlatoonLimit = 18,
             PrioritizedCategories = {
        --         categories.TECH3 * categories.ANTIMISSILE * categories.SILO * categories.STRUCTURE,
                 categories.TECH3 * categories.NUKE * categories.SILO * categories.STRUCTURE,
@@ -597,6 +604,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             ACUOnField = true,
+            PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.ENERGYSTORAGE,
                 categories.ENERGYPRODUCTION * categories.TECH3,
@@ -617,6 +625,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.RADAR * categories.STRUCTURE,
                 categories.ENERGYSTORAGE,
