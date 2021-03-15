@@ -37,30 +37,6 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI AntiAir BaseGuard',
-    Plan = 'GuardBaseRNG',
-    GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 2, 50, 'Attack', 'none' },
-    }
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI Bomber BaseGuard',
-    Plan = 'GuardBaseRNG',
-    GlobalSquads = {
-        { categories.MOBILE * categories.AIR * categories.BOMBER * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.daa0206 - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'Attack', 'none' },
-    }
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI Gunship BaseGuard',
-    Plan = 'GuardBaseRNG',
-    GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH1 + categories.TECH2) - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 50, 'Attack', 'none' },
-    }
-}
-
-PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
     Plan = 'StrikeForceAIRNG',
     GlobalSquads = {

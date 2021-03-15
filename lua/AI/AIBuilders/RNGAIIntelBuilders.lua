@@ -38,6 +38,32 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI RadarBuilders Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Radar T1 Expansion',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 850,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BuildStructures = {
+                    'T1Radar',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI SonarBuilders',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {

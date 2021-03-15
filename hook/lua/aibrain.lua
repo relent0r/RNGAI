@@ -850,6 +850,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BuilderManagers do
                 --LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
+                    LOG('Factory Count at Expansion '..v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS))
                     if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
                         local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
                         --LOG('Distance to Enemy for '..k..' is '..exDistance)
@@ -1828,6 +1829,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
+        if threatType then
+            LOG('CheckDirectorTarget Threat Type is '..threatType)
+            if platoonThreat then
+                LOG('CheckDirectorTarget platoon Threat is '..platoonThreat)
+            end
+        end
 
         if self.EnemyIntel.DirectorData.Intel and table.getn(self.EnemyIntel.DirectorData.Intel) > 0 then
             LOG('Intel Table size is '..table.getn(self.EnemyIntel.DirectorData.Intel))

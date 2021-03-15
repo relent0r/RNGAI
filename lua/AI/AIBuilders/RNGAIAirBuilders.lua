@@ -312,6 +312,7 @@ BuilderGroup {
         BuilderData = {
             Defensive = true,
             SearchRadius = BaseMilitaryArea,
+            LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -414,30 +415,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSize', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
-    },
-    Builder {
-        BuilderName = 'RNGAI Bomber Base Guard',
-        PlatoonTemplate = 'RNGAI Bomber BaseGuard',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
-        Priority = 890,
-        InstanceCount = 5,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT}},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.AIR * categories.BOMBER - categories.TECH3 - categories.daa0206 } },
-        },
-        BuilderData = {
-            GuardType = 'Bomber',
-            SearchRadius = BaseMilitaryArea,
-            PrioritizedCategories = {
-                categories.ENGINEER * categories.TECH1,
-                categories.MOBILE * categories.LAND,
-                categories.MASSEXTRACTION,
-                categories.STRUCTURE,
-                categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
     },
     Builder {
         BuilderName = 'RNGAI Bomber Attack MassRaid',

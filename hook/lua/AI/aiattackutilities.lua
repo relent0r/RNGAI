@@ -879,18 +879,10 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
 end
 -- This is Sproutos function for finding SMD's between launcher and target.
 function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, stepby, alliance)
-
-    if type(unitCat) == 'string' then
-        unitCat = ParseEntityCategory(unitCat)
-    end
-
 	local returnNum = 0
-	
 	-- number of steps to take based on distance divided by stepby ( min. 1)
-	
 	-- break the distance up into equal steps BUT each step is 125% of the stepby distance (so we reduce the overlap)
 	local steps = math.floor( VDist2(start[1], start[3], finish[1], finish[3]) / (stepby * 1.25) ) + 1
-	
 	local xstep, ystep
 	
 	-- the distance of each step
@@ -898,14 +890,14 @@ function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, s
 	ystep = (start[3] - finish[3]) / steps
 	
     for i = 1, steps do
-        local enemyAntiMissile = GetUnitsAroundPoint(aiBrain, categories.ANTIMISSILE * categories.SILO, { start[1] - (xstep * i), 0, start[3] - (ystep * i) }, stepby, alliance)
+        local enemyAntiMissile = GetUnitsAroundPoint(aiBrain, unitCat, { start[1] - (xstep * i), 0, start[3] - (ystep * i) }, stepby, alliance)
         local siloCount = table.getn(enemyAntiMissile)
-        --LOG('Total Anti Nuke Count '..siloCount..' completion is ')
+        --LOG('Total Anti missile Count '..siloCount..' completion is ')
         if siloCount > 0 then
             for _, silo in enemyAntiMissile do
                 --LOG('Silo completed fraction is '..silo:GetFractionComplete())
                 if silo and not silo.Dead and silo:GetFractionComplete() == 1 then
-                    --LOG('Completed Anti Nuke Detected')
+                    --LOG('Completed Anti missile Detected')
                     returnNum = returnNum + 1
                 end
             end

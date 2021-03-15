@@ -533,7 +533,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2TMLEngineer Expansion',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 825,
+        Priority = 400,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
