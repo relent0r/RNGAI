@@ -233,12 +233,12 @@ function CDROverChargeRNG(aiBrain, cdr)
     if cdr:IsUnitState("Upgrading") or cdr:IsUnitState("Enhancing") then
         return
     end
-
-    if Utilities.XZDistanceTwoVectors(cdrPos, cdr:GetPosition()) > maxRadius then
+    local currentPos = cdr:GetPosition()
+    if VDist2(cdrPos[1], cdrPos[3], currentPos[1], currentPos[3]) > maxRadius then
         return
     end
 
-    if numUnits > 1 or (not cdr.DistressCall and distressLoc and Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
+    if numUnits > 1 or (not cdr.DistressCall and distressLoc and VDist2(distressLoc[1], distressLoc[3], cdrPos[1], cdrPos[3]) < distressRange) then
         --LOG('Num of units greater than zero or base distress')
         if cdr.UnitBeingBuilt then
             --LOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
@@ -318,7 +318,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     --LOG('Target Distance is '..targetDistance..' from acu to target')
                     -- If inside base dont check threat, just shoot!
-                    if Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 45 then
+                    if VDist2(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 45 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                         --LOG('enemyThreat is '..enemyThreat)
                         enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
@@ -410,7 +410,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     if enemyThreat - enemyCdrThreat >= friendlyThreat + (cdrThreat / 3) then
                         break
                     end
-                    if distressLoc and (Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
+                    if distressLoc and (VDist2(distressLoc[1], distressLoc[3], cdrPos[1], cdrPos[3]) < distressRange) then
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: ACU Moving to distress location')
                         cdr.PlatoonHandle:MoveToLocation(distressLoc, false)

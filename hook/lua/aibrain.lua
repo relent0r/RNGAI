@@ -1094,7 +1094,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local highThreat = false
         local distance
         
-        if self.BaseMonitor.CDRDistress and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
+        if self.BaseMonitor.CDRDistress and VDist2(self.BaseMonitor.CDRDistress[1], self.BaseMonitor.CDRDistress[3], position[1], position[3]) < radius
             and self.BaseMonitor.CDRThreatLevel > threshold then
             -- Commander scared and nearby; help it
             return self.BaseMonitor.CDRDistress
@@ -1102,7 +1102,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.BaseMonitor.AlertSounded then
             --LOG('Base Alert Sounded')
             for k, v in self.BaseMonitor.AlertsTable do
-                local tempDist = Utilities.XZDistanceTwoVectors(position, v.Position)
+                local tempDist = VDist2(position[1], position[3], v.Position[1], v.Position[3])
 
                 -- Too far away
                 if tempDist > radius then
@@ -1140,7 +1140,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         self.BaseMonitor.PlatoonDistressTable[k] = nil
                         continue
                     end
-                    local tempDist = Utilities.XZDistanceTwoVectors(position, platPos)
+                    local tempDist = VDist2(position[1], position[3], platPos[1], platPos[3])
 
                     -- Platoon too far away to help
                     if tempDist > radius then

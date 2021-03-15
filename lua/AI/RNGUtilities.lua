@@ -665,9 +665,9 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
                     local unitPos = unit:GetPosition()
-                    if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                    if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                         retUnit = unit
-                        distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                        distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                     end
                 end
             end
@@ -1107,9 +1107,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                         if unit:GetAIBrain():GetArmyIndex() == v then
                             if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                 local unitPos = unit:GetPosition()
-                                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                                if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                                     retUnit = unit
-                                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                                 end
                                 if platoon.MovementLayer == 'Air' and platoonThreat then
                                     enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
@@ -1119,9 +1119,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                     end
                                 end
                                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                                if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                                     retUnit = unit
-                                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                                     targetShields = numShields
                                 end
                             end
@@ -1148,9 +1148,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                             end
                         end
                         local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1209,9 +1209,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                             end
                         end
                         local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1233,9 +1233,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                     end
                 end
                 local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     retUnit = unit
-                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end
