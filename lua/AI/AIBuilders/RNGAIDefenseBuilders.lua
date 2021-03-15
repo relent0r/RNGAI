@@ -1061,15 +1061,6 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T2 TML Silo',
-        PlatoonTemplate = 'RNGAI T2 TML',
-        Priority = 1,
-        InstanceCount = 1000,
-        FormRadius = 10000,
-        BuilderType = 'Any',
-    },]]
     
     Builder {
         BuilderName = 'RNGAI T2 Artillery',
