@@ -191,6 +191,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
+        self.EnemyIntel.ChokeFlag = false
         self.EnemyIntel.ChokePoints = {}
         self.EnemyIntel.EnemyThreatCurrent = {
             Air = 0,
@@ -1271,6 +1272,16 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyLandThreat = enemyLandThreat + bp.SurfaceThreatLevel
                     end
                     WaitTicks(1)
+                    local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
+                    for _,v in enemyDefense do
+                        bp = ALLBPS[v.UnitId].Defense
+                        --LOG('DefenseThreat unit is '..v.UnitId)
+                        --LOG('DefenseThreat is '..bp.SubThreatLevel)
+                        enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
+                        enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
+                        enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
+                    end
+                    WaitTicks(1)
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
                     for _,v in enemyACU do
                         local factionIndex = enemy:GetFactionIndex()
@@ -1322,6 +1333,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
         self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
         self.EnemyIntel.EnemyThreatCurrent.Land = enemyLandThreat
+        self.EnemyIntel.EnemyThreatCurrent.DefenseAir = enemyDefenseAir
+        self.EnemyIntel.EnemyThreatCurrent.DefenseSurface = enemyDefenseSurface
+        self.EnemyIntel.EnemyThreatCurrent.DefenseSub = enemyDefenseSub
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -2519,6 +2533,12 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         while true do
+            local fireBaseCount = 0
+            for k, v in self.EnemyIntel.EnemyThreatLocations do
+                if v.LandDefStructureCount > 8 then
+                    fireBaseCount = fireBaseCount + 1
+                end
+            end
             if self.EnemyIntel.EnemyCount > 0 then
                 for k, v in self.EnemyIntel.ChokePoints do
                     if not v.NoPath then
@@ -2527,6 +2547,25 @@ AIBrain = Class(RNGAIBrainClass) {
                             LOG('Total Threat for path is '..totalThreat)
                             self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / table.getn(path))
                             LOG('We have a path to the enemy start position with an average of '..(totalThreat / table.getn(path)..' threat'))
+
+                            if self.EnemyIntel.EnemyCount > 0 then
+                                LOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
+                                LOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                                LOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
+                                LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
+                                LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                                LOG('Firebase count should be greater than 8 '..fireBaseCount)
+                                if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
+                                and self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > self.BrainIntel.SelfThreat.LandNow
+                                and totalThreat > self.BrainIntel.SelfThreat.LandNow 
+                                and fireBaseCount > 0 then
+                                    self.EnemyIntel.ChokeFlag = true
+                                    LOG('ChokeFlag is true')
+                                else
+                                    LOG('ChokeFlag is false')
+                                    self.EnemyIntel.ChokeFlag = false
+                                end
+                            end
                         elseif (not path and reason) then
                             LOG('We dont have a path to the enemy start position, setting NoPath to true')
                             LOG('Reason is '..reason)
