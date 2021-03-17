@@ -192,6 +192,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
         self.EnemyIntel.ChokeFlag = false
+        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyAirFireBaseDetected = false
         self.EnemyIntel.ChokePoints = {}
         self.EnemyIntel.EnemyThreatCurrent = {
             Air = 0,
@@ -1610,7 +1612,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     else
                         onWater = false
                     end
-                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
+                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater }
                     table.insert(phaseTwoThreats, threatLocation)
                 end
             end
@@ -1660,7 +1662,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local landThreatAroundBase = 0
         --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for _, threat in self.EnemyIntel.EnemyThreatLocations do
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if threat.ThreatType == 'Land' then
                     local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
                     if threatDistance < 32400 then
@@ -1732,6 +1734,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local scanRadius = 0
         local IMAPSize = 0
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyAirFireBaseDetected = false
 
         if maxmapdimension == 256 then
             scanRadius = 11.5
@@ -1793,19 +1797,34 @@ AIBrain = Class(RNGAIBrainClass) {
         if table.getn(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
                 for q, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if not self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount then
+                        self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = 0
+                    end
+                    if not self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount then
+                        self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = 0
+                    end
                     if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
-                            unit.Air = threat.Threat
+                        unit.Air = threat.Threat
                     elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
                     elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
-                        if ALLBPS[unit.UnitId].Defense.AirThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
-                        elseif ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel > 0 then
+                        if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
                             self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + 1
+                        elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
+                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
                         end
+                    end
+                    if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount > 5 then
+                        self.EnemyIntel.EnemyLandFireBaseDetected = true
+                    end
+                    if self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
+                        self.EnemyIntel.EnemyAirFireBaseDetected = true
                     end
                 end
                 LOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            if self.EnemyIntel.EnemyLandFireBaseDetected then
+                LOG('EnemyLandFireBaseDetected is true')
             end
             self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
@@ -2095,7 +2114,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
                     end
-                    powerStateCaution = false
+                    massStateCaution = false
                 end
             end
             WaitTicks(30)
@@ -2533,12 +2552,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         while true do
-            local fireBaseCount = 0
-            for k, v in self.EnemyIntel.EnemyThreatLocations do
-                if v.LandDefStructureCount > 8 then
-                    fireBaseCount = fireBaseCount + 1
-                end
-            end
             if self.EnemyIntel.EnemyCount > 0 then
                 for k, v in self.EnemyIntel.ChokePoints do
                     if not v.NoPath then
@@ -2554,11 +2567,13 @@ AIBrain = Class(RNGAIBrainClass) {
                                 LOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
                                 LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
                                 LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                                LOG('Firebase count should be greater than 8 '..fireBaseCount)
+                                if self.EnemyIntel.EnemyLandFireBaseDetected then
+                                    LOG('Firebase flag is true')
+                                end
                                 if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
                                 and self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > self.BrainIntel.SelfThreat.LandNow
                                 and totalThreat > self.BrainIntel.SelfThreat.LandNow 
-                                and fireBaseCount > 0 then
+                                and self.EnemyIntel.EnemyLandFireBaseDetected then
                                     self.EnemyIntel.ChokeFlag = true
                                     LOG('ChokeFlag is true')
                                 else

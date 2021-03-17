@@ -20,8 +20,7 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, m
     if aiBrain.HasParagon and econ.MassStorageRatio >= 0.01 and econ.EnergyStorageRatio >= 0.01 then
         return true
     elseif aiBrain.EnemyIntel.ChokeFlag and mult then
-        LOG('Checkpoint set on storage ratio condition')
-        if econ.MassStorageRatio >= 0.10 and econ.EnergyStorageRatio >= 0.80 then
+        if econ.MassStorageRatio >= 0.20 and econ.EnergyStorageRatio >= 0.80 then
             return true
         end
     elseif aiBrain.UpgradeMode == 'Aggressive' then
