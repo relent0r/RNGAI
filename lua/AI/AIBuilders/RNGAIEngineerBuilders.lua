@@ -685,9 +685,9 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 4,
         BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
+                { UCBC, 'GreaterThanGameTimeSeconds', { 380 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'LessThanGameTimeSeconds', { 600 } },
+                { UCBC, 'LessThanGameTimeSeconds', { 900 } },
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -703,7 +703,7 @@ BuilderGroup {
         PlatoonAIPlan = 'ReclaimAIRNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 500,
-        InstanceCount = 10,
+        InstanceCount = 15,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},

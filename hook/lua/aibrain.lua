@@ -1862,21 +1862,14 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
-        if threatType then
-            LOG('CheckDirectorTarget Threat Type is '..threatType)
-            if platoonThreat then
-                LOG('CheckDirectorTarget platoon Threat is '..platoonThreat)
-            end
-        end
 
         if self.EnemyIntel.DirectorData.Intel and table.getn(self.EnemyIntel.DirectorData.Intel) > 0 then
-            LOG('Intel Table size is '..table.getn(self.EnemyIntel.DirectorData.Intel))
             for k, v in self.EnemyIntel.DirectorData.Intel do
-                LOG('Intel Target Data ')
-                LOG('Air Threat Around unit is '..v.Air)
-                LOG('Land Threat Around unit is '..v.Land)
-                LOG('Enemy Index of unit is '..v.EnemyIndex)
-                LOG('Unit ID is '..v.Object.UnitId)
+                --LOG('Intel Target Data ')
+                --LOG('Air Threat Around unit is '..v.Air)
+                --LOG('Land Threat Around unit is '..v.Land)
+                --LOG('Enemy Index of unit is '..v.EnemyIndex)
+                --LOG('Unit ID is '..v.Object.UnitId)
                 if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
                     if threatType and platoonThreat then
                         if threatType == 'AntiAir' then
@@ -1895,13 +1888,12 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if self.EnemyIntel.DirectorData.Energy and table.getn(self.EnemyIntel.DirectorData.Energy) > 0 then
-            LOG('Energy Table size is '..table.getn(self.EnemyIntel.DirectorData.Energy))
             for k, v in self.EnemyIntel.DirectorData.Energy do
-                LOG('Energy Target Data ')
-                LOG('Air Threat Around unit is '..v.Air)
-                LOG('Land Threat Around unit is '..v.Land)
-                LOG('Enemy Index of unit is '..v.EnemyIndex)
-                LOG('Unit ID is '..v.Object.UnitId)
+                --LOG('Energy Target Data ')
+                --LOG('Air Threat Around unit is '..v.Air)
+                --LOG('Land Threat Around unit is '..v.Land)
+                --LOG('Enemy Index of unit is '..v.EnemyIndex)
+                --LOG('Unit ID is '..v.Object.UnitId)
                 if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
                     if threatType and platoonThreat then
                         if threatType == 'AntiAir' then
@@ -2535,10 +2527,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         WaitTicks(100)
         if self.EnemyIntel.EnemyCount > 0 then
-            LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
             for index, brain in ArmyBrains do
-                LOG('Index is '..index)
-                LOG('Brain is '..brain.Name)
                 if IsEnemy(selfIndex, index) and not ArmyIsCivilian(index) then
                     local posX, posZ = brain:GetArmyStartPos()
                     self.EnemyIntel.ChokePoints[index] = {
@@ -2548,7 +2537,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     }
                 end
             end
-            LOG('Enemy Chokepoint table at game start'..repr(self.EnemyIntel.ChokePoints))
         end
 
         while true do

@@ -11,11 +11,18 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
-local LandAttackHeavyMode = function(self, aiBrain, builderManager)
+local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
         --LOG('Enable Land Heavy Attack Queue')
+        if builderData.TechLevel == 1 then
+            return 780
+        elseif builderData.TechLevel == 2 then
+            return 785
+        elseif builderData.TechLevel == 3 then
+            return 790
+        end
         return 790
     else
         --LOG('Disable Land Heavy Attack Queue')
@@ -23,11 +30,18 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager)
     end
 end
 
-local LandAttackMode = function(self, aiBrain, builderManager)
+local LandAttackMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
         --LOG('Enable Land Attack Queue')
+        if builderData.TechLevel == 1 then
+            return 780
+        elseif builderData.TechLevel == 2 then
+            return 785
+        elseif builderData.TechLevel == 3 then
+            return 790
+        end
         return 790
     else
         --LOG('Disable Land Attack Queue')
@@ -35,13 +49,40 @@ local LandAttackMode = function(self, aiBrain, builderManager)
     end
 end
 
-local LandEngMode = function(self, aiBrain, builderManager)
+local LandEngMode = function(self, aiBrain, builderManager, builderData)
     local locationType = builderManager.LocationType
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 3 then
         --LOG('Setting T1 Queue to Eng')
+        if builderData.TechLevel == 1 then
+            return 745
+        elseif builderData.TechLevel == 2 then
+            return 750
+        elseif builderData.TechLevel == 3 then
+            return 755
+        end
+        return 750
+    else
+        return 0
+    end
+end
+
+local LandNoEngMode = function(self, aiBrain, builderManager, builderData)
+    local locationType = builderManager.LocationType
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
+    if numUnits > 3 then
+        --LOG('Setting T1 Queue to NoEng')
+        if builderData.TechLevel == 1 then
+            return 745
+        elseif builderData.TechLevel == 2 then
+            return 750
+        elseif builderData.TechLevel == 3 then
+            return 755
+        end
         return 750
     else
         return 0
@@ -70,19 +111,6 @@ local AmphibNoSiegeMode = function(self, aiBrain, builderManager)
     if numUnits >= 3 then
         --LOG('Setting Amphib Non Siege Mode')
         return 550
-    else
-        return 0
-    end
-end
-
-local LandNoEngMode = function(self, aiBrain, builderManager)
-    local locationType = builderManager.LocationType
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-    local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
-    if numUnits > 3 then
-        --LOG('Setting T1 Queue to NoEng')
-        return 750
     else
         return 0
     end
@@ -138,6 +166,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Land Attack NoEng Small',
@@ -152,6 +183,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Arty Sera Small', -- Sera cause floaty
@@ -196,6 +230,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
@@ -297,6 +334,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Land Attack NoEng Large',
@@ -312,6 +352,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI T2 Attack Large',
@@ -340,6 +383,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large Siege',
@@ -354,6 +400,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
@@ -369,6 +418,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory T3 Amphib Attack Large Siege',
@@ -384,6 +436,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
 }
 
@@ -487,6 +542,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI Attack Heavy T3 Small',
@@ -501,6 +559,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Small',
@@ -545,6 +606,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Large',
@@ -1675,7 +1739,7 @@ BuilderGroup {
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 75,
-            AggressiveMove = false,      
+            AggressiveMove = true,      
             AvoidClosestRadius = 50,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 

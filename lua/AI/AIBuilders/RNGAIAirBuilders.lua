@@ -12,7 +12,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
-local AirDefenseMode = function(self, aiBrain, builderManager)
+local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
     if aiBrain.EnemyIntel.EnemyCount > 0 then
@@ -21,6 +21,13 @@ local AirDefenseMode = function(self, aiBrain, builderManager)
     if myAirThreat < (enemyAirThreat * 1.2 / enemyCount) then
         --LOG('Enable Air Intie Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        if builderData.TechLevel == 1 then
+            return 880
+        elseif builderData.TechLevel == 2 then
+            return 885
+        elseif builderData.TechLevel == 3 then
+            return 890
+        end
         return 890
     else
         --LOG('Disable Air Intie Pool Builder')
@@ -29,7 +36,7 @@ local AirDefenseMode = function(self, aiBrain, builderManager)
     end
 end
 
-local AirDefenseScramble = function(self, aiBrain, builderManager)
+local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     local enemyCount = 1
@@ -39,6 +46,13 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
     if myAirThreat < (enemyAirThreat / enemyCount) then
         --LOG('Enable Air ASF Scramble Pool Builder')
         --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        if builderData.TechLevel == 1 then
+            return 860
+        elseif builderData.TechLevel == 2 then
+            return 865
+        elseif builderData.TechLevel == 3 then
+            return 870
+        end
         return 870
     else
         --LOG('Disable Air ASF Scramble Pool Builder')
@@ -47,7 +61,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
     end
 end
 
-local AirAttackMode = function(self, aiBrain, builderManager)
+local AirAttackMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
     if aiBrain.EnemyIntel.EnemyCount > 0 then
@@ -56,6 +70,13 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     if myAirThreat / 1.5 > (enemyAirThreat / enemyCount) then
         --LOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
+        if builderData.TechLevel == 1 then
+            return 870
+        elseif builderData.TechLevel == 2 then
+            return 875
+        elseif builderData.TechLevel == 3 then
+            return 880
+        end
         return 880
     else
         --LOG('Disable Air Attack Queue')
@@ -64,7 +85,7 @@ local AirAttackMode = function(self, aiBrain, builderManager)
     end
 end
 
-local SeaTorpMode = function(self, aiBrain, manager)
+local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
     local myNavalThreat = aiBrain.BrainIntel.SelfThreat.NavalNow
     local enemyNavalThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
     if myNavalThreat < enemyNavalThreat then
@@ -151,6 +172,9 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
 }
 
@@ -168,6 +192,9 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
@@ -181,6 +208,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
@@ -270,6 +300,9 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.7 }},
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI T3 Air Queue',
@@ -283,6 +316,9 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
         },
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI T3 Air Attack Queue',
@@ -295,6 +331,9 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+        },
+        BuilderData = {
+            TechLevel = 3
         },
     },
 }
