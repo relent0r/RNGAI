@@ -289,7 +289,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.TACTICALMISSILEPLATFORM } },
             { EBC, 'GreaterThanEconEfficiency', { 0.8, 0.8}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95, true}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -596,7 +596,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -627,7 +627,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -660,7 +660,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -696,7 +696,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -726,7 +726,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -822,7 +822,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, true}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -1089,7 +1089,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },                      -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50, true } },             -- Ratio from 0 to 1. (1=100%)
         },
         BuilderType = 'Any',
         BuilderData = {
