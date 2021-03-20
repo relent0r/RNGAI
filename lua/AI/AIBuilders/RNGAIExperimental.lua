@@ -19,7 +19,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
+            { EBC, 'GreaterThanEconIncome', { 7.0, 400.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {

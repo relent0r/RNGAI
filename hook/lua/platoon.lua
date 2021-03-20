@@ -1911,9 +1911,12 @@ Platoon = Class(RNGAIPlatoon) {
                 table.insert(categoryList, v)
             end
         end
+        AIAttackUtils.GetMostRestrictiveLayer(self)
+        
+        -- Removing ALLUNITS so we rely on the builder config. Stops bombers trying to attack fighters.
+        --table.insert(atkPri, categories.ALLUNITS)
+        --table.insert(categoryList, categories.ALLUNITS)
 
-        table.insert(atkPri, categories.ALLUNITS)
-        table.insert(categoryList, categories.ALLUNITS)
         --LOG('Platoon is '..self.BuilderName..' table'..repr(categoryList))
         self:SetPrioritizedTargetList('Attack', categoryList)
         AIAttackUtils.GetMostRestrictiveLayer(self)
@@ -1961,10 +1964,10 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     if not target and myThreat > 8 then
-                        LOG('Checking for director target')
+                        --LOG('Checking for director target')
                         target = aiBrain:CheckDirectorTargetAvailable('AntiAir', myThreat)
                         if target then
-                            LOG('Target ID is '..target.UnitId)
+                            --LOG('Target ID is '..target.UnitId)
                         end
                     end
                 end
@@ -2020,7 +2023,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
 
                 if not target and platoonCount < platoonLimit then
-                    LOG('StrikeForceAI mergeRequired set true')
+                    --LOG('StrikeForceAI mergeRequired set true')
                     mergeRequired = true
                 end
 
@@ -2040,8 +2043,8 @@ Platoon = Class(RNGAIPlatoon) {
                             if path then
                                 local pathLength = table.getn(path)
                                 local averageThreat = totalThreat / pathLength
-                                LOG('StrikeForceAI average path threat is '..averageThreat)
-                                LOG('StrikeForceAI platoon threat is '..myThreat)
+                                --LOG('StrikeForceAI average path threat is '..averageThreat)
+                                --LOG('StrikeForceAI platoon threat is '..myThreat)
                                 if averageThreat < myThreat or platoonCount >= platoonLimit then
                                     --LOG('StrikeForce air assigning path')
                                     for i=1, pathLength do
@@ -2066,7 +2069,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         WaitTicks(10)
                                     end
                                 else
-                                    LOG('StrikeForceAI Path threat is too high, waiting and merging')
+                                    --LOG('StrikeForceAI Path threat is too high, waiting and merging')
                                     mergeRequired = true
                                     target = false
                                     WaitTicks(30)
@@ -2158,17 +2161,17 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('StrkeForce Air AI Attempting Merge')
                 self:MoveToLocation(mainBasePos, false)
                 local baseDist
-                LOG('StrikefoceAI Returning to base')
+                --LOG('StrikefoceAI Returning to base')
                 while PlatoonExists(aiBrain, self) do
                     platoonPosition = GetPlatoonPosition(self)
                     baseDist = VDist2Sq(platoonPosition[1], platoonPosition[3], mainBasePos[1], mainBasePos[3])
                     if baseDist < 6400 then
                         break
                     end
-                    LOG('StrikefoceAI base distance is baseDist')
+                    --LOG('StrikefoceAI base distance is baseDist')
                     WaitTicks(50)
                 end
-                LOG('MergeRequired, performing merge')
+                --LOG('MergeRequired, performing merge')
                 self:Stop()
                 self:MergeWithNearbyPlatoonsRNG('StrikeForceAIRNG', 60, 12, true)
                 mergeRequired = false
@@ -4690,7 +4693,7 @@ Platoon = Class(RNGAIPlatoon) {
     ArtilleryAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local target = false
-        LOG('Initialize atkPri table')
+        --LOG('Initialize atkPri table')
         local atkPri = { categories.STRUCTURE * categories.STRATEGIC,
                          categories.STRUCTURE * categories.ENERGYPRODUCTION,
                          categories.STRUCTURE * categories.FACTORY,
@@ -4701,11 +4704,11 @@ Platoon = Class(RNGAIPlatoon) {
                          categories.ALLUNITS,
                         }
         local atkPriTable = {}
-        LOG('Adding Target Priorities')
+        --LOG('Adding Target Priorities')
         for k,v in atkPri do
             table.insert(atkPriTable, v)
         end
-        LOG('Setting artillery priorities')
+        --LOG('Setting artillery priorities')
         self:SetPrioritizedTargetList('artillery', atkPriTable)
 
         -- Set priorities on the unit so if the target has died it will reprioritize before the platoon does
@@ -4719,25 +4722,25 @@ Platoon = Class(RNGAIPlatoon) {
         if not unit then
             return
         end
-        LOG('Set unit priorities')
+        --LOG('Set unit priorities')
         unit:SetTargetPriorities(atkPriTable)
         local bp = unit:GetBlueprint()
         local weapon = bp.Weapon[1]
         local maxRadius = weapon.MaxRadius
-        LOG('Starting Platoon Loop')
+        --LOG('Starting Platoon Loop')
 
         while aiBrain:PlatoonExists(self) do
             target = aiBrain:CheckDirectorTargetAvailable(false, false)
             if not target then
-                LOG('No Director Target, checking for normal target')
+                --LOG('No Director Target, checking for normal target')
                 target = self:FindPrioritizedUnit('artillery', 'Enemy', true, self:GetPlatoonPosition(), maxRadius)
             end
             if target and not target.Dead then
                 self:Stop()
-                LOG('Target Found..Attacking')
+                --LOG('Target Found..Attacking')
                 self:AttackTarget(target)
             end
-            LOG('Waiting 20 seconds')
+            --LOG('Waiting 20 seconds')
             WaitTicks(200)
         end
     end,

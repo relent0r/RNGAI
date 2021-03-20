@@ -14,6 +14,24 @@ local MABC = '/lua/editor/MarkerBuildConditions.lua'
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
+local NavalAdjust = function(self, aiBrain, builderManager)
+    local pathCount = 0
+    if aiBrain.EnemyIntel.ChokePoints then
+        for _, v in aiBrain.EnemyIntel.ChokePoints do
+            if not v.NoPath then
+                pathCount = pathCount + 1
+            end
+        end
+    end
+    if pathCount > 0 then
+        --LOG('We have a path to an enemy')
+        return 1005
+    else
+        --LOG('No path to an enemy')
+        return 1010
+    end
+end
+
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small',
@@ -132,7 +150,6 @@ BuilderGroup {
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -162,7 +179,6 @@ BuilderGroup {
                     'T1EnergyProduction',
                     'T1Resource',
                     'T1Resource',
-                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -309,7 +325,6 @@ BuilderGroup {
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -339,7 +354,6 @@ BuilderGroup {
                     'T1Resource',
                     'T1Resource',
                     'T1Resource',
-                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -372,7 +386,6 @@ BuilderGroup {
                     'T1Resource',
                     'T1Resource',
                     'T1Resource',
-                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -468,7 +481,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.09, 0.30, true}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.09, 0.30, 'FACTORY'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
@@ -669,7 +682,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 800,
+        Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
@@ -699,7 +712,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80, true}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80, 'FACTORY'}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
@@ -719,7 +732,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 800,
+        Priority = 1005,
+        PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},

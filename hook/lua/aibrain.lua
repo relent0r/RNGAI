@@ -272,7 +272,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.MapWaterRatio = self:GetMapWaterRatio()
-        LOG('Water Ratio is '..self.MapWaterRatio)
+        --LOG('Water Ratio is '..self.MapWaterRatio)
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
@@ -853,7 +853,6 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BuilderManagers do
                 --LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
-                    LOG('Factory Count at Expansion '..v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS))
                     if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
                         local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
                         --LOG('Distance to Enemy for '..k..' is '..exDistance)
@@ -861,8 +860,6 @@ AIBrain = Class(RNGAIBrainClass) {
                             expansionName = k
                             closest = exDistance
                         end
-                    else
-                        LOG('Active Expansion. No Factories in factory manager')
                     end
                 end
             end
@@ -950,7 +947,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v.ACUPosition[1] then
                     ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
                     --LOG('* AI-RNG: Enemy ACU Distance in Alliance Check is'..ACUDist)
-                    if ACUDist < 200 then
+                    if ACUDist < 230 then
                         --LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         self.EnemyIntel.ACU[k].OnField = true
@@ -964,7 +961,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         returnEnemy = v.Brain
                         return returnEnemy
                     end
-                    if ACUDist > 200 then
+                    if ACUDist > 230 then
                         self.EnemyIntel.ACU[k].OnField = false
                     end
                 end
@@ -996,7 +993,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.70
+                upgradeSpec.MassLowTrigger = 0.80
                 upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1438,7 +1435,7 @@ AIBrain = Class(RNGAIBrainClass) {
             landThreat = landThreat + bp.SurfaceThreatLevel
         end
         self.BrainIntel.SelfThreat.LandNow = landThreat
-        LOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
+        --LOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
     end,
 
     --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
@@ -1683,7 +1680,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         
-        if gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
+        if (gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.5) or self.EnemyIntel.ChokeFlag then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
@@ -1709,7 +1706,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-        LOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
+        --LOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
     end,
@@ -1789,7 +1786,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             self.EnemyIntel.DirectorData.Energy = energyUnits
         end
@@ -1821,10 +1818,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         self.EnemyIntel.EnemyAirFireBaseDetected = true
                     end
                 end
-                LOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             if self.EnemyIntel.EnemyLandFireBaseDetected then
-                LOG('EnemyLandFireBaseDetected is true')
+                --LOG('EnemyLandFireBaseDetected is true')
             end
             self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
@@ -1838,7 +1835,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Strategic Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Strategic Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             self.EnemyIntel.DirectorData.Strategic = strategicUnits
         end
@@ -1852,7 +1849,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Intel Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex.. ' Unit ID is '..unit.Object.UnitId)
+                --LOG('Enemy Intel Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex.. ' Unit ID is '..unit.Object.UnitId)
             end
             self.EnemyIntel.DirectorData.Intel = intelUnits
         end
@@ -1912,7 +1909,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if potentialTarget and not potentialTarget.Dead then
-            LOG('Target being returned is '..potentialTarget.UnitId)
+            --LOG('Target being returned is '..potentialTarget.UnitId)
             return potentialTarget
         end
         return false
@@ -2545,40 +2542,40 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not v.NoPath then
                         local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1)
                         if path then
-                            LOG('Total Threat for path is '..totalThreat)
+                            --LOG('Total Threat for path is '..totalThreat)
                             self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / table.getn(path))
-                            LOG('We have a path to the enemy start position with an average of '..(totalThreat / table.getn(path)..' threat'))
+                            --LOG('We have a path to the enemy start position with an average of '..(totalThreat / table.getn(path)..' threat'))
 
                             if self.EnemyIntel.EnemyCount > 0 then
-                                LOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
-                                LOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                                LOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
-                                LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
-                                LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                                --LOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
+                                --LOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                                --LOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
+                                --LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
+                                --LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
                                 if self.EnemyIntel.EnemyLandFireBaseDetected then
-                                    LOG('Firebase flag is true')
+                                    --LOG('Firebase flag is true')
                                 end
                                 if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
-                                and self.EnemyIntel.EnemyThreatCurrent.DefenseSurface > self.BrainIntel.SelfThreat.LandNow
+                                and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
                                 and totalThreat > self.BrainIntel.SelfThreat.LandNow 
                                 and self.EnemyIntel.EnemyLandFireBaseDetected then
                                     self.EnemyIntel.ChokeFlag = true
-                                    LOG('ChokeFlag is true')
+                                    --LOG('ChokeFlag is true')
                                 else
-                                    LOG('ChokeFlag is false')
+                                    --LOG('ChokeFlag is false')
                                     self.EnemyIntel.ChokeFlag = false
                                 end
                             end
                         elseif (not path and reason) then
-                            LOG('We dont have a path to the enemy start position, setting NoPath to true')
-                            LOG('Reason is '..reason)
+                            --LOG('We dont have a path to the enemy start position, setting NoPath to true')
+                            --LOG('Reason is '..reason)
                             self.EnemyIntel.ChokePoints[k].NoPath = true
                         else
                             WARN('AI-RNG : Chokepoint test has unexpected return')
                         end
                     end
-                    LOG('Current enemy chokepoint data for index '..k)
-                    LOG(repr(self.EnemyIntel.ChokePoints[k]))
+                    --LOG('Current enemy chokepoint data for index '..k)
+                    --LOG(repr(self.EnemyIntel.ChokePoints[k]))
                     WaitTicks(20)
                 end
             end

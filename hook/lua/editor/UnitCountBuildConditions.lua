@@ -839,13 +839,11 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
 end
 
 function ACUOnField(aiBrain, gun)
-    if aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 then
-        for k, v in aiBrain.EnemyIntel.ACU do
-            if v.OnField and v.Gun and gun then
-                return true
-            elseif v.OnField and not gun then
-                return true
-            end
+    for k, v in aiBrain.EnemyIntel.ACU do
+        if v.OnField and v.Gun and gun then
+            return true
+        elseif v.OnField and not gun then
+            return true
         end
     end
     return false

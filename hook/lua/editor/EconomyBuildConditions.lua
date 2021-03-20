@@ -19,8 +19,20 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, m
     --LOG('Mass Storage Ratio :'..econ.MassStorageRatio..' Energy Storage Ratio :'..econ.EnergyStorageRatio)
     if aiBrain.HasParagon and econ.MassStorageRatio >= 0.01 and econ.EnergyStorageRatio >= 0.01 then
         return true
-    elseif aiBrain.EnemyIntel.ChokeFlag and mult then
-        if econ.MassStorageRatio >= 0.20 and econ.EnergyStorageRatio >= 0.80 then
+    elseif aiBrain.EnemyIntel.ChokeFlag then
+        if mult == 'LAND' then
+            if econ.MassStorageRatio >= 0.20 and econ.EnergyStorageRatio >= 0.80 then
+                return true
+            end
+        elseif mult == 'FACTORY' then
+            if econ.MassStorageRatio >= 0.10 and econ.EnergyStorageRatio >= 0.80 then
+                return true
+            end
+        elseif mult == 'DEFENSE' then
+            if econ.MassStorageRatio >= 0.20 and econ.EnergyStorageRatio >= 0.80 then
+                return true
+            end
+        elseif econ.MassStorageRatio >= mStorageRatio and econ.EnergyStorageRatio >= eStorageRatio then
             return true
         end
     elseif aiBrain.UpgradeMode == 'Aggressive' then
