@@ -50,7 +50,6 @@ BaseBuilderTemplate {
         end
         local mapSizeX, mapSizeZ = GetMapSize()
         if mapSizeX < 1000 and mapSizeZ < 1000 then
-        --LOG('Returning naval expansion')
             return 100, 'RNGStandard'
         end
     end,
