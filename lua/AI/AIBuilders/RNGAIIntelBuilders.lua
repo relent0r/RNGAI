@@ -9,6 +9,19 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
+local ActiveExpansion = function(self, aiBrain, builderManager)
+    --LOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
+        --LOG('Active Expansion is set'..builderManager.LocationType)
+        --LOG('Active Expansion builders are set to 900')
+        return 900
+    else
+        --LOG('Disable Air Intie Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI RadarBuilders',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
@@ -102,8 +115,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
     },
@@ -115,8 +127,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.2 }},
         },
         BuilderType = 'Any',
     },
@@ -168,6 +179,20 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.5, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Radar Upgrade Expansion',
+        PlatoonTemplate = 'T1RadarUpgrade',
+        PriorityFunction = ActiveExpansion,
+        Priority = 600,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
