@@ -1963,7 +1963,7 @@ Platoon = Class(RNGAIPlatoon) {
                             --LOG('ACU found that coule be sniped, set to target')
                         end
                     end
-                    if not target and myThreat > 8 and (not data.UnitType == 'GUNSHIP') then
+                    if not target and myThreat > 8 and data.UnitType != 'GUNSHIP' then
                         --LOG('Checking for director target')
                         target = aiBrain:CheckDirectorTargetAvailable('AntiAir', myThreat)
                         if target then
