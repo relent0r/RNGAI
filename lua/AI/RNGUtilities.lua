@@ -2142,12 +2142,12 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
             LOG('mass marker MaxDistance Reached, breaking loop')
             break
         end
-        threat = aiBrain:GetThreatAtPosition( v.Position, 0, true, tType)
-        if threat > threatMax then
-            LOG('mass marker threatMax Reached, continuing')
-            continue
-        end
         if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+            threat = aiBrain:GetThreatAtPosition( v.Position, 0, true, tType)
+            if threat > threatMax then
+                LOG('mass marker threatMax Reached, continuing')
+                continue
+            end
             table.insert(newList, v)
         end
     end
