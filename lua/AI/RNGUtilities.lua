@@ -426,13 +426,13 @@ function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin
     if not pos then
         return false
     end
-    local positions = AIGetMarkersAroundLocationRNG(aiBrain, 'Expansion Area', pos, radius, tMin, tMax, tRings, tType)
+    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Expansion Area', pos, radius, tMin, tMax, tRings, tType)
 
     local retPos, retName
     if eng then
-        retPos, retName = AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
     else
-        retPos, retName = AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     end
 
     return retPos, retName
@@ -2062,6 +2062,96 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit)
         end
     end
     return false
+end
+
+local markerTypeCache = { }
+--- Flushes the entire cache
+function FlushMarkerTypeCache()
+    markerTypeCache = { }
+end
+--- Flushes a single element from the cache
+-- @param markerType The type to flush.
+function FlushElementOfMarkerTypeCache(markerType)
+    markerTypeCache[markerType] = nil
+end
+--- Sets the cache for a specific marker type - it is up to you to make 
+-- sure the format is correct: {Position = v.position, Name = k}.
+-- @param markerType The type to set.
+-- @param markers The marker to set.
+function SetMarkerTypeCache(markerType, markers)
+    markerTypeCache[markerType] = markers
+end
+
+function GetMarkersByType(markerType)
+
+    LOG("Retrieving markers of type: " .. markerType)
+
+    -- check if parameter is set, if not - help us all and return everything
+    if not markerType then 
+        return Scenario.MasterChain._MASTERCHAIN_.Markers
+    end
+    -- check if we already looked for these in the past
+    if not markerTypeCache[markerType] then
+        -- make it easier to read
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
+        -- prepare a table to keep the markers
+        local cache = { }
+        -- go over every marker and popualte our table
+        if markers then
+            for k, v in markers do
+                if v.type == markerType then
+                    table.insert(cache, {Position = v.position, Name = k})
+                end
+            end
+        end
+        -- add the markers of this type to the cache
+        markerTypeCache[markerType] = cache
+        LOG("ScenarioUtils: Cached " .. table.getn(cache) .. " markers of type: " .. markerType)
+    end
+    -- return the cached markers
+    return markerTypeCache[markerType]
+end
+
+function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings, tType, position)
+
+    local threatCheck = false
+    local threatMax = 999999
+    local threatMin = -999999
+    local startX, startZ = aiBrain:GetArmyStartPos()
+    local distance = maxDist * maxDist
+
+    if tMin and tMax then
+        threatCheck = true
+        threatMax = tMax
+        threatMin = tMin
+    end
+
+    local markerList = GetMarkersByType('Mass')
+    RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) > VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
+    local newList = {}
+    local threat
+    for _, v in markerList do
+        -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
+        if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
+            -- mass marker is too close to border, skip it.
+            continue
+        end
+        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > distance then
+            LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
+            LOG('Max Distance'..distance)
+            LOG('mass marker MaxDistance Reached, breaking loop')
+            break
+        end
+        threat = aiBrain:GetThreatAtPosition( v.Position, 0, true, tType)
+        if threat > threatMax then
+            LOG('mass marker threatMax Reached, continuing')
+            continue
+        end
+        if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+            table.insert(newList, v)
+        end
+    end
+    return newList
 end
 
 function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)

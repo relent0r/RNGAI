@@ -2326,7 +2326,7 @@ Platoon = Class(RNGAIPlatoon) {
                     return
                 end
             elseif cons.NearMarkerType == 'Expansion Area' then
-                reference, refName = AIUtils.AIFindExpansionAreaNeedsEngineer(aiBrain, cons.LocationType,
+                reference, refName = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
                 if not reference or not refName then
@@ -2507,6 +2507,13 @@ Platoon = Class(RNGAIPlatoon) {
                                                         cons.ThreatMax, cons.ThreatRings)
             buildFunction = AIBuildStructures.AIBuildAdjacency
             table.insert(baseTmplList, baseTmpl)
+        elseif cons.BuildStructures[1] == 'T1Resource' or cons.BuildStructures[1] == 'T2Resource' or cons.BuildStructures[1] == 'T3Resource' then
+            table.insert(baseTmplList, baseTmpl)
+            relative = true
+            reference = true
+            cons.NearMarkerType = cons
+            LOG('construction data '..repr(cons.NearMarkerType))
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         else
             table.insert(baseTmplList, baseTmpl)
             relative = true

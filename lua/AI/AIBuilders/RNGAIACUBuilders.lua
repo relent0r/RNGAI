@@ -561,6 +561,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -756,7 +757,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU Mass 20',
+        BuilderName = 'RNGAI ACU Mass 20 Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = { 
@@ -767,6 +768,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -774,7 +776,7 @@ BuilderGroup {
         }
     },
     Builder {    	
-        BuilderName = 'RNGAI ACU T1 Power Trend',
+        BuilderName = 'RNGAI ACU T1 Power Trend Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -795,7 +797,7 @@ BuilderGroup {
         }
     },
     Builder {    	
-        BuilderName = 'RNGAI ACU T1 Power Scale',
+        BuilderName = 'RNGAI ACU T1 Power Scale Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -818,7 +820,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU T2 Power Engineer Negative Trend',
+        BuilderName = 'RNGAI ACU T2 Power Engineer Negative Trend Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         InstanceCount = 1,
@@ -847,7 +849,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU T3 Power Engineer Negative Trend',
+        BuilderName = 'RNGAI ACU T3 Power Engineer Negative Trend Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         InstanceCount = 1,
@@ -875,7 +877,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Land',
+        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Land Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 950,
         BuilderConditions = {
@@ -910,7 +912,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Air',
+        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Air Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 950,
         BuilderConditions = {

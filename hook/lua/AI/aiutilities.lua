@@ -378,11 +378,43 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
     return markerList
 end
 
+function AIFilterAlliedBasesRNG(aiBrain, positions)
+    local retPositions = {}
+    local armyIndex = aiBrain:GetArmyIndex()
+    for _, v in positions do
+        local allyPosition = false
+        for index,brain in ArmyBrains do
+            if brain.BrainType == 'AI' and IsAlly(brain:GetArmyIndex(), armyIndex) then
+                if brain.BuilderManagers[v.Name]  or ( v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] ) then
+                    if brain.BuilderManagers[v.Name] then
+                        LOG('Ally AI already has expansion '..v.Name)
+                        if brain.BuilderManagers[v.Name].Active then
+                            LOG('BuilderManager is active')
+                        end
+                    elseif v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] then
+                        --LOG('Ally AI already has Main Position')
+                    end
+                    allyPosition = true
+                    break
+                end
+            end
+        end
+        if not allyPosition then
+            --LOG('No AI ally at this expansion position, perform structure threat')
+            local threat = GetAlliesThreat(aiBrain, v, 2, 'StructuresNotMex')
+            if threat == 0 then
+                table.insert(retPositions, v)
+            end
+        end
+    end
+    return retPositions
+end
+
 function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     local closest = false
     local markerCount = false
     local retPos, retName
-    local positions = AIFilterAlliedBases(aiBrain, positions)
+    local positions = AIFilterAlliedBasesRNG(aiBrain, positions)
     --LOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then

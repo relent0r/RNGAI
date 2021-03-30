@@ -26,6 +26,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -45,6 +46,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 60,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -67,6 +69,7 @@ BuilderGroup {
                 RepeatBuild = true,
                 Distance = 30,
                 Type = 'Mass',
+                MaxDistance = 120,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -89,6 +92,7 @@ BuilderGroup {
                 RepeatBuild = true,
                 Distance = 30,
                 Type = 'Mass',
+                MaxDistance = 240,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -114,6 +118,7 @@ BuilderGroup {
                 RepeatBuild = true,
                 Distance = 30,
                 Type = 'Mass',
+                MaxDistance = 480,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -136,6 +141,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 1000,
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -237,6 +243,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -256,6 +263,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 150,
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -276,6 +284,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 1000,
                 BuildStructures = {
                     'T1Resource',
                 }

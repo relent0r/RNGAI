@@ -164,6 +164,10 @@ function CDROverChargeRNG(aiBrain, cdr)
             acuThreatLimit = 37
         end
     elseif factionIndex == 2 then
+        if cdr:HasEnhancement('HeatSink') then
+            cdr.GunUpgradePresent = true
+            acuThreatLimit = 32
+        end
         if cdr:HasEnhancement('CrysalisBeam') then
             cdr.GunUpgradePresent = true
             weapon.Range = 35 - 3
