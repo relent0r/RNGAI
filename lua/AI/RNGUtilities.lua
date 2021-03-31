@@ -2117,7 +2117,15 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     local threatCheck = false
     local threatMax = 999999
     local threatMin = -999999
-    local startX, startZ = aiBrain:GetArmyStartPos()
+
+    local startX, startZ
+    
+    if position then
+        startX = position[1]
+        startZ = position[3]
+    else
+        startX, startZ = aiBrain:GetArmyStartPos()
+    end
     local distance = maxDist * maxDist
 
     if tMin and tMax then
@@ -2127,7 +2135,8 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     end
 
     local markerList = GetMarkersByType('Mass')
-    RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) > VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
+    RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) < VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
+    --LOG(' Mass Marker List '..repr(markerList))
     local newList = {}
     local threat
     for _, v in markerList do

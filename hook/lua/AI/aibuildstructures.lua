@@ -47,7 +47,7 @@ end
 local AntiSpamList = {}
 function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     if not aiBrain.RNG then
-        return RNGExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
+        return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
     end
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
@@ -147,6 +147,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     local location = false
     if IsResource(buildingType) then
+        --location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
         if buildingType != 'T1HydroCarbon' then
             --test
             local threatMin = -9999
@@ -154,17 +155,17 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             local threatRings = 0
             local threatType = 'AntiSurface'
             local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MaxDistance, threatMin, threatMax, threatRings, threatType, relativeTo)
+            relative = false
             for _,v in markerTable do
                 if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance then
                     if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
                         location = table.copy(markerTable[Random(1,table.getn(markerTable))])
-                        LOG('mass marker location '..repr(location))
+                        location = {location.Position[1], location.Position[3], location.Position[2]}
                     end
                 end
             end
         else
             location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
-            LOG('HydroLocation '..repr(location))
         end
     else
         location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
@@ -204,7 +205,10 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     -- if we have a location, build!
     if location then
+        LOG('Location = '..repr(location))
         local relativeLoc = BuildToNormalLocation(location)
+        LOG('relativeLoc = '..repr(relativeLoc))
+        LOG('relativeTo = '..repr(relativeTo))
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
