@@ -55,6 +55,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -83,6 +84,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -112,6 +114,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -142,6 +145,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -173,6 +177,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1Resource',
@@ -204,6 +209,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -230,6 +236,7 @@ BuilderGroup {
         BuilderData = {
             ScanWait = 40,
             Construction = {
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1EnergyProduction',
                     'T1EnergyProduction',
@@ -261,6 +268,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -289,6 +297,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -318,6 +327,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -348,6 +358,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -379,6 +390,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -411,6 +423,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
                     'T1EnergyProduction',
@@ -437,6 +450,7 @@ BuilderGroup {
         BuilderData = {
             ScanWait = 40,
             Construction = {
+                MaxDistance = 30,
                 BuildStructures = {
                     'T1EnergyProduction',
                     'T1EnergyProduction',
@@ -458,7 +472,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.25}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.7 }},
@@ -504,7 +518,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncome',  { 0.7, 8.0}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 0.7, 8.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
@@ -550,7 +564,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU Mass 20',
+        BuilderName = 'RNGAI ACU Mass 30',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = { 
@@ -687,7 +701,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
@@ -738,7 +752,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncome',  { 0.5, 5.0}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
@@ -757,7 +771,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU Mass 20 Large',
+        BuilderName = 'RNGAI ACU Mass 30 Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 850,
         BuilderConditions = { 
@@ -965,7 +979,7 @@ BuilderGroup {
         Priority = 860,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,50, categories.STRUCTURE * categories.HYDROCARBON, }},
-            { EBC, 'GreaterThanEconIncome',  { 0.5, 0.0}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 0.0}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1029,7 +1043,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncome',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'HeavyAntiMatterCannon', false }},
                 { MIBC, 'FactionIndex', {1}},
             },
@@ -1048,7 +1062,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncome',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'CrysalisBeam', false }},
                 { MIBC, 'FactionIndex', {2}},
             },
@@ -1067,7 +1081,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncome',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'CoolingUpgrade', false }},
                 { MIBC, 'FactionIndex', {3}},
             },
@@ -1086,7 +1100,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncome',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'RateOfFire', false }},
                 { MIBC, 'FactionIndex', {4}},
             },
@@ -1110,7 +1124,7 @@ BuilderGroup {
                 { MIBC, 'GreaterThanGameTimeRNG', { 1500 } },
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
-                { EBC, 'GreaterThanEconIncome',  { 1.2, 120.0}},
+                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 120.0}},
                 --{ MIBC, 'FactionIndex', {4}},
             },
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
@@ -1130,7 +1144,7 @@ BuilderGroup {
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
-                { EBC, 'GreaterThanEconIncome',  { 1.2, 120.0}},
+                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 120.0}},
                 --{ MIBC, 'FactionIndex', {4}},
             },
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },

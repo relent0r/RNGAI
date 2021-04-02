@@ -27,6 +27,9 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 30,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -47,6 +50,9 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 60,
+                ThreatMin = -500,
+                ThreatMax = 0,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -66,10 +72,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
-                RepeatBuild = true,
-                Distance = 30,
-                Type = 'Mass',
                 MaxDistance = 120,
+                ThreatMin = -500,
+                ThreatMax = 0,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -90,9 +96,12 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 30,
+                Distance = 120,
                 Type = 'Mass',
                 MaxDistance = 240,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -104,7 +113,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
-        InstanceCount = 4,
+        InstanceCount = 6,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
@@ -116,9 +125,12 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 30,
+                Distance = 120,
                 Type = 'Mass',
                 MaxDistance = 480,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -127,13 +139,13 @@ BuilderGroup {
     },
 
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 1000',
+        BuilderName = 'RNGAI T1Engineer Mass 2000',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 300,
-        InstanceCount = 4,
+        InstanceCount = 7,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 2, 0, 'AntiSurface', 1}},
             
         },
         BuilderType = 'Any',
@@ -142,6 +154,9 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 1000,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -244,6 +259,9 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 30,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -264,6 +282,9 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 150,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -277,14 +298,17 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-                { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 50, 0, 'AntiSurface', 1 }},
+                { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 50, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
         BuilderData = {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
-                MaxDistance = 1000,
+                MaxDistance = 2000,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 }

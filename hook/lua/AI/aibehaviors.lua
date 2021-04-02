@@ -1551,7 +1551,7 @@ end
 
 function FatBoyBehaviorRNG(self)
     local aiBrain = self:GetBrain()
-    AssignExperimentalPriorities(self)
+    AssignExperimentalPrioritiesRNG(self)
 
     local unit = GetExperimentalUnit(self)
     local targetUnit = false

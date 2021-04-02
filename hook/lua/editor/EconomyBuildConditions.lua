@@ -173,3 +173,12 @@ function EnergyToMassRatioIncomeRNG(aiBrain, ratio, compareType, DEBUG)
     end
     return CompareBody(EnergyIncome / MassIncome, ratio, compareType)
 end
+
+function GreaterThanEconIncomeRNG(aiBrain, mIncome, eIncome)
+    local EnergyIncome = GetEconomyIncome(aiBrain,'ENERGY')
+    local MassIncome = GetEconomyIncome(aiBrain,'MASS')
+    if (MassIncome >= mIncome and EnergyIncome >= eIncome) then
+        return true
+    end
+    return false
+end

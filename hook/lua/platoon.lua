@@ -2265,7 +2265,7 @@ Platoon = Class(RNGAIPlatoon) {
                 reference = table.copy(eng:GetPosition())
             end
             relative = false
-            buildFunction = AIBuildStructures.AIExecuteBuildStructure
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.OrderedTemplate then
             relativeTo = table.copy(eng:GetPosition())
@@ -2419,7 +2419,7 @@ Platoon = Class(RNGAIPlatoon) {
 
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
 
-            buildFunction = AIBuildStructures.AIExecuteBuildStructure
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType and cons.NearMarkerType == 'Naval Defensive Point' then
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
 
@@ -2431,7 +2431,7 @@ Platoon = Class(RNGAIPlatoon) {
 
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
 
-            buildFunction = AIBuildStructures.AIExecuteBuildStructure
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType and (cons.NearMarkerType == 'Rally Point' or cons.NearMarkerType == 'Protected Experimental Construction') then
             --DUNCAN - add so experimentals build on maps with no markers.
             if not cons.ThreatMin or not cons.ThreatMax or not cons.ThreatRings then
@@ -2447,7 +2447,7 @@ Platoon = Class(RNGAIPlatoon) {
                 reference = pos
             end
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
-            buildFunction = AIBuildStructures.AIExecuteBuildStructure
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType then
             --WARN('*Data weird for builder named - ' .. self.BuilderName)
             if not cons.ThreatMin or not cons.ThreatMax or not cons.ThreatRings then
@@ -2466,7 +2466,7 @@ Platoon = Class(RNGAIPlatoon) {
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, (cons.ExpansionRadius or 100), cons.ExpansionTypes, nil, cons)
             end
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
-            buildFunction = AIBuildStructures.AIExecuteBuildStructure
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.AvoidCategory then
             relative = false
             local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
@@ -2507,18 +2507,11 @@ Platoon = Class(RNGAIPlatoon) {
                                                         cons.ThreatMax, cons.ThreatRings)
             buildFunction = AIBuildStructures.AIBuildAdjacency
             table.insert(baseTmplList, baseTmpl)
-        elseif cons.BuildStructures[1] == 'T1Resource' or cons.BuildStructures[1] == 'T2Resource' or cons.BuildStructures[1] == 'T3Resource' then
-            table.insert(baseTmplList, baseTmpl)
-            relative = true
-            reference = true
-            cons.NearMarkerType = cons
-            LOG('construction data '..repr(cons.NearMarkerType))
-            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         else
             table.insert(baseTmplList, baseTmpl)
             relative = true
             reference = true
-            buildFunction = AIBuildStructures.AIExecuteBuildStructure
+            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         end
         if cons.BuildClose then
             closeToBuilder = eng
@@ -2546,12 +2539,12 @@ Platoon = Class(RNGAIPlatoon) {
                         if aiBrain.CustomUnits[v] and aiBrain.CustomUnits[v][faction] then
                             local replacement = SUtils.GetTemplateReplacement(aiBrain, v, faction, buildingTmpl)
                             if replacement then
-                                buildFunction(aiBrain, eng, v, closeToBuilder, relative, replacement, baseListData, reference, cons.NearMarkerType)
+                                buildFunction(aiBrain, eng, v, closeToBuilder, relative, replacement, baseListData, reference, cons)
                             else
-                                buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
+                                buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
                             end
                         else
-                            buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons.NearMarkerType)
+                            buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
                         end
                     else
                         if PlatoonExists(aiBrain, self) then
@@ -2758,7 +2751,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
-                        if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30, -500, 1, 0, 'AntiSurface', 1) then
+                        if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30) then
                             --LOG('We can build on a mass marker within 30')
                             massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, buildLocation)
                             --LOG('Mass Marker'..repr(massMarker))
@@ -2795,14 +2788,9 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('Repeat Build is set for :'..eng.Sync.id)
                 if type == 'Mass' and distance then
                     if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
-                        --LOG('Type is Mass, setting ai plan')
-                        massMarker = RUtils.GetClosestMassMarker(aiBrain, eng)
-                        --LOG('Mass Marker Returned is'..repr(massMarker))
-                        if massMarker[1] and VDist3( massMarker, engpos ) < distance then
-                            eng.PlatoonHandle:EngineerBuildAIRNG()
-                            --eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
-                            return
-                        end
+                        eng.PlatoonHandle:EngineerBuildAIRNG()
+                        --eng.PlatoonHandle:SetAIPlan( eng.PlatoonHandle.PlanName, aiBrain)
+                        return
                     end
                 else
                     WARN('Invalid Construction Type or Distance, Expected : Mass, number')

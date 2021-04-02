@@ -17,12 +17,12 @@ function AddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
     table.insert(builder.EngineerBuildQueue, newEntry)
 end
 
-function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
+function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     if whatToBuild then
         if IsResource(buildingType) then
-            return AIExecuteBuildStructure(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
+            return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
         else
             for l,bType in baseTemplate do
                 for m,bString in bType[1] do
@@ -46,9 +46,6 @@ end
 
 local AntiSpamList = {}
 function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
-    if not aiBrain.RNG then
-        return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
-    end
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     -- If the c-engine can't decide what to build, then search the build template manually.
@@ -154,7 +151,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             local threatMax = 9999
             local threatRings = 0
             local threatType = 'AntiSurface'
-            local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MaxDistance, threatMin, threatMax, threatRings, threatType, relativeTo)
+            local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MaxDistance, constructionData.ThreatMin, constructionData.ThreatMax, constructionData.ThreatRings, constructionData.ThreatType, relativeTo)
             relative = false
             for _,v in markerTable do
                 if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance then

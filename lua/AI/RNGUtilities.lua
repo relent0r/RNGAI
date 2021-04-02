@@ -2117,6 +2117,8 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     local threatCheck = false
     local threatMax = 999999
     local threatMin = -999999
+    local threatType = 'AntiSurface'
+    local distance = 2000
 
     local startX, startZ
     
@@ -2126,12 +2128,15 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     else
         startX, startZ = aiBrain:GetArmyStartPos()
     end
-    local distance = maxDist * maxDist
+    if maxDist then
+        distance = maxDist * maxDist
+    end
 
-    if tMin and tMax then
+    if tMin and tMax and tType then
         threatCheck = true
         threatMax = tMax
         threatMin = tMin
+        threatType = tType
     end
 
     local markerList = GetMarkersByType('Mass')
@@ -2152,10 +2157,12 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
             break
         end
         if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
-            threat = aiBrain:GetThreatAtPosition( v.Position, 0, true, tType)
-            if threat > threatMax then
-                LOG('mass marker threatMax Reached, continuing')
-                continue
+            if threatCheck then
+                threat = aiBrain:GetThreatAtPosition( v.Position, 0, true, threatType)
+                if threat > threatMax then
+                    LOG('mass marker threatMax Reached, continuing')
+                    continue
+                end
             end
             table.insert(newList, v)
         end
