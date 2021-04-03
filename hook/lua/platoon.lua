@@ -4691,10 +4691,10 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('Initialize atkPri table')
         local atkPri = { categories.STRUCTURE * categories.STRATEGIC,
                          categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                         categories.COMMAND,
                          categories.STRUCTURE * categories.FACTORY,
                          categories.EXPERIMENTAL * categories.LAND,
                          categories.STRUCTURE * categories.SHIELD,
-                         categories.COMMAND,
                          categories.STRUCTURE * categories.DEFENSE,
                          categories.ALLUNITS,
                         }
@@ -4725,18 +4725,29 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('Starting Platoon Loop')
 
         while aiBrain:PlatoonExists(self) do
-            target = aiBrain:CheckDirectorTargetAvailable(false, false)
+            local targetRotation = 0
+            if not target then
+                target = aiBrain:CheckDirectorTargetAvailable(false, false)
+            end
             if not target then
                 --LOG('No Director Target, checking for normal target')
                 target = self:FindPrioritizedUnit('artillery', 'Enemy', true, self:GetPlatoonPosition(), maxRadius)
             end
             if target and not target.Dead then
                 self:Stop()
-                --LOG('Target Found..Attacking')
                 self:AttackTarget(target)
+                while (target and not target.Dead) or targetRotation < 6 do
+                    LOG('Arty Target Rotation is '..targetRotation)
+                    targetRotation = targetRotation + 1
+                    WaitTicks(200)
+                    if target.Dead then
+                        LOG('Target Dead ending loop')
+                        break
+                    end
+                end
             end
-            --LOG('Waiting 20 seconds')
-            WaitTicks(200)
+            target = false
+            WaitTicks(100)
         end
     end,
 }

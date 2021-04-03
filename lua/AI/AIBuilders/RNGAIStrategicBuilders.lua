@@ -69,10 +69,10 @@ BuilderGroup {
     },
 }
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Strategic Artillery Builders',
+    BuilderGroupName = 'RNGAI Strategic Artillery Builders Small',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T3 Artillery Hi Pri',
+        BuilderName = 'RNGAI T3 Artillery Hi Pri Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
@@ -103,7 +103,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T3 Artillery Lo Pri',
+        BuilderName = 'RNGAI T3 Artillery Lo Pri Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
@@ -134,7 +134,165 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T4 Mavor Exp Nuke',
+        BuilderName = 'RNGAI T4 Mavor Exp Nuke Small',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        Priority = 650,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { EBC, 'GreaterThanEconIncomeRNG', {40, 1500}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            MinNumAssistees = 3,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                BuildStructures = {
+                    'T4Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 RapidFire Small',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        Priority = 650,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { EBC, 'GreaterThanEconIncomeRNG', {40, 1500}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            MinNumAssistees = 3,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                BuildStructures = {
+                    'T3RapidArtillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Scathis Small',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        Priority = 650,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { EBC, 'GreaterThanEconIncomeRNG', {40, 1500}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            MinNumAssistees = 3,
+            Construction = {
+                BuildClose = true,
+                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                BuildStructures = {
+                    'T4LandExperimental2',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Strategic Artillery Builders Large',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T3 Artillery Hi Pri Large',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 600,
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconIncomeRNG', { 8.0, 700.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                DesiresAssist = true,
+                NumAssistees = 15,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 20,
+                BuildStructures = {
+                    'T3Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Artillery Lo Pri Large',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 600,
+        DelayEqualBuildPlattons = {'Artillery', 20},
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconIncomeRNG', { 8.0, 700.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = true,
+                DesiresAssist = true,
+                NumAssistees = 15,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                maxUnits = 1,
+                maxRadius = 20,
+                BuildStructures = {
+                    'T3Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Mavor Exp Nuke Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         DelayEqualBuildPlattons = {'Artillery', 20},
         Priority = 650,
@@ -165,7 +323,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T4 RapidFire',
+        BuilderName = 'RNGAI T4 RapidFire Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         DelayEqualBuildPlattons = {'Artillery', 20},
         Priority = 650,
@@ -196,7 +354,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T4 Scathis',
+        BuilderName = 'RNGAI T4 Scathis Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         DelayEqualBuildPlattons = {'Artillery', 20},
         Priority = 650,

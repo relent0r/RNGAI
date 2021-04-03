@@ -8,6 +8,7 @@ local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -484,7 +485,7 @@ function GetClosestMassMarkerToPos(aiBrain, pos)
         local y = v.Position[2]
         local z = v.Position[3]
         distance = VDist2(pos[1], pos[3], x, z)
-        if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+        if (not lowest or distance < lowest) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             --LOG('Can build at position '..repr(v.Position))
             loc = v.Position
             name = v.Name
@@ -516,7 +517,7 @@ function GetClosestMassMarker(aiBrain, unit)
         local y = v.Position[2]
         local z = v.Position[3]
         distance = VDist2(engPos[1], engPos[3], x, z)
-        if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+        if (not lowest or distance < lowest) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             loc = v.Position
             name = v.Name
             lowest = distance
@@ -797,7 +798,7 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
         }
     }
     blueprintID = DefenseTable[factionIndex][structureType][tech]
-    if aiBrain:CanBuildStructureAt(blueprintID, position) then
+    if CanBuildStructureAt(aiBrain, blueprintID, position) then
         IssueStop({eng})
         IssueClearCommands({eng})
         aiBrain:BuildStructure(eng, blueprintID, position, false)
@@ -1963,7 +1964,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local posDistance = 0
         if startPos then
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
-                posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
+                posThreat = GetThreatAtPosition(aiBrain, startPos, 1, true, 'StructuresNotMex')
                 --LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 5 then
                     if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, startPos, 50, 'Enemy') > 0 then
@@ -2082,7 +2083,7 @@ function SetMarkerTypeCache(markerType, markers)
     markerTypeCache[markerType] = markers
 end
 
-function GetMarkersByType(markerType)
+function GetMarkersByTypeIn(markerType)
 
     LOG("Retrieving markers of type: " .. markerType)
 
@@ -2115,10 +2116,8 @@ end
 function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings, tType, position)
 
     local threatCheck = false
-    local threatMax = 999999
-    local threatMin = -999999
-    local threatType = 'AntiSurface'
     local distance = 2000
+
 
     local startX, startZ
     
@@ -2134,16 +2133,14 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
 
     if tMin and tMax and tType then
         threatCheck = true
-        threatMax = tMax
-        threatMin = tMin
-        threatType = tType
+    else
+        threatCheck = false
     end
 
     local markerList = GetMarkersByType('Mass')
     RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) < VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
     --LOG(' Mass Marker List '..repr(markerList))
     local newList = {}
-    local threat
     for _, v in markerList do
         -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
         if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
@@ -2156,10 +2153,9 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
             LOG('mass marker MaxDistance Reached, breaking loop')
             break
         end
-        if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+        if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             if threatCheck then
-                threat = aiBrain:GetThreatAtPosition( v.Position, 0, true, threatType)
-                if threat > threatMax then
+                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) > tMax then
                     LOG('mass marker threatMax Reached, continuing')
                     continue
                 end

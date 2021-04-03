@@ -387,7 +387,7 @@ function AIFilterAlliedBasesRNG(aiBrain, positions)
             if brain.BrainType == 'AI' and IsAlly(brain:GetArmyIndex(), armyIndex) then
                 if brain.BuilderManagers[v.Name]  or ( v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] ) then
                     if brain.BuilderManagers[v.Name] then
-                        LOG('Ally AI already has expansion '..v.Name)
+                        --LOG('Ally AI already has expansion '..v.Name)
                         if brain.BuilderManagers[v.Name].Active then
                             LOG('BuilderManager is active')
                         end

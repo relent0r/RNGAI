@@ -145,7 +145,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     local location = false
     if IsResource(buildingType) then
         --location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
-        if buildingType != 'T1HydroCarbon' then
+        --[[if buildingType != 'T1HydroCarbon' then
             --test
             local threatMin = -9999
             local threatMax = 9999
@@ -163,7 +163,8 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             end
         else
             location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
-        end
+        end]]
+        location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
     else
         location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
     end
