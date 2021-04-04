@@ -389,7 +389,7 @@ function AIFilterAlliedBasesRNG(aiBrain, positions)
                     if brain.BuilderManagers[v.Name] then
                         --LOG('Ally AI already has expansion '..v.Name)
                         if brain.BuilderManagers[v.Name].Active then
-                            LOG('BuilderManager is active')
+                            --LOG('BuilderManager is active')
                         end
                     elseif v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] then
                         --LOG('Ally AI already has Main Position')

@@ -203,10 +203,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     -- if we have a location, build!
     if location then
-        LOG('Location = '..repr(location))
         local relativeLoc = BuildToNormalLocation(location)
-        LOG('relativeLoc = '..repr(relativeLoc))
-        LOG('relativeTo = '..repr(relativeTo))
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end

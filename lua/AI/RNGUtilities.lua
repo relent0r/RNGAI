@@ -2085,7 +2085,7 @@ end
 
 function GetMarkersByTypeIn(markerType)
 
-    LOG("Retrieving markers of type: " .. markerType)
+    --LOG("Retrieving markers of type: " .. markerType)
 
     -- check if parameter is set, if not - help us all and return everything
     if not markerType then 
@@ -2107,7 +2107,7 @@ function GetMarkersByTypeIn(markerType)
         end
         -- add the markers of this type to the cache
         markerTypeCache[markerType] = cache
-        LOG("ScenarioUtils: Cached " .. table.getn(cache) .. " markers of type: " .. markerType)
+        --LOG("ScenarioUtils: Cached " .. table.getn(cache) .. " markers of type: " .. markerType)
     end
     -- return the cached markers
     return markerTypeCache[markerType]
@@ -2148,15 +2148,15 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
             continue
         end
         if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > distance then
-            LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
-            LOG('Max Distance'..distance)
-            LOG('mass marker MaxDistance Reached, breaking loop')
+            --LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
+            --LOG('Max Distance'..distance)
+            --LOG('mass marker MaxDistance Reached, breaking loop')
             break
         end
         if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             if threatCheck then
                 if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) > tMax then
-                    LOG('mass marker threatMax Reached, continuing')
+                    --LOG('mass marker threatMax Reached, continuing')
                     continue
                 end
             end

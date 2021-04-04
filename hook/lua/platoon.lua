@@ -4736,12 +4736,12 @@ Platoon = Class(RNGAIPlatoon) {
             if target and not target.Dead then
                 self:Stop()
                 self:AttackTarget(target)
-                while (target and not target.Dead) or targetRotation < 6 do
-                    LOG('Arty Target Rotation is '..targetRotation)
+                while (target and not target.Dead) do
+                    --LOG('Arty Target Rotation is '..targetRotation)
                     targetRotation = targetRotation + 1
                     WaitTicks(200)
-                    if target.Dead then
-                        LOG('Target Dead ending loop')
+                    if target.Dead or (targetRotation > 6) then
+                        --LOG('Target Dead ending loop')
                         break
                     end
                 end

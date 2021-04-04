@@ -145,7 +145,7 @@ BuilderGroup {
         InstanceCount = 7,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 10, 0, 'AntiSurface', 1}},
             
         },
         BuilderType = 'Any',
@@ -155,7 +155,7 @@ BuilderGroup {
             Construction = {
                 MaxDistance = 1000,
                 ThreatMin = -500,
-                ThreatMax = 30,
+                ThreatMax = 10,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
