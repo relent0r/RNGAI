@@ -13,21 +13,14 @@ function CanBuildOnMassLessThanDistance(aiBrain, locationType, distance, threatM
     local position = engineerManager.Location
     
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
-    positionThreat = aiBrain:GetThreatAtPosition( position, threatRings, true, threatType or 'Overall' )
-    if positionThreat > threatMax then
-        --LOG('Mass Build at distance :'..distance)
-        --LOG('Threat at position :'..positionThreat)
-    end
     if markerTable[1] and VDist3( markerTable[1], position ) < distance then
-        local dist = VDist3( markerTable[1], position )
         return true
     end
     return false
 end
 
-function CanBuildOnMassEng2(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
+function CanBuildOnMassEng2(aiBrain, engPos, distance)
     local MassMarker = {}
-    local threatCheck = true
     for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
         if v.type == 'Mass' then
             if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
@@ -45,12 +38,6 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance, threatMin, threatMax, thr
         end
         --LOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
         if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
-            if threatCheck then
-                threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
-                if threat < threatMin or threat > threatMax then
-                    continue
-                end
-            end
             LastMassBOOL = true
             break
         end

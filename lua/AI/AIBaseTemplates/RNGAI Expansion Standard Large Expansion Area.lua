@@ -9,7 +9,7 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Expansion Standard Large Expansion Area',
     Builders = {       
                 -- Intel Builders --
-                'RNGAI RadarBuilders',
+                'RNGAI RadarBuilders Expansion',
                 'RNGAI RadarUpgrade T1 Expansion',
                 'RNGAI Engineer Transfer To Main From Expansion',
         
@@ -53,6 +53,7 @@ BaseBuilderTemplate {
                 'RNGAI Perimeter Defenses Small',
                 'RNGAI T2 Defense FormBuilders',
                 'RNGAI T2 Expansion TML',
+                'RNGAI Shield Builder Expansion',
 		},
     NonCheatBuilders = { },
     BaseSettings = {

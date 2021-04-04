@@ -577,7 +577,7 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
             --LOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
+            path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --LOG('reason'..repr(reason))
             if path then
                 --LOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
@@ -839,13 +839,11 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
 end
 
 function ACUOnField(aiBrain, gun)
-    if aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 then
-        for k, v in aiBrain.EnemyIntel.ACU do
-            if v.OnField and v.Gun and gun then
-                return true
-            elseif v.OnField and not gun then
-                return true
-            end
+    for k, v in aiBrain.EnemyIntel.ACU do
+        if v.OnField and v.Gun and gun then
+            return true
+        elseif v.OnField and not gun then
+            return true
         end
     end
     return false

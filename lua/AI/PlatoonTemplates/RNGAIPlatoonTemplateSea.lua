@@ -95,23 +95,22 @@ PlatoonTemplate {
     FactionSquads = {
         UEF = {
             { 'ues0203', 1, 1, 'attack', 'none' },
-            { 'xes0102', 1, 2, 'attack', 'none' },
-            { 'ues0201', 1, 1, 'attack', 'none' }
+            { 'xes0102', 1, 1, 'attack', 'none' },
+            { 'ues0201', 1, 2, 'attack', 'none' }
         },
         Aeon = {
             { 'uas0203', 1, 1, 'attack', 'none' },
             { 'xas0204', 1, 2, 'attack', 'none' },
-            { 'uas0201', 1, 1, 'attack', 'none' }
+            { 'uas0201', 1, 2, 'attack', 'none' }
         },
         Cybran = {
             { 'urs0203', 1, 1, 'attack', 'none' },
             { 'xrs0204', 1, 2, 'attack', 'none' },
-            { 'urs0201', 1, 1, 'attack', 'none' }
+            { 'urs0201', 1, 2, 'attack', 'none' }
         },
         Seraphim = {
             { 'xss0203', 1, 1, 'attack', 'none' },
-            { 'xss0201', 1, 2, 'attack', 'none' },
-            { 'xss0201', 1, 1, 'attack', 'none' }
+            { 'xss0201', 1, 3, 'attack', 'none' },
         },
     }
 }
@@ -122,19 +121,18 @@ PlatoonTemplate {
         UEF = {
             { 'ues0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
             { 'ues0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xes0102', 2, 1, 'Attack', 'none' },       -- Torp Boat
-            { 'ues0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
+            { 'ues0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
          },
         Aeon = {
             { 'uas0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
             { 'uas0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            { 'xas0204', 1, 1, 'Attack', 'none' },       -- Sub Killer
             { 'uas0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
         },
         Cybran = {
             { 'urs0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
             { 'urs0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xrs0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            { 'xrs0204', 1, 1, 'Attack', 'none' },       -- Sub Killer
             { 'urs0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
         },
         Seraphim = {
@@ -149,17 +147,17 @@ PlatoonTemplate {
     Name = 'RNGAIT2SeaAttackRangedQueue',
     FactionSquads = {
         UEF = {
-            { 'xes0102', 1, 1, 'Attack', 'none' },       -- Torp Boat
+            { 'ues0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
             { 'ues0202', 1, 2, 'Artillery', 'None' },     -- Sea Cruiser
          },
         Aeon = {
-            { 'xas0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            { 'xas0204', 1, 1, 'Attack', 'none' },       -- Sub Killer
             { 'uas0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
             { 'uas0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
             
         },
         Cybran = {
-            { 'xrs0204', 2, 1, 'Attack', 'none' },       -- Sub Killer
+            { 'xrs0204', 1, 1, 'Attack', 'none' },       -- Sub Killer
             { 'urs0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
             { 'urs0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
             
@@ -175,7 +173,7 @@ PlatoonTemplate {
     Name = 'RNGAIT3SeaAttackRangedQueue',
     FactionSquads = {
         UEF = {
-            { 'xes0102', 1, 1, 'Attack', 'none' },       -- Torp Boat
+            { 'ues0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
             { 'ues0304', 1, 1, 'Artillery', 'None' },     -- Strat Sub
          },
         Aeon = {

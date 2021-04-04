@@ -1,3 +1,5 @@
+WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibuildstructures.lua' )
+
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 RNGAddToBuildQueue = AddToBuildQueue
@@ -15,12 +17,12 @@ function AddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
     table.insert(builder.EngineerBuildQueue, newEntry)
 end
 
-function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
+function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     if whatToBuild then
         if IsResource(buildingType) then
-            return AIExecuteBuildStructure(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
+            return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
         else
             for l,bType in baseTemplate do
                 for m,bString in bType[1] do
@@ -41,13 +43,9 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
     return # unsuccessful build
 end
 
---[[
+
 local AntiSpamList = {}
-RNGExecuteBuildStructure = AIExecuteBuildStructure
-function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
-    if not aiBrain.RNG then
-        return RNGExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, NearMarkerType)
-    end
+function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     -- If the c-engine can't decide what to build, then search the build template manually.
@@ -101,25 +99,19 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
         end
         -- If we can't find a techlevel for the building we  want to build, return
         if not HasTech then
-            WARN('*AIExecuteBuildStructure: Can\'t find techlevel for Builder: '..__blueprints[BuildUnitWithID].Description or  "Unknown")
+            WARN('*AIExecuteBuildStructure: Can\'t find techlevel for engineer: '..repr(builder:GetBlueprint().BlueprintId))
             return false
         else
-            SPEW('*AIExecuteBuildStructure: Building ('..repr(BuildUnitWithID)..') has Techlevel ('..HasTech..')')
+            SPEW('*AIExecuteBuildStructure: Engineer ('..repr(builder:GetBlueprint().BlueprintId)..') has Techlevel ('..HasTech..')')
         end
-        --LOG('*AIExecuteBuildStructure: We have TECH'..HasTech..' engineer.')
+
         if HasTech < NeedTech then
-            WARN('*AIExecuteBuildStructure: TECH'..NeedTech..' Unit "'..BuildUnitWithID..'" is assigned to TECH'..HasTech..' buildplatoon! ('..repr(buildingType)..')')
+            WARN('*AIExecuteBuildStructure: TECH'..HasTech..' Unit "'..BuildUnitWithID..'" is assigned to build TECH'..NeedTech..' buildplatoon! ('..repr(buildingType)..')')
             return false
         else
-            SPEW('*AIExecuteBuildStructure: Engineer with Techlevel ('..NeedTech..') can build BuildUnitWithID: '..repr(BuildUnitWithID))
+            SPEW('*AIExecuteBuildStructure: Engineer with Techlevel ('..HasTech..') can build TECH'..NeedTech..' BuildUnitWithID: '..repr(BuildUnitWithID))
         end
-        local IsRestricted = import('/lua/game.lua').IsRestricted
-        if IsRestricted(BuildUnitWithID, GetFocusArmy()) then
-            WARN('*AIExecuteBuildStructure: Unit is Restricted!!! Building Type: '..repr(buildingType)..', faction: '..repr(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
-            AntiSpamList[buildingType] = true
-            return false
-        end
-        
+
         HasFaction = builder.factionCategory
         NeedFaction = string.upper(__blueprints[string.lower(BuildUnitWithID)].General.FactionName)
         if HasFaction ~= NeedFaction then
@@ -128,7 +120,14 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
         else
             SPEW('*AIExecuteBuildStructure: AI-faction: '..AIFactionName..', Engineer with faction ('..HasFaction..') can build faction ('..NeedFaction..') - BuildUnitWithID: '..repr(BuildUnitWithID))
         end
-       
+
+        local IsRestricted = import('/lua/game.lua').IsRestricted
+        if IsRestricted(BuildUnitWithID, GetFocusArmy()) then
+            WARN('*AIExecuteBuildStructure: Unit is Restricted!!! Building Type: '..repr(buildingType)..', faction: '..repr(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
+            AntiSpamList[buildingType] = true
+            return false
+        end
+
         WARN('*AIExecuteBuildStructure: DecideWhatToBuild call failed for Building Type: '..repr(buildingType)..', faction: '..repr(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
         return false
     end
@@ -138,31 +137,41 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
     if closeToBuilder then
         relativeTo = builder:GetPosition()
     elseif builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
-        relativeTo = builder.BuilderManagerData.EngineerManager.Location
+        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
     else
         local startPosX, startPosZ = aiBrain:GetArmyStartPos()
         relativeTo = {startPosX, 0, startPosZ}
     end
     local location = false
-
-    local buildingTypeReplace
-    local whatToBuildReplace
-
-    -- Replace T1GroundDefense with T2 Pgen to try keep enough room for surounding walls.
-    if buildingType == 'T1GroundDefense' then
-        buildingTypeReplace = 'T1LandFactory'
-        whatToBuildReplace = 'ueb0101'
-    end
-
     if IsResource(buildingType) then
+        --location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
+        --[[if buildingType != 'T1HydroCarbon' then
+            --test
+            local threatMin = -9999
+            local threatMax = 9999
+            local threatRings = 0
+            local threatType = 'AntiSurface'
+            local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MaxDistance, constructionData.ThreatMin, constructionData.ThreatMax, constructionData.ThreatRings, constructionData.ThreatType, relativeTo)
+            relative = false
+            for _,v in markerTable do
+                if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance then
+                    if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+                        location = table.copy(markerTable[Random(1,table.getn(markerTable))])
+                        location = {location.Position[1], location.Position[3], location.Position[2]}
+                    end
+                end
+            end
+        else
+            location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
+        end]]
         location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
     else
-        location = aiBrain:FindPlaceToBuild(buildingTypeReplace or buildingType, whatToBuildReplace or whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+        location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
     end
     -- if it's a reference, look around with offsets
     if not location and reference then
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
-            location = aiBrain:FindPlaceToBuild(buildingTypeReplace or buildingType, whatToBuildReplace or whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+            location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then
                 break
             end
@@ -171,7 +180,7 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
     -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
     if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
         --LOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
-        relativeTo = builder.BuilderManagerData.EngineerManager.Location
+        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
             location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then
@@ -204,4 +213,4 @@ function AIExecuteBuildStructure(aiBrain, builder, buildingType, closeToBuilder,
     end
     -- At this point we're out of options, so move on to the next thing
     return false
-end]]
+end

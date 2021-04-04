@@ -9,7 +9,7 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Expansion Standard Aggressive',
     Builders = {       
                 -- Intel Builders --
-                'RNGAI RadarBuilders',
+                'RNGAI RadarBuilders Expansion',
                 'RNGAI RadarUpgrade T1 Expansion',
         
                 -- Economy Builders --
@@ -44,6 +44,7 @@ BaseBuilderTemplate {
                 'RNGAI Perimeter Defenses Small',
                 'RNGAI T2 Defense FormBuilders',
                 'RNGAI T2 Expansion TML',
+                'RNGAI Shield Builder Expansion',
 		},
     NonCheatBuilders = { },
     BaseSettings = {

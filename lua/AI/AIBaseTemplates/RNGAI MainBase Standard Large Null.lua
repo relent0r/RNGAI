@@ -22,7 +22,7 @@ BaseBuilderTemplate {
         'RNGAI Energy Production Reclaim',
 
         -- Intel Builders --
-        'RNGAI RadarBuilders',
+        'RNGAI RadarBuilders Expansion',
         'RNGAI RadarUpgrade',
         'RNGAI RadarUpgrade T1 Expansion',
         

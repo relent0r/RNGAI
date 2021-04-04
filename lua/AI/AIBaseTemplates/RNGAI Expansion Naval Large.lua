@@ -1,13 +1,13 @@
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Standard Expansion Naval',
+    BaseTemplateName = 'RNGAI Standard Expansion Naval Large',
     Builders = {
         'RNGAI Engineer Builder Expansion',
         'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
 
         -- Sea Builders --
-        'RNGAI Factory Builder Sea',
+        'RNGAI Factory Builder Sea Large',
         'RNGAI Sea Upgrade Builders',
         'RNGAI T12 Perimeter Defenses Naval',
 
@@ -49,7 +49,7 @@ BaseBuilderTemplate {
             return -1
         end
         local mapSizeX, mapSizeZ = GetMapSize()
-        if mapSizeX < 1000 and mapSizeZ < 1000 then
+        if mapSizeX > 1000 and mapSizeZ > 1000 then
             return 100, 'RNGStandard'
         end
     end,

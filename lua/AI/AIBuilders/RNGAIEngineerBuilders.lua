@@ -536,7 +536,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
-            { EBC, 'GreaterThanEconIncome',  { 1, 10}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
         },
@@ -559,7 +559,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.ENGINEERSTATION }},
-            { EBC, 'GreaterThanEconIncome',  { 1, 10}},
+            { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
         },
@@ -667,7 +667,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSeconds', { 420 } }, -- don't build after 7 minutes
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, categories.MOBILE * categories.ENGINEER}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
                 
             },
         BuilderData = {
@@ -685,9 +685,9 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 4,
         BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSeconds', { 420 } },
+                { UCBC, 'GreaterThanGameTimeSeconds', { 380 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'LessThanGameTimeSeconds', { 600 } },
+                { UCBC, 'LessThanGameTimeSeconds', { 900 } },
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -703,7 +703,7 @@ BuilderGroup {
         PlatoonAIPlan = 'ReclaimAIRNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 500,
-        InstanceCount = 10,
+        InstanceCount = 15,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSeconds', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},

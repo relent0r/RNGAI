@@ -259,7 +259,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
     if table.getn(transports) ~= 0 then
         -- If no location then we have loaded transports then return true
         if location then
-            local safePath = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Air', transports[1]:GetPosition(), location, 200)
+            local safePath = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Air', transports[1]:GetPosition(), location, 200)
             if safePath then
                 for _, p in safePath do
                     IssueMove(transports, p)
@@ -378,11 +378,43 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
     return markerList
 end
 
+function AIFilterAlliedBasesRNG(aiBrain, positions)
+    local retPositions = {}
+    local armyIndex = aiBrain:GetArmyIndex()
+    for _, v in positions do
+        local allyPosition = false
+        for index,brain in ArmyBrains do
+            if brain.BrainType == 'AI' and IsAlly(brain:GetArmyIndex(), armyIndex) then
+                if brain.BuilderManagers[v.Name]  or ( v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] ) then
+                    if brain.BuilderManagers[v.Name] then
+                        --LOG('Ally AI already has expansion '..v.Name)
+                        if brain.BuilderManagers[v.Name].Active then
+                            --LOG('BuilderManager is active')
+                        end
+                    elseif v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] then
+                        --LOG('Ally AI already has Main Position')
+                    end
+                    allyPosition = true
+                    break
+                end
+            end
+        end
+        if not allyPosition then
+            --LOG('No AI ally at this expansion position, perform structure threat')
+            local threat = GetAlliesThreat(aiBrain, v, 2, 'StructuresNotMex')
+            if threat == 0 then
+                table.insert(retPositions, v)
+            end
+        end
+    end
+    return retPositions
+end
+
 function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     local closest = false
     local markerCount = false
     local retPos, retName
-    local positions = AIFilterAlliedBases(aiBrain, positions)
+    local positions = AIFilterAlliedBasesRNG(aiBrain, positions)
     --LOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
@@ -513,9 +545,9 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if numShields < maxShields and (not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance)) then
+                if numShields < maxShields and (not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance)) then
                     retUnit = unit
-                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end

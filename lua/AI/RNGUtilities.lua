@@ -8,6 +8,7 @@ local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -426,13 +427,13 @@ function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin
     if not pos then
         return false
     end
-    local positions = AIGetMarkersAroundLocationRNG(aiBrain, 'Expansion Area', pos, radius, tMin, tMax, tRings, tType)
+    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Expansion Area', pos, radius, tMin, tMax, tRings, tType)
 
     local retPos, retName
     if eng then
-        retPos, retName = AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
     else
-        retPos, retName = AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     end
 
     return retPos, retName
@@ -484,7 +485,7 @@ function GetClosestMassMarkerToPos(aiBrain, pos)
         local y = v.Position[2]
         local z = v.Position[3]
         distance = VDist2(pos[1], pos[3], x, z)
-        if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+        if (not lowest or distance < lowest) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             --LOG('Can build at position '..repr(v.Position))
             loc = v.Position
             name = v.Name
@@ -516,7 +517,7 @@ function GetClosestMassMarker(aiBrain, unit)
         local y = v.Position[2]
         local z = v.Position[3]
         distance = VDist2(engPos[1], engPos[3], x, z)
-        if (not lowest or distance < lowest) and aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+        if (not lowest or distance < lowest) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             loc = v.Position
             name = v.Name
             lowest = distance
@@ -665,9 +666,9 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
                     local unitPos = unit:GetPosition()
-                    if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                    if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                         retUnit = unit
-                        distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                        distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                     end
                 end
             end
@@ -797,7 +798,7 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
         }
     }
     blueprintID = DefenseTable[factionIndex][structureType][tech]
-    if aiBrain:CanBuildStructureAt(blueprintID, position) then
+    if CanBuildStructureAt(aiBrain, blueprintID, position) then
         IssueStop({eng})
         IssueClearCommands({eng})
         aiBrain:BuildStructure(eng, blueprintID, position, false)
@@ -1107,9 +1108,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                         if unit:GetAIBrain():GetArmyIndex() == v then
                             if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                 local unitPos = unit:GetPosition()
-                                if not retUnit or Utils.XZDistanceTwoVectors(position, unitPos) < distance then
+                                if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                                     retUnit = unit
-                                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                                 end
                                 if platoon.MovementLayer == 'Air' and platoonThreat then
                                     enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
@@ -1119,9 +1120,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                     end
                                 end
                                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                                if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                                     retUnit = unit
-                                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                                     targetShields = numShields
                                 end
                             end
@@ -1148,9 +1149,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                             end
                         end
                         local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1209,9 +1210,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                             end
                         end
                         local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1233,9 +1234,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                     end
                 end
                 local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if not retUnit or numShields < targetShields or (numShields == targetShields and Utils.XZDistanceTwoVectors(position, unitPos) < distance) then
+                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     retUnit = unit
-                    distance = Utils.XZDistanceTwoVectors(position, unitPos)
+                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end
@@ -1376,7 +1377,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --LOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             --LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', location, startloc, 10)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', location, startloc, 10)
             --local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
             
             if reason then
@@ -1963,7 +1964,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local posDistance = 0
         if startPos then
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
-                posThreat = aiBrain:GetThreatAtPosition(startPos, 1, true, 'StructuresNotMex')
+                posThreat = GetThreatAtPosition(aiBrain, startPos, 1, true, 'StructuresNotMex')
                 --LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 5 then
                     if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, startPos, 50, 'Enemy') > 0 then
@@ -2062,6 +2063,107 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit)
         end
     end
     return false
+end
+
+local markerTypeCache = { }
+--- Flushes the entire cache
+function FlushMarkerTypeCache()
+    markerTypeCache = { }
+end
+--- Flushes a single element from the cache
+-- @param markerType The type to flush.
+function FlushElementOfMarkerTypeCache(markerType)
+    markerTypeCache[markerType] = nil
+end
+--- Sets the cache for a specific marker type - it is up to you to make 
+-- sure the format is correct: {Position = v.position, Name = k}.
+-- @param markerType The type to set.
+-- @param markers The marker to set.
+function SetMarkerTypeCache(markerType, markers)
+    markerTypeCache[markerType] = markers
+end
+
+function GetMarkersByTypeIn(markerType)
+
+    --LOG("Retrieving markers of type: " .. markerType)
+
+    -- check if parameter is set, if not - help us all and return everything
+    if not markerType then 
+        return Scenario.MasterChain._MASTERCHAIN_.Markers
+    end
+    -- check if we already looked for these in the past
+    if not markerTypeCache[markerType] then
+        -- make it easier to read
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
+        -- prepare a table to keep the markers
+        local cache = { }
+        -- go over every marker and popualte our table
+        if markers then
+            for k, v in markers do
+                if v.type == markerType then
+                    table.insert(cache, {Position = v.position, Name = k})
+                end
+            end
+        end
+        -- add the markers of this type to the cache
+        markerTypeCache[markerType] = cache
+        --LOG("ScenarioUtils: Cached " .. table.getn(cache) .. " markers of type: " .. markerType)
+    end
+    -- return the cached markers
+    return markerTypeCache[markerType]
+end
+
+function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings, tType, position)
+
+    local threatCheck = false
+    local distance = 2000
+
+
+    local startX, startZ
+    
+    if position then
+        startX = position[1]
+        startZ = position[3]
+    else
+        startX, startZ = aiBrain:GetArmyStartPos()
+    end
+    if maxDist then
+        distance = maxDist * maxDist
+    end
+
+    if tMin and tMax and tType then
+        threatCheck = true
+    else
+        threatCheck = false
+    end
+
+    local markerList = GetMarkersByType('Mass')
+    RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) < VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
+    --LOG(' Mass Marker List '..repr(markerList))
+    local newList = {}
+    for _, v in markerList do
+        -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
+        if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
+            -- mass marker is too close to border, skip it.
+            continue
+        end
+        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > distance then
+            --LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
+            --LOG('Max Distance'..distance)
+            --LOG('mass marker MaxDistance Reached, breaking loop')
+            break
+        end
+        if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
+            if threatCheck then
+                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) > tMax then
+                    --LOG('mass marker threatMax Reached, continuing')
+                    continue
+                end
+            end
+            table.insert(newList, v)
+        end
+    end
+    return newList
 end
 
 function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)

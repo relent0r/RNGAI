@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGSORT = table.sort
 
 
 -- ##############################################################################################################
@@ -58,7 +59,7 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     end
     -- path wit AI markers from our base to the enemy base
     --LOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
-    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
+    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
     -- if we have a path generated with AI path markers then....
     if path then
         --LOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
@@ -264,6 +265,20 @@ function ArmyNeedOrWantTransports(aiBrain)
     elseif aiBrain and aiBrain:GetNoRushTicks() <= 0 and aiBrain.WantTransports then
         return true
     end
+    return false
+end
+
+function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        return false
+    end
+    local position = engineerManager:GetLocationCoords()
+    local markerTable = AIGetSortedMassLocationsThreatRNG(aiBrain, distance, threatMin, threatMax, threatRings, threatType, position)
+    if markerTable[1] then
+        return true
+    end
+
     return false
 end
     

@@ -4,6 +4,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
+local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
 
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
@@ -190,6 +191,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
+        self.EnemyIntel.ChokeFlag = false
+        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyAirFireBaseDetected = false
+        self.EnemyIntel.ChokePoints = {}
         self.EnemyIntel.EnemyThreatCurrent = {
             Air = 0,
             AntiAir = 0,
@@ -242,6 +247,7 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseThreatCaution = false,
             AntiAirNow = 0,
             AirNow = 0,
+            LandNow = 0,
             NavalNow = 0,
             NavalSubNow = 0,
         }
@@ -340,7 +346,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoMassManagerRNG)
-        --self:ForkThread(self.GetStartingReclaim)
+        self:ForkThread(self.EnemyChokePointTestRNG)
     end,
     
     CalculateMassMarkersRNG = function(self)
@@ -405,7 +411,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
         self:ForkThread(self.TacticalMonitorInitializationRNG)
-        --self:ForkThread(self.TacticalAnalysisThreadRNG)
+        self:ForkThread(self.TacticalAnalysisThreadRNG)
     end,
 
     GetStructureVectorsRNG = function(self)
@@ -854,11 +860,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BuilderManagers do
                 --LOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
-                    local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
-                    --LOG('Distance to Enemy for '..k..' is '..exDistance)
-                    if (exDistance < closest) and (mainDist > exDistance) then
-                        expansionName = k
-                        closest = exDistance
+                    if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
+                        local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+                        --LOG('Distance to Enemy for '..k..' is '..exDistance)
+                        if (exDistance < closest) and (mainDist > exDistance) then
+                            expansionName = k
+                            closest = exDistance
+                        end
                     end
                 end
             end
@@ -946,7 +954,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v.ACUPosition[1] then
                     ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
                     --LOG('* AI-RNG: Enemy ACU Distance in Alliance Check is'..ACUDist)
-                    if ACUDist < 200 then
+                    if ACUDist < 230 then
                         --LOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         self.EnemyIntel.ACU[k].OnField = true
@@ -960,7 +968,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         returnEnemy = v.Brain
                         return returnEnemy
                     end
-                    if ACUDist > 200 then
+                    if ACUDist > 230 then
                         self.EnemyIntel.ACU[k].OnField = false
                     end
                 end
@@ -992,7 +1000,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.70
+                upgradeSpec.MassLowTrigger = 0.80
                 upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1093,7 +1101,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local highThreat = false
         local distance
         
-        if self.BaseMonitor.CDRDistress and Utilities.XZDistanceTwoVectors(self.BaseMonitor.CDRDistress, position) < radius
+        if self.BaseMonitor.CDRDistress and VDist2(self.BaseMonitor.CDRDistress[1], self.BaseMonitor.CDRDistress[3], position[1], position[3]) < radius
             and self.BaseMonitor.CDRThreatLevel > threshold then
             -- Commander scared and nearby; help it
             return self.BaseMonitor.CDRDistress
@@ -1101,7 +1109,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.BaseMonitor.AlertSounded then
             --LOG('Base Alert Sounded')
             for k, v in self.BaseMonitor.AlertsTable do
-                local tempDist = Utilities.XZDistanceTwoVectors(position, v.Position)
+                local tempDist = VDist2(position[1], position[3], v.Position[1], v.Position[3])
 
                 -- Too far away
                 if tempDist > radius then
@@ -1139,7 +1147,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         self.BaseMonitor.PlatoonDistressTable[k] = nil
                         continue
                     end
-                    local tempDist = Utilities.XZDistanceTwoVectors(position, platPos)
+                    local tempDist = VDist2(position[1], position[3], platPos[1], platPos[3])
 
                     -- Platoon too far away to help
                     if tempDist > radius then
@@ -1213,6 +1221,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyAirThreat = 0
         local enemyAntiAirThreat = 0
         local enemyNavalThreat = 0
+        local enemyLandThreat = 0
         local enemyNavalSubThreat = 0
         local enemyExtractorthreat = 0
         local enemyExtractorCount = 0
@@ -1261,6 +1270,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('NavyThreat is '..bp.SubThreatLevel)
                         enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
+                    end
+                    WaitTicks(1)
+                    local enemyLand = GetListOfUnits( enemy, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+                    for _,v in enemyLand do
+                        bp = ALLBPS[v.UnitId].Defense
+                        enemyLandThreat = enemyLandThreat + bp.SurfaceThreatLevel
+                    end
+                    WaitTicks(1)
+                    local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
+                    for _,v in enemyDefense do
+                        bp = ALLBPS[v.UnitId].Defense
+                        --LOG('DefenseThreat unit is '..v.UnitId)
+                        --LOG('DefenseThreat is '..bp.SubThreatLevel)
+                        enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
+                        enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
+                        enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
                     end
                     WaitTicks(1)
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
@@ -1313,6 +1338,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat
         self.EnemyIntel.EnemyThreatCurrent.NavalSub = enemyNavalSubThreat
+        self.EnemyIntel.EnemyThreatCurrent.Land = enemyLandThreat
+        self.EnemyIntel.EnemyThreatCurrent.DefenseAir = enemyDefenseAir
+        self.EnemyIntel.EnemyThreatCurrent.DefenseSurface = enemyDefenseSurface
+        self.EnemyIntel.EnemyThreatCurrent.DefenseSub = enemyDefenseSub
         --LOG('Completing Threat Check'..GetGameTick())
     end,
 
@@ -1404,6 +1433,16 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.NavalNow = navalThreat
         self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
+
+        WaitTicks(1)
+        local brainLandUnits = GetListOfUnits( self, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+        local landThreat = 0
+        for _,v in brainLandUnits do
+            bp = ALLBPS[v.UnitId].Defense
+            landThreat = landThreat + bp.SurfaceThreatLevel
+        end
+        self.BrainIntel.SelfThreat.LandNow = landThreat
+        --LOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
     end,
 
     --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
@@ -1577,7 +1616,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     else
                         onWater = false
                     end
-                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater, AirDefStructureCount = 0, LandDefStructureCount = 0}
+                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater }
                     table.insert(phaseTwoThreats, threatLocation)
                 end
             end
@@ -1627,7 +1666,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local landThreatAroundBase = 0
         --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for _, threat in self.EnemyIntel.EnemyThreatLocations do
+            for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if threat.ThreatType == 'Land' then
                     local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
                     if threatDistance < 32400 then
@@ -1648,7 +1687,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         
-        if gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.7 then
+        if (gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.5) or self.EnemyIntel.ChokeFlag then
             --LOG('Switch to agressive upgrade mode')
             self.UpgradeMode = 'Aggressive'
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
@@ -1674,6 +1713,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        --LOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         WaitTicks(2)
     end,
@@ -1695,11 +1735,33 @@ AIBrain = Class(RNGAIBrainClass) {
         local defensiveUnits = {}
         local intelUnits = {}
         local gameTime = GetGameTimeSeconds()
+        local scanRadius = 0
+        local IMAPSize = 0
+        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyAirFireBaseDetected = false
+
+        if maxmapdimension == 256 then
+            scanRadius = 11.5
+            IMAPSize = 16
+        elseif maxmapdimension == 512 then
+            scanRadius = 22.5
+            IMAPSize = 32
+        elseif maxmapdimension == 1024 then
+            scanRadius = 45.0
+            IMAPSize = 64
+        elseif maxmapdimension == 2048 then
+            scanRadius = 89.5
+            IMAPSize = 128
+        else
+            scanRadius = 180.0
+            IMAPSize = 256
+        end
         
         if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
-                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, scanRadius, 'Enemy')
                     for s, unit in unitsAtLocation do
                         local unitIndex = unit:GetAIBrain():GetArmyIndex()
                         if not ArmyIsCivilian(unitIndex) then
@@ -1731,29 +1793,44 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Energy Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            table.insert(self.EnemyIntel.DirectorData.Energy, energyUnits)
+            self.EnemyIntel.DirectorData.Energy = energyUnits
         end
         WaitTicks(1)
         if table.getn(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
                 for q, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if not self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount then
+                        self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = 0
+                    end
+                    if not self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount then
+                        self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = 0
+                    end
                     if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
-                            unit.Air = threat.Threat
+                        unit.Air = threat.Threat
                     elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                         unit.Land = threat.Threat
                     elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
-                        if ALLBPS[unit.UnitId].Defense.AirThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
-                        elseif ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel > 0 then
+                        if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
                             self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + 1
+                        elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
+                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
                         end
                     end
+                    if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount > 5 then
+                        self.EnemyIntel.EnemyLandFireBaseDetected = true
+                    end
+                    if self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
+                        self.EnemyIntel.EnemyAirFireBaseDetected = true
+                    end
                 end
-                --LOG('Enemy Defense Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            table.insert(self.EnemyIntel.DirectorData.Defense, defensiveUnits)
+            if self.EnemyIntel.EnemyLandFireBaseDetected then
+                --LOG('EnemyLandFireBaseDetected is true')
+            end
+            self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
         WaitTicks(1)
         if table.getn(strategicUnits) > 0 then
@@ -1765,9 +1842,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Strategic Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Strategic Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            table.insert(self.EnemyIntel.DirectorData.Strategic, strategicUnits)
+            self.EnemyIntel.DirectorData.Strategic = strategicUnits
         end
         WaitTicks(1)
         if table.getn(intelUnits) > 0 then
@@ -1779,10 +1856,70 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Intel Structure has '..unit.Air..' air thread and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Enemy Intel Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex.. ' Unit ID is '..unit.Object.UnitId)
             end
-            table.insert(self.EnemyIntel.DirectorData.Intel, intelUnits)
+            self.EnemyIntel.DirectorData.Intel = intelUnits
         end
+    end,
+
+    CheckDirectorTargetAvailable = function(self, threatType, platoonThreat)
+        local potentialTarget = false
+        local targetType = false
+        local potentialTargetValue = 0
+
+        if self.EnemyIntel.DirectorData.Intel and table.getn(self.EnemyIntel.DirectorData.Intel) > 0 then
+            for k, v in self.EnemyIntel.DirectorData.Intel do
+                --LOG('Intel Target Data ')
+                --LOG('Air Threat Around unit is '..v.Air)
+                --LOG('Land Threat Around unit is '..v.Land)
+                --LOG('Enemy Index of unit is '..v.EnemyIndex)
+                --LOG('Unit ID is '..v.Object.UnitId)
+                if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
+                    if threatType and platoonThreat then
+                        if threatType == 'AntiAir' then
+                            if v.Air > platoonThreat then
+                                continue
+                            end
+                        elseif threatType == 'Land' then
+                            if v.Land > platoonThreat then
+                                continue
+                            end
+                        end
+                    end
+                    potentialTargetValue = v.Value
+                    potentialTarget = v.Object
+                end
+            end
+        end
+        if self.EnemyIntel.DirectorData.Energy and table.getn(self.EnemyIntel.DirectorData.Energy) > 0 then
+            for k, v in self.EnemyIntel.DirectorData.Energy do
+                --LOG('Energy Target Data ')
+                --LOG('Air Threat Around unit is '..v.Air)
+                --LOG('Land Threat Around unit is '..v.Land)
+                --LOG('Enemy Index of unit is '..v.EnemyIndex)
+                --LOG('Unit ID is '..v.Object.UnitId)
+                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    if threatType and platoonThreat then
+                        if threatType == 'AntiAir' then
+                            if v.Air > platoonThreat then
+                                continue
+                            end
+                        elseif threatType == 'Land' then
+                            if v.Land > platoonThreat then
+                                continue
+                            end
+                        end
+                    end
+                    potentialTargetValue = v.Value
+                    potentialTarget = v.Object
+                end
+            end
+        end
+        if potentialTarget and not potentialTarget.Dead then
+            --LOG('Target being returned is '..potentialTarget.UnitId)
+            return potentialTarget
+        end
+        return false
     end,
 
     EcoExtractorUpgradeCheckRNG = function(self)
@@ -1973,7 +2110,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
                     end
-                    powerStateCaution = false
+                    massStateCaution = false
                 end
             end
             WaitTicks(30)
@@ -2387,7 +2524,71 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    EnemyChokePointTestRNG = function(self)
+        local selfIndex = self:GetArmyIndex()
+        local selfStartPos = self.BuilderManagers['MAIN'].Position
+        local enemyTestTable = {}
 
+        WaitTicks(100)
+        if self.EnemyIntel.EnemyCount > 0 then
+            for index, brain in ArmyBrains do
+                if IsEnemy(selfIndex, index) and not ArmyIsCivilian(index) then
+                    local posX, posZ = brain:GetArmyStartPos()
+                    self.EnemyIntel.ChokePoints[index] = {
+                        CurrentPathThreat = 0,
+                        NoPath = false,
+                        StartPosition = {posX, 0, posZ},
+                    }
+                end
+            end
+        end
+
+        while true do
+            if self.EnemyIntel.EnemyCount > 0 then
+                for k, v in self.EnemyIntel.ChokePoints do
+                    if not v.NoPath then
+                        local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1)
+                        if path then
+                            --LOG('Total Threat for path is '..totalThreat)
+                            self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / table.getn(path))
+                            --LOG('We have a path to the enemy start position with an average of '..(totalThreat / table.getn(path)..' threat'))
+
+                            if self.EnemyIntel.EnemyCount > 0 then
+                                --LOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
+                                --LOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                                --LOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
+                                --LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
+                                --LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                                if self.EnemyIntel.EnemyLandFireBaseDetected then
+                                    --LOG('Firebase flag is true')
+                                end
+                                if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
+                                and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
+                                and totalThreat > self.BrainIntel.SelfThreat.LandNow 
+                                and self.EnemyIntel.EnemyLandFireBaseDetected then
+                                    self.EnemyIntel.ChokeFlag = true
+                                    --LOG('ChokeFlag is true')
+                                else
+                                    --LOG('ChokeFlag is false')
+                                    self.EnemyIntel.ChokeFlag = false
+                                end
+                            end
+                        elseif (not path and reason) then
+                            --LOG('We dont have a path to the enemy start position, setting NoPath to true')
+                            --LOG('Reason is '..reason)
+                            self.EnemyIntel.ChokePoints[k].NoPath = true
+                        else
+                            WARN('AI-RNG : Chokepoint test has unexpected return')
+                        end
+                    end
+                    --LOG('Current enemy chokepoint data for index '..k)
+                    --LOG(repr(self.EnemyIntel.ChokePoints[k]))
+                    WaitTicks(20)
+                end
+            end
+            WaitTicks(1200)
+        end
+    end,
 
 --[[
     GetManagerCount = function(self, type)

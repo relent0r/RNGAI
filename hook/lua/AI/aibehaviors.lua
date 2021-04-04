@@ -164,6 +164,10 @@ function CDROverChargeRNG(aiBrain, cdr)
             acuThreatLimit = 37
         end
     elseif factionIndex == 2 then
+        if cdr:HasEnhancement('HeatSink') then
+            cdr.GunUpgradePresent = true
+            acuThreatLimit = 32
+        end
         if cdr:HasEnhancement('CrysalisBeam') then
             cdr.GunUpgradePresent = true
             weapon.Range = 35 - 3
@@ -233,12 +237,12 @@ function CDROverChargeRNG(aiBrain, cdr)
     if cdr:IsUnitState("Upgrading") or cdr:IsUnitState("Enhancing") then
         return
     end
-
-    if Utilities.XZDistanceTwoVectors(cdrPos, cdr:GetPosition()) > maxRadius then
+    local currentPos = cdr:GetPosition()
+    if VDist2(cdrPos[1], cdrPos[3], currentPos[1], currentPos[3]) > maxRadius then
         return
     end
 
-    if numUnits > 1 or (not cdr.DistressCall and distressLoc and Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
+    if numUnits > 1 or (not cdr.DistressCall and distressLoc and VDist2(distressLoc[1], distressLoc[3], cdrPos[1], cdrPos[3]) < distressRange) then
         --LOG('Num of units greater than zero or base distress')
         if cdr.UnitBeingBuilt then
             --LOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
@@ -318,7 +322,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     --LOG('Target Distance is '..targetDistance..' from acu to target')
                     -- If inside base dont check threat, just shoot!
-                    if Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 45 then
+                    if VDist2(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 45 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                         --LOG('enemyThreat is '..enemyThreat)
                         enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
@@ -410,7 +414,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     if enemyThreat - enemyCdrThreat >= friendlyThreat + (cdrThreat / 3) then
                         break
                     end
-                    if distressLoc and (Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) < distressRange) then
+                    if distressLoc and (VDist2(distressLoc[1], distressLoc[3], cdrPos[1], cdrPos[3]) < distressRange) then
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: ACU Moving to distress location')
                         cdr.PlatoonHandle:MoveToLocation(distressLoc, false)
@@ -811,15 +815,15 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     if unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Aggressive' then
         ecoTimeOut = (320 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Aggressive' then
-        ecoTimeOut = (520 / multiplier)
+        ecoTimeOut = (650 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (780 / multiplier)
+        ecoTimeOut = (880 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (780 / multiplier)
+        ecoTimeOut = (880 / multiplier)
     end
 
     --LOG('Multiplier is '..multiplier)
@@ -1412,7 +1416,7 @@ PlatoonRetreat = function (platoon)
                 if remotePlatoonDistance < 40000 then
                     --LOG('Best Retreat Platoon Position '..repr(remotePlatoonLocation))
                     --LOG('Best Retreat Platoon Distance '..remotePlatoonDistance)
-                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, platoon.MovementLayer, selfPlatoonPos, remotePlatoonLocation, 100 , 200)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, platoon.MovementLayer, selfPlatoonPos, remotePlatoonLocation, 100 , 200)
                     if path then
                         local position = GetPlatoonPosition(platoon)
                         if VDist2Sq(position[1], position[3], remotePlatoonLocation[1], remotePlatoonLocation[3]) > 262144 then
@@ -1547,7 +1551,7 @@ end
 
 function FatBoyBehaviorRNG(self)
     local aiBrain = self:GetBrain()
-    AssignExperimentalPriorities(self)
+    AssignExperimentalPrioritiesRNG(self)
 
     local unit = GetExperimentalUnit(self)
     local targetUnit = false

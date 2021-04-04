@@ -19,7 +19,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},
+            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 400.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -137,7 +137,7 @@ BuilderGroup {
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
-            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -165,7 +165,7 @@ BuilderGroup {
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
-            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -193,7 +193,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },
-            { EBC, 'GreaterThanEconIncome', { 7.0, 600.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {

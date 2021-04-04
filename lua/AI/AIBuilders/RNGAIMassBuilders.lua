@@ -26,6 +26,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 30,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -45,6 +49,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 60,
+                ThreatMin = -500,
+                ThreatMax = 0,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -64,9 +72,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
-                RepeatBuild = true,
-                Distance = 30,
-                Type = 'Mass',
+                MaxDistance = 120,
+                ThreatMin = -500,
+                ThreatMax = 0,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -87,8 +96,12 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 30,
+                Distance = 120,
                 Type = 'Mass',
+                MaxDistance = 240,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -100,7 +113,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
-        InstanceCount = 4,
+        InstanceCount = 6,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
@@ -112,8 +125,12 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 30,
+                Distance = 120,
                 Type = 'Mass',
+                MaxDistance = 480,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -122,13 +139,13 @@ BuilderGroup {
     },
 
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 1000',
+        BuilderName = 'RNGAI T1Engineer Mass 2000',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 300,
-        InstanceCount = 4,
+        InstanceCount = 7,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 10, 0, 'AntiSurface', 1}},
             
         },
         BuilderType = 'Any',
@@ -136,6 +153,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 1000,
+                ThreatMin = -500,
+                ThreatMax = 10,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -152,7 +173,9 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Fab',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
+        DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassFab' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
@@ -184,8 +207,9 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Fab Adja',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 400,
+        DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
-            -- When do we want to build this ?
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassFab' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             -- Do we need additional conditions to build it ?
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
@@ -234,6 +258,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 30,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -253,6 +281,10 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 150,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -266,13 +298,17 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-                { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 1000, -500, 50, 0, 'AntiSurface', 1 }},
+                { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 50, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
         BuilderData = {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MaxDistance = 2000,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 }
@@ -288,8 +324,10 @@ BuilderGroup {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 800,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
@@ -315,8 +353,10 @@ BuilderGroup {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 400,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},

@@ -1,13 +1,5 @@
 
 PlatoonTemplate {
-    Name = 'RNGAI T2 TML',
-    Plan = 'TacticalAIRNG',
-    GlobalSquads = {
-        { categories.STRUCTURE * categories.TECH2 * categories.TACTICALMISSILEPLATFORM * categories.INDIRECTFIRE, 1, 1, 'Attack', 'none' }
-    }
-}
-
-PlatoonTemplate {
     Name = 'T2LandFactoryUpgrade',
     Plan = 'UnitUpgradeAI',
     GlobalSquads = {

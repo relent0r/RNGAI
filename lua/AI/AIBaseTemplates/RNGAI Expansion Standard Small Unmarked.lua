@@ -9,7 +9,7 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Unmarked Expansion Standard Small',
     Builders = {       
                 -- Intel Builders --
-                'RNGAI RadarBuilders',
+                'RNGAI RadarBuilders Expansion',
                 'RNGAI RadarUpgrade T1 Expansion',
         
                 -- Economy Builders --

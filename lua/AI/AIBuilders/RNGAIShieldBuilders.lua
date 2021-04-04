@@ -2,6 +2,19 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 
+local ActiveExpansion = function(self, aiBrain, builderManager)
+    --LOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
+        --LOG('Active Expansion is set'..builderManager.LocationType)
+        --LOG('Active Expansion builders are set to 900')
+        return 700
+    else
+        --LOG('Disable Air Intie Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Shield Builder',                   
     BuildersType = 'EngineerBuilder',
@@ -9,10 +22,12 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Shield Single',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
         },
         BuilderType = 'Any',
@@ -36,11 +51,12 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Shield Ratio',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 625,
+        DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
@@ -67,10 +83,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Shield Ratio',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 650,
+        DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
@@ -98,13 +115,47 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Shield Builder Expansion',                   
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T2 Shield Single Expansion Active',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
+        DelayEqualBuildPlattons = {'Shield', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 4,
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY,
+                AvoidCategory = categories.STRUCTURE * categories.SHIELD,
+                maxUnits = 1,
+                maxRadius = 35,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T2ShieldDefense',
+                },
+            },
+        },
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Shields Upgrader',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI Shield Cybran 1',
         PlatoonTemplate = 'T2Shield1',
         Priority = 700,
-        DelayEqualBuildPlattons = {'Shield', 2},
+        DelayEqualBuildPlattons = {'ShieldUpgrade', 2},
         InstanceCount = 5,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, -- Ratio from 0 to 1. (1=100%)
@@ -119,7 +170,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Shield Cybran 2',
         PlatoonTemplate = 'T2Shield2',
         Priority = 700,
-        DelayEqualBuildPlattons = {'Shield', 2},
+        DelayEqualBuildPlattons = {'ShieldUpgrade', 2},
         InstanceCount = 5,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, -- Ratio from 0 to 1. (1=100%)
@@ -134,7 +185,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Shield Cybran 3',
         PlatoonTemplate = 'T2Shield3',
         Priority = 700,
-        DelayEqualBuildPlattons = {'Shield', 2},
+        DelayEqualBuildPlattons = {'ShieldUpgrade', 2},
         InstanceCount = 5,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}}, -- Ratio from 0 to 1. (1=100%)
@@ -149,7 +200,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Shield Cybran 4',
         PlatoonTemplate = 'T2Shield4',
         Priority = 700,
-        DelayEqualBuildPlattons = {'Shield', 2},
+        DelayEqualBuildPlattons = {'ShieldUpgrade', 2},
         InstanceCount = 5,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
@@ -164,7 +215,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Shield UEF Seraphim',
         PlatoonTemplate = 'T2Shield',
         Priority = 700,
-        DelayEqualBuildPlattons = {'Shield', 2},
+        DelayEqualBuildPlattons = {'ShieldUpgrade', 2},
         InstanceCount = 5,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },             -- Ratio from 0 to 1. (1=100%)

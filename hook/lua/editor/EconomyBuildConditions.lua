@@ -19,6 +19,22 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, m
     --LOG('Mass Storage Ratio :'..econ.MassStorageRatio..' Energy Storage Ratio :'..econ.EnergyStorageRatio)
     if aiBrain.HasParagon and econ.MassStorageRatio >= 0.01 and econ.EnergyStorageRatio >= 0.01 then
         return true
+    elseif aiBrain.EnemyIntel.ChokeFlag then
+        if mult == 'LAND' then
+            if econ.MassStorageRatio >= 0.20 and econ.EnergyStorageRatio >= 0.80 then
+                return true
+            end
+        elseif mult == 'FACTORY' then
+            if econ.MassStorageRatio >= 0.10 and econ.EnergyStorageRatio >= 0.80 then
+                return true
+            end
+        elseif mult == 'DEFENSE' then
+            if econ.MassStorageRatio >= 0.20 and econ.EnergyStorageRatio >= 0.80 then
+                return true
+            end
+        elseif econ.MassStorageRatio >= mStorageRatio and econ.EnergyStorageRatio >= eStorageRatio then
+            return true
+        end
     elseif aiBrain.UpgradeMode == 'Aggressive' then
         if econ.MassStorageRatio >= mStorageRatio * 1.5 and econ.EnergyStorageRatio >= eStorageRatio then
             return true
@@ -158,4 +174,13 @@ function EnergyToMassRatioIncomeRNG(aiBrain, ratio, compareType, DEBUG)
         --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( E:'..(econ.EnergyIncome*10)..' '..compareType..' M:'..(econ.MassIncome*10)..' ) -- R['..ratio..'] -- return '..repr(CompareBody(econ.EnergyIncome / econ.MassIncome, ratio, compareType)))
     end
     return CompareBody(EnergyIncome / MassIncome, ratio, compareType)
+end
+
+function GreaterThanEconIncomeRNG(aiBrain, mIncome, eIncome)
+    local EnergyIncome = GetEconomyIncome(aiBrain,'ENERGY')
+    local MassIncome = GetEconomyIncome(aiBrain,'MASS')
+    if (MassIncome >= mIncome and EnergyIncome >= eIncome) then
+        return true
+    end
+    return false
 end
