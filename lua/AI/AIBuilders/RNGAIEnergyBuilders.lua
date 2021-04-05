@@ -105,7 +105,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -160,7 +160,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 120.0 } },
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.00}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
@@ -189,7 +189,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -243,7 +243,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.5 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 }},
@@ -278,7 +278,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -303,7 +303,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
@@ -333,7 +333,7 @@ BuilderGroup {
         Priority = 1000,
         InstanceCount = 1,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 50, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 50, -1000, 100, 1, 'AntiSurface', 1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -353,7 +353,8 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 256, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 256, -1000, 100, 1, 'AntiSurface', 1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {

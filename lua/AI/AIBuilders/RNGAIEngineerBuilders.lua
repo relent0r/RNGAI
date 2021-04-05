@@ -598,7 +598,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'ReclaimStructuresAI',
         Priority = 800,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
@@ -616,7 +616,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'ReclaimStructuresAI',
         Priority = 600,
-        InstanceCount = 1,
+        InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.TECH3 * categories.ENERGYPRODUCTION}},

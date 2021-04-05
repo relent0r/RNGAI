@@ -2,19 +2,6 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
--- hook for additional build conditions used from AIBuilders
-
---{ UCBC, 'ReturnTrue', {} },
-function ReturnTrue(aiBrain)
-    --LOG('** true')
-    return true
-end
-
---{ UCBC, 'ReturnFalse', {} },
-function ReturnFalse(aiBrain)
-    --LOG('** false')
-    return false
-end
 
 -- Check if less than num in seconds
 function LessThanGameTimeSeconds(aiBrain, num)
@@ -33,48 +20,6 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
-
-
-
-
-function CanBuildOnMassLessThanLocationDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum , builderName)
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    if not engineerManager then
-        --WARN('*AI WARNING: Invalid location - ' .. locationType)
-        return false
-    end
-    local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
-    local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, locationPos)
-    if markerTable[1] and VDist3( markerTable[1], locationPos ) < distance then
-        --LOG('Check is for :', builderName)
-        --LOG('We can build in less than '..VDist3( markerTable[1], locationPos ))
-        return true
-    else
-        --LOG('Check is for :', builderName)
-        --LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
-    end
-    return false
-end
-
-function CanBuildOnMassGreaterThanLocationDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum , builderName)
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    if not engineerManager then
-        --WARN('*AI WARNING: Invalid location - ' .. locationType)
-        return false
-    end
-    local locationPos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
-    local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, locationPos)
-    if markerTable[1] and VDist3( markerTable[1], locationPos ) > distance then
-        --LOG('Check is for :', builderName)
-        --LOG('We can build in greater than '..VDist3( markerTable[1], locationPos ))
-        return true
-    else
-        --LOG('Check is for :', builderName)
-        --LOG('Outside range: '..VDist3( markerTable[1], locationPos ))
-    end
-    return false
-end
-
 -- ##############################################################################################################
 -- # function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
 -- #
@@ -86,12 +31,8 @@ end
 -- #
 -- ##############################################################################################################
 function HaveUnitsWithCategoryAndAlliance(aiBrain, greater, numReq, category, alliance)
-    local testCat = category
-    if type(category) == 'string' then
-        testCat = ParseEntityCategory(category)
-        --LOG('HaveUnitsWithCategory Cat is :', testCat)
-    end
-    local numUnits = aiBrain:GetNumUnitsAroundPoint( testCat, Vector(0,0,0), 100000, alliance )
+
+    local numUnits = aiBrain:GetNumUnitsAroundPoint( category, Vector(0,0,0), 100000, alliance )
     if numUnits > numReq and greater then
         --LOG('HaveUnitsWithCategory greater and true')
         return true
@@ -103,16 +44,14 @@ function HaveUnitsWithCategoryAndAlliance(aiBrain, greater, numReq, category, al
     return false
 end
 --    Uveso Function          { SBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 1000, -1000, 100, 1, 'AntiSurface', 1 }},
-function CanBuildOnHydroLessThanDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum)
+function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
-    local position = engineerManager.Location
-
-    local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
-    if markerTable[1] and VDist3(markerTable[1], position) < distance then
+    local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
+    if markerTable[1] and VDist3(markerTable[1], engineerManager.Location) < distance then
         return true
     end
     return false
@@ -164,7 +103,6 @@ end
 function EnemyHasUnitOfCategoryRNG(aiBrain, category)
     local selfIndex = aiBrain:GetArmyIndex()
     local enemyBrains = {}
-    local unitCount = 0
 
     --LOG('Starting Threat Check at'..GetGameTick())
     for index, brain in ArmyBrains do
