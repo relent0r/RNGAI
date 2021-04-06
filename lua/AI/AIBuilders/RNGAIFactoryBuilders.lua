@@ -1350,6 +1350,39 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Factory Builder Land Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T1 Expansion',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PriorityFunction = ActiveExpansion,
+        Priority = 0,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelay', { 'Factories' }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.35, 'FACTORY'}}, -- Ratio from 0 to 1. (1=100%)
+            --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.8 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Gate Builders',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {

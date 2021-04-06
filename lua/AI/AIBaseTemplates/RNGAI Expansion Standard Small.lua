@@ -35,7 +35,7 @@ BaseBuilderTemplate {
                 'RNGAI Perimeter Defenses Expansions',
         
                 -- Land Factory Builders --
-                --'RNGAI Factory Builder Land',
+                'RNGAI Factory Builder Land Expansion',
         
                 -- Land Factory Formers --
                 'RNGAI T1 Upgrade Builders Expansion',

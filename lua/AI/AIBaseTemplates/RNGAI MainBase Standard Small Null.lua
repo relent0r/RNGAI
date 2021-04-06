@@ -35,7 +35,7 @@ BaseBuilderTemplate {
         'RNGAI Assist Builders',
         --Strategic Builders
         'RNGAI SML Builders',
-        'RNGAI Strategic Artillery Builders',
+        'RNGAI Strategic Artillery Builders Small',
         'RNGAI Strategic Formers',
         'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',

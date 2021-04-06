@@ -414,9 +414,9 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 
     local retPos, retName
     if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerThreatRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
     else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
+        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
     end
 
     return retPos, retName
@@ -2083,7 +2083,7 @@ function SetMarkerTypeCache(markerType, markers)
     markerTypeCache[markerType] = markers
 end
 
-function GetMarkersByTypeIn(markerType)
+function GetMarkersByType(markerType)
 
     --LOG("Retrieving markers of type: " .. markerType)
 
@@ -2139,7 +2139,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
 
     local markerList = GetMarkersByType('Mass')
     RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) < VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
-    --LOG(' Mass Marker List '..repr(markerList))
+    --LOG('Sorted Mass Marker List '..repr(markerList))
     local newList = {}
     for _, v in markerList do
         -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
@@ -2155,7 +2155,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
         end
         if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             if threatCheck then
-                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) > tMax then
+                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) >= tMax then
                     --LOG('mass marker threatMax Reached, continuing')
                     continue
                 end
@@ -2163,6 +2163,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
             table.insert(newList, v)
         end
     end
+    LOG('Return marker list has '..table.getn(newList)..' entries')
     return newList
 end
 

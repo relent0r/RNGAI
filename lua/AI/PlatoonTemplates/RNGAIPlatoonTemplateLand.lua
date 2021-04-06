@@ -823,6 +823,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'xel0305', 1, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'uel0303', 1, 2, 'Attack', 'none' },      -- Heavy Assault Bot
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'uel0304', 1, 2, 'Artillery', 'none' },   -- Artillery
             { 'xel0305', 1, 1, 'Attack', 'none' },      -- Armored Assault Bot
             { 'xel0306', 1, 1, 'Artillery', 'none' },   -- Artillery
@@ -837,6 +838,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'ual0303', 1, 2, 'Attack', 'none' },      -- Heavy Assault Bot
             { 'xal0305', 1, 2, 'Attack', 'none' },      -- Sniper Bot
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'ual0304', 1, 2, 'Artillery', 'none' },   -- Artillery
             --{ 'dal0310', 1, 1, 'Artillery', 'none' },   -- Artillery
             { 'dalk003', 1, 1, 'Guard', 'none' },       -- AA
@@ -851,6 +853,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'xrl0305', 1, 3, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0303', 1, 2, 'Attack', 'none' },      -- Siege Assault Bot
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0304', 1, 2, 'Artillery', 'none' },   -- Artillery
             { 'xrl0305', 1, 2, 'Attack', 'none' },      -- Armored Assault Bot
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -865,6 +868,7 @@ PlatoonTemplate { Name = 'RNGAIT3LandAttackQueue',
             { 'xsl0303', 1, 2, 'Attack', 'none' },       -- Siege Tank
             { 'xsl0305', 1, 2, 'Attack', 'none' },       -- Sniper Bot
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'xsl0304', 1, 2, 'Artillery', 'none' },   -- Artillery
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0307', 1, 1, 'Guard', 'none' },       -- Mobile Shield

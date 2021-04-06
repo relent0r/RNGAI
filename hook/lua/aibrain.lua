@@ -112,6 +112,8 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Map X size is : '..mapSizeX..'Map Z size is : '..mapSizeZ)
         -- Stores handles to all builders for quick iteration and updates to all
         self.BuilderHandles = {}
+        -- this is for chps fav map, when the masspoint are created they are not put in the scenariocache
+        self.crazyrush = false
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -321,6 +323,10 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             --LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
+        end
+        if string.find(ScenarioInfo.name, 'crazyrush') then
+            --LOG('We are playing crazyrush')
+            self.crazyrush = true
         end
         --[[ Below was used prior to Uveso adding the expansion generator to provide expansion in locations with multiple mass markers
         RUtils.TacticalMassLocations(self)

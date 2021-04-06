@@ -4611,14 +4611,14 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local eng = GetPlatoonUnits(self)[1]
         if eng and not eng.Dead and eng.BuilderManagerData.EngineerManager then
-            --LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
-            eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)
-            --LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..moveToLocation..' - ' .. aiBrain.BuilderManagers[moveToLocation].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
-            aiBrain.BuilderManagers[moveToLocation].EngineerManager:AddUnit(eng, true)
-            -- Move the unit to the desired base after transfering BuilderManagers to the new LocationType
-            local basePosition = aiBrain.BuilderManagers[moveToLocation].Position
             --LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. moveToLocation)
-            AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, basePosition)
+            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, aiBrain.BuilderManagers[moveToLocation].Position) then
+                --LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
+                eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)
+                --LOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..moveToLocation..' - ' .. aiBrain.BuilderManagers[moveToLocation].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
+                aiBrain.BuilderManagers[moveToLocation].EngineerManager:AddUnit(eng, true)
+                -- Move the unit to the desired base after transfering BuilderManagers to the new LocationType
+            end
         end
         if PlatoonExists(aiBrain, self) then
             self:PlatoonDisband()

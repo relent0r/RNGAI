@@ -144,20 +144,25 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     local location = false
     if IsResource(buildingType) then
-        --location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
-        --[[if buildingType != 'T1HydroCarbon' then
-            --test
-            local threatMin = -9999
-            local threatMax = 9999
-            local threatRings = 0
-            local threatType = 'AntiSurface'
-            local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MaxDistance, constructionData.ThreatMin, constructionData.ThreatMax, constructionData.ThreatRings, constructionData.ThreatType, relativeTo)
-            relative = false
-            for _,v in markerTable do
-                if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance then
-                    if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
-                        location = table.copy(markerTable[Random(1,table.getn(markerTable))])
-                        location = {location.Position[1], location.Position[3], location.Position[2]}
+        --[[
+        if buildingType != 'T1HydroCarbon' then
+            if aiBrain.crazyrush then
+                LOG('CrazyRush Find place to build')
+                location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
+            else
+                LOG('Not CrazyRush Find place to build')
+                local threatMin = -9999
+                local threatMax = 9999
+                local threatRings = 0
+                local threatType = 'AntiSurface'
+                local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MaxDistance, constructionData.ThreatMin, constructionData.ThreatMax, constructionData.ThreatRings, constructionData.ThreatType, relativeTo)
+                relative = false
+                for _,v in markerTable do
+                    if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance then
+                        if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+                            location = table.copy(markerTable[Random(1,table.getn(markerTable))])
+                            location = {location.Position[1], location.Position[3], location.Position[2]}
+                        end
                     end
                 end
             end

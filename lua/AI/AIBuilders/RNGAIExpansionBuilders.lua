@@ -62,7 +62,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Expansion Area',
-                ExpansionRadius = 60, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                ExpansionRadius = 50, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
                 LocationRadius = 350,
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -93,6 +93,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
+                ExpansionRadius = 60,
                 LocationRadius = 250, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -123,7 +124,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
-                ExpansionRadius = 70,
+                ExpansionRadius = 60,
                 LocationRadius = 250, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -157,7 +158,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
-                ExpansionRadius = 80,
+                ExpansionRadius = 70,
                 LocationRadius = 250, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -220,7 +221,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
-                ExpansionRadius = 70,
+                ExpansionRadius = 60,
                 LocationRadius = 1000, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -252,6 +253,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
+                ExpansionRadius = 60,
                 LocationRadius = 1000, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -361,7 +363,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Expansion Area',
-                ExpansionRadius = 60, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                ExpansionRadius = 50, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
                 LocationRadius = 350,
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -394,7 +396,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Expansion Area',
-                ExpansionRadius = 60, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                ExpansionRadius = 50, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
                 LocationRadius = 1000,
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -425,6 +427,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
+                ExpansionRadius = 60,
                 LocationRadius = 500, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -455,7 +458,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
-                ExpansionRadius = 70,
+                ExpansionRadius = 60,
                 LocationRadius = 500, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -486,6 +489,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
+                ExpansionRadius = 60,
                 LocationRadius = 800, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -516,6 +520,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Start Location',
+                ExpansionRadius = 60,
                 LocationRadius = 2000, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
@@ -546,6 +551,7 @@ BuilderGroup {
                 BaseTemplate = ExBaseTmpl,
                 ExpansionBase = true,
                 NearMarkerType = 'Large Expansion Area',
+                ExpansionRadius = 60,
                 LocationRadius = 1000, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
