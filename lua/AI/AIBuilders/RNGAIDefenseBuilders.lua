@@ -367,7 +367,7 @@ BuilderGroup {
         PlatoonAIPlan = 'ReclaimUnitsAIRNG',
         Priority = 400,
         BuilderConditions = {
-            { UCBC, 'HaveUnitsWithCategoryAndAlliance', { true, 10, categories.WALL, 'Enemy'}},
+            { UCBC, 'HaveUnitsWithCategoryAndAllianceRNG', { true, 10, categories.WALL, 'Enemy'}},
         },
         BuilderType = 'Any',
         BuilderData = {

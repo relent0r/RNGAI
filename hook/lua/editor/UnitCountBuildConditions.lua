@@ -30,7 +30,7 @@ end
 -- # parameter 4: expr   alliance       = false         doc = "docs for param3"
 -- #
 -- ##############################################################################################################
-function HaveUnitsWithCategoryAndAlliance(aiBrain, greater, numReq, category, alliance)
+function HaveUnitsWithCategoryAndAllianceRNG(aiBrain, greater, numReq, category, alliance)
 
     local numUnits = aiBrain:GetNumUnitsAroundPoint( category, Vector(0,0,0), 100000, alliance )
     if numUnits > numReq and greater then
