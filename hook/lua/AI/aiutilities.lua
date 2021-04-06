@@ -1,3 +1,4 @@
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
@@ -344,7 +345,7 @@ function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatM
             if not threatMin then
                 table.insert(returnMarkers, v)
             else
-                local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+                local threat = GetThreatAtPosition(aiBrain, v.Position, threatRings, true, threatType or 'Overall')
                 if threat >= threatMin and threat <= threatMax then
                     table.insert(returnMarkers, v)
                 end
@@ -443,6 +444,41 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     return retPos, retName
 end
 
+function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    local closest = false
+    local markerCount = false
+    local retPos, retName
+    local positions = AIFilterAlliedBasesRNG(aiBrain, positions)
+    --LOG('Pontetial Marker Locations '..repr(positions))
+    for _, v in positions do
+        if not aiBrain.BuilderManagers[v.Name] then
+            if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) < tMax then
+                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3(pos, v.Position)
+                    retPos = v.Position
+                    retName = v.Name
+                    markerCount = v.MassSpotsInRange
+                end
+            end
+        else
+            local managers = aiBrain.BuilderManagers[v.Name]
+            if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
+                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3(pos, v.Position)
+                    retPos = v.Position
+                    retName = v.Name
+                    markerCount = v.MassSpotsInRange
+                end
+            end
+        end
+    end
+    if not markerCount then 
+        markerCount = 0
+    end
+    --LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
+    return retPos, retName
+end
+
 function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes)
     local markerList = AIGetMarkerLocations(aiBrain, markerType)
     if extraTypes then
@@ -505,7 +541,7 @@ function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tM
     local refName = false
     
     for _, marker in inRangeList do
-        local threat = aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'AntiSurface')
+        local threat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSurface')
         if threat < maxThreat then
             if threat < bestThreat and threat < maxThreat then
                 bestDistSq = VDist2Sq(threatPos[1], threatPos[3], marker.Position[1], marker.Position[3])
