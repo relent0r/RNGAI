@@ -2155,7 +2155,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
         end
         if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             if threatCheck then
-                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) > tMax then
+                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) >= tMax then
                     --LOG('mass marker threatMax Reached, continuing')
                     continue
                 end

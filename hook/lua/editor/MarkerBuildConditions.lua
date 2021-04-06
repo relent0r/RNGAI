@@ -75,7 +75,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
             if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
                 if threatCheck then
                     threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
-                    if threat < threatMin or threat > threatMax then
+                    if threat <= threatMin or threat >= threatMax then
                         continue
                     end
                 end

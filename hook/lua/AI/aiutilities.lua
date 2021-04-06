@@ -452,7 +452,7 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
     --LOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
-            if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) < tMax then
+            if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) <= tMax then
                 if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
                     closest = VDist3(pos, v.Position)
                     retPos = v.Position
