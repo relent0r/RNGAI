@@ -108,7 +108,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 400, -- low factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.8} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8} },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -172,7 +172,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 5, 0, 'AntiSurface', 1 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.6} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.4, 0.6} },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -183,7 +183,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 400, -- low factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.4, 0.6} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.4, 0.6} },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -195,7 +195,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 450, -- low factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.1} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.1} },
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -228,7 +228,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH1 * ( categories.LAND + categories.AIR ) }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
         BuilderType = 'Any',
@@ -252,7 +252,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
         BuilderType = 'Any',
@@ -276,7 +276,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
         },
         BuilderType = 'Any',
@@ -300,7 +300,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.BOMBER} },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
         },
         BuilderData = {
@@ -325,7 +325,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
-                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+                { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             },
         BuilderData = {
             Assist = {
@@ -388,7 +388,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
         },
         BuilderType = 'Any',
@@ -412,7 +412,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 16,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
         },
@@ -538,7 +538,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.2 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -561,7 +561,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.2 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -603,7 +603,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
-                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.1 }},
+                { EBC, 'GreaterThanEconEfficiencyRNG', { 0.1, 1.1 }},
             },
         BuilderData = {
             Location = 'LocationType',
@@ -621,7 +621,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.TECH3 * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
-                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.1 }},
+                { EBC, 'GreaterThanEconEfficiencyRNG', { 0.1, 1.1 }},
             },
         BuilderData = {
             Location = 'LocationType',
@@ -640,7 +640,7 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80 } },
         },

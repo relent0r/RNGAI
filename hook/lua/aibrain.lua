@@ -1065,7 +1065,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
-                    local threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'AntiSurface')
+                    local threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'Land')
                     local myThreat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
                     --LOG('* AI-RNG: Threat of attacker'..threat)
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
@@ -2366,7 +2366,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.MASSSTORAGE) , v.UnitBeingBuilt) then
+                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.MASSSTORAGE + categories.ENERGYSTORAGE) , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end

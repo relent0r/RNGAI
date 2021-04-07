@@ -990,7 +990,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('HuntAI Enemy ACU Close, setting attack priority')
                 target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.COMMAND)
             else
-                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
             end
             if target then
                 local threatAroundplatoon = 0
@@ -2401,9 +2401,6 @@ Platoon = Class(RNGAIPlatoon) {
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, eng, cons)
             end
             relative = false
-            if reference and GetThreatAtPosition(aiBrain, reference , 1, true, 'AntiSurface') > 0 then
-                --aiBrain:ExpansionHelp(eng, reference)
-            end
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
