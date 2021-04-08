@@ -122,7 +122,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyData = {}
         self.EconomyTicksMonitor = 50
         self.EconomyCurrentTick = 1
-        self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitor)
+        self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
+        self.EconomyOverTimeCurrent = {}
+        self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -347,6 +349,59 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoMassManagerRNG)
         self:ForkThread(self.EnemyChokePointTestRNG)
     end,
+
+    EconomyMonitorRNG = function(self)
+        -- build "eco trend over time" table
+        for i = 1, self.EconomyTicksMonitor do
+            self.EconomyData[i] = { EnergyIncome=0, EnergyRequested=0, MassIncome=0, MassRequested=0 }
+        end
+        -- make counters local (they are not used anywhere else)
+        local EconomyTicksMonitor = self.EconomyTicksMonitor
+        local EconomyCurrentTick = self.EconomyCurrentTick
+        -- loop until the AI is dead
+        while self.Result ~= "defeat" do
+            self.EconomyData[EconomyCurrentTick].EnergyIncome = self:GetEconomyIncome('ENERGY')
+            self.EconomyData[EconomyCurrentTick].MassIncome = self:GetEconomyIncome('MASS')
+            self.EconomyData[EconomyCurrentTick].EnergyRequested = self:GetEconomyRequested('ENERGY')
+            self.EconomyData[EconomyCurrentTick].MassRequested = self:GetEconomyRequested('MASS')
+            -- store eco trend for the last 50 ticks (5 seconds)
+            EconomyCurrentTick = EconomyCurrentTick + 1
+            if EconomyCurrentTick > EconomyTicksMonitor then
+                EconomyCurrentTick = 1
+            end
+            WaitTicks(2)
+        end
+    end,
+
+    EconomyOverTimeRNG = function(self)
+        if not self.EconomyMonitorThread then
+            WARN('RNGAI : Error EconomyMonitorThread not running')
+            return
+        end
+        while self.Result ~= "defeat" do
+            local eIncome = 0
+            local mIncome = 0
+            local eRequested = 0
+            local mRequested = 0
+            local num = 0
+            for k, v in self.EconomyData do
+                num = k
+                eIncome = eIncome + v.EnergyIncome
+                mIncome = mIncome + v.MassIncome
+                eRequested = eRequested + v.EnergyRequested
+                mRequested = mRequested + v.MassRequested
+            end
+
+            self.EconomyOverTimeCurrent.EnergyIncome = eIncome / num
+            self.EconomyOverTimeCurrent.MassIncome = mIncome / num
+            self.EconomyOverTimeCurrent.EnergyRequested = eRequested / num
+            self.EconomyOverTimeCurrent.MassRequested = mRequested / num
+            self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime = math.min(eIncome / eRequested, 2)
+            self.EconomyOverTimeCurrent.MassEfficiencyOverTime = math.min(mIncome / mRequested, 2)
+            WaitTicks(50)
+        end
+    end,
+
     
     CalculateMassMarkersRNG = function(self)
         local MassMarker = {}
@@ -1186,18 +1241,19 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                --[[if true then
+                if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
                     local MassRequested = GetEconomyRequested(self,'MASS')
-                    local EnergyEfficiencyOverTime = math.min(EnergyIncome / EnergyRequested, 2)
-                    local MassEfficiencyOverTime = math.min(MassIncome / MassRequested, 2)
+                    local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
+                    local MassEfficiency = math.min(MassIncome / MassRequested, 2)
                     LOG('Eco Stats for :'..self.Nickname)
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
-                    LOG('Mass Efficiency :'..MassEfficiencyOverTime..'Energy Efficiency :'..EnergyEfficiencyOverTime)
-                end]]
+                    LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
+                    LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+                end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
