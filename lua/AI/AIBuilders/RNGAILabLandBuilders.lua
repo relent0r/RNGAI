@@ -46,8 +46,8 @@ BuilderGroup {
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
-            AvoidBases = false,
-            AvoidBasesRadius = 75,
+            AvoidBases = true,
+            AvoidBasesRadius = 150,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
             TargetSearchPriorities = { 

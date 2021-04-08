@@ -443,11 +443,13 @@ BuilderGroup {
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
             TargetSearchPriorities = { 
+                categories.MASSEXTRACTION,
                 categories.MOBILE * categories.NAVAL
             },
             PrioritizedCategories = {   
                 categories.MOBILE * categories.NAVAL,
                 categories.STRUCTURE * categories.ANTINAVY,
+                categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.NAVAL,
                 categories.COMMAND,
                 categories.EXPERIMENTAL * categories.MOBILE

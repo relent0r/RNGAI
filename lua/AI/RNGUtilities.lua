@@ -2167,6 +2167,12 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     return newList
 end
 
+function EdgeDistance(x,y,mapwidth)
+    local edgeDists = { x, y, math.abs(x-mapwidth), math.abs(y-mapwidth)}
+    RNGSORT(edgeDists, function(k1, k2) return k1 < k2 end)
+    return edgeDists[1]
+end
+
 function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
 
 

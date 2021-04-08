@@ -1490,6 +1490,8 @@ Platoon = Class(RNGAIPlatoon) {
                     self:PlatoonDisband()
                     return
                 end
+            elseif self.PlatoonData.GetTargetsFromBase then
+                return self:SetAIPlan('ReturnToBaseAIRNG')
             end
             --LOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
             WaitTicks(50)
@@ -2947,6 +2949,7 @@ Platoon = Class(RNGAIPlatoon) {
                 table.insert(categoryList, v)
             end
         end
+        self:SetPrioritizedTargetList('Attack', categoryList)
 
         markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
         
@@ -2980,14 +2983,13 @@ Platoon = Class(RNGAIPlatoon) {
             end
             --LOG('Best pre calculation marker threat is '..markerThreat..' at position'..repr(marker.Position))
             --LOG('Surface Threat at marker is '..enemyThreat..' at position'..repr(marker.Position))
-            if enemyThreat > 1 and markerThreat then
+            if enemyThreat > 0 and markerThreat then
                 markerThreat = markerThreat / enemyThreat
             end
-            --LOG('Best marker threat is '..markerThreat..' at position'..repr(marker.Position))
             local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
 
             if markerThreat >= minThreatThreshold and markerThreat <= maxThreatThreshold then
-                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) then
+                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) and distSq > (avoidClosestRadius * avoidClosestRadius) then
                     if self.IsBetterThreat(bFindHighestThreat, markerThreat, bestMarkerThreat) then
                         bestDistSq = distSq
                         bestMarker = marker
@@ -3018,17 +3020,34 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
             return self:SetAIPlan('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
-            --LOG('Best Marker position was nil, select random')
+            LOG('Best Marker position was nil, select random')
             if table.getn(markerLocations) <= 2 then
                 self.LastMarker[1] = nil
                 self.LastMarker[2] = nil
             end
-            for _,marker in RandomIter(markerLocations) do
+            local enemyStartX, enemyStartZ
+            if aiBrain:GetCurrentEnemy() then
+                enemyStartX, enemyStartZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+            else
+                WARN('RNGAI: No current enemy, massraid logic failed')
+                WaitTicks(50)
+                return self:SetAIPlan('HuntAIPATHRNG')
+            end
+
+            table.sort(markerLocations,function(a,b) return VDist2(a.Position[1], a.Position[3],enemyStartX, enemyStartZ) / (VDist2(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],ScenarioInfo.size[1])) > VDist2(b.Position[1], b.Position[3], enemyStartX, enemyStartZ) / (VDist2(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],ScenarioInfo.size[1])) end)
+            --LOG('Sorted table '..repr(markerLocations))
+            if not self.MassMarkerTable then
+                self.MassMarkerTable = markerLocations
+            end
+            
+            for k,marker in self.MassMarkerTable do
                 if table.getn(markerLocations) <= 2 then
                     self.LastMarker[1] = nil
                      self.LastMarker[2] = nil
+                     self.MassMarkerTable = false
                 end
-                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) then
+                local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
+                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) and distSq > (avoidClosestRadius * avoidClosestRadius) then
                     if self.LastMarker[1] and marker.Position[1] == self.LastMarker[1][1] and marker.Position[3] == self.LastMarker[1][3] then
                         continue
                     end
@@ -3036,9 +3055,12 @@ Platoon = Class(RNGAIPlatoon) {
                         continue
                     end
                     bestMarker = marker
+                    self.MassMarkerTable[k] = nil
                     break
                 end
             end
+            aiBrain:RebuildTable(self.MassMarkerTable)
+            LOG('bestMarker is '..repr(bestMarker))
         end
 
         local usedTransports = false
@@ -3056,9 +3078,6 @@ Platoon = Class(RNGAIPlatoon) {
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, true)
                 elseif VDist2(position[1], position[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false)
-                end
-                if usedTransports then
-                    --LOG('usedTransports is true')
                 end
                 if not usedTransports then
                     local pathLength = table.getn(path)
@@ -3162,23 +3181,17 @@ Platoon = Class(RNGAIPlatoon) {
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     --LOG('MASSRAID no transports')
-                    self:PlatoonDisband()
-                    return
+                    return self:SetAIPlan('ReturnToBaseAIRNG')
                 end
                 --LOG('Guardmarker found transports')
             else
                 --LOG('Path error in MASSRAID')
-                self:PlatoonDisband()
-                return
-            end
-            if usedTransports then
-                --LOG('usedTransports is true')
+                return self:SetAIPlan('ReturnToBaseAIRNG')
             end
 
             if (not path or not success) and not usedTransports then
                 --LOG('not path or not success or not usedTransports MASSRAID')
-                self:PlatoonDisband()
-                return
+                return self:SetAIPlan('ReturnToBaseAIRNG')
             end
             
             if aiBrain:CheckBlockingTerrain(GetPlatoonPosition(self), bestMarker.Position, 'none') then
@@ -3221,7 +3234,7 @@ Platoon = Class(RNGAIPlatoon) {
         else
             -- no marker found, disband!
             --LOG('no marker found, disband MASSRAID')
-            self:PlatoonDisband()
+            return self:SetAIPlan('ReturnToBaseAIRNG')
         end
     end,
 
