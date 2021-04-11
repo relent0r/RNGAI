@@ -50,6 +50,7 @@ BuilderGroup {
             AvoidBasesRadius = 150,
             AggressiveMove = true,      
             AvoidClosestRadius = 50,
+            EarlyRaid = true,
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
             },

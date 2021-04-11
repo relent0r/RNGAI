@@ -360,6 +360,7 @@ BuilderGroup {
                 categories.GROUNDATTACK * categories.AIR,
                 categories.TRANSPORTFOCUS * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
+                categories.AIR,
             },
         },
         BuilderConditions = {

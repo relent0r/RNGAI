@@ -827,6 +827,14 @@ function HaveGreaterThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory
     return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '>')
 end
 
+function EngineerAssistManagerNeedsEngineers(aiBrain)
+
+    if aiBrain.EngineerAssistManager.Active then
+        return true
+    end
+    return false
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

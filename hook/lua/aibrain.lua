@@ -125,6 +125,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
         self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
+        self.EngineerAssistManagerActive = false
+        self.EngineerAssistManagerEngineerCount = 0
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -225,6 +227,13 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.BrainIntel = {}
+        self.BrainIntel.IMAPConfig = {
+            OgridRadius = 0,
+            IMAPSize = 0,
+            ResolveBlocks = 0,
+            ThresholdMult = 0,
+            Rings = 0,
+        }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.MassMarker = 0
         self.BrainIntel.AirAttackMode = false
@@ -333,6 +342,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end]]
         self:CalculateMassMarkersRNG()
+        self:IMAPConfigurationRNG()
         -- Begin the base monitor process
 
         self:BaseMonitorInitializationRNG()
@@ -1106,7 +1116,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
-        --LOG('* AI-RNG: New Entry Added to platoon distress'..repr(self.BaseMonitor.PlatoonDistressTable))
         -- Create the distress call if it doesn't exist
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
@@ -1500,89 +1509,32 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
     end,
 
-    --[[TacticalThreatAnalysisRNG = function(self, ALLBPS)
+    IMAPConfigurationRNG = function(self, ALLBPS)
+        -- Used to configure imap values, used for setting threat ring sizes depending on map size to try and get a somewhat decent radius
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
 
-        -- set the OgridRadius according to mapsize
-        -- it controls the size of the query when seeking the epicentre of a threat
-        -- and the ability to 'merge' two points that might be in the same, or adjacent
-        -- IMAP blocks
-        local OgridRadius, IMAPsize, ResolveBlocks, Rings, ThresholdMult
-        local units, counter, x1,x2,x3, unitPos, dupe
-
         if maxmapdimension == 256 then
-            OgridRadius = 11.5
-            IMAPSize = 16
-            ResolveBlocks = 0
-            ThresholdMult = .33
-            Rings = 3
+            self.BrainIntel.IMAPConfig.OgridRadius = 11.5
+            self.BrainIntel.IMAPConfig.IMAPSize = 16
+            self.BrainIntel.IMAPConfig.Rings = 3
         elseif maxmapdimension == 512 then
-            OgridRadius = 22.5
-            IMAPSize = 32
-            ResolveBlocks = 0
-            ThresholdMult = .66
-            Rings = 2
+            self.BrainIntel.IMAPConfig.OgridRadius = 22.5
+            self.BrainIntel.IMAPConfig.IMAPSize = 32
+            self.BrainIntel.IMAPConfig.Rings = 2
         elseif maxmapdimension == 1024 then
-            OgridRadius = 45.0
-            IMAPSize = 64
-            ResolveBlocks = 0
-            ThresholdMult = 1
-            Rings = 1
+            self.BrainIntel.IMAPConfig.OgridRadius = 45.0
+            self.BrainIntel.IMAPConfig.IMAPSize = 64
+            self.BrainIntel.IMAPConfig.Rings = 1
         elseif maxmapdimension == 2048 then
-            OgridRadius = 89.5
-            IMAPSize = 128
-            ResolveBlocks = 4
-            ThresholdMult = 1
-            Rings = 0
+            self.BrainIntel.IMAPConfig.OgridRadius = 89.5
+            self.BrainIntel.IMAPConfig.IMAPSize = 128
+            self.BrainIntel.IMAPConfig.Rings = 0
         else
-            OgridRadius = 180.0
-            IMAPSize = 256
-            ResolveBlocks = 16
-            ThresholdMult = 1.5
-            Rings = 0
+            self.BrainIntel.IMAPConfig.OgridRadius = 180.0
+            self.BrainIntel.IMAPConfig.IMAPSize = 256
+            self.BrainIntel.IMAPConfig.Rings = 0
         end
-        local IMAPRadius = IMAPSize * .5
-		
-		local numchecks = 0
-        local usedticks = 0
-        local checkspertick = 1
-        local tempImapLocation = {false,false}
-        if table.getn(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                if (tempImapLocation[1] ~= threat[1] and tempImapLocation[2] ~= threat[2]) and VDist2Sq(tempImapLocation[1], tempImapLocation[2], threat[1], threat[2]) < 10000 then
-                    continue
-                end
-                if threat.Threat > 100 and ThreatType == 'StructuresNotMex' then
-                    numchecks = numchecks + 1
-                    if numchecks > checkspertick then
-                        WaitTicks(1)
-                        usedticks = usedticks + 1
-                        numchecks = 0
-                    end
-                    units = RUtils.GetEnemyUnitsInRect( self, threat.Position[1]-IMAPRadius, threa.Position[2]-IMAPRadius, threat.Position[1]+IMAPRadius, threat.Position[2]+IMAPRadius)
-                    counter = 0
-                    x1 = 0
-                    x2 = 0
-                    x3 = 0
-                    for _,v in EntityCategoryFilterDown( categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, units ) do
-                        counter = counter + 1
-                        unitPos = GetPosition(v)
-                        if unitPos and not v.Dead then
-                            x1 = x1 + unitPos[1]
-                            x2 = x2 + unitPos[2]
-                            x3 = x3 + unitPos[3]
-                        end
-                    end
-                    if counter > 0 then
-                        dupe = false
-                        -- divide the position values by the counter to get average position (gives you the heart of the real cluster)
-                        newPos = { x1/counter, x2/counter, x3/counter }
-                        tempImapLocation = {newPos[1], newPos[2]}
-                        units = GetUnitsAroundPoint( aiBrain, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, newPos, 100, 'Enemy')
-                    end
-                end
-            end
-    end,]]
+    end,
 
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
@@ -1763,8 +1715,8 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
         --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
         --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
@@ -2644,6 +2596,24 @@ AIBrain = Class(RNGAIBrainClass) {
             WaitTicks(1200)
         end
     end,
+
+    EngineerAssistManagerBrainRNG = function(self, type)
+        WaitTicks(1200)
+        while true do
+            local massStorage = GetEconomyStored( aiBrain, 'MASS')
+            local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
+            LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
+            LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
+
+            if massStorage > 200 and energyStorage > 1000 then
+                self.EngineerAssistManagerEngineerCount = aiBrain.EngineerAssistManagerEngineerCount + 1
+                self.EngineerAssistManagerActive = true
+            else
+                self.EngineerAssistManagerActive = false
+            end
+            WaitTicks(30)
+        end
+    end
 
 --[[
     GetManagerCount = function(self, type)

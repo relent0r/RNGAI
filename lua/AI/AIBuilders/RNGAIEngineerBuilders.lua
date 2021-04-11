@@ -538,7 +538,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -561,7 +561,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -603,7 +603,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
-                { EBC, 'GreaterThanEconEfficiencyRNG', { 0.1, 1.1 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {
             Location = 'LocationType',
@@ -621,7 +621,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.TECH3 * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
-                { EBC, 'GreaterThanEconEfficiencyRNG', { 0.1, 1.1 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {
             Location = 'LocationType',
@@ -640,7 +640,7 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80 } },
         },
@@ -755,6 +755,26 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Assist Manager BuilderGroup',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Assist Manager',
+        PlatoonTemplate = 'EngineerAssistManagerRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
+        },
+        BuilderData = {
+            PlatoonPlan = 'EngineerAssistManagerRNG',
+            Location = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {

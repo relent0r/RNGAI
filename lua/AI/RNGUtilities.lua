@@ -1113,7 +1113,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                     distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                                 end
                                 if platoon.MovementLayer == 'Air' and platoonThreat then
-                                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                                     --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
                                     if enemyThreat > platoonThreat then
                                         continue
@@ -1142,7 +1142,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                             end
                         end
                         if platoon.MovementLayer == 'Air' and platoonThreat then
-                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                             --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
                             if enemyThreat > platoonThreat then
                                 continue
@@ -1203,7 +1203,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                             continue
                         end]]
                         if platoon.MovementLayer == 'Air' and platoonThreat then
-                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                             --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
                             if enemyThreat > platoonThreat then
                                 continue
@@ -1964,7 +1964,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local posDistance = 0
         if startPos then
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
-                posThreat = GetThreatAtPosition(aiBrain, startPos, 1, true, 'StructuresNotMex')
+                posThreat = GetThreatAtPosition(aiBrain, startPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'StructuresNotMex')
                 --LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 5 then
                     if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, startPos, 50, 'Enemy') > 0 then

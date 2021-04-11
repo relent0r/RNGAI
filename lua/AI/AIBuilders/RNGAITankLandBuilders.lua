@@ -722,6 +722,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Expansions',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
         Priority = 600,                                                          -- Priority. 1000 is normal.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -736,9 +737,9 @@ BuilderGroup {
             MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
-            AvoidBasesRadius = 75,
+            AvoidBasesRadius = 120,
             AggressiveMove = false,      
-            AvoidClosestRadius = 100,
+            AvoidClosestRadius = 10,
             UseFormation = 'AttackFormation',
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
@@ -765,7 +766,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
-            DistressRange = 100,
+            DistressRange = 180,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
@@ -845,6 +846,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -860,9 +862,9 @@ BuilderGroup {
             MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
-            AvoidBasesRadius = 75,
+            AvoidBasesRadius = 120,
             AggressiveMove = false,      
-            AvoidClosestRadius = 100,
+            AvoidClosestRadius = 10,
             UseFormation = 'AttackFormation',
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
@@ -889,7 +891,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
-            DistressRange = 100,
+            DistressRange = 120,
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 5,
@@ -970,7 +972,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
-            DistressRange = 100,
+            DistressRange = BaseMilitaryArea,
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -1704,11 +1706,11 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 3000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = true,      
-            AvoidClosestRadius = 75,
+            AvoidClosestRadius = 10,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 
                 categories.MASSEXTRACTION,
@@ -1744,7 +1746,7 @@ BuilderGroup {
             AvoidBases = true,
             AvoidBasesRadius = 150,
             AggressiveMove = true,      
-            AvoidClosestRadius = 125,
+            AvoidClosestRadius = 10,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 
                 categories.MASSEXTRACTION,

@@ -739,7 +739,7 @@ function ACUDetection(platoon)
     end
 end
 
--- 99% of the below was Sprouto's work
+-- 80% of the below was Sprouto's work
 function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
     --LOG('* AI-RNG: Starting structure thread upgrade for'..aiBrain.Nickname)
 
@@ -919,12 +919,12 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: massTrend'..massTrend)
             energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyTrend'..energyTrend)
-            massEfficiency = math.min(massIncome / massRequested, 2)
+            --massEfficiency = math.min(massIncome / massRequested, 2)
             --LOG('* AI-RNG: massEfficiency'..massEfficiency)
-            energyEfficiency = math.min(energyIncome / energyRequested, 2)
+            --energyEfficiency = math.min(energyIncome / energyRequested, 2)
             --LOG('* AI-RNG: energyEfficiency'..energyEfficiency)
             
-            if (massEfficiency >= upgradeSpec.MassLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
+            if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= upgradeSpec.MassLowTrigger and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= upgradeSpec.EnergyLowTrigger)
                 or ((massStorageRatio > .60 and energyStorageRatio > .40))
                 or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .7 ) ) or bypasseco then
                     if bypasseco then

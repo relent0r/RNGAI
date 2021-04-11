@@ -107,7 +107,7 @@ EngineerManager = Class(RNGEngineerManager) {
             end
             if builder:GetPlatoonAIPlan() then
                 hndl.PlanName = builder:GetPlatoonAIPlan()
-                hndl:SetAIPlan(hndl.PlanName)
+                hndl:SetAIPlanRNG(hndl.PlanName)
             end
 
             --If we have additional threads to fork on the platoon, do that as well.
