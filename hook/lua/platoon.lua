@@ -4330,6 +4330,9 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('Location Type is '..location)
         --LOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
         --LOG('Destiantion Plan is '..destinationPlan)
+        if destinationPlan == 'EngineerAssistManagerRNG' then
+            LOG('Have been requested to create EngineerAssistManager platoon')
+        end
         if not destinationPlan then
             return
         end
@@ -4773,7 +4776,8 @@ Platoon = Class(RNGAIPlatoon) {
 
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
-        local platoonUnits = GetPlatoonUnits(self)
+        local platoonUnits
+        local platoonCount = 0
         local locationType = self.PlatoonData.Location or 'MAIN'
         local engineerRadius = aiBrain.BuilderManagers[locationType].EngineerManager.Radius
         local managerPosition = aiBrain.BuilderManagers[locationType].Position
@@ -4791,12 +4795,12 @@ Platoon = Class(RNGAIPlatoon) {
             SACU = 56
             SACU + eng = 98
         ]]
-        for _, eng in platoonUnits do
+        --[[for _, eng in platoonUnits do
             if not eng or eng.Dead or eng:BeenDestroyed() then
                 self:PlatoonDisbandNoAssign()
                 return
             end
-        end
+        end]]
         local ExtractorCostSpec = {
             TECH1 = ALLBPS['ueb1103'].Economy.BuildCostMass,
             TECH2 = ALLBPS['ueb1202'].Economy.BuildCostMass,
@@ -4807,28 +4811,31 @@ Platoon = Class(RNGAIPlatoon) {
             LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
             platoonUnits = GetPlatoonUnits(self)
             totalBuildRate = 0
-            local platoonCount = table.getn(platoonUnits)
+            platoonCount = table.getn(platoonUnits)
+            LOG('Start of loop platoon count '..platoonCount)
             
             for _, eng in platoonUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                    if platoonCount > aiBrain.EngineerAssistManagerEngineerCount then
-                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
+                    if platoonCount > 3 then
+                        LOG('Moving engineer back to armypool')
+                        IssueClearCommands({eng})
+                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Support', 'NoFormation')
                         platoonCount = platoonCount - 1
-
+                        continue
                     end
                     totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                 end
             end
+            aiBrain.EngineerAssistManagerEngineerCount = platoonCount
             LOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
+            LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
 
             local unitsUpgrading = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, managerPosition, engineerRadius, 'Ally')
             local low = false
             local bestUnit = false
             if unitsUpgrading then
-                LOG('Starting loop')
                 local numBuilding = 0
                 for _, unit in unitsUpgrading do
-                    LOG('Loop through one extractor')
                     if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                         LOG('Upgrading Extractor Found')
                         numBuilding = numBuilding + 1

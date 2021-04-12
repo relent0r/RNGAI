@@ -127,6 +127,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
+        self.EngineerAssistManagerEngineerCountDesired = 0
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -358,6 +359,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoMassManagerRNG)
         self:ForkThread(self.EnemyChokePointTestRNG)
+        self:ForkThread(self.EngineerAssistManagerBrainRNG)
     end,
 
     EconomyMonitorRNG = function(self)
@@ -1715,8 +1717,8 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
         --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
         --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        --LOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --LOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
@@ -2600,17 +2602,21 @@ AIBrain = Class(RNGAIBrainClass) {
     EngineerAssistManagerBrainRNG = function(self, type)
         WaitTicks(1200)
         while true do
-            local massStorage = GetEconomyStored( aiBrain, 'MASS')
-            local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
+            local massStorage = GetEconomyStored( self, 'MASS')
+            local energyStorage = GetEconomyStored( self, 'ENERGY')
             LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
 
             if massStorage > 200 and energyStorage > 1000 then
-                if self.EngineerAssistManagerEngineerCount <= 3 then
-                    self.EngineerAssistManagerEngineerCount = self.EngineerAssistManagerEngineerCount + 1
+                if self.EngineerAssistManagerEngineerCountDesired <= 2 and self.EngineerAssistManagerEngineerCount <= 2 then
+                    self.EngineerAssistManagerEngineerCountDesired = self.EngineerAssistManagerEngineerCountDesired + 1
                 end
+                LOG('EngineerAssistManager is Active')
                 self.EngineerAssistManagerActive = true
             else
+                if self.EngineerAssistManagerEngineerCountDesired > 0 then
+                    self.EngineerAssistManagerEngineerCountDesired = self.EngineerAssistManagerEngineerCountDesired - 1
+                end
                 --self.EngineerAssistManagerActive = false
             end
             WaitTicks(30)
