@@ -829,7 +829,7 @@ end
 
 function EngineerAssistManagerNeedsEngineers(aiBrain)
 
-    if aiBrain.EngineerAssistManager.Active then
+    if aiBrain.EngineerAssistManager.Active and aiBrain.EngineerAssistManagerEngineerCount <= 3 then
         return true
     end
     return false

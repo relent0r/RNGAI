@@ -2606,10 +2606,12 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
 
             if massStorage > 200 and energyStorage > 1000 then
-                self.EngineerAssistManagerEngineerCount = aiBrain.EngineerAssistManagerEngineerCount + 1
+                if self.EngineerAssistManagerEngineerCount <= 3 then
+                    self.EngineerAssistManagerEngineerCount = self.EngineerAssistManagerEngineerCount + 1
+                end
                 self.EngineerAssistManagerActive = true
             else
-                self.EngineerAssistManagerActive = false
+                --self.EngineerAssistManagerActive = false
             end
             WaitTicks(30)
         end

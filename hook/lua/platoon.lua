@@ -4777,12 +4777,20 @@ Platoon = Class(RNGAIPlatoon) {
         local locationType = self.PlatoonData.Location or 'MAIN'
         local engineerRadius = aiBrain.BuilderManagers[locationType].EngineerManager.Radius
         local managerPosition = aiBrain.BuilderManagers[locationType].Position
+        local totalBuildRate = 0
         LOG('engineerRadius '..engineerRadius)
         LOG('managerPosition '..repr(managerPosition))
         local platoonMaximum = 0
         self.Active = false
         
-
+        --[[
+            Buildrates :
+            T1 = 5
+            T2 = 12.5
+            T3 = 30
+            SACU = 56
+            SACU + eng = 98
+        ]]
         for _, eng in platoonUnits do
             if not eng or eng.Dead or eng:BeenDestroyed() then
                 self:PlatoonDisbandNoAssign()
@@ -4798,23 +4806,25 @@ Platoon = Class(RNGAIPlatoon) {
         while aiBrain:PlatoonExists(self) do
             LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
             platoonUnits = GetPlatoonUnits(self)
+            totalBuildRate = 0
             local platoonCount = table.getn(platoonUnits)
-            if platoonCount > aiBrain.EngineerAssistManagerEngineerCount then
-                for _, eng in platoonUnits do
-                    if not eng or eng.Dead or eng:BeenDestroyed() then
+            
+            for _, eng in platoonUnits do
+                if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
+                    if platoonCount > aiBrain.EngineerAssistManagerEngineerCount then
                         aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                        platoonCount = platCount - 1
-                        if platoonCount <= aiBrain.EngineerAssistManagerEngineerCount then
-                            break
-                        end
+                        platoonCount = platoonCount - 1
+
                     end
+                    totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                 end
             end
+            LOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
+
             local unitsUpgrading = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, managerPosition, engineerRadius, 'Ally')
             local low = false
             local bestUnit = false
             if unitsUpgrading then
-
                 LOG('Starting loop')
                 local numBuilding = 0
                 for _, unit in unitsUpgrading do
@@ -4864,7 +4874,9 @@ Platoon = Class(RNGAIPlatoon) {
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 break
             end
-            if not self.Active then
+            if not aiBrain.EngineerAssistManagerActive then
+                IssueClearCommands({eng})
+                aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
                 break
             end
             WaitTicks(50)
