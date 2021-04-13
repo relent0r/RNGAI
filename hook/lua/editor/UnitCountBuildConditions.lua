@@ -829,7 +829,7 @@ end
 
 function EngineerAssistManagerNeedsEngineers(aiBrain)
 
-    if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerEngineerCountDesired < 2 and aiBrain.EngineerAssistManagerEngineerCount <= 2 then
+    if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > 0 and aiBrain.EngineerAssistManagerBuildPower <= 15 then
         LOG('EngineerAssist condition is true')
         LOG('Condition aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
         return true

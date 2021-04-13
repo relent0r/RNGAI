@@ -4816,7 +4816,7 @@ Platoon = Class(RNGAIPlatoon) {
             
             for _, eng in platoonUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                    if platoonCount > 3 then
+                    if totalBuildRate > 15 then
                         LOG('Moving engineer back to armypool')
                         IssueClearCommands({eng})
                         aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Support', 'NoFormation')
@@ -4826,6 +4826,7 @@ Platoon = Class(RNGAIPlatoon) {
                     totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                 end
             end
+            aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
             aiBrain.EngineerAssistManagerEngineerCount = platoonCount
             LOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
             LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
@@ -4879,6 +4880,12 @@ Platoon = Class(RNGAIPlatoon) {
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() do
             LOG('EngineerAssistThread fork loop')
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                eng.UnitBeingAssist = nil
+                break
+            end
+            if aiBrain.EngineerAssistManagerBuildPowerRequired <= 0 then
+                IssueClearCommands({eng})
+                aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
                 break
             end
             if not aiBrain.EngineerAssistManagerActive then
@@ -4888,6 +4895,6 @@ Platoon = Class(RNGAIPlatoon) {
             end
             WaitTicks(50)
         end
-        eng.UnitBeingAssist = false
+        eng.UnitBeingAssist = nil
     end,
 }

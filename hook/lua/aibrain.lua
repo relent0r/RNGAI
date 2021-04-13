@@ -128,6 +128,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
         self.EngineerAssistManagerEngineerCountDesired = 0
+        self.EngineerAssistManagerBuildPowerDesired = 5
+        self.EngineerAssistManagerBuildPowerRequired = 0
+        self.EngineerAssistManagerBuildPower = 0
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -153,15 +156,27 @@ AIBrain = Class(RNGAIBrainClass) {
             NUKE = 6,
         }
         self.EcoManager.MassPriorityTable = {
-            MASSEXTRACTION = 8,
-            TML = 11,
-            STATIONPODS = 10,
-            ENGINEER = 12,
-            AIR = 6,
-            NAVAL = 7,
-            LAND = 5,
-            NUKE = 9,
+            Advantage = {
+                MASSEXTRACTION = 5,
+                TML = 12,
+                STATIONPODS = 10,
+                ENGINEER = 11,
+                AIR = 7,
+                NAVAL = 8,
+                LAND = 6,
+                NUKE = 9,
+                },
+            Disadvantage = {
+                MASSEXTRACTION = 8,
+                TML = 12,
+                STATIONPODS = 10,
+                ENGINEER = 11,
+                AIR = 6,
+                NAVAL = 7,
+                NUKE = 9,
+            }
         }
+
         self.DefensiveSupport = {}
 
         --Tactical Monitor
@@ -251,6 +266,7 @@ AIBrain = Class(RNGAIBrainClass) {
             MassMarker = 0,
             AllyExtractorCount = 0,
             AllyExtractor = 0,
+            AllyLandThreat = 0,
             BaseThreatCaution = false,
             AntiAirNow = 0,
             AirNow = 0,
@@ -406,9 +422,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 mIncome = mIncome + v.MassIncome
                 eRequested = eRequested + v.EnergyRequested
                 mRequested = mRequested + v.MassRequested
-                eTrend = eTrend + v.EnergyTrend
-                mTrend = mTrend + v.MassTrend
-
+                
+                if v.EnergyTrend then
+                    eTrend = eTrend + v.EnergyTrend
+                end
+                if v.EnergyTrend then
+                    mTrend = mTrend + v.MassTrend
+                end
             end
 
             self.EconomyOverTimeCurrent.EnergyIncome = eIncome / num
@@ -1109,6 +1129,44 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    GetMassStallSpec = function(self, threatAdvantage)
+        local stallSpec = {}
+        if threatAdvantage then
+            if self.UpgradeMode == 'Aggressive' then
+                upgradeSpec.MassLowTrigger = 0.80
+                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.MassHighTrigger = 2.0
+                upgradeSpec.EnergyHighTrigger = 99999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 50
+                upgradeSpec.EnemyThreatLimit = 10
+                return upgradeSpec
+            elseif self.UpgradeMode == 'Normal' then
+                upgradeSpec.MassLowTrigger = 0.9
+                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.MassHighTrigger = 2.0
+                upgradeSpec.EnergyHighTrigger = 99999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 70
+                upgradeSpec.EnemyThreatLimit = 5
+                return upgradeSpec
+            elseif self.UpgradeMode == 'Caution' then
+                upgradeSpec.MassLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.MassHighTrigger = 2.5
+                upgradeSpec.EnergyHighTrigger = 99999
+                upgradeSpec.UpgradeCheckWait = 18
+                upgradeSpec.InitialDelay = 80
+                upgradeSpec.EnemyThreatLimit = 0
+                return upgradeSpec
+            end
+        else
+            --LOG('* AI-RNG: Unit is not Mass Extractor')
+            stallSpec = false
+            return stallSpec
+        end
+    end,
+
     BaseMonitorPlatoonDistressRNG = function(self, platoon, threat)
         if not self.BaseMonitor then
             return
@@ -1479,6 +1537,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         local allyExtractorCount = 0
         local allyExtractorthreat = 0
+        local allyLandThreat = 0
         --LOG('Number of Allies '..table.getn(allyBrains))
         WaitTicks(1)
         if table.getn(allyBrains) > 0 then
@@ -1489,11 +1548,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     allyExtractorthreat = allyExtractorthreat + bp.EconomyThreatLevel
                     allyExtractorCount = allyExtractorCount + 1
                 end
+                local allylandThreat = GetListOfUnits( ally, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+                
+                for _,v in allylandThreat do
+                    bp = ALLBPS[v.UnitId].Defense
+                    allyLandThreat = allyLandThreat + bp.SurfaceThreatLevel
+                end
             end
-            
         end
         self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
         self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
+        self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
         --LOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
         --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
@@ -1969,10 +2034,19 @@ AIBrain = Class(RNGAIBrainClass) {
                     local massCycle = 0
                     local unitTypePaused = {}
                     while massStateCaution do
+                        local massPriorityTable = {}
                         local priorityNum = 0
                         local priorityUnit = false
+                        LOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > self.EnemyIntel.EnemyThreatCurrent.Land then
+                            massPriorityTable = self.EcoManager.MassPriorityTable.Advantage
+                            LOG('Land threat advantage mass priority table')
+                        else
+                            massPriorityTable = self.EcoManager.MassPriorityTable.Disadvantage
+                            LOG('Land thread disadvantage mass priority table')
+                        end
                         massCycle = massCycle + 1
-                        for k, v in self.EcoManager.MassPriorityTable do
+                        for k, v in massPriorityTable do
                             local priorityUnitAlreadySet = false
                             for l, b in unitTypePaused do
                                 if k == b then
@@ -2091,7 +2165,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         massStateCaution = self:EcoManagerMassStateCheck()
                         if massStateCaution then
                             --LOG('Power State Caution still true after first pass')
-                            if massCycle > 5 then
+                            if massCycle > 8 then
                                 --LOG('Power Cycle Threashold met, waiting longer')
                                 WaitTicks(100)
                                 massCycle = 0
@@ -2316,7 +2390,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         powerStateCaution = self:EcoManagerPowerStateCheck()
                         if powerStateCaution then
                             --LOG('Power State Caution still true after first pass')
-                            if powerCycle > 5 then
+                            if powerCycle > 11 then
                                 --LOG('Power Cycle Threashold met, waiting longer')
                                 WaitTicks(100)
                                 powerCycle = 0
@@ -2365,7 +2439,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerMassStateCheck = function(self)
-        if self:GetEconomyTrend('MASS') <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
+        if self.EconomyOverTimeCurrent.MassTrend <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
             return true
         else
             return false
@@ -2618,14 +2692,14 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
 
             if massStorage > 200 and energyStorage > 1000 then
-                if self.EngineerAssistManagerEngineerCountDesired <= 2 and self.EngineerAssistManagerEngineerCount <= 2 then
-                    self.EngineerAssistManagerEngineerCountDesired = self.EngineerAssistManagerEngineerCountDesired + 1
+                if self.EngineerAssistManagerBuildPower <= 15 and self.EngineerAssistManagerBuildPowerRequired <= 8 then
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
                 LOG('EngineerAssistManager is Active')
                 self.EngineerAssistManagerActive = true
             else
-                if self.EngineerAssistManagerEngineerCountDesired > 0 then
-                    self.EngineerAssistManagerEngineerCountDesired = self.EngineerAssistManagerEngineerCountDesired - 1
+                if self.EngineerAssistManagerBuildPowerRequired > 0 then
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 3
                 end
                 --self.EngineerAssistManagerActive = false
             end
