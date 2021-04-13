@@ -1129,44 +1129,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    GetMassStallSpec = function(self, threatAdvantage)
-        local stallSpec = {}
-        if threatAdvantage then
-            if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.80
-                upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 2.0
-                upgradeSpec.EnergyHighTrigger = 99999
-                upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 50
-                upgradeSpec.EnemyThreatLimit = 10
-                return upgradeSpec
-            elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.9
-                upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 2.0
-                upgradeSpec.EnergyHighTrigger = 99999
-                upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 70
-                upgradeSpec.EnemyThreatLimit = 5
-                return upgradeSpec
-            elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 1.0
-                upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 2.5
-                upgradeSpec.EnergyHighTrigger = 99999
-                upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 80
-                upgradeSpec.EnemyThreatLimit = 0
-                return upgradeSpec
-            end
-        else
-            --LOG('* AI-RNG: Unit is not Mass Extractor')
-            stallSpec = false
-            return stallSpec
-        end
-    end,
-
     BaseMonitorPlatoonDistressRNG = function(self, platoon, threat)
         if not self.BaseMonitor then
             return
@@ -2707,6 +2669,25 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end
 
+    AllyEconomyHelpThread = function(self)
+        local selfIndex = self:GetArmyIndex()
+        while true do
+            if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
+                for index, brain in ArmyBrains do
+                    if index ~= selfIndex then
+                        if IsAlly(selfIndex, brain:GetArmyIndex()) then
+                            if GetEconomyStoredRatio(brain, 'ENERGY') < .05 then
+                                local amount
+                                amount = GetEconomyStored( self, 'ENERGY') / 100 * 10
+                                GiveResource('ENERGY', amount)
+                            end
+                        end
+                    end
+                end
+            end
+            WaitTicks(100)
+        end
+    end
 --[[
     GetManagerCount = function(self, type)
         if not self.RNG then
