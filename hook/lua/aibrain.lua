@@ -372,10 +372,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local EconomyCurrentTick = self.EconomyCurrentTick
         -- loop until the AI is dead
         while self.Result ~= "defeat" do
-            self.EconomyData[EconomyCurrentTick].EnergyIncome = self:GetEconomyIncome('ENERGY')
-            self.EconomyData[EconomyCurrentTick].MassIncome = self:GetEconomyIncome('MASS')
-            self.EconomyData[EconomyCurrentTick].EnergyRequested = self:GetEconomyRequested('ENERGY')
-            self.EconomyData[EconomyCurrentTick].MassRequested = self:GetEconomyRequested('MASS')
+            self.EconomyData[EconomyCurrentTick].EnergyIncome = GetEconomyIncome(self, 'ENERGY')
+            self.EconomyData[EconomyCurrentTick].MassIncome = GetEconomyIncome(self, 'MASS')
+            self.EconomyData[EconomyCurrentTick].EnergyRequested = GetEconomyRequested(self, 'ENERGY')
+            self.EconomyData[EconomyCurrentTick].MassRequested = GetEconomyRequested(self, 'MASS')
+            self.EconomyData[EconomyCurrentTick].EnergyTrend = GetEconomyTrend(self, 'ENERGY')
+            self.EconomyData[EconomyCurrentTick].MassTrend = GetEconomyTrend(self, 'MASS')
             -- store eco trend for the last 50 ticks (5 seconds)
             EconomyCurrentTick = EconomyCurrentTick + 1
             if EconomyCurrentTick > EconomyTicksMonitor then
@@ -395,6 +397,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local mIncome = 0
             local eRequested = 0
             local mRequested = 0
+            local eTrend = 0
+            local mTrend = 0
             local num = 0
             for k, v in self.EconomyData do
                 num = k
@@ -402,6 +406,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 mIncome = mIncome + v.MassIncome
                 eRequested = eRequested + v.EnergyRequested
                 mRequested = mRequested + v.MassRequested
+                eTrend = eTrend + v.EnergyTrend
+                mTrend = mTrend + v.MassTrend
+
             end
 
             self.EconomyOverTimeCurrent.EnergyIncome = eIncome / num
@@ -410,6 +417,8 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyOverTimeCurrent.MassRequested = mRequested / num
             self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime = math.min(eIncome / eRequested, 2)
             self.EconomyOverTimeCurrent.MassEfficiencyOverTime = math.min(mIncome / mRequested, 2)
+            self.EconomyOverTimeCurrent.EnergyTrend = eTrend / num
+            self.EconomyOverTimeCurrent.MassTrend = mTrend / num
             WaitTicks(50)
         end
     end,
