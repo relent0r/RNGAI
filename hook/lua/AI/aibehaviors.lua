@@ -1579,7 +1579,7 @@ function FatBoyBehaviorRNG(self)
         local guards = unit.Guards:GetPlatoonUnits()
         local inWater = InWaterCheck(self)
         --LOG('Start of FATBOY Loop')
-        targetUnit, lastBase = FindExperimentalTarget(self)
+        targetUnit, lastBase = FindExperimentalTargetRNG(self)
         if targetUnit then
             --LOG('We have target')
             IssueClearCommands({unit})
@@ -1815,7 +1815,7 @@ CzarBehaviorRNG = function(self)
     --LOG('Assign CZAR Priorities')
     AssignCZARPriorities(self)
     local cmd = {}
-    local targetUnit, targetBase = FindExperimentalTarget(self)
+    local targetUnit, targetBase = FindExperimentalTargetRNG(self)
     local oldTargetUnit = nil
     while not experimental.Dead do
         if (targetUnit and targetUnit ~= oldTargetUnit) or not self:IsCommandsActive(cmd) then
@@ -1851,7 +1851,7 @@ CzarBehaviorRNG = function(self)
         WaitSeconds(1)
 
         oldTargetUnit = targetUnit
-        targetUnit, targetBase = FindExperimentalTarget(self)
+        targetUnit, targetBase = FindExperimentalTargetRNG(self)
     end
 end
 
@@ -1872,13 +1872,10 @@ local SurfacePrioritiesRNG = {
     'TECH2 MASSEXTRACTION STRUCTURE',
     'TECH3 FACTORY LAND STRUCTURE',
     'TECH3 FACTORY AIR STRUCTURE',
-    'TECH3 FACTORY NAVAL STRUCTURE',
     'TECH2 FACTORY LAND STRUCTURE',
     'TECH2 FACTORY AIR STRUCTURE',
-    'TECH2 FACTORY NAVAL STRUCTURE',
     'TECH1 FACTORY LAND STRUCTURE',
     'TECH1 FACTORY AIR STRUCTURE',
-    'TECH1 FACTORY NAVAL STRUCTURE',
     'TECH1 MASSEXTRACTION STRUCTURE',
     'TECH3 STRUCTURE',
     'TECH2 STRUCTURE',
@@ -1893,6 +1890,75 @@ AssignExperimentalPrioritiesRNG = function(platoon)
     if experimental then
         experimental:SetLandTargetPriorities(SurfacePrioritiesRNG)
     end
+end
+
+WreckBaseRNG = function(self, base)
+    for _, priority in SurfacePrioritiesRNG do
+        local numUnitsAtBase = 0
+        local notDeadUnit = false
+        local unitsAtBase = self:GetBrain():GetUnitsAroundPoint(ParseEntityCategory(priority), base.Position, 100, 'Enemy')
+        for _, unit in unitsAtBase do
+            if not unit.Dead then
+                notDeadUnit = unit
+                numUnitsAtBase = numUnitsAtBase + 1
+            end
+        end
+
+        if numUnitsAtBase > 0 then
+            return notDeadUnit, base
+        end
+    end
+end
+
+FindExperimentalTargetRNG = function(self)
+    local aiBrain = self:GetBrain()
+    if not aiBrain.InterestList or not aiBrain.InterestList.HighPriority then
+        -- No target
+        return
+    end
+
+    -- For each priority in SurfacePriorities list, check against each enemy base we're aware of (through scouting/intel),
+    -- The base with the most number of the highest-priority targets gets selected. If there's a tie, pick closer
+    local enemyBases = aiBrain.InterestList.HighPriority
+    for _, priority in SurfacePrioritiesRNG do
+        local bestBase = false
+        local mostUnits = 0
+        local bestUnit = false
+        for _, base in enemyBases do
+            local unitsAtBase = aiBrain:GetUnitsAroundPoint(ParseEntityCategory(priority), base.Position, 100, 'Enemy')
+            local numUnitsAtBase = 0
+            local notDeadUnit = false
+
+            for _, unit in unitsAtBase do
+                if not unit.Dead then
+                    notDeadUnit = unit
+                    numUnitsAtBase = numUnitsAtBase + 1
+                end
+            end
+
+            if numUnitsAtBase > 0 then
+                if numUnitsAtBase > mostUnits then
+                    bestBase = base
+                    mostUnits = numUnitsAtBase
+                    bestUnit = notDeadUnit
+                elseif numUnitsAtBase == mostUnits then
+                    local myPos = self:GetPlatoonPosition()
+                    local dist1 = VDist2(myPos[1], myPos[3], base.Position[1], base.Position[3])
+                    local dist2 = VDist2(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
+
+                    if dist1 < dist2 then
+                        bestBase = base
+                        bestUnit = notDeadUnit
+                    end
+                end
+            end
+        end
+        if bestBase and bestUnit then
+            return bestUnit, bestBase
+        end
+    end
+
+    return false, false
 end
 
 function BehemothBehaviorRNG(self, id)
@@ -1919,9 +1985,9 @@ function BehemothBehaviorRNG(self, id)
     -- Find target loop
     while experimental and not experimental.Dead do
         if lastBase then
-            targetUnit, lastBase = WreckBase(self, lastBase)
+            targetUnit, lastBase = WreckBaseRNG(self, lastBase)
         elseif not lastBase then
-            targetUnit, lastBase = FindExperimentalTarget(self)
+            targetUnit, lastBase = FindExperimentalTargetRNG(self)
         end
 
         if targetUnit and not targetUnit.Dead then
