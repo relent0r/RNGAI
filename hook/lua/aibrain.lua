@@ -1273,6 +1273,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrend..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrend)
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
