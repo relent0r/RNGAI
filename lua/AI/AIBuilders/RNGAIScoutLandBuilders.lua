@@ -19,7 +19,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT } },
-            { UCBC, 'LessThanGameTimeSeconds', { 180 } }, -- don't build after 3 minutes
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 180 } }, -- don't build after 3 minutes
         },
         BuilderType = 'Land',
     },

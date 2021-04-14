@@ -268,7 +268,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.MOBILE * categories.AIR * categories.ANTINAVY }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
+            { UCBC, 'UnitsGreaterAtEnemyRNG', { 0 , categories.NAVAL * categories.FACTORY } },
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.AIR * categories.ANTINAVY, '<',categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.GROUNDATTACK - categories.BOMBER } },
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
         },
@@ -432,7 +432,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
     },
@@ -453,7 +453,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
     },
     Builder {
@@ -526,7 +526,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -560,7 +560,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -587,7 +587,7 @@ BuilderGroup {
         InstanceCount = 20,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -637,7 +637,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,

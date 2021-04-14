@@ -81,7 +81,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }}, -- LocationType, categoryUnits
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70 } },
-            { UCBC, 'UnitsGreaterAtEnemy', { 0 , categories.NAVAL * categories.FACTORY } },
+            { UCBC, 'UnitsGreaterAtEnemyRNG', { 0 , categories.NAVAL * categories.FACTORY } },
         },
         BuilderType = 'Sea',
     },
@@ -340,7 +340,7 @@ BuilderGroup {
         Priority = 300,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSize', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {

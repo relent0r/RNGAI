@@ -1088,7 +1088,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50, 'DEFENSE' } },             -- Ratio from 0 to 1. (1=100%)
         },
@@ -1116,7 +1116,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { UCBC, 'HaveUnitRatioVersusEnemyRNG', { 0.50, 'LocationType', 180, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, '<', categories.SILO * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },

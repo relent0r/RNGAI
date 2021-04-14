@@ -315,7 +315,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'LessThanGameTimeSeconds', { 600 } },
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 600 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.AIR}},
 
             { MIBC, 'CanBuildAggressivebaseRNG', { 'LocationType', 250, -1000, 5, 1, 'AntiSurface'} },
