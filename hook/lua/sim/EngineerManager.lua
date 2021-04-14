@@ -192,4 +192,20 @@ EngineerManager = Class(RNGEngineerManager) {
 
         self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
+
+    LowMass = function(self)
+        -- We have a seperate eco manager, this also uses storage for mass where as we use trend.
+        if not self.Brain.RNG then
+            return RNGEngineerManager.LowMass(self)
+        end
+        LOG('LowMass Condition detected by default eco manager')
+    end,
+
+    LowEnergy = function(self)
+        -- We have a seperate eco manager, this also uses storage for mass where as we use something else.
+        if not self.Brain.RNG then
+            return RNGEngineerManager.LowEnergy(self)
+        end
+        LOG('LowEnergy Condition detected by default eco manager')
+    end,
 }
