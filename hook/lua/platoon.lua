@@ -3066,7 +3066,7 @@ Platoon = Class(RNGAIPlatoon) {
         if bestMarker then
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
-            LOG("MassRaid: Attacking " .. bestMarker.Name)
+            --LOG("MassRaid: Attacking " .. bestMarker.Name)
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10 , maxPathDistance)
             local success, bestGoalPos = AIAttackUtils.CheckPlatoonPathingEx(self, bestMarker.Position)
             IssueClearCommands(GetPlatoonUnits(self))
@@ -3181,12 +3181,14 @@ Platoon = Class(RNGAIPlatoon) {
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     --LOG('MASSRAID no transports')
-                    local data = {}
                     if self.MassMarkerTable then
+                        local data = {}
                         data.MassMarkerTable = self.MassMarkerTable
+                        LOG('No path and no transports to location, setting table data and restarting')
+                        return self:SetAIPlanRNG('MassRaidRNG', nil, data)
                     end
-                    LOG('No path to location, setting table data and restarting')
-                    return self:SetAIPlanRNG('MassRaidRNG', nil, data)
+                    LOG('No path and no transports to location, return to base')
+                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
                 --LOG('Guardmarker found transports')
             else
