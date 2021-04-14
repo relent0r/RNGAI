@@ -2667,7 +2667,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             WaitTicks(30)
         end
-    end
+    end,
 
     AllyEconomyHelpThread = function(self)
         local selfIndex = self:GetArmyIndex()
@@ -2687,7 +2687,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             WaitTicks(100)
         end
-    end
+    end,
 --[[
     GetManagerCount = function(self, type)
         if not self.RNG then
