@@ -10,6 +10,7 @@ local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local GiveResource = moho.aibrain_methods.GiveResource
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -376,6 +377,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoMassManagerRNG)
         self:ForkThread(self.EnemyChokePointTestRNG)
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
+        self:ForkThread(self.AllyEconomyHelpThread)
     end,
 
     EconomyMonitorRNG = function(self)
@@ -2650,9 +2652,8 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
-            LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
-            LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-
+            --LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
+            --LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if massStorage > 200 and energyStorage > 1000 then
                 if self.EngineerAssistManagerBuildPower <= 15 and self.EngineerAssistManagerBuildPowerRequired <= 8 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
@@ -2671,15 +2672,17 @@ AIBrain = Class(RNGAIBrainClass) {
 
     AllyEconomyHelpThread = function(self)
         local selfIndex = self:GetArmyIndex()
+        WaitTicks(180)
         while true do
             if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
                 for index, brain in ArmyBrains do
                     if index ~= selfIndex then
                         if IsAlly(selfIndex, brain:GetArmyIndex()) then
-                            if GetEconomyStoredRatio(brain, 'ENERGY') < .05 then
+                            if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
+                                LOG('Transfer Energy to team mate')
                                 local amount
                                 amount = GetEconomyStored( self, 'ENERGY') / 100 * 10
-                                GiveResource('ENERGY', amount)
+                                GiveResource(self, 'ENERGY', amount)
                             end
                         end
                     end
