@@ -4830,6 +4830,8 @@ Platoon = Class(RNGAIPlatoon) {
             aiBrain.EngineerAssistManagerEngineerCount = platoonCount
             LOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
             LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
+            LOG('aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
+            LOG('aiBrain.EngineerAssistManagerBuildPowerRequired '..aiBrain.EngineerAssistManagerBuildPowerRequired)
 
             local unitsUpgrading = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, managerPosition, engineerRadius, 'Ally')
             local low = false
@@ -4885,11 +4887,13 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if aiBrain.EngineerAssistManagerBuildPowerRequired <= 0 then
                 IssueClearCommands({eng})
+                aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
                 break
             end
             if not aiBrain.EngineerAssistManagerActive then
                 IssueClearCommands({eng})
+                aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
                 break
             end
