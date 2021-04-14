@@ -121,7 +121,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
@@ -157,7 +157,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},	
-            { UCBC, 'EnemyUnitsLessAtLocationRadius', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
+            { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
         },	
         BuilderType = 'Air',	
     },
@@ -220,7 +220,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
@@ -286,7 +286,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
         },
         BuilderType = 'Air',
     },
@@ -381,7 +381,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseEnemyArea, 'LocationType', 0, categories.COMMAND - categories.EXPERIMENTAL }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseEnemyArea, 'LocationType', 0, categories.COMMAND - categories.EXPERIMENTAL }},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.daa0206 } },
         },
     },

@@ -53,7 +53,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaSub',
         Priority = 840,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
@@ -65,7 +65,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaAntiAir',
         Priority = 840,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
@@ -144,7 +144,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SeaDestroyer',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseMilitaryArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.DESTROYER }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseMilitaryArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.DESTROYER }}, -- radius, LocationType, unitCount, categoryEnemy
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
@@ -169,7 +169,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SeaCruiser',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.AIR * (categories.ANTINAVY + categories.GROUNDATTACK) }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.AIR * (categories.ANTINAVY + categories.GROUNDATTACK) }}, -- radius, LocationType, unitCount, categoryEnemy
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
@@ -194,7 +194,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SubKiller',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
+            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
