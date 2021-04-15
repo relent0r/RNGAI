@@ -379,3 +379,65 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAIR Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAIR T1 Mex Adjacency Engineer',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 900,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 5, 0}},
+            { EBC, 'GreaterThanEconStorageRatio', { -0.1, 0.1 }},
+            { EBC, 'LessThanEconStorageRatio', { 1, 1.1 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = categories.MASSEXTRACTION,
+                AdjacencyDistance = 100,
+                BuildClose = false,
+                ThreatMin = -1000,
+                ThreatMax = 5,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR T1 Mex Adjacency Engineer Distant',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 400,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
+            { EBC, 'LessThanEconStorageRatio', { 0.2, 1.1 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = categories.MASSEXTRACTION,
+                AdjacencyDistance = 500,
+                BuildClose = false,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+}

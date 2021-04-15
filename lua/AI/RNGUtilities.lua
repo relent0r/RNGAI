@@ -2182,3 +2182,29 @@ function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
     end
 
 end
+
+DisplayBaseMexAllocationRNG = function(aiBrain)
+    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local MassMarker = {}
+    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                -- mass marker is too close to border, skip it.
+                continue
+            end 
+            table.insert(MassMarker, v)
+        end
+    end
+    while aiBrain.Result ~= "defeat" do
+        for _, v in MassMarker do
+            local pos1={0,0,0}
+            local pos2={0,0,0}
+            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+            local chosenstart = starts[1]
+            pos1=v.position
+            pos2=chosenstart.Position
+            DrawLinePop(pos1,pos2,'ffFF0000')
+        end
+        WaitTicks(2)
+    end
+end
