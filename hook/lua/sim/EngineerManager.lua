@@ -107,7 +107,7 @@ EngineerManager = Class(RNGEngineerManager) {
             end
             if builder:GetPlatoonAIPlan() then
                 hndl.PlanName = builder:GetPlatoonAIPlan()
-                hndl:SetAIPlan(hndl.PlanName)
+                hndl:SetAIPlanRNG(hndl.PlanName)
             end
 
             --If we have additional threads to fork on the platoon, do that as well.
@@ -191,5 +191,21 @@ EngineerManager = Class(RNGEngineerManager) {
         end
 
         self.Brain:RemoveConsumption(self.LocationType, unit)
+    end,
+
+    LowMass = function(self)
+        -- We have a seperate eco manager, this also uses storage for mass where as we use trend.
+        if not self.Brain.RNG then
+            return RNGEngineerManager.LowMass(self)
+        end
+        LOG('LowMass Condition detected by default eco manager')
+    end,
+
+    LowEnergy = function(self)
+        -- We have a seperate eco manager, this also uses storage for mass where as we use something else.
+        if not self.Brain.RNG then
+            return RNGEngineerManager.LowEnergy(self)
+        end
+        LOG('LowEnergy Condition detected by default eco manager')
     end,
 }

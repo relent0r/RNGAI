@@ -91,12 +91,9 @@ function LessThanEnergyTrendRNG(aiBrain, eTrend)
 end
 -- not used yet
 function GreaterThanEconEfficiencyOverTimeRNG(aiBrain, MassEfficiency, EnergyEfficiency)
-    local econTime = aiBrain:GetEconomyOverTime()
-
-    local EnergyEfficiencyOverTime = math.min(econTime.EnergyIncome / econTime.EnergyRequested, 2)
-    local MassEfficiencyOverTime = math.min(econTime.MassIncome / econTime.MassRequested, 2)
+    -- Using eco over time values from the EconomyOverTimeRNG thread.
     --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
-    if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
+    if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
         --LOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true
     end

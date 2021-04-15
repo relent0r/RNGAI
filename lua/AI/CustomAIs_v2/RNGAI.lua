@@ -10,7 +10,7 @@ AI = {
         },
         {
             key = 'RNGStandardAir',
-            name = "<LOC RNG_0001>AI: RNG Standard Air",
+            name = "<LOC RNG_0002>AI: RNG Standard Air",
         },
         --{
         --   key = 'RNGStandardnull',
@@ -25,7 +25,7 @@ AI = {
         },
         {
             key = 'RNGStandardAircheat',
-            name = "<LOC RNG_0003>AIx: RNG Standard Air",
+            name = "<LOC RNG_0004>AIx: RNG Standard Air",
         },
         --{
         --   key = 'RNGStandardnullcheat',

@@ -30,31 +30,36 @@ BaseBuilderTemplate {
         'RNGAI Hydro Builder',
         --'RNGAI ExtractorUpgrades',
         'RNGAI Mass Fab',
+        --'RNGAIR Crazyrush Builder',
 
         -- Engineer Builders --
-        'RNGAI Engineer Builder',
+        'RNGAIR Engineer Builder',
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Builders',
         'RNGAI Assist Builders',
+        'RNGAIR Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
 
         -- Air Factory Builders --
-        'RNGAI Factory Builder Air',
+        'RNGAIR Factory Builder Air',
         'RNGAI Air Staging Platform',
         
         -- Air Factory Formers --
-        'RNGAI Air Upgrade Builders',
+        'RNGAIR Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
         'RNGAI Air Builder T1',
-        'RNGAI Air Builder T2',
+        --'RNGAI Air Builder T2',
         'RNGAI Air Builder T3',
         'RNGAI TransportFactoryBuilders Small',
 
+
+        
+
         -- Air Unit Formers --
         'RNGAI ScoutAirFormer',
-        'RNGAI Air Platoon Builder',
+        'RNGAIR Air Platoon Builder',
         'RNGAI Air Response Formers',
 
         -- Sea Unit Builders
@@ -65,13 +70,17 @@ BaseBuilderTemplate {
         --'RNGAI Mass Hunter Sea Formers',
         
         -- Defence Builders --
+        'RNGAI Base Defenses',
+        'RNGAI Perimeter Defenses Small',
+        'RNGAI T2 Defense FormBuilders',
         'RNGAI Shield Builder',
         'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
+        'RNGAI Perimeter Defenses Expansions',
 
         -- SACU Builders --
         'RNGAI Gate Builders',
-        'RNGAI SACU Builder',
+        'RNGAIR SACU Builder',
 
         --Strategic Builders
         'RNGAI SML Builders',
@@ -79,21 +88,21 @@ BaseBuilderTemplate {
         'RNGAI Strategic Formers',
 
         --Experimentals --
-        'RNGAI Experimental Builders',
+        'RNGAIR Experimental Builders',
         'RNGAI Experimental Formers',
     },
     NonCheatBuilders = {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 20,
-            Tech2 = 9,
-            Tech3 = 6,
-            SCU = 3,
+            Tech1 = 10,
+            Tech2 = 15,
+            Tech3 = 12,
+            SCU = 100,
         },
         FactoryCount = {
-            Land = 15,
-            Air = 5,
+            Land = 1,
+            Air = 3,
             Sea = 1,
             Gate = 1,
         },

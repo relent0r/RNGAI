@@ -4,7 +4,7 @@ local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 
 -- Check if less than num in seconds
-function LessThanGameTimeSeconds(aiBrain, num)
+function LessThanGameTimeSecondsRNG(aiBrain, num)
     if num > GetGameTimeSeconds() then
         --LOG('Less than game time is true'..num)
         return true
@@ -88,7 +88,7 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, lo
     return false
 end
 
-function GetOwnUnitsAroundLocation(aiBrain, category, location, radius)
+function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
     local units = aiBrain:GetUnitsAroundPoint(category, location, radius, 'Ally')
     local index = aiBrain:GetArmyIndex()
     local retUnits = {}
@@ -148,7 +148,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         --LOG('No Base Position for GetUnitsBeingBuildlocation')
         return false
     end
-    local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
+    local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
     local retUnits = {}
     for k,v in filterUnits do
         -- Only assist if allowed
@@ -206,7 +206,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         radius = radiusOverride
     end
     --LOG('Radius is '..radius)
-    local filterUnits = GetOwnUnitsAroundLocation(aiBrain, builderCategory, baseposition, radius)
+    local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
     local retUnits = {}
     for k,v in filterUnits do
         -- Only assist if allowed
@@ -232,39 +232,6 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         table.insert(retUnits, v)
     end
     return retUnits
-end
-
--- # ==================================================== #
--- #     Factory Manager Check Maximum Factory Number
--- # ==================================================== #
-function FactoryCapCheck(aiBrain, locationType, factoryType)
-    local catCheck = false
-    if factoryType == 'Land' then
-        catCheck = categories.LAND * categories.FACTORY
-    elseif factoryType == 'Air' then
-        catCheck = categories.AIR * categories.FACTORY
-    elseif factoryType == 'Sea' then
-        catCheck = categories.NAVAL * categories.FACTORY
-    elseif factoryType == 'Gate' then
-        catCheck = categories.GATE
-    else
-        WARN('*AI WARNING: Invalid factorytype - ' .. factoryType)
-        return false
-    end
-    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-    if not factoryManager then
-        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
-        return false
-    end
-    local numUnits = factoryManager:GetNumCategoryFactories(catCheck)
-    numUnits = numUnits + aiBrain:GetEngineerManagerUnitsBeingBuilt(catCheck)
-    
-    if numUnits < aiBrain.BuilderManagers[locationType].BaseSettings.FactoryCount[factoryType] then
-        --LOG('Factory Cap Check is true')
-        return true
-    end
-    --LOG('Factory Cap Check is false')
-    return false
 end
 
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
@@ -305,21 +272,6 @@ function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadiu
     end
     --LOG('UnmarkedExpansionNeedsEngineer is False')
     return false
-end
-
-function FactoryComparisonAtLocation(aiBrain, locationType, unitCount, unitCategory, compareType)
-    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-    local testCat = unitCategory
-    if type(unitCategory) == 'string' then
-        testCat = ParseEntityCategory(unitCategory)
-    end
-    if not factoryManager then
-        WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
-        return false
-    end
-    local numUnits = factoryManager:GetNumCategoryFactories(testCat)
-    --LOG('Factory Comparison Current Number : '..numUnits..'Desired Number : '..compareType..''..unitCount)
-    return CompareBody(numUnits, unitCount, compareType)
 end
 
 function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
@@ -403,7 +355,7 @@ function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1,
     return false
 end
 
-function HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, compareType)
+function HaveUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category, compareType)
     -- get all units matching 'category'
     local unitsBuilding = aiBrain:GetListOfUnits(category, false)
     local numBuilding = 0
@@ -418,11 +370,11 @@ function HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, compareTy
     --LOG(aiBrain:GetArmyIndex()..' HaveUnitsInCategoryBeingUpgrade ( '..numBuilding..' '..compareType..' '..numunits..' ) --  return '..repr(CompareBody(numBuilding, numunits, compareType))..' ')
     return CompareBody(numBuilding, numunits, compareType)
 end
-function HaveLessThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
-    return HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, '<')
+function HaveLessThanUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category)
+    return HaveUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category, '<')
 end
-function HaveGreaterThanUnitsInCategoryBeingUpgraded(aiBrain, numunits, category)
-    return HaveUnitsInCategoryBeingUpgraded(aiBrain, numunits, category, '>')
+function HaveGreaterThanUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category)
+    return HaveUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category, '>')
 end
 
 function HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, compareType)
@@ -434,12 +386,12 @@ function HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, ca
     --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} radius:['..radius..'] '..repr(DEBUG)..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)
 end
---            { UCBC, 'EnemyUnitsGreaterAtLocationRadius', {  BasePanicZone, 'LocationType', 0, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
-function EnemyUnitsGreaterAtLocationRadius(aiBrain, radius, locationType, unitCount, categoryEnemy)
+--            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BasePanicZone, 'LocationType', 0, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
+function EnemyUnitsGreaterAtLocationRadiusRNG(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '>')
 end
---            { UCBC, 'EnemyUnitsLessAtLocationRadius', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
-function EnemyUnitsLessAtLocationRadius(aiBrain, radius, locationType, unitCount, categoryEnemy)
+--            { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
+function EnemyUnitsLessAtLocationRadiusRNG(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
 end
 
@@ -452,14 +404,14 @@ function IsAcuBuilder(aiBrain, builderName)
     end
 end
 
-function GreaterThanGameTimeSeconds(aiBrain, num)
+function GreaterThanGameTimeSecondsRNG(aiBrain, num)
     if num < GetGameTimeSeconds() then
         return true
     end
     return false
 end
 
-function CheckBuildPlatoonDelay(aiBrain, PlatoonName)
+function CheckBuildPlatoonDelayRNG(aiBrain, PlatoonName)
     if aiBrain.DelayEqualBuildPlattons[PlatoonName] and aiBrain.DelayEqualBuildPlattons[PlatoonName] > GetGameTimeSeconds() then
         --LOG('Platoon Delay is false')
         return false
@@ -498,8 +450,8 @@ function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compa
     return CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)
 end
 
-function BuildOnlyOnLocation(aiBrain, LocationType, AllowedLocationType)
-    --LOG('* BuildOnlyOnLocation: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
+function BuildOnlyOnLocationRNG(aiBrain, LocationType, AllowedLocationType)
+    --LOG('* BuildOnlyOnLocationRNG: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
     if string.find(LocationType, AllowedLocationType) then
         return true
     end
@@ -556,7 +508,7 @@ function NavalBaseWithLeastUnitsRNG(aiBrain, radius, locationType, unitCategory)
     return locationType == lowloc
 end
 
-function HaveUnitRatioVersusCap(aiBrain, ratio, compareType, categoryOwn)
+function HaveUnitRatioVersusCapRNG(aiBrain, ratio, compareType, categoryOwn)
     local numOwnUnits = aiBrain:GetCurrentUnits(categoryOwn)
     local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
     --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..cap..' ) -- ['..ratio..'] -- '..repr(DEBUG)..' :: '..(numOwnUnits / cap)..' '..compareType..' '..cap..' return '..repr(CompareBody(numOwnUnits / cap, ratio, compareType)))
@@ -609,19 +561,19 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
-function GetEnemyUnits(aiBrain, unitCount, categoryEnemy, compareType)
+function GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, compareType)
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
     --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)
 end
-function UnitsLessAtEnemy(aiBrain, unitCount, categoryEnemy)
-    return GetEnemyUnits(aiBrain, unitCount, categoryEnemy, '<')
+function UnitsLessAtEnemyRNG(aiBrain, unitCount, categoryEnemy)
+    return GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, '<')
 end
-function UnitsGreaterAtEnemy(aiBrain, unitCount, categoryEnemy)
-    return GetEnemyUnits(aiBrain, unitCount, categoryEnemy, '>')
+function UnitsGreaterAtEnemyRNG(aiBrain, unitCount, categoryEnemy)
+    return GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, '>')
 end
 
-function ScalePlatoonSize(aiBrain, locationType, type, unitCategory)
+function ScalePlatoonSizeRNG(aiBrain, locationType, type, unitCategory)
     -- Note to self, create a brain flag in the air superiority function that can assist with the AIR platoon sizing increase.
     local currentTime = GetGameTimeSeconds()
     if type == 'LAND' then
@@ -825,6 +777,18 @@ function HaveLessThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
 end
 function HaveGreaterThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
     return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '>')
+end
+
+function EngineerAssistManagerNeedsEngineers(aiBrain)
+
+    if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > 0 and aiBrain.EngineerAssistManagerBuildPower <= 15 then
+        LOG('EngineerAssist condition is true')
+        LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
+        return true
+    end
+    LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
+    LOG('EngineerAssist condition is false')
+    return false
 end
 
 --[[
