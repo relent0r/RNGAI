@@ -3640,6 +3640,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 moveLocation = distressLocation
                                 self:Stop()
                                 LOG('Platoon responding to distress at location '..repr(distressLocation))
+                                self:SetPlatoonFormationOverride('NoFormation')
                                 local cmd = self:AggressiveMoveToLocation(distressLocation)
                                 repeat
                                     WaitSeconds(reactionTime)
@@ -3654,6 +3655,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     -- Now that we have helped the first location, see if any other location needs the help
                                     distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange)
                                     if distressLocation then
+                                        self:SetPlatoonFormationOverride('NoFormation')
                                         self:AggressiveMoveToLocation(distressLocation)
                                     end
                                 end
