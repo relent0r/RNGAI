@@ -337,13 +337,13 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 560,
+        PlatoonTemplate = 'T1EngineerAssistRNG',
+        Priority = 860,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
-        InstanceCount = 5,
+        InstanceCount = 3,
         BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.ENERGYPRODUCTION}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.08, 0.1 }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0,  categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             { EBC, 'LessThanEnergyTrendRNG', { 50.0 }, true },
             },
         BuilderData = {

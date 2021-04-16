@@ -2648,7 +2648,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EngineerAssistManagerBrainRNG = function(self, type)
-        WaitTicks(1200)
+        WaitTicks(1800)
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')

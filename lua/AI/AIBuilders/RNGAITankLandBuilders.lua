@@ -862,7 +862,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
@@ -1713,7 +1713,7 @@ BuilderGroup {
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
+            MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,

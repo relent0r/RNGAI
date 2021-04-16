@@ -1011,11 +1011,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Engineer',
         PlatoonTemplate = 'CommanderAssistRNG',
-        Priority = 750,
+        Priority = 850,
         DelayEqualBuildPlattons = {'ACUAssist', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0}},
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.3}},
         },
         BuilderType = 'Any',
         BuilderData = {
