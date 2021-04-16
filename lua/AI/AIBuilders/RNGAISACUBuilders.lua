@@ -76,8 +76,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'SCU' } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
         },
         BuilderType = 'Gate',
     },

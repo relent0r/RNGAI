@@ -25,11 +25,11 @@ BaseBuilderTemplate {
         -- Economy Builders --
         'RNGAI Energy Builder',
         'RNGAI Energy Storage Builder',
-        'RNGAI Mass Builder',
+        'RNGAIR Mass Builder',
         'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
         --'RNGAI ExtractorUpgrades',
-        'RNGAI Mass Fab',
+        'RNGAIR Mass Fab',
         --'RNGAIR Crazyrush Builder',
 
         -- Engineer Builders --
@@ -39,6 +39,7 @@ BaseBuilderTemplate {
         'RNGAI Assist Builders',
         'RNGAIR Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
+        'RNGAI Assist Manager BuilderGroup',
 
         -- Air Factory Builders --
         'RNGAIR Factory Builder Air',
