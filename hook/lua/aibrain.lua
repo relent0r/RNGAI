@@ -1107,7 +1107,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
                 upgradeSpec.MassLowTrigger = 0.9
-                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 1.2
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -1116,8 +1116,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
                 upgradeSpec.MassLowTrigger = 1.0
-                upgradeSpec.EnergyLowTrigger = 1.0
-                upgradeSpec.MassHighTrigger = 2.5
+                upgradeSpec.EnergyLowTrigger = 1.2
+                upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
                 upgradeSpec.InitialDelay = 80
@@ -2648,7 +2648,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EngineerAssistManagerBrainRNG = function(self, type)
-        WaitTicks(1200)
+        WaitTicks(1800)
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')

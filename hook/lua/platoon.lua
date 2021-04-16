@@ -2885,7 +2885,8 @@ Platoon = Class(RNGAIPlatoon) {
 
         local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
 
-        self.MassMarkerTable = self.data.MassMarkerTable or false
+        self.MassMarkerTable = self.planData.MassMarkerTable or false
+        self.LoopCount = self.planData.LoopCount or 0
 
         -----------------------------------------------------------------------
         local markerLocations
@@ -3024,25 +3025,27 @@ Platoon = Class(RNGAIPlatoon) {
             return self:SetAIPlanRNG('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
             LOG('Best Marker position was nil, select random')
-            if table.getn(markerLocations) <= 2 then
-                self.LastMarker[1] = nil
-                self.LastMarker[2] = nil
-            end
-            local startX, startZ = aiBrain:GetArmyStartPos()
-
-            table.sort(markerLocations,function(a,b) return VDist2(a.Position[1], a.Position[3],startX, startZ) / (VDist2(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],ScenarioInfo.size[1])) > VDist2(b.Position[1], b.Position[3], startX, startZ) / (VDist2(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],ScenarioInfo.size[1])) end)
-            --LOG('Sorted table '..repr(markerLocations))
             if not self.MassMarkerTable then
                 self.MassMarkerTable = markerLocations
             else
                 LOG('Found old marker table, using that')
             end
-            
+            if table.getn(self.MassMarkerTable) <= 2 then
+                self.LastMarker[1] = nil
+                self.LastMarker[2] = nil
+            end
+            local startX, startZ = aiBrain:GetArmyStartPos()
+
+            table.sort(self.MassMarkerTable,function(a,b) return VDist2(a.Position[1], a.Position[3],startX, startZ) / (VDist2(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],ScenarioInfo.size[1])) > VDist2(b.Position[1], b.Position[3], startX, startZ) / (VDist2(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],ScenarioInfo.size[1])) end)
+            --LOG('Sorted table '..repr(markerLocations))
+            LOG('Marker table is before loop is '..table.getn(self.MassMarkerTable))
+
             for k,marker in self.MassMarkerTable do
-                if table.getn(markerLocations) <= 2 then
+                if table.getn(self.MassMarkerTable) <= 2 then
                     self.LastMarker[1] = nil
-                     self.LastMarker[2] = nil
-                     self.MassMarkerTable = false
+                    self.LastMarker[2] = nil
+                    self.MassMarkerTable = false
+                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
                 local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
                 if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) and distSq > (avoidClosestRadius * avoidClosestRadius) then
@@ -3053,11 +3056,13 @@ Platoon = Class(RNGAIPlatoon) {
                         continue
                     end
                     bestMarker = marker
+                    LOG('Delete Marker '..repr(marker))
                     self.MassMarkerTable[k] = nil
                     break
                 end
             end
-            aiBrain:RebuildTable(self.MassMarkerTable)
+            self.MassMarkerTable = aiBrain:RebuildTable(self.MassMarkerTable)
+            LOG('Marker table is after loop is '..table.getn(self.MassMarkerTable))
             LOG('bestMarker is '..repr(bestMarker))
         end
 
@@ -3182,8 +3187,14 @@ Platoon = Class(RNGAIPlatoon) {
                 if not usedTransports then
                     --LOG('MASSRAID no transports')
                     if self.MassMarkerTable then
+                        if self.LoopCount > 15 then
+                            LOG('Loop count greater than 15, return to base')
+                            return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+                        end
                         local data = {}
                         data.MassMarkerTable = self.MassMarkerTable
+                        self.LoopCount = self.LoopCount + 1
+                        data.LoopCount = self.LoopCount
                         LOG('No path and no transports to location, setting table data and restarting')
                         return self:SetAIPlanRNG('MassRaidRNG', nil, data)
                     end
@@ -3629,6 +3640,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 moveLocation = distressLocation
                                 self:Stop()
                                 LOG('Platoon responding to distress at location '..repr(distressLocation))
+                                self:SetPlatoonFormationOverride('NoFormation')
                                 local cmd = self:AggressiveMoveToLocation(distressLocation)
                                 repeat
                                     WaitSeconds(reactionTime)
@@ -3643,6 +3655,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     -- Now that we have helped the first location, see if any other location needs the help
                                     distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange)
                                     if distressLocation then
+                                        self:SetPlatoonFormationOverride('NoFormation')
                                         self:AggressiveMoveToLocation(distressLocation)
                                     end
                                 end

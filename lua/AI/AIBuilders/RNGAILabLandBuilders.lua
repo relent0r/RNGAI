@@ -55,6 +55,9 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {   
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
                 categories.MOBILE * categories.LAND,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
