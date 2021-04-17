@@ -2176,11 +2176,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoManagerPowerStateCheck = function(self)
 
-        local energyIncome = GetEconomyIncome(self, 'ENERGY')
-        local energyRequest = self:GetEconomyRequested('ENERGY')
-        local energyStorage = self:GetEconomyStored('ENERGY')
-        local stallTime = energyStorage / ((energyRequest * 10) - (energyIncome * 10))
-        --LOG('Energy Income :'..(energyIncome * 10)..' Energy Requested :'..(energyRequest * 10)..' Energy Storage :'..energyStorage)
+        local stallTime = GetEconomyStored(self, 'ENERGY') / ((GetEconomyRequested(self, 'ENERGY') * 10) - (GetEconomyIncome(self, 'ENERGY') * 10))
         --LOG('Time to stall for '..stallTime)
         if stallTime >= 0.0 then
             if stallTime < 20 then

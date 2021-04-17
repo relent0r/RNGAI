@@ -21,12 +21,10 @@ Platoon = Class(RNGAIPlatoon) {
     AirHuntAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
-        local armyIndex = aiBrain:GetArmyIndex()
         local data = self.PlatoonData
         local categoryList = {}
         local atkPri = {}
         local target
-        local blip
         local startX, startZ = aiBrain:GetArmyStartPos()
         local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
         local currentPlatPos
@@ -57,7 +55,7 @@ Platoon = Class(RNGAIPlatoon) {
         local maxRadius = data.SearchRadius or 1000
         local threatCountLimit = 0
         while PlatoonExists(aiBrain, self) do
-            local currentPosition = GetPlatoonPosition(self)
+            local currentPlatPos = GetPlatoonPosition(self)
             local platoonThreat = self:CalculatePlatoonThreat('AntiAir', categories.ALLUNITS)
             if not target or target.Dead then
                 if defensive then
@@ -79,12 +77,11 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             end
-            --LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
-            --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
+
             if target then
                 local targetPos = target:GetPosition()
                 local platoonCount = table.getn(GetPlatoonUnits(self))
-                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') > platoonThreat) and platoonCount < platoonLimit then
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') > platoonThreat) and platoonCount < platoonLimit then
                     --LOG('Target air threat too high')
                     threatCountLimit = threatCountLimit + 1
                     self:MoveToLocation(homeBaseLocation, false)
@@ -99,7 +96,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
                 self:AttackTarget(target)
                 while PlatoonExists(aiBrain, self) do
-                    currentPosition = GetPlatoonPosition(self)
+                    currentPlatPos = GetPlatoonPosition(self)
                     if aiBrain.EnemyIntel.EnemyStartLocations then
                         if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
                             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
@@ -141,9 +138,9 @@ Platoon = Class(RNGAIPlatoon) {
                 return
             else
                 WaitTicks(2)
-                currentPosition = GetPlatoonPosition(self)
+                currentPlatPos = GetPlatoonPosition(self)
             end
-            if (target.Dead or not target or target:BeenDestroyed()) and VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
+            if (target.Dead or not target or target:BeenDestroyed()) and VDist2Sq(currentPlatPos[1], currentPlatPos[3], startX, startZ) > 6400 then
                 --LOG('* AI-RNG: No Target Returning to base')
                 if PlatoonExists(aiBrain, self) then
                     self:Stop()
@@ -4895,7 +4892,6 @@ Platoon = Class(RNGAIPlatoon) {
 
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() do
-            LOG('EngineerAssistThread fork loop')
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 eng.UnitBeingAssist = nil
                 break

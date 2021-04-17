@@ -342,7 +342,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Response Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNGAI Air Intercept MilitaryArea',
+        BuilderName = 'RNGAI Air Intercept BaseDMZArea',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
@@ -350,7 +350,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Defensive = true,
-            SearchRadius = BaseMilitaryArea,
+            SearchRadius = BaseDMZArea,
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
