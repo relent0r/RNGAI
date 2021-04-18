@@ -86,7 +86,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 240',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
-        InstanceCount = 6,
+        InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
         },
@@ -113,7 +113,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
-        InstanceCount = 6,
+        InstanceCount = 5,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
@@ -142,7 +142,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 300,
-        InstanceCount = 7,
+        InstanceCount = 5,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 10, 0, 'AntiSurface', 1}},

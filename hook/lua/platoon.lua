@@ -2009,7 +2009,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local targetExpThreat
                     if self.MovementLayer == 'Air' then
                         targetExpPos = newtarget:GetPosition()
-                        targetExpThreat = GetThreatAtPosition(aiBrain, targetExpPos, 1, true, 'AntiAir')
+                        targetExpThreat = GetThreatAtPosition(aiBrain, targetExpPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                         --LOG('Target Air Threat is '..targetExpThreat)
                         --LOG('My Air Threat is '..myThreat)
                         if myThreat > targetExpThreat then
@@ -2721,11 +2721,19 @@ Platoon = Class(RNGAIPlatoon) {
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
                             local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
-                            local enemyEngPos = enemyEngineer[1]:GetPosition()
-                            if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
-                                IssueStop({eng})
-                                IssueClearCommands({eng})
-                                IssueReclaim({eng}, enemyEngineer[1])
+                            if enemyEngineer then
+                                local enemyEngPos
+                                for _, unit in enemyEngineer do
+                                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        enemyEngPos = unit:GetPosition()
+                                        if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                            IssueStop({eng})
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, enemyEngineer[1])
+                                            break
+                                        end
+                                    end
+                                end
                             end
                         end
                     end
@@ -4828,9 +4836,22 @@ Platoon = Class(RNGAIPlatoon) {
             
             for _, eng in platoonUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                    if totalBuildRate > 15 then
+                    if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
                         LOG('Moving engineer back to armypool')
-                        IssueClearCommands({eng})
+                        eng.PlatoonHandle = nil
+                        eng.AssistSet = nil
+                        eng.AssistPlatoon = nil
+                        eng.UnitBeingAssist = nil
+                        eng.UnitBeingBuilt = nil
+                        eng.ReclaimInProgress = nil
+                        eng.CaptureInProgress = nil
+                        if eng:IsPaused() then
+                            eng:SetPaused( false )
+                        end
+                        if not eng.Dead then
+                            IssueStop({eng})
+                            IssueClearCommands({eng})
+                        end
                         aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Support', 'NoFormation')
                         platoonCount = platoonCount - 1
                         continue
@@ -4879,11 +4900,8 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 else
-                    LOG('Not best unit found')
+                    LOG('No best unit found')
                 end
-            else
-                LOG('Setting active to false')
-                self.Active = false
             end
             LOG('Wait 50 ticks')
             WaitTicks(50)
@@ -4891,22 +4909,50 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
+        WaitTicks(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() do
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 eng.UnitBeingAssist = nil
                 break
             end
-            if aiBrain.EngineerAssistManagerBuildPowerRequired <= 0 then
-                IssueClearCommands({eng})
+            if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
+                eng.PlatoonHandle = nil
+                eng.AssistSet = nil
+                eng.AssistPlatoon = nil
+                eng.UnitBeingAssist = nil
+                eng.UnitBeingBuilt = nil
+                eng.ReclaimInProgress = nil
+                eng.CaptureInProgress = nil
+                if eng:IsPaused() then
+                    eng:SetPaused( false )
+                end
+                if not eng.Dead then
+                    IssueStop({eng})
+                    IssueClearCommands({eng})
+                end
+                LOG('Removing Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
                 aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                break
+                return
             end
             if not aiBrain.EngineerAssistManagerActive then
-                IssueClearCommands({eng})
+                eng.PlatoonHandle = nil
+                eng.AssistSet = nil
+                eng.AssistPlatoon = nil
+                eng.UnitBeingAssist = nil
+                eng.UnitBeingBuilt = nil
+                eng.ReclaimInProgress = nil
+                eng.CaptureInProgress = nil
+                if eng:IsPaused() then
+                    eng:SetPaused( false )
+                end
+                if not eng.Dead then
+                    IssueStop({eng})
+                    IssueClearCommands({eng})
+                end
                 aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                break
+                return
             end
             WaitTicks(50)
         end
