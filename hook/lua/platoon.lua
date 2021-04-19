@@ -4832,6 +4832,7 @@ Platoon = Class(RNGAIPlatoon) {
             platoonUnits = GetPlatoonUnits(self)
             totalBuildRate = 0
             platoonCount = table.getn(platoonUnits)
+
             LOG('Start of loop platoon count '..platoonCount)
             
             for _, eng in platoonUnits do
@@ -4852,11 +4853,12 @@ Platoon = Class(RNGAIPlatoon) {
                             IssueStop({eng})
                             IssueClearCommands({eng})
                         end
-                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Support', 'NoFormation')
+                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
+                        aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
                         platoonCount = platoonCount - 1
-                        continue
+                    else
+                        totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                     end
-                    totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                 end
             end
             aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
@@ -4881,7 +4883,7 @@ Platoon = Class(RNGAIPlatoon) {
                         if (not low or dist < low) and NumAssist < 20 and dist < engineerRadius then
                             low = dist
                             bestUnit = unit
-                            LOG('EngineerAssistManager has best unit')
+                            --LOG('EngineerAssistManager has best unit')
                         end
                     end
                 end
@@ -4892,19 +4894,23 @@ Platoon = Class(RNGAIPlatoon) {
                         if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                             if not eng.UnitBeingAssist then
                                 eng.UnitBeingAssist = bestUnit
-                                LOG('Engineer Assist issuing guard')
+                                --LOG('Engineer Assist issuing guard')
                                 IssueGuard({eng}, eng.UnitBeingAssist)
-                                LOG('For assist wait thread for engineer')
+                                --LOG('For assist wait thread for engineer')
                                 self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
                             end
                         end
                     end
                 else
-                    LOG('No best unit found')
+                    --LOG('No best unit found')
                 end
             end
-            LOG('Wait 50 ticks')
             WaitTicks(50)
+            if aiBrain.EngineerAssistManagerBuildPower <= 0 then
+                LOG('No Engineers in platoon, disbanding')
+                self:PlatoonDisbandNoAssign()
+                return
+            end
         end
     end,
 
@@ -4930,9 +4936,10 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueStop({eng})
                     IssueClearCommands({eng})
                 end
-                LOG('Removing Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
                 aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+                LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
+                LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
                 return
             end
             if not aiBrain.EngineerAssistManagerActive then
@@ -4951,6 +4958,7 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueClearCommands({eng})
                 end
                 aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+                LOG('ForkThread Engineer to army pool EngineerAssistManagerActive false')
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
                 return
             end
