@@ -84,6 +84,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
                             reclaimTimeout = reclaimTimeout + 1
                             --LOG('Waiting for reclaim to no longer exist')
+                            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
+                                self:SetPaused( true )
+                                WaitTicks(50)
+                                self:SetPaused( false )
+                            end
                             WaitTicks(20)
                         end
                         --LOG('Reclaim Count is '..reclaimCount)
@@ -239,6 +244,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if idleCount > 5 then
                     reclaiming = false
                 end
+            end
+            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
+                self:SetPaused( true )
+                WaitTicks(50)
+                self:SetPaused( false )
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position

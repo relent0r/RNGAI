@@ -338,13 +338,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T1EngineerAssistRNG',
-        Priority = 860,
+        Priority = 1050,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderConditions = {
+            { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.08, 0.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0,  categories.STRUCTURE * categories.ENERGYPRODUCTION}},
-            { EBC, 'LessThanEnergyTrendRNG', { 50.0 }, true },
             },
         BuilderData = {
             Assist = {
@@ -768,6 +769,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
+            { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
         },
         BuilderData = {
             PlatoonPlan = 'EngineerAssistManagerRNG',

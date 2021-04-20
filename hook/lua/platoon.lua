@@ -21,12 +21,10 @@ Platoon = Class(RNGAIPlatoon) {
     AirHuntAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
-        local armyIndex = aiBrain:GetArmyIndex()
         local data = self.PlatoonData
         local categoryList = {}
         local atkPri = {}
         local target
-        local blip
         local startX, startZ = aiBrain:GetArmyStartPos()
         local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
         local currentPlatPos
@@ -57,7 +55,7 @@ Platoon = Class(RNGAIPlatoon) {
         local maxRadius = data.SearchRadius or 1000
         local threatCountLimit = 0
         while PlatoonExists(aiBrain, self) do
-            local currentPosition = GetPlatoonPosition(self)
+            local currentPlatPos = GetPlatoonPosition(self)
             local platoonThreat = self:CalculatePlatoonThreat('AntiAir', categories.ALLUNITS)
             if not target or target.Dead then
                 if defensive then
@@ -79,12 +77,11 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             end
-            --LOG('* AI-RNG: AirHunt AI Positions: Platoon:'..currentPosition[1]..':'..currentPosition[3]..' Base :'..startX..':'..startZ)
-            --LOG('Distance from base is :'..VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ))
+
             if target then
                 local targetPos = target:GetPosition()
                 local platoonCount = table.getn(GetPlatoonUnits(self))
-                if (threatCountLimit < 5 ) and (VDist2Sq(currentPosition[1], currentPosition[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') > platoonThreat) and platoonCount < platoonLimit then
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') > platoonThreat) and platoonCount < platoonLimit then
                     --LOG('Target air threat too high')
                     threatCountLimit = threatCountLimit + 1
                     self:MoveToLocation(homeBaseLocation, false)
@@ -99,7 +96,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
                 self:AttackTarget(target)
                 while PlatoonExists(aiBrain, self) do
-                    currentPosition = GetPlatoonPosition(self)
+                    currentPlatPos = GetPlatoonPosition(self)
                     if aiBrain.EnemyIntel.EnemyStartLocations then
                         if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
                             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
@@ -141,9 +138,9 @@ Platoon = Class(RNGAIPlatoon) {
                 return
             else
                 WaitTicks(2)
-                currentPosition = GetPlatoonPosition(self)
+                currentPlatPos = GetPlatoonPosition(self)
             end
-            if (target.Dead or not target or target:BeenDestroyed()) and VDist2Sq(currentPosition[1], currentPosition[3], startX, startZ) > 6400 then
+            if (target.Dead or not target or target:BeenDestroyed()) and VDist2Sq(currentPlatPos[1], currentPlatPos[3], startX, startZ) > 6400 then
                 --LOG('* AI-RNG: No Target Returning to base')
                 if PlatoonExists(aiBrain, self) then
                     self:Stop()
@@ -2012,7 +2009,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local targetExpThreat
                     if self.MovementLayer == 'Air' then
                         targetExpPos = newtarget:GetPosition()
-                        targetExpThreat = GetThreatAtPosition(aiBrain, targetExpPos, 1, true, 'AntiAir')
+                        targetExpThreat = GetThreatAtPosition(aiBrain, targetExpPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                         --LOG('Target Air Threat is '..targetExpThreat)
                         --LOG('My Air Threat is '..myThreat)
                         if myThreat > targetExpThreat then
@@ -2724,11 +2721,19 @@ Platoon = Class(RNGAIPlatoon) {
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
                             local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
-                            local enemyEngPos = enemyEngineer[1]:GetPosition()
-                            if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
-                                IssueStop({eng})
-                                IssueClearCommands({eng})
-                                IssueReclaim({eng}, enemyEngineer[1])
+                            if enemyEngineer then
+                                local enemyEngPos
+                                for _, unit in enemyEngineer do
+                                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        enemyEngPos = unit:GetPosition()
+                                        if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                            IssueStop({eng})
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, enemyEngineer[1])
+                                            break
+                                        end
+                                    end
+                                end
                             end
                         end
                     end
@@ -4827,18 +4832,18 @@ Platoon = Class(RNGAIPlatoon) {
             platoonUnits = GetPlatoonUnits(self)
             totalBuildRate = 0
             platoonCount = table.getn(platoonUnits)
+
             LOG('Start of loop platoon count '..platoonCount)
             
             for _, eng in platoonUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                    if totalBuildRate > 15 then
+                    if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
                         LOG('Moving engineer back to armypool')
-                        IssueClearCommands({eng})
-                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Support', 'NoFormation')
+                        self:EngineerAssistRemoveRNG(aiBrain, eng)
                         platoonCount = platoonCount - 1
-                        continue
+                    else
+                        totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                     end
-                    totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
                 end
             end
             aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
@@ -4863,7 +4868,7 @@ Platoon = Class(RNGAIPlatoon) {
                         if (not low or dist < low) and NumAssist < 20 and dist < engineerRadius then
                             low = dist
                             bestUnit = unit
-                            LOG('EngineerAssistManager has best unit')
+                            --LOG('EngineerAssistManager has best unit')
                         end
                     end
                 end
@@ -4874,46 +4879,66 @@ Platoon = Class(RNGAIPlatoon) {
                         if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                             if not eng.UnitBeingAssist then
                                 eng.UnitBeingAssist = bestUnit
-                                LOG('Engineer Assist issuing guard')
+                                --LOG('Engineer Assist issuing guard')
                                 IssueGuard({eng}, eng.UnitBeingAssist)
-                                LOG('For assist wait thread for engineer')
+                                --LOG('For assist wait thread for engineer')
                                 self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
                             end
                         end
                     end
                 else
-                    LOG('Not best unit found')
+                    --LOG('No best unit found')
                 end
-            else
-                LOG('Setting active to false')
-                self.Active = false
             end
-            LOG('Wait 50 ticks')
             WaitTicks(50)
+            if aiBrain.EngineerAssistManagerBuildPower <= 0 then
+                LOG('No Engineers in platoon, disbanding')
+                self:PlatoonDisbandNoAssign()
+                return
+            end
         end
     end,
 
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
+        WaitTicks(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() do
-            LOG('EngineerAssistThread fork loop')
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 eng.UnitBeingAssist = nil
                 break
             end
-            if aiBrain.EngineerAssistManagerBuildPowerRequired <= 0 then
-                IssueClearCommands({eng})
-                aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
-                aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                break
+            if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
+                self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
             if not aiBrain.EngineerAssistManagerActive then
-                IssueClearCommands({eng})
-                aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
-                aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                break
+                self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
             WaitTicks(50)
         end
         eng.UnitBeingAssist = nil
+    end,
+
+    EngineerAssistRemoveRNG = function(self, aiBrain, eng)
+        -- Removes an engineer from a platoon without disbanding it.
+        if not eng.Dead then
+            eng.PlatoonHandle = nil
+            eng.AssistSet = nil
+            eng.AssistPlatoon = nil
+            eng.UnitBeingAssist = nil
+            eng.UnitBeingBuilt = nil
+            eng.ReclaimInProgress = nil
+            eng.CaptureInProgress = nil
+            if eng:IsPaused() then
+                eng:SetPaused( false )
+            end
+            IssueStop({eng})
+            IssueClearCommands({eng})
+            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+            LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
+            aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
+            if eng.BuilderManagerData.EngineerManager then
+                eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
+            end
+            LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
+        end
     end,
 }

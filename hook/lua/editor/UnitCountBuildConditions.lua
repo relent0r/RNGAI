@@ -781,13 +781,13 @@ end
 
 function EngineerAssistManagerNeedsEngineers(aiBrain)
 
-    if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > 0 and aiBrain.EngineerAssistManagerBuildPower <= 15 then
+    if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
         LOG('EngineerAssist condition is true')
         LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
         return true
     end
-    LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
-    LOG('EngineerAssist condition is false')
+    --LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
+    --LOG('EngineerAssist condition is false')
     return false
 end
 
