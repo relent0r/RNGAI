@@ -4839,22 +4839,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                     if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
                         LOG('Moving engineer back to armypool')
-                        eng.PlatoonHandle = nil
-                        eng.AssistSet = nil
-                        eng.AssistPlatoon = nil
-                        eng.UnitBeingAssist = nil
-                        eng.UnitBeingBuilt = nil
-                        eng.ReclaimInProgress = nil
-                        eng.CaptureInProgress = nil
-                        if eng:IsPaused() then
-                            eng:SetPaused( false )
-                        end
-                        if not eng.Dead then
-                            IssueStop({eng})
-                            IssueClearCommands({eng})
-                        end
-                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                        aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+                        self:EngineerAssistRemoveRNG(aiBrain, eng)
                         platoonCount = platoonCount - 1
                     else
                         totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
@@ -4922,48 +4907,38 @@ Platoon = Class(RNGAIPlatoon) {
                 break
             end
             if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
-                eng.PlatoonHandle = nil
-                eng.AssistSet = nil
-                eng.AssistPlatoon = nil
-                eng.UnitBeingAssist = nil
-                eng.UnitBeingBuilt = nil
-                eng.ReclaimInProgress = nil
-                eng.CaptureInProgress = nil
-                if eng:IsPaused() then
-                    eng:SetPaused( false )
-                end
-                if not eng.Dead then
-                    IssueStop({eng})
-                    IssueClearCommands({eng})
-                end
-                aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
-                LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
-                aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
-                return
+                self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
             if not aiBrain.EngineerAssistManagerActive then
-                eng.PlatoonHandle = nil
-                eng.AssistSet = nil
-                eng.AssistPlatoon = nil
-                eng.UnitBeingAssist = nil
-                eng.UnitBeingBuilt = nil
-                eng.ReclaimInProgress = nil
-                eng.CaptureInProgress = nil
-                if eng:IsPaused() then
-                    eng:SetPaused( false )
-                end
-                if not eng.Dead then
-                    IssueStop({eng})
-                    IssueClearCommands({eng})
-                end
-                aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
-                LOG('ForkThread Engineer to army pool EngineerAssistManagerActive false')
-                aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-                return
+                self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
             WaitTicks(50)
         end
         eng.UnitBeingAssist = nil
+    end,
+
+    EngineerAssistRemoveRNG = function(self, aiBrain, eng)
+        -- Removes an engineer from a platoon without disbanding it.
+        if not eng.Dead then
+            eng.PlatoonHandle = nil
+            eng.AssistSet = nil
+            eng.AssistPlatoon = nil
+            eng.UnitBeingAssist = nil
+            eng.UnitBeingBuilt = nil
+            eng.ReclaimInProgress = nil
+            eng.CaptureInProgress = nil
+            if eng:IsPaused() then
+                eng:SetPaused( false )
+            end
+            IssueStop({eng})
+            IssueClearCommands({eng})
+            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+            LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
+            aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
+            if eng.BuilderManagerData.EngineerManager then
+                eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
+            end
+            LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
+        end
     end,
 }
