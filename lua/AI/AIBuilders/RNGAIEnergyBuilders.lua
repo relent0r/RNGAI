@@ -328,12 +328,12 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Hydro Builder',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Hydro 50',
+        BuilderName = 'RNGAI T1Engineer Hydro 60',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
         InstanceCount = 1,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 50, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 60, -1000, 100, 1, 'AntiSurface', 1 }},
         },
         BuilderType = 'Any',
         BuilderData = {

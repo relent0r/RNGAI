@@ -4829,9 +4829,9 @@ Platoon = Class(RNGAIPlatoon) {
 
         while aiBrain:PlatoonExists(self) do
             LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
-            platoonUnits = GetPlatoonUnits(self)
-            totalBuildRate = 0
-            platoonCount = table.getn(platoonUnits)
+            local platoonUnits = GetPlatoonUnits(self)
+            local totalBuildRate = 0
+            local platoonCount = table.getn(platoonUnits)
 
             LOG('Start of loop platoon count '..platoonCount)
             
@@ -4853,41 +4853,63 @@ Platoon = Class(RNGAIPlatoon) {
             LOG('aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
             LOG('aiBrain.EngineerAssistManagerBuildPowerRequired '..aiBrain.EngineerAssistManagerBuildPowerRequired)
 
-            local unitsUpgrading = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, managerPosition, engineerRadius, 'Ally')
-            local low = false
-            local bestUnit = false
-            if unitsUpgrading then
-                local numBuilding = 0
-                for _, unit in unitsUpgrading do
-                    if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                        LOG('Upgrading Extractor Found')
-                        numBuilding = numBuilding + 1
-                        local unitPos = unit:GetPosition()
-                        local NumAssist = table.getn(unit:GetGuards())
-                        local dist = VDist2(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                        if (not low or dist < low) and NumAssist < 20 and dist < engineerRadius then
-                            low = dist
-                            bestUnit = unit
-                            --LOG('EngineerAssistManager has best unit')
-                        end
+            --[[local unitTypeAssist = {}
+            local priorityNum = 0
+            for k, v in aiBrain.EngineerAssistManagerPriorityTable do
+                local priorityUnitAlreadyAssist = false
+                for l, b in unitTypeAssist do
+                    if k == b then
+                        priorityUnitAlreadyAssist = true
                     end
                 end
-                if bestUnit then
-                    LOG('Best unit is true looking through platoon units')
-                    LOG('Number of platoon units is '..table.getn(platoonUnits))
-                    for _, eng in platoonUnits do
-                        if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                            if not eng.UnitBeingAssist then
-                                eng.UnitBeingAssist = bestUnit
-                                --LOG('Engineer Assist issuing guard')
-                                IssueGuard({eng}, eng.UnitBeingAssist)
-                                --LOG('For assist wait thread for engineer')
-                                self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
+                if priorityUnitAlreadyAssist then
+                    --LOG('priorityUnit already in unitTypePaused, skipping')
+                    continue
+                end
+                if v > priorityNum then
+                    priorityNum = v
+                    priorityUnit = k
+                end
+            end]]
+            local priorityUnit = 'MASSEXTRACTION'
+            
+            if priorityUnit == 'MASSEXTRACTION' then
+                local unitsUpgrading = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, managerPosition, engineerRadius, 'Ally')
+                local low = false
+                local bestUnit = false
+                if unitsUpgrading then
+                    local numBuilding = 0
+                    for _, unit in unitsUpgrading do
+                        if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                            LOG('Upgrading Extractor Found')
+                            numBuilding = numBuilding + 1
+                            local unitPos = unit:GetPosition()
+                            local NumAssist = table.getn(unit:GetGuards())
+                            local dist = VDist2(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                            if (not low or dist < low) and NumAssist < 20 and dist < engineerRadius then
+                                low = dist
+                                bestUnit = unit
+                                --LOG('EngineerAssistManager has best unit')
                             end
                         end
                     end
-                else
-                    --LOG('No best unit found')
+                    if bestUnit then
+                        LOG('Best unit is true looking through platoon units')
+                        LOG('Number of platoon units is '..table.getn(platoonUnits))
+                        for _, eng in platoonUnits do
+                            if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
+                                if not eng.UnitBeingAssist then
+                                    eng.UnitBeingAssist = bestUnit
+                                    --LOG('Engineer Assist issuing guard')
+                                    IssueGuard({eng}, eng.UnitBeingAssist)
+                                    --LOG('For assist wait thread for engineer')
+                                    self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
+                                end
+                            end
+                        end
+                    else
+                        --LOG('No best unit found')
+                    end
                 end
             end
             WaitTicks(50)

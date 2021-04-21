@@ -132,6 +132,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerDesired = 5
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
+        self.EngineerAssistManagerPriorityTable = {}
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -1488,6 +1489,22 @@ AIBrain = Class(RNGAIBrainClass) {
             exBp = ALLBPS[v.UnitId].Defense
             selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
             selfExtractorCount = selfExtractorCount + 1
+            -- This bit is important. This is so that if the AI is given or captures any extractors it will start an upgrade thread and distress thread on them.
+            if not v.PlatoonHandle then
+                --LOG('This extractor has no platoon handle')
+                if not self.StructurePool then
+                    RUtils.CheckCustomPlatoons(self)
+                end
+                local unitBp = v:GetBlueprint()
+                local StructurePool = self.StructurePool
+                --LOG('* AI-RNG: Assigning built extractor to StructurePool')
+                self:AssignUnitsToPlatoon(StructurePool, {v}, 'Support', 'none' )
+                local upgradeID = unitBp.General.UpgradesTo or false
+                if upgradeID and unitBp then
+                    --LOG('* AI-RNG: UpgradeID')
+                    RUtils.StructureUpgradeInitialize(v, self)
+                end
+            end
         end
         self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
         self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
@@ -2646,6 +2663,10 @@ AIBrain = Class(RNGAIBrainClass) {
     EngineerAssistManagerBrainRNG = function(self, type)
         WaitTicks(1800)
         while true do
+            self.EngineerAssistManagerPriorityTable = {
+                MASSEXTRACTION = 1,
+                POWER = 2
+            }
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             --LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
