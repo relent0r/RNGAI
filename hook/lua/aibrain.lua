@@ -116,6 +116,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- this is for chps fav map, when the masspoint are created they are not put in the scenariocache
         self.crazyrush = false
 
+
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
 
@@ -1484,8 +1485,10 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
         local exBp
-
+        local TeamMex=self:ConstructBaseMexAllocationRNG()
         for _,v in brainExtractors do
+            local mexpos = v:GetPosition()
+            LOG(''..repr(mexpos))
             exBp = ALLBPS[v.UnitId].Defense
             selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
             selfExtractorCount = selfExtractorCount + 1
@@ -1503,6 +1506,15 @@ AIBrain = Class(RNGAIBrainClass) {
                 if upgradeID and unitBp then
                     --LOG('* AI-RNG: UpgradeID')
                     RUtils.StructureUpgradeInitialize(v, self)
+                end
+            end
+            if v:IsUnitState('Upgrading') or EntityCategoryContains(categories.TECH2 + categories.TECH3, v) then continue end
+            for _,x in TeamMex do
+                if x[1]==selfIndex then if VDist2Sq(mexpos[1],mexpos[3],x[2].position[1],x[2].position[3])<1 then break end continue end
+                if VDist2Sq(mexpos[1],mexpos[3],x[2].position[1],x[2].position[3])<1 then
+                    LOG('giving mex!!')
+                    import('/lua/ScenarioFramework.lua').GiveUnitToArmy(v,x[1])
+                break
                 end
             end
         end
@@ -2707,6 +2719,62 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             WaitTicks(100)
         end
+    end,
+    ConstructBaseMexAllocationRNG = function(self)
+        LOG('start construct mex')
+        --while self.Result ~= "defeat" do
+        local starts = {}
+        local selfIndex = self:GetArmyIndex()
+        LOG('self index'..selfIndex)
+        local MassMarker = {}
+        local teamspots = {}
+        local mexnums1 = {}
+        local mexnums2 = {}
+        for _, v in ArmyBrains do
+            local Index = v:GetArmyIndex()
+            if IsEnemy(selfIndex, Index) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+            local startX, startZ = v:GetArmyStartPos()
+            local extractorCount = v:GetCurrentUnits(categories.STRUCTURE * categories.MASSEXTRACTION)
+            local selfstart = {Index, {startX, 0, startZ}, extractorCount}
+            table.insert(starts,selfstart)
+            table.insert(mexnums1,Index,extractorCount)
+            table.insert(mexnums2,Index,0)
+        end
+        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                    -- mass marker is too close to border, skip it.
+                    continue
+                end 
+                table.insert(MassMarker, v)
+            end
+        end
+        --[[for i=0,50,1 do--]]
+            for _, v in MassMarker do
+                table.sort(starts,function(k1,k2) return VDist2Sq(k1[2][1],k1[2][3],v.position[1],v.position[3])<VDist2Sq(k2[2][1],k2[2][3],v.position[1],v.position[3]) end)
+                local chosenstart = starts[1]
+                mexnums2[chosenstart[1]]=mexnums2[chosenstart[1]]+1
+                --[[pos1=v.position
+                pos2=chosenstart
+                DrawLinePop(pos1,pos2,'88FF0000')--]]
+            end
+            for _,v in starts do
+                v[3]=mexnums2[v[1]]/4 + 3*mexnums1[v[1]]/4
+                LOG('MEXASSIGNMENT: ARMY '..repr(v[1])..' moving from '..repr(mexnums1[v[1]])..' to '..repr(mexnums2[v[1]])..'. adjusted is '..repr(v[3]))
+            end
+            for _, v in MassMarker do
+                table.sort(starts,function(k1,k2) return (k1[3]+1)*VDist2Sq(k1[2][1],k1[2][3],v.position[1],v.position[3])<(k2[3]+1)*VDist2Sq(k2[2][1],k2[2][3],v.position[1],v.position[3]) end)
+                local chosenstart = starts[1]
+                local mexdata = {chosenstart[1],v}
+                table.insert(teamspots,mexdata)
+                --[[pos1=v.position
+                pos2=chosenstart
+                DrawLinePop(pos1,pos2,'88FF0000')--]]
+            end
+            --WaitTicks(2)
+        --end
+        --end
+        return teamspots
     end,
 --[[
     GetManagerCount = function(self, type)

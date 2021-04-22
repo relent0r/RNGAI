@@ -101,6 +101,14 @@ function GreaterThanEconEfficiencyOverTimeRNG(aiBrain, MassEfficiency, EnergyEff
     return false
 end
 
+function LessThanEnergyEfficiencyOverTimeRNG(aiBrain, EnergyEfficiency)
+
+    if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime <= EnergyEfficiency then
+        return true
+    end
+    return false
+end
+
 function GreaterThanEconEfficiencyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
 
     local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
