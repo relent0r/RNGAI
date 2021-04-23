@@ -365,6 +365,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Begin the base monitor process
 
         self:BaseMonitorInitializationRNG()
+        --LOG(repr(Scenario))
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
         plat:ForkThread(plat.BaseManagersDistressAIRNG)

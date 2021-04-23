@@ -343,7 +343,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 }},
+            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.08, 0.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0,  categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             },
