@@ -139,10 +139,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Excess',
         PlatoonTemplate = 'T3BuildEngineer',
-        Priority = 300, -- low factory priority
+        Priority = 850, -- low factory priority
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.00}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.70, 0.00}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },

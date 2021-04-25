@@ -37,6 +37,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI ResponseAttack',
+    Plan = 'StrikeForceAIRNG',
+    GlobalSquads = {
+        { categories.MOBILE * categories.AIR *(categories.BOMBER + categories.GROUNDATTACK) - categories.daa0206 - categories.EXPERIMENTAL - categories.TRANSPORTFOCUS, 1, 100, 'Attack', 'NoFormation' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
     Plan = 'StrikeForceAIRNG',
     GlobalSquads = {
