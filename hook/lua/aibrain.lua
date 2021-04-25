@@ -2524,7 +2524,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v.Dead then continue end
                 if v:GetFractionComplete() ~= 1 then continue end
                 if not v.MaintenanceConsumption then continue end
-                --LOG('pausing MASSFABRICATION or SHIELD')
+                --LOG('pausing MASSFABRICATION or SHIELD '..v.UnitId)
                 v:OnProductionPaused()
             elseif priorityUnit == 'NUKE' then
                 --LOG('Priority Unit Is Nuke')

@@ -48,7 +48,7 @@ Platoon = Class(RNGAIPlatoon) {
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
             if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
-                v:EnableUnitIntel('Toggle', 'Cloak')
+                v:SetScriptBit('RULEUTC_CloakToggle', false)
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
@@ -700,7 +700,7 @@ Platoon = Class(RNGAIPlatoon) {
 
         --If we have Stealth (are cybran), then turn on our Stealth
         if scout:TestToggleCaps('RULEUTC_CloakToggle') then
-            scout:EnableUnitIntel('Toggle', 'Cloak')
+            scout:SetScriptBit('RULEUTC_CloakToggle', false)
         end
         local estartX = nil
         local estartZ = nil
@@ -1468,20 +1468,17 @@ Platoon = Class(RNGAIPlatoon) {
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not usedTransports then
                         --LOG('* AI-RNG: * HuntAIPATH: not used transports')
-                        self:PlatoonDisband()
-                        return
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     --LOG('Guardmarker found transports')
                 else
                     --LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
-                    self:PlatoonDisband()
-                    return
+                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
 
                 if (not path or not success) and not usedTransports then
                     --LOG('* AI-RNG: * HuntAIPATH: No Path found, no transports used')
-                    self:PlatoonDisband()
-                    return
+                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
             elseif self.PlatoonData.GetTargetsFromBase then
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
@@ -1737,12 +1734,10 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
                     else
                         --LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
-                        self:PlatoonDisband()
-                        return
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     if not path or not success then
-                        self:PlatoonDisband()
-                        return
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                 end
                 if rangedPosition then

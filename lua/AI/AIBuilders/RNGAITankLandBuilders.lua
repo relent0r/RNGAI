@@ -754,6 +754,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {
+                categories.EXPERIMENTAL,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,   
@@ -784,6 +785,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -912,6 +914,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -949,6 +952,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -994,6 +998,7 @@ BuilderGroup {
             Defensive = true,
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.MOBILE *categories.LAND,
             },
             PrioritizedCategories = {                                           -- Attack these targets.
@@ -1029,9 +1034,11 @@ BuilderGroup {
             Defensive = true,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
+                categories.EXPERIMENTAL * categories.AIR,
                 categories.MOBILE * categories.AIR
             },
             PrioritizedCategories = {   
+                categories.EXPERIMENTAL * categories.AIR,
                 categories.MOBILE * categories.AIR * categories.GROUNDATTACK,
                 categories.MOBILE * categories.AIR * categories.BOMBER,
                 categories.MOBILE * categories.AIR,
@@ -1119,6 +1126,7 @@ BuilderGroup {
             AggressiveMove = true,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1235,6 +1243,7 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             LocationType = 'LocationType',
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND
             },
@@ -1303,6 +1312,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE * categories.ANTIAIR,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE
@@ -1387,6 +1397,7 @@ BuilderGroup {
             AggressiveMove = true,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1426,6 +1437,7 @@ BuilderGroup {
             PlatoonLimit = 15,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1597,6 +1609,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1637,6 +1650,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1730,6 +1744,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {   
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
@@ -1768,6 +1783,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
             },
             PrioritizedCategories = {   
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
