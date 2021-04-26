@@ -126,7 +126,7 @@ BaseBuilderTemplate {
             Tech1 = 15,
             Tech2 = 12,
             Tech3 = 10,
-            SCU = 6,
+            SCU = 8,
         },
         FactoryCount = {
             Land = 12,

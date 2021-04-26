@@ -124,6 +124,15 @@ local ACUClosePriority = function(self, aiBrain)
     end
 end
 
+local NoSmallFrys = function (self, aiBrain)
+    if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) > aiBrain.EnemyIntel.EnemyThreatCurrent.Land then
+        return 0
+    else
+        return 700
+    end
+end
+
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
@@ -726,7 +735,7 @@ BuilderGroup {
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
         },
         BuilderData = {
             IncludeWater = false,
@@ -745,6 +754,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {
+                categories.EXPERIMENTAL,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,   
@@ -763,7 +773,7 @@ BuilderGroup {
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
         },
         BuilderData = {
@@ -775,6 +785,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -903,6 +914,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -940,6 +952,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -985,6 +998,7 @@ BuilderGroup {
             Defensive = true,
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
                 categories.MOBILE *categories.LAND,
             },
             PrioritizedCategories = {                                           -- Attack these targets.
@@ -1020,9 +1034,11 @@ BuilderGroup {
             Defensive = true,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
+                categories.EXPERIMENTAL * categories.AIR,
                 categories.MOBILE * categories.AIR
             },
             PrioritizedCategories = {   
+                categories.EXPERIMENTAL * categories.AIR,
                 categories.MOBILE * categories.AIR * categories.GROUNDATTACK,
                 categories.MOBILE * categories.AIR * categories.BOMBER,
                 categories.MOBILE * categories.AIR,
@@ -1110,6 +1126,7 @@ BuilderGroup {
             AggressiveMove = true,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1199,7 +1216,6 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
@@ -1227,6 +1243,7 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             LocationType = 'LocationType',
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND
             },
@@ -1281,6 +1298,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Attack AntiAir Structures',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack AA Structures',                          -- Template Name.
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1295,6 +1313,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE * categories.ANTIAIR,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE
@@ -1329,7 +1348,6 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {     
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
@@ -1380,6 +1398,7 @@ BuilderGroup {
             AggressiveMove = true,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1419,6 +1438,7 @@ BuilderGroup {
             PlatoonLimit = 15,
             ThreatSupport = 5,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1449,7 +1469,6 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
@@ -1503,7 +1522,6 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderType = 'Any',
         BuilderConditions = {
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
         },
@@ -1592,6 +1610,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1632,6 +1651,7 @@ BuilderGroup {
             ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -1659,6 +1679,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PriorityFunction = NoSmallFrys,
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -1724,6 +1745,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {   
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
@@ -1762,6 +1784,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
             },
             PrioritizedCategories = {   
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,

@@ -47,8 +47,11 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
+            if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                v:SetScriptBit('RULEUTC_StealthToggle', false)
+            end
             if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
-                v:EnableUnitIntel('Toggle', 'Cloak')
+                v:SetScriptBit('RULEUTC_CloakToggle', false)
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
@@ -700,7 +703,7 @@ Platoon = Class(RNGAIPlatoon) {
 
         --If we have Stealth (are cybran), then turn on our Stealth
         if scout:TestToggleCaps('RULEUTC_CloakToggle') then
-            scout:EnableUnitIntel('Toggle', 'Cloak')
+            scout:SetScriptBit('RULEUTC_CloakToggle', false)
         end
         local estartX = nil
         local estartZ = nil
@@ -1224,6 +1227,7 @@ Platoon = Class(RNGAIPlatoon) {
             --[[if not target then
                 LOG('No target on huntaipath loop')
                 LOG('Max Radius is '..maxRadius)
+                LOG('Debug loop is '..debugloop)
                 debugloop = debugloop + 1
             end]]
             platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
@@ -1312,6 +1316,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local pathNodesCount = table.getn(path)
                         for i=1, pathNodesCount do
                             local PlatoonPosition
+                            local distEnd = false
                             if guardUnits then
                                 local guardedUnit = 1
                                 if attackUnitCount > 0 then
@@ -1348,8 +1353,16 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                             --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
                             if bAggroMove and attackUnits and (not currentLayerSeaBed) then
+                                if distEnd and distEnd > 6400 then
+                                    self:SetPlatoonFormationOverride('NoFormation')
+                                    attackFormation = false
+                                end
                                 self:AggressiveMoveToLocation(path[i], 'Attack')
                             elseif attackUnits then
+                                if distEnd and distEnd > 6400 then
+                                    self:SetPlatoonFormationOverride('NoFormation')
+                                    attackFormation = false
+                                end
                                 self:MoveToLocation(path[i], false, 'Attack')
                             end
                             --LOG('* AI-RNG: * HuntAIPATH:: moving to Waypoint')
@@ -1422,7 +1435,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
                                 if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
                                     attackFormation = true
-                                    --LOG('* AI-RNG: * MovePath: distEnd < 50 '..distEnd)
+                                    --LOG('* AI-RNG: * MovePath: distEnd < 6400 '..distEnd..' Switching to attack formation')
                                     self:SetPlatoonFormationOverride('AttackFormation')
                                 end
                                 dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
@@ -1445,21 +1458,6 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     end
                                 end
-                                if not target or target.Dead then
-                                    --if VDist2Sq(SquadPosition[1], SquadPosition[3], targetPosition[1],targetPosition[3]) > 6400 then
-                                        --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 6 seconds '..repr(path[i]))
-                                    --    IssueClearCommands(GetPlatoonUnits(self))
-                                    --    self:MoveToLocation(targetPosition, false, 'Attack')
-                                    --    WaitTicks(60)
-                                    --else
-                                    --    --LOG('* AI-RNG: * HuntAIPATH: Lost target while moving to Waypoint. Moving to targetpos for 3 seconds '..repr(path[i]))
-                                    --    IssueClearCommands(GetPlatoonUnits(self))
-                                    --    self:MoveToLocation(targetPosition, false, 'Attack')
-                                    --    WaitTicks(40)
-                                    --end
-                                    --self:Stop()
-                                    break
-                                end
                                 --LOG('* AI-RNG: * HuntAIPATH: End of movement loop, wait 10 ticks at :'..GetGameTimeSeconds())
                                 WaitTicks(15)
                             end
@@ -1473,20 +1471,17 @@ Platoon = Class(RNGAIPlatoon) {
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not usedTransports then
                         --LOG('* AI-RNG: * HuntAIPATH: not used transports')
-                        self:PlatoonDisband()
-                        return
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     --LOG('Guardmarker found transports')
                 else
                     --LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
-                    self:PlatoonDisband()
-                    return
+                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
 
                 if (not path or not success) and not usedTransports then
                     --LOG('* AI-RNG: * HuntAIPATH: No Path found, no transports used')
-                    self:PlatoonDisband()
-                    return
+                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
             elseif self.PlatoonData.GetTargetsFromBase then
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
@@ -1742,12 +1737,10 @@ Platoon = Class(RNGAIPlatoon) {
                         --LOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
                     else
                         --LOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
-                        self:PlatoonDisband()
-                        return
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     if not path or not success then
-                        self:PlatoonDisband()
-                        return
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                 end
                 if rangedPosition then
@@ -3644,7 +3637,7 @@ Platoon = Class(RNGAIPlatoon) {
                             repeat
                                 moveLocation = distressLocation
                                 self:Stop()
-                                LOG('Platoon responding to distress at location '..repr(distressLocation))
+                                --LOG('Platoon responding to distress at location '..repr(distressLocation))
                                 self:SetPlatoonFormationOverride('NoFormation')
                                 local cmd = self:AggressiveMoveToLocation(distressLocation)
                                 repeat
