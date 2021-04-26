@@ -2742,34 +2742,40 @@ AIBrain = Class(RNGAIBrainClass) {
             local brainExtractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
             local extractorCount = table.getn(brainExtractors)
             local givemex = 0
+            local allyBrains = {}
+            for _, v in ArmyBrains do
+                local Index = v:GetArmyIndex()
+                if IsEnemy(selfIndex, Index) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+                local astartX, astartZ = v:GetArmyStartPos()
+                local selfstart = {position={astartX, 0, astartZ},abrain=v,index=Index}
+                table.insert(allyBrains,selfstart)
+            end
             for _, x in brainExtractors do
                 if x.Position~=nil then continue end
                 x.Position=x:GetPosition()
             end
             table.sort(brainExtractors,function(k1,k2) return VDist2(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2(start[1],start[3],k2.Position[1],k2.Position[3]) end)
             for _, x in brainExtractors do
-                if self:MexAllocateRNG(x) then givemex=givemex+1 end
+                if self:MexAllocateRNG(x,allyBrains) then givemex=givemex+1 end
                 if givemex/extractorCount>0.2 then break end
-                WaitTicks(2)
+                WaitTicks(5)
             end
-            WaitTicks(400)
+            WaitTicks(300)
         end
     end,
 
-    MexAllocateRNG = function(self,mex)
+    MexAllocateRNG = function(self,mex,allyBrains)
         LOG('start construct mex')
         if mex:IsUnitState('Upgrading') then return false end
         local starts = {}
         local selfIndex = self:GetArmyIndex()
         LOG('self index'..selfIndex)
         local mexnums1 = {}
-        for _, v in ArmyBrains do
-            local Index = v:GetArmyIndex()
-            if IsEnemy(selfIndex, Index) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
-            local extractorCount = v:GetCurrentUnits(categories.STRUCTURE * categories.MASSEXTRACTION)
-            local startX, startZ = v:GetArmyStartPos()
+        for _, v in allyBrains do
+            local Index = v.index
+            local extractorCount = v.abrain:GetCurrentUnits(categories.STRUCTURE * categories.MASSEXTRACTION)
             table.insert(mexnums1,Index,extractorCount)
-            local selfstart = {Index, {startX, 0, startZ}, mexnums1[Index]}
+            local selfstart = {Index, v.position, mexnums1[Index]}
             table.insert(starts,selfstart)
         end
             table.sort(starts,function(k1,k2) return (k1[3]+10)*VDist2Sq(k1[2][1],k1[2][3],mex.Position[1],mex.Position[3])<(k2[3]+10)*VDist2Sq(k2[2][1],k2[2][3],mex.Position[1],mex.Position[3]) end)
