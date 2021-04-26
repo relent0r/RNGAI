@@ -86,7 +86,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 240',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
-        InstanceCount = 6,
+        InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
         },
@@ -113,7 +113,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
-        InstanceCount = 6,
+        InstanceCount = 5,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
@@ -142,7 +142,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 300,
-        InstanceCount = 7,
+        InstanceCount = 5,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 10, 0, 'AntiSurface', 1}},
@@ -175,7 +175,7 @@ BuilderGroup {
         Priority = 500,
         DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'MassFab' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassFab' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
@@ -183,7 +183,7 @@ BuilderGroup {
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
             -- Respect UnitCap
-            { UCBC, 'HaveUnitRatioVersusCap', { 0.10 , '<', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSFABRICATION) } },
+            { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.10 , '<', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSFABRICATION) } },
     
         },
         BuilderType = 'Any',
@@ -209,7 +209,7 @@ BuilderGroup {
         Priority = 400,
         DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'MassFab' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassFab' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             -- Do we need additional conditions to build it ?
             { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
@@ -217,11 +217,11 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { EBC, 'LessThanMassTrendRNG', { 5.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } }, -- relative income
             -- Don't build it if...
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.MASSFABRICATION } },
             -- Respect UnitCap
-            { UCBC, 'HaveUnitRatioVersusCap', { 0.10 , '<', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSFABRICATION) } },
+            { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.10 , '<', categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSFABRICATION) } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -327,10 +327,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'MassStorage' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
@@ -356,10 +356,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'MassStorage' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },
@@ -401,6 +401,68 @@ BuilderGroup {
                 ThreatRings = 0,
                 BuildStructures = {
                     'MassStorage',
+                }
+            }
+        }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAIR Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAIR T1 Mex Adjacency Engineer',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 900,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 5, 0}},
+            { EBC, 'GreaterThanEconStorageRatio', { -0.1, 0.1 }},
+            { EBC, 'LessThanEconStorageRatio', { 1, 1.1 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = categories.MASSEXTRACTION,
+                AdjacencyDistance = 100,
+                BuildClose = false,
+                ThreatMin = -1000,
+                ThreatMax = 5,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR T1 Mex Adjacency Engineer Distant',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 400,
+        InstanceCount = 12,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
+            { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
+            { EBC, 'LessThanEconStorageRatio', { 0.2, 1.1 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                AdjacencyCategory = categories.MASSEXTRACTION,
+                AdjacencyDistance = 500,
+                BuildClose = false,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'T1Resource',
                 }
             }
         }

@@ -19,7 +19,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT } },
-            { UCBC, 'LessThanGameTimeSeconds', { 180 } }, -- don't build after 3 minutes
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 180 } }, -- don't build after 3 minutes
         },
         BuilderType = 'Land',
     },
@@ -32,7 +32,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.SCOUT } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.3, 0.5 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.3, 0.5 }},
         },
         BuilderType = 'Land',
     },

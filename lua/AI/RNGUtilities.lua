@@ -84,6 +84,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
                             reclaimTimeout = reclaimTimeout + 1
                             --LOG('Waiting for reclaim to no longer exist')
+                            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
+                                self:SetPaused( true )
+                                WaitTicks(50)
+                                self:SetPaused( false )
+                            end
                             WaitTicks(20)
                         end
                         --LOG('Reclaim Count is '..reclaimCount)
@@ -239,6 +244,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if idleCount > 5 then
                     reclaiming = false
                 end
+            end
+            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
+                self:SetPaused( true )
+                WaitTicks(50)
+                self:SetPaused( false )
             end
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
@@ -693,6 +703,7 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
         extractorPlatoon.MovementLayer = 'Land'
         --LOG('* AI-RNG: Assigning Extractor to new platoon')
         AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
+        finishedUnit.PlatoonHandle = extractorPlatoon
         extractorPlatoon:ForkThread( extractorPlatoon.ExtractorCallForHelpAIRNG, aiBrain )
 
         if not finishedUnit.UpgradeThread then
@@ -1113,7 +1124,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                     distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
                                 end
                                 if platoon.MovementLayer == 'Air' and platoonThreat then
-                                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                                     --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
                                     if enemyThreat > platoonThreat then
                                         continue
@@ -1142,7 +1153,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                             end
                         end
                         if platoon.MovementLayer == 'Air' and platoonThreat then
-                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                             --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
                             if enemyThreat > platoonThreat then
                                 continue
@@ -1203,7 +1214,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                             continue
                         end]]
                         if platoon.MovementLayer == 'Air' and platoonThreat then
-                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, 0, true, 'AntiAir')
+                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                             --LOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
                             if enemyThreat > platoonThreat then
                                 continue
@@ -1964,7 +1975,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local posDistance = 0
         if startPos then
             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
-                posThreat = GetThreatAtPosition(aiBrain, startPos, 1, true, 'StructuresNotMex')
+                posThreat = GetThreatAtPosition(aiBrain, startPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'StructuresNotMex')
                 --LOG('Ranged attack loop position is '..repr(startPos)..' with threat of '..posThreat)
                 if posThreat > 5 then
                     if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, startPos, 50, 'Enemy') > 0 then
@@ -2167,6 +2178,12 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     return newList
 end
 
+function EdgeDistance(x,y,mapwidth)
+    local edgeDists = { x, y, math.abs(x-mapwidth), math.abs(y-mapwidth)}
+    RNGSORT(edgeDists, function(k1, k2) return k1 < k2 end)
+    return edgeDists[1]
+end
+
 function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
 
 
@@ -2175,4 +2192,30 @@ function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
         AIAttackUtils.GetMostRestrictiveLayer(platoon)
     end
 
+end
+
+DisplayBaseMexAllocationRNG = function(aiBrain)
+    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local MassMarker = {}
+    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                -- mass marker is too close to border, skip it.
+                continue
+            end 
+            table.insert(MassMarker, v)
+        end
+    end
+    while aiBrain.Result ~= "defeat" do
+        for _, v in MassMarker do
+            local pos1={0,0,0}
+            local pos2={0,0,0}
+            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+            local chosenstart = starts[1]
+            pos1=v.position
+            pos2=chosenstart.Position
+            DrawLinePop(pos1,pos2,'ffFF0000')
+        end
+        WaitTicks(2)
+    end
 end

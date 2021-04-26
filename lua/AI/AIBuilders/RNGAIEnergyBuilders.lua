@@ -20,7 +20,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -45,14 +45,13 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 990,
-        InstanceCount = 3,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 120.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
+            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 0.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
@@ -79,7 +78,7 @@ BuilderGroup {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
-            { UCBC, 'HaveUnitRatioVersusCap', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
+            { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
         },
         InstanceCount = 1,
@@ -103,9 +102,9 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -129,11 +128,11 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -157,7 +156,7 @@ BuilderGroup {
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 120.0 } },
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.1 }},
@@ -187,9 +186,9 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -213,11 +212,11 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -241,7 +240,7 @@ BuilderGroup {
         InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
@@ -276,7 +275,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
@@ -302,8 +301,8 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
@@ -328,12 +327,12 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Hydro Builder',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1Engineer Hydro 50',
+        BuilderName = 'RNGAI T1Engineer Hydro 60',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
         InstanceCount = 1,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 50, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 60, -1000, 100, 1, 'AntiSurface', 1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -350,11 +349,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 250',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 850,
+        Priority = 780,
         InstanceCount = 2,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 256, -1000, 100, 1, 'AntiSurface', 1 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {

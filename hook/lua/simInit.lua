@@ -46,9 +46,12 @@ function DrawIMAPThreatsRNG()
 
                     enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'Naval')
                     DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, 'ff00ffff' ) -- cyan
+
+                    enemyThreat = aiBrain:GetThreatAtPosition({PosX, 0, PosY}, 0, true, 'Commander')
+                    DrawCircle({PosX, 0, PosY}, (enemyThreat / 120) + 0.1, '53ff00' ) -- green
                 end
             end        
         end
-        coroutine.yield(2)
+        coroutine.yield(4)
     end
 end

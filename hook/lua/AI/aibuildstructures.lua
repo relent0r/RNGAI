@@ -53,7 +53,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         if AntiSpamList[buildingType] then
             return false
         end
-        local FactionIndexToName = {[1] = 'UEF', [2] = 'AEON', [3] = 'CYBRAN', [4] = 'SERAPHIM', [5] = 'NOMADS' }
+        local FactionIndexToName = {[1] = 'UEF', [2] = 'AEON', [3] = 'CYBRAN', [4] = 'SERAPHIM', [5] = 'NOMADS', [6] = 'ARM', [7] = 'CORE' }
         local AIFactionName = FactionIndexToName[factionIndex]
         SPEW('*AIExecuteBuildStructure: We cant decide whatToBuild! AI-faction: '..AIFactionName..', Building Type: '..repr(buildingType)..', engineer-faction: '..repr(builder.factionCategory))
         -- Get the UnitId for the actual buildingType

@@ -16,7 +16,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
 
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -29,7 +29,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, 'FACTORY LAND TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -42,7 +42,7 @@ BuilderGroup {
         BuilderType = 'Land',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.6, 0.80 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.80 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

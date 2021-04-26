@@ -32,7 +32,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
         },
         BuilderType = 'Any',
@@ -60,7 +60,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
         },
         BuilderType = 'Any',
@@ -86,7 +86,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.STRUCTURE * categories.SONAR) + categories.MOBILESONAR } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
         },
         BuilderType = 'Any',
@@ -115,7 +115,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
     },
@@ -127,7 +127,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.2 }},
         },
         BuilderType = 'Any',
     },
@@ -142,7 +142,7 @@ BuilderGroup {
         Priority = 600,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.TECH1 * categories.SONAR }},
         },
@@ -156,7 +156,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 1200 } },
             { MIBC, 'FactionIndex', { 1, 2, 3, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } }, -- relative income
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.90 } },             -- Ratio from 0 to 1. (1=100%)
             -- When do we want to build this ?
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH2 * categories.MOBILESONAR }},
@@ -179,7 +179,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.5, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
     },
@@ -193,7 +193,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
     },

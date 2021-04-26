@@ -18,7 +18,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 400.0 }},
         },
         BuilderType = 'Any',
@@ -47,7 +47,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
         },
         BuilderType = 'Any',
@@ -76,7 +76,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
         BuilderType = 'Any',
@@ -106,7 +106,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
         },
         BuilderType = 'Any',
@@ -135,7 +135,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
             { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -163,7 +163,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
             { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -191,9 +191,218 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },
             { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                BuildStructures = {
+                    'T4SatelliteExperimental',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAIR Experimental Builders',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 1st',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.LAND}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 400.0 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 20,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 20,
+                BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                BuildStructures = {
+                    'T4LandExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 MultiBuild',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.MASSEXTRACTION * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                BuildStructures = {
+                    'T4LandExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 Excess',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 300,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 3,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
+            { EBC, 'GreaterThanEconIncome', { 30.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                BuildStructures = {
+                    'T4LandExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 Megabot',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = false,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                BuildStructures = {
+                    'T4LandExperimental3',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 Air',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 550,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            -- Have we the eco to build it ?
+            { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
+            { EBC, 'GreaterThanEconIncomeRNG', { 40.0, 60.0 }},                    -- Base income
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                BuildStructures = {
+                    'T4AirExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 Sea',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 500,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            -- Have we the eco to build it ?
+            { UCBC, 'CanBuildCategory', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
+            { EBC, 'GreaterThanEconIncomeRNG', { 20.0, 60.0 }},                    -- Base income
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                NumAssistees = 10,
+                BuildClose = true,
+                BuildStructures = {
+                    'T4SeaExperimental1',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAIR Experimental1 Novax',
+        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        Priority = 700,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'MobileExperimental', 10},
+        BuilderConditions = {
+            { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            -- Have we the eco to build it ?
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },
+            { EBC, 'GreaterThanEconIncomeRNG', { 50.0, 60.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {

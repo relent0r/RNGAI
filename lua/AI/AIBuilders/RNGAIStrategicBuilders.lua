@@ -12,7 +12,7 @@ BuilderGroup {
         Priority = 700,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
@@ -43,10 +43,10 @@ BuilderGroup {
         Priority = 500,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconIncomeRNG', { 9.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.90 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.NUKE * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.ENERGYPRODUCTION * categories.TECH3 } },
@@ -77,8 +77,8 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
             { EBC, 'GreaterThanEconIncomeRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
@@ -108,10 +108,10 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconIncomeRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
@@ -141,8 +141,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
@@ -171,8 +171,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE}},
@@ -201,8 +201,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL * categories.STRUCTURE}},
@@ -235,8 +235,8 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
             { EBC, 'GreaterThanEconIncomeRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
@@ -266,10 +266,10 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'Artillery', 20},
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1 }},
             { EBC, 'GreaterThanEconIncomeRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
@@ -299,8 +299,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -330,8 +330,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -361,8 +361,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'BuildOnlyOnLocation', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Artillery' }},
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
