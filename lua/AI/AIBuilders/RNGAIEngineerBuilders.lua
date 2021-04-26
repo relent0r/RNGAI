@@ -1046,7 +1046,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.SUBCOMMANDER}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconTrendRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50}},
         },
         BuilderType = 'Any',

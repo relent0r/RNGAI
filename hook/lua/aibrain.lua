@@ -441,8 +441,8 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyOverTimeCurrent.MassRequested = mRequested / num
             self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime = math.min(eIncome / eRequested, 2)
             self.EconomyOverTimeCurrent.MassEfficiencyOverTime = math.min(mIncome / mRequested, 2)
-            self.EconomyOverTimeCurrent.EnergyTrend = eTrend / num
-            self.EconomyOverTimeCurrent.MassTrend = mTrend / num
+            self.EconomyOverTimeCurrent.EnergyTrendOverTime = eTrend / num
+            self.EconomyOverTimeCurrent.MassTrendOverTime = mTrend / num
             WaitTicks(50)
         end
     end,
@@ -1297,7 +1297,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrend..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrend)
+                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -2417,7 +2417,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerMassStateCheck = function(self)
-        if self.EconomyOverTimeCurrent.MassTrend <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
+        if self.EconomyOverTimeCurrent.MassTrendOverTime <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
             return true
         else
             return false

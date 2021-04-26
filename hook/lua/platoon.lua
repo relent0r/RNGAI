@@ -47,6 +47,9 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
+            if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                v:SetScriptBit('RULEUTC_StealthToggle', false)
+            end
             if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
                 v:SetScriptBit('RULEUTC_CloakToggle', false)
             end
@@ -1432,7 +1435,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --LOG('* AI-RNG: * MovePath: dist to Path End: '..distEnd)
                                 if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
                                     attackFormation = true
-                                    LOG('* AI-RNG: * MovePath: distEnd < 6400 '..distEnd..' Switching to attack formation')
+                                    --LOG('* AI-RNG: * MovePath: distEnd < 6400 '..distEnd..' Switching to attack formation')
                                     self:SetPlatoonFormationOverride('AttackFormation')
                                 end
                                 dist = VDist2Sq(path[i][1], path[i][3], SquadPosition[1], SquadPosition[3])
@@ -3634,7 +3637,7 @@ Platoon = Class(RNGAIPlatoon) {
                             repeat
                                 moveLocation = distressLocation
                                 self:Stop()
-                                LOG('Platoon responding to distress at location '..repr(distressLocation))
+                                --LOG('Platoon responding to distress at location '..repr(distressLocation))
                                 self:SetPlatoonFormationOverride('NoFormation')
                                 local cmd = self:AggressiveMoveToLocation(distressLocation)
                                 repeat

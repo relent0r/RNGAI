@@ -1298,6 +1298,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Attack AntiAir Structures',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack AA Structures',                          -- Template Name.
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
