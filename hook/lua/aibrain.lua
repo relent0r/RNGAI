@@ -244,6 +244,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 OnField = false,
                 Gun = false,
             }
+            self.EnemyIntel.DirectorData[v:GetArmyIndex()] = {
+                Strategic = {},
+                Energy = {},
+                Mass = {},
+                Factory = {},
+                Combat = {},
+            }
         end
 
         self.BrainIntel = {}
@@ -1614,7 +1621,7 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
         WaitTicks(Random(1,7))
-        --LOG('* AI-RNG: Tactical Monitor Threat Pass')
+        LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
@@ -1741,7 +1748,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 threat.InsertTime = currentGameTime
                 table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
             end
-            --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         WaitTicks(2)
 
