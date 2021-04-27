@@ -328,9 +328,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                         enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         --LOG('enemyCDR is '..enemyCdrThreat)
                         friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
-                        --LOG('friendlyThreat is'..friendlyThreat)
+                        LOG('friendlyThreat is'..friendlyThreat)
                         if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.3)) then
-                            --LOG('Enemy Threat too high')
+                            LOG('Enemy Threat too high')
                             break
                         end
                     end
@@ -443,15 +443,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
             end
-            -- If com is down to yellow then dont keep fighting
-            if (cdr:GetHealthPercent() < 0.70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
-                continueFighting = false
-                if not cdr.GunUpgradePresent then
-                    --LOG('ACU Low health and no gun upgrade, set required')
-                    cdr.GunUpgradeRequired = true
-                end
-            end
+
             if continueFighting == true then
+                local acuIMAPThreat = aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land') + (aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') / 2)
+                LOG('acuIMAPThreat '..acuIMAPThreat)
+
                 local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER ), cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
@@ -482,9 +478,17 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     --LOG('Enemy ACU is under HP limit we can draw')
-                elseif (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
+                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
                     continueFighting = false
+                end
+            end
+            -- If com is down to yellow then dont keep fighting
+            if (cdr:GetHealthPercent() < 0.50) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+                continueFighting = false
+                if not cdr.GunUpgradePresent then
+                    --LOG('ACU Low health and no gun upgrade, set required')
+                    cdr.GunUpgradeRequired = true
                 end
             end
             if (aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0) and (not cdr.GunUpgradePresent) and (GetGameTimeSeconds() < 1500) then
