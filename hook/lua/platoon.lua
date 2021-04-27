@@ -2036,30 +2036,37 @@ Platoon = Class(RNGAIPlatoon) {
                             if path then
                                 local pathLength = table.getn(path)
                                 local averageThreat = totalThreat / pathLength
+                                local pathDistance
                                 --LOG('StrikeForceAI average path threat is '..averageThreat)
                                 --LOG('StrikeForceAI platoon threat is '..myThreat)
                                 if averageThreat < myThreat or platoonCount >= platoonLimit then
                                     --LOG('StrikeForce air assigning path')
                                     for i=1, pathLength do
                                         self:MoveToLocation(path[i], false)
-                                    end
-                                    while PlatoonExists(aiBrain, self) do
+                                        while PlatoonExists(aiBrain, self) do
+                                            platoonPosition = GetPlatoonPosition(self)
+                                            targetPosition = target:GetPosition()
+                                            targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
+                                            if targetDistance < 10000 then
+                                                --LOG('strikeforce air attack command on target')
+                                                self:Stop()
+                                                self:AttackTarget(target)
+                                                break
+                                            end
+                                            pathDistance = VDist2Sq(path[i][1], path[i][3], platoonPosition[1], platoonPosition[3])
+                                            if pathDistance < 900 then
+                                                -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                                self:Stop()
+                                                break
+                                            end
+                                            --LOG('Waiting to reach target loop')
+                                            WaitTicks(10)
+                                        end
                                         if not target or target.Dead then
                                             target = false
                                             --LOG('Target dead or lost during strikeforce')
                                             break
                                         end
-                                        platoonPosition = GetPlatoonPosition(self)
-                                        targetPosition = target:GetPosition()
-                                        targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
-                                        if targetDistance < 10000 then
-                                            --LOG('strikeforce air attack command on target')
-                                            self:Stop()
-                                            self:AttackTarget(target)
-                                            break
-                                        end
-                                        --LOG('Waiting to reach target loop')
-                                        WaitTicks(10)
                                     end
                                 else
                                     --LOG('StrikeForceAI Path threat is too high, waiting and merging')
@@ -2155,11 +2162,19 @@ Platoon = Class(RNGAIPlatoon) {
                 self:MoveToLocation(mainBasePos, false)
                 local baseDist
                 --LOG('StrikefoceAI Returning to base')
+                myThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
                 while PlatoonExists(aiBrain, self) do
                     platoonPosition = GetPlatoonPosition(self)
                     baseDist = VDist2Sq(platoonPosition[1], platoonPosition[3], mainBasePos[1], mainBasePos[3])
                     if baseDist < 6400 then
                         break
+                    end
+                    if not target and myThreat > 8 and data.UnitType != 'GUNSHIP' then
+                        --LOG('Checking for director target')
+                        target = aiBrain:CheckDirectorTargetAvailable('AntiAir', myThreat)
+                        if target then
+                            break
+                        end
                     end
                     --LOG('StrikefoceAI base distance is baseDist')
                     WaitTicks(50)

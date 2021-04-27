@@ -1100,7 +1100,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.80
+                upgradeSpec.MassLowTrigger = 0.85
                 upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1109,7 +1109,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 10
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.9
+                upgradeSpec.MassLowTrigger = 0.95
                 upgradeSpec.EnergyLowTrigger = 1.2
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1118,7 +1118,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 5
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 1.0
+                upgradeSpec.MassLowTrigger = 1.1
                 upgradeSpec.EnergyLowTrigger = 1.2
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
