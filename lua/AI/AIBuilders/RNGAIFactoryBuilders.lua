@@ -86,6 +86,7 @@ BuilderGroup {
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
+                AdjacencyCategory = categories.ENERGYPRODUCTION,
                 BuildStructures = {
                     'T2SupportLandFactory',
                 },

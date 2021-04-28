@@ -153,9 +153,9 @@ AIBrain = Class(RNGAIBrainClass) {
             SHIELD = 8,
             AIR = 9,
             NAVAL = 5,
-            LAND = 3,
+            LAND = 2,
             RADAR = 4,
-            MASSEXTRACTION = 2,
+            MASSEXTRACTION = 3,
             MASSFABRICATION = 7,
             NUKE = 6,
         }

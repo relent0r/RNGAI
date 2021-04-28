@@ -485,7 +485,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
         InstanceCount = 12,
         BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 }, true },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
 
             { EBC, 'LessThanEnergyTrendRNG', { 100.0 }, true },
