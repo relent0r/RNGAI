@@ -947,6 +947,9 @@ Platoon = Class(RNGAIPlatoon) {
         local x
         local y
         local smartPos
+        local SquadPosition
+        local attackSquad
+        local microCap
         AIAttackUtils.GetMostRestrictiveLayer(self)
 
         if platoonUnits > 0 then
@@ -1151,6 +1154,15 @@ Platoon = Class(RNGAIPlatoon) {
         local LocationType = self.PlatoonData.LocationType
         local maxRadius = data.SearchRadius or 200
         local mainBasePos
+        local SquadPosition
+        local attackSquad
+        local microCap
+        local unitPos
+        local smartPos
+        local alpha
+        local x
+        local y
+
         if LocationType then
             mainBasePos = aiBrain.BuilderManagers[LocationType].Position
         else
@@ -4969,6 +4981,259 @@ Platoon = Class(RNGAIPlatoon) {
                 eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
             end
             LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
+        end
+    end,
+
+    HuntAIRNGHero = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local target
+        local blip
+        local platoonUnits = GetPlatoonUnits(self)
+        local enemyRadius = 40
+        local movingToScout = false
+        local MaxPlatoonWeaponRange
+        local unitPos
+        local alpha
+        local x
+        local y
+        local smartPos
+        local SquadPosition
+        local attackSquad
+        local microCap
+        local friendlyThreat
+        AIAttackUtils.GetMostRestrictiveLayer(self)
+        local Hero=platoonUnits[1]
+        local homebasex,homebasey = aiBrain:GetArmyStartPos()
+        local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
+        Hero.home=homepos
+        LOG('Hero homebase: '..repr(homepos)..' startpos = '..repr({homebasex,homebasey}))
+        if platoonUnits > 0 then
+                if not Hero.Dead then
+                    for _, weapon in Hero:GetBlueprint().Weapon or {} do
+                        -- unit can have MaxWeaponRange entry from the last platoon
+                        if not Hero.MaxWeaponRange or weapon.MaxRadius > Hero.MaxWeaponRange then
+                            -- save the weaponrange 
+                            Hero.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
+                            -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
+                            if weapon.BallisticArc == 'RULEUBA_LowArc' then
+                                Hero.WeaponArc = 'low'
+                            elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
+                                Hero.WeaponArc = 'high'
+                            else
+                                Hero.WeaponArc = 'none'
+                            end
+                        end
+                        if not MaxPlatoonWeaponRange or MaxPlatoonWeaponRange < Hero.MaxWeaponRange then
+                            MaxPlatoonWeaponRange = Hero.MaxWeaponRange
+                        end
+                    end
+                    if Hero:TestToggleCaps('RULEUTC_StealthToggle') then
+                        Hero:SetScriptBit('RULEUTC_StealthToggle', false)
+                    end
+                    if Hero:TestToggleCaps('RULEUTC_CloakToggle') then
+                        Hero:SetScriptBit('RULEUTC_CloakToggle', false)
+                    end
+                    -- prevent units from reclaiming while attack moving
+                    Hero:RemoveCommandCap('RULEUCC_Reclaim')
+                    Hero:RemoveCommandCap('RULEUCC_Repair')
+                    Hero.smartPos = {0,0,0}
+                    if not Hero.MaxWeaponRange then
+                        WARN('Scanning: unit ['..repr(Hero.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                    end
+                end
+        end
+        while PlatoonExists(aiBrain, self) do
+            if aiBrain.EnemyIntel.ACUEnemyClose then
+                --LOG('HuntAI Enemy ACU Close, setting attack priority')
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.COMMAND)
+            else
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL - categories.NAVAL)
+            end
+            if target then
+                local threatAroundplatoon = 0
+                local platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS) * Hero.MaxWeaponRange/18
+                Hero.Threat=platoonThreat
+                local targetPosition = target:GetPosition()
+                local platoonPos = Hero:GetPosition()
+                local targetDist = VDist2(platoonPos[1],platoonPos[3],targetPosition[1],targetPosition[3])
+                friendlyThreat = aiBrain:GetThreatAtPosition(platoonPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                local enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 1, true, 'AntiSurface')
+                local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPosition, 1, true, 'Commander')
+                local friendlyCdrThreat = aiBrain:GetThreatAtPosition(platoonPos, 1, true, 'Commander', aiBrain:GetArmyIndex())
+                if EntityCategoryContains(categories.COMMAND, target) and not aiBrain.ACUSupport.Supported then
+                    if platoonThreat + friendlyThreat < 30 then
+                        local retreatPos = RUtils.lerpy(targetPosition, platoonPos, {1, 50})
+                        self:MoveToLocation(retreatPos, false)
+                        Hero:SetCustomName('Hero Movement: Archaic Cdr Runaway Time')
+                        --LOG('Target is ACU retreating')
+                        --LOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
+                        --LOG('Platoon Threat = '..platoonThreat)
+                        WaitTicks(50)
+                        continue
+                    end
+                end
+                local attackUnits =  Hero
+                local attackUnitCount = 1
+                if attackUnits then
+                    self:Stop('Attack')
+                    --self:MoveToLocation(table.copy(targetPosition), false, 'Attack')
+                    local position = AIUtils.RandomLocation(target:GetPosition()[1],target:GetPosition()[3])
+                    --self:MoveToLocation(position, false, 'Attack')
+                    Hero:SetCustomName('Hero Movement: Searching')
+                    local returnDist=VDist2(position[1],position[3],platoonPos[1],platoonPos[3])
+                    local randpos = AIUtils.RandomLocation(platoonPos[1],platoonPos[3])
+                    local testpos = RUtils.lerpy(platoonPos,position,{returnDist,5+Hero.MaxWeaponRange})
+                    local searchpos = RUtils.lerpy(testpos,targetPosition,{returnDist,5+Hero.MaxWeaponRange})
+                    self:MoveToLocation(searchpos, false, 'Attack')
+                    friendlyThreat = aiBrain:GetThreatAtPosition(platoonPos, 2, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                    enemyThreat = aiBrain:GetThreatAtPosition(testpos, 1, true, 'AntiSurface')
+                    enemyCdrThreat = aiBrain:GetThreatAtPosition(testpos, 1, true, 'Commander')
+                    friendlyCdrThreat = aiBrain:GetThreatAtPosition(platoonPos, 1, true, 'Commander', aiBrain:GetArmyIndex())
+                    if (enemyCdrThreat + enemyThreat) > 3*Hero.MaxWeaponRange/18*(platoonThreat + 1.5*friendlyThreat + friendlyCdrThreat) then
+                        local returnPos = AIUtils.RandomLocation(homepos[1],homepos[3])
+                        LOG('hero attempt move returnhome')
+                        IssueClearCommands({Hero})
+                        Hero:SetCustomName('Hero Movement: CowardSearch')
+                        IssueMove({Hero},returnPos)
+                        WaitTicks(20)
+                        continue
+                    end
+                    WaitTicks(10)
+                end
+                WaitTicks(5)
+                SquadPosition = self:GetSquadPosition('Attack') or nil
+                if not SquadPosition then break end
+                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                if enemyUnitCount > 0 then
+                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.WALL)
+                    attackSquad = self:GetSquadUnits('Attack')
+                    IssueClearCommands(attackSquad)
+                    while PlatoonExists(aiBrain, self) do
+                        if target and not target.Dead then
+                            targetPosition = target:GetPosition()
+                            Hero.target=targetPosition
+                            platoonPos = Hero:GetPosition()
+                            Hero.pos=platoonPos
+                            targetDist = VDist2(platoonPos[1],platoonPos[3],targetPosition[1],targetPosition[3])
+                            friendlyThreat = aiBrain:GetThreatAtPosition(platoonPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                            enemyThreat = aiBrain:GetThreatAtPosition(targetPosition, 1, true, 'AntiSurface')
+                            enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPosition, 1, true, 'Commander')
+                            friendlyCdrThreat = aiBrain:GetThreatAtPosition(platoonPos, 1, true, 'Commander', aiBrain:GetArmyIndex())
+                            Hero.enemythreat=enemyThreat
+                            Hero.friendlythreat=friendlyThreat
+                                if Hero.Dead then break end
+                                if not Hero.MaxWeaponRange then
+                                    break
+                                end
+                                if enemyThreat > Hero.MaxWeaponRange/18*(platoonThreat + 1.5*friendlyThreat + friendlyCdrThreat*1.5) then
+                                    local returnPos = AIUtils.RandomLocation(homepos[1],homepos[3])
+                                    LOG('hero attempt move returnhome')
+                                    Hero:SetCustomName('Hero Movement: HighThreat')
+                                    IssueClearCommands({Hero})
+                                    IssueMove({Hero},returnPos)
+                                    WaitTicks(60)
+                                    break
+                                end
+                                if (enemyCdrThreat + enemyThreat) > Hero.MaxWeaponRange/18*(platoonThreat + 1.5*friendlyThreat + friendlyCdrThreat) then
+                                    local returnPos = AIUtils.RandomLocation(homepos[1],homepos[3])
+                                    LOG('hero attempt move returnhome')
+                                    Hero:SetCustomName('Hero Movement: Cdr HighThreat')
+                                    IssueClearCommands({Hero})
+                                    IssueMove({Hero},returnPos)
+                                    WaitTicks(60)
+                                    break
+                                end
+                                if Hero:GetHealthPercent()<0.7 and Hero.Sync.regen>0 then
+                                    local returnPos = AIUtils.RandomLocation(homepos[1],homepos[3])
+                                    LOG('hero attempt move returnhome')
+                                    Hero:SetCustomName('Hero Movement: LowHealthRetreat')
+                                    IssueClearCommands({Hero})
+                                    IssueMove({Hero},returnPos)
+                                    local returnDist=VDist2(returnPos[1],returnPos[3],platoonPos[1],platoonPos[3])
+                                    WaitTicks(math.floor(returnDist*3))
+                                    break
+                                end
+                                smartPos = RUtils.lerpy({platoonPos[1]+math.random(-2,2),platoonPos[2],platoonPos[3]+math.random(-2,2)},targetPosition,{targetDist,targetDist - Hero.MaxWeaponRange})
+                                smartPos = {smartPos[1]+math.random(-1,1),smartPos[2],smartPos[3]+math.random(-1,1)}
+                                local strafeshift=RUtils.LerpyRotate(platoonPos,smartPos,{4,math.random(-4,4)})
+                                -- check if the move position is new or target has moved
+                                if VDist2( smartPos[1], smartPos[3], platoonPos[1], platoonPos[3] ) > 1 then
+                                    -- clear move commands
+                                    IssueClearCommands({Hero})
+                                    WaitTicks(5)
+                                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                                    LOG('hero attempt move strafeshift')
+                                    LOG(repr(strafeshift))
+                                    Hero:SetCustomName('Hero Movement: Strafing')
+                                    self:MoveToLocation(strafeshift, false, 'Attack')
+                                    if target.Dead then break end
+                                    --IssueAttack({Hero}, target)
+                                -- in case we don't move, check if we can fire at the target
+                                else
+                                    if aiBrain:CheckBlockingTerrain(platoonPos, targetPosition, Hero.WeaponArc) then
+                                        --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                        LOG('hero attempt move CheckBlocking')
+                                        IssueMove({Hero}, targetPosition )
+                                        WaitTicks(10)
+                                    else
+                                        --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                    end
+                                end
+                        else
+                            break
+                        end
+                    WaitTicks(15)
+                    end
+                end
+            elseif not movingToScout then
+                movingToScout = true
+                self:Stop()
+                Hero:SetCustomName('Hero Movement: Boring Scouting')
+                for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, GetPlatoonPosition(self)) do
+                    if v[1] < 0 or v[3] < 0 or v[1] > ScenarioInfo.size[1] or v[3] > ScenarioInfo.size[2] then
+                        --LOG('*AI DEBUG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
+                    end
+                    self:MoveToLocation((v), false)
+                end
+            end
+            WaitTicks(15)
+        end
+    end,
+    HighlightHero = function(self)
+        LOG('starting expansion display')
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local platoonUnits = GetPlatoonUnits(self)
+        local Hero=platoonUnits[1]
+        while not Hero.dead and PlatoonExists(aiBrain, self) do
+                local pos1={0,0,0}
+                local pos2={0,0,0}
+                local pos3={0,0,0}
+                Hero.pos=Hero:GetPosition() 
+                pos1=Hero.pos
+                pos2=Hero.home
+                if not Hero.pos then
+                    WaitTicks(2)
+                    continue 
+                end
+                if Hero.target then
+                    pos3=Hero.target
+                    DrawLinePop(pos1,pos3,'ffFF1155')
+                end
+                DrawLinePop(pos1,pos2,'aa00aaFF')
+                if Hero.Threat then
+                    DrawCircle(pos1,Hero.Threat,'ffFF11FF')
+                end
+                if Hero.enemythreat and Hero.friendlythreat then
+                    DrawCircle(pos1,Hero.enemythreat/5,'ffFF0000')
+                    DrawCircle(pos1,Hero.friendlythreat/5,'ff0000FF')
+                end
+                if Hero.MaxWeaponRange then
+                    DrawCircle(pos1,Hero.MaxWeaponRange,'ffaa11FF')
+                end
+            WaitTicks(2)
         end
     end,
 }

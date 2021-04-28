@@ -1051,6 +1051,24 @@ BuilderGroup {
     BuilderGroupName = 'RNGAIR Hard Assist Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNGAIR Engineer Early Unfinished Structures',
+        PlatoonTemplate = 'T1EngineerFinishRNG',
+        Priority = 900,
+        DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE}},
+                { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            },
+        BuilderData = {
+            Assist = {
+                AssistLocation = 'LocationType',
+                BeingBuiltCategories = categories.STRUCTURE ,
+            },
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
         BuilderName = 'RNGAIR Engineer Assist Quantum Gateway',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 510,
@@ -1184,7 +1202,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2 + categories.MASSSTORAGE) }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2) }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1194,7 +1212,7 @@ BuilderGroup {
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 100,
                 AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2 + categories.MASSSTORAGE)},
+                BeingBuiltCategories = {categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2)},
                 Time = 60,
             },
         }
