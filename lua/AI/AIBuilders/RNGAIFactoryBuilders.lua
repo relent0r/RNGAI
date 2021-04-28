@@ -18,6 +18,15 @@ local ACUClosePriority = function(self, aiBrain)
     end
 end
 
+local LandThreat = function(self, aiBrain)
+
+    if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.Land then
+        return 850
+    else
+        return 0
+    end
+end
+
 local ActiveExpansion = function(self, aiBrain, builderManager)
     --LOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
@@ -46,7 +55,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -56,6 +65,29 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T2 MainBase',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                BuildStructures = {
+                    'T2SupportLandFactory',
                 },
             }
         }
@@ -71,7 +103,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 8, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
          },
         BuilderType = 'Any',
         BuilderData = {

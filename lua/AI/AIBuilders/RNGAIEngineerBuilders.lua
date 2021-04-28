@@ -40,10 +40,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Mass',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 750,
+        Priority = 650,
         BuilderConditions = {
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 80, -500, 0, 0, 'AntiSurface', 1}},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -51,10 +51,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Power',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 775,
+        Priority = 675,
         BuilderConditions = {
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 10.0 } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'Land',
@@ -74,11 +74,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 750, -- low factory priority
+        Priority = 650, -- low factory priority
         BuilderConditions = {
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
-            { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 1000, -1000, 0, 2, 'AntiSurface' } },
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.ENGINEER * categories.TECH1 } },
+            { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 200, -1000, 0, 2, 'AntiSurface' } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH1 } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
