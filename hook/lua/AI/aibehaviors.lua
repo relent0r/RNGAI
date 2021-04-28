@@ -145,6 +145,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     local weapon = {}
     local factionIndex = aiBrain:GetFactionIndex()
     local acuThreatLimit = 22
+    local enemyCdrThreat
+    local friendlyThreat
     for k, v in weapBPs do
         if v.Label == 'OverCharge' then
             overCharge = v
@@ -285,7 +287,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             overCharging = false
             if counter >= 5 or not target or target.Dead or Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) > maxRadius then
                 counter = 0
-                searchRadius = 30
+                local searchRadius = 30
                 repeat
                     searchRadius = searchRadius + 30
                     for k, v in priList do
@@ -443,7 +445,14 @@ function CDROverChargeRNG(aiBrain, cdr)
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
                 continueFighting = false
             end
-
+            -- If com is down to yellow then dont keep fighting
+            if (cdr:GetHealthPercent() < 0.40) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+                continueFighting = false
+                if not cdr.GunUpgradePresent then
+                    --LOG('ACU Low health and no gun upgrade, set required')
+                    cdr.GunUpgradeRequired = true
+                end
+            end
             if continueFighting == true then
                 local acuIMAPThreat = aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land') + (aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') / 2)
                 LOG('acuIMAPThreat '..acuIMAPThreat)
@@ -478,8 +487,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     --LOG('Enemy ACU is under HP limit we can draw')
-                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
+                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
                     continueFighting = false
                 end
             end

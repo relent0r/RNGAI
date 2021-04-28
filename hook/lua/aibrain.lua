@@ -116,7 +116,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BuilderHandles = {}
         -- this is for chps fav map, when the masspoint are created they are not put in the scenariocache
         self.crazyrush = false
-
+        --self.DisplayExpansionStuff = self:ForkThread(self.DisplayBaseMexAllocationRNG)
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -153,9 +153,9 @@ AIBrain = Class(RNGAIBrainClass) {
             SHIELD = 8,
             AIR = 9,
             NAVAL = 5,
-            LAND = 3,
+            LAND = 2,
             RADAR = 4,
-            MASSEXTRACTION = 2,
+            MASSEXTRACTION = 3,
             MASSFABRICATION = 7,
             NUKE = 6,
         }
@@ -2790,6 +2790,116 @@ AIBrain = Class(RNGAIBrainClass) {
                     GiveUnitToArmy(mex,chosenstart[1])
                 end
         return true
+    end,
+
+    DisplayBaseMexAllocationRNG = function(self)
+        LOG('starting expansion display')
+        WaitTicks(50)
+        local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
+        local Expands = AIUtils.AIGetMarkerLocations(self, 'Expansion Area')
+        local BigExpands = AIUtils.AIGetMarkerLocations(self, 'Large Expansion Area')
+        local players = {}
+        LOG('finished grabbing expands and starts')
+        for _,v in ArmyBrains do
+            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+            local astartX, astartZ = v:GetArmyStartPos()
+            local selfstart = {Position={astartX, 0, astartZ}}
+            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
+            selfstart.Position[2]=starts[1].Position[2]
+            table.insert(players,selfstart)
+        end
+        local MassMarker = {}
+        local expandstart = {}
+        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                    -- mass marker is too close to border, skip it.
+                    continue
+                end 
+                table.insert(MassMarker, v)
+            end
+        end
+        for _, v in Expands do
+            v.expandtype='expand'
+            v.mexnum=0
+            table.insert(expandstart,v)
+        end
+        for _, v in BigExpands do
+            v.expandtype='bigexpand'
+            v.mexnum=0
+            table.insert(expandstart,v)
+        end
+        for _, v in starts do
+            v.expandtype='start'
+            v.mexnum=0
+            table.insert(expandstart,v)
+        end
+        while self.Result ~= "defeat" do
+            for _, v in MassMarker do
+                local pos1={0,0,0}
+                local pos2={0,0,0}
+                table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+                local chosenstart = expandstart[1]
+                expandstart[1].mexnum=expandstart[1].mexnum+1
+                pos1=v.position
+                pos2=chosenstart.Position
+                DrawLinePop(pos1,pos2,'88FF0000')
+                if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
+                    pos2=expandstart[2].Position
+                    expandstart[2].mexnum=expandstart[2].mexnum+1
+                    DrawLinePop(pos1,pos2,'88FF0000')
+                end
+            end
+            for _, v in expandstart do
+                local pos1={0,0,0}
+                local pos2={0,0,0}
+                table.sort(players,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+                local chosenstart = players[1]
+                pos1=v.Position
+                pos2=chosenstart.Position
+                if v.expandtype=='start' then
+                    DrawLinePop(pos1,pos2,'ff0000FF')
+                    DrawCircle(pos1,5*v.mexnum,'ff0000FF')
+                elseif v.expandtype=='bigexpand' then
+                    DrawLinePop(pos1,pos2,'ff00FF00')
+                    DrawCircle(pos1,5*v.mexnum,'ff00FF00')
+                elseif v.expandtype=='expand' then
+                    DrawLinePop(pos1,pos2,'ffFF00FF')
+                    DrawCircle(pos1,5*v.mexnum,'ffFF0000')
+                end
+                if v.expandtype~='start' then
+                    table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+                    if VDist2(chosenstart.Position[1],chosenstart.Position[3],starts[1].Position[1],starts[1].Position[3])>3 then
+                        pos2=starts[1].Position
+                        if v.expandtype=='bigexpand' then
+                            DrawLinePop(pos1,pos2,'5f00FF00')
+                        elseif v.expandtype=='expand' then
+                            DrawLinePop(pos1,pos2,'5fFF00FF')
+                        end
+                        if VDist2(starts[2].Position[1],starts[2].Position[3],v.Position[1],v.Position[3])-VDist2(starts[1].Position[1],starts[1].Position[3],v.Position[1],v.Position[3])<5 then
+                            pos2=starts[2].Position
+                            if v.expandtype=='bigexpand' then
+                                DrawLinePop(pos1,pos2,'5f00FF00')
+                            elseif v.expandtype=='expand' then
+                                DrawLinePop(pos1,pos2,'5fFF00FF')
+                            end
+                        end
+                    end
+                end
+                if VDist2(players[2].Position[1],players[2].Position[3],v.Position[1],v.Position[3])-VDist2(players[1].Position[1],players[1].Position[3],v.Position[1],v.Position[3])<5 then
+                    pos2=players[2].Position
+                    if v.expandtype=='start' then
+                        DrawLinePop(pos1,pos2,'ff0000FF')
+                    elseif v.expandtype=='bigexpand' then
+                        DrawLinePop(pos1,pos2,'ff00FF00')
+                    elseif v.expandtype=='expand' then
+                        DrawLinePop(pos1,pos2,'ffFF00FF')
+                    end
+                end
+                v.mexnum=0
+            end
+            WaitTicks(2)
+        end
     end,
 --[[
     GetManagerCount = function(self, type)

@@ -378,33 +378,6 @@ BuilderGroup {
             }
         }
     },
-    Builder {
-        BuilderName = 'RNG T1 Mass Adjacency Excess',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION'}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', 'MASSEXTRACTION', 150, 'ueb1106' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                AdjacencyCategory = 'MASSEXTRACTION TECH3, MASSEXTRACTION TECH2',
-                AdjacencyDistance = 100,
-                BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'MassStorage',
-                }
-            }
-        }
-    },
 }
 
 BuilderGroup {
