@@ -1106,6 +1106,38 @@ BuilderGroup {
             LocationType = 'LocationType',
             },
     },
+    
+    Builder {
+        BuilderName = 'RNGAI Mass Strike Early',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI Mass Strike Small',                          -- Template Name. 
+        Priority = 800,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 350 } }, -- don't build after 5 minutes
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            SearchRadius = BaseMilitaryArea,
+            GetTargetsFromBase = true,
+            RequireTransport = false,
+            AggressiveMove = true,
+            LocationType = 'LocationType',
+            Defensive = true,
+            AttackEnemyStrength = 200,                              
+            TargetSearchPriorities = { 
+                categories.MASSEXTRACTION,
+            },
+            PrioritizedCategories = {   
+                categories.MASSEXTRACTION,
+                categories.EXPERIMENTAL * categories.AIR,
+                categories.MOBILE * categories.LAND,
+                categories.STRUCTURE,
+            },
+            UseFormation = 'None',
+        },
+    },
+    
     Builder {
         BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
