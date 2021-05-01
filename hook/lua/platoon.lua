@@ -4851,6 +4851,9 @@ Platoon = Class(RNGAIPlatoon) {
                         platoonCount = platoonCount - 1
                     else
                         totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
+                        if eng:IsIdleState() then
+                            eng:SetCustomName('In Assist Manager but idle')
+                        end
                     end
                 end
             end
@@ -4932,6 +4935,7 @@ Platoon = Class(RNGAIPlatoon) {
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
         WaitTicks(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() do
+            eng:SetCustomName('I am assisting')
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 eng.UnitBeingAssist = nil
                 break
@@ -4942,6 +4946,7 @@ Platoon = Class(RNGAIPlatoon) {
             if not aiBrain.EngineerAssistManagerActive then
                 self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
+            LOG('I am assisting with aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired being true :'..aiBrain.EngineerAssistManagerBuildPower..' > ' ..aiBrain.EngineerAssistManagerBuildPowerRequired)
             WaitTicks(50)
         end
         eng.UnitBeingAssist = nil
@@ -4950,6 +4955,7 @@ Platoon = Class(RNGAIPlatoon) {
     EngineerAssistRemoveRNG = function(self, aiBrain, eng)
         -- Removes an engineer from a platoon without disbanding it.
         if not eng.Dead then
+            eng:SetCustomName('I am being removed')
             eng.PlatoonHandle = nil
             eng.AssistSet = nil
             eng.AssistPlatoon = nil
@@ -4966,6 +4972,7 @@ Platoon = Class(RNGAIPlatoon) {
             LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
             aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
             if eng.BuilderManagerData.EngineerManager then
+                eng:SetCustomName('I should be in the ArmyPool')
                 eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
             end
             LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))

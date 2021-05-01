@@ -1110,15 +1110,15 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Strike Early',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI Mass Strike Small',                          -- Template Name. 
-        Priority = 800,                                                          -- Priority. 1000 is normal.
+        Priority = 810,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 350 } }, -- don't build after 5 minutes
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 400 } }, -- don't build after 5 minutes
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseMilitaryArea,
+            SearchRadius = BaseEnemyArea,
             GetTargetsFromBase = true,
             RequireTransport = false,
             AggressiveMove = true,
@@ -1126,6 +1126,7 @@ BuilderGroup {
             Defensive = true,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
             },
             PrioritizedCategories = {   
@@ -1348,7 +1349,8 @@ BuilderGroup {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE * categories.ANTIAIR,
                 categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE
+                categories.MASSEXTRACTION,
+                categories.ENGINEER,
             },
             PrioritizedCategories = {                                           -- Attack these targets.
                 categories.STRUCTURE * categories.ANTIAIR,
