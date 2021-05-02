@@ -791,7 +791,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80, 'FACTORY'}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',

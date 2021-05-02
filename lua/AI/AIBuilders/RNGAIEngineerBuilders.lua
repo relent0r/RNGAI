@@ -38,13 +38,13 @@ BuilderGroup {
         BuilderType = 'All',
     },]]
     Builder {
-        BuilderName = 'RNGAI Factory Engineer T1 Mass',
+        BuilderName = 'RNGAI Factory Engineer T1 MassRatioAvailable',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 650,
+        Priority = 750,
         BuilderConditions = {
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 80, -500, 0, 0, 'AntiSurface', 1}},
+            { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER * ( categories.TECH1 + categories.TECH2) - categories.COMMAND } },
         },
         BuilderType = 'All',
     },

@@ -441,14 +441,23 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('* AI-RNG: GuardMarkerRNG movement logic')
                     for i=1, pathLength-1 do
                         local direction = RUtils.GetDirectionInDegrees( prevpoint, path[i] )
-                        --LOG('* AI-RNG: GuardMarkerRNG direction returned is '..direction)
-                        --LOG('* AI-RNG: GuardMarkerRNG prevpoint is '..repr(prevpoint)..' path node is '..repr(path[i]))
                         if bAggroMove then
                             --self:AggressiveMoveToLocation(path[i])
                             IssueFormAggressiveMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
                         else
                             --self:MoveToLocation(path[i], false)
                             IssueFormMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
+                        end
+                        while PlatoonExists(aiBrain, self) do
+                            platoonPosition = GetPlatoonPosition(self)
+                            pathDistance = VDist2Sq(path[i][1], path[i][3], platoonPosition[1], platoonPosition[3])
+                            if pathDistance < 400 then
+                                -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                                self:Stop()
+                                break
+                            end
+                            --LOG('Waiting to reach target loop')
+                            WaitTicks(10)
                         end
                         prevpoint = table.copy(path[i])
                     end
@@ -4934,7 +4943,7 @@ Platoon = Class(RNGAIPlatoon) {
 
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
         WaitTicks(math.random(1, 20))
-        while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() do
+        while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
             eng:SetCustomName('I am assisting')
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 eng.UnitBeingAssist = nil
@@ -4959,7 +4968,6 @@ Platoon = Class(RNGAIPlatoon) {
             eng.PlatoonHandle = nil
             eng.AssistSet = nil
             eng.AssistPlatoon = nil
-            eng.UnitBeingAssist = nil
             eng.UnitBeingBuilt = nil
             eng.ReclaimInProgress = nil
             eng.CaptureInProgress = nil
@@ -4975,6 +4983,7 @@ Platoon = Class(RNGAIPlatoon) {
                 eng:SetCustomName('I should be in the ArmyPool')
                 eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
             end
+            eng.UnitBeingAssist = nil
             LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
         end
     end,

@@ -281,4 +281,10 @@ function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, thre
 
     return false
 end
-    
+
+function MassPointRatioAvailable(aiBrain)
+    if aiBrain.BrainIntel.SelfThreat.MassMarkerBuildable / (aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount) > 0 then
+        return true
+    end
+    return false
+end
