@@ -178,9 +178,14 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
     massTotal = massTotal + (unitCount * t3Drain)
 
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, '>') then
+        LOG('MassToFactoryRatio false')
+        LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        LOG('Factory massTotal : '..massTotal)
         return false
     end
-
+    LOG('MassToFactoryRatio true')
+    LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+    LOG('Factory massTotal : '..massTotal)
     return true
 end
 

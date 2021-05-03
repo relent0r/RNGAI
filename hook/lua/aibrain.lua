@@ -127,6 +127,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
         self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
+        self.EconomyMassProduction = 0
+        self.EconomyMassProductionThread = self:ForkThread(self.MassProductionRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
         self.EngineerAssistManagerEngineerCountDesired = 0
@@ -1155,7 +1157,7 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
-                if v.Platoon == platoon then
+                if table.equal(v.Platoon, platoon) then
                     continue
                 end
                 -- Add platoon to list desiring aid
@@ -1201,6 +1203,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.BaseMonitor.PlatoonAlertSounded = false
             end
             self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
+            LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
@@ -1309,6 +1312,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Mass Production '..self.EconomyMassProduction)
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -2003,18 +2007,31 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         return false
     end,
-
-    EcoExtractorUpgradeCheckRNG = function(self)
-    -- A straight shooter with upper management written all over him
+    
+    MassProductionRNG = function(self)
+    -- Provides mass production stats to avoid reclaim influencing MASSINCOME
         WaitTicks(Random(1,7))
         while true do
-            local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
-            self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1
-            self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2
+            local massIncome = 0
+            local massProduction = GetListOfUnits( self, categories.MASSPRODUCTION, false, false)
+            for _, v in massProduction do
+                massIncome = massIncome + v:GetProductionPerSecondMass()
+            end
+            self.EconomyMassProduction = massIncome
             WaitTicks(30)
         end
-
     end,
+
+    EcoExtractorUpgradeCheckRNG = function(self)
+        -- Keep track of how many extractors are currently upgrading
+            WaitTicks(Random(1,7))
+            while true do
+                local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
+                self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1
+                self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2
+                WaitTicks(30)
+            end
+        end,
 
     EcoMassManagerRNG = function(self)
     -- Watches for low power states

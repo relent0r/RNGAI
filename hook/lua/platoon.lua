@@ -4971,11 +4971,10 @@ Platoon = Class(RNGAIPlatoon) {
             eng.UnitBeingBuilt = nil
             eng.ReclaimInProgress = nil
             eng.CaptureInProgress = nil
+            eng.UnitBeingAssist = nil
             if eng:IsPaused() then
                 eng:SetPaused( false )
             end
-            IssueStop({eng})
-            IssueClearCommands({eng})
             aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
             LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
             aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
@@ -4983,7 +4982,8 @@ Platoon = Class(RNGAIPlatoon) {
                 eng:SetCustomName('I should be in the ArmyPool')
                 eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
             end
-            eng.UnitBeingAssist = nil
+            IssueStop({eng})
+            IssueClearCommands({eng})
             LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
         end
     end,
