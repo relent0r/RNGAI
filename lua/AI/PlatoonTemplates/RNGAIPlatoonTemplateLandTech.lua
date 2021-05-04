@@ -21,7 +21,7 @@ PlatoonTemplate {
     Name = 'RNGTECH Hero Sniper',
     Plan = 'HuntAIRNGHeroSniper', -- The platoon function to use.
     GlobalSquads = {
-        { categories.SNIPER * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305, -- Type of units.
+        { categories.SNIPER * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204, -- Type of units.
           1, -- Min number of units.
           1, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',

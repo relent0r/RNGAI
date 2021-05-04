@@ -65,10 +65,10 @@ BaseBuilderTemplate {
         'RNGAI Factory Builder Land',
         --'RNG Tech Factory Builder Land',
         'RNG Tech Support Factory Builder Land',
-        --'RNG Tech Land Factory Reclaimer',
+        'RNG Tech Land Factory Reclaimer',
 
         -- Land Factory Formers --
-        --'RNG Tech Land Upgrade Builders',
+        'RNG Tech Land Upgrade Builders',
         'RNGAI Land Upgrade Builders',
 
         -- Air Factory Builders --
@@ -141,7 +141,7 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 4.3,
+            T1Value = 4.4,
             T2Value = 11,
             T3Value = 19,
         },
