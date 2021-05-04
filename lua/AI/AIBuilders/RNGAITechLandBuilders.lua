@@ -175,7 +175,7 @@ BuilderGroup {
         InstanceCount = 50,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204} },
         },
         BuilderData = {
             UseFormation = 'None',
