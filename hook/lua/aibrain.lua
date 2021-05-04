@@ -329,15 +329,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StartReclaimTable = {}
         self.StartReclaimTaken = false
 
-        self.coinFlip = math.random(2)
-        if self.coinFlip == 1 then
-            self.UpgradeMode = 'Normal'
-        elseif self.coinFlip == 2 then
-            self.UpgradeMode = 'Caution'
-            self.UpgradeIssuedLimit = 1
-        end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
-        
+        self.UpgradeMode = 'Normal'
 
         -- ACU Support Data
         self.ACUSupport = {}
