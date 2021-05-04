@@ -132,40 +132,15 @@ local NoSmallFrys = function (self, aiBrain)
     end
 end
 BuilderGroup {
-    BuilderGroupName = 'RNG Tech InitialBuilder Small',
+    BuilderGroupName = 'RNG Tech T3 Land Builder Small',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNG Tech Factory Initial Queue 10km Small',
-        PlatoonTemplate = 'RNGTECHT1InitialAttackBuild10k',
-        Priority = 830, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 1000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 210 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNG Tech Factory Initial Queue 5km Small',
-        PlatoonTemplate = 'RNGTECHT1InitialAttackBuild10k',
-        Priority = 830, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 500 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 210 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNG Tech Factory Initial Expand Engineers',
-        PlatoonTemplate = 'RNGTECHEarlyExpandEngineers',
+        BuilderName = 'RNG Tech Factory Heavy T3 Land Queue',
+        PlatoonTemplate = 'RNGTECHT3LandAttackQueue',
         Priority = 840, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 1000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 60 } }, -- don't build after 2 minutes
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.FACTORY }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.TECH3 - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -179,13 +154,29 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNG Tech Hero T3',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGTECH Hero',                          -- Template Name. 
+        PlatoonTemplate = 'RNGTECH Hero T3',                          -- Template Name. 
         Priority = 1300,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'HighlightHero' },
-        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
+        --PlatoonAddPlans = { 'HighlightHero' },
+        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH3 - categories.ENGINEER - categories.EXPERIMENTAL } },        },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH3 - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            LocationType = 'LocationType',
+        },
+    },
+    Builder {
+        BuilderName = 'RNG Tech Hero Sniper',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGTECH Hero Sniper',                          -- Template Name. 
+        Priority = 1300,                                                          -- Priority. 1000 is normal.
+        --PlatoonAddPlans = { 'HighlightHero' },
+        InstanceCount = 50,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 } },
+        },
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
@@ -195,8 +186,24 @@ BuilderGroup {
         BuilderName = 'RNG Tech Early Hero T1',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGTECH Early Hero T1',                          -- Template Name. 
         Priority = 1200,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'HighlightHero' },
-        InstanceCount = 10,                                                      -- Number of platoons that will be formed.
+        --PlatoonAddPlans = { 'HighlightHero' },
+        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH1 - categories.ENGINEER } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            LocationType = 'LocationType',
+        },
+    },
+    Builder {
+        BuilderName = 'RNG Tech Arty Hero T1',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGTECH Arty Hero T1',                          -- Template Name. 
+        Priority = 1200,                                                          -- Priority. 1000 is normal.
+        --PlatoonAddPlans = { 'HighlightHero' },
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH1 - categories.ENGINEER } },
@@ -211,11 +218,12 @@ BuilderGroup {
         BuilderName = 'RNG Tech Early Hero T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGTECH Early Hero T2',                          -- Template Name. 
         Priority = 1200,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'HighlightHero' },        
-        InstanceCount = 12,                                                      -- Number of platoons that will be formed.
+        --PlatoonAddPlans = { 'HighlightHero' },        
+        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH2 - categories.ENGINEER } },        },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH2 - categories.ENGINEER } },
+        },
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',

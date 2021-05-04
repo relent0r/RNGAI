@@ -6,7 +6,7 @@
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Tech',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Rush',
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
@@ -35,8 +35,7 @@ BaseBuilderTemplate {
         'RNGAI Engineer Builder',
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Builders',
-        --'RNGAI Assist Builders',
-        --'RNGAIR Hard Assist Builders',
+        'RNGAI Assist Builders',
         'RNGAI Energy Production Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
         'RNGAI Assist Manager BuilderGroup',
@@ -49,9 +48,6 @@ BaseBuilderTemplate {
         'RNGAI Land AA 2',
         'RNGAI Reaction Tanks',
         'RNGAI T3 AttackLandBuilder Small',
-        --'RNG Tech InitialBuilder Small',
-        'RNG Tech T3 Land Builder Small',
-        
 
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
@@ -59,16 +55,11 @@ BaseBuilderTemplate {
         'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
-        'RNG Tech Hero FormBuilders',
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land',
-        --'RNG Tech Factory Builder Land',
-        'RNG Tech Support Factory Builder Land',
-        --'RNG Tech Land Factory Reclaimer',
 
         -- Land Factory Formers --
-        --'RNG Tech Land Upgrade Builders',
         'RNGAI Land Upgrade Builders',
 
         -- Air Factory Builders --
@@ -135,13 +126,13 @@ BaseBuilderTemplate {
             SCU = 6,
         },
         FactoryCount = {
-            Land = 15,
+            Land = 25,
             Air = 5,
             Sea = 1,
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 4.3,
+            T1Value = 3.7,
             T2Value = 11,
             T3Value = 19,
         },
@@ -153,10 +144,10 @@ BaseBuilderTemplate {
     FirstBaseFunction = function(aiBrain)
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if personality == 'RNGTech' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGTechcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
+        if personality == 'RNGRush' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGRushcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
-            return 1000, 'RNGTech'
+            return 1000, 'RNGRush'
         end
         return -1
     end,
