@@ -4978,6 +4978,7 @@ Platoon = Class(RNGAIPlatoon) {
             aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
             LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
             aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
+            WaitTicks(2)
             if eng.BuilderManagerData.EngineerManager then
                 eng:SetCustomName('I should be in the ArmyPool')
                 eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
