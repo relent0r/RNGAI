@@ -14,6 +14,7 @@ local GiveResource = moho.aibrain_methods.GiveResource
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
 local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
@@ -128,6 +129,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
         self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
+        self.EconomyMassProduction = 0
+        self.EconomyMassProductionThread = self:ForkThread(self.MassProductionRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
         self.EngineerAssistManagerEngineerCountDesired = 0
@@ -275,6 +278,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Extractor = 0,
             ExtractorCount = 0,
             MassMarker = 0,
+            MassMarkerBuildable = 0,
             AllyExtractorCount = 0,
             AllyExtractor = 0,
             AllyLandThreat = 0,
@@ -319,15 +323,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StartReclaimTable = {}
         self.StartReclaimTaken = false
 
-        self.coinFlip = math.random(2)
-        if self.coinFlip == 1 then
-            self.UpgradeMode = 'Normal'
-        elseif self.coinFlip == 2 then
-            self.UpgradeMode = 'Caution'
-            self.UpgradeIssuedLimit = 1
-        end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
-        
+        self.UpgradeMode = 'Normal'
 
         -- ACU Support Data
         self.ACUSupport = {}
@@ -369,7 +365,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
             end
         end]]
-        self:CalculateMassMarkersRNG()
+        
         self:IMAPConfigurationRNG()
         -- Begin the base monitor process
 
@@ -389,6 +385,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EnemyChokePointTestRNG)
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
+        self:CalculateMassMarkersRNG()
     end,
 
     EconomyMonitorRNG = function(self)
@@ -459,17 +456,25 @@ AIBrain = Class(RNGAIBrainClass) {
     
     CalculateMassMarkersRNG = function(self)
         local MassMarker = {}
+        local massMarkerBuildable = 0
+        local markerCount = 0
         for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
                     continue
                 end 
+                if CanBuildStructureAt(self, 'ueb1103', v.position) then
+                    massMarkerBuildable = massMarkerBuildable + 1
+                end
+                markerCount = markerCount + 1
                 table.insert(MassMarker, v)
             end
         end
-        local markerCount = table.getn(MassMarker)
         self.BrainIntel.SelfThreat.MassMarker = markerCount
+        self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
+        LOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
+        LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable '..self.BrainIntel.SelfThreat.MassMarkerBuildable)
     end,
 
     BaseMonitorThreadRNG = function(self)
@@ -1108,7 +1113,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local upgradeSpec = {}
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.85
+                upgradeSpec.MassLowTrigger = 0.80
                 upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1117,7 +1122,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 10
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.95
+                upgradeSpec.MassLowTrigger = 0.90
                 upgradeSpec.EnergyLowTrigger = 1.2
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1126,7 +1131,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 5
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 1.1
+                upgradeSpec.MassLowTrigger = 1.0
                 upgradeSpec.EnergyLowTrigger = 1.2
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1153,7 +1158,7 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
-                if v.Platoon == platoon then
+                if table.equal(v.Platoon, platoon) then
                     continue
                 end
                 -- Add platoon to list desiring aid
@@ -1199,6 +1204,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.BaseMonitor.PlatoonAlertSounded = false
             end
             self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
+            LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
@@ -1307,6 +1313,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Mass Production '..self.EconomyMassProduction)
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -1320,6 +1327,11 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 self:TacticalThreatAnalysisRNG(ALLBPS)
             end
+            self:CalculateMassMarkersRNG()
+            LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
+            LOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
+            LOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)
+            LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable)
             WaitTicks(600)
         end
     end,
@@ -2010,18 +2022,31 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         return false
     end,
-
-    EcoExtractorUpgradeCheckRNG = function(self)
-    -- A straight shooter with upper management written all over him
+    
+    MassProductionRNG = function(self)
+    -- Provides mass production stats to avoid reclaim influencing MASSINCOME
         WaitTicks(Random(1,7))
         while true do
-            local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
-            self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1
-            self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2
+            local massIncome = 0
+            local massProduction = GetListOfUnits( self, categories.MASSPRODUCTION, false, false)
+            for _, v in massProduction do
+                massIncome = massIncome + v:GetProductionPerSecondMass()
+            end
+            self.EconomyMassProduction = massIncome
             WaitTicks(30)
         end
-
     end,
+
+    EcoExtractorUpgradeCheckRNG = function(self)
+        -- Keep track of how many extractors are currently upgrading
+            WaitTicks(Random(1,7))
+            while true do
+                local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
+                self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1
+                self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2
+                WaitTicks(30)
+            end
+        end,
 
     EcoMassManagerRNG = function(self)
     -- Watches for low power states
@@ -2461,7 +2486,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.MASSSTORAGE + categories.ENERGYSTORAGE) , v.UnitBeingBuilt) then
+                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end

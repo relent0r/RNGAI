@@ -91,6 +91,16 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI Mass Strike Small',
+    Plan = 'StrikeForceAIRNG',    
+    GlobalSquads = {
+        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 3, 'attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'attack', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1 Guard Marker Medium',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
@@ -380,16 +390,14 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             --{ 'uel0106', 1, 2, 'attack', 'None' },      -- Labs
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'uel0201', 1, 4, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+            { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'uel0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
-            { 'uel0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
          },
         Aeon = {
             { 'ual0105', 1, 3, 'support', 'None' },     -- Engineer
@@ -397,16 +405,14 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             --{ 'ual0106', 1, 2, 'attack', 'None' },       -- Labs
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+            { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
-            { 'ual0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
             { 'url0105', 1, 3, 'support', 'None' },     -- Engineer
@@ -414,16 +420,14 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             --{ 'url0106', 1, 2, 'attack', 'None' },      -- Labs
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
+            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
+            { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
+            { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'url0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
-            { 'url0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
             { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
@@ -431,14 +435,11 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+            { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
-            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
-            { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
         },
     }
 }
@@ -448,7 +449,8 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
         UEF = {
             { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'uel0106', 1, 2, 'attack', 'None' },      -- Labs
+            --{ 'uel0106', 1, 2, 'attack', 'None' },      -- Labs
+            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'uel0201', 1, 4, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
@@ -465,7 +467,8 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
         Aeon = {
             { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0106', 1, 2, 'attack', 'None' },       -- Labs
+            --{ 'ual0106', 1, 2, 'attack', 'None' },       -- Labs
+            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
@@ -482,7 +485,8 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
         Cybran = {
             { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'url0106', 1, 2, 'attack', 'None' },      -- Labs
+            --{ 'url0106', 1, 2, 'attack', 'None' },      -- Labs
+            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
@@ -492,7 +496,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0104', 1, 2, 'Guard', 'none' },		-- AA
             { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
-            { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
+            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
             { 'xsl0105', 1, 2, 'support', 'None' },     -- Engineer
@@ -503,11 +507,11 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
             { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
-            { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
-            { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
         },
     }
 }

@@ -131,8 +131,8 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 4,
-            T2Value = 11,
+            T1Value = 4.50,
+            T2Value = 12,
             T3Value = 19,
         },
 

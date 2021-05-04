@@ -171,7 +171,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND *  (categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
 
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -188,7 +188,7 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -234,7 +234,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -265,7 +265,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -1106,6 +1106,39 @@ BuilderGroup {
             LocationType = 'LocationType',
             },
     },
+    
+    Builder {
+        BuilderName = 'RNGAI Mass Strike Early',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI Mass Strike Small',                          -- Template Name. 
+        Priority = 810,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 400 } }, -- don't build after 5 minutes
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            GetTargetsFromBase = true,
+            RequireTransport = false,
+            AggressiveMove = true,
+            LocationType = 'LocationType',
+            Defensive = true,
+            AttackEnemyStrength = 200,                              
+            TargetSearchPriorities = { 
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+            },
+            PrioritizedCategories = {   
+                categories.MASSEXTRACTION,
+                categories.EXPERIMENTAL * categories.AIR,
+                categories.MOBILE * categories.LAND,
+                categories.STRUCTURE,
+            },
+            UseFormation = 'None',
+        },
+    },
+    
     Builder {
         BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
@@ -1316,7 +1349,8 @@ BuilderGroup {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE * categories.ANTIAIR,
                 categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE
+                categories.MASSEXTRACTION,
+                categories.ENGINEER,
             },
             PrioritizedCategories = {                                           -- Attack these targets.
                 categories.STRUCTURE * categories.ANTIAIR,
