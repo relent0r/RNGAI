@@ -16,6 +16,10 @@ AI = {
             key = 'RNGTech',
             name = "<LOC RNG_0003>AI: RNG Tech",
         },
+		{
+            key = 'RNGRush',
+            name = "<LOC RNG_0004>AI: RNG Rush",
+        },
         --{
         --   key = 'RNGStandardnull',
         --    name = "<LOC RNG_0001>AI: RNG Standardnull",
@@ -25,15 +29,19 @@ AI = {
     CheatAIList = {
         {
             key = 'RNGStandardcheat',
-            name = "<LOC RNG_0004>AIx: RNG Standard",
+            name = "<LOC RNG_0005>AIx: RNG Standard",
         },
         {
             key = 'RNGStandardAircheat',
-            name = "<LOC RNG_0005>AIx: RNG Standard Air",
+            name = "<LOC RNG_0006>AIx: RNG Standard Air",
         },
         {
             key = 'RNGTechcheat',
-            name = "<LOC RNG_0006>AIx: RNG Tech",
+            name = "<LOC RNG_0007>AIx: RNG Tech",
+        },
+		{
+            key = 'RNGRushcheat',
+            name = "<LOC RNG_0008>AIx: RNG Rush",
         },
         --{
         --   key = 'RNGStandardnullcheat',

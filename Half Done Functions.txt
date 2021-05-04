@@ -1,0 +1,506 @@
+    ExpansionDirectorRNG = function(self)
+        if not self.directorpos then
+            self.directorpos={}
+        end
+        WaitTicks(600)
+        while self.Result ~= "defeat" do
+            LOG('starting director')
+            local strategytable={}
+            local stagingpoints={}
+            local home=self.locationstart
+            local homebase
+            if not self.emptyBases or not self.enemyBases or not self.teamBases then
+                WaitTicks(20) 
+                continue 
+            end
+            if self.emptyBase==nil or self.teamBase==nil then
+                WaitTicks(20) 
+                continue
+            end
+            if self.emptyBase==0 or self.teamBase==0 then
+                LOG('EXPANDDIRECTOR - NO TEAMBASES OR NO EMPTYBASES')
+                WaitTicks(20) 
+                self.directorpos.expand=nil
+                continue
+            end
+            for i,v in self.teamBases do
+                table.insert(stagingpoints,v)
+                LOG('EXPANDDIRECTOR - setting up stagingpoints '..repr(i)..' at '..repr(v.Position))
+                if self.grabdistRNG(home,v.Position)<5 then
+                    homebase=v
+                end
+            end
+            LOG('EXPANDDIRECTOR - STARTING SORT')
+            for _,v in self.emptyBases do
+                table.sort(stagingpoints,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+                local dist=VDist2(stagingpoints[1].Position[1],stagingpoints[1].Position[3],v.Position[1],v.Position[3])
+                local hdist=VDist2(home[1],home[3],v.Position[1],v.Position[3])
+                local expand={marker=v,dist=dist,staging=stagingpoints[1].Position,stagingName=stagingpoints[1].Name,hdist=hdist,danger=v.dangerlevel}
+                table.insert(strategytable,expand)
+            end
+            if strategytable[1].marker.Position==nil then
+                WaitTicks(30) 
+                self.directorpos.expand=nil
+                continue 
+            end
+            table.sort(strategytable,function(k1,k2) return k1.hdist*k1.dist/k1.marker.relevance/k1.danger*k1.hdist<k2.hdist*k2.dist/k2.marker.relevance/k2.danger*k2.hdist end)
+            LOG('EXPANDDIRECTOR - closest teambase to marker '..repr(strategytable[1].marker.Name)..' at '..repr(strategytable[1].marker.Position)..' is '..repr(strategytable[1].stagingName)..' at '..repr(strategytable[1].staging))
+            local chosen=strategytable[1]
+            local pos3=homebase
+            local pts2={}
+            local pts3={}
+            --self.directorpos.expand=chosen.marker.Position
+            if chosen.marker.dangerlevel and chosen.marker.dangerlevel>0 then
+                self.directorpos.expand={Position=chosen.marker.Position,Weight=1/chosen.marker.dangerlevel*chosen.marker.relevance/chosen.dist}
+            else
+                self.directorpos.expand={Position=chosen.marker.Position,Weight=1/chosen.marker.relevance/chosen.dist}
+            end
+            local chain=self:PointsFromChainRNG(self:BuildMarkerChainRNG(pos3,chosen.marker,'expand'))
+            --local chain={pts1={pos3.Position},pts2={chosen.marker.Position}}
+            pts2=chain.pts1
+            pts3=chain.pts2
+            for i=0,10 do
+                for k=0,10 do
+                    for a=-1,1,1 do
+                        for b=-1,1,1 do
+                            for j,v in pts2 do
+                                DrawLinePop({pts2[j][1]+a,pts2[j][2],pts2[j][3]+b},{pts3[j][1]+0.5*a,pts3[j][2],pts3[j][3]+0.5*b},'ffD8FF00')
+                                if (i+k+a+b+j) - math.floor((i+k+a+b+j)/5)*5==0 then
+                                    WaitTicks(1)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            WaitTicks(10)
+        end
+    end,
+    PanicDirectorRNG = function(self)
+        WaitTicks(600)
+        while self.Result ~= "defeat" do
+            LOG('starting panic director')
+            local strategytable={}
+            local home=self.locationstart
+            local emergencyexit=0
+            local homebase
+            if not self.emptyBases or not self.enemyBases or not self.teamBases then
+                WaitTicks(20) 
+                continue 
+            end
+            if self.teamBase==nil then
+                WaitTicks(20) 
+                continue
+            end
+            if self.teamBase==0 then
+                LOG('PANICDIRECTOR - NO TEAMBASES OR NO ENEMYBASES')
+                WaitTicks(20) 
+                continue
+            end
+            LOG('PANICDIRECTOR - setting up strategytable')
+            for i,v in self.teamBases do
+                if not v.dangerlevel or not v.econlevel then emergencyexit=1 break end
+                if self.grabdistRNG(home,v.Position)<5 then
+                    homebase=v
+                end
+                if v.dangerlevel<5 then continue end
+                local dist=VDist2(home[1],home[3],v.Position[1],v.Position[3])
+                local expand={marker=v,dist=dist,danger=v.dangerlevel,econ=v.econlevel}
+                table.insert(strategytable,expand)
+            end
+            if emergencyexit==1 then 
+                WaitTicks(30) 
+                self.directorpos.defend=nil
+                continue  
+            end
+            if strategytable[1].marker.Position==nil then
+                WaitTicks(30) 
+                self.directorpos.defend=nil
+                continue 
+            end
+            LOG('PANICDIRECTOR - STARTING SORT')
+            table.sort(strategytable,function(k1,k2) return k1.dist/k1.marker.relevance/k1.danger/k1.econ<k2.dist/k2.marker.relevance/k2.danger/k2.econ end)
+            LOG('PANICDIRECTOR - Priority Danger is '..repr(strategytable[1].marker.Name)..' at '..repr(strategytable[1].marker.Position))
+            local chosen=strategytable[1]
+            local pos3=homebase
+            local pts2={}
+            local pts3={}
+            self.directorpos.defend={Position=chosen.marker.Position,Weight=chosen.marker.econlevel*chosen.marker.dangerlevel*chosen.marker.relevance/chosen.dist}
+            local chain=self:PointsFromChainRNG(self:BuildMarkerChainRNG(pos3,chosen.marker,'team'))
+            --local chain={pts1={pos3.Position},pts2={chosen.marker.Position}}
+            pts2=chain.pts1
+            pts3=chain.pts2
+            for i=0,10 do
+                for k=0,10 do
+                    for a=-1,1,1 do
+                        for b=-1,1,1 do
+                            for j,v in pts2 do
+                                DrawLinePop({pts2[j][1]+a,pts2[j][2],pts2[j][3]+b},{pts3[j][1]+0.5*a,pts3[j][2],pts3[j][3]+0.5*b},'ffD67FFF')
+                                if (i+k+a+b+j) - math.floor((i+k+a+b+j)/5)*5==0 then
+                                    WaitTicks(1)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            WaitTicks(10)
+        end
+    end,
+    AttackDirectorRNG = function(self)
+        WaitTicks(600)
+        while self.Result ~= "defeat" do
+            LOG('starting director')
+            local strategytable={}
+            local stagingpoints={}
+            local home=self.locationstart
+            local homebase
+            if not self.enemyBases or not self.teamBases then
+                WaitTicks(20)
+                continue
+            end
+            if self.enemyBase==nil or self.teamBase==nil then
+                WaitTicks(20)
+                continue
+            end
+            if self.teamBase==0 or self.enemyBase==0 then
+                LOG('ATTACKDIRECTOR - NO TEAMBASES OR NO ENEMYBASES')
+                WaitTicks(20)
+                continue
+            end
+            for i,v in self.teamBases do
+                table.insert(stagingpoints,v)
+                LOG('ATTACKDIRECTOR - setting up stagingpoints '..repr(i)..' at '..repr(v.Position))
+                if self.grabdistRNG(home,v.Position)<5 then
+                    homebase=v
+                end
+            end
+            LOG('ATTACKDIRECTOR - STARTING SORT')
+            for _,v in self.enemyBases do
+                if not v.dangerlevel or not v.econlevel or not v or not v.Position then continue end
+                table.sort(stagingpoints,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+                local dist=VDist2(stagingpoints[1].Position[1],stagingpoints[1].Position[3],v.Position[1],v.Position[3])
+                local hdist=VDist2(home[1],home[3],v.Position[1],v.Position[3])
+                local expand={marker=v,dist=dist,danger=v.dangerlevel,hdist=hdist,econ=v.econlevel}
+                table.insert(strategytable,expand)
+            end
+            if strategytable[1].marker.Position==nil then
+                WaitTicks(30) 
+                self.directorpos.attack=nil
+                continue 
+            end
+            table.sort(strategytable,function(k1,k2) return k1.hdist*k1.dist/k1.marker.relevance*k1.danger/k1.econ<k2.hdist*k2.dist/k2.marker.relevance*k2.danger/k2.econ end)
+            LOG('ATTACKDIRECTOR - closest teambase to marker '..repr(strategytable[1].marker.Name)..' at '..repr(strategytable[1].marker.Position)..' is '..repr(strategytable[1].stagingName)..' at '..repr(strategytable[1].staging))
+            local chosen=strategytable[1]
+            local pos3=homebase
+            local pts2={}
+            local pts3={}
+            --self.directorpos.attack=chosen.marker.Position
+            self.directorpos.attack={Position=chosen.marker.Position,Weight=chosen.marker.econlevel/chosen.marker.dangerlevel*chosen.marker.relevance/chosen.dist}
+            local chain=self:PointsFromChainRNG(self:BuildMarkerChainRNG(pos3,chosen.marker,'enemy'))
+            --local chain={pts1={pos3.Position},pts2={chosen.marker.Position}}
+            pts2=chain.pts1
+            pts3=chain.pts2
+            for i=0,10 do
+                for k=0,10 do
+                    for a=-1,1,1 do
+                        for b=-1,1,1 do
+                            for j,v in pts2 do
+                                DrawLinePop({pts2[j][1]+a,pts2[j][2],pts2[j][3]+b},{pts3[j][1]+0.5*a,pts3[j][2],pts3[j][3]+0.5*b},'ff00FF3F')
+                                if (i+k+a+b+j) - math.floor((i+k+a+b+j)/5)*5==0 then
+                                    WaitTicks(1)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            WaitTicks(10)
+        end
+    end,
+    BuildMarkerChainRNG = function(self,start,finish,allegiance)
+            LOG('Building Marker Chain')
+            local chosen=finish
+            local strategytable={}
+            local enemy=false
+            if allegiance=='enemy' or allegiance=='team' or allegiance=='expand' then
+                for i,v in self.teamBases do
+                    if v.Name==start.Name then continue end
+                    v.pathpenalty=0.9
+                    table.insert(strategytable,{v,enemy=false})
+                end
+            end
+            if allegiance=='enemy' or allegiance=='expand' then
+                for i,v in self.emptyBases do
+                    if v.Name==start.Name then continue end
+                    v.pathpenalty=1
+                    table.insert(strategytable,{v,enemy=false})
+                end
+                for i,v in self.enemyBases do
+                    if v.Name==start.Name then continue end
+                    v.pathpenalty=1.5
+                    table.insert(strategytable,{v,enemy=true})
+                end
+            end
+            local otherBases=table.copy(strategytable)
+            if strategytable[1].Position==nil or start.Position==nil or finish.Position==nil then return end
+            local pathingchain={}
+            local current=start
+            table.insert(pathingchain,{marker=current,dist=0})
+            while current.Name~=chosen.Name do
+                table.sort(otherBases,function(k1,k2) return (k1.pathpenalty*self.grabdistsqRNG(k1.Position,current.Position)+self.grabdistsqRNG(k1.Position,chosen.Position))<(k2.pathpenalty*self.grabdistsqRNG(k2.Position,current.Position)+self.grabdistsqRNG(k2.Position,chosen.Position)) end)
+                local dist=VDist2(otherBases[1].Position[1],otherBases[1].Position[3],current.Position[1],current.Position[3])
+                local expand={marker=otherBases[1],dist=dist}
+                table.insert(pathingchain,expand)
+                current=otherBases[1]
+                if current.enemy then enemy=true end
+                table.remove(otherBases,1)
+            end
+            local dist=0
+            for _,v in pathingchain do
+                dist=dist+v.dist
+            end
+            LOG('pathingchain from '..repr(start.Name)..' to '..repr(finish.Name)..' is '..repr(pathingchain))
+            return pathingchain
+    end,
+    PointsFromChainRNG = function(self,markers)
+        local pts1={}
+        local pts2={}
+        local n = table.getn(markers)
+        for i,v in markers do
+            if i<n then
+                table.insert(pts1,v.marker.Position)
+            end
+            if i>1 then
+                table.insert(pts2,v.marker.Position)
+            end
+        end
+        local pts3={pts1=pts1,pts2=pts2}
+        LOG('markerchainpts='..repr(pts1))
+        return pts3
+    end,
+    grabdistsqRNG = function(pos1,pos2)
+        return VDist2Sq(pos1[1],pos1[3],pos2[1],pos2[3])
+    end,
+    grabdistRNG = function(pos1,pos2)
+        return VDist2(pos1[1],pos1[3],pos2[1],pos2[3])
+    end,
+    --PLATOON
+    RushForceRNG = function(self)
+        LOG('RUSHFORCE BEGINNING CODE')
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local platoonUnits = GetPlatoonUnits(self)
+        local targetpos
+        local data = self.PlatoonData
+        local categoryList = {}
+        local atkPri = {}
+        local stance = nil
+        if data.PrioritizedCategories then
+            for k,v in data.PrioritizedCategories do
+                table.insert(atkPri, v)
+                table.insert(categoryList, ParseEntityCategory(v))
+            end
+        end
+        table.insert(atkPri, 'ALLUNITS')
+        table.insert(categoryList, categories.ALLUNITS)
+        self:SetPrioritizedTargetList('Attack', categoryList)
+        local target
+        local blip = false
+        local maxRadius = data.SearchRadius or 50
+        local movingToScout = false
+        if platoonUnits > 0 then
+            for _,Hero in platoonUnits do
+                if not Hero.Dead then
+                    for _, weapon in Hero:GetBlueprint().Weapon or {} do
+                        -- unit can have MaxWeaponRange entry from the last platoon
+                        if not Hero.MaxWeaponRange or weapon.MaxRadius > Hero.MaxWeaponRange then
+                            -- save the weaponrange 
+                            Hero.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
+                            -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
+                            if weapon.BallisticArc == 'RULEUBA_LowArc' then
+                                Hero.WeaponArc = 'low'
+                            elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
+                                Hero.WeaponArc = 'high'
+                            else
+                                Hero.WeaponArc = 'none'
+                            end
+                        end
+                    end
+                    if Hero:TestToggleCaps('RULEUTC_StealthToggle') then
+                        Hero:SetScriptBit('RULEUTC_StealthToggle', false)
+                    end
+                    if Hero:TestToggleCaps('RULEUTC_CloakToggle') then
+                        Hero:SetScriptBit('RULEUTC_CloakToggle', false)
+                    end
+                    -- prevent units from reclaiming while attack moving
+                    Hero:RemoveCommandCap('RULEUCC_Reclaim')
+                    Hero:RemoveCommandCap('RULEUCC_Repair')
+                    Hero.smartPos = {0,0,0}
+                    if not Hero.MaxWeaponRange then
+                        WARN('Scanning: unit ['..repr(Hero.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                    end
+                end
+            end
+    end
+        while aiBrain:PlatoonExists(self) do
+            platoonUnits = GetPlatoonUnits(self)
+            --[[if stance then
+                if stance=='defend' and not aiBrain.directorpos.defend or aiBrain.grabdistRNG(targetpos,aiBrain.directorpos.defend.Position)<10 then
+                    stance=nil
+                elseif stance=='expand' and not aiBrain.directorpos.expand or aiBrain.grabdistRNG(targetpos,aiBrain.directorpos.expand.Position)<10 then
+                    stance=nil
+                elseif stance=='attack' and not aiBrain.directorpos.attack or aiBrain.grabdistRNG(targetpos,aiBrain.directorpos.defend.Position)<10 then
+                    stance=nil
+                end
+            else]]
+                LOG('RUSHFORCE TARGETPOS SELECTION')
+                targetpos=nil
+                local directorpriority={}
+                --[[local probtotal=0
+                local defendn=0
+                local expandn=0
+                local attackn=0]]
+                if aiBrain.directorpos.defend then
+                    table.insert(directorpriority,{math.ceil(math.abs(aiBrain.directorpos.defend.Weight)*2000000),director='defend'})
+                end
+                if aiBrain.directorpos.expand then
+                    table.insert(directorpriority,{math.ceil(math.abs(aiBrain.directorpos.expand.Weight)*1000000),director='expand'})
+                end
+                if aiBrain.directorpos.attack then
+                    table.insert(directorpriority,{math.ceil(math.abs(aiBrain.directorpos.attack.Weight)*1200000),director='attack'})
+                end
+                table.sort(directorpriority,function(k1,k2) return k1[1]>k2[1] end)
+                local choice=directorpriority[1]
+                LOG('RUSHFORCE priorities:'..repr(directorpriority))
+                --[[local randn=math.random(probtotal)
+                LOG('RUSHFORCE randn:'..repr(randn))
+                if randn<=defendn then
+                    targetpos=aiBrain.directorpos.defend.Position
+                    stance = 'defend'
+                    LOG('RUSHFORCE selected DEFEND')
+                elseif randn<=defendn+expandn then
+                    targetpos=aiBrain.directorpos.expand.Position
+                    stance = 'expand'
+                    LOG('RUSHFORCE selected EXPAND')
+                elseif randn<=defendn+expandn+attackn then
+                    targetpos=aiBrain.directorpos.attack.Position
+                    stance='attack'
+                    LOG('RUSHFORCE selected ATTACK')
+                end]]
+                if aiBrain.directorpos.defend and choice.director=='defend' then
+                    targetpos=aiBrain.directorpos.defend.Position
+                    stance = 'defend'
+                    LOG('RUSHFORCE selected DEFEND')
+                elseif aiBrain.directorpos.attack and choice.director=='attack' then
+                    targetpos=aiBrain.directorpos.attack.Position
+                    stance='attack'
+                    LOG('RUSHFORCE selected ATTACK')
+                elseif aiBrain.directorpos.expand and choice.director=='expand' then
+                    targetpos=aiBrain.directorpos.expand.Position
+                    stance = 'expand'
+                    LOG('RUSHFORCE selected EXPAND')
+                else 
+                    targetpos=nil
+                    stance=nil
+                    LOG('no director target!')
+                end
+            --end
+                if not target or target.Dead or target and aiBrain.grabdistRNG(self:GetPlatoonPosition(),target:GetPosition())>100 then
+                    for _,v in platoonUnits do
+                        if v.Dead then continue end
+                        v:SetCustomName('no target')
+                    end
+                    target=nil
+                    local mult = { 1,3,5 }
+                    for _,i in mult do
+                        for _,v in ArmyBrains do
+                            if not IsEnemy(armyIndex,v:GetArmyIndex()) or v.Result == "defeat" then continue end
+                            target = AIUtils.AIFindBrainTargetInRange(aiBrain, self, 'Attack', 20*i, atkPri, v)
+                            if target then
+                                break
+                            end
+                        end
+                        if target then
+                            break
+                        end
+                    end
+                end
+                if targetpos then
+                    for _,v in platoonUnits do
+                        if v.Dead then continue end
+                        if aiBrain.grabdistRNG(v:GetPosition(),targetpos)>30 then
+                            v:SetCustomName('onroute')
+                            if not data.UseMoveOrder then
+                                IssueClearCommands({v})
+                                IssueAggressiveMove({v},AIUtils.RandomLocation(targetpos[1],targetpos[3]))
+                                WaitTicks(1)
+                            else
+                                IssueClearCommands({v})
+                                IssueMove({v},AIUtils.RandomLocation(targetpos[1],targetpos[3]))
+                                WaitTicks(1)
+                            end
+                        else
+                            local tdist=aiBrain.grabdistRNG(v:GetPosition(),targetpos)
+                            v:SetCustomName('combat')
+                            if target then
+                                local tdist=aiBrain.grabdistRNG(v:GetPosition(),target:GetPosition())
+                                IssueClearCommands({v})
+                                IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),target:GetPosition(),{tdist,v.MaxWeaponRange+math.random(-2,2)}))
+                                WaitTicks(1)
+                            else
+                                IssueClearCommands({v})
+                                IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),targetpos,{tdist,v.MaxWeaponRange+math.random(-2,4)}))
+                                WaitTicks(1)
+                            end
+                        end
+                    end
+                    movingToScout = false
+                else
+                    for _,v in platoonUnits do
+                        if v.Dead then continue end
+                        v:SetCustomName('no targetpos')
+                    end
+                    movingToScout = true
+                    if target then
+                        for _,v in platoonUnits do
+                            if v.Dead then continue end
+                            v:SetCustomName('no targetpos - starting combat')
+                        end
+                        if aiBrain.grabdistRNG(self:GetPlatoonPosition(),target:GetPosition())>30+math.random(-2,10) then
+                            if not data.UseMoveOrder then
+                                self:AttackTarget(target)
+                            else
+                                self:MoveToLocation(AIUtils.RandomLocation(targetpos[1],targetpos[3]), false)
+                            end
+                        else
+                            for _,v in platoonUnits do
+                                if v.Dead then continue end
+                                IssueClearCommands({v})
+                                local tdist=aiBrain.grabdistRNG(v:GetPosition(),target:GetPosition())
+                                IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),target:GetPosition(),{tdist,v.MaxWeaponRange+math.random(-2,2)}))
+                                WaitTicks(1)
+                            end
+                        end
+                    else
+                        for _,v in platoonUnits do
+                            if v.Dead then continue end
+                            v:SetCustomName('no targetpos - no target')
+                        end
+                        for k,v in AIUtils.AIGetSortedMassLocations(aiBrain, 10, nil, nil, nil, nil, self:GetPlatoonPosition()) do
+                            if v[1] < 0 or v[3] < 0 or v[1] > ScenarioInfo.size[1] or v[3] > ScenarioInfo.size[2] then
+                                --LOG('*AI DEBUG: STRIKE FORCE SENDING UNITS TO WRONG LOCATION - ' .. v[1] .. ', ' .. v[3])
+                            end
+                            for _,x in platoonUnits do
+                                local tdist=aiBrain.grabdistRNG(x:GetPosition(),v:GetPosition())
+                                IssueMove({x},RUtils.LerpyRotate(x:GetPosition(),v,{tdist,x.MaxWeaponRange+math.random(-2,4)}))
+                            end
+                        end
+                    end
+                end
+            WaitTicks(20)
+            WaitTicks(math.ceil(math.random(10,50)))
+        end
+        LOG('Rushforce something broke!')
+    end,
+}
