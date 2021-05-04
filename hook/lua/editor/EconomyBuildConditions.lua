@@ -154,3 +154,51 @@ function GreaterThanEconIncomeRNG(aiBrain, mIncome, eIncome)
     end
     return false
 end
+
+function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
+
+    # T1 Test
+    local testCat = categories.TECH1 * categories.FACTORY
+    local unitCount = aiBrain:GetCurrentUnits(testCat)
+    # Find units of this type being built or about to be built
+    unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt(testCat)
+
+    local massTotal = unitCount * t1Drain
+
+    # T2 Test
+    testCat = categories.TECH2 * categories.FACTORY
+    unitCount = aiBrain:GetCurrentUnits(testCat)
+
+    massTotal = massTotal + (unitCount * t2Drain)
+
+    # T3 Test
+    testCat = categories.TECH3 * categories.FACTORY
+    unitCount = aiBrain:GetCurrentUnits(testCat)
+
+    massTotal = massTotal + (unitCount * t3Drain)
+
+    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, '>') then
+        LOG('MassToFactoryRatio false')
+        LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        LOG('Factory massTotal : '..massTotal)
+        return false
+    end
+    LOG('MassToFactoryRatio true')
+    LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+    LOG('Factory massTotal : '..massTotal)
+    return true
+end
+
+function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
+        return false
+    end
+
+    local t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
+    local t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
+    local t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+
+    return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
+end

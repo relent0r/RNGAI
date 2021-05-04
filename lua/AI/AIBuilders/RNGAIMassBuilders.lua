@@ -83,6 +83,29 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2Engineer Mass 120',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 850,
+        InstanceCount = 1,
+        BuilderConditions = { 
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                MaxDistance = 120,
+                ThreatMin = -500,
+                ThreatMax = 0,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {
+                    'T2Resource',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
