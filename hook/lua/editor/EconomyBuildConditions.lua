@@ -178,14 +178,14 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
     massTotal = massTotal + (unitCount * t3Drain)
 
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, '>') then
-        LOG('MassToFactoryRatio false')
-        LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        LOG('Factory massTotal : '..massTotal)
+        --LOG('MassToFactoryRatio false')
+        --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        --LOG('Factory massTotal : '..massTotal)
         return false
     end
-    LOG('MassToFactoryRatio true')
-    LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-    LOG('Factory massTotal : '..massTotal)
+    --LOG('MassToFactoryRatio true')
+    --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+    --LOG('Factory massTotal : '..massTotal)
     return true
 end
 
@@ -196,9 +196,18 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
         return false
     end
 
-    local t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
-    local t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
-    local t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+    local t1
+    local t2
+    local t3
+    if aiBrain.CheatEnabled then
+        t1 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8) * tonumber(ScenarioInfo.Options.BuildMult)
+        t2 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20) * tonumber(ScenarioInfo.Options.BuildMult)
+        t3 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30) * tonumber(ScenarioInfo.Options.BuildMult)
+    else
+        t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
+        t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
+        t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+    end
 
     return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
 end
