@@ -106,6 +106,32 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1Engineer Mass 200',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 1010,
+        InstanceCount = 1,
+        BuilderConditions = { 
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 200, -500, 2, 0, 'AntiSurface', 1}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                RepeatBuild = true,
+                Distance = 200,
+                Type = 'Mass',
+                MaxDistance = 200,
+                ThreatMin = -500,
+                ThreatMax = 5,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {
+                    'T1Resource',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,

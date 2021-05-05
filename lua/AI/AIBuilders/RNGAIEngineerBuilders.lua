@@ -44,7 +44,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER * ( categories.TECH1 + categories.TECH2) - categories.COMMAND } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 13, categories.ENGINEER * ( categories.TECH1 + categories.TECH2) - categories.COMMAND } },
         },
         BuilderType = 'All',
     },
@@ -338,13 +338,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
         PlatoonTemplate = 'T1EngineerAssistRNG',
-        Priority = 1050,
+        Priority = 1010,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.08, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.09, 0.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0,  categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             },
         BuilderData = {
