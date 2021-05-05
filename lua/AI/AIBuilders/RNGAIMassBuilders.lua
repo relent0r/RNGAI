@@ -16,7 +16,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 30',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 1000,
+        Priority = 999,
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 0, 0, 'AntiSurface', 1}},
