@@ -97,6 +97,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     InitializeSkirmishSystems = function(self)
+        self.HeavyEco = self:ForkThread(self.HeavyEconomyRNG)
+        self.DisplayEco = self:ForkThread(self.DisplayEconomyRNG)
         if not self.RNG then
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
@@ -125,6 +127,8 @@ AIBrain = Class(RNGAIBrainClass) {
             --self.PanicDirector = self:ForkThread(self.PanicDirectorRNG)
             --self.AttackDirector = self:ForkThread(self.AttackDirectorRNG)
         end]]
+        --self.HeavyEco = self:ForkThread(self.HeavyEconomyRNG)
+        --self.DisplayEco = self:ForkThread(self.DisplayEconomyRNG)
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
 
@@ -3002,6 +3006,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        for i, v in expandstart do
+            self:UpdateExpansionAllegianceRNG(v,i)
+        end
         while self.Result ~= "defeat" do
             for x=0,30,1 do
                 for i, v in expandstart do
@@ -3310,6 +3317,121 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             WaitTicks(10)
         end
+    end,
+    HeavyEconomyRNG = function(self)
+        local selfIndex = self:GetArmyIndex()
+        if ArmyIsCivilian(self:GetArmyIndex()) then return end
+        WaitTicks(100)
+        LOG('Heavy Economy thread starting'..selfIndex)
+        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0,r=0},storage={max={m=0,e=0},current={m=0,e=0}}}
+        while not self.defeat do
+            LOG('heavy economy loop started')
+            if not self then LOG('not self skip') WaitTicks(20) continue end
+            if not self:GetEconomyIncome('MASS') then LOG('not mass skip') WaitTicks(50) continue end
+            local units = table.copy(GetListOfUnits(self, categories.SELECTABLE, false, true))
+            LOG('units grabbed')
+            local factories = {land=0,air=0,navy=0,l1=0,l2=0,l3=0,a1=0,a2=0,a3=0,n1=0,n2=0,n3=0}
+            local extractors = {t1=0,t2=0,t3=0}
+            local fabs = {t2=0,t3=0}
+            local coms = {acu=0,sacu=0}
+            local pgens = {t1=0,t2=0,t3=0}
+            local missiles = {t2=0,t3=0}
+            local shields = {t2=0,t3=0}
+            local intel = {t1=0,t2=0,t3=0}
+            local mobilespend = {t1=0,t2=0,t3=0}
+            local facspend = {l=0,a=0,n=0,u=0}
+            local mexspend = {t1=0,t2=0,t3=0}
+            local engspend = {t1=0,t2=0,t3=0}
+            local rincome = {m=0,e=0}
+            local tincome = {m=self:GetEconomyIncome('MASS')*10,e=self:GetEconomyIncome('ENERGY')*10}
+            local storage = {max = {m=self:GetEconomyStored('MASS')/self:GetEconomyStoredRatio('MASS'),e=self:GetEconomyStored('ENERGY')/self:GetEconomyStoredRatio('ENERGY')},current={m=self:GetEconomyStored('MASS'),e=self:GetEconomyStored('ENERGY')}}
+            local tspend = {m=0,e=0}
+            for _,unit in units do
+                local spendm=unit:GetConsumptionPerSecondMass()
+                local spende=unit:GetConsumptionPerSecondEnergy()
+                local producem=unit:GetProductionPerSecondMass()
+                local producee=unit:GetProductionPerSecondEnergy()
+                tspend.m=tspend.m+spendm
+                tspend.e=tspend.e+spende
+                rincome.m=rincome.m+producem
+                rincome.e=rincome.e+producee
+                --[[if EntityCategoryContains(categories.COMMAND,unit) then
+                    coms.acu=coms.acu+1
+                elseif EntityCategoryContains(categories.ENGINEER,unit) then
+                    engspend=engspend+spendm
+                elseif EntityCategoryContains(categories.ENGINEER,unit) then
+
+                elseif EntityCategoryContains(categories.ENGINEER,unit) then
+
+                end]]
+            end
+            self.cmanager={income={r={m=rincome.m,e=rincome.e},t={m=tincome.m,e=tincome.e}},spend={m=tspend.m,e=tspend.e}}
+            self.cmanager.income.r.m=rincome.m
+            self.cmanager.income.r.e=rincome.e
+            self.cmanager.income.t.m=tincome.m
+            self.cmanager.income.t.e=tincome.e
+            self.cmanager.spend.m=tspend.m
+            self.cmanager.spend.e=tspend.e
+            self.cmanager.storage.current.m=storage.current.m
+            self.cmanager.storage.current.e=storage.current.e
+            if storage.current.m>0 and storage.current.e>0 then
+                self.cmanager.storage.max.m=storage.max.m
+                self.cmanager.storage.max.e=storage.max.e
+            end
+            LOG('ARMY'..repr(selfIndex)..' eco numbers:'..repr(self.cmanager))
+            WaitTicks(50)
+        end
+    end,
+    DisplayEconomyRNG = function(self)
+        if ArmyIsCivilian(self:GetArmyIndex()) then return end
+        if not self.locationstart then 
+            local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
+            local astartX, astartZ = self:GetArmyStartPos()
+            local selfstart = {Position={astartX, 0, astartZ}}
+            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
+            selfstart.Position[2]=starts[1].Position[2]
+            self.locationstart=selfstart.Position
+        end
+        while self.Result ~= "defeat" do
+            if not self.cmanager.income.r.m then LOG('no mass?') WaitTicks(20) continue end
+            if not self.cmanager.income.t.e or not self.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
+            local rawm=self.cmanager.income.r.m
+            local totalm=self.cmanager.income.t.m
+            local spendm=self.cmanager.spend.m
+            local storemaxm=self.cmanager.storage.max.m/10
+            local storem=self.cmanager.storage.current.m/10
+            local rawe=self.cmanager.income.r.e/10
+            local totale=self.cmanager.income.t.e/10
+            local spende=self.cmanager.spend.e/10
+            local storemaxe=self.cmanager.storage.max.e/30
+            local storee=self.cmanager.storage.current.e/30
+            local home=self.locationstart
+            local widthm=math.max(math.sqrt(rawm),4)
+            local widthe=math.max(math.sqrt(rawe),4)
+            for _=0,25 do
+                self:RenderBarRNG(home,rawm/widthm,widthm,1,'ff4CFF00')
+                self:RenderBarRNG(home,totalm/widthm,widthm,1+widthm,'ff267F00')
+                self:RenderBarRNG(home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
+                self:RenderBarRNG(home,-storemaxm/3/widthm,3*widthm,1,'ff267F00')
+                self:RenderBarRNG(home,-storem/3/widthm,3*widthm,1,'ff4CFF00')
+                self:RenderBarRNG(home,rawe/widthe,widthe,1.5+3*widthm,'ffFFFF00')
+                self:RenderBarRNG(home,totale/widthe,widthe,1.5+3*widthm+widthe,'ffFFD800')
+                self:RenderBarRNG(home,spende/widthe,widthe,1.5+3*widthm+2*widthe,'ffFF5900')
+                self:RenderBarRNG(home,-storemaxe/3/widthe,3*widthe,1.5+3*widthm,'ffFFD800')
+                self:RenderBarRNG(home,-storee/3/widthe,3*widthe,1.5+3*widthm,'ffFFFF00')
+                WaitTicks(2)
+            end
+        end
+    end,
+    RenderBarRNG = function(self,pos,value,width,offset,color)
+        local shiftpos={pos[1]-10,pos[2],pos[3]+8.05+offset}
+        local blc={shiftpos[1],shiftpos[2],shiftpos[3]+width-0.1}
+        local brc={shiftpos[1]+value,shiftpos[2],shiftpos[3]+width-0.1}
+        local trc={shiftpos[1]+value,shiftpos[2],shiftpos[3]}
+        DrawLine(shiftpos,blc,color)
+        DrawLine(blc,brc,color)
+        DrawLine(brc,trc,color)
+        DrawLine(trc,shiftpos,color)
     end,
 --[[
     GetManagerCount = function(self, type)
