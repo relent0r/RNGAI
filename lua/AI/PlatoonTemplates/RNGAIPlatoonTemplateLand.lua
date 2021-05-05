@@ -531,14 +531,14 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueue',
          },
         Aeon = {
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0201', 1, 5, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
@@ -578,10 +578,10 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueExp',
          },
         Aeon = {
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0201', 1, 5, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
@@ -615,11 +615,11 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueNoEng',
          },
         Aeon = {
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0201', 1, 5, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- Artillery
+            { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {

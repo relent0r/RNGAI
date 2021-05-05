@@ -28,6 +28,7 @@ BaseBuilderTemplate {
         'RNGAI Energy Production Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
         'RNGAI Assist Manager BuilderGroup',
+        'RNG Tech Energy Assist',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
@@ -35,7 +36,7 @@ BaseBuilderTemplate {
         'RNGAI RadarUpgrade T1 Expansion',
         
         -- Economy Builder --
-        'RNGAI Energy Builder',
+        'RNG Tech Energy Builder',
         'RNGAI Energy Storage Builder',
         'RNGAI Mass Builder',
         'RNGAI Mass Storage Builder',
@@ -63,7 +64,7 @@ BaseBuilderTemplate {
         'RNGAI Land AA 2',
         'RNGAI T3 AttackLandBuilder Large',
         'RNGAI Island Large FormBuilders',
-
+        'RNG Tech T3 Land Builder Small',
 
         -- Land Unit Formers T1 --
         'RNGAI ScoutLandFormer',
@@ -71,7 +72,8 @@ BaseBuilderTemplate {
         'RNGAI Land FormBuilders Large',
         'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
-
+        'RNG Tech Hero FormBuilders',
+        
         -- Air Unit Builders --
         'RNGAI TransportFactoryBuilders Large',
         'RNGAI Air Builder T1',
@@ -83,9 +85,11 @@ BaseBuilderTemplate {
         'RNGAI Air Platoon Builder',
 
         -- Land Factory Builders --
-        'RNG Tech Factory Builder Land T1 Large',
+        'RNGAI Factory Builder Land',
+        --'RNG Tech Factory Builder Land',
         'RNG Tech Support Factory Builder Land',
         'RNG Tech Land Factory Reclaimer',
+
 
 
         -- Air Factory Builders --
@@ -93,6 +97,7 @@ BaseBuilderTemplate {
 
         -- Land Factory Formers --
         'RNG Tech Land Upgrade Builders',
+        'RNGAI Land Upgrade Builders',
 
         -- Air Upgrade Builders --
         'RNGAI Air Upgrade Builders',
