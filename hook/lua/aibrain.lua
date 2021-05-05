@@ -1150,9 +1150,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
                 if table.equal(v.Platoon, platoon) then
-                    continue
+                    LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
+                    found = true
+                    break
                 end
-                -- Add platoon to list desiring aid
+            end
+            if not found then
+                LOG('Platoon doesnt already exist, adding')
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
@@ -1160,7 +1164,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
-        --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
@@ -1174,8 +1178,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Threat of attacker'..threat)
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
-                if threat and threat > (myThreat * 1.5) then
-                    --LOG('* AI-RNG: Created Threat Alert')
+                    if threat and threat > (myThreat * 1.5) then
+                        LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -1189,12 +1193,13 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             -- If any platoons still want help; continue sounding
+            LOG('Alerted Platoons '..numPlatoons)
             if numPlatoons > 0 then
                 self.BaseMonitor.PlatoonAlertSounded = true
             else
                 self.BaseMonitor.PlatoonAlertSounded = false
             end
-            self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
+            self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
             LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
