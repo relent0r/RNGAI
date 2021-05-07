@@ -139,7 +139,6 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECHT3LandAttackQueue',
         Priority = 840, -- After Second Engie Group
         BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 1000 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.TECH3 - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
