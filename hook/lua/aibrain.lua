@@ -97,6 +97,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     InitializeSkirmishSystems = function(self)
+        self.HeavyEco = self:ForkThread(self.HeavyEconomyRNG)
+        self.DisplayEco = self:ForkThread(self.DisplayEconomyRNG)
         if not self.RNG then
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
@@ -125,6 +127,8 @@ AIBrain = Class(RNGAIBrainClass) {
             --self.PanicDirector = self:ForkThread(self.PanicDirectorRNG)
             --self.AttackDirector = self:ForkThread(self.AttackDirectorRNG)
         end]]
+        --self.HeavyEco = self:ForkThread(self.HeavyEconomyRNG)
+        --self.DisplayEco = self:ForkThread(self.DisplayEconomyRNG)
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
 
@@ -1165,9 +1169,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
                 if table.equal(v.Platoon, platoon) then
-                    continue
+                    LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
+                    found = true
+                    break
                 end
-                -- Add platoon to list desiring aid
+            end
+            if not found then
+                LOG('Platoon doesnt already exist, adding')
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
@@ -1175,7 +1183,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
-        --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
@@ -1189,8 +1197,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Threat of attacker'..threat)
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
-                if threat and threat > (myThreat * 1.5) then
-                    --LOG('* AI-RNG: Created Threat Alert')
+                    if threat and threat > (myThreat * 1.5) then
+                        LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -1204,12 +1212,13 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             -- If any platoons still want help; continue sounding
+            LOG('Alerted Platoons '..numPlatoons)
             if numPlatoons > 0 then
                 self.BaseMonitor.PlatoonAlertSounded = true
             else
                 self.BaseMonitor.PlatoonAlertSounded = false
             end
-            self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
+            self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
             LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
@@ -2726,7 +2735,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             --LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if massStorage > 200 and energyStorage > 1000 then
+            if massStorage > 200 and energyStorage > 2000 then
                 if self.EngineerAssistManagerBuildPower <= 15 and self.EngineerAssistManagerBuildPowerRequired <= 8 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
@@ -3001,6 +3010,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('relevance '..repr(v.relevance))
                 end
             end
+        end
+        for i, v in expandstart do
+            self:UpdateExpansionAllegianceRNG(v,i)
         end
         while self.Result ~= "defeat" do
             for x=0,30,1 do
@@ -3309,6 +3321,342 @@ AIBrain = Class(RNGAIBrainClass) {
                 WaitTicks(20)
             end
             WaitTicks(10)
+        end
+    end,
+    HeavyEconomyRNG = function(self)
+        local selfIndex = self:GetArmyIndex()
+        if ArmyIsCivilian(self:GetArmyIndex()) then return end
+        WaitTicks(100)
+        LOG('Heavy Economy thread starting'..selfIndex)
+        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
+        self.amanager = {t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},total={t1=0,t2=0,t3=0}}
+        self.smanager={fac={l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}},mex={t1=0,t2=0,t3=0},pgen={t1=0,t2=0,t3=0},silo={t2=0,t3=0},fabs={t2=0,t3=0}}
+        while not self.defeat do
+            LOG('heavy economy loop started')
+            if not self then LOG('not self skip') WaitTicks(20) continue end
+            if not self:GetEconomyIncome('MASS') then LOG('not mass skip') WaitTicks(50) continue end
+            self:ForkThread(self.HeavyEconomyForkRNG)
+            WaitTicks(50)
+        end
+    end,
+    HeavyEconomyForkRNG = function(self)
+        local units = table.copy(GetListOfUnits(self, categories.SELECTABLE, false, true))
+        local selfIndex = self:GetArmyIndex()
+        LOG('units grabbed')
+        local factories = {l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}}
+        local extractors = {t1=0,t2=0,t3=0}
+        local fabs = {t2=0,t3=0}
+        local coms = {acu=0,sacu=0}
+        local pgens = {t1=0,t2=0,t3=0}
+        local silo = {t2=0,t3=0}
+        local army={t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
+        local armytype={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
+        local armytiers={t1=0,t2=0,t3=0}
+        local launcherspend = {t2=0,t3=0}
+        local facspend = {l=0,a=0,n=0}
+        local mexspend = {t1=0,t2=0,t3=0}
+        local engspend = {t1=0,t2=0,t3=0,com=0}
+        local rincome = {m=0,e=0}
+        local tincome = {m=self:GetEconomyIncome('MASS')*10,e=self:GetEconomyIncome('ENERGY')*10}
+        local storage = {max = {m=self:GetEconomyStored('MASS')/self:GetEconomyStoredRatio('MASS'),e=self:GetEconomyStored('ENERGY')/self:GetEconomyStoredRatio('ENERGY')},current={m=self:GetEconomyStored('MASS'),e=self:GetEconomyStored('ENERGY')}}
+        local tspend = {m=0,e=0}
+        for _,unit in units do
+            if unit.Dead then continue end
+            if not unit then continue end
+            local spendm=unit:GetConsumptionPerSecondMass()
+            local spende=unit:GetConsumptionPerSecondEnergy()
+            local producem=unit:GetProductionPerSecondMass()
+            local producee=unit:GetProductionPerSecondEnergy()
+            tspend.m=tspend.m+spendm
+            tspend.e=tspend.e+spende
+            rincome.m=rincome.m+producem
+            rincome.e=rincome.e+producee
+            if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    extractors.t1=extractors.t1+1
+                    mexspend.t1=mexspend.t1+spendm
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    extractors.t2=extractors.t2+1
+                    mexspend.t2=mexspend.t2+spendm
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    extractors.t3=extractors.t3+1
+                    mexspend.t3=mexspend.t3+spendm
+                end
+            elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
+                if EntityCategoryContains(categories.COMMAND,unit) then
+                    coms.acu=coms.acu+1
+                    engspend.com=engspend.com+spendm
+                elseif EntityCategoryContains(categories.SUBCOMMANDER,unit) then
+                    coms.sacu=coms.sacu+1
+                    engspend.com=engspend.com+spendm
+                end
+            elseif EntityCategoryContains(categories.MASSFABRICATION,unit) then
+                if EntityCategoryContains(categories.TECH2,unit) then
+                    fabs.t2=fabs.t2+1
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    fabs.t3=fabs.t3+1
+                end
+            elseif EntityCategoryContains(categories.ENGINEER,unit) then
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    engspend.t1=engspend.t1+spendm
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    engspend.t2=engspend.t2+spendm
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    engspend.t3=engspend.t3+spendm
+                end
+            elseif EntityCategoryContains(categories.FACTORY,unit) then
+                if EntityCategoryContains(categories.LAND,unit) then
+                    facspend.l=facspend.l+spendm
+                    if EntityCategoryContains(categories.TECH1,unit) then
+                        factories.l.t1=factories.l.t1+1
+                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                        factories.l.t2=factories.l.t2+1
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        factories.l.t3=factories.l.t3+1
+                    end
+                elseif EntityCategoryContains(categories.AIR,unit) then
+                    facspend.a=facspend.a+spendm
+                    if EntityCategoryContains(categories.TECH1,unit) then
+                        factories.a.t1=factories.a.t1+1
+                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                        factories.a.t2=factories.a.t2+1
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        factories.a.t3=factories.a.t3+1
+                    end
+                elseif EntityCategoryContains(categories.NAVAL,unit) then
+                    facspend.n=facspend.n+spendm
+                    if EntityCategoryContains(categories.TECH1,unit) then
+                        factories.n.t1=factories.n.t1+1
+                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                        factories.n.t2=factories.n.t2+1
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        factories.n.t3=factories.n.t3+1
+                    end
+                end
+            elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    pgens.t1=pgens.t1+1
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    pgens.t2=pgens.t2+1
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    pgens.t3=pgens.t3+1
+                end
+            elseif EntityCategoryContains(categories.LAND,unit) then
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    armytiers.t1=armytiers.t1+1
+                    if EntityCategoryContains(categories.SCOUT,unit) then
+                        army.t1.scout=army.t1.scout+1
+                        armytype.scout=armytype.scout+1
+                    elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                        army.t1.tank=army.t1.tank+1
+                        armytype.tank=armytype.tank+1
+                    elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
+                        army.t1.arty=army.t1.arty+1
+                        armytype.arty=armytype.arty+1
+                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        army.t1.aa=army.t1.aa+1
+                        armytype.aa=armytype.aa+1
+                    end
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    armytiers.t2=armytiers.t2+1
+                    if EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                        army.t2.tank=army.t2.tank+1
+                        armytype.tank=armytype.tank+1
+                    elseif EntityCategoryContains(categories.SILO,unit) then
+                        army.t2.mml=army.t2.mml+1
+                        armytype.mml=armytype.mml+1
+                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        army.t2.aa=army.t2.aa+1
+                        armytype.aa=armytype.aa+1
+                    elseif EntityCategoryContains(categories.SHIELD,unit) then
+                        army.t2.shield=army.t2.shield+1
+                        armytype.shield=armytype.shield+1
+                    end
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    armytiers.t3=armytiers.t3+1
+                    if EntityCategoryContains(categories.SNIPER,unit) then
+                        army.t3.sniper=army.t3.sniper+1
+                        armytype.sniper=armytype.sniper+1
+                    elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                        army.t3.tank=army.t3.tank+1
+                        armytype.tank=armytype.tank+1
+                    elseif EntityCategoryContains(categories.SILO,unit) then
+                        army.t3.mml=army.t3.mml+1
+                        armytype.mml=armytype.mml+1
+                    elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
+                        army.t3.arty=army.t3.arty+1
+                        armytype.arty=armytype.arty+1
+                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        army.t3.aa=army.t3.aa+1
+                        armytype.aa=armytype.aa+1
+                    elseif EntityCategoryContains(categories.SHIELD,unit) then
+                        army.t3.shield=army.t3.shield+1
+                        armytype.shield=armytype.shield+1
+                    end
+                end
+            elseif EntityCategoryContains(categories.SILO,unit) then
+                if EntityCategoryContains(categories.TECH2,unit) then
+                    silo.t2=silo.t2+1
+                    launcherspend.t2=launcherspend.t2+spendm
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    silo.t3=silo.t3+1
+                    launcherspend.t3=launcherspend.t3+spendm
+                end
+            end
+        end
+        self.cmanager.income.r.m=rincome.m
+        self.cmanager.income.r.e=rincome.e
+        self.cmanager.income.t.m=tincome.m
+        self.cmanager.income.t.e=tincome.e
+        self.cmanager.spend.m=tspend.m
+        self.cmanager.spend.e=tspend.e
+        self.cmanager.categoryspend.eng=engspend
+        self.cmanager.categoryspend.fac=facspend
+        self.cmanager.categoryspend.silo=launcherspend
+        self.cmanager.categoryspend.mex=mexspend
+        self.cmanager.storage.current.m=storage.current.m
+        self.cmanager.storage.current.e=storage.current.e
+        if storage.current.m>0 and storage.current.e>0 then
+            self.cmanager.storage.max.m=storage.max.m
+            self.cmanager.storage.max.e=storage.max.e
+        end
+        self.amanager=army
+        self.amanager.total=armytiers
+        self.amanager.type=armytype
+        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
+        LOG('ARMY'..repr(selfIndex)..' eco numbers:'..repr(self.cmanager))
+    end,
+    DisplayEconomyRNG = function(self)
+        if ArmyIsCivilian(self:GetArmyIndex()) then return end
+        if not self.locationstart then 
+            local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
+            local astartX, astartZ = self:GetArmyStartPos()
+            local selfstart = {Position={astartX, 0, astartZ}}
+            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
+            selfstart.Position[2]=starts[1].Position[2]
+            self.locationstart=selfstart.Position
+        end
+        while self.Result ~= "defeat" do
+            if not self.cmanager.income.r.m then LOG('no mass?') WaitTicks(20) continue end
+            if not self.cmanager.income.t.e or not self.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
+            local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF'}
+            local fcolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD'}
+            local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',t1='ff4CFF00',t2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
+            local engsum=0
+            for _,v in self.cmanager.categoryspend.eng do
+                engsum=engsum+v
+            end
+            local spendcategories={l=self.cmanager.categoryspend.fac.l,a=self.cmanager.categoryspend.fac.a,n=self.cmanager.categoryspend.fac.n,t1=self.cmanager.categoryspend.mex.t1,t2=self.cmanager.categoryspend.mex.t2,eng=engsum,other=0}
+            local othersum=self.cmanager.spend.m
+            for _,v in spendcategories do
+                othersum=othersum-v
+            end
+            spendcategories.other=othersum
+            local factotal=self.smanager.fac
+            local facnum={l=0,a=0,n=0}
+            local facsum=0
+            for x,v in factotal do
+                for _,i in factotal[x] do
+                    facsum=facsum+i
+                    facnum[x]=facnum[x]+i
+                end
+            end
+            local rawm=self.cmanager.income.r.m
+            local totalm=self.cmanager.income.t.m
+            local spendm=self.cmanager.spend.m
+            local storemaxm=self.cmanager.storage.max.m/10
+            local storem=self.cmanager.storage.current.m/10
+            local rawe=self.cmanager.income.r.e/10
+            local totale=self.cmanager.income.t.e/10
+            local spende=self.cmanager.spend.e/10
+            local storemaxe=self.cmanager.storage.max.e/30
+            local storee=self.cmanager.storage.current.e/30
+            local home=self.locationstart
+            local army=self.amanager
+            local widthm=math.max(math.sqrt(rawm),4)
+            local widthe=math.max(math.sqrt(rawe),4)
+            for _=0,25 do
+                local voffset=-10
+                --[[self:RenderChartRNG(home,army.t1,6,voffset,armycolors)
+                self:RenderChartRNG(home,army.t2,6,voffset-6,armycolors)
+                self:RenderChartRNG(home,army.t3,6,voffset-12,armycolors)]]
+                self:RenderPieRNG(home,math.sqrt(army.total.t1),18,-10,army.t1,armycolors)
+                self:RenderPieRNG(home,math.sqrt(army.total.t2),18+math.sqrt(army.total.t1)+math.sqrt(army.total.t2),-10,army.t2,armycolors)
+                self:RenderPieRNG(home,math.sqrt(army.total.t3),18+2*math.sqrt(army.total.t2)+math.sqrt(army.total.t1)+math.sqrt(army.total.t3),-10,army.t3,armycolors)
+                self:RenderPieRNG(home,math.sqrt(spendm),-10+math.sqrt(spendm)+math.max(spendm/widthm,totalm/widthm,rawm/widthm),9.05+1.5*widthm,spendcategories,scolors)
+                self:RenderPieRNG(home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.total.t1),-10,facnum,fcolors)
+                self:RenderBarRNG(home,rawm/widthm,widthm,1,'ff4CFF00')
+                self:RenderBarRNG(home,totalm/widthm,widthm,1+widthm,'ff267F00')
+                self:RenderBarRNG(home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
+                self:RenderBarRNG(home,-storemaxm/3/widthm,3*widthm,1,'ff267F00')
+                self:RenderBarRNG(home,-storem/3/widthm,3*widthm,1,'ff4CFF00')
+                self:RenderBarRNG(home,rawe/widthe,widthe,1.5+3*widthm,'ffFFFF00')
+                self:RenderBarRNG(home,totale/widthe,widthe,1.5+3*widthm+widthe,'ffFFD800')
+                self:RenderBarRNG(home,spende/widthe,widthe,1.5+3*widthm+2*widthe,'ffFF5900')
+                self:RenderBarRNG(home,-storemaxe/3/widthe,3*widthe,1.5+3*widthm,'ffFFD800')
+                self:RenderBarRNG(home,-storee/3/widthe,3*widthe,1.5+3*widthm,'ffFFFF00')
+                WaitTicks(2)
+            end
+        end
+    end,
+    RenderBarRNG = function(self,pos,value,width,offset,color)
+        local shiftpos={pos[1]-10,pos[2],pos[3]+8.05+offset}
+        local blc={shiftpos[1],shiftpos[2],shiftpos[3]+width-0.1}
+        local brc={shiftpos[1]+value-0.1,shiftpos[2],shiftpos[3]+width-0.1}
+        local trc={shiftpos[1]+value-0.1,shiftpos[2],shiftpos[3]}
+        DrawLine(shiftpos,blc,color)
+        DrawLine(blc,brc,color)
+        DrawLine(brc,trc,color)
+        DrawLine(trc,shiftpos,color)
+    end,
+    RenderChartRNG = function(self,pos,valuetable,width,offset,colortable)
+        local sum=0
+        local currentoffset=0
+        for _,v in valuetable do
+            sum=sum+v
+        end
+        local color='ffFFFFFF'
+        self:RenderBarRNG(pos,sum,width,offset,color)
+        for i,v in valuetable do
+            local newpos={pos[1]+currentoffset,pos[2],pos[3]}
+            self:RenderBarRNG(newpos,v,width,offset,colortable[i])
+            currentoffset=currentoffset+v
+        end
+    end,
+    RenderSliceRNG = function(self,center,radius,angle1,anglewidth,color)
+        local posi={center[1]+radius*math.cos(angle1),center[2],center[3]+radius*math.sin(angle1)}
+        local posf={center[1]+radius*math.cos(angle1+anglewidth),center[2],center[3]+radius*math.sin(angle1+anglewidth)}
+        DrawLine(center,posi,color)
+        DrawLine(center,posf,color)
+        local pos1={center[1]+radius*math.cos(angle1+anglewidth*1/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*1/7)}
+        local pos2={center[1]+radius*math.cos(angle1+anglewidth*2/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*2/7)}
+        local pos3={center[1]+radius*math.cos(angle1+anglewidth*3/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*3/7)}
+        local pos4={center[1]+radius*math.cos(angle1+anglewidth*4/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*4/7)}
+        local pos5={center[1]+radius*math.cos(angle1+anglewidth*5/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*5/7)}
+        local pos6={center[1]+radius*math.cos(angle1+anglewidth*6/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*6/7)}
+        DrawLine(posi,pos1,color)
+        DrawLine(pos1,pos2,color)
+        DrawLine(pos2,pos3,color)
+        DrawLine(pos3,pos4,color)
+        DrawLine(pos4,pos5,color)
+        DrawLine(pos5,pos6,color)
+        DrawLine(pos6,posf,color)
+        --[[for i=0,math.floor(anglewidth) do
+            local pos3={center[1]+math.cos(angle1+i),center[2],center[3]+math.sin(angle1+i)}
+
+        end]]
+    end,
+    RenderPieRNG = function(self,pos,radius,offsetx,offsetz,valuetable,colortable)
+        local sum=0
+        local currentoffset=0
+        local center={pos[1]+offsetx,pos[2],pos[3]+offsetz}
+        for _,v in valuetable do
+            sum=sum+v
+        end
+        for i,v in valuetable do
+            local degreeslice=2*math.pi*v/sum
+            self:RenderSliceRNG(center,radius,currentoffset+0.01,degreeslice-0.01,colortable[i])
+            currentoffset=currentoffset+degreeslice
         end
     end,
 --[[

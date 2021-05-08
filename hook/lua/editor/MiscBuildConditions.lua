@@ -201,12 +201,12 @@ function GreaterThanGameTimeRNG(aiBrain, num, caution)
     local time = GetGameTimeSeconds()
     local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
     if caution and aiBrain.UpgradeMode == 'Caution' then
-        if aiBrain.CheatEnabled and ((num / multiplier) * 1.3) < time then
+        if aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
             return true
         elseif num * 1.3 < time then
             return true
         end
-    elseif aiBrain.CheatEnabled and ((num / multiplier) * 1.2) < time then
+    elseif aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
         return true
     elseif num < time then
         return true
@@ -268,6 +268,7 @@ function ArmyNeedOrWantTransports(aiBrain)
     return false
 end
 
+-- Not in use
 function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
