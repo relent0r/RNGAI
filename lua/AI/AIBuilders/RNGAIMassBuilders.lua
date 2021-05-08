@@ -111,7 +111,7 @@ BuilderGroup {
         Priority = 1010,
         InstanceCount = 1,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 200, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 200, -500, 2, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -119,9 +119,11 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
+                MexThreat = true,
                 Distance = 200,
                 Type = 'Mass',
                 MaxDistance = 200,
+                MinDistance = 100,
                 ThreatMin = -500,
                 ThreatMax = 5,
                 ThreatType = 'AntiSurface',
@@ -145,9 +147,10 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 120,
+                Distance = 240,
                 Type = 'Mass',
                 MaxDistance = 240,
+                MinDistance = 100,
                 ThreatMin = -500,
                 ThreatMax = 5,
                 ThreatType = 'AntiSurface',

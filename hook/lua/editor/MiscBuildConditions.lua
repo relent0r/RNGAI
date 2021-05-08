@@ -268,6 +268,7 @@ function ArmyNeedOrWantTransports(aiBrain)
     return false
 end
 
+-- Not in use
 function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
