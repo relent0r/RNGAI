@@ -688,11 +688,13 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     local unitList = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
     --LOG('Check for unit clump')
     for k, v in unitList do
-        local unitPos = v:GetPosition()
-        local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
-        if unitCount > 1 then
-            --LOG('Multiple Units found')
-            return true, v
+        if v and not v.Dead then
+            local unitPos = v:GetPosition()
+            local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+            if unitCount > 1 then
+                --LOG('Multiple Units found')
+                return true, v
+            end
         end
     end
     return false
