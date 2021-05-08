@@ -16,7 +16,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Trend',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 1000,
-        InstanceCount = 3,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
@@ -45,7 +45,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 990,
-        InstanceCount = 2,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
@@ -153,7 +153,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Power Engineer Scale',
         PlatoonTemplate = 'EngineerBuilderT23RNG',
         Priority = 800,
-        InstanceCount = 2,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 6},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
@@ -237,7 +237,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Power Engineer Scale',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 700,
-        InstanceCount = 2,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},

@@ -2735,7 +2735,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             --LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if massStorage > 200 and energyStorage > 1000 then
+            if massStorage > 200 and energyStorage > 2000 then
                 if self.EngineerAssistManagerBuildPower <= 15 and self.EngineerAssistManagerBuildPowerRequired <= 8 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end

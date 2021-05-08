@@ -2124,10 +2124,11 @@ function GetMarkersByType(markerType)
     return markerTypeCache[markerType]
 end
 
-function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings, tType, position)
+function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax, tRings, tType, position)
 
     local threatCheck = false
-    local distance = 2000
+    local maxDistance = 2000
+    local minDistance = 0
 
 
     local startX, startZ
@@ -2138,8 +2139,9 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
     else
         startX, startZ = aiBrain:GetArmyStartPos()
     end
-    if maxDist then
-        distance = maxDist * maxDist
+    if maxDist and minDist then
+        maxDistance = maxDist * maxDist
+        minDistance = minDist * minDist
     end
 
     if tMin and tMax and tType then
@@ -2158,10 +2160,13 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, maxDist, tMin, tMax, tRings,
             -- mass marker is too close to border, skip it.
             continue
         end
-        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > distance then
-            --LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
-            --LOG('Max Distance'..distance)
-            --LOG('mass marker MaxDistance Reached, breaking loop')
+        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) < minDistance then
+            continue
+        end
+        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > maxDistance  then
+            LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
+            LOG('Max Distance'..maxDistance)
+            LOG('mass marker MaxDistance Reached, breaking loop')
             break
         end
         if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then

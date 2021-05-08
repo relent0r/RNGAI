@@ -4934,6 +4934,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     eng.UnitBeingAssist = bestUnit
                                     --LOG('Engineer Assist issuing guard')
                                     IssueGuard({eng}, eng.UnitBeingAssist)
+                                    eng:SetCustomName('Ive been ordered to guard')
                                     --LOG('For assist wait thread for engineer')
                                     self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
                                 end
@@ -4990,13 +4991,16 @@ Platoon = Class(RNGAIPlatoon) {
             aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
             LOG('ForkThread Engineer to army pool EngineerAssistManagerBuildPower too high')
             aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
-            WaitTicks(2)
+            WaitTicks(3)
             if eng.BuilderManagerData.EngineerManager then
                 eng:SetCustomName('I should be in the ArmyPool')
                 eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
+            else
+                eng:SetCustomName('I was being removed but I had no engineer manager')
             end
             IssueStop({eng})
             IssueClearCommands({eng})
+            eng:SetCustomName('I was being removed and I performed my stop commands')
             LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
         end
     end,
