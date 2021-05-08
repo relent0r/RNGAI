@@ -3328,7 +3328,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if ArmyIsCivilian(self:GetArmyIndex()) then return end
         WaitTicks(100)
         LOG('Heavy Economy thread starting'..selfIndex)
-        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0,r=0,eng=0,fac=0,mex=0,silo=0},storage={max={m=0,e=0},current={m=0,e=0}}}
+        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
         self.amanager = {t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},total={t1=0,t2=0,t3=0}}
         self.smanager={fac={l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}},mex={t1=0,t2=0,t3=0},pgen={t1=0,t2=0,t3=0},silo={t2=0,t3=0},fabs={t2=0,t3=0}}
         while not self.defeat do
@@ -3423,7 +3423,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif EntityCategoryContains(categories.TECH3,unit) then
                         factories.a.t3=factories.a.t3+1
                     end
-                elseif EntityCategoryContains(categories.NAVY,unit) then
+                elseif EntityCategoryContains(categories.NAVAL,unit) then
                     facspend.n=facspend.n+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
                         factories.n.t1=factories.n.t1+1
@@ -3510,10 +3510,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.cmanager.income.t.e=tincome.e
         self.cmanager.spend.m=tspend.m
         self.cmanager.spend.e=tspend.e
-        self.cmanager.spend.eng=engspend
-        self.cmanager.spend.fac=facspend
-        self.cmanager.spend.silo=launcherspend
-        self.cmanager.spend.mex=mexspend
+        self.cmanager.categoryspend.eng=engspend
+        self.cmanager.categoryspend.fac=facspend
+        self.cmanager.categoryspend.silo=launcherspend
+        self.cmanager.categoryspend.mex=mexspend
         self.cmanager.storage.current.m=storage.current.m
         self.cmanager.storage.current.e=storage.current.e
         if storage.current.m>0 and storage.current.e>0 then
@@ -3539,7 +3539,28 @@ AIBrain = Class(RNGAIBrainClass) {
         while self.Result ~= "defeat" do
             if not self.cmanager.income.r.m then LOG('no mass?') WaitTicks(20) continue end
             if not self.cmanager.income.t.e or not self.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
-            local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='B200FF'}
+            local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF'}
+            local fcolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD'}
+            local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',t1='ff4CFF00',t2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
+            local engsum=0
+            for _,v in self.cmanager.categoryspend.eng do
+                engsum=engsum+v
+            end
+            local spendcategories={l=self.cmanager.categoryspend.fac.l,a=self.cmanager.categoryspend.fac.a,n=self.cmanager.categoryspend.fac.n,t1=self.cmanager.categoryspend.mex.t1,t2=self.cmanager.categoryspend.mex.t2,eng=engsum,other=0}
+            local othersum=self.cmanager.spend.m
+            for _,v in spendcategories do
+                othersum=othersum-v
+            end
+            spendcategories.other=othersum
+            local factotal=self.smanager.fac
+            local facnum={l=0,a=0,n=0}
+            local facsum=0
+            for x,v in factotal do
+                for _,i in factotal[x] do
+                    facsum=facsum+i
+                    facnum[x]=facnum[x]+i
+                end
+            end
             local rawm=self.cmanager.income.r.m
             local totalm=self.cmanager.income.t.m
             local spendm=self.cmanager.spend.m
@@ -3562,6 +3583,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:RenderPieRNG(home,math.sqrt(army.total.t1),18,-10,army.t1,armycolors)
                 self:RenderPieRNG(home,math.sqrt(army.total.t2),18+math.sqrt(army.total.t1)+math.sqrt(army.total.t2),-10,army.t2,armycolors)
                 self:RenderPieRNG(home,math.sqrt(army.total.t3),18+2*math.sqrt(army.total.t2)+math.sqrt(army.total.t1)+math.sqrt(army.total.t3),-10,army.t3,armycolors)
+                self:RenderPieRNG(home,math.sqrt(spendm),-10+math.sqrt(spendm)+math.max(spendm/widthm,totalm/widthm,rawm/widthm),9.05+1.5*widthm,spendcategories,scolors)
+                self:RenderPieRNG(home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.total.t1),-10,facnum,fcolors)
                 self:RenderBarRNG(home,rawm/widthm,widthm,1,'ff4CFF00')
                 self:RenderBarRNG(home,totalm/widthm,widthm,1+widthm,'ff267F00')
                 self:RenderBarRNG(home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
