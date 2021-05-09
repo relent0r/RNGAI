@@ -2301,7 +2301,7 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
             --LOG('NearPerimeterPoints')
-            reference, orient, buildpoint = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
+            reference = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
             --LOG('referece is '..repr(reference))
             relative = false
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
@@ -3867,7 +3867,7 @@ Platoon = Class(RNGAIPlatoon) {
             if aiBrain.TacticalMonitor.TacticalSACUMode then
                 --stuff
             else
-                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
+                local target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.WALL)
                 if target then
                     --LOG('* AI-RNG: * HuntAIPATH:: Target Found')
                     local targetPosition = target:GetPosition()

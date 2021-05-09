@@ -519,7 +519,7 @@ function GetClosestMassMarker(aiBrain, unit)
         end
     end
 
-    engPos = unit:GetPosition()
+    local engPos = unit:GetPosition()
     local loc, distance, lowest, name = nil
 
     for _, v in markerList do
@@ -540,6 +540,7 @@ end
 
 function GetStartLocationMassMarkers(aiBrain, massLocations)
     local startLocations
+    local allyStarts = {}
 
     for i = 1, 16 do
         local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
@@ -601,10 +602,10 @@ function lerpy(vec1, vec2, distance)
     -- Courtesy of chp2001
     -- note the distance param is {distance, distance - weapon range}
     -- vec1 is friendly unit, vec2 is enemy unit
-    distanceFrac = distance[2] / distance[1]
-    x = vec1[1] * (1 - distanceFrac) + vec2[1] * distanceFrac
-    y = vec1[2] * (1 - distanceFrac) + vec2[2] * distanceFrac
-    z = vec1[3] * (1 - distanceFrac) + vec2[3] * distanceFrac
+    local distanceFrac = distance[2] / distance[1]
+    local x = vec1[1] * (1 - distanceFrac) + vec2[1] * distanceFrac
+    local y = vec1[2] * (1 - distanceFrac) + vec2[2] * distanceFrac
+    local z = vec1[3] * (1 - distanceFrac) + vec2[3] * distanceFrac
     return {x,y,z}
 end
 
@@ -612,10 +613,10 @@ function LerpyRotate(vec1, vec2, distance)
     -- Courtesy of chp2001
     -- note the distance param is {distance, weapon range}
     -- vec1 is friendly unit, vec2 is enemy unit
-    distanceFrac = distance[2] / distance[1]
-    z = vec2[3] + distanceFrac * (vec2[1] - vec1[1])
-    y = vec2[2] - distanceFrac * (vec2[2] - vec1[2])
-    x = vec2[1] - distanceFrac * (vec2[3] - vec1[3])
+    local distanceFrac = distance[2] / distance[1]
+    local z = vec2[3] + distanceFrac * (vec2[1] - vec1[1])
+    local y = vec2[2] - distanceFrac * (vec2[2] - vec1[2])
+    local x = vec2[1] - distanceFrac * (vec2[3] - vec1[3])
     return {x,y,z}
 end
 
@@ -736,7 +737,7 @@ end
 
 function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
     -- Usage ManualBuildStructure(aiBrain, engineerunit, 'AntiSurface', 'TECH2', {123:20:123})
-    factionIndex = aiBrain:GetFactionIndex()
+    local factionIndex = aiBrain:GetFactionIndex()
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     DefenseTable = {
         { 
@@ -808,7 +809,7 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
             }
         }
     }
-    blueprintID = DefenseTable[factionIndex][structureType][tech]
+    local blueprintID = DefenseTable[factionIndex][structureType][tech]
     if CanBuildStructureAt(aiBrain, blueprintID, position) then
         IssueStop({eng})
         IssueClearCommands({eng})
