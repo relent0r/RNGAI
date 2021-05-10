@@ -340,13 +340,13 @@ function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatM
     local markers = AIGetMarkerLocationsRNG(aiBrain, markerType)
     local returnMarkers = {}
     for _, v in markers do
-        local dist = VDist2(pos[1], pos[3], v.Position[1], v.Position[3])
         if markerType == 'Blank Marker' then
             if VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3]) < 10000 then
-                LOG('Start Location too close to main base skip, location is '..VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3])..' from main base pos')
+                --LOG('Start Location too close to main base skip, location is '..VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3])..' from main base pos')
                 continue
             end
         end
+        local dist = VDist2(pos[1], pos[3], v.Position[1], v.Position[3])
         if dist < radius then
             if not threatMin then
                 table.insert(returnMarkers, v)

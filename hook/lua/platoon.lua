@@ -262,6 +262,11 @@ Platoon = Class(RNGAIPlatoon) {
         self:SetPlatoonFormationOverride(PlatoonFormation)
         local enemyRadius = 40
         local MaxPlatoonWeaponRange
+        local unitPos
+        local alpha
+        local x
+        local y
+        local smartPos
         local platoonUnits = GetPlatoonUnits(self)
         local atkPri = {}
 
@@ -544,11 +549,11 @@ Platoon = Class(RNGAIPlatoon) {
                             if not unit.MaxWeaponRange then
                                 continue
                             end
-                            local unitPos = unit:GetPosition()
+                            unitPos = unit:GetPosition()
                             alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
                             x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
                             y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                            local smartPos = { x, GetTerrainHeight( x, y), y }
+                            smartPos = { x, GetTerrainHeight( x, y), y }
                             -- check if the move position is new or target has moved
                             if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
                                 -- clear move commands if we have queued more than 4
@@ -1082,7 +1087,7 @@ Platoon = Class(RNGAIPlatoon) {
                     while PlatoonExists(aiBrain, self) do
                         if target and not target.Dead then
                             targetPosition = target:GetPosition()
-                            microCap = 50
+                            local microCap = 50
                             for _, unit in attackSquad do
                                 microCap = microCap - 1
                                 if microCap <= 0 then break end
@@ -1166,6 +1171,11 @@ Platoon = Class(RNGAIPlatoon) {
             mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         end
         local MaxPlatoonWeaponRange
+        local unitPos
+        local alpha
+        local x
+        local y
+        local smartPos
         local platoonThreat = false
         
         if platoonUnits > 0 then
@@ -1383,7 +1393,7 @@ Platoon = Class(RNGAIPlatoon) {
                             while PlatoonExists(aiBrain, self) do
                                 --LOG('Movement Loop '..debugloop)
                                 --debugloop = debugloop + 1
-                                SquadPosition = self:GetSquadPosition('Attack') or nil
+                                local SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
                                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 and (not currentLayerSeaBed) then
@@ -1396,7 +1406,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         --debugloop = debugloop + 1
                                         if target and not target.Dead then
                                             targetPosition = target:GetPosition()
-                                            microCap = 50
+                                            local microCap = 50
                                             for _, unit in attackSquad do
                                                 microCap = microCap - 1
                                                 if microCap <= 0 then break end
@@ -1518,6 +1528,11 @@ Platoon = Class(RNGAIPlatoon) {
         local maxRadius = data.SearchRadius or 200
         local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         local MaxPlatoonWeaponRange
+        local unitPos
+        local alpha
+        local x
+        local y
+        local smartPos
         local platoonThreat = false
         local rangedPosition = false
         local SquadPosition = {}
@@ -1660,7 +1675,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     while PlatoonExists(aiBrain, self) do
                                         if target and not target.Dead then
                                             targetPosition = target:GetPosition()
-                                            microCap = 50
+                                            local microCap = 50
                                             for _, unit in attackSquad do
                                                 microCap = microCap - 1
                                                 if microCap <= 0 then break end
@@ -1754,7 +1769,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if rangedPosition then
                     --LOG('Ranged position is true')
-                    artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
+                    local artillerySquadPosition = self:GetSquadPosition('Artillery') or nil
                     if not artillerySquadPosition then self:ReturnToBaseAIRNG() end
                     rangedPositionDistance = VDist2Sq(artillerySquadPosition[1], artillerySquadPosition[3], rangedPosition[1], rangedPosition[3])
                     if rangedPositionDistance < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange) then
@@ -1776,7 +1791,7 @@ Platoon = Class(RNGAIPlatoon) {
                             while PlatoonExists(aiBrain, self) do
                                 if target and not target.Dead then
                                     targetPosition = target:GetPosition()
-                                    microCap = 50
+                                    local microCap = 50
                                     for _, unit in artillerySquad do
                                         microCap = microCap - 1
                                         if microCap <= 0 then break end
@@ -2101,7 +2116,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 while PlatoonExists(aiBrain, self) do
                                     if target and not target.Dead then
                                         local targetPosition = target:GetPosition()
-                                        microCap = 50
+                                        local microCap = 50
                                         for _, unit in attackSquad do
                                             microCap = microCap - 1
                                             if microCap <= 0 then break end
@@ -2285,7 +2300,7 @@ Platoon = Class(RNGAIPlatoon) {
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.OrderedTemplate then
-            relativeTo = table.copy(eng:GetPosition())
+            local relativeTo = table.copy(eng:GetPosition())
             --LOG('relativeTo is'..repr(relativeTo))
             relative = true
             local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
@@ -3151,7 +3166,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     while PlatoonExists(aiBrain, self) do
                                         if target and not target.Dead then
                                             local targetPosition = target:GetPosition()
-                                            microCap = 50
+                                            local microCap = 50
                                             for _, unit in attackSquad do
                                                 microCap = microCap - 1
                                                 if microCap <= 0 then break end
@@ -4470,6 +4485,7 @@ Platoon = Class(RNGAIPlatoon) {
                             -- 6000 damage for TML
                             if EntityCategoryContains(categories.COMMAND, unit) then
                                 local armorHealth = unit:GetHealth()
+                                local shieldHealth
                                 if unit.MyShield then
                                     shieldHealth = unit.MyShield:GetHealth()
                                 else
@@ -4492,7 +4508,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 enemyTmdCount = AIAttackUtils.AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, self.CenterPosition, targetPosition, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, 30, 'Enemy')
                                 enemyShield = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
                                 if table.getn(enemyShield) > 0 then
-                                    local shieldHealth = 0
+                                    local enemyShieldHealth = 0
                                     --LOG('There are '..table.getn(enemyShield)..'shields')
                                     for k, shield in enemyShield do
                                         if not shield or shield.Dead or not shield.MyShield then continue end
