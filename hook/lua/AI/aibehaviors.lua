@@ -327,9 +327,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                     if VDist2(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 45 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                         --LOG('enemyThreat is '..enemyThreat)
-                        enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
+                        local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         --LOG('enemyCDR is '..enemyCdrThreat)
-                        friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                        local friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                         LOG('friendlyThreat is'..friendlyThreat)
                         if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.3)) then
                             LOG('Enemy Threat too high')
@@ -411,8 +411,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                 elseif distressLoc then
                     --LOG('* AI-RNG: ACU Detected Distress Location')
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
-                    enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
-                    friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                    local enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
+                    local friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                     if enemyThreat - enemyCdrThreat >= friendlyThreat + (cdrThreat / 3) then
                         break
                     end
@@ -697,11 +697,13 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     local unitList = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
     --LOG('Check for unit clump')
     for k, v in unitList do
-        local unitPos = v:GetPosition()
-        local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
-        if unitCount > 1 then
-            --LOG('Multiple Units found')
-            return true, v
+        if v and not v.Dead then
+            local unitPos = v:GetPosition()
+            local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+            if unitCount > 1 then
+                --LOG('Multiple Units found')
+                return true, v
+            end
         end
     end
     return false

@@ -398,7 +398,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
     local maxThreat = 200
     local airthreatMax = 20
 
-    # only get transports for land (or partial land) movement
+    -- only get transports for land (or partial land) movement
     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
 
         -- DUNCAN - commented out, why check it?
@@ -414,17 +414,17 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
         end
 
-        # if we don't *need* transports, then just call GetTransports...
+        -- if we don't *need* transports, then just call GetTransports...
         if not bRequired then
-            #  if it doesn't work, tell the aiBrain we want transports and bail
+            --  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransports(platoon) == false then
                 aiBrain.WantTransports = true
                 --LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
-            # we were told that transports are the only way to get where we want to go...
-            # ask for a transport every 10 seconds
+            -- we were told that transports are the only way to get where we want to go...
+            -- ask for a transport every 10 seconds
             local counter = 0
             local transportsNeeded = AIUtils.GetNumTransports(units)
             local numTransportsNeeded = math.ceil((transportsNeeded.Small + (transportsNeeded.Medium * 2) + (transportsNeeded.Large * 4)) / 10)
@@ -437,8 +437,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
             
             local bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransports(platoon)
-            while not bUsedTransports and counter < 9 do #DUNCAN - was 6
-                # if we have overflow, dump the overflow and just send what we can
+            while not bUsedTransports and counter < 9 do --DUNCAN - was 6
+                -- if we have overflow, dump the overflow and just send what we can
                 if not bUsedTransports and overflowSm+overflowMd+overflowLg > 0 then
                     local goodunits, overflow = AIUtils.SplitTransportOverflow(units, overflowSm, overflowMd, overflowLg)
                     local numOverflow = table.getn(overflow)
@@ -511,8 +511,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         local useGraph = 'Land'
         if not transportLocation then
-            # go directly to destination, do not pass go.  This move might kill you, fyi.
-            transportLocation = AIUtils.RandomLocation(destination[1],destination[3]) #Duncan - was platoon:GetPlatoonPosition()
+            -- go directly to destination, do not pass go.  This move might kill you, fyi.
+            transportLocation = AIUtils.RandomLocation(destination[1],destination[3]) --Duncan - was platoon:GetPlatoonPosition()
             useGraph = 'Air'
         end
 
@@ -557,20 +557,20 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             return false
         end
 
-        # then go to attack location
+        -- then go to attack location
         if not path then
-            # directly
+            -- directly
             if not bSkipLastMove then
                 platoon:AggressiveMoveToLocation(destination)
                 platoon.LastAttackDestination = {destination}
             end
         else
-            # or indirectly
-            # store path for future comparison
+            -- or indirectly
+            -- store path for future comparison
             platoon.LastAttackDestination = path
 
             local pathSize = table.getn(path)
-            #move to destination afterwards
+            --move to destination afterwards
             for wpidx,waypointPath in path do
                 if wpidx == pathSize then
                     if not bSkipLastMove then
@@ -743,7 +743,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 for iz, offsetZ in lookAroundTable do
                     local surf = GetSurfaceHeight(bestPos[1]+offsetX, bestPos[3]+offsetZ)
                     local terr = GetTerrainHeight(bestPos[1]+offsetX, bestPos[3]+offsetZ)
-                    # is it lower land... make it our new position to continue searching around
+                    -- is it lower land... make it our new position to continue searching around
                     if terr >= surf and terr < attackPosHeight then
                         bestPos[1] = bestPos[1] + offsetX
                         bestPos[3] = bestPos[3] + offsetZ
@@ -786,7 +786,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                     --Couldn't find a valid pathing node. Just use shortest path.
                     platoon:AggressiveMoveToLocation(attackPos)
                 end
-                # force reevaluation
+                -- force reevaluation
                 platoon.LastAttackDestination = {attackPos}
             else
                 --LOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
