@@ -3259,6 +3259,69 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         return brainThreats
     end,
+    GrabPosDangerRNG = function(self,pos,radius)
+        local brainThreats = {ally=0,enemy=0}
+        local allyunits=self:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+        local enemyunits=self:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+        for _,v in allyunits do
+            if not v.Dead then
+                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+                --LOG('Unit ID is '..v.UnitId)
+                --bp = v:GetBlueprint().Defense
+                local bp = __blueprints[v.UnitId].Defense
+                --LOG(repr(__blueprints[v.UnitId].Defense))
+                if bp.SurfaceThreatLevel ~= nil then
+                    brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel*v:GetHealthPercent()
+                end
+            end
+        end
+        for _,v in enemyunits do
+            if not v.Dead then
+                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+                --LOG('Unit ID is '..v.UnitId)
+                --bp = v:GetBlueprint().Defense
+                local bp = __blueprints[v.UnitId].Defense
+                --LOG(repr(__blueprints[v.UnitId].Defense))
+                if bp.SurfaceThreatLevel ~= nil then
+                    brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel*v:GetHealthPercent()
+                end
+            end
+        end
+        return brainThreats
+    end,
+    GrabPosEconRNG = function(self,pos,radius)
+        local brainThreats = {ally=0,enemy=0}
+        if not self:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Ally') then return brainThreats end
+        local allyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Ally')
+        local enemyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Enemy')
+        for _,v in allyunits do
+            if not v.Dead then
+                local index = v:GetAIBrain():GetArmyIndex()
+                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+                --LOG('Unit ID is '..v.UnitId)
+                --bp = v:GetBlueprint().Defense
+                local bp = __blueprints[v.UnitId].Defense
+                --LOG(repr(__blueprints[v.UnitId].Defense))
+                if bp.EconomyThreatLevel ~= nil then
+                    brainThreats.ally = brainThreats.ally + bp.EconomyThreatLevel
+                end
+            end
+        end
+        for _,v in enemyunits do
+            if not v.Dead then
+                local index = v:GetAIBrain():GetArmyIndex()
+                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+                --LOG('Unit ID is '..v.UnitId)
+                --bp = v:GetBlueprint().Defense
+                local bp = __blueprints[v.UnitId].Defense
+                --LOG(repr(__blueprints[v.UnitId].Defense))
+                if bp.EconomyThreatLevel ~= nil then
+                    brainThreats.enemy = brainThreats.enemy + bp.EconomyThreatLevel
+                end
+            end
+        end
+        return brainThreats
+    end,
     ExpansionDangerCheckRNG = function(self)
         WaitTicks(600)
         while self.Result ~= "defeat" do
@@ -3686,6 +3749,5 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Type is '..type..' Count is '..count)
         return count
     end,]]
-
     
 }

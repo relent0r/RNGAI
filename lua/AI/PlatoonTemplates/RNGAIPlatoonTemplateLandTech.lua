@@ -8,7 +8,7 @@
 
 PlatoonTemplate {
     Name = 'RNGTECH Hero T3',
-    Plan = 'HuntAIRNGHero', -- The platoon function to use.
+    Plan = 'TrueHeroRNG', -- The platoon function to use.
     GlobalSquads = {
         {  categories.ual0303 + categories.uel0303 + categories.url0303 + categories.xsl0303, -- Type of units.
           1, -- Min number of units.
@@ -19,7 +19,7 @@ PlatoonTemplate {
 }
 PlatoonTemplate {
     Name = 'RNGTECH Hero Sniper',
-    Plan = 'HuntAIRNGHeroSniper', -- The platoon function to use.
+    Plan = 'TrueHeroRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.SNIPER * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204, -- Type of units.
           1, -- Min number of units.
@@ -30,7 +30,7 @@ PlatoonTemplate {
 }
 PlatoonTemplate {
     Name = 'RNGTECH Early Hero T1',
-    Plan = 'HuntAIRNGHero', -- The platoon function to use.
+    Plan = 'TrueHeroRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1) * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.SILO, -- Type of units.
           1, -- Min number of units.
@@ -41,7 +41,7 @@ PlatoonTemplate {
 }
 PlatoonTemplate {
     Name = 'RNGTECH Arty Hero T1',
-    Plan = 'HuntAIRNGHeroSniper', -- The platoon function to use.
+    Plan = 'TrueHeroRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1) * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.SILO, -- Type of units.
           1, -- Min number of units.
@@ -52,7 +52,7 @@ PlatoonTemplate {
 }
 PlatoonTemplate {
     Name = 'RNGTECH Early Hero T2',
-    Plan = 'HuntAIRNGHero', -- The platoon function to use.
+    Plan = 'TrueHeroRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH2) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.SILO, -- Type of units.
           1, -- Min number of units.

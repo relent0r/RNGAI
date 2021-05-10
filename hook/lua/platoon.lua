@@ -2297,7 +2297,7 @@ Platoon = Class(RNGAIPlatoon) {
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
             table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.OrderedTemplate then
-            relativeTo = table.copy(eng:GetPosition())
+            local relativeTo = table.copy(eng:GetPosition())
             --LOG('relativeTo is'..repr(relativeTo))
             relative = true
             local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
@@ -2313,6 +2313,8 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
             --LOG('NearPerimeterPoints')
+            local orient
+            local buildpoint
             reference, orient, buildpoint = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
             --LOG('referece is '..repr(reference))
             relative = false
@@ -5327,7 +5329,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 Hero:SetCustomName('Hero Movement: Too Close! Sniper Panic')
                                 IssueClearCommands({Hero})
                                 IssueMove({Hero},returnPos)
-                                WaitTicks(50)
+                                WaitTicks(60)
                             end
                             local kitePos = RUtils.lerpy(targetPosition, platoonPos, {targetDist, Hero.MaxWeaponRange})
                             self:MoveToLocation(kitePos, false, 'Attack')
@@ -5443,7 +5445,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     --LOG(repr(strafeshift))
                                     Hero:SetCustomName('Hero Movement: Strafing')
                                     self:MoveToLocation(strafeshift, false, 'Attack')
-                                    WaitTicks(30)
+                                    WaitTicks(20)
                                     if target.Dead then break end
                                     --IssueAttack({Hero}, target)
                                 -- in case we don't move, check if we can fire at the target
@@ -5463,7 +5465,7 @@ Platoon = Class(RNGAIPlatoon) {
                         else
                             break
                         end
-                    WaitTicks(25)
+                    WaitTicks(15)
                     end
                 end
             elseif not movingToScout then
@@ -5477,7 +5479,7 @@ Platoon = Class(RNGAIPlatoon) {
                     self:MoveToLocation((v), false)
                 end
             end
-            WaitTicks(35)
+            WaitTicks(10)
         end
     end,
     HighlightHero = function(self)
@@ -5511,6 +5513,254 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if Hero.MaxWeaponRange then
                     DrawCircle(pos1,Hero.MaxWeaponRange,'ffaa11FF')
+                end
+            WaitTicks(2)
+        end
+    end,
+    TrueHeroRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local target
+        local blip
+        local platoonUnits = GetPlatoonUnits(self)
+        local enemyRadius = 40
+        local movingToScout = false
+        local MaxPlatoonWeaponRange
+        local friendlyThreat=0
+        local enemyThreat=0
+        AIAttackUtils.GetMostRestrictiveLayer(self)
+        local Hero=platoonUnits[1]
+        local homebasex,homebasey = aiBrain:GetArmyStartPos()
+        local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
+        local platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
+        if EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204,Hero) then
+            Hero.Sniper=true
+        end
+        Hero.Threat=platoonThreat
+        Hero.home=homepos
+        Hero.base=homepos
+        Hero.evaluationpoints = {}
+        Hero.friendlyThreats = {}
+        Hero.enemyThreats = {}
+        Hero.threats = {}
+        Hero.Pos=Hero:GetPosition()
+        LOG('Hero homebase: '..repr(homepos)..' startpos = '..repr({homebasex,homebasey}))
+        if not Hero.Dead then
+            for _, weapon in Hero:GetBlueprint().Weapon or {} do
+                if not Hero.MaxWeaponRange or weapon.MaxRadius > Hero.MaxWeaponRange then
+                    Hero.MaxWeaponRange = weapon.MaxRadius * 0.9
+                    if weapon.BallisticArc == 'RULEUBA_LowArc' then
+                        Hero.WeaponArc = 'low'
+                    elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
+                        Hero.WeaponArc = 'high'
+                    else
+                        Hero.WeaponArc = 'none'
+                    end
+                end
+            end
+            if Hero:TestToggleCaps('RULEUTC_StealthToggle') then
+                Hero:SetScriptBit('RULEUTC_StealthToggle', false)
+            end
+            if Hero:TestToggleCaps('RULEUTC_CloakToggle') then
+                Hero:SetScriptBit('RULEUTC_CloakToggle', false)
+            end
+            Hero:RemoveCommandCap('RULEUCC_Reclaim')
+            Hero:RemoveCommandCap('RULEUCC_Repair')
+            if not Hero.MaxWeaponRange then
+                WARN('Scanning: unit ['..repr(Hero.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+            end
+            Hero.evaluationradius=Hero.MaxWeaponRange*0.7
+            LOG('hero evaluationradius = '..repr(Hero.evaluationradius))
+        end
+        while PlatoonExists(aiBrain, self) do
+            local health=Hero:GetHealthPercent()
+            local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION, false, true))
+            --LOG('alliedmexes:'..repr(alliedmexes))
+            table.sort(alliedmexes,function(k1,k2) return VDist3(k1:GetPosition(),Hero.Pos)<VDist3(k2:GetPosition(),Hero.Pos) end)
+            local closestmex=alliedmexes[1]
+            --LOG('closestmex:'..repr(closestmex))
+            if closestmex then
+                Hero.home=closestmex:GetPosition()
+            end
+            friendlyThreat=0
+            enemyThreat=0
+            for i=0,2*math.pi,math.pi/4 do
+                Hero.evaluationpoints[i]={Hero.Pos[1]+math.cos(i)*Hero.MaxWeaponRange,Hero.Pos[2],Hero.Pos[3]+math.sin(i)*Hero.MaxWeaponRange}
+            end
+            LOG('evaluationpoints at '..repr(Hero.evaluationpoints))
+            LOG('grabbing evaluationpoint threats')
+            for i,v in Hero.evaluationpoints do
+                local danger=aiBrain.GrabPosDangerRNG(aiBrain,Hero.evaluationpoints[i],Hero.evaluationradius)
+                Hero.friendlyThreats[i]=danger.ally
+                Hero.enemyThreats[i]=danger.enemy
+                Hero.threats[i]=Hero.enemyThreats[i]-Hero.friendlyThreats[i]
+                friendlyThreat=friendlyThreat+Hero.friendlyThreats[i]
+                enemyThreat=enemyThreat+Hero.enemyThreats[i]
+            end
+            Hero.ThreatLimit=(friendlyThreat/2+platoonThreat)*health
+            if enemyThreat>Hero.ThreatLimit then
+                --ENGAGE RUNAWAYMODE
+                local runawaydirection = 0
+                local evalweight=0
+                for i,v in Hero.evaluationpoints do
+                    if Hero.threats[i]<0 then
+                        runawaydirection=runawaydirection-i*math.pi/4*Hero.threats[i]
+                        evalweight=evalweight-Hero.threats[i]
+                    else
+                        runawaydirection=runawaydirection+(i*math.pi/4+math.pi)*Hero.threats[i]
+                        evalweight=evalweight+Hero.threats[i]
+                    end
+                end
+                local angle=runawaydirection/evalweight
+                local runawaypoint={Hero.Pos[1]+math.cos(angle)*Hero.MaxWeaponRange,Hero.Pos[2],Hero.Pos[3]+math.sin(angle)*Hero.MaxWeaponRange}
+                Hero.dest=runawaypoint
+                IssueClearCommands({Hero})
+                IssueMove({Hero},runawaypoint)
+                WaitTicks(30)
+                Hero.dest={Hero.home[1]+math.random(-4,4),Hero.home[2],Hero.home[3]+math.random(-4,4)}
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.home)
+                WaitTicks(30)
+                continue
+            end
+            Hero.target=nil
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.WALL)
+            local targetPosition
+            local targetDist
+            if target then
+                targetPosition=target:GetPosition()
+                Hero.target=targetPosition
+                local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+            end
+            if not target or target.Dead then
+                Hero.target=nil
+                local mex=AIUtils.AIGetMarkerLocations(aiBrain, 'Mass')
+                local raidlocs={}
+                for _,v in mex do
+                    if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
+                        -- mass marker is too close to border, skip it.
+                        continue
+                    end
+                    if GetSurfaceHeight(v.Position[1],v.Position[3])>GetTerrainHeight(v.Position[1],v.Position[3]) then
+                        continue
+                    end
+                    if aiBrain.GrabPosEconRNG(aiBrain,v.Position,20).ally>0 then
+                        continue
+                    end
+                    if VDist2(v.Position[1],v.Position[3],Hero.Pos[1],Hero.Pos[3])<100 then
+                        continue
+                    end
+                    table.insert(raidlocs,v)
+                end
+                table.sort(raidlocs,function(k1,k2) return math.pow(VDist2(k1.Position[1],k1.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],Hero.base[1],Hero.base[3])<math.pow(VDist2(k2.Position[1],k2.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],Hero.base[1],Hero.base[3]) end)
+                Hero.dest=raidlocs[1].Position
+                Hero.dest={Hero.dest[1]+math.random(-4,4),Hero.dest[2],Hero.dest[3]+math.random(-4,4)}
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(70)
+            elseif health<0.5 and Hero.Sync.regen>0 then
+                local targetPosition=target:GetPosition()
+                Hero.target=targetPosition
+                local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                Hero.dest = RUtils.lerpy({Hero.Pos[1],Hero.Pos[2],Hero.Pos[3]},targetPosition,{targetDist,targetDist - 3 * Hero.MaxWeaponRange})
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(40)
+                Hero.dest=Hero.home
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(30)
+            elseif target and targetDist>100 then
+                local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(30)
+            else
+                if enemyThreat<Hero.ThreatLimit/2 and not Hero.Sniper then
+                    local targetPosition=target:GetPosition()
+                    Hero.target=targetPosition
+                    local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                    if targetDist<Hero.MaxWeaponRange*1.5 then
+                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,2+math.random(-0,2)})
+                        IssueClearCommands({Hero})
+                        IssueMove({Hero},Hero.dest)
+                        WaitTicks(30)
+                    elseif targetDist<Hero.MaxWeaponRange*5 then
+                        Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
+                        IssueClearCommands({Hero})
+                        IssueMove({Hero},Hero.dest)
+                        WaitTicks(40)
+                    else
+                        Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
+                        IssueClearCommands({Hero})
+                        IssueMove({Hero},Hero.dest)
+                        WaitTicks(100)
+                    end
+                else
+                    local targetPosition=target:GetPosition()
+                    Hero.target=targetPosition
+                    local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                    if targetDist<Hero.MaxWeaponRange*2.5 then
+                        local smartPos = RUtils.lerpy({Hero.Pos[1]+math.random(-2,2),Hero.Pos[2],Hero.Pos[3]+math.random(-2,2)},targetPosition,{targetDist,targetDist - Hero.MaxWeaponRange})
+                        smartPos = {smartPos[1]+math.random(-1,1),smartPos[2],smartPos[3]+math.random(-1,1)}
+                        local strafeshift=RUtils.LerpyRotate(Hero.Pos,smartPos,{4,math.random(-4,4)})
+                        Hero.dest=strafeshift
+                        IssueClearCommands({Hero})
+                        IssueMove({Hero},strafeshift)
+                        WaitTicks(25)
+                    elseif targetDist<Hero.MaxWeaponRange*5 then
+                        Hero.dest=AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
+                        IssueClearCommands({Hero})
+                        IssueMove({Hero},Hero.dest)
+                        WaitTicks(40)
+                    else
+                        Hero.dest=AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
+                        IssueClearCommands({Hero})
+                        IssueMove({Hero},Hero.dest)
+                        WaitTicks(100)
+                    end
+                end
+            end
+            WaitTicks(10)
+        end
+    end,
+    HighlightTrueHero = function(self)
+        LOG('starting expansion display')
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local platoonUnits = GetPlatoonUnits(self)
+        local Hero=platoonUnits[1]
+        while not Hero.dead and PlatoonExists(aiBrain, self) do
+                local pos1={0,0,0}
+                local pos2={0,0,0}
+                local pos3={0,0,0}
+                Hero.pos=Hero:GetPosition() 
+                pos1=Hero.pos
+                pos2=Hero.dest
+                DrawLinePop(pos1,Hero.home,'3f00FF21')
+                if not Hero.pos then
+                    WaitTicks(2)
+                    continue 
+                end
+                if Hero.target then
+                    pos3=Hero.target
+                    DrawLinePop(pos1,pos3,'afFF1155')
+                end
+                DrawLinePop(pos1,pos2,'8f00aaFF')
+                if Hero.Threat then
+                    DrawCircle(pos1,Hero.Threat,'4fFF11FF')
+                end
+                if Hero.friendlyThreats and Hero.enemyThreats then
+                    for i,v in Hero.evaluationpoints do
+                        DrawCircle(v,math.min(Hero.evaluationradius*Hero.enemyThreats[i]/Hero.ThreatLimit,Hero.evaluationradius*1.2),'23FF0000')
+                        DrawCircle(v,math.min(Hero.evaluationradius*Hero.friendlyThreats[i]/Hero.ThreatLimit,Hero.evaluationradius*1.2),'230000FF')
+                        DrawCircle(v,Hero.evaluationradius,'2a808080')
+                    end
+                end
+                if Hero.MaxWeaponRange then
+                    DrawCircle(pos1,Hero.MaxWeaponRange,'3a808080')
                 end
             WaitTicks(2)
         end

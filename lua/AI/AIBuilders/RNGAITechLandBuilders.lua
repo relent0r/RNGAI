@@ -156,7 +156,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECH Hero T3',                          -- Template Name. 
         Priority = 1300,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        PlatoonAddPlans = { 'HighlightTrueHero' },
+        InstanceCount = 50,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH3 - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -171,7 +172,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECH Hero Sniper',                          -- Template Name. 
         Priority = 1300,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
-        InstanceCount = 50,                                                      -- Number of platoons that will be formed.
+        PlatoonAddPlans = { 'HighlightTrueHero' },
+        InstanceCount = 100,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204} },
@@ -186,7 +188,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECH Early Hero T1',                          -- Template Name. 
         Priority = 1200,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
-        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
+        PlatoonAddPlans = { 'HighlightTrueHero' },
+        InstanceCount = 300,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH1 - categories.ENGINEER } },
@@ -202,7 +205,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECH Arty Hero T1',                          -- Template Name. 
         Priority = 1200,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
-        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        PlatoonAddPlans = { 'HighlightTrueHero' },
+        InstanceCount = 300,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH1 - categories.ENGINEER } },
@@ -217,8 +221,9 @@ BuilderGroup {
         BuilderName = 'RNG Tech Early Hero T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGTECH Early Hero T2',                          -- Template Name. 
         Priority = 1200,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddPlans = { 'HighlightHero' },        
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        --PlatoonAddPlans = { 'HighlightHero' },  
+        PlatoonAddPlans = { 'HighlightTrueHero' },      
+        InstanceCount = 100,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH2 - categories.ENGINEER } },

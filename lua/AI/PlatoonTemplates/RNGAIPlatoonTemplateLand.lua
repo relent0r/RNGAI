@@ -41,7 +41,7 @@ PlatoonTemplate {
     Name = 'RNGAI Guard Marker Small',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
-        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 4, 10, 'Attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), 4, 10, 'Attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 10, 'Artillery', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
@@ -61,7 +61,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Mass Raiders Small',
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
-        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 8, 'Attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), 3, 8, 'Attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'Artillery', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
@@ -72,7 +72,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Mass Raiders Medium',
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
-        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.TECH3 , 4, 15, 'attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.TECH3 - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204) , 4, 15, 'attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.TECH3 - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL  , 0, 2, 'attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'Artillery', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
@@ -104,7 +104,7 @@ PlatoonTemplate {
     Name = 'RNGAI T1 Guard Marker Medium',
     Plan = 'GuardMarkerRNG',    
     GlobalSquads = {
-        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 5, 30, 'attack', 'none' },
+        { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), 5, 30, 'attack', 'none' },
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 8, 'attack', 'none' },
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
@@ -115,7 +115,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Small',
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           1, -- Min number of units.
           8, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -129,7 +129,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam Expansion',
     Plan = 'HuntAIRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -148,7 +148,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam Intelli',
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -186,7 +186,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack AA Structures',
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -199,7 +199,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam',
     Plan = 'HuntAIRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           4, -- Min number of units.
           16, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -213,7 +213,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam Early',
     Plan = 'HuntAIRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           3, -- Min number of units.
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -227,7 +227,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam Aeon',
     Plan = 'HuntAIRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'Attack', -- platoon types: 'support', 'attack', 'scout',
@@ -241,7 +241,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam Aeon Intelli',
     Plan = 'HuntAIPATHRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'Attack', -- platoon types: 'support', 'attack', 'scout',
@@ -274,7 +274,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Medium',
     Plan = 'AttackForceAIRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT,-- Type of units.
+        { categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204),-- Type of units.
           4, -- Min number of units.
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
@@ -297,7 +297,7 @@ PlatoonTemplate {
     Name = 'RNGAI LandAttack Large',
     Plan = 'AttackForceAIRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT, -- Type of units.
+        { categories.MOBILE * categories.LAND - categories.ANTIAIR - categories.EXPERIMENTAL - categories.ENGINEER - categories.SCOUT - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204), -- Type of units.
           8, -- Min number of units.
           14, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',

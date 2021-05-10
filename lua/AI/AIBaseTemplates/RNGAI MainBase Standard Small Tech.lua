@@ -12,8 +12,8 @@ BaseBuilderTemplate {
         'RNGAI Initial ACU Builder Small',
 
         -- ACU Other Builders --
-        'RNGAI ACU Build Assist',
-        'RNGAI ACU Structure Builders',
+        'RNG Tech ACU Build Assist',
+        'RNG Tech ACU Structure Builders',
         --'RNGAI Test PD',
         --'RNGAI ACU Enhancements Gun',
         --'RNGAI ACU Enhancements Tier',
@@ -58,7 +58,7 @@ BaseBuilderTemplate {
         'RNGAI Land Mass Raid',
         'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
-        'RNGAI Land Response Formers',
+        --'RNGAI Land Response Formers',
         'RNG Tech Hero FormBuilders',
 
         -- Land Factory Builders --
