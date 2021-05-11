@@ -28,6 +28,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI T1 Artillery',
@@ -41,6 +44,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI T1 AA',
@@ -54,5 +60,8 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
 }
