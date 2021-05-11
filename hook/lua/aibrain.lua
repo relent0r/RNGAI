@@ -134,6 +134,134 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerPriorityTable = {}
+        self.cmanager = {
+            income = {
+                r  = {
+                    m = 0,
+                    e = 0,
+                },
+                t = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+            spend = {
+                m = 0,
+                e = 0,
+            },
+            categoryspend = {
+                eng = 0,
+                fact = 0,
+                silo = 0,
+                mex = 0,
+            },
+            storage = {
+                m = 0,
+                e = 0,
+                max = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+        }
+        self.amanager = {
+            current = {
+                Land = {
+                    t1 = {
+                        scout=0,
+                        tank=0,
+                        arty=0,
+                        aa=0
+                    },
+                    t2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    t3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0}
+                    },
+                },
+                Air = {
+                    t1 = {
+                        scout=0,
+                        interceptor=0,
+                        bomber=0,
+                        gunship=0
+                    },
+                    t2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    t3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0}
+                    },
+                },
+                Naval = {
+                    t1 = {
+                        frigate=0,
+                        submarine=0,
+                        aa=0
+                    },
+                    t2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    t3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0}
+                    },
+                },
+            total = {
+                t1 = 0,
+                t2 = 0,
+                t3 = 0,
+            },
+            type = {
+                scout=0,
+                tank=0,
+                sniper=0,
+                arty=0,
+                mml=0,
+                aa=0,
+                shield=0
+            },
+            ratios = {
+                t1 = {
+                    scout=11,
+                    tank=55,
+                    arty=22,
+                    aa=12,
+                },
+            },
+        }
+        self.smanager = {
+            fac = {},
+            mex = {},
+            silo = {},
+            fabs = {},
+            pgens = {},
+        }
+
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -2921,7 +3049,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.cmanager.storage.max.m=storage.max.m
             self.cmanager.storage.max.e=storage.max.e
         end
-        self.amanager=army
+        self.amanager.current.Land=army
         self.amanager.total=armytiers
         self.amanager.type=armytype
         self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
