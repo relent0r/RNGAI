@@ -519,7 +519,7 @@ function GetClosestMassMarker(aiBrain, unit)
         end
     end
 
-    engPos = unit:GetPosition()
+    local engPos = unit:GetPosition()
     local loc, distance, lowest, name = nil
 
     for _, v in markerList do
@@ -540,6 +540,7 @@ end
 
 function GetStartLocationMassMarkers(aiBrain, massLocations)
     local startLocations
+    local allyStarts = {}
 
     for i = 1, 16 do
         local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
@@ -736,7 +737,7 @@ end
 
 function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
     -- Usage ManualBuildStructure(aiBrain, engineerunit, 'AntiSurface', 'TECH2', {123:20:123})
-    factionIndex = aiBrain:GetFactionIndex()
+    local factionIndex = aiBrain:GetFactionIndex()
     -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     DefenseTable = {
         { 
@@ -808,7 +809,7 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
             }
         }
     }
-    blueprintID = DefenseTable[factionIndex][structureType][tech]
+    local blueprintID = DefenseTable[factionIndex][structureType][tech]
     if CanBuildStructureAt(aiBrain, blueprintID, position) then
         IssueStop({eng})
         IssueClearCommands({eng})
