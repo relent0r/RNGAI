@@ -475,7 +475,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Land',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        PlatoonAIPlan = 'ReclaimStructuresAI',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -493,7 +493,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Land Mass Stall',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        PlatoonAIPlan = 'ReclaimStructuresAI',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
         Priority = 1050,
         InstanceCount = 3,
         BuilderConditions = {
@@ -512,7 +512,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T2 Land',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        PlatoonAIPlan = 'ReclaimStructuresAI',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
         Priority = 940,
         InstanceCount = 4,
         BuilderConditions = {
@@ -530,7 +530,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T2 Land Mass Stall',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        PlatoonAIPlan = 'ReclaimStructuresAI',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
         Priority = 1050,
         InstanceCount = 10,
         BuilderConditions = {

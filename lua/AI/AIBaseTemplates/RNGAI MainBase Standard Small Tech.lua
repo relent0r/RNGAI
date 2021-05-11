@@ -12,8 +12,8 @@ BaseBuilderTemplate {
         'RNGAI Initial ACU Builder Small',
 
         -- ACU Other Builders --
-        'RNGAI ACU Build Assist',
-        'RNGAI ACU Structure Builders',
+        'RNG Tech ACU Build Assist',
+        'RNG Tech ACU Structure Builders',
         --'RNGAI Test PD',
         --'RNGAI ACU Enhancements Gun',
         --'RNGAI ACU Enhancements Tier',
@@ -39,15 +39,15 @@ BaseBuilderTemplate {
         --'RNGAIR Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
-        'RNGAI Assist Manager BuilderGroup',
+        --'RNGAI Assist Manager BuilderGroup',
         'RNG Tech Energy Assist',
 
         -- Land Unit Builders T1 --
         'RNGAI ScoutLandBuilder',
         --'RNGAI LabLandBuilder', -- Remove to use queue
         'RNGAI TankLandBuilder Small',
-        'RNGAI Land AA 2',
-        'RNGAI Reaction Tanks',
+        --'RNGAI Land AA 2',
+        --'RNGAI Reaction Tanks',
         'RNGAI T3 AttackLandBuilder Small',
         --'RNG Tech InitialBuilder Small',
         'RNG Tech T3 Land Builder Small',
@@ -58,7 +58,7 @@ BaseBuilderTemplate {
         'RNGAI Land Mass Raid',
         'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
-        'RNGAI Land Response Formers',
+        --'RNGAI Land Response Formers',
         'RNG Tech Hero FormBuilders',
 
         -- Land Factory Builders --

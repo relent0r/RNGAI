@@ -152,11 +152,11 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             local threatType = 'AntiSurface'
             local markerTable = RUtils.AIGetSortedMassLocationsThreatRNG(aiBrain, constructionData.MinDistance, constructionData.MaxDistance, constructionData.ThreatMin, constructionData.ThreatMax, constructionData.ThreatRings, constructionData.ThreatType, relativeTo)
             relative = false
-            for _,v in markerTable do
+            for i,v in markerTable do
                 if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance and VDist3( v.Position, relativeTo ) >= constructionData.MinDistance then
                     if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
                         LOG('MassPoint found for engineer')
-                        location = table.copy(markerTable[Random(1,table.getn(markerTable))])
+                        location = table.copy(markerTable[i])
                         location = {location.Position[1], location.Position[3], location.Position[2]}
                         LOG('Location is '..repr(location))
                         break
