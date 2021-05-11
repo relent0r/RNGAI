@@ -27,22 +27,19 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
                 -- mass marker is too close to border, skip it.
                 continue
             end 
-            table.insert(MassMarker, {Position = v.position, Distance = VDist3( v.position, engPos ) })
+            local mexDistance = VDist3( v.position, engPos )
+            if mexDistance < distance and aiBrain:CanBuildStructureAt('ueb1103', v.position) then
+                LOG('mexDistance '..mexDistance)
+                table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})
+            end
         end
     end
     table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
-    LastMassBOOL = false
-    for _, v in MassMarker do
-        if v.Distance > distance then
-            break
-        end
-        --LOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
-        if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
-            LastMassBOOL = true
-            break
-        end
+    if table.getn(MassMarker) > 0 then
+        return true, MassMarker
+    else
+        return false
     end
-    return LastMassBOOL
 end
 
 function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
