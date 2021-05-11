@@ -15,9 +15,12 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
+local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMass
+local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
+local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
+local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
-
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 
@@ -2926,10 +2929,10 @@ AIBrain = Class(RNGAIBrainClass) {
         for _,unit in units do
             if unit.Dead then continue end
             if not unit then continue end
-            local spendm=unit:GetConsumptionPerSecondMass()
-            local spende=unit:GetConsumptionPerSecondEnergy()
-            local producem=unit:GetProductionPerSecondMass()
-            local producee=unit:GetProductionPerSecondEnergy()
+            local spendm=GetConsumptionPerSecondMass(unit)
+            local spende=GetConsumptionPerSecondEnergy(unit)
+            local producem=GetProductionPerSecondMass(unit)
+            local producee=GetProductionPerSecondEnergy(unit)
             tspend.m=tspend.m+spendm
             tspend.e=tspend.e+spende
             rincome.m=rincome.m+producem
