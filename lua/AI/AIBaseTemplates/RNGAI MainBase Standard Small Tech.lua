@@ -39,15 +39,15 @@ BaseBuilderTemplate {
         --'RNGAIR Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
-        'RNGAI Assist Manager BuilderGroup',
+        --'RNGAI Assist Manager BuilderGroup',
         'RNG Tech Energy Assist',
 
         -- Land Unit Builders T1 --
         'RNGAI ScoutLandBuilder',
         --'RNGAI LabLandBuilder', -- Remove to use queue
         'RNGAI TankLandBuilder Small',
-        'RNGAI Land AA 2',
-        'RNGAI Reaction Tanks',
+        --'RNGAI Land AA 2',
+        --'RNGAI Reaction Tanks',
         'RNGAI T3 AttackLandBuilder Small',
         --'RNG Tech InitialBuilder Small',
         'RNG Tech T3 Land Builder Small',

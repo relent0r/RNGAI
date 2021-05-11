@@ -16,6 +16,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 30',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 999,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -39,6 +40,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 60',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 950,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -62,6 +64,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 850,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -85,7 +88,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2Engineer Mass 120',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 850,
+        PlatoonAIPlan = 'MexBuildAIRNG',
+        Priority = 650,
         InstanceCount = 1,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
@@ -108,6 +112,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 200',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 1010,
         InstanceCount = 1,
         BuilderConditions = { 
@@ -136,6 +141,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -164,6 +170,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 700,
         InstanceCount = 5,
         BuilderConditions = { 
@@ -193,6 +200,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
         PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'MexBuildAIRNG',
         Priority = 300,
         InstanceCount = 5,
         BuilderConditions = { 

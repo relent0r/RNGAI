@@ -2824,7 +2824,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('Repeat Build is set for :'..eng.Sync.id)
                 if type == 'Mass' and distance then
                     if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
-                        eng.PlatoonHandle:EngineerBuildAIRNG()
+                        eng.PlatoonHandle:MexBuildAIRNG()
                         --eng.PlatoonHandle:SetAIPlanRNG( eng.PlatoonHandle.PlanName, aiBrain)
                         return
                     end
@@ -5522,6 +5522,10 @@ Platoon = Class(RNGAIPlatoon) {
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target
+        local targetmex
+        local targetacu
+        local targeteng
+        local targetpd
         local blip
         local platoonUnits = GetPlatoonUnits(self)
         local enemyRadius = 40
@@ -5581,7 +5585,11 @@ Platoon = Class(RNGAIPlatoon) {
             local closestmex=alliedmexes[1]
             --LOG('closestmex:'..repr(closestmex))
             if closestmex then
-                Hero.home=closestmex:GetPosition()
+                --[[if not Hero:CanPathTo(alliedmexes[1]:GetPosition()) then
+                    Hero.home=Hero.base
+                else]]
+                    Hero.home=closestmex:GetPosition()
+                --end
             end
             friendlyThreat=0
             enemyThreat=0
@@ -5625,15 +5633,55 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
             Hero.target=nil
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.WALL)
+            Hero.targetacu=nil
+            Hero.targetmex=nil
+            Hero.targeteng=nil
+            Hero.targetpd=nil
+            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.COMMAND - (categories.DEFENSE * categories.DIRECTFIRE) - categories.NAVAL - categories.AIR - categories.WALL)
+            local targetacuDist
+            targetacu = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND)
+            local targetmexDist
+            targetmex = self:FindClosestUnit('Attack', 'Enemy', true, categories.MASSEXTRACTION)
+            local targetengDist
+            targeteng = self:FindClosestUnit('Attack', 'Enemy', true, categories.ENGINEER - categories.COMMAND)
+            local targetpdDist
+            targetpd = self:FindClosestUnit('Attack', 'Enemy', true, categories.DEFENSE * categories.DIRECTFIRE)
+            if targetacu then
+                Hero.targetacu=targetacu:GetPosition()
+                targetacuDist=VDist2(Hero.targetacu[1],Hero.targetacu[3],Hero.Pos[1],Hero.Pos[3])
+                if targetacuDist>150 then
+                    Hero.targetacu=nil
+                end
+            end
+            if targetmex then
+                Hero.targetmex=targetmex:GetPosition()
+                targetmexDist=VDist2(Hero.targetmex[1],Hero.targetmex[3],Hero.Pos[1],Hero.Pos[3])
+                if targetmexDist>150 then
+                    Hero.targetmex=nil
+                end
+            end
+            if targeteng then
+                Hero.targeteng=targeteng:GetPosition()
+                targetengDist=VDist2(Hero.targeteng[1],Hero.targeteng[3],Hero.Pos[1],Hero.Pos[3])
+                if targetengDist>150 then
+                    Hero.targeteng=nil
+                end
+            end
+            if targetpd then
+                Hero.targetpd=targetpd:GetPosition()
+                targetpdDist=VDist2(Hero.targetpd[1],Hero.targetpd[3],Hero.Pos[1],Hero.Pos[3])
+                if targetpdDist>150 then
+                    Hero.targetpd=nil
+                end
+            end
             local targetPosition
             local targetDist
             if target then
                 targetPosition=target:GetPosition()
                 Hero.target=targetPosition
-                local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
             end
-            if not target or target.Dead then
+            if not target or target.Dead --[[or not Hero:CanPathTo(targetPosition)]] then
                 Hero.target=nil
                 local mex=AIUtils.AIGetMarkerLocations(aiBrain, 'Mass')
                 local raidlocs={}
@@ -5662,7 +5710,7 @@ Platoon = Class(RNGAIPlatoon) {
             elseif health<0.5 and Hero.Sync.regen>0 then
                 local targetPosition=target:GetPosition()
                 Hero.target=targetPosition
-                local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
                 Hero.dest = RUtils.lerpy({Hero.Pos[1],Hero.Pos[2],Hero.Pos[3]},targetPosition,{targetDist,targetDist - 3 * Hero.MaxWeaponRange})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
@@ -5671,22 +5719,66 @@ Platoon = Class(RNGAIPlatoon) {
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 WaitTicks(30)
-            elseif target and targetDist>100 then
+            elseif targetpd and targetpdDist<Hero.MaxWeaponRange*2 and not Hero.MaxWeaponRange>29 then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
                 Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 WaitTicks(30)
+            elseif targetpd and targetpdDist<targetDist*0.9 and Hero.MaxWeaponRange>29 and targetpdDist<Hero.MaxWeaponRange*1.3 then
+                Hero.dest = RUtils.lerpy({Hero.Pos[1],Hero.Pos[2],Hero.Pos[3]},Hero.targetpd,{targetpdDist,targetpdDist - Hero.MaxWeaponRange})
+                target=targetpd
+                local targetPosition=target:GetPosition()
+                Hero.target=targetPosition
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                IssueAttack({Hero},target)
+                WaitTicks(40)
+            elseif targetacu and targetacuDist<Hero.MaxWeaponRange*2 and not Hero.MaxWeaponRange>29 then
+                local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(30)
+            elseif targetacu and targetacuDist<Hero.MaxWeaponRange*2 and Hero.MaxWeaponRange>29 and targetacuDist<targetDist*0.9 then
+                Hero.dest = RUtils.lerpy({Hero.Pos[1],Hero.Pos[2],Hero.Pos[3]},Hero.targetacu,{targetacuDist,targetacuDist - Hero.MaxWeaponRange})
+                target=targetacu
+                local targetPosition=target:GetPosition()
+                Hero.target=targetPosition
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                IssueAttack({Hero},target)
+                WaitTicks(40)
+            elseif target and targetDist>100 then
+                local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,10+homedist/3+math.random(-3,2)})
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(30)
+                Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
+                IssueClearCommands({Hero})
+                IssueMove({Hero},Hero.dest)
+                WaitTicks(50)
             else
-                if enemyThreat<Hero.ThreatLimit/2 and not Hero.Sniper then
+                if targeteng and targetengDist<targetDist*1.5 then
+                    IssueClearCommands({Hero})
+                    IssueAttack({Hero},targeteng)
+                    WaitTicks(40)
+                elseif targetmex and targetmexDist<targetDist*1.5 then
+                    IssueClearCommands({Hero})
+                    IssueAttack({Hero},targetmex)
+                    WaitTicks(40)
+                end
+                if not target or target.Dead then continue end
+                if enemyThreat<Hero.ThreatLimit/2 and not Hero.Sniper and not targetacuDist<40 or enemyThreat<Hero.ThreatLimit/5 then
                     local targetPosition=target:GetPosition()
                     Hero.target=targetPosition
-                    local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                    targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
                     if targetDist<Hero.MaxWeaponRange*1.5 then
-                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,2+math.random(-0,2)})
+                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,3+math.random(0,5)})
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(30)
+                        WaitTicks(10)
                     elseif targetDist<Hero.MaxWeaponRange*5 then
                         Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
@@ -5701,7 +5793,7 @@ Platoon = Class(RNGAIPlatoon) {
                 else
                     local targetPosition=target:GetPosition()
                     Hero.target=targetPosition
-                    local targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
+                    targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
                     if targetDist<Hero.MaxWeaponRange*2.5 then
                         local smartPos = RUtils.lerpy({Hero.Pos[1]+math.random(-2,2),Hero.Pos[2],Hero.Pos[3]+math.random(-2,2)},targetPosition,{targetDist,targetDist - Hero.MaxWeaponRange})
                         smartPos = {smartPos[1]+math.random(-1,1),smartPos[2],smartPos[3]+math.random(-1,1)}
@@ -5745,8 +5837,19 @@ Platoon = Class(RNGAIPlatoon) {
                     continue 
                 end
                 if Hero.target then
-                    pos3=Hero.target
-                    DrawLinePop(pos1,pos3,'afFF1155')
+                    DrawLinePop(pos1,Hero.target,'8fFF1155')
+                end
+                if Hero.targetmex then
+                    DrawLinePop(pos1,Hero.targetmex,'1f4CFF00')
+                end
+                if Hero.targetacu then
+                    DrawLinePop(pos1,Hero.targetacu,'4f4800FF')
+                end
+                if Hero.targetpd then
+                    DrawLinePop(pos1,Hero.targetpd,'5fFF6A00')
+                end
+                if Hero.targeteng then
+                    DrawLinePop(pos1,Hero.targeteng,'1fFFD800')
                 end
                 DrawLinePop(pos1,pos2,'8f00aaFF')
                 if Hero.Threat then
@@ -5754,9 +5857,9 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if Hero.friendlyThreats and Hero.enemyThreats then
                     for i,v in Hero.evaluationpoints do
-                        DrawCircle(v,math.min(Hero.evaluationradius*Hero.enemyThreats[i]/Hero.ThreatLimit,Hero.evaluationradius*1.2),'23FF0000')
-                        DrawCircle(v,math.min(Hero.evaluationradius*Hero.friendlyThreats[i]/Hero.ThreatLimit,Hero.evaluationradius*1.2),'230000FF')
-                        DrawCircle(v,Hero.evaluationradius,'2a808080')
+                        DrawCircle(v,math.min(Hero.evaluationradius*Hero.enemyThreats[i]/Hero.ThreatLimit,Hero.evaluationradius*1.2),'13FF0000')
+                        DrawCircle(v,math.min(Hero.evaluationradius*Hero.friendlyThreats[i]/Hero.ThreatLimit,Hero.evaluationradius*1.2),'130000FF')
+                        DrawCircle(v,Hero.evaluationradius,'1a808080')
                     end
                 end
                 if Hero.MaxWeaponRange then
@@ -5764,5 +5867,352 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             WaitTicks(2)
         end
+    end,
+    ReclaimStructuresRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local data = self.PlatoonData
+        local radius = aiBrain:PBMGetLocationRadius(data.Location)
+        local categories = data.Reclaim
+        local counter = 0
+        local reclaimcat
+        local reclaimables
+        local unitPos
+        local reclaimunit
+        local distance
+        local allIdle
+        while aiBrain:PlatoonExists(self) do
+            unitPos = self:GetPlatoonPosition()
+            reclaimunit = false
+            distance = false
+            for num,cat in categories do
+                if type(cat) == 'string' then
+                    reclaimcat = ParseEntityCategory(cat)
+                else
+                    reclaimcat = cat
+                end
+                reclaimables = aiBrain:GetListOfUnits(reclaimcat, false)
+                for k,v in reclaimables do
+                    if not v.Dead and (not reclaimunit or VDist3(unitPos, v:GetPosition()) < distance) and unitPos and not v:IsUnitState('Upgrading') then
+                        reclaimunit = v
+                        distance = VDist3(unitPos, v:GetPosition())
+                    end
+                end
+                if reclaimunit then break end
+            end
+            if reclaimunit and not reclaimunit.Dead then
+                counter = 0
+                -- Set ReclaimInProgress to prevent repairing (see RepairAI)
+                reclaimunit.ReclaimInProgress = true
+                IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
+                repeat
+                    WaitSeconds(2)
+                    if not aiBrain:PlatoonExists(self) then
+                        return
+                    end
+                    allIdle = true
+                    for k,v in self:GetPlatoonUnits() do
+                        if not v.Dead and not v:IsIdleState() then
+                            allIdle = false
+                            break
+                        end
+                    end
+                until allIdle
+            elseif not reclaimunit or counter >= 5 then
+                self:PlatoonDisband()
+                return
+            else
+                counter = counter + 1
+                WaitSeconds(5)
+            end
+        end
+    end,
+    MexBuildAIRNG = function(self)
+        local aiBrain = self:GetBrain()
+        local platoonUnits = GetPlatoonUnits(self)
+        local armyIndex = aiBrain:GetArmyIndex()
+        local cons = self.PlatoonData.Construction
+        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
+        local eng
+        for k, v in platoonUnits do
+            if not v.Dead and EntityCategoryContains(categories.ENGINEER, v) then
+                IssueClearCommands({v})
+                if not eng then
+                    eng = v
+                else
+                    IssueGuard({v}, eng)
+                end
+            end
+        end
+        if not eng or eng.Dead then
+            WaitTicks(1)
+            self:PlatoonDisband()
+            return
+        end
+        if eng:IsUnitState('Building') or eng:IsUnitState('Upgrading') or eng:IsUnitState("Enhancing") then
+           return
+        end
+        local FactionToIndex  = { UEF = 1, AEON = 2, CYBRAN = 3, SERAPHIM = 4, NOMADS = 5}
+        local factionIndex = cons.FactionIndex or FactionToIndex[eng.factionCategory]
+        buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
+        baseTmplFile = import(cons.BaseTemplateFile or '/lua/BaseTemplates.lua')
+        baseTmplDefault = import('/lua/BaseTemplates.lua')
+        buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
+        baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
+        if self.PlatoonData.NeedGuard then
+            eng.NeedGuard = true
+        end
+        -------- CHOOSE APPROPRIATE BUILD FUNCTION AND SETUP BUILD VARIABLES --------
+        local reference = false
+        local refName = false
+        local buildFunction
+        local closeToBuilder
+        local relative
+        local baseTmplList = {}
+
+        -- if we have nothing to build, disband!
+        if not cons.BuildStructures then
+            WaitTicks(1)
+            self:PlatoonDisband()
+            return
+        end
+        table.insert(baseTmplList, baseTmpl)
+        relative = true
+        reference = true
+        buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
+        if cons.BuildClose then
+            closeToBuilder = eng
+        end
+        if cons.BuildStructures[1] == 'T1Resource' or cons.BuildStructures[1] == 'T2Resource' or cons.BuildStructures[1] == 'T3Resource' then
+            relative = true
+            closeToBuilder = eng
+            local guards = eng:GetGuards()
+            for k,v in guards do
+                if not v.Dead and v.PlatoonHandle and PlatoonExists(aiBrain, v.PlatoonHandle) then
+                    v.PlatoonHandle:PlatoonDisband()
+                end
+            end
+        end
+
+        --LOG("*AI DEBUG: Setting up Callbacks for " .. eng.Sync.id)
+        self.SetupEngineerCallbacksRNG(eng)
+
+        -------- BUILD BUILDINGS HERE --------
+        for baseNum, baseListData in baseTmplList do
+            for k, v in cons.BuildStructures do
+                if PlatoonExists(aiBrain, self) then
+                    if not eng.Dead then
+                        local faction = SUtils.GetEngineerFaction(eng)
+                        if aiBrain.CustomUnits[v] and aiBrain.CustomUnits[v][faction] then
+                            local replacement = SUtils.GetTemplateReplacement(aiBrain, v, faction, buildingTmpl)
+                            if replacement then
+                                buildFunction(aiBrain, eng, v, closeToBuilder, relative, replacement, baseListData, reference, cons)
+                            else
+                                buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
+                            end
+                        else
+                            buildFunction(aiBrain, eng, v, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
+                        end
+                    else
+                        if PlatoonExists(aiBrain, self) then
+                            WaitTicks(1)
+                            self:PlatoonDisband()
+                            return
+                        end
+                    end
+                end
+            end
+        end
+
+        -- wait in case we're still on a base
+        if not eng.Dead then
+            local count = 0
+            while eng:IsUnitState('Attached') and count < 2 do
+                WaitTicks(60)
+                count = count + 1
+            end
+        end
+
+        if not eng:IsUnitState('Building') then
+            return self.ProcessBuildMexCommandRNG(eng, false)
+        end
+    end,
+    ProcessBuildMexCommandRNG = function(eng, removeLastBuild)
+        --DUNCAN - Trying to stop commander leaving projects
+        if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Upgrading or eng.GoingHome then
+            return
+        end
+
+        local aiBrain = eng.PlatoonHandle:GetBrain()
+        if not aiBrain or eng.Dead or not eng.EngineerBuildQueue or table.getn(eng.EngineerBuildQueue) == 0 then
+            if PlatoonExists(aiBrain, eng.PlatoonHandle) then
+                --LOG("*AI DEBUG: Disbanding Engineer Platoon in ProcessBuildCommand top " .. eng.Sync.id)
+                --if eng.CDRHome then --LOG('*AI DEBUG: Commander process build platoon disband...') end
+                if not eng.AssistSet and not eng.AssistPlatoon and not eng.UnitBeingAssist then
+                    --LOG('Disband engineer platoon start of process')
+                    eng.PlatoonHandle:PlatoonDisband()
+                end
+            end
+            if eng then eng.ProcessBuild = nil end
+            return
+        end
+
+        -- it wasn't a failed build, so we just finished something
+        if removeLastBuild then
+            table.remove(eng.EngineerBuildQueue, 1)
+        end
+
+        eng.ProcessBuildDone = false
+        IssueClearCommands({eng})
+        local commandDone = false
+        local PlatoonPos
+        while not eng.Dead and not commandDone and table.getn(eng.EngineerBuildQueue) > 0  do
+            local whatToBuild = eng.EngineerBuildQueue[1][1]
+            local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
+            if GetTerrainHeight(buildLocation[1], buildLocation[3]) > GetSurfaceHeight(buildLocation[1], buildLocation[3]) then
+                --land
+                buildLocation[2] = GetTerrainHeight(buildLocation[1], buildLocation[3])
+            else
+                --water
+                buildLocation[2] = GetSurfaceHeight(buildLocation[1], buildLocation[3])
+            end
+            local buildRelative = eng.EngineerBuildQueue[1][3]
+            if not eng.NotBuildingThread then
+                eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
+            end
+            -- see if we can move there first
+            --LOG('Check if we can move to location')
+            --LOG('Unit is '..eng.UnitId)
+
+            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation) then
+                if not eng or eng.Dead or not eng.PlatoonHandle or not PlatoonExists(aiBrain, eng.PlatoonHandle) then
+                    if eng then eng.ProcessBuild = nil end
+                    return
+                end
+                --[[if AIUtils.IsMex(whatToBuild) and (not aiBrain:CanBuildStructureAt(whatToBuild, buildLocation)) then
+                    LOG('Cant build at mass location')
+                    LOG('*AI DEBUG: EngineerBuild AI ' ..eng.Sync.id)
+                    LOG('Build location is '..repr(buildLocation))
+                    return
+                end]]
+                aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                local engStuckCount = 0
+                local Lastdist
+                local dist
+                while not eng.Dead do
+                    PlatoonPos = eng:GetPosition()
+                    dist = VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0)
+                    if dist < 12 then
+                        break
+                    end
+                    if Lastdist ~= dist then
+                        engStuckCount = 0
+                        Lastdist = dist
+                    else
+                        engStuckCount = engStuckCount + 1
+                        --LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                        if engStuckCount > 40 and not eng:IsUnitState('Building') then
+                            --LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                            break
+                        end
+                    end
+
+                    if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                        if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
+                            local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
+                            if enemyEngineer then
+                                local enemyEngPos
+                                for _, unit in enemyEngineer do
+                                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        enemyEngPos = unit:GetPosition()
+                                        if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                            IssueStop({eng})
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, enemyEngineer[1])
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    WaitTicks(7)
+                end
+                if not eng or eng.Dead or not eng.PlatoonHandle or not PlatoonExists(aiBrain, eng.PlatoonHandle) then
+                    if eng then eng.ProcessBuild = nil end
+                    return
+                end
+                -- cancel all commands, also the buildcommand for blocking mex to check for reclaim or capture
+                eng.PlatoonHandle:Stop()
+                -- check to see if we need to reclaim or capture...
+                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
+                    -- check to see if we can repair
+                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
+                        -- otherwise, go ahead and build the next structure there
+                --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
+                --aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
+                    --LOG('What to build was a mass extractor')
+                    if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
+                        local currentmexpos=buildLocation
+                        for _=0,10,1 do
+                            if MABC.CanBuildOnMassEng2(aiBrain, currentmexpos, 40) then
+                                --LOG('We can build on a mass marker within 30')
+                                local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, currentmexpos)
+                                --LOG('Mass Marker'..repr(massMarker))
+                                --LOG('Attempting second mass marker')
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker)
+                                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker)
+                                aiBrain:BuildStructure(eng, whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative)
+                                local newEntry = {whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative}
+                                table.insert(eng.EngineerBuildQueue, newEntry)
+                                currentmexpos=massMarker
+                            else
+                                break
+                            end
+                        end
+                    end
+                end
+                if not eng.NotBuildingThread then
+                    eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
+                end
+                --LOG('Build commandDone set true')
+                commandDone = true
+            else
+                -- we can't move there, so remove it from our build queue
+                table.remove(eng.EngineerBuildQueue, 1)
+            end
+            WaitTicks(2)
+        end
+        --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
+        if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
+            --LOG('Starting RepeatBuild')
+            local distance = eng.PlatoonHandle.PlatoonData.Construction.Distance
+            local type = eng.PlatoonHandle.PlatoonData.Construction.Type
+            local engpos = eng:GetPosition()
+            if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
+                --LOG('Repeat Build is set for :'..eng.Sync.id)
+                if type == 'Mass' and distance then
+                    if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
+                        eng.PlatoonHandle:MexBuildAIRNG()
+                        --eng.PlatoonHandle:SetAIPlanRNG( eng.PlatoonHandle.PlanName, aiBrain)
+                        return
+                    end
+                else
+                    WARN('Invalid Construction Type or Distance, Expected : Mass, number')
+                end
+            end
+        end
+        -- final check for if we should disband
+        if not eng or eng.Dead or table.getn(eng.EngineerBuildQueue) <= 0 then
+            if eng.PlatoonHandle and PlatoonExists(aiBrain, eng.PlatoonHandle) then
+                --LOG('buildqueue 0 disband for'..eng.UnitId)
+                eng.PlatoonHandle:PlatoonDisband()
+            end
+            if eng then eng.ProcessBuild = nil end
+            return
+        end
+        if eng then eng.ProcessBuild = nil end
     end,
 }
