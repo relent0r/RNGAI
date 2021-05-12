@@ -5552,7 +5552,7 @@ Platoon = Class(RNGAIPlatoon) {
         local homebasex,homebasey = aiBrain:GetArmyStartPos()
         local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
         local platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
-        if EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204,Hero) then
+        if EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204,Hero) then
             Hero.Sniper=true
         end
         Hero.Threat=platoonThreat
@@ -5593,7 +5593,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         while PlatoonExists(aiBrain, self) do
             local health=Hero:GetHealthPercent()
-            local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION, false, true))
+            local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION + categories.ENGINEER, false, true))
             --LOG('alliedmexes:'..repr(alliedmexes))
             table.sort(alliedmexes,function(k1,k2) return VDist3(k1:GetPosition(),Hero.Pos)<VDist3(k2:GetPosition(),Hero.Pos) end)
             local closestmex=alliedmexes[1]
@@ -5763,16 +5763,16 @@ Platoon = Class(RNGAIPlatoon) {
                 IssueMove({Hero},Hero.dest)
                 IssueAttack({Hero},target)
                 WaitTicks(40)
-            elseif target and targetDist>100 then
+            elseif target and targetDist>160 and not EntityCategoryContains(categories.ENGINEER + categories.STRUCTURE,target) then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
                 Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,10+homedist/3+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
-                WaitTicks(30)
+                WaitTicks(10)
                 Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
-                WaitTicks(50)
+                WaitTicks(30)
             else
                 if targeteng and targetengDist<targetDist*1.5 then
                     IssueClearCommands({Hero})
@@ -5865,7 +5865,9 @@ Platoon = Class(RNGAIPlatoon) {
                 if Hero.targeteng then
                     DrawLinePop(pos1,Hero.targeteng,'1fFFD800')
                 end
-                DrawLinePop(pos1,pos2,'8f00aaFF')
+                if Hero.dest then
+                    DrawLinePop(pos1,pos2,'8f00aaFF')
+                end
                 if Hero.Threat then
                     DrawCircle(pos1,Hero.Threat,'4fFF11FF')
                 end
