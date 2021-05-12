@@ -159,8 +159,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 mex = 0,
             },
             storage = {
-                m = 0,
-                e = 0,
+                current = {
+                    m = 0,
+                    e = 0,
+                },
                 max = {
                     m = 0,
                     e = 0,
@@ -2927,6 +2929,15 @@ AIBrain = Class(RNGAIBrainClass) {
 
         WaitTicks(Random(80,100))
         LOG('Heavy Economy thread starting '..self.Nickname)
+        -- This section is for debug
+        --[[
+        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
+        self.amanager = {t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},total={t1=0,t2=0,t3=0}}
+        self.smanager={fac={l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}},mex={t1=0,t2=0,t3=0},pgen={t1=0,t2=0,t3=0},silo={t2=0,t3=0},fabs={t2=0,t3=0}}
+        ]]
+
+
+
         while not self.defeat do
             LOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
@@ -3115,8 +3126,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.cmanager.storage.max.m=storage.max.m
             self.cmanager.storage.max.e=storage.max.e
         end
-        LOG('Brain amanager table is '..repr(self.amanager))
-        LOG('Brain Current table is '..repr(self.amanager.Current))
         self.amanager.Current.Land=armyLand
         self.amanager.Total.Land=armyLandTiers
         self.amanager.Type.Land=armyLandType
