@@ -37,6 +37,7 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildStructures = {
                     'T1EnergyProduction',
+                    'T1EnergyProduction'
                 },
             }
         }

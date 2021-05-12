@@ -15,6 +15,10 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
+local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMass
+local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
+local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
+local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
 local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
@@ -139,8 +143,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
         self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
-        self.EconomyMassProduction = 0
-        self.EconomyMassProductionThread = self:ForkThread(self.MassProductionRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
         self.EngineerAssistManagerEngineerCountDesired = 0
@@ -148,6 +150,168 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerPriorityTable = {}
+        self.cmanager = {
+            income = {
+                r  = {
+                    m = 0,
+                    e = 0,
+                },
+                t = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+            spend = {
+                m = 0,
+                e = 0,
+            },
+            categoryspend = {
+                eng = 0,
+                fact = 0,
+                silo = 0,
+                mex = 0,
+            },
+            storage = {
+                m = 0,
+                e = 0,
+                max = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+        }
+        self.amanager = {
+            Current = {
+                Land = {
+                    t1 = {
+                        scout=0,
+                        tank=0,
+                        arty=0,
+                        aa=0
+                    },
+                    t2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    t3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0}
+                    },
+                },
+                Air = {
+                    t1 = {
+                        scout=0,
+                        interceptor=0,
+                        bomber=0,
+                        gunship=0
+                    },
+                    t2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    t3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0}
+                    },
+                },
+                Naval = {
+                    t1 = {
+                        frigate=0,
+                        submarine=0,
+                        aa=0
+                    },
+                    t2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    t3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0}
+                    },
+                },
+            Total = {
+                Land = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                },
+                Air = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                },
+                Naval = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                }
+            },
+            Type = {
+                Land = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0
+                },
+                Air = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0
+                },
+                Naval = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0
+                },
+            },
+            Ratios = {
+                Land = {
+                    T1 = {
+                        scout=11,
+                        tank=55,
+                        arty=22,
+                        aa=12,
+                    },
+                },
+            },
+        }
+        self.smanager = {
+            fac = {},
+            mex = {},
+            silo = {},
+            fabs = {},
+            pgens = {},
+        }
+
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -395,6 +559,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EnemyChokePointTestRNG)
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
+        self:ForkThread(self.HeavyEconomyRNG)
         self:CalculateMassMarkersRNG()
     end,
 
@@ -1328,7 +1493,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                    LOG('Mass Production '..self.EconomyMassProduction)
+                    LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
+                    LOG('ARMY '..self.Nickname..' Army numbers:'..repr(self.amanager))
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -2038,20 +2204,6 @@ AIBrain = Class(RNGAIBrainClass) {
         return false
     end,
     
-    MassProductionRNG = function(self)
-    -- Provides mass production stats to avoid reclaim influencing MASSINCOME
-        WaitTicks(Random(1,7))
-        while true do
-            local massIncome = 0
-            local massProduction = GetListOfUnits( self, categories.MASSPRODUCTION, false, false)
-            for _, v in massProduction do
-                massIncome = massIncome + v:GetProductionPerSecondMass()
-            end
-            self.EconomyMassProduction = massIncome
-            WaitTicks(30)
-        end
-    end,
-
     EcoExtractorUpgradeCheckRNG = function(self)
         -- Keep track of how many extractors are currently upgrading
             WaitTicks(Random(1,7))
@@ -2480,7 +2632,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerMassStateCheck = function(self)
-        if self.EconomyOverTimeCurrent.MassTrendOverTime <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
+        if self.EconomyOverTimeCurrent.MassTrendOverTime <= 0.0 and GetEconomyStored(self, 'MASS') <= 200 then
             return true
         else
             return false
@@ -3389,61 +3541,60 @@ AIBrain = Class(RNGAIBrainClass) {
     HeavyEconomyRNG = function(self)
         local selfIndex = self:GetArmyIndex()
         if ArmyIsCivilian(self:GetArmyIndex()) then return end
-        WaitTicks(100)
-        LOG('Heavy Economy thread starting'..selfIndex)
+        WaitTicks(Random(80,100))
+        LOG('Heavy Economy thread starting '..self.Nickname)
         self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
         self.amanager = {t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},total={t1=0,t2=0,t3=0}}
         self.smanager={fac={l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}},mex={t1=0,t2=0,t3=0},pgen={t1=0,t2=0,t3=0},silo={t2=0,t3=0},fabs={t2=0,t3=0}}
         while not self.defeat do
             LOG('heavy economy loop started')
-            if not self then LOG('not self skip') WaitTicks(20) continue end
-            if not self:GetEconomyIncome('MASS') then LOG('not mass skip') WaitTicks(50) continue end
-            self:ForkThread(self.HeavyEconomyForkRNG)
+            self:HeavyEconomyForkRNG()
             WaitTicks(50)
         end
     end,
+
     HeavyEconomyForkRNG = function(self)
-        local units = table.copy(GetListOfUnits(self, categories.SELECTABLE, false, true))
-        local selfIndex = self:GetArmyIndex()
+        local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
         LOG('units grabbed')
-        local factories = {l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}}
-        local extractors = {t1=0,t2=0,t3=0}
-        local fabs = {t2=0,t3=0}
+        local factories = {l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}}
+        local extractors = {T1=0,T2=0,T3=0}
+        local fabs = {T2=0,T3=0}
         local coms = {acu=0,sacu=0}
-        local pgens = {t1=0,t2=0,t3=0}
-        local silo = {t2=0,t3=0}
-        local army={t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
-        local armytype={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
-        local armytiers={t1=0,t2=0,t3=0}
-        local launcherspend = {t2=0,t3=0}
+        local pgens = {T1=0,T2=0,T3=0}
+        local silo = {T2=0,T3=0}
+        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
+        local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
+        local armyLandTiers={T1=0,T2=0,T3=0}
+        local launcherspend = {T2=0,T3=0}
         local facspend = {l=0,a=0,n=0}
-        local mexspend = {t1=0,t2=0,t3=0}
-        local engspend = {t1=0,t2=0,t3=0,com=0}
+        local mexspend = {T1=0,T2=0,T3=0}
+        local engspend = {T1=0,T2=0,T3=0,com=0}
         local rincome = {m=0,e=0}
-        local tincome = {m=self:GetEconomyIncome('MASS')*10,e=self:GetEconomyIncome('ENERGY')*10}
-        local storage = {max = {m=self:GetEconomyStored('MASS')/self:GetEconomyStoredRatio('MASS'),e=self:GetEconomyStored('ENERGY')/self:GetEconomyStoredRatio('ENERGY')},current={m=self:GetEconomyStored('MASS'),e=self:GetEconomyStored('ENERGY')}}
+        local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
+        local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
+
         for _,unit in units do
             if unit.Dead then continue end
             if not unit then continue end
-            local spendm=unit:GetConsumptionPerSecondMass()
-            local spende=unit:GetConsumptionPerSecondEnergy()
-            local producem=unit:GetProductionPerSecondMass()
-            local producee=unit:GetProductionPerSecondEnergy()
+            local spendm=GetConsumptionPerSecondMass(unit)
+            local spende=GetConsumptionPerSecondEnergy(unit)
+            local producem=GetProductionPerSecondMass(unit)
+            local producee=GetProductionPerSecondEnergy(unit)
             tspend.m=tspend.m+spendm
             tspend.e=tspend.e+spende
             rincome.m=rincome.m+producem
             rincome.e=rincome.e+producee
             if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    extractors.t1=extractors.t1+1
-                    mexspend.t1=mexspend.t1+spendm
+                    extractors.T1=extractors.T1+1
+                    mexspend.T1=mexspend.T1+spendm
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    extractors.t2=extractors.t2+1
-                    mexspend.t2=mexspend.t2+spendm
+                    extractors.T2=extractors.T2+1
+                    mexspend.T2=mexspend.T2+spendm
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    extractors.t3=extractors.t3+1
-                    mexspend.t3=mexspend.t3+spendm
+                    extractors.T3=extractors.T3+1
+                    mexspend.T3=mexspend.T3+spendm
                 end
             elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
                 if EntityCategoryContains(categories.COMMAND,unit) then
@@ -3455,115 +3606,115 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             elseif EntityCategoryContains(categories.MASSFABRICATION,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
-                    fabs.t2=fabs.t2+1
+                    fabs.T2=fabs.T2+1
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    fabs.t3=fabs.t3+1
+                    fabs.T3=fabs.T3+1
                 end
             elseif EntityCategoryContains(categories.ENGINEER,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    engspend.t1=engspend.t1+spendm
+                    engspend.T1=engspend.T1+spendm
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    engspend.t2=engspend.t2+spendm
+                    engspend.T2=engspend.T2+spendm
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    engspend.t3=engspend.t3+spendm
+                    engspend.T3=engspend.T3+spendm
                 end
             elseif EntityCategoryContains(categories.FACTORY,unit) then
                 if EntityCategoryContains(categories.LAND,unit) then
                     facspend.l=facspend.l+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.l.t1=factories.l.t1+1
+                        factories.l.T1=factories.l.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.l.t2=factories.l.t2+1
+                        factories.l.T2=factories.l.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.l.t3=factories.l.t3+1
+                        factories.l.T3=factories.l.T3+1
                     end
                 elseif EntityCategoryContains(categories.AIR,unit) then
                     facspend.a=facspend.a+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.a.t1=factories.a.t1+1
+                        factories.a.T1=factories.a.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.a.t2=factories.a.t2+1
+                        factories.a.T2=factories.a.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.a.t3=factories.a.t3+1
+                        factories.a.T3=factories.a.T3+1
                     end
                 elseif EntityCategoryContains(categories.NAVAL,unit) then
                     facspend.n=facspend.n+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.n.t1=factories.n.t1+1
+                        factories.n.T1=factories.n.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.n.t2=factories.n.t2+1
+                        factories.n.T2=factories.n.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.n.t3=factories.n.t3+1
+                        factories.n.T3=factories.n.T3+1
                     end
                 end
             elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    pgens.t1=pgens.t1+1
+                    pgens.T1=pgens.T1+1
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    pgens.t2=pgens.t2+1
+                    pgens.T2=pgens.T2+1
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    pgens.t3=pgens.t3+1
+                    pgens.T3=pgens.T3+1
                 end
             elseif EntityCategoryContains(categories.LAND,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    armytiers.t1=armytiers.t1+1
+                    armyLandTiers.T1=armyLandTiers.T1+1
                     if EntityCategoryContains(categories.SCOUT,unit) then
-                        army.t1.scout=army.t1.scout+1
-                        armytype.scout=armytype.scout+1
+                        armyLand.T1.scout=armyLand.T1.scout+1
+                        armyLandType.scout=armyLandType.scout+1
                     elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
-                        army.t1.tank=army.t1.tank+1
-                        armytype.tank=armytype.tank+1
+                        armyLand.T1.tank=armyLand.T1.tank+1
+                        armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
-                        army.t1.arty=army.t1.arty+1
-                        armytype.arty=armytype.arty+1
+                        armyLand.T1.arty=armyLand.T1.arty+1
+                        armyLandType.arty=armyLandType.arty+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        army.t1.aa=army.t1.aa+1
-                        armytype.aa=armytype.aa+1
+                        armyLand.T1.aa=armyLand.T1.aa+1
+                        armyLandType.aa=armyLandType.aa+1
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    armytiers.t2=armytiers.t2+1
+                    armyLandTiers.T2=armyLandTiers.T2+1
                     if EntityCategoryContains(categories.DIRECTFIRE,unit) then
-                        army.t2.tank=army.t2.tank+1
-                        armytype.tank=armytype.tank+1
+                        armyLand.T2.tank=armyLand.T2.tank+1
+                        armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
-                        army.t2.mml=army.t2.mml+1
-                        armytype.mml=armytype.mml+1
+                        armyLand.T2.mml=armyLand.T2.mml+1
+                        armyLandType.mml=armyLandType.mml+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        army.t2.aa=army.t2.aa+1
-                        armytype.aa=armytype.aa+1
+                        armyLand.T2.aa=armyLand.T2.aa+1
+                        armyLandType.aa=armyLandType.aa+1
                     elseif EntityCategoryContains(categories.SHIELD,unit) then
-                        army.t2.shield=army.t2.shield+1
-                        armytype.shield=armytype.shield+1
+                        armyLand.T2.shield=armyLand.T2.shield+1
+                        armyLandType.shield=armyLandType.shield+1
                     end
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    armytiers.t3=armytiers.t3+1
+                    armyLandTiers.T3=armyLandTiers.T3+1
                     if EntityCategoryContains(categories.SNIPER,unit) then
-                        army.t3.sniper=army.t3.sniper+1
-                        armytype.sniper=armytype.sniper+1
+                        armyLand.T3.sniper=armyLand.T3.sniper+1
+                        armyLandType.sniper=armyLandType.sniper+1
                     elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
-                        army.t3.tank=army.t3.tank+1
-                        armytype.tank=armytype.tank+1
+                        armyLand.T3.tank=armyLand.T3.tank+1
+                        armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
-                        army.t3.mml=army.t3.mml+1
-                        armytype.mml=armytype.mml+1
+                        armyLand.T3.mml=armyLand.T3.mml+1
+                        armyLandType.mml=armyLandType.mml+1
                     elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
-                        army.t3.arty=army.t3.arty+1
-                        armytype.arty=armytype.arty+1
+                        armyLand.T3.arty=armyLand.T3.arty+1
+                        armyLandType.arty=armyLandType.arty+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        army.t3.aa=army.t3.aa+1
-                        armytype.aa=armytype.aa+1
+                        armyLand.T3.aa=armyLand.T3.aa+1
+                        armyLandType.aa=armyLandType.aa+1
                     elseif EntityCategoryContains(categories.SHIELD,unit) then
-                        army.t3.shield=army.t3.shield+1
-                        armytype.shield=armytype.shield+1
+                        armyLand.T3.shield=armyLand.T3.shield+1
+                        armyLandType.shield=armyLandType.shield+1
                     end
                 end
             elseif EntityCategoryContains(categories.SILO,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
-                    silo.t2=silo.t2+1
-                    launcherspend.t2=launcherspend.t2+spendm
+                    silo.T2=silo.T2+1
+                    launcherspend.T2=launcherspend.T2+spendm
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    silo.t3=silo.t3+1
-                    launcherspend.t3=launcherspend.t3+spendm
+                    silo.T3=silo.T3+1
+                    launcherspend.T3=launcherspend.T3+spendm
                 end
             end
         end
@@ -3583,11 +3734,10 @@ AIBrain = Class(RNGAIBrainClass) {
             self.cmanager.storage.max.m=storage.max.m
             self.cmanager.storage.max.e=storage.max.e
         end
-        self.amanager=army
-        self.amanager.total=armytiers
-        self.amanager.type=armytype
-        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
-        LOG('ARMY'..repr(selfIndex)..' eco numbers:'..repr(self.cmanager))
+        self.amanager.Current.Land=armyLand
+        self.amanager.Total.Land=armyLandTiers
+        self.amanager.Type.Land=armyLandType
+        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens}
     end,
     DisplayEconomyRNG = function(self)
         if ArmyIsCivilian(self:GetArmyIndex()) then return end
@@ -3604,12 +3754,12 @@ AIBrain = Class(RNGAIBrainClass) {
             if not self.cmanager.income.t.e or not self.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
             local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF'}
             local fcolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD'}
-            local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',t1='ff4CFF00',t2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
+            local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',T1='ff4CFF00',T2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
             local engsum=0
             for _,v in self.cmanager.categoryspend.eng do
                 engsum=engsum+v
             end
-            local spendcategories={l=self.cmanager.categoryspend.fac.l,a=self.cmanager.categoryspend.fac.a,n=self.cmanager.categoryspend.fac.n,t1=self.cmanager.categoryspend.mex.t1,t2=self.cmanager.categoryspend.mex.t2,eng=engsum,other=0}
+            local spendcategories={l=self.cmanager.categoryspend.fac.l,a=self.cmanager.categoryspend.fac.a,n=self.cmanager.categoryspend.fac.n,T1=self.cmanager.categoryspend.mex.T1,T2=self.cmanager.categoryspend.mex.T2,eng=engsum,other=0}
             local othersum=self.cmanager.spend.m
             for _,v in spendcategories do
                 othersum=othersum-v
@@ -3643,11 +3793,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 --[[self:RenderChartRNG(home,army.t1,6,voffset,armycolors)
                 self:RenderChartRNG(home,army.t2,6,voffset-6,armycolors)
                 self:RenderChartRNG(home,army.t3,6,voffset-12,armycolors)]]
-                self:RenderPieRNG(home,math.sqrt(army.total.t1),18,-10,army.t1,armycolors)
-                self:RenderPieRNG(home,math.sqrt(army.total.t2),18+math.sqrt(army.total.t1)+math.sqrt(army.total.t2),-10,army.t2,armycolors)
-                self:RenderPieRNG(home,math.sqrt(army.total.t3),18+2*math.sqrt(army.total.t2)+math.sqrt(army.total.t1)+math.sqrt(army.total.t3),-10,army.t3,armycolors)
+                self:RenderPieRNG(home,math.sqrt(army.Total.Land.T1),18,-10,army.Current.Land.T1,armycolors)
+                self:RenderPieRNG(home,math.sqrt(army.Total.Land.T2),18+math.sqrt(army.Total.Land.T1)+math.sqrt(army.Total.Land.T2),-10,army.Current.Land.T2,armycolors)
+                self:RenderPieRNG(home,math.sqrt(army.Total.Land.T3),18+2*math.sqrt(army.Total.Land.T2)+math.sqrt(army.Total.Land.T1)+math.sqrt(army.Total.Land.T3),-10,army.Current.Land.T3,armycolors)
                 self:RenderPieRNG(home,math.sqrt(spendm),-10+math.sqrt(spendm)+math.max(spendm/widthm,totalm/widthm,rawm/widthm),9.05+1.5*widthm,spendcategories,scolors)
-                self:RenderPieRNG(home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.total.t1),-10,facnum,fcolors)
+                self:RenderPieRNG(home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.Total.Land.T1),-10,facnum,fcolors)
                 self:RenderBarRNG(home,rawm/widthm,widthm,1,'ff4CFF00')
                 self:RenderBarRNG(home,totalm/widthm,widthm,1+widthm,'ff267F00')
                 self:RenderBarRNG(home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
@@ -3722,6 +3872,7 @@ AIBrain = Class(RNGAIBrainClass) {
             currentoffset=currentoffset+degreeslice
         end
     end,
+
 --[[
     GetManagerCount = function(self, type)
         if not self.RNG then

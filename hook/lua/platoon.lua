@@ -47,7 +47,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
-            if v:TestToggleCaps('RULEUTC_StealthToggle') then
+            if not v.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
                 v:SetScriptBit('RULEUTC_StealthToggle', false)
             end
             if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
@@ -2800,19 +2800,20 @@ Platoon = Class(RNGAIPlatoon) {
                 if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
-                        if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30) then
-                            --LOG('We can build on a mass marker within 30')
-                            massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, buildLocation)
-                            --LOG('Mass Marker'..repr(massMarker))
-                            --LOG('Attempting second mass marker')
-                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
-                            AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
-                            aiBrain:BuildStructure(eng, whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative)
-                            local newEntry = {whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative}
-                            table.insert(eng.EngineerBuildQueue, newEntry)
-
+                        local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30)
+                        if MexQueueBuild then
+                            LOG('We can build on a mass marker within 30')
+                            LOG(repr(MassMarkerTable))
+                            for _, v in MassMarkerTable do
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
+                                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
+                                aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
+                                local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative}
+                                table.insert(eng.EngineerBuildQueue, newEntry)
+                            end
                         else
-                            --LOG('Cant find mass within distance')
+                            LOG('Cant find mass within distance')
                         end
                     end
                 end
@@ -2830,17 +2831,11 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
         if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
             --LOG('Starting RepeatBuild')
-            local distance = eng.PlatoonHandle.PlatoonData.Construction.Distance
-            local type = eng.PlatoonHandle.PlatoonData.Construction.Type
             local engpos = eng:GetPosition()
             if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
                 --LOG('Repeat Build is set for :'..eng.Sync.id)
-                if type == 'Mass' and distance then
-                    if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
-                        eng.PlatoonHandle:MexBuildAIRNG()
-                        --eng.PlatoonHandle:SetAIPlanRNG( eng.PlatoonHandle.PlanName, aiBrain)
-                        return
-                    end
+                if eng.PlatoonHandle.PlatoonData.Construction.Type == 'Mass' then
+                    eng.PlatoonHandle:EngineerBuildAIRNG()
                 else
                     WARN('Invalid Construction Type or Distance, Expected : Mass, number')
                 end

@@ -65,7 +65,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 120',
         PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'MexBuildAIRNG',
-        Priority = 850,
+        Priority = 995,
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
@@ -75,6 +75,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                RepeatBuild = true,
                 MaxDistance = 120,
                 ThreatMin = -500,
                 ThreatMax = 0,
@@ -125,7 +126,6 @@ BuilderGroup {
             Construction = {
                 RepeatBuild = true,
                 MexThreat = true,
-                Distance = 200,
                 Type = 'Mass',
                 MaxDistance = 200,
                 MinDistance = 100,
@@ -153,7 +153,6 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 240,
                 Type = 'Mass',
                 MaxDistance = 240,
                 MinDistance = 100,
@@ -184,7 +183,6 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
-                Distance = 120,
                 Type = 'Mass',
                 MaxDistance = 480,
                 ThreatMin = -500,

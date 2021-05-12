@@ -791,6 +791,17 @@ function EngineerAssistManagerNeedsEngineers(aiBrain)
     return false
 end
 
+function ArmyManagerBuild(aiBrain, uType, tier, unit)
+
+    if aiBrain.amanager.current[tier][unit] < 1 then
+        return true
+    elseif (aiBrain.amanager.current[tier][unit] / aiBrain.amanager.total[tier] * 100) < aiBrain.amanager.ratios[tier][unit] then
+        return true
+    end
+    return false
+
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.
