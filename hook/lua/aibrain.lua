@@ -188,8 +188,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         arty=0,
                         mml=0,
                         aa=0,
-                        shield=0}
-                    },
+                        shield=0
+                    }
                 },
                 Air = {
                     t1 = {
@@ -210,8 +210,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         arty=0,
                         mml=0,
                         aa=0,
-                        shield=0}
-                    },
+                        shield=0
+                    }
                 },
                 Naval = {
                     t1 = {
@@ -231,9 +231,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         arty=0,
                         mml=0,
                         aa=0,
-                        shield=0}
-                    },
+                        shield=0
+                    }
                 },
+            },
             Total = {
                 Land = {
                     T1 = 0,
@@ -1314,13 +1315,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
                 if table.equal(v.Platoon, platoon) then
-                    LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
+                    --LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
                     found = true
                     break
                 end
             end
             if not found then
-                LOG('Platoon doesnt already exist, adding')
+                --LOG('Platoon doesnt already exist, adding')
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
@@ -1328,7 +1329,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
-        LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
