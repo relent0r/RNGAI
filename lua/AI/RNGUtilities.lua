@@ -2206,7 +2206,7 @@ ThrottledAllocateRNG = function(aiBrain)
     local startX, startZ = aiBrain:GetArmyStartPos()
     local start={startX,0,startZ}
     while not aiBrain.defeat do
-        local brainExtractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
+        local brainExtractors = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
         local extractorCount = table.getn(brainExtractors)
         local givemex = 0
         local allyBrains = {}

@@ -797,8 +797,8 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
         LOG('Less than 1 unit of type '..unit)
         return true
-    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100) < aiBrain.amanager.Ratios[uType][tier][unit] then
-        LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
+    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier]) < aiBrain.amanager.Ratios[uType][tier][unit]/aiBrain.amanager.Ratios[uType][tier].total then
+        LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier])..'should be '..(aiBrain.amanager.Ratios[uType][tier][unit]/aiBrain.amanager.Ratios[uType][tier].total))
         return true
     end
     return false
