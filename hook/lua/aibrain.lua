@@ -15,6 +15,10 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
+local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMass
+local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
+local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
+local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
 local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
@@ -97,10 +101,26 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     InitializeSkirmishSystems = function(self)
-        self.HeavyEco = self:ForkThread(self.HeavyEconomyRNG)
-        self.DisplayEco = self:ForkThread(self.DisplayEconomyRNG)
+        self:ForkThread(RUtils.DisplayEconomyRNG)
         if not self.RNG then
+            self.HeavyEco = self:ForkThread(self.HeavyEconomyRNG)
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
+        end
+        
+        --if we aren't running team share thread, check if we have teammates
+        local selfindex = self:GetArmyIndex()
+        local DoMexConstruct=false
+        if not self.TeamMexAllocation then
+            for _, v in ArmyBrains do
+                local testIndex = v:GetArmyIndex()
+                if IsEnemy(selfindex, testIndex) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" or testIndex==selfindex then continue end
+                DoMexConstruct=true
+                break
+            end
+        end
+        --if we aren't running team share thread and want to, start it
+        if DoMexConstruct and not self.TeamMexAllocation then
+            self:ForkThread(RUtils.ThrottledAllocateRNG)
         end
         --LOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
         -- Make sure we don't do anything for the human player!!!
@@ -139,8 +159,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
         self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
-        self.EconomyMassProduction = 0
-        self.EconomyMassProductionThread = self:ForkThread(self.MassProductionRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
         self.EngineerAssistManagerEngineerCountDesired = 0
@@ -148,6 +166,202 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerPriorityTable = {}
+        self.cmanager = {
+            income = {
+                r  = {
+                    m = 0,
+                    e = 0,
+                },
+                t = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+            spend = {
+                m = 0,
+                e = 0,
+            },
+            categoryspend = {
+                eng = {T1=0,T2=0,T3=0,com=0},
+                fac = {l=0,a=0,n=0},
+                silo = {T2=0,T3=0},
+                mex = {T1=0,T2=0,T3=0},
+            },
+            storage = {
+                current = {
+                    m = 0,
+                    e = 0,
+                },
+                max = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+        }
+        self.amanager = {
+            Current = {
+                Land = {
+                    T1 = {
+                        scout=0,
+                        tank=0,
+                        arty=0,
+                        aa=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    }
+                },
+                Air = {
+                    T1 = {
+                        scout=0,
+                        interceptor=0,
+                        bomber=0,
+                        gunship=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    }
+                },
+                Naval = {
+                    T1 = {
+                        frigate=0,
+                        submarine=0,
+                        aa=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    }
+                },
+            },
+            Total = {
+                Land = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                },
+                Air = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                },
+                Naval = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                }
+            },
+            Type = {
+                Land = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0
+                },
+                Air = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0
+                },
+                Naval = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0
+                },
+            },
+            Ratios = {
+                Land = {
+                    T1 = {
+                        scout=11,
+                        tank=55,
+                        arty=22,
+                        aa=12,
+                    },
+                },
+            },
+        }
+        self.smanager = {
+            fac = {
+                l =
+                {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0
+                },
+                a = {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                },
+                n= {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                }
+            },
+            mex = {
+                T1=0,
+                T2=0,
+                T3=0
+            },
+            pgen = {
+                T1=0,
+                T2=0,
+                T3=0
+            },
+            silo = {
+                T2=0,
+                T3=0
+            },
+            fabs= {
+                T2=0,
+                T3=0
+            }
+        }
+
         self.LowEnergyMode = false
         self.EcoManager = {
             EcoManagerTime = 30,
@@ -395,6 +609,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EnemyChokePointTestRNG)
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
+        self:ForkThread(self.HeavyEconomyRNG)
         self:CalculateMassMarkersRNG()
     end,
 
@@ -1169,13 +1384,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
                 if table.equal(v.Platoon, platoon) then
-                    LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
+                    --LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
                     found = true
                     break
                 end
             end
             if not found then
-                LOG('Platoon doesnt already exist, adding')
+                --LOG('Platoon doesnt already exist, adding')
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
@@ -1183,7 +1398,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
-        LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
@@ -1328,7 +1543,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                    LOG('Mass Production '..self.EconomyMassProduction)
+                    LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
+                    LOG('ARMY '..self.Nickname..' Army numbers:'..repr(self.amanager))
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -1521,21 +1737,6 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
         local exBp
-        local DoMexConstruct=false
-        --if we aren't running team share thread, check if we have teammates
-        if not self.TeamMexAllocation then
-            for _, v in ArmyBrains do
-                local testIndex = v:GetArmyIndex()
-                if IsEnemy(selfIndex, testIndex) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" or testIndex==selfIndex then continue end
-                DoMexConstruct=true
-                break
-            end
-        end
-        --if we aren't running team share thread and want to, start it
-        if DoMexConstruct and not self.TeamMexAllocation then
-            self:ForkThread(self.ThrottledAllocateRNG)
-            self.TeamMexAllocation=true
-        end
         for _,v in brainExtractors do
             exBp = ALLBPS[v.UnitId].Defense
             selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
@@ -2038,20 +2239,6 @@ AIBrain = Class(RNGAIBrainClass) {
         return false
     end,
     
-    MassProductionRNG = function(self)
-    -- Provides mass production stats to avoid reclaim influencing MASSINCOME
-        WaitTicks(Random(1,7))
-        while true do
-            local massIncome = 0
-            local massProduction = GetListOfUnits( self, categories.MASSPRODUCTION, false, false)
-            for _, v in massProduction do
-                massIncome = massIncome + v:GetProductionPerSecondMass()
-            end
-            self.EconomyMassProduction = massIncome
-            WaitTicks(30)
-        end
-    end,
-
     EcoExtractorUpgradeCheckRNG = function(self)
         -- Keep track of how many extractors are currently upgrading
             WaitTicks(Random(1,7))
@@ -2480,7 +2667,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerMassStateCheck = function(self)
-        if self.EconomyOverTimeCurrent.MassTrendOverTime <= 0.0 and self:GetEconomyStored('MASS') <= 200 then
+        if self.EconomyOverTimeCurrent.MassTrendOverTime <= 0.0 and GetEconomyStored(self, 'MASS') <= 200 then
             return true
         else
             return false
@@ -2772,678 +2959,65 @@ AIBrain = Class(RNGAIBrainClass) {
             WaitTicks(100)
         end
     end,
-
-    ThrottledAllocateRNG = function(self)
-        local selfIndex = self:GetArmyIndex()
-        LOG('self index (start mex allocation thread)'..selfIndex)
-        local startX, startZ = self:GetArmyStartPos()
-        local start={startX,0,startZ}
-        while not self.defeat do
-            local brainExtractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
-            local extractorCount = table.getn(brainExtractors)
-            local givemex = 0
-            local allyBrains = {}
-            for _, v in ArmyBrains do
-                local Index = v:GetArmyIndex()
-                if IsEnemy(selfIndex, Index) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
-                local astartX, astartZ = v:GetArmyStartPos()
-                local selfstart = {position={astartX, 0, astartZ},abrain=v,index=Index}
-                table.insert(allyBrains,selfstart)
-            end
-            for _, x in brainExtractors do
-                if x.Position~=nil then continue end
-                x.Position=x:GetPosition()
-            end
-            table.sort(brainExtractors,function(k1,k2) return VDist2(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2(start[1],start[3],k2.Position[1],k2.Position[3]) end)
-            for _, x in brainExtractors do
-                if self:MexAllocateRNG(x,allyBrains) then givemex=givemex+1 end
-                if givemex/extractorCount>0.2 then break end
-                WaitTicks(5)
-            end
-            WaitTicks(300)
-        end
-    end,
-
-    MexAllocateRNG = function(self,mex,allyBrains)
-        LOG('start construct mex')
-        if mex:IsUnitState('Upgrading') then return false end
-        local starts = {}
-        local selfIndex = self:GetArmyIndex()
-        LOG('self index'..selfIndex)
-        local mexnums1 = {}
-        for _, v in allyBrains do
-            local Index = v.index
-            local extractorCount = v.abrain:GetCurrentUnits(categories.STRUCTURE * categories.MASSEXTRACTION)
-            table.insert(mexnums1,Index,extractorCount)
-            local selfstart = {Index, v.position, mexnums1[Index]}
-            table.insert(starts,selfstart)
-        end
-            table.sort(starts,function(k1,k2) return (k1[3]+10)*VDist2Sq(k1[2][1],k1[2][3],mex.Position[1],mex.Position[3])<(k2[3]+10)*VDist2Sq(k2[2][1],k2[2][3],mex.Position[1],mex.Position[3]) end)
-            local chosenstart = starts[1]
-                if chosenstart[1]==selfIndex then return false
-                elseif chosenstart[1]==nil then return false
-                else
-                    LOG('giving mex to '..repr(chosenstart[1]))
-                    if mex.PlatoonHandle then
-                        mex.PlatoonHandle:PlatoonDisbandNoAssign()
-                    end
-                    GiveUnitToArmy(mex,chosenstart[1])
-                end
-        return true
-    end,
-
-    DisplayBaseMexAllocationRNG = function(self)
-        LOG('starting expansion display')
-        WaitTicks(50)
-        local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
-        local Expands = AIUtils.AIGetMarkerLocations(self, 'Expansion Area')
-        local BigExpands = AIUtils.AIGetMarkerLocations(self, 'Large Expansion Area')
-        local players = {}
-        LOG('finished grabbing expands and starts')
-        for _,v in ArmyBrains do
-            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
-            local astartX, astartZ = v:GetArmyStartPos()
-            local selfstart = {Position={astartX, 0, astartZ}}
-            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
-            selfstart.Position[2]=starts[1].Position[2]
-            table.insert(players,selfstart)
-        end
-        local MassMarker = {}
-        local expandstart = {}
-        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
-            if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
-                table.insert(MassMarker, v)
-            end
-        end
-        for _, v in Expands do
-            v.expandtype='expand'
-            v.mexnum=0
-            table.insert(expandstart,v)
-        end
-        for _, v in BigExpands do
-            v.expandtype='bigexpand'
-            v.mexnum=0
-            table.insert(expandstart,v)
-        end
-        for _, v in starts do
-            v.expandtype='start'
-            v.mexnum=0
-            table.insert(expandstart,v)
-        end
-        while self.Result ~= "defeat" do
-            for _, v in MassMarker do
-                local pos1={0,0,0}
-                local pos2={0,0,0}
-                table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
-                local chosenstart = expandstart[1]
-                expandstart[1].mexnum=expandstart[1].mexnum+1
-                pos1=v.position
-                pos2=chosenstart.Position
-                DrawLinePop(pos1,pos2,'88FF0000')
-                if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
-                    pos2=expandstart[2].Position
-                    expandstart[2].mexnum=expandstart[2].mexnum+1
-                    DrawLinePop(pos1,pos2,'88FF0000')
-                end
-            end
-            for _, v in expandstart do
-                local pos1={0,0,0}
-                local pos2={0,0,0}
-                table.sort(players,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
-                local chosenstart = players[1]
-                pos1=v.Position
-                pos2=chosenstart.Position
-                if v.expandtype=='start' then
-                    DrawLinePop(pos1,pos2,'ff0000FF')
-                    DrawCircle(pos1,5*v.mexnum,'ff0000FF')
-                elseif v.expandtype=='bigexpand' then
-                    DrawLinePop(pos1,pos2,'ff00FF00')
-                    DrawCircle(pos1,5*v.mexnum,'ff00FF00')
-                elseif v.expandtype=='expand' then
-                    DrawLinePop(pos1,pos2,'ffFF00FF')
-                    DrawCircle(pos1,5*v.mexnum,'ffFF0000')
-                end
-                if v.expandtype~='start' then
-                    table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
-                    if VDist2(chosenstart.Position[1],chosenstart.Position[3],starts[1].Position[1],starts[1].Position[3])>3 then
-                        pos2=starts[1].Position
-                        if v.expandtype=='bigexpand' then
-                            DrawLinePop(pos1,pos2,'5f00FF00')
-                        elseif v.expandtype=='expand' then
-                            DrawLinePop(pos1,pos2,'5fFF00FF')
-                        end
-                        if VDist2(starts[2].Position[1],starts[2].Position[3],v.Position[1],v.Position[3])-VDist2(starts[1].Position[1],starts[1].Position[3],v.Position[1],v.Position[3])<5 then
-                            pos2=starts[2].Position
-                            if v.expandtype=='bigexpand' then
-                                DrawLinePop(pos1,pos2,'5f00FF00')
-                            elseif v.expandtype=='expand' then
-                                DrawLinePop(pos1,pos2,'5fFF00FF')
-                            end
-                        end
-                    end
-                end
-                if VDist2(players[2].Position[1],players[2].Position[3],v.Position[1],v.Position[3])-VDist2(players[1].Position[1],players[1].Position[3],v.Position[1],v.Position[3])<5 then
-                    pos2=players[2].Position
-                    if v.expandtype=='start' then
-                        DrawLinePop(pos1,pos2,'ff0000FF')
-                    elseif v.expandtype=='bigexpand' then
-                        DrawLinePop(pos1,pos2,'ff00FF00')
-                    elseif v.expandtype=='expand' then
-                        DrawLinePop(pos1,pos2,'ffFF00FF')
-                    end
-                end
-                v.mexnum=0
-            end
-            WaitTicks(2)
-        end
-    end,
-    DisplayExpansionAllegianceSetupRNG = function(self)
-        LOG('starting expansion display')
-        local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
-        local Expands = AIUtils.AIGetMarkerLocations(self, 'Expansion Area')
-        local BigExpands = AIUtils.AIGetMarkerLocations(self, 'Large Expansion Area')
-        LOG('finished grabbing expands and starts')
-        local MassMarker = {}
-        local expandstart = {}
-        local players = {}
-        self.teamBases={}
-        self.enemyBases={}
-        for i,v in ArmyBrains do
-            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
-            local astartX, astartZ = v:GetArmyStartPos()
-            local selfstart = {Position={astartX, 0, astartZ},army=i}
-            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
-            selfstart.Position[2]=starts[1].Position[2]
-            table.insert(players,i,selfstart)
-        end
-        for _, v in Expands do
-            v.expandtype='expand'
-            v.mexnum=0
-            v.mextable={}
-            v.relevance=0
-            v.owner=nil
-            table.insert(expandstart,v)
-        end
-        for _, v in BigExpands do
-            v.expandtype='bigexpand'
-            v.mexnum=0
-            v.mextable={}
-            v.relevance=0
-            v.owner=nil
-            table.insert(expandstart,v)
-        end
-        for _, v in starts do
-            v.expandtype='start'
-            v.mexnum=0
-            v.mextable={}
-            v.relevance=0
-            v.owner=nil
-            table.insert(expandstart,v)
-        end
-        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
-            if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
-                table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
-                expandstart[1].mexnum=expandstart[1].mexnum+1
-                table.insert(expandstart[1].mextable, v)
-                if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
-                    expandstart[2].mexnum=expandstart[2].mexnum+1
-                    table.insert(expandstart[2].mextable, v)
-                end
-                table.insert(MassMarker,v)
-            end
-        end
-        for _, v in expandstart do
-            for _,x in MassMarker do
-                v.relevance=v.relevance+ScenarioInfo.size[1]/math.pow(math.max(VDist2(v.Position[1],v.Position[3],x.position[1],x.position[3]),25),1.5)
-            end
-            if not v.expandtype=='start' then
-                for _,x in starts do
-                    v.relevance=v.relevance-ScenarioInfo.size[1]/math.pow(VDist2(v.Position[1],v.Position[3],x.Position[1],x.Position[3]),1.5)
-                    --LOG('relevance '..repr(v.relevance))
-                end
-            end
-        end
-        for i, v in expandstart do
-            self:UpdateExpansionAllegianceRNG(v,i)
-        end
-        while self.Result ~= "defeat" do
-            for x=0,30,1 do
-                for i, v in expandstart do
-                    self:DisplayExpansionAllegianceRNG(v,i)
-                end
-                WaitTicks(2)
-            end
-            for i, v in expandstart do
-                self:UpdateExpansionAllegianceRNG(v,i)
-            end
-        end
-    end,
-    DisplayExpansionAllegianceRNG = function(self,marker,num)
-        local pos1
-        local pos2
-            for _, v in marker.mextable do
-                pos1=v.position
-                pos2=marker.Position
-                DrawLinePop(pos1,pos2,'88FF0000')
-            end
-            if marker.expandtype=='start' then
-                DrawCircle(pos2,marker.relevance,'5a0000FF')
-            elseif marker.expandtype=='bigexpand' then
-                DrawCircle(pos2,marker.relevance,'5a00FF00')
-            elseif marker.expandtype=='expand' then
-                DrawCircle(pos2,marker.relevance,'5aFF0000')
-            end
-            if marker.owner then
-                pos1=marker.Position
-                pos2=marker.ownerPos
-                if marker.expandtype=='start' then
-                    DrawLinePop(pos1,pos2,'c00000FF')
-                elseif marker.expandtype=='bigexpand' then
-                    DrawLinePop(pos1,pos2,'c000FF00')
-                elseif marker.expandtype=='expand' then
-                    DrawLinePop(pos1,pos2,'c0FF00FF')
-                end
-            end
-            if marker.allythreat then
-                pos1=marker.Position
-                local allegiance=marker.allythreat-marker.enemythreat
-                if allegiance>0 then
-                    local radius=math.min(allegiance/20,marker.relevance-1)
-                    DrawCircle(pos1,radius,'ff0000FF')
-                else
-                    local radius=math.min(-allegiance/20,marker.relevance-1)
-                    DrawCircle(pos1,radius,'ffFF0000')
-                end
-            end
-            --[[for i,v in players do
-                if self:GetThreatAtPosition(marker.Position, 1, true, 'Overall',i)>0 then
-                    v.points=v.points+self:GetThreatAtPosition(marker.Position, 1, true, 'Overall',i)
-                else
-                    v.points=v.points*0.9
-                end
-            end
-            self:GetThreatAtPosition(marker.Position, 1, true, 'Overall')--]]
-    end,
-    UpdateExpansionAllegianceRNG = function(self,marker,num)
-        local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
-        local selfindex = self:GetArmyIndex()
-        local players = {}
-        local maxpoints = 0
-        local maxindex
-        local brainThreats=self:GrabMarkerThreatsRNG(marker)
-        marker.allythreat=0
-        marker.enemythreat=0
-        for i,v in ArmyBrains do
-            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
-            local index = v:GetArmyIndex()
-            local enemybool = false
-            if IsEnemy(selfindex,v:GetArmyIndex()) then
-                enemybool=true
-            end
-            if not v.points then
-                v.points={}
-                v.points[num]=0
-            end
-            if not v.points[num] then
-                v.points[num]=0
-            end
-            local astartX, astartZ = v:GetArmyStartPos()
-            local selfstart = {Position={astartX, 0, astartZ},army=i}
-            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
-            selfstart.Position[2]=starts[1].Position[2]
-            table.insert(players,i,selfstart)
-            if not v.locationstart then
-                v.locationstart=selfstart.Position
-            end
-            --LOG('threat for army'..repr(i)..' at marker '..repr(marker.Name)..' is '..repr(brainThreats[index])..' points are '..repr(v.points[num]))
-                    v.points[num]=v.points[num]+brainThreats[index]
-                    v.points[num]=v.points[num]*0.9
-                if v.points[num]>maxpoints then
-                    maxpoints=v.points[num]
-                    maxindex=i
-                end
-                if not enemybool then
-                    marker.allythreat=marker.allythreat+v.points[num]
-                else
-                    marker.enemythreat=marker.enemythreat+v.points[num]
-                end
-        end
-            if maxpoints>10 then
-                marker.owner=maxindex
-                marker.ownerPos=players[maxindex].Position
-            else
-                marker.owner=nil
-            end
-            --LOG('allegiance for '..repr(marker.Name)..' is '..repr(marker.allythreat-marker.enemythreat))
-            if not self.emptyBases then self.emptyBases={} end
-            if not self.emptyBase then self.emptyBase=0 end
-            if not self.teamBase then self.teamBase=0 end
-            if not self.enemyBase then self.enemyBase=0 end
-            if marker.allythreat-marker.enemythreat>10 then
-                if not self.teamBases[num] then 
-                    self.teamBases[num]=marker 
-                    self.teamBase=self.teamBase+1
-                end
-                if self.enemyBases[num] then self.enemyBases[num]=nil 
-                    self.enemyBase=self.enemyBase-1
-                end
-                if self.emptyBases[num] then self.emptyBases[num]=nil 
-                    self.emptyBase=self.emptyBase-1
-                end
-            elseif math.abs(marker.allythreat-marker.enemythreat)<10 then
-                if self.teamBases[num] then self.teamBases[num]=nil 
-                    self.teamBase=self.teamBase-1
-                end
-                if self.enemyBases[num] then self.enemyBases[num]=nil 
-                    self.enemyBase=self.enemyBase-1
-                end
-                if not self.emptyBases[num] then 
-                    self.emptyBases[num]=marker 
-                    self.emptyBase=self.emptyBase+1
-                end
-            else
-                if not self.enemyBases[num] then 
-                    self.enemyBases[num]=marker 
-                    self.enemyBase=self.enemyBase+1
-                end
-                if self.teamBases[num] then self.teamBases[num]=nil 
-                    self.teamBase=self.teamBase-1
-                end
-                if self.emptyBases[num] then self.emptyBases[num]=nil 
-                    self.emptyBase=self.emptyBase-1
-                end
-            end
-    end,
-    GrabMarkerThreatsRNG = function(self,marker)
-        local brainThreats = {}
-        local allyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Ally')
-        local enemyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Enemy')
-        for i,v in ArmyBrains do
-            brainThreats[i]=0
-        end
-        for _,v in allyunits do
-            if not v.Dead then
-                local index = v:GetAIBrain():GetArmyIndex()
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    brainThreats[index] = brainThreats[index] + bp.EconomyThreatLevel/20 + bp.SurfaceThreatLevel
-                end
-            end
-        end
-        for _,v in enemyunits do
-            if not v.Dead then
-                local index = v:GetAIBrain():GetArmyIndex()
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    brainThreats[index] = brainThreats[index] + bp.EconomyThreatLevel/20 + bp.SurfaceThreatLevel
-                end
-            end
-        end
-        return brainThreats
-    end,
-    GrabMarkerEconRNG = function(self,marker)
-        local brainThreats = {ally=0,enemy=0}
-        local allyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Ally')
-        local enemyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Enemy')
-        for _,v in allyunits do
-            if not v.Dead then
-                local index = v:GetAIBrain():GetArmyIndex()
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.EconomyThreatLevel ~= nil then
-                    brainThreats.ally = brainThreats.ally + bp.EconomyThreatLevel/100
-                end
-            end
-        end
-        for _,v in enemyunits do
-            if not v.Dead then
-                local index = v:GetAIBrain():GetArmyIndex()
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.EconomyThreatLevel ~= nil then
-                    brainThreats.enemy = brainThreats.enemy + bp.EconomyThreatLevel/100
-                end
-            end
-        end
-        return brainThreats
-    end,
-    GrabMarkerDangerRNG = function(self,marker)
-        local brainThreats = {ally=0,enemy=0}
-        local allyunits=self:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,marker.Position,marker.relevance*2,'Ally')
-        local enemyunits=self:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,marker.Position,marker.relevance*2,'Enemy')
-        for _,v in allyunits do
-            if not v.Dead then
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel
-                end
-            end
-        end
-        for _,v in enemyunits do
-            if not v.Dead then
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel
-                end
-            end
-        end
-        return brainThreats
-    end,
-    GrabPosDangerRNG = function(self,pos,radius)
-        local brainThreats = {ally=0,enemy=0}
-        local allyunits=self:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
-        local enemyunits=self:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
-        for _,v in allyunits do
-            if not v.Dead then
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel*v:GetHealthPercent()
-                end
-            end
-        end
-        for _,v in enemyunits do
-            if not v.Dead then
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.SurfaceThreatLevel ~= nil then
-                    brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel*v:GetHealthPercent()
-                end
-            end
-        end
-        return brainThreats
-    end,
-    GrabPosEconRNG = function(self,pos,radius)
-        local brainThreats = {ally=0,enemy=0}
-        if not self:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Ally') then return brainThreats end
-        local allyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Ally')
-        local enemyunits=self:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Enemy')
-        for _,v in allyunits do
-            if not v.Dead then
-                local index = v:GetAIBrain():GetArmyIndex()
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.EconomyThreatLevel ~= nil then
-                    brainThreats.ally = brainThreats.ally + bp.EconomyThreatLevel
-                end
-            end
-        end
-        for _,v in enemyunits do
-            if not v.Dead then
-                local index = v:GetAIBrain():GetArmyIndex()
-                --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                --LOG('Unit ID is '..v.UnitId)
-                --bp = v:GetBlueprint().Defense
-                local bp = __blueprints[v.UnitId].Defense
-                --LOG(repr(__blueprints[v.UnitId].Defense))
-                if bp.EconomyThreatLevel ~= nil then
-                    brainThreats.enemy = brainThreats.enemy + bp.EconomyThreatLevel
-                end
-            end
-        end
-        return brainThreats
-    end,
-    ExpansionDangerCheckRNG = function(self)
-        WaitTicks(600)
-        while self.Result ~= "defeat" do
-            --LOG('expansion danger check cycle')
-            if not self.teamBases or not self.emptyBases or not self.enemyBases then
-                WaitTicks(20) 
-                continue 
-            end
-            if self.teamBases and self.teamBase>0 then
-                for _,v in self.teamBases do
-                    local danger=self:GrabMarkerDangerRNG(v)
-                    v.dangerlevel=danger.enemy
-                    local econ = self:GrabMarkerEconRNG(v)
-                    v.econlevel=econ.ally
-                end
-            end
-            if self.enemyBases and self.enemyBase>0 then
-                for _,v in self.enemyBases do
-                    local danger=self:GrabMarkerDangerRNG(v)
-                    v.dangerlevel=danger.enemy-danger.ally/2
-                    local econ = self:GrabMarkerEconRNG(v)
-                    v.econlevel=econ.enemy
-                end
-            end
-            if self.emptyBases and self.emptyBase>0 then
-                for _,v in self.emptyBases do
-                    local danger=self:GrabMarkerDangerRNG(v)
-                    v.dangerlevel=danger.enemy-danger.ally/3
-                    v.econlevel=nil
-                end
-            end
-            for i=0,3 do
-                for i=0,10 do
-                    for _,v in self.teamBases do
-                        if self.teamBases and self.teamBase>0 then
-                            if v.dangerlevel>0 then
-                                DrawCircle(v.Position,v.relevance-2,'ffFF6060')
-                                DrawCircle(v.Position,v.relevance+2,'ffFF6060')
-                            end
-                        end
-                    end
-                    if self.enemyBases and self.enemyBase>0 then
-                        for _,v in self.enemyBases do
-                            if v.dangerlevel<0 then
-                                DrawCircle(v.Position,v.relevance-2,'ff00C7FF')
-                                DrawCircle(v.Position,v.relevance+2,'ff00C7FF')
-                            end
-                        end
-                    end
-                    if self.EmptyBases and self.emptyBase>0 then
-                        for _,v in self.emptyBases do
-                            if v.dangerlevel>0 then
-                                DrawCircle(v.Position,v.relevance-2,'ffFF9D00')
-                                DrawCircle(v.Position,v.relevance+2,'ffFF9D00')
-                            end
-                        end
-                    end
-                    WaitTicks(2)
-                end
-                WaitTicks(20)
-            end
-            WaitTicks(10)
-        end
-    end,
     HeavyEconomyRNG = function(self)
-        local selfIndex = self:GetArmyIndex()
         if ArmyIsCivilian(self:GetArmyIndex()) then return end
-        WaitTicks(100)
-        LOG('Heavy Economy thread starting'..selfIndex)
-        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
-        self.amanager = {t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},total={t1=0,t2=0,t3=0}}
-        self.smanager={fac={l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}},mex={t1=0,t2=0,t3=0},pgen={t1=0,t2=0,t3=0},silo={t2=0,t3=0},fabs={t2=0,t3=0}}
+        WaitTicks(math.random(80,100))
+        LOG('Heavy Economy thread starting '..self.Nickname)
+        -- This section is for debug
+        --[[
+        self.cmanager={income={r={m=0,e=0,},t={m=0,e=0,},},spend={m=0,e=0,},categoryspend={eng={T1=0,T2=0,T3=0,com=0},fac={l=0,a=0,n=0},silo={T2=0,T3=0},mex={T1=0,T2=0,T3=0},},storage={current={m=0,e=0,},max={m=0,e=0,}}}
+        self.amanager={Current={Land={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Air={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Naval={T1={frigate=0,submarine=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},},Total={Land={T1=0,T2=0,T3=0,},Air={T1=0,T2=0,T3=0,},Naval={T1=0,T2=0,T3=0,}},Type={Land={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Air={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Naval={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},},Ratios={Land={T1={scout=11,tank=55,arty=22,aa=12,}}}}
+        self.smanager={fac={l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}},mex={T1=0,T2=0,T3=0},pgen={T1=0,T2=0,T3=0},silo={T2=0,T3=0},fabs={T2=0,T3=0}}
+        --]]
         while not self.defeat do
             LOG('heavy economy loop started')
-            if not self then LOG('not self skip') WaitTicks(20) continue end
-            if not self:GetEconomyIncome('MASS') then LOG('not mass skip') WaitTicks(50) continue end
-            self:ForkThread(self.HeavyEconomyForkRNG)
+            self:HeavyEconomyForkRNG()
             WaitTicks(50)
         end
     end,
+
     HeavyEconomyForkRNG = function(self)
-        local units = table.copy(GetListOfUnits(self, categories.SELECTABLE, false, true))
-        local selfIndex = self:GetArmyIndex()
+        local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
         LOG('units grabbed')
-        local factories = {l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}}
-        local extractors = {t1=0,t2=0,t3=0}
-        local fabs = {t2=0,t3=0}
+        local factories = {l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}}
+        local extractors = {T1=0,T2=0,T3=0}
+        local fabs = {T2=0,T3=0}
         local coms = {acu=0,sacu=0}
-        local pgens = {t1=0,t2=0,t3=0}
-        local silo = {t2=0,t3=0}
-        local army={t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
-        local armytype={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
-        local armytiers={t1=0,t2=0,t3=0}
-        local launcherspend = {t2=0,t3=0}
+        local pgens = {T1=0,T2=0,T3=0}
+        local silo = {T2=0,T3=0}
+        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
+        local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
+        local armyLandTiers={T1=0,T2=0,T3=0}
+        local launcherspend = {T2=0,T3=0}
         local facspend = {l=0,a=0,n=0}
-        local mexspend = {t1=0,t2=0,t3=0}
-        local engspend = {t1=0,t2=0,t3=0,com=0}
+        local mexspend = {T1=0,T2=0,T3=0}
+        local engspend = {T1=0,T2=0,T3=0,com=0}
         local rincome = {m=0,e=0}
-        local tincome = {m=self:GetEconomyIncome('MASS')*10,e=self:GetEconomyIncome('ENERGY')*10}
-        local storage = {max = {m=self:GetEconomyStored('MASS')/self:GetEconomyStoredRatio('MASS'),e=self:GetEconomyStored('ENERGY')/self:GetEconomyStoredRatio('ENERGY')},current={m=self:GetEconomyStored('MASS'),e=self:GetEconomyStored('ENERGY')}}
+        local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
+        local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
+
         for _,unit in units do
             if unit.Dead then continue end
             if not unit then continue end
-            local spendm=unit:GetConsumptionPerSecondMass()
-            local spende=unit:GetConsumptionPerSecondEnergy()
-            local producem=unit:GetProductionPerSecondMass()
-            local producee=unit:GetProductionPerSecondEnergy()
+            local spendm=GetConsumptionPerSecondMass(unit)
+            local spende=GetConsumptionPerSecondEnergy(unit)
+            local producem=GetProductionPerSecondMass(unit)
+            local producee=GetProductionPerSecondEnergy(unit)
             tspend.m=tspend.m+spendm
             tspend.e=tspend.e+spende
             rincome.m=rincome.m+producem
             rincome.e=rincome.e+producee
             if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    extractors.t1=extractors.t1+1
-                    mexspend.t1=mexspend.t1+spendm
+                    extractors.T1=extractors.T1+1
+                    mexspend.T1=mexspend.T1+spendm
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    extractors.t2=extractors.t2+1
-                    mexspend.t2=mexspend.t2+spendm
+                    extractors.T2=extractors.T2+1
+                    mexspend.T2=mexspend.T2+spendm
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    extractors.t3=extractors.t3+1
-                    mexspend.t3=mexspend.t3+spendm
+                    extractors.T3=extractors.T3+1
+                    mexspend.T3=mexspend.T3+spendm
                 end
             elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
                 if EntityCategoryContains(categories.COMMAND,unit) then
@@ -3455,115 +3029,115 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             elseif EntityCategoryContains(categories.MASSFABRICATION,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
-                    fabs.t2=fabs.t2+1
+                    fabs.T2=fabs.T2+1
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    fabs.t3=fabs.t3+1
+                    fabs.T3=fabs.T3+1
                 end
             elseif EntityCategoryContains(categories.ENGINEER,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    engspend.t1=engspend.t1+spendm
+                    engspend.T1=engspend.T1+spendm
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    engspend.t2=engspend.t2+spendm
+                    engspend.T2=engspend.T2+spendm
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    engspend.t3=engspend.t3+spendm
+                    engspend.T3=engspend.T3+spendm
                 end
             elseif EntityCategoryContains(categories.FACTORY,unit) then
                 if EntityCategoryContains(categories.LAND,unit) then
                     facspend.l=facspend.l+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.l.t1=factories.l.t1+1
+                        factories.l.T1=factories.l.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.l.t2=factories.l.t2+1
+                        factories.l.T2=factories.l.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.l.t3=factories.l.t3+1
+                        factories.l.T3=factories.l.T3+1
                     end
                 elseif EntityCategoryContains(categories.AIR,unit) then
                     facspend.a=facspend.a+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.a.t1=factories.a.t1+1
+                        factories.a.T1=factories.a.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.a.t2=factories.a.t2+1
+                        factories.a.T2=factories.a.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.a.t3=factories.a.t3+1
+                        factories.a.T3=factories.a.T3+1
                     end
                 elseif EntityCategoryContains(categories.NAVAL,unit) then
                     facspend.n=facspend.n+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.n.t1=factories.n.t1+1
+                        factories.n.T1=factories.n.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.n.t2=factories.n.t2+1
+                        factories.n.T2=factories.n.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.n.t3=factories.n.t3+1
+                        factories.n.T3=factories.n.T3+1
                     end
                 end
             elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    pgens.t1=pgens.t1+1
+                    pgens.T1=pgens.T1+1
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    pgens.t2=pgens.t2+1
+                    pgens.T2=pgens.T2+1
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    pgens.t3=pgens.t3+1
+                    pgens.T3=pgens.T3+1
                 end
             elseif EntityCategoryContains(categories.LAND,unit) then
                 if EntityCategoryContains(categories.TECH1,unit) then
-                    armytiers.t1=armytiers.t1+1
+                    armyLandTiers.T1=armyLandTiers.T1+1
                     if EntityCategoryContains(categories.SCOUT,unit) then
-                        army.t1.scout=army.t1.scout+1
-                        armytype.scout=armytype.scout+1
+                        armyLand.T1.scout=armyLand.T1.scout+1
+                        armyLandType.scout=armyLandType.scout+1
                     elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
-                        army.t1.tank=army.t1.tank+1
-                        armytype.tank=armytype.tank+1
+                        armyLand.T1.tank=armyLand.T1.tank+1
+                        armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
-                        army.t1.arty=army.t1.arty+1
-                        armytype.arty=armytype.arty+1
+                        armyLand.T1.arty=armyLand.T1.arty+1
+                        armyLandType.arty=armyLandType.arty+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        army.t1.aa=army.t1.aa+1
-                        armytype.aa=armytype.aa+1
+                        armyLand.T1.aa=armyLand.T1.aa+1
+                        armyLandType.aa=armyLandType.aa+1
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
-                    armytiers.t2=armytiers.t2+1
+                    armyLandTiers.T2=armyLandTiers.T2+1
                     if EntityCategoryContains(categories.DIRECTFIRE,unit) then
-                        army.t2.tank=army.t2.tank+1
-                        armytype.tank=armytype.tank+1
+                        armyLand.T2.tank=armyLand.T2.tank+1
+                        armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
-                        army.t2.mml=army.t2.mml+1
-                        armytype.mml=armytype.mml+1
+                        armyLand.T2.mml=armyLand.T2.mml+1
+                        armyLandType.mml=armyLandType.mml+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        army.t2.aa=army.t2.aa+1
-                        armytype.aa=armytype.aa+1
+                        armyLand.T2.aa=armyLand.T2.aa+1
+                        armyLandType.aa=armyLandType.aa+1
                     elseif EntityCategoryContains(categories.SHIELD,unit) then
-                        army.t2.shield=army.t2.shield+1
-                        armytype.shield=armytype.shield+1
+                        armyLand.T2.shield=armyLand.T2.shield+1
+                        armyLandType.shield=armyLandType.shield+1
                     end
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    armytiers.t3=armytiers.t3+1
+                    armyLandTiers.T3=armyLandTiers.T3+1
                     if EntityCategoryContains(categories.SNIPER,unit) then
-                        army.t3.sniper=army.t3.sniper+1
-                        armytype.sniper=armytype.sniper+1
+                        armyLand.T3.sniper=armyLand.T3.sniper+1
+                        armyLandType.sniper=armyLandType.sniper+1
                     elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
-                        army.t3.tank=army.t3.tank+1
-                        armytype.tank=armytype.tank+1
+                        armyLand.T3.tank=armyLand.T3.tank+1
+                        armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
-                        army.t3.mml=army.t3.mml+1
-                        armytype.mml=armytype.mml+1
+                        armyLand.T3.mml=armyLand.T3.mml+1
+                        armyLandType.mml=armyLandType.mml+1
                     elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
-                        army.t3.arty=army.t3.arty+1
-                        armytype.arty=armytype.arty+1
+                        armyLand.T3.arty=armyLand.T3.arty+1
+                        armyLandType.arty=armyLandType.arty+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        army.t3.aa=army.t3.aa+1
-                        armytype.aa=armytype.aa+1
+                        armyLand.T3.aa=armyLand.T3.aa+1
+                        armyLandType.aa=armyLandType.aa+1
                     elseif EntityCategoryContains(categories.SHIELD,unit) then
-                        army.t3.shield=army.t3.shield+1
-                        armytype.shield=armytype.shield+1
+                        armyLand.T3.shield=armyLand.T3.shield+1
+                        armyLandType.shield=armyLandType.shield+1
                     end
                 end
             elseif EntityCategoryContains(categories.SILO,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
-                    silo.t2=silo.t2+1
-                    launcherspend.t2=launcherspend.t2+spendm
+                    silo.T2=silo.T2+1
+                    launcherspend.T2=launcherspend.T2+spendm
                 elseif EntityCategoryContains(categories.TECH3,unit) then
-                    silo.t3=silo.t3+1
-                    launcherspend.t3=launcherspend.t3+spendm
+                    silo.T3=silo.T3+1
+                    launcherspend.T3=launcherspend.T3+spendm
                 end
             end
         end
@@ -3583,145 +3157,12 @@ AIBrain = Class(RNGAIBrainClass) {
             self.cmanager.storage.max.m=storage.max.m
             self.cmanager.storage.max.e=storage.max.e
         end
-        self.amanager=army
-        self.amanager.total=armytiers
-        self.amanager.type=armytype
-        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
-        LOG('ARMY'..repr(selfIndex)..' eco numbers:'..repr(self.cmanager))
+        self.amanager.Current.Land=armyLand
+        self.amanager.Total.Land=armyLandTiers
+        self.amanager.Type.Land=armyLandType
+        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens}
     end,
-    DisplayEconomyRNG = function(self)
-        if ArmyIsCivilian(self:GetArmyIndex()) then return end
-        if not self.locationstart then 
-            local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
-            local astartX, astartZ = self:GetArmyStartPos()
-            local selfstart = {Position={astartX, 0, astartZ}}
-            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],selfstart.Position[1],selfstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],selfstart.Position[1],selfstart.Position[3]) end)
-            selfstart.Position[2]=starts[1].Position[2]
-            self.locationstart=selfstart.Position
-        end
-        while self.Result ~= "defeat" do
-            if not self.cmanager.income.r.m then LOG('no mass?') WaitTicks(20) continue end
-            if not self.cmanager.income.t.e or not self.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
-            local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF'}
-            local fcolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD'}
-            local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',t1='ff4CFF00',t2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
-            local engsum=0
-            for _,v in self.cmanager.categoryspend.eng do
-                engsum=engsum+v
-            end
-            local spendcategories={l=self.cmanager.categoryspend.fac.l,a=self.cmanager.categoryspend.fac.a,n=self.cmanager.categoryspend.fac.n,t1=self.cmanager.categoryspend.mex.t1,t2=self.cmanager.categoryspend.mex.t2,eng=engsum,other=0}
-            local othersum=self.cmanager.spend.m
-            for _,v in spendcategories do
-                othersum=othersum-v
-            end
-            spendcategories.other=othersum
-            local factotal=self.smanager.fac
-            local facnum={l=0,a=0,n=0}
-            local facsum=0
-            for x,v in factotal do
-                for _,i in factotal[x] do
-                    facsum=facsum+i
-                    facnum[x]=facnum[x]+i
-                end
-            end
-            local rawm=self.cmanager.income.r.m
-            local totalm=self.cmanager.income.t.m
-            local spendm=self.cmanager.spend.m
-            local storemaxm=self.cmanager.storage.max.m/10
-            local storem=self.cmanager.storage.current.m/10
-            local rawe=self.cmanager.income.r.e/10
-            local totale=self.cmanager.income.t.e/10
-            local spende=self.cmanager.spend.e/10
-            local storemaxe=self.cmanager.storage.max.e/30
-            local storee=self.cmanager.storage.current.e/30
-            local home=self.locationstart
-            local army=self.amanager
-            local widthm=math.max(math.sqrt(rawm),4)
-            local widthe=math.max(math.sqrt(rawe),4)
-            for _=0,25 do
-                local voffset=-10
-                --[[self:RenderChartRNG(home,army.t1,6,voffset,armycolors)
-                self:RenderChartRNG(home,army.t2,6,voffset-6,armycolors)
-                self:RenderChartRNG(home,army.t3,6,voffset-12,armycolors)]]
-                self:RenderPieRNG(home,math.sqrt(army.total.t1),18,-10,army.t1,armycolors)
-                self:RenderPieRNG(home,math.sqrt(army.total.t2),18+math.sqrt(army.total.t1)+math.sqrt(army.total.t2),-10,army.t2,armycolors)
-                self:RenderPieRNG(home,math.sqrt(army.total.t3),18+2*math.sqrt(army.total.t2)+math.sqrt(army.total.t1)+math.sqrt(army.total.t3),-10,army.t3,armycolors)
-                self:RenderPieRNG(home,math.sqrt(spendm),-10+math.sqrt(spendm)+math.max(spendm/widthm,totalm/widthm,rawm/widthm),9.05+1.5*widthm,spendcategories,scolors)
-                self:RenderPieRNG(home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.total.t1),-10,facnum,fcolors)
-                self:RenderBarRNG(home,rawm/widthm,widthm,1,'ff4CFF00')
-                self:RenderBarRNG(home,totalm/widthm,widthm,1+widthm,'ff267F00')
-                self:RenderBarRNG(home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
-                self:RenderBarRNG(home,-storemaxm/3/widthm,3*widthm,1,'ff267F00')
-                self:RenderBarRNG(home,-storem/3/widthm,3*widthm,1,'ff4CFF00')
-                self:RenderBarRNG(home,rawe/widthe,widthe,1.5+3*widthm,'ffFFFF00')
-                self:RenderBarRNG(home,totale/widthe,widthe,1.5+3*widthm+widthe,'ffFFD800')
-                self:RenderBarRNG(home,spende/widthe,widthe,1.5+3*widthm+2*widthe,'ffFF5900')
-                self:RenderBarRNG(home,-storemaxe/3/widthe,3*widthe,1.5+3*widthm,'ffFFD800')
-                self:RenderBarRNG(home,-storee/3/widthe,3*widthe,1.5+3*widthm,'ffFFFF00')
-                WaitTicks(2)
-            end
-        end
-    end,
-    RenderBarRNG = function(self,pos,value,width,offset,color)
-        local shiftpos={pos[1]-10,pos[2],pos[3]+8.05+offset}
-        local blc={shiftpos[1],shiftpos[2],shiftpos[3]+width-0.1}
-        local brc={shiftpos[1]+value-0.1,shiftpos[2],shiftpos[3]+width-0.1}
-        local trc={shiftpos[1]+value-0.1,shiftpos[2],shiftpos[3]}
-        DrawLine(shiftpos,blc,color)
-        DrawLine(blc,brc,color)
-        DrawLine(brc,trc,color)
-        DrawLine(trc,shiftpos,color)
-    end,
-    RenderChartRNG = function(self,pos,valuetable,width,offset,colortable)
-        local sum=0
-        local currentoffset=0
-        for _,v in valuetable do
-            sum=sum+v
-        end
-        local color='ffFFFFFF'
-        self:RenderBarRNG(pos,sum,width,offset,color)
-        for i,v in valuetable do
-            local newpos={pos[1]+currentoffset,pos[2],pos[3]}
-            self:RenderBarRNG(newpos,v,width,offset,colortable[i])
-            currentoffset=currentoffset+v
-        end
-    end,
-    RenderSliceRNG = function(self,center,radius,angle1,anglewidth,color)
-        local posi={center[1]+radius*math.cos(angle1),center[2],center[3]+radius*math.sin(angle1)}
-        local posf={center[1]+radius*math.cos(angle1+anglewidth),center[2],center[3]+radius*math.sin(angle1+anglewidth)}
-        DrawLine(center,posi,color)
-        DrawLine(center,posf,color)
-        local pos1={center[1]+radius*math.cos(angle1+anglewidth*1/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*1/7)}
-        local pos2={center[1]+radius*math.cos(angle1+anglewidth*2/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*2/7)}
-        local pos3={center[1]+radius*math.cos(angle1+anglewidth*3/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*3/7)}
-        local pos4={center[1]+radius*math.cos(angle1+anglewidth*4/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*4/7)}
-        local pos5={center[1]+radius*math.cos(angle1+anglewidth*5/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*5/7)}
-        local pos6={center[1]+radius*math.cos(angle1+anglewidth*6/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*6/7)}
-        DrawLine(posi,pos1,color)
-        DrawLine(pos1,pos2,color)
-        DrawLine(pos2,pos3,color)
-        DrawLine(pos3,pos4,color)
-        DrawLine(pos4,pos5,color)
-        DrawLine(pos5,pos6,color)
-        DrawLine(pos6,posf,color)
-        --[[for i=0,math.floor(anglewidth) do
-            local pos3={center[1]+math.cos(angle1+i),center[2],center[3]+math.sin(angle1+i)}
 
-        end]]
-    end,
-    RenderPieRNG = function(self,pos,radius,offsetx,offsetz,valuetable,colortable)
-        local sum=0
-        local currentoffset=0
-        local center={pos[1]+offsetx,pos[2],pos[3]+offsetz}
-        for _,v in valuetable do
-            sum=sum+v
-        end
-        for i,v in valuetable do
-            local degreeslice=2*math.pi*v/sum
-            self:RenderSliceRNG(center,radius,currentoffset+0.01,degreeslice-0.01,colortable[i])
-            currentoffset=currentoffset+degreeslice
-        end
-    end,
 --[[
     GetManagerCount = function(self, type)
         if not self.RNG then

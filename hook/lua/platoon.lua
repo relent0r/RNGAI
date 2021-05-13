@@ -47,7 +47,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
-            if v:TestToggleCaps('RULEUTC_StealthToggle') then
+            if not v.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
                 v:SetScriptBit('RULEUTC_StealthToggle', false)
             end
             if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
@@ -2800,19 +2800,20 @@ Platoon = Class(RNGAIPlatoon) {
                 if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
-                        if MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30) then
-                            --LOG('We can build on a mass marker within 30')
-                            massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, buildLocation)
-                            --LOG('Mass Marker'..repr(massMarker))
-                            --LOG('Attempting second mass marker')
-                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
-                            AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
-                            aiBrain:BuildStructure(eng, whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative)
-                            local newEntry = {whatToBuild, {massMarker[1], massMarker[3], 0}, buildRelative}
-                            table.insert(eng.EngineerBuildQueue, newEntry)
-
+                        local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30)
+                        if MexQueueBuild then
+                            LOG('We can build on a mass marker within 30')
+                            LOG(repr(MassMarkerTable))
+                            for _, v in MassMarkerTable do
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
+                                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
+                                aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
+                                local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative}
+                                table.insert(eng.EngineerBuildQueue, newEntry)
+                            end
                         else
-                            --LOG('Cant find mass within distance')
+                            LOG('Cant find mass within distance')
                         end
                     end
                 end
@@ -2830,17 +2831,11 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('EnginerBuildQueue : '..table.getn(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
         if not eng.Dead and table.getn(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
             --LOG('Starting RepeatBuild')
-            local distance = eng.PlatoonHandle.PlatoonData.Construction.Distance
-            local type = eng.PlatoonHandle.PlatoonData.Construction.Type
             local engpos = eng:GetPosition()
             if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild and eng.PlatoonHandle.PlanName then
                 --LOG('Repeat Build is set for :'..eng.Sync.id)
-                if type == 'Mass' and distance then
-                    if MABC.CanBuildOnMassEng(aiBrain, engpos, distance, -500, 1, 0, 'AntiSurface', 1) then
-                        eng.PlatoonHandle:MexBuildAIRNG()
-                        --eng.PlatoonHandle:SetAIPlanRNG( eng.PlatoonHandle.PlanName, aiBrain)
-                        return
-                    end
+                if eng.PlatoonHandle.PlatoonData.Construction.Type == 'Mass' then
+                    eng.PlatoonHandle:EngineerBuildAIRNG()
                 else
                     WARN('Invalid Construction Type or Distance, Expected : Mass, number')
                 end
@@ -5552,7 +5547,7 @@ Platoon = Class(RNGAIPlatoon) {
         local homebasex,homebasey = aiBrain:GetArmyStartPos()
         local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
         local platoonThreat = self:CalculatePlatoonThreat('AntiSurface', categories.ALLUNITS)
-        if EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204,Hero) then
+        if EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204,Hero) then
             Hero.Sniper=true
         end
         Hero.Threat=platoonThreat
@@ -5593,7 +5588,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         while PlatoonExists(aiBrain, self) do
             local health=Hero:GetHealthPercent()
-            local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION, false, true))
+            local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION + categories.ENGINEER, false, true))
             --LOG('alliedmexes:'..repr(alliedmexes))
             table.sort(alliedmexes,function(k1,k2) return VDist3(k1:GetPosition(),Hero.Pos)<VDist3(k2:GetPosition(),Hero.Pos) end)
             local closestmex=alliedmexes[1]
@@ -5610,10 +5605,10 @@ Platoon = Class(RNGAIPlatoon) {
             for i=0,2*math.pi,math.pi/4 do
                 Hero.evaluationpoints[i]={Hero.Pos[1]+math.cos(i)*Hero.MaxWeaponRange,Hero.Pos[2],Hero.Pos[3]+math.sin(i)*Hero.MaxWeaponRange}
             end
-            LOG('evaluationpoints at '..repr(Hero.evaluationpoints))
-            LOG('grabbing evaluationpoint threats')
+            --LOG('evaluationpoints at '..repr(Hero.evaluationpoints))
+            --LOG('grabbing evaluationpoint threats')
             for i,v in Hero.evaluationpoints do
-                local danger=aiBrain.GrabPosDangerRNG(aiBrain,Hero.evaluationpoints[i],Hero.evaluationradius)
+                local danger=RUtils.GrabPosDangerRNG(aiBrain,Hero.evaluationpoints[i],Hero.evaluationradius)
                 Hero.friendlyThreats[i]=danger.ally
                 Hero.enemyThreats[i]=danger.enemy
                 Hero.threats[i]=Hero.enemyThreats[i]-Hero.friendlyThreats[i]
@@ -5657,7 +5652,7 @@ Platoon = Class(RNGAIPlatoon) {
             local targetmexDist
             targetmex = self:FindClosestUnit('Attack', 'Enemy', true, categories.MASSEXTRACTION)
             local targetengDist
-            targeteng = self:FindClosestUnit('Attack', 'Enemy', true, categories.ENGINEER - categories.COMMAND)
+            targeteng = self:FindClosestUnit('Attack', 'Enemy', true, categories.ENGINEER - categories.AIR - categories.NAVAL - categories.COMMAND)
             local targetpdDist
             targetpd = self:FindClosestUnit('Attack', 'Enemy', true, categories.DEFENSE * categories.DIRECTFIRE)
             if targetacu then
@@ -5715,12 +5710,12 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     table.insert(raidlocs,v)
                 end
-                table.sort(raidlocs,function(k1,k2) return math.pow(VDist2(k1.Position[1],k1.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],Hero.base[1],Hero.base[3])<math.pow(VDist2(k2.Position[1],k2.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],Hero.base[1],Hero.base[3]) end)
+                table.sort(raidlocs,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],Hero.Pos[1],Hero.Pos[3])*math.pow(VDist2(k1.Position[1],k1.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],Hero.base[1],Hero.base[3])<VDist2(k2.Position[1],k2.Position[3],Hero.Pos[1],Hero.Pos[3])*math.pow(VDist2(k2.Position[1],k2.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],Hero.base[1],Hero.base[3]) end)
                 Hero.dest=raidlocs[1].Position
                 Hero.dest={Hero.dest[1]+math.random(-4,4),Hero.dest[2],Hero.dest[3]+math.random(-4,4)}
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
-                WaitTicks(70)
+                WaitTicks(30)
             elseif health<0.5 and Hero.Sync.regen>0 then
                 local targetPosition=target:GetPosition()
                 Hero.target=targetPosition
@@ -5735,7 +5730,7 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(30)
             elseif targetpd and targetpdDist<Hero.MaxWeaponRange*2 and not Hero.MaxWeaponRange>29 then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
-                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,5+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 WaitTicks(30)
@@ -5750,7 +5745,7 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(40)
             elseif targetacu and targetacuDist<Hero.MaxWeaponRange*2 and not Hero.MaxWeaponRange>29 then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
-                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,4+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 WaitTicks(30)
@@ -5762,17 +5757,17 @@ Platoon = Class(RNGAIPlatoon) {
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 IssueAttack({Hero},target)
-                WaitTicks(40)
-            elseif target and targetDist>100 then
+                WaitTicks(10)
+            elseif target and targetDist>160 and not EntityCategoryContains(categories.ENGINEER + categories.STRUCTURE,target) then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
                 Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,10+homedist/3+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
-                WaitTicks(30)
+                WaitTicks(10)
                 Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
-                WaitTicks(50)
+                WaitTicks(30)
             else
                 if targeteng and targetengDist<targetDist*1.5 then
                     IssueClearCommands({Hero})
@@ -5789,20 +5784,20 @@ Platoon = Class(RNGAIPlatoon) {
                     Hero.target=targetPosition
                     targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
                     if targetDist<Hero.MaxWeaponRange*1.5 then
-                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,3+math.random(0,5)})
+                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,6+math.random(-2,5)})
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(10)
+                        WaitTicks(5)
                     elseif targetDist<Hero.MaxWeaponRange*5 then
                         Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(40)
+                        WaitTicks(30)
                     else
                         Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(100)
+                        WaitTicks(30)
                     end
                 else
                     local targetPosition=target:GetPosition()
@@ -5817,15 +5812,15 @@ Platoon = Class(RNGAIPlatoon) {
                         IssueMove({Hero},strafeshift)
                         WaitTicks(25)
                     elseif targetDist<Hero.MaxWeaponRange*5 then
-                        Hero.dest=AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
+                        Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(40)
+                        WaitTicks(30)
                     else
-                        Hero.dest=AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
+                        Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(100)
+                        WaitTicks(30)
                     end
                 end
             end
@@ -5865,7 +5860,9 @@ Platoon = Class(RNGAIPlatoon) {
                 if Hero.targeteng then
                     DrawLinePop(pos1,Hero.targeteng,'1fFFD800')
                 end
-                DrawLinePop(pos1,pos2,'8f00aaFF')
+                if Hero.dest then
+                    DrawLinePop(pos1,pos2,'8f00aaFF')
+                end
                 if Hero.Threat then
                     DrawCircle(pos1,Hero.Threat,'4fFF11FF')
                 end

@@ -393,6 +393,7 @@ BuilderGroup {
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
+                AdjacencyCategory = categories.ENERGYPRODUCTION,
                 BuildStructures = {
                     'T2SupportLandFactory',
                 },
@@ -417,6 +418,7 @@ BuilderGroup {
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
+                AdjacencyCategory = categories.ENERGYPRODUCTION,
                 BuildStructures = {
                     'T3SupportLandFactory',
                 },
