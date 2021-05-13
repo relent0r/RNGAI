@@ -220,7 +220,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         mml=0,
                         aa=0,
                         shield=0
-                    },
+                    }
                 },
                 Air = {
                     T1 = {
@@ -242,7 +242,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         mml=0,
                         aa=0,
                         shield=0
-                    },
+                    }
                 },
                 Naval = {
                     T1 = {
@@ -263,7 +263,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         mml=0,
                         aa=0,
                         shield=0
-                    },
+                    }
                 },
             },
             Total = {
@@ -324,11 +324,42 @@ AIBrain = Class(RNGAIBrainClass) {
             },
         }
         self.smanager = {
-            fac = {},
-            mex = {},
-            silo = {},
-            fabs = {},
-            pgens = {},
+            fac = {
+                l =
+                {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0
+                },
+                a = {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                },
+                n= {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                }
+            },
+            mex = {
+                T1=0,
+                T2=0,
+                T3=0
+            },
+            pgen = {
+                T1=0,
+                T2=0,
+                T3=0
+            },
+            silo = {
+                T2=0,
+                T3=0
+            },
+            fabs= {
+                T2=0,
+                T3=0
+            }
         }
 
         self.LowEnergyMode = false
@@ -1353,13 +1384,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
                 if table.equal(v.Platoon, platoon) then
-                    LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
+                    --LOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
                     found = true
                     break
                 end
             end
             if not found then
-                LOG('Platoon doesnt already exist, adding')
+                --LOG('Platoon doesnt already exist, adding')
                 table.insert(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
         end
@@ -1367,7 +1398,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.PlatoonDistressThread then
             self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
-        LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
@@ -2930,172 +2961,14 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
     HeavyEconomyRNG = function(self)
         if ArmyIsCivilian(self:GetArmyIndex()) then return end
-        self.cmanager = {
-            income = {
-                r  = {
-                    m = 0,
-                    e = 0,
-                },
-                t = {
-                    m = 0,
-                    e = 0,
-                },
-            },
-            spend = {
-                m = 0,
-                e = 0,
-            },
-            categoryspend = {
-                eng = {T1=0,T2=0,T3=0,com=0},
-                fac = {l=0,a=0,n=0},
-                silo = {T2=0,T3=0},
-                mex = {T1=0,T2=0,T3=0},
-            },
-            storage = {
-                current = {
-                    m = 0,
-                    e = 0,
-                },
-                max = {
-                    m = 0,
-                    e = 0,
-                },
-            },
-        }
-        self.amanager = {
-            Current = {
-                Land = {
-                    T1 = {
-                        scout=0,
-                        tank=0,
-                        arty=0,
-                        aa=0
-                    },
-                    T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                    T3 = {
-                        tank=0,
-                        sniper=0,
-                        arty=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                },
-                Air = {
-                    T1 = {
-                        scout=0,
-                        interceptor=0,
-                        bomber=0,
-                        gunship=0
-                    },
-                    T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                    T3 = {
-                        tank=0,
-                        sniper=0,
-                        arty=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                },
-                Naval = {
-                    T1 = {
-                        frigate=0,
-                        submarine=0,
-                        aa=0
-                    },
-                    T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                    T3 = {
-                        tank=0,
-                        sniper=0,
-                        arty=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                },
-            },
-            Total = {
-                Land = {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0,
-                },
-                Air = {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0,
-                },
-                Naval = {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0,
-                }
-            },
-            Type = {
-                Land = {
-                    scout=0,
-                    tank=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
-                    shield=0
-                },
-                Air = {
-                    scout=0,
-                    tank=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
-                    shield=0
-                },
-                Naval = {
-                    scout=0,
-                    tank=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
-                    shield=0
-                },
-            },
-            Ratios = {
-                Land = {
-                    T1 = {
-                        scout=11,
-                        tank=55,
-                        arty=22,
-                        aa=12,
-                    },
-                },
-            },
-        }
-        self.smanager = {
-            fac = {},
-            mex = {},
-            silo = {},
-            fabs = {},
-            pgens = {},
-        }
         WaitTicks(math.random(80,100))
         LOG('Heavy Economy thread starting '..self.Nickname)
+        -- This section is for debug
+        --[[
+        self.cmanager={income={r={m=0,e=0,},t={m=0,e=0,},},spend={m=0,e=0,},categoryspend={eng={T1=0,T2=0,T3=0,com=0},fac={l=0,a=0,n=0},silo={T2=0,T3=0},mex={T1=0,T2=0,T3=0},},storage={current={m=0,e=0,},max={m=0,e=0,}}}
+        self.amanager={Current={Land={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Air={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Naval={T1={frigate=0,submarine=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},},Total={Land={T1=0,T2=0,T3=0,},Air={T1=0,T2=0,T3=0,},Naval={T1=0,T2=0,T3=0,}},Type={Land={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Air={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Naval={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},},Ratios={Land={T1={scout=11,tank=55,arty=22,aa=12,}}}}
+        self.smanager={fac={l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}},mex={T1=0,T2=0,T3=0},pgen={T1=0,T2=0,T3=0},silo={T2=0,T3=0},fabs={T2=0,T3=0}}
+        ]]
         while not self.defeat do
             LOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
