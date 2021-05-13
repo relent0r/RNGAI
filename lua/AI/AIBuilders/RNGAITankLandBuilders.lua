@@ -160,7 +160,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Land Attack Small',
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
@@ -195,7 +195,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 1
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Arty Sera Small', -- Sera cause floaty
         PlatoonTemplate = 'T1LandArtillery',
