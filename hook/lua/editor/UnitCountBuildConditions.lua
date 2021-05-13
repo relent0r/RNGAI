@@ -794,10 +794,13 @@ end
 function ArmyManagerBuild(aiBrain, uType, tier, unit)
 
     --LOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
+    local factionIndex = aiBrain:GetFactionIndex()
+    if factionIndex > 4 then factionIndex = 5 end
+    LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
         --LOG('Less than 1 unit of type '..unit)
         return true
-    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100) < aiBrain.amanager.Ratios[uType][tier][unit] then
+    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100) < aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] then
         --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
         return true
     end

@@ -76,3 +76,24 @@ BuilderGroup {
         },
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI LandBuilder T2',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T2 Tank',
+        PlatoonTemplate = 'T2LandDFTank',
+        Priority = 750,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'tank'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+}

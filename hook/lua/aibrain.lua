@@ -284,12 +284,85 @@ AIBrain = Class(RNGAIBrainClass) {
                 },
             },
             Ratios = {
-                Land = {
-                    T1 = {
-                        scout=11,
-                        tank=55,
-                        arty=22,
-                        aa=12,
+                [1] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20
+                            aa=10,
+                            shield=10
+                        }
+                    },
+                },
+                [2] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=75,
+                            mml=5,
+                            aa=10,
+                            shield=10
+                        }
+                    },
+                },
+                [3] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=60,
+                            mml=5,
+                            bot=25
+                            aa=10,
+                        }
+                    },
+                },
+                [4] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=75,
+                            mml=10,
+                            aa=15,
+                        }
+                    },
+                },
+                [5] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20
+                            aa=10,
+                            shield=10
+                        }
                     },
                 },
             },
@@ -3053,10 +3126,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if EntityCategoryContains(categories.SCOUT,unit) then
                         armyLand.T1.scout=armyLand.T1.scout+1
                         armyLandType.scout=armyLandType.scout+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                    elseif EntityCategoryContains(categories.DIRECTFIRE - categories.ANTIAIR,unit) then
                         armyLand.T1.tank=armyLand.T1.tank+1
                         armyLandType.tank=armyLandType.tank+1
-                    elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
+                    elseif EntityCategoryContains(categories.INDIRECTFIRE - categories.ANTIAIR,unit) then
                         armyLand.T1.arty=armyLand.T1.arty+1
                         armyLandType.arty=armyLandType.arty+1
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
