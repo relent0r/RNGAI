@@ -5605,10 +5605,10 @@ Platoon = Class(RNGAIPlatoon) {
             for i=0,2*math.pi,math.pi/4 do
                 Hero.evaluationpoints[i]={Hero.Pos[1]+math.cos(i)*Hero.MaxWeaponRange,Hero.Pos[2],Hero.Pos[3]+math.sin(i)*Hero.MaxWeaponRange}
             end
-            LOG('evaluationpoints at '..repr(Hero.evaluationpoints))
-            LOG('grabbing evaluationpoint threats')
+            --LOG('evaluationpoints at '..repr(Hero.evaluationpoints))
+            --LOG('grabbing evaluationpoint threats')
             for i,v in Hero.evaluationpoints do
-                local danger=aiBrain.GrabPosDangerRNG(aiBrain,Hero.evaluationpoints[i],Hero.evaluationradius)
+                local danger=RUtils.GrabPosDangerRNG(aiBrain,Hero.evaluationpoints[i],Hero.evaluationradius)
                 Hero.friendlyThreats[i]=danger.ally
                 Hero.enemyThreats[i]=danger.enemy
                 Hero.threats[i]=Hero.enemyThreats[i]-Hero.friendlyThreats[i]
@@ -5652,7 +5652,7 @@ Platoon = Class(RNGAIPlatoon) {
             local targetmexDist
             targetmex = self:FindClosestUnit('Attack', 'Enemy', true, categories.MASSEXTRACTION)
             local targetengDist
-            targeteng = self:FindClosestUnit('Attack', 'Enemy', true, categories.ENGINEER - categories.COMMAND)
+            targeteng = self:FindClosestUnit('Attack', 'Enemy', true, categories.ENGINEER - categories.AIR - categories.NAVAL - categories.COMMAND)
             local targetpdDist
             targetpd = self:FindClosestUnit('Attack', 'Enemy', true, categories.DEFENSE * categories.DIRECTFIRE)
             if targetacu then
@@ -5710,12 +5710,12 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     table.insert(raidlocs,v)
                 end
-                table.sort(raidlocs,function(k1,k2) return math.pow(VDist2(k1.Position[1],k1.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],Hero.base[1],Hero.base[3])<math.pow(VDist2(k2.Position[1],k2.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],Hero.base[1],Hero.base[3]) end)
+                table.sort(raidlocs,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],Hero.Pos[1],Hero.Pos[3])*math.pow(VDist2(k1.Position[1],k1.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],Hero.base[1],Hero.base[3])<VDist2(k2.Position[1],k2.Position[3],Hero.Pos[1],Hero.Pos[3])*math.pow(VDist2(k2.Position[1],k2.Position[3],Hero.home[1],Hero.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],Hero.base[1],Hero.base[3]) end)
                 Hero.dest=raidlocs[1].Position
                 Hero.dest={Hero.dest[1]+math.random(-4,4),Hero.dest[2],Hero.dest[3]+math.random(-4,4)}
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
-                WaitTicks(70)
+                WaitTicks(30)
             elseif health<0.5 and Hero.Sync.regen>0 then
                 local targetPosition=target:GetPosition()
                 Hero.target=targetPosition
@@ -5730,7 +5730,7 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(30)
             elseif targetpd and targetpdDist<Hero.MaxWeaponRange*2 and not Hero.MaxWeaponRange>29 then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
-                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,5+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 WaitTicks(30)
@@ -5745,7 +5745,7 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(40)
             elseif targetacu and targetacuDist<Hero.MaxWeaponRange*2 and not Hero.MaxWeaponRange>29 then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
-                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{homedist,10+homedist/5+math.random(-3,2)})
+                Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,4+math.random(-3,2)})
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 WaitTicks(30)
@@ -5757,7 +5757,7 @@ Platoon = Class(RNGAIPlatoon) {
                 IssueClearCommands({Hero})
                 IssueMove({Hero},Hero.dest)
                 IssueAttack({Hero},target)
-                WaitTicks(40)
+                WaitTicks(10)
             elseif target and targetDist>160 and not EntityCategoryContains(categories.ENGINEER + categories.STRUCTURE,target) then
                 local homedist=VDist2(Hero.home[1],Hero.home[3],Hero.Pos[1],Hero.Pos[3])
                 Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),Hero.home,{homedist,10+homedist/3+math.random(-3,2)})
@@ -5784,20 +5784,20 @@ Platoon = Class(RNGAIPlatoon) {
                     Hero.target=targetPosition
                     targetDist=VDist2(targetPosition[1],targetPosition[3],Hero.Pos[1],Hero.Pos[3])
                     if targetDist<Hero.MaxWeaponRange*1.5 then
-                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,3+math.random(0,5)})
+                        Hero.dest=RUtils.LerpyRotate(Hero:GetPosition(),target:GetPosition(),{targetDist,6+math.random(-2,5)})
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(10)
+                        WaitTicks(5)
                     elseif targetDist<Hero.MaxWeaponRange*5 then
                         Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(40)
+                        WaitTicks(30)
                     else
                         Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(100)
+                        WaitTicks(30)
                     end
                 else
                     local targetPosition=target:GetPosition()
@@ -5812,15 +5812,15 @@ Platoon = Class(RNGAIPlatoon) {
                         IssueMove({Hero},strafeshift)
                         WaitTicks(25)
                     elseif targetDist<Hero.MaxWeaponRange*5 then
-                        Hero.dest=AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
+                        Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(40)
+                        WaitTicks(30)
                     else
-                        Hero.dest=AIUtils.RandomLocation(targetPosition[1],targetPosition[3])
+                        Hero.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                         IssueClearCommands({Hero})
                         IssueMove({Hero},Hero.dest)
-                        WaitTicks(100)
+                        WaitTicks(30)
                     end
                 end
             end

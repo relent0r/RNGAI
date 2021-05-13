@@ -2200,9 +2200,83 @@ function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
 
 end
 
+ThrottledAllocateRNG = function(aiBrain)
+    local aiBrainIndex = aiBrain:GetArmyIndex()
+    LOG('aiBrain index (start mex allocation thread)'..aiBrainIndex)
+    local startX, startZ = aiBrain:GetArmyStartPos()
+    local start={startX,0,startZ}
+    while not aiBrain.defeat do
+        local brainExtractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
+        local extractorCount = table.getn(brainExtractors)
+        local givemex = 0
+        local allyBrains = {}
+        for _, v in ArmyBrains do
+            local Index = v:GetArmyIndex()
+            if IsEnemy(aiBrainIndex, Index) or ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+            local astartX, astartZ = v:GetArmyStartPos()
+            local aiBrainstart = {position={astartX, 0, astartZ},abrain=v,index=Index}
+            table.insert(allyBrains,aiBrainstart)
+        end
+        for _, x in brainExtractors do
+            if x.Position~=nil then continue end
+            x.Position=x:GetPosition()
+        end
+        table.sort(brainExtractors,function(k1,k2) return VDist2(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2(start[1],start[3],k2.Position[1],k2.Position[3]) end)
+        for _, x in brainExtractors do
+            if aiBrain:MexAllocateRNG(x,allyBrains) then givemex=givemex+1 end
+            if givemex/extractorCount>0.2 then break end
+            WaitTicks(5)
+        end
+        WaitTicks(300)
+    end
+end
+
+MexAllocateRNG = function(aiBrain,mex,allyBrains)
+    LOG('start construct mex')
+    if mex:IsUnitState('Upgrading') then return false end
+    local starts = {}
+    local aiBrainIndex = aiBrain:GetArmyIndex()
+    LOG('aiBrain index'..aiBrainIndex)
+    local mexnums1 = {}
+    for _, v in allyBrains do
+        local Index = v.index
+        local extractorCount = v.abrain:GetCurrentUnits(categories.STRUCTURE * categories.MASSEXTRACTION)
+        table.insert(mexnums1,Index,extractorCount)
+        local aiBrainstart = {Index, v.position, mexnums1[Index]}
+        table.insert(starts,aiBrainstart)
+    end
+        table.sort(starts,function(k1,k2) return (k1[3]+10)*VDist2Sq(k1[2][1],k1[2][3],mex.Position[1],mex.Position[3])<(k2[3]+10)*VDist2Sq(k2[2][1],k2[2][3],mex.Position[1],mex.Position[3]) end)
+        local chosenstart = starts[1]
+            if chosenstart[1]==aiBrainIndex then return false
+            elseif chosenstart[1]==nil then return false
+            else
+                LOG('giving mex to '..repr(chosenstart[1]))
+                if mex.PlatoonHandle then
+                    mex.PlatoonHandle:PlatoonDisbandNoAssign()
+                end
+                GiveUnitToArmy(mex,chosenstart[1])
+            end
+    return true
+end
+
 DisplayBaseMexAllocationRNG = function(aiBrain)
+    LOG('starting expansion display')
+    WaitTicks(50)
     local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local Expands = AIUtils.AIGetMarkerLocations(aiBrain, 'Expansion Area')
+    local BigExpands = AIUtils.AIGetMarkerLocations(aiBrain, 'Large Expansion Area')
+    local players = {}
+    LOG('finished grabbing expands and starts')
+    for _,v in ArmyBrains do
+        if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+        local astartX, astartZ = v:GetArmyStartPos()
+        local aiBrainstart = {Position={astartX, 0, astartZ}}
+        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        aiBrainstart.Position[2]=starts[1].Position[2]
+        table.insert(players,aiBrainstart)
+    end
     local MassMarker = {}
+    local expandstart = {}
     for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
         if v.type == 'Mass' then
             if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
@@ -2212,16 +2286,665 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
             table.insert(MassMarker, v)
         end
     end
+    for _, v in Expands do
+        v.expandtype='expand'
+        v.mexnum=0
+        table.insert(expandstart,v)
+    end
+    for _, v in BigExpands do
+        v.expandtype='bigexpand'
+        v.mexnum=0
+        table.insert(expandstart,v)
+    end
+    for _, v in starts do
+        v.expandtype='start'
+        v.mexnum=0
+        table.insert(expandstart,v)
+    end
     while aiBrain.Result ~= "defeat" do
         for _, v in MassMarker do
             local pos1={0,0,0}
             local pos2={0,0,0}
-            table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
-            local chosenstart = starts[1]
+            table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+            local chosenstart = expandstart[1]
+            expandstart[1].mexnum=expandstart[1].mexnum+1
             pos1=v.position
             pos2=chosenstart.Position
-            DrawLinePop(pos1,pos2,'ffFF0000')
+            DrawLinePop(pos1,pos2,'88FF0000')
+            if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
+                pos2=expandstart[2].Position
+                expandstart[2].mexnum=expandstart[2].mexnum+1
+                DrawLinePop(pos1,pos2,'88FF0000')
+            end
+        end
+        for _, v in expandstart do
+            local pos1={0,0,0}
+            local pos2={0,0,0}
+            table.sort(players,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+            local chosenstart = players[1]
+            pos1=v.Position
+            pos2=chosenstart.Position
+            if v.expandtype=='start' then
+                DrawLinePop(pos1,pos2,'ff0000FF')
+                DrawCircle(pos1,5*v.mexnum,'ff0000FF')
+            elseif v.expandtype=='bigexpand' then
+                DrawLinePop(pos1,pos2,'ff00FF00')
+                DrawCircle(pos1,5*v.mexnum,'ff00FF00')
+            elseif v.expandtype=='expand' then
+                DrawLinePop(pos1,pos2,'ffFF00FF')
+                DrawCircle(pos1,5*v.mexnum,'ffFF0000')
+            end
+            if v.expandtype~='start' then
+                table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+                if VDist2(chosenstart.Position[1],chosenstart.Position[3],starts[1].Position[1],starts[1].Position[3])>3 then
+                    pos2=starts[1].Position
+                    if v.expandtype=='bigexpand' then
+                        DrawLinePop(pos1,pos2,'5f00FF00')
+                    elseif v.expandtype=='expand' then
+                        DrawLinePop(pos1,pos2,'5fFF00FF')
+                    end
+                    if VDist2(starts[2].Position[1],starts[2].Position[3],v.Position[1],v.Position[3])-VDist2(starts[1].Position[1],starts[1].Position[3],v.Position[1],v.Position[3])<5 then
+                        pos2=starts[2].Position
+                        if v.expandtype=='bigexpand' then
+                            DrawLinePop(pos1,pos2,'5f00FF00')
+                        elseif v.expandtype=='expand' then
+                            DrawLinePop(pos1,pos2,'5fFF00FF')
+                        end
+                    end
+                end
+            end
+            if VDist2(players[2].Position[1],players[2].Position[3],v.Position[1],v.Position[3])-VDist2(players[1].Position[1],players[1].Position[3],v.Position[1],v.Position[3])<5 then
+                pos2=players[2].Position
+                if v.expandtype=='start' then
+                    DrawLinePop(pos1,pos2,'ff0000FF')
+                elseif v.expandtype=='bigexpand' then
+                    DrawLinePop(pos1,pos2,'ff00FF00')
+                elseif v.expandtype=='expand' then
+                    DrawLinePop(pos1,pos2,'ffFF00FF')
+                end
+            end
+            v.mexnum=0
         end
         WaitTicks(2)
+    end
+end
+DisplayExpansionAllegianceSetupRNG = function(aiBrain)
+    LOG('starting expansion display')
+    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local Expands = AIUtils.AIGetMarkerLocations(aiBrain, 'Expansion Area')
+    local BigExpands = AIUtils.AIGetMarkerLocations(aiBrain, 'Large Expansion Area')
+    LOG('finished grabbing expands and starts')
+    local MassMarker = {}
+    local expandstart = {}
+    local players = {}
+    aiBrain.teamBases={}
+    aiBrain.enemyBases={}
+    for i,v in ArmyBrains do
+        if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+        local astartX, astartZ = v:GetArmyStartPos()
+        local aiBrainstart = {Position={astartX, 0, astartZ},army=i}
+        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        aiBrainstart.Position[2]=starts[1].Position[2]
+        table.insert(players,i,aiBrainstart)
+    end
+    for _, v in Expands do
+        v.expandtype='expand'
+        v.mexnum=0
+        v.mextable={}
+        v.relevance=0
+        v.owner=nil
+        table.insert(expandstart,v)
+    end
+    for _, v in BigExpands do
+        v.expandtype='bigexpand'
+        v.mexnum=0
+        v.mextable={}
+        v.relevance=0
+        v.owner=nil
+        table.insert(expandstart,v)
+    end
+    for _, v in starts do
+        v.expandtype='start'
+        v.mexnum=0
+        v.mextable={}
+        v.relevance=0
+        v.owner=nil
+        table.insert(expandstart,v)
+    end
+    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                -- mass marker is too close to border, skip it.
+                continue
+            end 
+            table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+            expandstart[1].mexnum=expandstart[1].mexnum+1
+            table.insert(expandstart[1].mextable, v)
+            if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
+                expandstart[2].mexnum=expandstart[2].mexnum+1
+                table.insert(expandstart[2].mextable, v)
+            end
+            table.insert(MassMarker,v)
+        end
+    end
+    for _, v in expandstart do
+        for _,x in MassMarker do
+            v.relevance=v.relevance+ScenarioInfo.size[1]/math.pow(math.max(VDist2(v.Position[1],v.Position[3],x.position[1],x.position[3]),25),1.5)
+        end
+        if not v.expandtype=='start' then
+            for _,x in starts do
+                v.relevance=v.relevance-ScenarioInfo.size[1]/math.pow(VDist2(v.Position[1],v.Position[3],x.Position[1],x.Position[3]),1.5)
+                --LOG('relevance '..repr(v.relevance))
+            end
+        end
+    end
+    for i, v in expandstart do
+        aiBrain:UpdateExpansionAllegianceRNG(v,i)
+    end
+    while aiBrain.Result ~= "defeat" do
+        for x=0,30,1 do
+            for i, v in expandstart do
+                aiBrain:DisplayExpansionAllegianceRNG(v,i)
+            end
+            WaitTicks(2)
+        end
+        for i, v in expandstart do
+            aiBrain:UpdateExpansionAllegianceRNG(v,i)
+        end
+    end
+end
+DisplayExpansionAllegianceRNG = function(aiBrain,marker,num)
+    local pos1
+    local pos2
+        for _, v in marker.mextable do
+            pos1=v.position
+            pos2=marker.Position
+            DrawLinePop(pos1,pos2,'88FF0000')
+        end
+        if marker.expandtype=='start' then
+            DrawCircle(pos2,marker.relevance,'5a0000FF')
+        elseif marker.expandtype=='bigexpand' then
+            DrawCircle(pos2,marker.relevance,'5a00FF00')
+        elseif marker.expandtype=='expand' then
+            DrawCircle(pos2,marker.relevance,'5aFF0000')
+        end
+        if marker.owner then
+            pos1=marker.Position
+            pos2=marker.ownerPos
+            if marker.expandtype=='start' then
+                DrawLinePop(pos1,pos2,'c00000FF')
+            elseif marker.expandtype=='bigexpand' then
+                DrawLinePop(pos1,pos2,'c000FF00')
+            elseif marker.expandtype=='expand' then
+                DrawLinePop(pos1,pos2,'c0FF00FF')
+            end
+        end
+        if marker.allythreat then
+            pos1=marker.Position
+            local allegiance=marker.allythreat-marker.enemythreat
+            if allegiance>0 then
+                local radius=math.min(allegiance/20,marker.relevance-1)
+                DrawCircle(pos1,radius,'ff0000FF')
+            else
+                local radius=math.min(-allegiance/20,marker.relevance-1)
+                DrawCircle(pos1,radius,'ffFF0000')
+            end
+        end
+        --[[for i,v in players do
+            if aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'Overall',i)>0 then
+                v.points=v.points+aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'Overall',i)
+            else
+                v.points=v.points*0.9
+            end
+        end
+        aiBrain:GetThreatAtPosition(marker.Position, 1, true, 'Overall')--]]
+end
+UpdateExpansionAllegianceRNG = function(aiBrain,marker,num)
+    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local aiBrainindex = aiBrain:GetArmyIndex()
+    local players = {}
+    local maxpoints = 0
+    local maxindex
+    local brainThreats=aiBrain:GrabMarkerThreatsRNG(marker)
+    marker.allythreat=0
+    marker.enemythreat=0
+    for i,v in ArmyBrains do
+        if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+        local index = v:GetArmyIndex()
+        local enemybool = false
+        if IsEnemy(aiBrainindex,v:GetArmyIndex()) then
+            enemybool=true
+        end
+        if not v.points then
+            v.points={}
+            v.points[num]=0
+        end
+        if not v.points[num] then
+            v.points[num]=0
+        end
+        local astartX, astartZ = v:GetArmyStartPos()
+        local aiBrainstart = {Position={astartX, 0, astartZ},army=i}
+        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        aiBrainstart.Position[2]=starts[1].Position[2]
+        table.insert(players,i,aiBrainstart)
+        if not v.locationstart then
+            v.locationstart=aiBrainstart.Position
+        end
+        --LOG('threat for army'..repr(i)..' at marker '..repr(marker.Name)..' is '..repr(brainThreats[index])..' points are '..repr(v.points[num]))
+                v.points[num]=v.points[num]+brainThreats[index]
+                v.points[num]=v.points[num]*0.9
+            if v.points[num]>maxpoints then
+                maxpoints=v.points[num]
+                maxindex=i
+            end
+            if not enemybool then
+                marker.allythreat=marker.allythreat+v.points[num]
+            else
+                marker.enemythreat=marker.enemythreat+v.points[num]
+            end
+    end
+        if maxpoints>10 then
+            marker.owner=maxindex
+            marker.ownerPos=players[maxindex].Position
+        else
+            marker.owner=nil
+        end
+        --LOG('allegiance for '..repr(marker.Name)..' is '..repr(marker.allythreat-marker.enemythreat))
+        if not aiBrain.emptyBases then aiBrain.emptyBases={} end
+        if not aiBrain.emptyBase then aiBrain.emptyBase=0 end
+        if not aiBrain.teamBase then aiBrain.teamBase=0 end
+        if not aiBrain.enemyBase then aiBrain.enemyBase=0 end
+        if marker.allythreat-marker.enemythreat>10 then
+            if not aiBrain.teamBases[num] then 
+                aiBrain.teamBases[num]=marker 
+                aiBrain.teamBase=aiBrain.teamBase+1
+            end
+            if aiBrain.enemyBases[num] then aiBrain.enemyBases[num]=nil 
+                aiBrain.enemyBase=aiBrain.enemyBase-1
+            end
+            if aiBrain.emptyBases[num] then aiBrain.emptyBases[num]=nil 
+                aiBrain.emptyBase=aiBrain.emptyBase-1
+            end
+        elseif math.abs(marker.allythreat-marker.enemythreat)<10 then
+            if aiBrain.teamBases[num] then aiBrain.teamBases[num]=nil 
+                aiBrain.teamBase=aiBrain.teamBase-1
+            end
+            if aiBrain.enemyBases[num] then aiBrain.enemyBases[num]=nil 
+                aiBrain.enemyBase=aiBrain.enemyBase-1
+            end
+            if not aiBrain.emptyBases[num] then 
+                aiBrain.emptyBases[num]=marker 
+                aiBrain.emptyBase=aiBrain.emptyBase+1
+            end
+        else
+            if not aiBrain.enemyBases[num] then 
+                aiBrain.enemyBases[num]=marker 
+                aiBrain.enemyBase=aiBrain.enemyBase+1
+            end
+            if aiBrain.teamBases[num] then aiBrain.teamBases[num]=nil 
+                aiBrain.teamBase=aiBrain.teamBase-1
+            end
+            if aiBrain.emptyBases[num] then aiBrain.emptyBases[num]=nil 
+                aiBrain.emptyBase=aiBrain.emptyBase-1
+            end
+        end
+end
+
+DisplayEconomyRNG = function(aiBrain)
+    WaitTicks(150)
+    if ArmyIsCivilian(aiBrain:GetArmyIndex()) then return end
+    if not aiBrain.locationstart then 
+        local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+        local astartX, astartZ = aiBrain:GetArmyStartPos()
+        local aiBrainstart = {Position={astartX, 0, astartZ}}
+        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        aiBrainstart.Position[2]=starts[1].Position[2]
+        aiBrain.locationstart=aiBrainstart.Position
+    end
+    while aiBrain.Result ~= "defeat" do
+        if not aiBrain.cmanager.income.r.m then LOG('no mass?') WaitTicks(20) continue end
+        if not aiBrain.cmanager.income.t.e or not aiBrain.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
+        local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF'}
+        local fcolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD'}
+        local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',T1='ff4CFF00',T2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
+        local engsum=0
+        for _,v in aiBrain.cmanager.categoryspend.eng do
+            engsum=engsum+v
+        end
+        local spendcategories={l=aiBrain.cmanager.categoryspend.fac.l,a=aiBrain.cmanager.categoryspend.fac.a,n=aiBrain.cmanager.categoryspend.fac.n,T1=aiBrain.cmanager.categoryspend.mex.T1,T2=aiBrain.cmanager.categoryspend.mex.T2,eng=engsum,other=0}
+        local othersum=aiBrain.cmanager.spend.m
+        for _,v in spendcategories do
+            othersum=othersum-v
+        end
+        spendcategories.other=othersum
+        local factotal=aiBrain.smanager.fac
+        local facnum={l=0,a=0,n=0}
+        local facsum=0
+        for x,v in factotal do
+            for _,i in factotal[x] do
+                facsum=facsum+i
+                facnum[x]=facnum[x]+i
+            end
+        end
+        local rawm=aiBrain.cmanager.income.r.m
+        local totalm=aiBrain.cmanager.income.t.m
+        local spendm=aiBrain.cmanager.spend.m
+        local storemaxm=aiBrain.cmanager.storage.max.m/10
+        local storem=aiBrain.cmanager.storage.current.m/10
+        local rawe=aiBrain.cmanager.income.r.e/10
+        local totale=aiBrain.cmanager.income.t.e/10
+        local spende=aiBrain.cmanager.spend.e/10
+        local storemaxe=aiBrain.cmanager.storage.max.e/30
+        local storee=aiBrain.cmanager.storage.current.e/30
+        local home=aiBrain.locationstart
+        local army=aiBrain.amanager
+        local widthm=math.max(math.sqrt(rawm),4)
+        local widthe=math.max(math.sqrt(rawe),4)
+        for _=0,25 do
+            local voffset=-10
+            --[[aiBrain:RenderChartRNG(home,army.t1,6,voffset,armycolors)
+            aiBrain:RenderChartRNG(home,army.t2,6,voffset-6,armycolors)
+            aiBrain:RenderChartRNG(home,army.t3,6,voffset-12,armycolors)]]
+            RenderPieRNG(aiBrain,home,math.sqrt(army.Total.Land.T1),18,-10,army.Current.Land.T1,armycolors)
+            RenderPieRNG(aiBrain,home,math.sqrt(army.Total.Land.T2),18+math.sqrt(army.Total.Land.T1)+math.sqrt(army.Total.Land.T2),-10,army.Current.Land.T2,armycolors)
+            RenderPieRNG(aiBrain,home,math.sqrt(army.Total.Land.T3),18+2*math.sqrt(army.Total.Land.T2)+math.sqrt(army.Total.Land.T1)+math.sqrt(army.Total.Land.T3),-10,army.Current.Land.T3,armycolors)
+            RenderPieRNG(aiBrain,home,math.sqrt(spendm),-10+math.sqrt(spendm)+math.max(spendm/widthm,totalm/widthm,rawm/widthm),9.05+1.5*widthm,spendcategories,scolors)
+            RenderPieRNG(aiBrain,home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.Total.Land.T1),-10,facnum,fcolors)
+            RenderBarRNG(aiBrain,home,rawm/widthm,widthm,1,'ff4CFF00')
+            RenderBarRNG(aiBrain,home,totalm/widthm,widthm,1+widthm,'ff267F00')
+            RenderBarRNG(aiBrain,home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
+            RenderBarRNG(aiBrain,home,-storemaxm/3/widthm,3*widthm,1,'ff267F00')
+            RenderBarRNG(aiBrain,home,-storem/3/widthm,3*widthm,1,'ff4CFF00')
+            RenderBarRNG(aiBrain,home,rawe/widthe,widthe,1.5+3*widthm,'ffFFFF00')
+            RenderBarRNG(aiBrain,home,totale/widthe,widthe,1.5+3*widthm+widthe,'ffFFD800')
+            RenderBarRNG(aiBrain,home,spende/widthe,widthe,1.5+3*widthm+2*widthe,'ffFF5900')
+            RenderBarRNG(aiBrain,home,-storemaxe/3/widthe,3*widthe,1.5+3*widthm,'ffFFD800')
+            RenderBarRNG(aiBrain,home,-storee/3/widthe,3*widthe,1.5+3*widthm,'ffFFFF00')
+            WaitTicks(2)
+        end
+    end
+end
+RenderBarRNG = function(aiBrain,pos,value,width,offset,color)
+    local shiftpos={pos[1]-10,pos[2],pos[3]+8.05+offset}
+    local blc={shiftpos[1],shiftpos[2],shiftpos[3]+width-0.1}
+    local brc={shiftpos[1]+value-0.1,shiftpos[2],shiftpos[3]+width-0.1}
+    local trc={shiftpos[1]+value-0.1,shiftpos[2],shiftpos[3]}
+    DrawLine(shiftpos,blc,color)
+    DrawLine(blc,brc,color)
+    DrawLine(brc,trc,color)
+    DrawLine(trc,shiftpos,color)
+end
+RenderChartRNG = function(aiBrain,pos,valuetable,width,offset,colortable)
+    local sum=0
+    local currentoffset=0
+    for _,v in valuetable do
+        sum=sum+v
+    end
+    local color='ffFFFFFF'
+    RenderBarRNG(aiBrain,pos,sum,width,offset,color)
+    for i,v in valuetable do
+        local newpos={pos[1]+currentoffset,pos[2],pos[3]}
+        RenderBarRNG(aiBrain,newpos,v,width,offset,colortable[i])
+        currentoffset=currentoffset+v
+    end
+end
+RenderSliceRNG = function(aiBrain,center,radius,angle1,anglewidth,color)
+    local posi={center[1]+radius*math.cos(angle1),center[2],center[3]+radius*math.sin(angle1)}
+    local posf={center[1]+radius*math.cos(angle1+anglewidth),center[2],center[3]+radius*math.sin(angle1+anglewidth)}
+    DrawLine(center,posi,color)
+    DrawLine(center,posf,color)
+    local pos1={center[1]+radius*math.cos(angle1+anglewidth*1/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*1/7)}
+    local pos2={center[1]+radius*math.cos(angle1+anglewidth*2/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*2/7)}
+    local pos3={center[1]+radius*math.cos(angle1+anglewidth*3/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*3/7)}
+    local pos4={center[1]+radius*math.cos(angle1+anglewidth*4/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*4/7)}
+    local pos5={center[1]+radius*math.cos(angle1+anglewidth*5/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*5/7)}
+    local pos6={center[1]+radius*math.cos(angle1+anglewidth*6/7),center[2],center[3]+radius*math.sin(angle1+anglewidth*6/7)}
+    DrawLine(posi,pos1,color)
+    DrawLine(pos1,pos2,color)
+    DrawLine(pos2,pos3,color)
+    DrawLine(pos3,pos4,color)
+    DrawLine(pos4,pos5,color)
+    DrawLine(pos5,pos6,color)
+    DrawLine(pos6,posf,color)
+    --[[for i=0,math.floor(anglewidth) do
+        local pos3={center[1]+math.cos(angle1+i),center[2],center[3]+math.sin(angle1+i)}
+
+    end]]
+end
+RenderPieRNG = function(aiBrain,pos,radius,offsetx,offsetz,valuetable,colortable)
+    local sum=0
+    local currentoffset=0
+    local center={pos[1]+offsetx,pos[2],pos[3]+offsetz}
+    for _,v in valuetable do
+        sum=sum+v
+    end
+    for i,v in valuetable do
+        local degreeslice=2*math.pi*v/sum
+        RenderSliceRNG(aiBrain,center,radius,currentoffset+0.01,degreeslice-0.01,colortable[i])
+        currentoffset=currentoffset+degreeslice
+    end
+end
+GrabMarkerThreatsRNG = function(aiBrain,marker)
+    local brainThreats = {}
+    local allyunits=aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Ally')
+    local enemyunits=aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Enemy')
+    for i,v in ArmyBrains do
+        brainThreats[i]=0
+    end
+    for _,v in allyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats[index] = brainThreats[index] + bp.EconomyThreatLevel/20 + bp.SurfaceThreatLevel
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats[index] = brainThreats[index] + bp.EconomyThreatLevel/20 + bp.SurfaceThreatLevel
+            end
+        end
+    end
+    return brainThreats
+end
+GrabMarkerEconRNG = function(aiBrain,marker)
+    local brainThreats = {ally=0,enemy=0}
+    local allyunits=aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Ally')
+    local enemyunits=aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,marker.Position,marker.relevance,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.EconomyThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.EconomyThreatLevel/100
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.EconomyThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.EconomyThreatLevel/100
+            end
+        end
+    end
+    return brainThreats
+end
+GrabMarkerDangerRNG = function(aiBrain,marker)
+    local brainThreats = {ally=0,enemy=0}
+    local allyunits=aiBrain:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,marker.Position,marker.relevance*2,'Ally')
+    local enemyunits=aiBrain:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,marker.Position,marker.relevance*2,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel
+            end
+        end
+    end
+    return brainThreats
+end
+GrabPosDangerRNG = function(aiBrain,pos,radius)
+    local brainThreats = {ally=0,enemy=0}
+    local allyunits=aiBrain:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+    local enemyunits=aiBrain:GetUnitsAroundPoint(categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel*v:GetHealthPercent()
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel*v:GetHealthPercent()
+            end
+        end
+    end
+    return brainThreats
+end
+GrabPosEconRNG = function(aiBrain,pos,radius)
+    local brainThreats = {ally=0,enemy=0}
+    if not aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Ally') then return brainThreats end
+    local allyunits=aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Ally')
+    local enemyunits=aiBrain:GetUnitsAroundPoint(categories.STRUCTURE,pos,radius,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.EconomyThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.EconomyThreatLevel
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.EconomyThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.EconomyThreatLevel
+            end
+        end
+    end
+    return brainThreats
+end
+ExpansionDangerCheckRNG = function(aiBrain)
+    WaitTicks(600)
+    while aiBrain.Result ~= "defeat" do
+        --LOG('expansion danger check cycle')
+        if not aiBrain.teamBases or not aiBrain.emptyBases or not aiBrain.enemyBases then
+            WaitTicks(20) 
+            continue 
+        end
+        if aiBrain.teamBases and aiBrain.teamBase>0 then
+            for _,v in aiBrain.teamBases do
+                local danger=aiBrain:GrabMarkerDangerRNG(v)
+                v.dangerlevel=danger.enemy
+                local econ = aiBrain:GrabMarkerEconRNG(v)
+                v.econlevel=econ.ally
+            end
+        end
+        if aiBrain.enemyBases and aiBrain.enemyBase>0 then
+            for _,v in aiBrain.enemyBases do
+                local danger=aiBrain:GrabMarkerDangerRNG(v)
+                v.dangerlevel=danger.enemy-danger.ally/2
+                local econ = aiBrain:GrabMarkerEconRNG(v)
+                v.econlevel=econ.enemy
+            end
+        end
+        if aiBrain.emptyBases and aiBrain.emptyBase>0 then
+            for _,v in aiBrain.emptyBases do
+                local danger=aiBrain:GrabMarkerDangerRNG(v)
+                v.dangerlevel=danger.enemy-danger.ally/3
+                v.econlevel=nil
+            end
+        end
+        for i=0,3 do
+            for i=0,10 do
+                for _,v in aiBrain.teamBases do
+                    if aiBrain.teamBases and aiBrain.teamBase>0 then
+                        if v.dangerlevel>0 then
+                            DrawCircle(v.Position,v.relevance-2,'ffFF6060')
+                            DrawCircle(v.Position,v.relevance+2,'ffFF6060')
+                        end
+                    end
+                end
+                if aiBrain.enemyBases and aiBrain.enemyBase>0 then
+                    for _,v in aiBrain.enemyBases do
+                        if v.dangerlevel<0 then
+                            DrawCircle(v.Position,v.relevance-2,'ff00C7FF')
+                            DrawCircle(v.Position,v.relevance+2,'ff00C7FF')
+                        end
+                    end
+                end
+                if aiBrain.EmptyBases and aiBrain.emptyBase>0 then
+                    for _,v in aiBrain.emptyBases do
+                        if v.dangerlevel>0 then
+                            DrawCircle(v.Position,v.relevance-2,'ffFF9D00')
+                            DrawCircle(v.Position,v.relevance+2,'ffFF9D00')
+                        end
+                    end
+                end
+                WaitTicks(2)
+            end
+            WaitTicks(20)
+        end
+        WaitTicks(10)
     end
 end
