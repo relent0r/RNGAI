@@ -17,10 +17,21 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI LandBuilder T1',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Scout',
+        PlatoonTemplate = 'T1LandScout',
+        Priority = 744, -- After second engie group
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Tank',
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 745,
-        PriorityFunction = LandMode,
+        --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
@@ -35,8 +46,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Artillery',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 745,
-        PriorityFunction = LandMode,
+        Priority = 743,
+        --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
@@ -51,8 +62,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 AA',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 745,
-        PriorityFunction = LandMode,
+        Priority = 742,
+        --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
