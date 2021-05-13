@@ -2968,7 +2968,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.cmanager={income={r={m=0,e=0,},t={m=0,e=0,},},spend={m=0,e=0,},categoryspend={eng={T1=0,T2=0,T3=0,com=0},fac={l=0,a=0,n=0},silo={T2=0,T3=0},mex={T1=0,T2=0,T3=0},},storage={current={m=0,e=0,},max={m=0,e=0,}}}
         self.amanager={Current={Land={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Air={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Naval={T1={frigate=0,submarine=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},},Total={Land={T1=0,T2=0,T3=0,},Air={T1=0,T2=0,T3=0,},Naval={T1=0,T2=0,T3=0,}},Type={Land={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Air={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Naval={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},},Ratios={Land={T1={scout=11,tank=55,arty=22,aa=12,}}}}
         self.smanager={fac={l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}},mex={T1=0,T2=0,T3=0},pgen={T1=0,T2=0,T3=0},silo={T2=0,T3=0},fabs={T2=0,T3=0}}
-        ]]
+        --]]
         while not self.defeat do
             LOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
