@@ -226,7 +226,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T2 Attack Small',
         PlatoonTemplate = 'RNGAIT2LandAttackQueue',
         Priority = 760,
@@ -242,7 +242,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -538,7 +538,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Small',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Attack T3 Small',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 790,
@@ -571,7 +571,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Small',
         PlatoonTemplate = 'T3LandArtillery',

@@ -847,7 +847,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     --LOG('Eco timeout for Tech '..unitTech..' Extractor is '..ecoTimeOut)
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < (upgradeSpec.InitialDelay / multiplier) do
-		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 1000 and unit:GetFractionComplete() == 1 then
+		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 700 and unit:GetFractionComplete() == 1 then
             initial_delay = initial_delay + 10
             unit.InitialDelay = true
             if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then

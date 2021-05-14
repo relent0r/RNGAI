@@ -60,6 +60,17 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Power',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 776,
+        BuilderConditions = {
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 300, -- low factory priority
@@ -344,7 +355,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.09, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0,  categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             },
         BuilderData = {
@@ -630,6 +641,25 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Reclaim T1 Land Mass Stall - chp',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1050,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.SUPPORTFACTORY}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 5, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanEconEfficiency', { 0.9, 2.0 }},
+            },
+        BuilderData = {
+            Location = 'LocationType',
+            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
+        },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {
@@ -694,7 +724,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 8
+            MinimumReclaim = 15
         },
         BuilderType = 'Any',
     },
@@ -733,7 +763,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 15
         },
         BuilderType = 'Any',
     },
@@ -751,7 +781,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 30
         },
         BuilderType = 'Any',
     },

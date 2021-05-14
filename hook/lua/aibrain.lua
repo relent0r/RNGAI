@@ -211,7 +211,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         tank=0,
                         mml=0,
                         aa=0,
-                        shield=0
+                        shield=0,
+                        bot=0
                     },
                     T3 = {
                         tank=0,
@@ -219,7 +220,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         arty=0,
                         mml=0,
                         aa=0,
-                        shield=0
+                        shield=0,
+                        armoured=0
                     }
                 },
                 Air = {
@@ -291,16 +293,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     arty=0,
                     mml=0,
                     aa=0,
-                    shield=0
+                    shield=0,
+                    bot=0,
+                    armoured=0
                 },
                 Air = {
                     scout=0,
-                    tank=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
-                    shield=0
+                    interceptor=0,
+                    bomber=0,
+                    gunship=0,
+                    asf=0,
                 },
                 Naval = {
                     scout=0,
@@ -327,6 +329,34 @@ AIBrain = Class(RNGAIBrainClass) {
                             bot=20,
                             aa=10,
                             shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=11,
+                            interceptor=55,
+                            bomber=22,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
+                            shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
                         }
                     },
                 },
@@ -343,6 +373,33 @@ AIBrain = Class(RNGAIBrainClass) {
                             mml=5,
                             aa=10,
                             shield=10
+                        },
+                        T3 = {
+                            tank=45,
+                            arty=15,
+                            aa=10,
+                            sniper=30
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=11,
+                            interceptor=55,
+                            bomber=22,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
+                            shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
                         }
                     },
                 },
@@ -355,10 +412,39 @@ AIBrain = Class(RNGAIBrainClass) {
                             aa=12,
                         },
                         T2 = {
-                            tank=60,
+                            tank=55,
                             mml=5,
                             bot=25,
                             aa=10,
+                            stealth=5,
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            arty=15,
+                            aa=10,
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=11,
+                            interceptor=55,
+                            bomber=22,
+                            gunship=12,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
+                            shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
                         }
                     },
                 },
@@ -374,6 +460,34 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=75,
                             mml=10,
                             aa=15,
+                        },
+                        T3 = {
+                            tank=45,
+                            arty=10,
+                            aa=10,
+                            sniper=30,
+                            shield=5,
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=11,
+                            interceptor=55,
+                            bomber=22,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
+                            shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
                         }
                     },
                 },
@@ -390,7 +504,35 @@ AIBrain = Class(RNGAIBrainClass) {
                             mml=5,
                             bot=20,
                             aa=10,
+                            shield=10,
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10,
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=11,
+                            interceptor=55,
+                            bomber=22,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
                             shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
                         }
                     },
                 },
@@ -3065,9 +3207,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local coms = {acu=0,sacu=0}
         local pgens = {T1=0,T2=0,T3=0}
         local silo = {T2=0,T3=0}
-        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
-        local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
+        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
+        local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
+        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={interceptor=0,bomber=0,gunship=0,mercy=0},T3={asf=0,bomber=0,gunship=0}}
+        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0}
+        local armyAirTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
         local facspend = {l=0,a=0,n=0}
         local mexspend = {T1=0,T2=0,T3=0}
@@ -3184,9 +3329,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
                     armyLandTiers.T2=armyLandTiers.T2+1
-                    if EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                    if EntityCategoryContains(categories.DIRECTFIRE - categories.BOT - categories.ANTIAIR,unit) then
                         armyLand.T2.tank=armyLand.T2.tank+1
                         armyLandType.tank=armyLandType.tank+1
+                    elseif EntityCategoryContains(categories.DIRECTFIRE * categories.BOT - categories.ANTIAIR,unit) then
+                        armyLand.T2.bot=armyLand.T2.bot+1
+                        armyLandType.bot=armyLandType.bot+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
                         armyLand.T2.mml=armyLand.T2.mml+1
                         armyLandType.mml=armyLandType.mml+1
@@ -3202,7 +3350,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if EntityCategoryContains(categories.SNIPER,unit) then
                         armyLand.T3.sniper=armyLand.T3.sniper+1
                         armyLandType.sniper=armyLandType.sniper+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                    elseif EntityCategoryContains(categories.DIRECTFIRE * (categories.xel0305 + categories.xrl0305),unit) then
+                        armyLand.T3.armoured=armyLand.T3.armoured+1
+                        armyLandType.armoured=armyLandType.armoured+1
+                    elseif EntityCategoryContains(categories.DIRECTFIRE - categories.xel0305 - categories.xrl0305 - categories.ANTIAIR,unit) then
                         armyLand.T3.tank=armyLand.T3.tank+1
                         armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
@@ -3218,6 +3369,27 @@ AIBrain = Class(RNGAIBrainClass) {
                         armyLand.T3.shield=armyLand.T3.shield+1
                         armyLandType.shield=armyLandType.shield+1
                     end
+                end
+            elseif EntityCategoryContains(categories.AIR,unit) then
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    armyAirTiers.T1=armyAirTiers.T1+1
+                    if EntityCategoryContains(categories.SCOUT,unit) then
+                        armyAir.T1.scout=armyAir.T1.scout+1
+                        armyAirType.scout=armyAirType.scout+1
+                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        armyAir.T1.interceptor=armyAir.T1.interceptor+1
+                        armyAirType.interceptor=armyAirType.interceptor+1
+                    elseif EntityCategoryContains(categories.BOMBER,unit) then
+                        armyAir.T1.bomber=armyAir.T1.bomber+1
+                        armyAirType.bomber=armyAirType.bomber+1
+                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                        armyAir.T1.gunship=armyAir.T1.gunship+1
+                        armyAirType.gunship=armyAirType.gunship+1
+                    end
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    armyAirTiers.T2=armyAirTiers.T2+1
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    armyAirTiers.T3=armyAirTiers.T3+1
                 end
             elseif EntityCategoryContains(categories.SILO,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
@@ -3248,7 +3420,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Current.Land=armyLand
         self.amanager.Total.Land=armyLandTiers
         self.amanager.Type.Land=armyLandType
-        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens}
+        self.amanager.Current.Air=armyAir
+        self.amanager.Total.Air=armyAirTiers
+        self.amanager.Type.Air=armyAirType
+        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
     end,
 
 --[[

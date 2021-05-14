@@ -1,7 +1,7 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 
-local LandMode = function(self, aiBrain, builderManager, builderData)
+local AirMode = function(self, aiBrain, builderManager, builderData)
     --LOG('Setting T1 Queue to Eng')
     if builderData.TechLevel == 1 then
         return 745
@@ -14,71 +14,71 @@ local LandMode = function(self, aiBrain, builderManager, builderData)
 end
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI LandBuilder T1',
+    BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Scout',
-        PlatoonTemplate = 'T1LandScout',
+        BuilderName = 'RNGAI T1 Air Scout',
+        PlatoonTemplate = 'T1AirScout',
         Priority = 744, -- After second engie group
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'scout'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Tank',
-        PlatoonTemplate = 'T1LandDFTank',
+        BuilderName = 'RNGAI T1 Air Interceptor',
+        PlatoonTemplate = 'T1AirFighter',
         Priority = 745,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'interceptor'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 1
         },
     },
     Builder {
-        BuilderName = 'RNGAI T1 Artillery',
-        PlatoonTemplate = 'T1LandArtillery',
+        BuilderName = 'RNGAI T1 Air Bomber',
+        PlatoonTemplate = 'T1AirBomber',
         Priority = 743,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'bomber'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 1
         },
     },
     Builder {
-        BuilderName = 'RNGAI T1 AA',
-        PlatoonTemplate = 'T1LandAA',
+        BuilderName = 'RNGAI T1 Gunship',
+        PlatoonTemplate = 'T1Gunship',
         Priority = 742,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'gunship'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 1
         },
     },
 }
-
+--[[
 BuilderGroup {
-    BuilderGroupName = 'RNGAI LandBuilder T2',
+    BuilderGroupName = 'RNGAI AirBuilder T2',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Tank',
@@ -179,7 +179,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI LandBuilder T3',
+    BuilderGroupName = 'RNGAI AirBuilder T3',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T3 Tank',
@@ -295,3 +295,4 @@ BuilderGroup {
     },
 }
 
+]]
