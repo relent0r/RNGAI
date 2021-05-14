@@ -641,6 +641,25 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI T1 Engineer Reclaim T1 Land Mass Stall - chp',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1050,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.SUPPORTFACTORY}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 5, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanEconEfficiency', { 0.9, 2.0 }},
+            },
+        BuilderData = {
+            Location = 'LocationType',
+            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
+        },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {
