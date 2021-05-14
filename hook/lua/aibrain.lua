@@ -295,7 +295,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         T2 = {
                             tank=55,
                             mml=5,
-                            bot=20
+                            bot=20,
                             aa=10,
                             shield=10
                         }
@@ -326,10 +326,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             aa=12,
                         },
                         T2 = {
-                            tank=60,
+                            tank=55,
                             mml=5,
-                            bot=25
+                            bot=25,
                             aa=10,
+                            stealth=5,
                         }
                     },
                 },
@@ -359,7 +360,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         T2 = {
                             tank=55,
                             mml=5,
-                            bot=20
+                            bot=20,
                             aa=10,
                             shield=10
                         }

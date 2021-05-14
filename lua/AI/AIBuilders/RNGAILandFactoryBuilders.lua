@@ -96,4 +96,85 @@ BuilderGroup {
             TechLevel = 2
         },
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Bot',
+        PlatoonTemplate = 'RNGAIT2AttackBot',
+        Priority = 749,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 AA',
+        PlatoonTemplate = 'T2LandAA',
+        Priority = 746,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Shield',
+        PlatoonTemplate = 'T2MobileShields',
+        Priority = 747,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'shield'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 MML',
+        PlatoonTemplate = 'T2LandArtillery',
+        Priority = 748,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mobile Stealth',
+        PlatoonTemplate = 'RNGAIT2MobileStealth',
+        Priority = 746,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
 }
+
