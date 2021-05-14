@@ -313,12 +313,85 @@ AIBrain = Class(RNGAIBrainClass) {
                 },
             },
             Ratios = {
-                Land = {
-                    T1 = {
-                        scout=11,
-                        tank=55,
-                        arty=22,
-                        aa=12,
+                [1] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
+                            shield=10
+                        }
+                    },
+                },
+                [2] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=75,
+                            mml=5,
+                            aa=10,
+                            shield=10
+                        }
+                    },
+                },
+                [3] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=60,
+                            mml=5,
+                            bot=25,
+                            aa=10,
+                        }
+                    },
+                },
+                [4] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=75,
+                            mml=10,
+                            aa=15,
+                        }
+                    },
+                },
+                [5] = {
+                    Land = {
+                        T1 = {
+                            scout=11,
+                            tank=55,
+                            arty=22,
+                            aa=12,
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=5,
+                            bot=20,
+                            aa=10,
+                            shield=10
+                        }
                     },
                 },
             },
@@ -2965,8 +3038,14 @@ AIBrain = Class(RNGAIBrainClass) {
         LOG('Heavy Economy thread starting '..self.Nickname)
         -- This section is for debug
         ---[[
-        self.cmanager={income={r={m=0,e=0,},t={m=0,e=0,},},spend={m=0,e=0,},categoryspend={eng={T1=0,T2=0,T3=0,com=0},fac={l=0,a=0,n=0},silo={T2=0,T3=0},mex={T1=0,T2=0,T3=0},},storage={current={m=0,e=0,},max={m=0,e=0,}}}
-        self.amanager={Current={Land={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Air={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Naval={T1={frigate=0,submarine=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},},Total={Land={T1=0,T2=0,T3=0,},Air={T1=0,T2=0,T3=0,},Naval={T1=0,T2=0,T3=0,}},Type={Land={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Air={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Naval={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},},Ratios={Land={T1={scout=11,tank=55,arty=22,aa=12,total=0}}}}
+        self.cmanager={income={r={m=0,e=0,},t={m=0,e=0,},},spend={m=0,e=0,},categoryspend={eng={T1=0,T2=0,T3=0,com=0},fac={l=0,a=0,n=0},silo={T2=0,T3=0},mex={T1=0,T2=0,T3=0},},storage={current={m=0,e=0,},max={m=0,e=0,},},}
+        self.amanager={Current={Land={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Air={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},Naval={T1={frigate=0,submarine=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}},},Total={Land={T1=0,T2=0,T3=0,},Air={T1=0,T2=0,T3=0,},Naval={T1=0,T2=0,T3=0,}},Type={Land={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Air={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},Naval={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},},
+        Ratios={
+            [1]={Land={T1={scout=11,tank=55,arty=22,aa=12,total=0},T2={tank=55,mml=5,bot=20,aa=10,shield=10,total=0}},},
+            [2]={Land={T1={scout=11,tank=55,arty=22,aa=12,total=0},T2={tank=75,mml=5,aa=10,shield=10,total=0}},},
+            [3]={Land={T1={scout=11,tank=55,arty=22,aa=12,total=0},T2={tank=60,mml=5,bot=25,aa=10,total=0}},},
+            [4]={Land={T1={scout=11,tank=55,arty=22,aa=12,total=0},T2={tank=75,mml=10,aa=15,total=0}},},
+            [5]={Land={T1={scout=11,tank=55,arty=22,aa=12,total=0},T2={tank=55,mml=5,bot=20,aa=10,shield=10,total=0}},},},}
         self.smanager={fac={l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}},mex={T1=0,T2=0,T3=0},pgen={T1=0,T2=0,T3=0},silo={T2=0,T3=0},fabs={T2=0,T3=0}}
         --]]
         while not self.defeat do
@@ -2978,6 +3057,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     HeavyEconomyForkRNG = function(self)
         local units = GetListOfUnits(self, categories.SELECTABLE, true, true)
+        local factionIndex = self:GetFactionIndex()
         LOG('units grabbed')
         local factories = {l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}}
         local extractors = {T1=0,T2=0,T3=0}
@@ -2996,7 +3076,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
-        for _,z in self.amanager.Ratios[factionindex] do
+        for _,z in self.amanager.Ratios[factionIndex] do
             for _,c in z do
                 c.total=0
                 for i,v in c do
@@ -3005,7 +3085,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-        self.amanager.Ratios.Land.T1.total=landt1ratiototal
         for _,unit in units do
             if unit.Dead then continue end
             if not unit then continue end
@@ -3096,10 +3175,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif EntityCategoryContains(categories.ANTIAIR,unit) then
                         armyLand.T1.aa=armyLand.T1.aa+1
                         armyLandType.aa=armyLandType.aa+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                    elseif EntityCategoryContains(categories.DIRECTFIRE - categories.ANTIAIR,unit) then
                         armyLand.T1.tank=armyLand.T1.tank+1
                         armyLandType.tank=armyLandType.tank+1
-                    elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
+                    elseif EntityCategoryContains(categories.INDIRECTFIRE - categories.ANTIAIR,unit) then
                         armyLand.T1.arty=armyLand.T1.arty+1
                         armyLandType.arty=armyLandType.arty+1
                     end
