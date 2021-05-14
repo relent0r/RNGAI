@@ -319,6 +319,26 @@ PlatoonTemplate {
     },
 }
 
+PlatoonTemplate { Name = 'RNGAIT2AttackBot',
+    FactionSquads = {
+        UEF = {
+            { 'del0204', 1, 1, 'Attack', 'none' },      -- Gatling Bot
+        },
+        Cybran = {
+            { 'drl0204', 1, 1, 'Attack', 'none' },      -- Rocket Bot
+        },
+    }
+}
+
+PlatoonTemplate { Name = 'RNGAIT2MobileStealth',
+    FactionSquads = {
+        Cybran = {
+            { 'url0306', 1, 1, 'Attack', 'none' },      -- Rocket Bot
+        },
+    }
+}
+
+
 PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
     FactionSquads = {
         UEF = {

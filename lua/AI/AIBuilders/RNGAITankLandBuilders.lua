@@ -226,7 +226,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T2 Attack Small',
         PlatoonTemplate = 'RNGAIT2LandAttackQueue',
         Priority = 760,
@@ -242,7 +242,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
