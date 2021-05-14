@@ -2223,7 +2223,7 @@ ThrottledAllocateRNG = function(aiBrain)
         end
         table.sort(brainExtractors,function(k1,k2) return VDist2(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2(start[1],start[3],k2.Position[1],k2.Position[3]) end)
         for _, x in brainExtractors do
-            if aiBrain:MexAllocateRNG(x,allyBrains) then givemex=givemex+1 end
+            if MexAllocateRNG(aiBrain,x,allyBrains) then givemex=givemex+1 end
             if givemex/extractorCount>0.2 then break end
             WaitTicks(5)
         end
@@ -2439,17 +2439,17 @@ DisplayExpansionAllegianceSetupRNG = function(aiBrain)
         end
     end
     for i, v in expandstart do
-        aiBrain:UpdateExpansionAllegianceRNG(v,i)
+        UpdateExpansionAllegianceRNG(aiBrain,v,i)
     end
     while aiBrain.Result ~= "defeat" do
         for x=0,30,1 do
             for i, v in expandstart do
-                aiBrain:DisplayExpansionAllegianceRNG(v,i)
+                DisplayExpansionAllegianceRNG(aiBrain,v,i)
             end
             WaitTicks(2)
         end
         for i, v in expandstart do
-            aiBrain:UpdateExpansionAllegianceRNG(v,i)
+            UpdateExpansionAllegianceRNG(aiBrain,v,i)
         end
     end
 end
