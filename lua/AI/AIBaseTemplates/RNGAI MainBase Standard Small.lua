@@ -66,6 +66,7 @@ BaseBuilderTemplate {
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
+        'RNGAI Air Builder T1',
         'RNGAI Air Staging Platform',
         
         -- Sea Factory Builders
