@@ -67,6 +67,8 @@ BaseBuilderTemplate {
         'RNG Tech Support Factory Builder Land',
         'RNG Tech Land Factory Reclaimer',
         'RNGAI LandBuilder T1',
+        'RNGAI LandBuilder T2',
+        'RNGAI LandBuilder T3',
 
         -- Land Factory Formers --
         'RNG Tech Land Upgrade Builders',
