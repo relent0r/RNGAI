@@ -6138,13 +6138,28 @@ Platoon = Class(RNGAIPlatoon) {
                 local angle=runawaydirection/evalweight
                 local runawaypoint={platoon.Pos[1]+math.cos(angle)*platoon.MaxWeaponRange,platoon.Pos[2],platoon.Pos[3]+math.sin(angle)*platoon.MaxWeaponRange}
                 platoon.dest=runawaypoint
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
+                for _,v in platoonUnits do
+                    IssueClearCommands({v})
+                    IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                end
                 WaitTicks(30)
-                platoon.dest={platoon.home[1]+math.random(-4,4),platoon.home[2],platoon.home[3]+math.random(-4,4)}
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
-                WaitTicks(30)
+                if VDist2(self:GetPlatoonPosition(),platoon.home)>30 then
+                    platoon.dest={platoon.home[1]+math.random(-4,4),platoon.home[2],platoon.home[3]+math.random(-4,4)}
+                    for _,v in platoonUnits do
+                        if not v or v.Dead then continue end
+                        IssueClearCommands({v})
+                        IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                    end
+                    WaitTicks(30)
+                else
+                    platoon.dest={platoon.base[1]+math.random(-4,4),platoon.base[2],platoon.base[3]+math.random(-4,4)}
+                    for _,v in platoonUnits do
+                        if not v or v.Dead then continue end
+                        IssueClearCommands({v})
+                        IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                    end
+                    WaitTicks(30)
+                end
                 continue
             end
             platoon.target=nil
@@ -6219,26 +6234,20 @@ Platoon = Class(RNGAIPlatoon) {
                 table.sort(raidlocs,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],platoon.Pos[1],platoon.Pos[3])*math.pow(VDist2(k1.Position[1],k1.Position[3],platoon.home[1],platoon.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],platoon.base[1],platoon.base[3])<VDist2(k2.Position[1],k2.Position[3],platoon.Pos[1],platoon.Pos[3])*math.pow(VDist2(k2.Position[1],k2.Position[3],platoon.home[1],platoon.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],platoon.base[1],platoon.base[3]) end)
                 platoon.dest=raidlocs[1].Position
                 platoon.dest={platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)}
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
-                WaitTicks(30)
-            elseif health<0.5 and platoon.Sync.regen>0 then
-                local targetPosition=target:GetPosition()
-                platoon.target=targetPosition
-                targetDist=VDist2(targetPosition[1],targetPosition[3],platoon.Pos[1],platoon.Pos[3])
-                platoon.dest = RUtils.lerpy({platoon.Pos[1],platoon.Pos[2],platoon.Pos[3]},targetPosition,{targetDist,targetDist - 3 * platoon.MaxWeaponRange})
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
-                WaitTicks(40)
-                platoon.dest=platoon.home
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
+                for _,v in platoonUnits do
+                    if not v or v.Dead then continue end
+                    IssueClearCommands({v})
+                    IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                end
                 WaitTicks(30)
             elseif targetpd and targetpdDist<platoon.MaxWeaponRange*2 and not platoon.MaxWeaponRange>29 then
                 local homedist=VDist2(platoon.home[1],platoon.home[3],platoon.Pos[1],platoon.Pos[3])
                 platoon.dest=RUtils.LerpyRotate(platoon.Pos,platoon.home,{homedist,5+math.random(-3,2)})
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
+                for _,v in platoonUnits do
+                    if not v or v.Dead then continue end
+                    IssueClearCommands({v})
+                    IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                end
                 WaitTicks(30)
             elseif targetpd and targetpdDist<targetDist*0.9 and platoon.MaxWeaponRange>29 and targetpdDist<platoon.MaxWeaponRange*1.3 then
                 platoon.dest = RUtils.lerpy({platoon.Pos[1],platoon.Pos[2],platoon.Pos[3]},platoon.targetpd,{targetpdDist,targetpdDist - platoon.MaxWeaponRange})
@@ -6252,8 +6261,11 @@ Platoon = Class(RNGAIPlatoon) {
             elseif targetacu and targetacuDist<platoon.MaxWeaponRange*2 and not platoon.MaxWeaponRange>29 then
                 local homedist=VDist2(platoon.home[1],platoon.home[3],platoon.Pos[1],platoon.Pos[3])
                 platoon.dest=RUtils.LerpyRotate(platoon.Pos,platoon.home,{homedist,4+math.random(-3,2)})
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
+                for _,v in platoonUnits do
+                    if not v or v.Dead then continue end
+                    IssueClearCommands({v})
+                    IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                end
                 WaitTicks(30)
             elseif targetacu and targetacuDist<platoon.MaxWeaponRange*2 and platoon.MaxWeaponRange>29 and targetacuDist<targetDist*0.9 then
                 platoon.dest = RUtils.lerpy({platoon.Pos[1],platoon.Pos[2],platoon.Pos[3]},platoon.targetacu,{targetacuDist,targetacuDist - platoon.MaxWeaponRange})
@@ -6267,8 +6279,11 @@ Platoon = Class(RNGAIPlatoon) {
             elseif target and targetDist>160 and not EntityCategoryContains(categories.ENGINEER + categories.STRUCTURE,target) then
                 local homedist=VDist2(platoon.home[1],platoon.home[3],platoon.Pos[1],platoon.Pos[3])
                 platoon.dest=RUtils.LerpyRotate(platoon.Pos,platoon.home,{homedist,10+homedist/3+math.random(-3,2)})
-                self:Stop()
-                self:MoveToLocation(platoon.dest, false)
+                for _,v in platoonUnits do
+                    if not v or v.Dead then continue end
+                    IssueClearCommands({v})
+                    IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                end
                 WaitTicks(10)
                 platoon.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
                 self:Stop()
@@ -6291,8 +6306,11 @@ Platoon = Class(RNGAIPlatoon) {
                     targetDist=VDist2(targetPosition[1],targetPosition[3],platoon.Pos[1],platoon.Pos[3])
                     if targetDist<platoon.MaxWeaponRange*1.5 then
                         platoon.dest=RUtils.LerpyRotate(platoon.Pos,target:GetPosition(),{targetDist,6+math.random(-2,5)})
-                        self:Stop()
-                        self:MoveToLocation(platoon.dest, false)
+                        for _,v in platoonUnits do
+                            if not v or v.Dead then continue end
+                            IssueClearCommands({v})
+                            IssueMove({v},{platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)})
+                        end
                         WaitTicks(5)
                     elseif targetDist<platoon.MaxWeaponRange*5 then
                         platoon.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
@@ -6314,8 +6332,16 @@ Platoon = Class(RNGAIPlatoon) {
                         smartPos = {smartPos[1]+math.random(-1,1),smartPos[2],smartPos[3]+math.random(-1,1)}
                         local strafeshift=RUtils.LerpyRotate(platoon.Pos,smartPos,{4,math.random(-4,4)})
                         platoon.dest=strafeshift
-                        self:Stop()
-                        self:MoveToLocation(platoon.dest, false)
+                        for _,v in platoonUnits do
+                            if not v or v.Dead then continue end
+                            local upos=v:GetPosition()
+                            local tdist=VDist2(targetPosition[1],targetPosition[3],upos[1],upos[3])
+                            local smartPos = RUtils.lerpy({upos[1]+math.random(-2,2),upos[2],upos[3]+math.random(-2,2)},targetPosition,{tdist,tdist - platoon.MaxWeaponRange})
+                            smartPos = {smartPos[1]+math.random(-1,1),smartPos[2],smartPos[3]+math.random(-1,1)}
+                            local strafeshift=RUtils.LerpyRotate(tdist,smartPos,{4,math.random(-4,4)})
+                            IssueClearCommands({v})
+                            IssueMove({v},strafeshift)
+                        end
                         WaitTicks(25)
                     elseif targetDist<platoon.MaxWeaponRange*5 then
                         platoon.dest={targetPosition[1]+math.random(-4,4),targetPosition[2],targetPosition[3]+math.random(-4,4)}
