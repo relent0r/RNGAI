@@ -538,7 +538,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Small',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Attack T3 Small',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 790,
@@ -571,7 +571,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Small',
         PlatoonTemplate = 'T3LandArtillery',

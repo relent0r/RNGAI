@@ -211,7 +211,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         tank=0,
                         mml=0,
                         aa=0,
-                        shield=0
+                        shield=0,
+                        bot=0
                     },
                     T3 = {
                         tank=0,
@@ -219,7 +220,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         arty=0,
                         mml=0,
                         aa=0,
-                        shield=0
+                        shield=0,
+                        armoured=0
                     }
                 },
                 Air = {
@@ -291,7 +293,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     arty=0,
                     mml=0,
                     aa=0,
-                    shield=0
+                    shield=0,
+                    bot=0,
+                    armoured=0
                 },
                 Air = {
                     scout=0,
@@ -327,6 +331,13 @@ AIBrain = Class(RNGAIBrainClass) {
                             bot=20,
                             aa=10,
                             shield=10
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10
                         }
                     },
                 },
@@ -343,6 +354,12 @@ AIBrain = Class(RNGAIBrainClass) {
                             mml=5,
                             aa=10,
                             shield=10
+                        },
+                        T3 = {
+                            tank=45,
+                            arty=15,
+                            aa=10,
+                            sniper=30
                         }
                     },
                 },
@@ -360,6 +377,12 @@ AIBrain = Class(RNGAIBrainClass) {
                             bot=25,
                             aa=10,
                             stealth=5,
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            arty=15,
+                            aa=10,
                         }
                     },
                 },
@@ -375,6 +398,13 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=75,
                             mml=10,
                             aa=15,
+                        },
+                        T3 = {
+                            tank=45,
+                            arty=10,
+                            aa=10,
+                            sniper=30,
+                            shield=5,
                         }
                     },
                 },
@@ -391,7 +421,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             mml=5,
                             bot=20,
                             aa=10,
-                            shield=10
+                            shield=10,
+                        },
+                        T3 = {
+                            tank=30,
+                            armoured=40,
+                            mml=5,
+                            arty=15,
+                            aa=10,
                         }
                     },
                 },
@@ -3059,8 +3096,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local coms = {acu=0,sacu=0}
         local pgens = {T1=0,T2=0,T3=0}
         local silo = {T2=0,T3=0}
-        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}}
-        local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0}
+        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
+        local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
         local facspend = {l=0,a=0,n=0}
@@ -3170,9 +3207,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
                     armyLandTiers.T2=armyLandTiers.T2+1
-                    if EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                    if EntityCategoryContains(categories.DIRECTFIRE - categories.BOT - categories.ANTIAIR,unit) then
                         armyLand.T2.tank=armyLand.T2.tank+1
                         armyLandType.tank=armyLandType.tank+1
+                    elseif EntityCategoryContains(categories.DIRECTFIRE * categories.BOT - categories.ANTIAIR,unit) then
+                        armyLand.T2.bot=armyLand.T2.bot+1
+                        armyLandType.bot=armyLandType.bot+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
                         armyLand.T2.mml=armyLand.T2.mml+1
                         armyLandType.mml=armyLandType.mml+1
@@ -3188,7 +3228,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if EntityCategoryContains(categories.SNIPER,unit) then
                         armyLand.T3.sniper=armyLand.T3.sniper+1
                         armyLandType.sniper=armyLandType.sniper+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE,unit) then
+                    elseif EntityCategoryContains(categories.DIRECTFIRE * (categories.xel0305 + categories.xrl0305),unit) then
+                        armyLand.T3.armoured=armyLand.T3.armoured+1
+                        armyLandType.armoured=armyLandType.armoured+1
+                    elseif EntityCategoryContains(categories.DIRECTFIRE - categories.xel0305 - categories.xrl0305 - categories.ANTIAIR,unit) then
                         armyLand.T3.tank=armyLand.T3.tank+1
                         armyLandType.tank=armyLandType.tank+1
                     elseif EntityCategoryContains(categories.SILO,unit) then
