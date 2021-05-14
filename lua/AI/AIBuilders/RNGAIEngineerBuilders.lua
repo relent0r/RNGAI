@@ -60,6 +60,17 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Power',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 776,
+        BuilderConditions = {
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 300, -- low factory priority
@@ -344,7 +355,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.09, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0,  categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             },
         BuilderData = {
@@ -694,7 +705,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 8
+            MinimumReclaim = 15
         },
         BuilderType = 'Any',
     },
@@ -733,7 +744,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 15
         },
         BuilderType = 'Any',
     },
@@ -751,7 +762,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 30
         },
         BuilderType = 'Any',
     },
