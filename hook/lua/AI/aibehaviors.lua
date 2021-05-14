@@ -1410,7 +1410,7 @@ PlatoonRetreat = function (platoon)
                     if table.getn(v) > 3 then
                         local remotePlatoonPos = GetPlatoonPosition(v)
                         selfPlatoonPos = GetPlatoonPosition(platoon)
-                        local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[2], selfPlatoonPos[1], selfPlatoonPos[3])
+                        local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[3], selfPlatoonPos[1], selfPlatoonPos[3])
                         --LOG('Remote Platoon distance is '..remotePlatoonDistance)
                         if platDistance < remotePlatoonDistance then
                             remotePlatoonDistance = platDistance

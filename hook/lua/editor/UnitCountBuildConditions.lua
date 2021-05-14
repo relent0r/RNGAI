@@ -801,10 +801,14 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         --LOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
     end
-    if tier == 'T2' then
-        --LOG('T2 query')
-        --LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
-    end
+    --[[if tier == 'T3' then
+        LOG('T3 query')
+        LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+        LOG('Ratio for '..unit)
+        LOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
+        LOG('Total '..aiBrain.amanager.Total[uType][tier])
+        LOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+    end]]
     --LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
         --LOG('Less than 1 unit of type '..unit)
