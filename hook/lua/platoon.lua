@@ -2117,7 +2117,7 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         self:AttackTarget(target)
                         while PlatoonExists(aiBrain, self) do
-                            local SquadPosition = self:GetSquadPosition('Attack') or nil
+                            SquadPosition = self:GetSquadPosition('Attack') or nil
                             if not SquadPosition then break end
                             local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
                             if enemyUnitCount > 0 then
@@ -5590,9 +5590,7 @@ Platoon = Class(RNGAIPlatoon) {
             local health=Hero:GetHealthPercent()
             local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION + categories.ENGINEER, false, true))
             --LOG('alliedmexes:'..repr(alliedmexes))
-            if alliedmexes[1] then
-                table.sort(alliedmexes,function(k1,k2) return VDist3(k1:GetPosition(),Hero.Pos)<VDist3(k2:GetPosition(),Hero.Pos) end)
-            end
+            table.sort(alliedmexes,function(k1,k2) return VDist3(k1:GetPosition(),Hero.Pos)<VDist3(k2:GetPosition(),Hero.Pos) end)
             local closestmex=alliedmexes[1]
             --LOG('closestmex:'..repr(closestmex))
             if closestmex then
@@ -5601,8 +5599,6 @@ Platoon = Class(RNGAIPlatoon) {
                 else]]
                     Hero.home=closestmex:GetPosition()
                 --end
-                else 
-                    Hero.home=Hero.base
             end
             friendlyThreat=0
             enemyThreat=0
@@ -5706,7 +5702,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if GetSurfaceHeight(v.Position[1],v.Position[3])>GetTerrainHeight(v.Position[1],v.Position[3]) then
                         continue
                     end
-                    if RUtils.GrabPosEconRNG(aiBrain,v.Position,20).ally>0 then
+                    if aiBrain.GrabPosEconRNG(aiBrain,v.Position,20).ally>0 then
                         continue
                     end
                     if VDist2(v.Position[1],v.Position[3],Hero.Pos[1],Hero.Pos[3])<100 then
