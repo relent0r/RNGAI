@@ -8,22 +8,22 @@
 
 PlatoonTemplate {
     Name = 'RNGTECH Hero T3',
-    Plan = 'TrueHeroRNG', -- The platoon function to use.
+    Plan = 'TruePlatoonRNG', -- The platoon function to use.
     GlobalSquads = {
         {  categories.ual0303 + categories.uel0303 + categories.url0303 + categories.xsl0303, -- Type of units.
-          1, -- Min number of units.
-          1, -- Max number of units.
+          3, -- Min number of units.
+          10, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },
 }
 PlatoonTemplate {
     Name = 'RNGTECH Hero Sniper',
-    Plan = 'TrueHeroRNG', -- The platoon function to use.
+    Plan = 'TruePlatoonRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.SNIPER * categories.LAND + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204, -- Type of units.
-          1, -- Min number of units.
-          1, -- Max number of units.
+          3, -- Min number of units.
+          20, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },
@@ -52,11 +52,11 @@ PlatoonTemplate {
 }
 PlatoonTemplate {
     Name = 'RNGTECH Early Hero T2',
-    Plan = 'TrueHeroRNG', -- The platoon function to use.
+    Plan = 'TruePlatoonRNG', -- The platoon function to use.
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.TECH2) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.SILO, -- Type of units.
-          1, -- Min number of units.
-          1, -- Max number of units.
+        { categories.MOBILE * categories.LAND * (categories.TECH2) * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.SILO, -- Type of units.
+          2, -- Min number of units.
+          10, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
     },
