@@ -4,12 +4,12 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local Utils = import('/lua/utilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
-local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
+local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -157,7 +157,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                         if not self.BadReclaimables[v] then
                             local recPos = v:GetCachePosition()
-                            local distance = VDist2(engPos[1], engPos[3], recPos[1], recPos[3])
+                            local distance = VDist2Sq(engPos[1], engPos[3], recPos[1], recPos[3])
                             if distance < closestDistance then
                                 closestReclaim = recPos
                                 closestDistance = distance
@@ -495,7 +495,7 @@ function GetClosestMassMarkerToPos(aiBrain, pos)
         local x = v.Position[1]
         local y = v.Position[2]
         local z = v.Position[3]
-        distance = VDist2(pos[1], pos[3], x, z)
+        distance = VDist2Sq(pos[1], pos[3], x, z)
         if (not lowest or distance < lowest) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             --LOG('Can build at position '..repr(v.Position))
             loc = v.Position
@@ -527,7 +527,7 @@ function GetClosestMassMarker(aiBrain, unit)
         local x = v.Position[1]
         local y = v.Position[2]
         local z = v.Position[3]
-        distance = VDist2(engPos[1], engPos[3], x, z)
+        distance = VDist2Sq(engPos[1], engPos[3], x, z)
         if (not lowest or distance < lowest) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
             loc = v.Position
             name = v.Name
@@ -678,9 +678,9 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and unit:GetAIBrain():GetArmyIndex() == enemyIndex and platoon:CanAttackTarget(squad, unit) then
                     local unitPos = unit:GetPosition()
-                    if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                    if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                         retUnit = unit
-                        distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     end
                 end
             end
@@ -1121,9 +1121,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                         if unit:GetAIBrain():GetArmyIndex() == v then
                             if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                 local unitPos = unit:GetPosition()
-                                if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                                if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                                     retUnit = unit
-                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                                 end
                                 if platoon.MovementLayer == 'Air' and platoonThreat then
                                     enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
@@ -1135,7 +1135,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                                 if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                                     retUnit = unit
-                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                                     targetShields = numShields
                                 end
                             end
@@ -1162,9 +1162,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                             end
                         end
                         local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1172,13 +1172,14 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
             end
             if retUnit and targetShields > 0 then
                 local platoonUnits = platoon:GetPlatoonUnits()
+                local punit
                 for _, w in platoonUnits do
                     if not w.Dead then
-                        unit = w
+                        punit = w
                         break
                     end
                 end
-                local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+                local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(punit, retUnit)
                 if closestBlockingShield then
                     return closestBlockingShield
                 end
@@ -1223,9 +1224,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                             end
                         end
                         local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1247,9 +1248,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThr
                     end
                 end
                 local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     retUnit = unit
-                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end
@@ -1293,15 +1294,15 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
     for _, range in RangeList do
         if not position then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: position is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: position is empty')
             return false
         end
         if not range then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: range is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: range is empty')
             return false
         end
         if not TargetSearchCategory then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
             return false
         end
         TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
@@ -1311,7 +1312,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             if type(category) == 'string' then
                 category = ParseEntityCategory(category)
             end
-            distance = maxRange
+            distance = maxRange*maxRange
             --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..table.getn(TargetsInRange)..'  ')
             for num, Target in TargetsInRange do
                 if Target.Dead or Target:BeenDestroyed() then
@@ -1333,7 +1334,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                         --WARN('* AIFindNearestCategoryTargetInRange: CaptureInProgress !!! Ignoring the target.')
                         continue
                     end
-                    targetRange = VDist2(position[1],position[3],TargetPosition[1],TargetPosition[3])
+                    targetRange = VDist2Sq(position[1],position[3],TargetPosition[1],TargetPosition[3])
                     -- check if the target is in range of the unit and in range of the base
                     if targetRange < distance then
                         TargetUnit = Target
@@ -1568,7 +1569,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 			-- tracks if we used threat to determine Orientation
 			local Direction = false
 			local threats = aiBrain:GetThreatsAroundPosition( location, 32, true, 'Economy' )
-			RNGSORT( threats, function(a,b) return VDist2(a[1],a[2],location[1],location[3]) + a[3] < VDist2(b[1],b[2],location[1],location[3]) + b[3] end )
+			RNGSORT( threats, function(a,b) return VDist2Sq(a[1],a[2],location[1],location[3]) + a[3] < VDist2Sq(b[1],b[2],location[1],location[3]) + b[3] end )
 			for _,v in threats do
 				Direction = GetDirectionInDegrees( {v[1],location[2],v[2]}, location )
 				break	-- process only the first one
@@ -2222,14 +2223,14 @@ ThrottledAllocateRNG = function(aiBrain)
             if x.Position~=nil then continue end
             x.Position=x:GetPosition()
         end
-        table.sort(brainExtractors,function(k1,k2) return VDist2(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2(start[1],start[3],k2.Position[1],k2.Position[3]) end)
+        table.sort(brainExtractors,function(k1,k2) return VDist2Sq(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2Sq(start[1],start[3],k2.Position[1],k2.Position[3]) end)
         for _, x in brainExtractors do
             if not x or x.Dead then continue end
             if MexAllocateRNG(aiBrain,x,allyBrains) then givemex=givemex+1 end
             if givemex/extractorCount>0.2 then break end
             WaitTicks(5)
         end
-        WaitTicks(300)
+        WaitTicks(200)
     end
 end
 
@@ -2273,7 +2274,7 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
         if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
         local astartX, astartZ = v:GetArmyStartPos()
         local aiBrainstart = {Position={astartX, 0, astartZ}}
-        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        table.sort(starts,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2Sq(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
         aiBrainstart.Position[2]=starts[1].Position[2]
         table.insert(players,aiBrainstart)
     end
@@ -2307,13 +2308,13 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
         for _, v in MassMarker do
             local pos1={0,0,0}
             local pos2={0,0,0}
-            table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+            table.sort(expandstart,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2Sq(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
             local chosenstart = expandstart[1]
             expandstart[1].mexnum=expandstart[1].mexnum+1
             pos1=v.position
             pos2=chosenstart.Position
             DrawLinePop(pos1,pos2,'88FF0000')
-            if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
+            if VDist2Sq(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2Sq(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
                 pos2=expandstart[2].Position
                 expandstart[2].mexnum=expandstart[2].mexnum+1
                 DrawLinePop(pos1,pos2,'88FF0000')
@@ -2322,7 +2323,7 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
         for _, v in expandstart do
             local pos1={0,0,0}
             local pos2={0,0,0}
-            table.sort(players,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+            table.sort(players,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2Sq(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
             local chosenstart = players[1]
             pos1=v.Position
             pos2=chosenstart.Position
@@ -2337,15 +2338,15 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
                 DrawCircle(pos1,5*v.mexnum,'ffFF0000')
             end
             if v.expandtype~='start' then
-                table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
-                if VDist2(chosenstart.Position[1],chosenstart.Position[3],starts[1].Position[1],starts[1].Position[3])>3 then
+                table.sort(starts,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],v.Position[1],v.Position[3])<VDist2Sq(k2.Position[1],k2.Position[3],v.Position[1],v.Position[3]) end)
+                if VDist2Sq(chosenstart.Position[1],chosenstart.Position[3],starts[1].Position[1],starts[1].Position[3])>3 then
                     pos2=starts[1].Position
                     if v.expandtype=='bigexpand' then
                         DrawLinePop(pos1,pos2,'5f00FF00')
                     elseif v.expandtype=='expand' then
                         DrawLinePop(pos1,pos2,'5fFF00FF')
                     end
-                    if VDist2(starts[2].Position[1],starts[2].Position[3],v.Position[1],v.Position[3])-VDist2(starts[1].Position[1],starts[1].Position[3],v.Position[1],v.Position[3])<5 then
+                    if VDist2Sq(starts[2].Position[1],starts[2].Position[3],v.Position[1],v.Position[3])-VDist2Sq(starts[1].Position[1],starts[1].Position[3],v.Position[1],v.Position[3])<5 then
                         pos2=starts[2].Position
                         if v.expandtype=='bigexpand' then
                             DrawLinePop(pos1,pos2,'5f00FF00')
@@ -2355,7 +2356,7 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
                     end
                 end
             end
-            if VDist2(players[2].Position[1],players[2].Position[3],v.Position[1],v.Position[3])-VDist2(players[1].Position[1],players[1].Position[3],v.Position[1],v.Position[3])<5 then
+            if VDist2Sq(players[2].Position[1],players[2].Position[3],v.Position[1],v.Position[3])-VDist2Sq(players[1].Position[1],players[1].Position[3],v.Position[1],v.Position[3])<5 then
                 pos2=players[2].Position
                 if v.expandtype=='start' then
                     DrawLinePop(pos1,pos2,'ff0000FF')
@@ -2385,7 +2386,7 @@ DisplayExpansionAllegianceSetupRNG = function(aiBrain)
         if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
         local astartX, astartZ = v:GetArmyStartPos()
         local aiBrainstart = {Position={astartX, 0, astartZ},army=i}
-        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        table.sort(starts,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2Sq(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
         aiBrainstart.Position[2]=starts[1].Position[2]
         table.insert(players,i,aiBrainstart)
     end
@@ -2419,10 +2420,10 @@ DisplayExpansionAllegianceSetupRNG = function(aiBrain)
                 -- mass marker is too close to border, skip it.
                 continue
             end 
-            table.sort(expandstart,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
+            table.sort(expandstart,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],v.position[1],v.position[3])<VDist2Sq(k2.Position[1],k2.Position[3],v.position[1],v.position[3]) end)
             expandstart[1].mexnum=expandstart[1].mexnum+1
             table.insert(expandstart[1].mextable, v)
-            if VDist2(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
+            if VDist2Sq(expandstart[2].Position[1],expandstart[2].Position[3],v.position[1],v.position[3])-VDist2Sq(expandstart[1].Position[1],expandstart[1].Position[3],v.position[1],v.position[3])<5 then
                 expandstart[2].mexnum=expandstart[2].mexnum+1
                 table.insert(expandstart[2].mextable, v)
             end
@@ -2599,7 +2600,7 @@ DisplayEconomyRNG = function(aiBrain)
         local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
         local astartX, astartZ = aiBrain:GetArmyStartPos()
         local aiBrainstart = {Position={astartX, 0, astartZ}}
-        table.sort(starts,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
+        table.sort(starts,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3])<VDist2Sq(k2.Position[1],k2.Position[3],aiBrainstart.Position[1],aiBrainstart.Position[3]) end)
         aiBrainstart.Position[2]=starts[1].Position[2]
         aiBrain.locationstart=aiBrainstart.Position
     end

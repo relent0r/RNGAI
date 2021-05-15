@@ -156,7 +156,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECH Hero T3',                          -- Template Name. 
         Priority = 1300,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
-        PlatoonAddPlans = { 'HighlightTrueHero' },
+        --PlatoonAddPlans = { 'HighlightTrueHero' },
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -172,7 +172,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGTECH Hero Sniper',                          -- Template Name. 
         Priority = 1300,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
-        PlatoonAddPlans = { 'HighlightTrueHero' },
+        --PlatoonAddPlans = { 'HighlightTrueHero' },
         InstanceCount = 100,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
