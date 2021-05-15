@@ -9,6 +9,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
+local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow

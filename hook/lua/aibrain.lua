@@ -21,7 +21,6 @@ local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local VDist2Sq = VDist2Sq
 local WaitTicks = coroutine.yield
-local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
 
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
