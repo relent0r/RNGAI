@@ -457,7 +457,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             aa=12,
                         },
                         T2 = {
-                            tank=75,
+                            bot=75,
                             mml=10,
                             aa=15,
                         },
@@ -1759,7 +1759,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
                     LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
-                    LOG('ARMY '..self.Nickname..' Army numbers:'..repr(self.amanager))
+                    LOG('ARMY '..self.Nickname..' Army numbers Current:'..repr(self.amanager.Current))
+                    LOG('ARMY '..self.Nickname..' Army numbers Ratios:'..repr(self.amanager.Ratios[self:GetFactionIndex()]))
+                    LOG('ARMY '..self.Nickname..' Army numbers Total:'..repr(self.amanager.Total))
+                    LOG('ARMY '..self.Nickname..' Army numbers Types:'..repr(self.amanager.Types))
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -3471,7 +3474,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             aa=12,
                         },
                         T2 = {
-                            tank=75,
+                            bot=75,
                             mml=10,
                             aa=15,
                         },

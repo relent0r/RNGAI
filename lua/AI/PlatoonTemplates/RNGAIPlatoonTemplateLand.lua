@@ -343,13 +343,16 @@ PlatoonTemplate { Name = 'RNGAIT2AttackBot',
         Cybran = {
             { 'drl0204', 1, 1, 'Attack', 'none' },      -- Rocket Bot
         },
+        Seraphim = {
+            { 'xsl0202', 1, 1, 'Attack', 'none' },      -- Assault Bot
+        },
     }
 }
 
 PlatoonTemplate { Name = 'RNGAIT2MobileStealth',
     FactionSquads = {
         Cybran = {
-            { 'url0306', 1, 1, 'Attack', 'none' },      -- Rocket Bot
+            { 'url0306', 1, 1, 'Attack', 'none' },      -- StealthGenerator
         },
     }
 }
