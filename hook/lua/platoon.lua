@@ -2785,7 +2785,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 --aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
+                if (whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103') and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
                         local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30)
@@ -5001,6 +5001,66 @@ Platoon = Class(RNGAIPlatoon) {
             IssueClearCommands({eng})
             eng:SetCustomName('I was being removed and I performed my stop commands')
             LOG('Removed Engineer From Assist Platoon. We now have '..table.getn(GetPlatoonUnits(self)))
+        end
+    end,
+
+    ReclaimStructuresRNG = function(self)
+        self:Stop()
+        local aiBrain = self:GetBrain()
+        local data = self.PlatoonData
+        local radius = aiBrain:PBMGetLocationRadius(data.Location)
+        local categories = data.Reclaim
+        local counter = 0
+        local reclaimcat
+        local reclaimables
+        local unitPos
+        local reclaimunit
+        local distance
+        local allIdle
+        while aiBrain:PlatoonExists(self) do
+            unitPos = self:GetPlatoonPosition()
+            reclaimunit = false
+            distance = false
+            for num,cat in categories do
+                if type(cat) == 'string' then
+                    reclaimcat = ParseEntityCategory(cat)
+                else
+                    reclaimcat = cat
+                end
+                reclaimables = aiBrain:GetListOfUnits(reclaimcat, false)
+                for k,v in reclaimables do
+                    if not v.Dead and (not reclaimunit or VDist3(unitPos, v:GetPosition()) < distance) and unitPos and not v:IsUnitState('Upgrading') then
+                        reclaimunit = v
+                        distance = VDist3(unitPos, v:GetPosition())
+                    end
+                end
+                if reclaimunit then break end
+            end
+            if reclaimunit and not reclaimunit.Dead then
+                counter = 0
+                -- Set ReclaimInProgress to prevent repairing (see RepairAI)
+                reclaimunit.ReclaimInProgress = true
+                IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
+                repeat
+                    WaitSeconds(2)
+                    if not aiBrain:PlatoonExists(self) then
+                        return
+                    end
+                    allIdle = true
+                    for k,v in self:GetPlatoonUnits() do
+                        if not v.Dead and not v:IsIdleState() then
+                            allIdle = false
+                            break
+                        end
+                    end
+                until allIdle
+            elseif not reclaimunit or counter >= 5 then
+                self:PlatoonDisband()
+                return
+            else
+                counter = counter + 1
+                WaitSeconds(5)
+            end
         end
     end,
 }
