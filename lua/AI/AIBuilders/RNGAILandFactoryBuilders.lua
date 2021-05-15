@@ -135,7 +135,7 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -151,7 +151,7 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -214,7 +214,7 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'arty'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -230,7 +230,7 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'shield'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -260,7 +260,7 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'mml'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

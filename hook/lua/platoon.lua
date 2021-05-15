@@ -2797,7 +2797,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 --aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
-                if whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103' then
+                if (whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103') and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
                     --LOG('What to build was a mass extractor')
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
                         local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30)

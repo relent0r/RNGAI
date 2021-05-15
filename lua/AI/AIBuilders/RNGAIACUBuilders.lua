@@ -565,9 +565,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI ACU Mass 30',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 860,
+        Priority = 1005,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 0, 0, 'AntiSurface', 1}},
+            { EBC, 'LessThanEconEfficiency', { 0.8, 2.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
