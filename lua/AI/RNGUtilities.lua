@@ -2207,7 +2207,7 @@ ThrottledAllocateRNG = function(aiBrain)
     local startX, startZ = aiBrain:GetArmyStartPos()
     local start={startX,0,startZ}
     while not aiBrain.defeat do
-        local brainExtractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
+        local brainExtractors = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1, false, false)
         local extractorCount = table.getn(brainExtractors)
         local givemex = 0
         local allyBrains = {}
@@ -2224,7 +2224,8 @@ ThrottledAllocateRNG = function(aiBrain)
         end
         table.sort(brainExtractors,function(k1,k2) return VDist2(start[1],start[3],k1.Position[1],k1.Position[3])>VDist2(start[1],start[3],k2.Position[1],k2.Position[3]) end)
         for _, x in brainExtractors do
-            if aiBrain:MexAllocateRNG(x,allyBrains) then givemex=givemex+1 end
+            if not x or x.Dead then continue end
+            if MexAllocateRNG(aiBrain,x,allyBrains) then givemex=givemex+1 end
             if givemex/extractorCount>0.2 then break end
             WaitTicks(5)
         end
@@ -2440,17 +2441,17 @@ DisplayExpansionAllegianceSetupRNG = function(aiBrain)
         end
     end
     for i, v in expandstart do
-        aiBrain:UpdateExpansionAllegianceRNG(v,i)
+        UpdateExpansionAllegianceRNG(aiBrain,v,i)
     end
     while aiBrain.Result ~= "defeat" do
         for x=0,30,1 do
             for i, v in expandstart do
-                aiBrain:DisplayExpansionAllegianceRNG(v,i)
+                DisplayExpansionAllegianceRNG(aiBrain,v,i)
             end
             WaitTicks(2)
         end
         for i, v in expandstart do
-            aiBrain:UpdateExpansionAllegianceRNG(v,i)
+            UpdateExpansionAllegianceRNG(aiBrain,v,i)
         end
     end
 end
@@ -2605,21 +2606,21 @@ DisplayEconomyRNG = function(aiBrain)
     while aiBrain.Result ~= "defeat" do
         if not aiBrain.cmanager.income.r.m then LOG('no mass?') WaitTicks(20) continue end
         if not aiBrain.cmanager.income.t.e or not aiBrain.cmanager.income.r.e then LOG('no energy?') WaitTicks(20) continue end
-        local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF'}
-        local fcolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD'}
-        local scolors={l='ffFF0000',n='ffFFD800',a='ff00FFDD',T1='ff4CFF00',T2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
+        local armycolors={tank='ffFF0000',scout='ffFF00DC',arty='ffFFD800',aa='ff00FFDD',sniper='ff4CFF00',shield='ff0094FF',mml='ffB200FF',bot='ff4CFF00',armoured='ff4CFF00'}
+        local fcolors={Land='ffFF0000',Naval='ffFFD800',Air='ff00FFDD'}
+        local scolors={Land='ffFF0000',Naval='ffFFD800',Air='ff00FFDD',T1='ff4CFF00',T2='ff267F00',eng='ffB200FF',other='ffFFFFFF'}
         local engsum=0
         for _,v in aiBrain.cmanager.categoryspend.eng do
             engsum=engsum+v
         end
-        local spendcategories={l=aiBrain.cmanager.categoryspend.fac.l,a=aiBrain.cmanager.categoryspend.fac.a,n=aiBrain.cmanager.categoryspend.fac.n,T1=aiBrain.cmanager.categoryspend.mex.T1,T2=aiBrain.cmanager.categoryspend.mex.T2,eng=engsum,other=0}
+        local spendcategories={Land=aiBrain.cmanager.categoryspend.fac.Land,Air=aiBrain.cmanager.categoryspend.fac.Air,Naval=aiBrain.cmanager.categoryspend.fac.Naval,T1=aiBrain.cmanager.categoryspend.mex.T1,T2=aiBrain.cmanager.categoryspend.mex.T2,eng=engsum,other=0}
         local othersum=aiBrain.cmanager.spend.m
         for _,v in spendcategories do
             othersum=othersum-v
         end
         spendcategories.other=othersum
         local factotal=aiBrain.smanager.fac
-        local facnum={l=0,a=0,n=0}
+        local facnum={Land=0,Air=0,Naval=0}
         local facsum=0
         for x,v in factotal do
             for _,i in factotal[x] do

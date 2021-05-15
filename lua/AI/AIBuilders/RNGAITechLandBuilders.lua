@@ -157,7 +157,7 @@ BuilderGroup {
         Priority = 1300,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
         PlatoonAddPlans = { 'HighlightTrueHero' },
-        InstanceCount = 50,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH3 - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -189,7 +189,7 @@ BuilderGroup {
         Priority = 1200,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
         PlatoonAddPlans = { 'HighlightTrueHero' },
-        InstanceCount = 300,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH1 - categories.ENGINEER } },
@@ -206,27 +206,11 @@ BuilderGroup {
         Priority = 1200,                                                          -- Priority. 1000 is normal.
         --PlatoonAddPlans = { 'HighlightHero' },
         PlatoonAddPlans = { 'HighlightTrueHero' },
-        InstanceCount = 300,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH1 - categories.ENGINEER } },
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
-        },
-        BuilderData = {
-            UseFormation = 'None',
-            LocationType = 'LocationType',
-        },
-    },
-    Builder {
-        BuilderName = 'RNG Tech Early Hero T2',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGTECH Early Hero T2',                          -- Template Name. 
-        Priority = 1200,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddPlans = { 'HighlightHero' },  
-        PlatoonAddPlans = { 'HighlightTrueHero' },      
-        InstanceCount = 100,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) * categories.TECH2 - categories.ENGINEER } },
         },
         BuilderData = {
             UseFormation = 'None',
