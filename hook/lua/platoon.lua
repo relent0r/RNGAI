@@ -6096,10 +6096,10 @@ Platoon = Class(RNGAIPlatoon) {
             local snum=0
             for _,v in platoonUnits do
                 if not v or v.Dead then continue end
-                if VDist3(v:GetPosition(),platoon.Pos)>v.MaxWeaponRange/2 then
+                if VDist3Sq(v:GetPosition(),platoon.Pos)>v.MaxWeaponRange/2*v.MaxWeaponRange/2 then
                     IssueClearCommands({v})
                     IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),v.MaxWeaponRange/4}))
-                    spread=spread+VDist3(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange
+                    spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                     snum=snum+1
                 end
             end
@@ -6114,7 +6114,7 @@ Platoon = Class(RNGAIPlatoon) {
             health=health/platoonNum
             local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION + categories.ENGINEER, false, true))
             if alliedmexes[1] then
-                table.sort(alliedmexes,function(k1,k2) return VDist3(k1:GetPosition(),platoon.Pos)<VDist3(k2:GetPosition(),platoon.Pos) end)
+                table.sort(alliedmexes,function(k1,k2) return VDist3Sq(k1:GetPosition(),platoon.Pos)<VDist3Sq(k2:GetPosition(),platoon.Pos) end)
             end
             local closestmex=alliedmexes[1]
             if closestmex then
@@ -6240,19 +6240,19 @@ Platoon = Class(RNGAIPlatoon) {
                     if RUtils.GrabPosEconRNG(aiBrain,v.Position,20).ally>0 then
                         continue
                     end
-                    if VDist2(v.Position[1],v.Position[3],platoon.Pos[1],platoon.Pos[3])<100 then
+                    if VDist2Sq(v.Position[1],v.Position[3],platoon.Pos[1],platoon.Pos[3])<100*100 then
                         continue
                     end
                     table.insert(raidlocs,v)
                 end
-                table.sort(raidlocs,function(k1,k2) return VDist2(k1.Position[1],k1.Position[3],platoon.Pos[1],platoon.Pos[3])*math.pow(VDist2(k1.Position[1],k1.Position[3],platoon.home[1],platoon.home[3]),1.5)/VDist2(k1.Position[1],k1.Position[3],platoon.base[1],platoon.base[3])<VDist2(k2.Position[1],k2.Position[3],platoon.Pos[1],platoon.Pos[3])*math.pow(VDist2(k2.Position[1],k2.Position[3],platoon.home[1],platoon.home[3]),1.5)/VDist2(k2.Position[1],k2.Position[3],platoon.base[1],platoon.base[3]) end)
+                table.sort(raidlocs,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],platoon.Pos[1],platoon.Pos[3])*math.pow(VDist2Sq(k1.Position[1],k1.Position[3],platoon.home[1],platoon.home[3]),1.5)/VDist2Sq(k1.Position[1],k1.Position[3],platoon.base[1],platoon.base[3])<VDist2Sq(k2.Position[1],k2.Position[3],platoon.Pos[1],platoon.Pos[3])*math.pow(VDist2Sq(k2.Position[1],k2.Position[3],platoon.home[1],platoon.home[3]),1.5)/VDist2Sq(k2.Position[1],k2.Position[3],platoon.base[1],platoon.base[3]) end)
                 platoon.dest=raidlocs[1].Position
                 platoon.dest={platoon.dest[1]+math.random(-4,4),platoon.dest[2],platoon.dest[3]+math.random(-4,4)}
                 self:Stop()
                 self:MoveToLocation(platoon.dest, false)
                 for _,v in platoonUnits do
                     if not v or v.Dead then continue end
-                    if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                    if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                         IssueClearCommands({v})
                         IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                         WaitTicks(1)
@@ -6282,7 +6282,7 @@ Platoon = Class(RNGAIPlatoon) {
                 platoon.dest=strafeshift
                 for _,v in platoonUnits do
                     if not v or v.Dead then continue end
-                    if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                    if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                         IssueClearCommands({v})
                         IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                         WaitTicks(1)
@@ -6314,7 +6314,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self:AggressiveMoveToLocation(platoon.dest)
                 for _,v in platoonUnits do
                     if not v or v.Dead then continue end
-                    if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                    if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                         IssueClearCommands({v})
                         IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                         WaitTicks(1)
@@ -6332,7 +6332,7 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueAttack(platoonUnits,targeteng)
                     for _,v in platoonUnits do
                         if not v or v.Dead then continue end
-                        if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                        if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                             IssueClearCommands({v})
                             IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                             WaitTicks(1)
@@ -6345,7 +6345,7 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueAttack(platoonUnits,targetmex)
                     for _,v in platoonUnits do
                         if not v or v.Dead then continue end
-                        if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                        if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                             IssueClearCommands({v})
                             IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                             WaitTicks(1)
@@ -6366,7 +6366,7 @@ Platoon = Class(RNGAIPlatoon) {
                         self:MoveToLocation(platoon.dest, false)
                         for _,v in platoonUnits do
                             if not v or v.Dead then continue end
-                            if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                            if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                                 IssueClearCommands({v})
                                 IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                                 WaitTicks(1)
@@ -6406,7 +6406,7 @@ Platoon = Class(RNGAIPlatoon) {
                         platoon.dest=strafeshift
                         for _,v in platoonUnits do
                             if not v or v.Dead then continue end
-                            if v.Support and VDist3(v:GetPosition(),platoon.Pos)>8 then
+                            if v.Support and VDist3Sq(v:GetPosition(),platoon.Pos)>8*8 then
                                 IssueClearCommands({v})
                                 IssueMove({v},RUtils.LerpyRotate(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),3}))
                                 WaitTicks(1)
