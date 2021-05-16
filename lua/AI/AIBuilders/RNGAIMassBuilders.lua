@@ -125,7 +125,7 @@ BuilderGroup {
                 MaxDistance = 200,
                 MinDistance = 100,
                 ThreatMin = -500,
-                ThreatMax = 5,
+                ThreatMax = 2,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
@@ -139,7 +139,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 240, -500, 0, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -149,9 +149,9 @@ BuilderGroup {
                 RepeatBuild = true,
                 Type = 'Mass',
                 MaxDistance = 240,
-                MinDistance = 100,
+                MinDistance = 60,
                 ThreatMin = -500,
-                ThreatMax = 5,
+                ThreatMax = 2,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
@@ -167,7 +167,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 480, -500, 2, 30, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 60, 480, -500, 2, 0, 'AntiSurface', 1}},
             
         },
         BuilderType = 'Any',
@@ -176,10 +176,11 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
+                MexThreat = true,
                 Type = 'Mass',
                 MaxDistance = 480,
                 ThreatMin = -500,
-                ThreatMax = 5,
+                ThreatMax = 2,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
@@ -195,7 +196,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-            { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 2000, -500, 10, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
             
         },
         BuilderType = 'Any',
@@ -203,9 +204,11 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
-                MaxDistance = 1000,
+                RepeatBuild = true,
+                MexThreat = true,
+                MaxDistance = 2000,
                 ThreatMin = -500,
-                ThreatMax = 10,
+                ThreatMax = 4,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
@@ -380,7 +383,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.1, 1.1 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
