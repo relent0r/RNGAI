@@ -344,7 +344,7 @@ PlatoonTemplate { Name = 'RNGAIT2AttackBot',
             { 'drl0204', 1, 1, 'Attack', 'none' },      -- Rocket Bot
         },
         Seraphim = {
-            { 'xsl0202', 1, 1, 'Attack', 'none' },      -- Assault Bot
+            { 'xsl0202', 1, 1, 'attack', 'none' },      -- Ilshavoh , its here because of the naming convention in the ratios
         },
     }
 }
