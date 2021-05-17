@@ -41,11 +41,11 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     local NodeCount = table.getn(path.path)
     for i,node in path.path do
         -- IF this is the first AND not the only waypoint AND its nearer 30 THEN continue and don't add it to the finalpath
-        if i == 1 and NodeCount > 1 and VDist2(startPos[1], startPos[3], node.position[1], node.position[3]) < 30 then  
+        if i == 1 and NodeCount > 1 and VDist2Sq(startPos[1], startPos[3], node.position[1], node.position[3]) < 30*30 then  
             continue
         end
         -- IF this is the last AND not the only waypoint AND its nearer 20 THEN continue and don't add it to the finalpath
-        if i == NodeCount and NodeCount > 1 and VDist2(endPos[1], endPos[3], node.position[1], node.position[3]) < 20 then  
+        if i == NodeCount and NodeCount > 1 and VDist2Sq(endPos[1], endPos[3], node.position[1], node.position[3]) < 20*20 then  
             continue
         end
         table.insert(finalPath, node.position)
@@ -97,8 +97,8 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     local fork = {}
     -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
     if startNode.name == endNode.name
-    or VDist2(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2(startPos[1], startPos[3], endPos[1], endPos[3]) < 50 then
+    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
+    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 50*50 then
         -- store as path only our current destination.
         fork.path = { { position = endPos } }
         aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
@@ -201,7 +201,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     local finalPath = {}
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2(start[1], start[3], destination[1], destination[3]) <= 100
+    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2Sq(start[1], start[3], destination[1], destination[3]) <= 100*100
     or (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist)) then
         table.insert(finalPath, destination)
         return finalPath
@@ -277,8 +277,8 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
     local fork = {}
     -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
     if startNode.name == endNode.name
-    or VDist2(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2(startPos[1], startPos[3], endPos[1], endPos[3]) < 50 then
+    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
+    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 50*50 then
         -- store as path only our current destination.
         fork.path = { { position = endPos } }
         aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
@@ -864,8 +864,8 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
                     end
                 end
                 if useUnit then
-                    local tempDist = VDist2(unitPos[1], unitPos[3], position[1], position[3])
-                    if tempDist < radius and (not distance or tempDist < distance) then
+                    local tempDist = VDist2Sq(unitPos[1], unitPos[3], position[1], position[3])
+                    if tempDist < radius*radius and (not distance or tempDist < distance) then
                         distance = tempDist
                         retUnit = unit
                     end
