@@ -3705,11 +3705,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 elseif EntityCategoryContains(categories.NAVAL,unit) then
                     facspend.Naval=facspend.Naval+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.Navy.T1=factories.Navy.T1+1
+                        factories.Naval.T1=factories.Naval.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.Navy.T2=factories.Navy.T2+1
+                        factories.Naval.T2=factories.Naval.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.Navy.T3=factories.Navy.T3+1
+                        factories.Naval.T3=factories.Naval.T3+1
                     end
                 end
             elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then

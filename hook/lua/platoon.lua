@@ -6036,6 +6036,7 @@ Platoon = Class(RNGAIPlatoon) {
         local enemyThreat=0
         AIAttackUtils.GetMostRestrictiveLayer(self)
         self:ForkThread(self.HighlightTruePlatoon)
+        self:ForkThread(self.OptimalTargetingRNG)
         local platoon=self
         local homebasex,homebasey = aiBrain:GetArmyStartPos()
         local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
@@ -6171,7 +6172,7 @@ Platoon = Class(RNGAIPlatoon) {
                 platoon.target=targetPosition
                 targetDist=VDist2(targetPosition[1],targetPosition[3],platoon.Pos[1],platoon.Pos[3])
             end
-            if not target and not targetacu or targetDist>platoon.MaxWeaponRange*2 or (not target and targetacuDist>platoon.MaxWeaponRange*2) then
+            if not target and not targetacu or targetDist>platoon.MaxWeaponRange*1.5 or (not target and targetacuDist>platoon.MaxWeaponRange*2) or not AIAttackUtils.CanGraphTo(AIAttackUtils.GetMostRestrictiveLayer(platoon),targetPosition,'Land') then
                 if platoon.path and VDist3Sq(platoon.path[table.getn(platoon.path)],platoon.Pos)<platoon.MaxWeaponRange then
                     platoon.path=nil
                 end
@@ -6228,7 +6229,11 @@ Platoon = Class(RNGAIPlatoon) {
                     table.sort(path,function(a,b) return VDist2Sq(a[1],a[3],platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3])*math.pow(VDist2Sq(a[1],a[3],platoon.Pos[1],platoon.Pos[3]),1.5)<VDist2Sq(b[1],b[3],platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3])*math.pow(VDist2Sq(b[1],b[3],platoon.Pos[1],platoon.Pos[3]),1.5) end)
                     self:Stop()
                     if VDist3Sq(path[1],platoon.Pos)<platoon.MaxWeaponRange*platoon.MaxWeaponRange*2 then
-                        self:AggressiveMoveToLocation(path[2])
+                        if path[2] then
+                            self:AggressiveMoveToLocation(path[2])
+                        else
+                            self:AggressiveMoveToLocation(path[1])
+                        end  
                     else
                         self:AggressiveMoveToLocation(path[1])
                     end
@@ -6605,6 +6610,54 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             WaitTicks(2)
+        end
+    end,
+    OptimalTargetingRNG = function(self)
+        if self.ttaken then return end
+        --CREDIT AZROC HOLY SHIT THIS ENTIRE IDEA WAS HIS I JUST MADE THE FUNCTION-CHP2001
+        LOG('starting targeting')
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local platoonUnits = GetPlatoonUnits(self)
+        local platoon=self
+        platoon.ttaken=true
+        local enemyunits=nil
+        while not platoon.dead and PlatoonExists(aiBrain, self) do
+            if not platoon.Pos then WaitTicks(10) continue end
+            platoonUnits = GetPlatoonUnits(self)
+            platoon.Pos=self:GetPlatoonPosition() 
+            enemyunits=aiBrain:GetUnitsAroundPoint(categories.SELECTABLE,platoon.Pos,platoon.MaxWeaponRange*1.3,'Enemy')
+            table.sort(enemyunits,function(a,b) return VDist3Sq(platoon.Pos,a:GetPosition())*math.pow(a:GetHealth(),2)<VDist3Sq(platoon.Pos,b:GetPosition())*math.pow(b:GetHealth(),2) end)
+            for i,v in enemyunits do
+                if v.Dead or not v then 
+                    table.remove(enemyunits,i) 
+                    continue 
+                end
+                v.health=v:GetHealth()
+            end
+            if table.getn(enemyunits)>1 then
+                for _,v in platoonUnits do
+                    if not v or v.Dead then continue end
+                    for x = 1, v:GetWeaponCount() do
+                        local weapon = v:GetWeapon(x)
+                        --LOG('weapon is '..repr(weapon))
+                        local bp = weapon:GetBlueprint()
+                        if bp.WeaponCategory=='Anti Air' and bp.WeaponCategory=='Death' then continue end
+                        for i,target in enemyunits do
+                            if not target or target.Dead then continue end
+                            if VDist3Sq(target:GetPosition(),v:GetPosition())>bp.MaxRadius*bp.MaxRadius then continue end
+                            LOG("got here")
+                            weapon:SetTargetEntity(target)
+                            target.health=target.health-bp.Damage
+                            if target.health<=0 then
+                                table.remove(enemyunits,i)
+                            end
+                            break
+                        end
+                    end
+                end
+            end
+            WaitTicks(20)
         end
     end,
     ReclaimStructuresRNG = function(self)
