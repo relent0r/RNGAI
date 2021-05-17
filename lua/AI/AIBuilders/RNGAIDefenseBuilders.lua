@@ -838,7 +838,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.70}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
         BuilderType = 'Any',

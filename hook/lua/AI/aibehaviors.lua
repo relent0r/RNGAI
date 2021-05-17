@@ -897,7 +897,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-        if (not unit.MAINBASE and bypasseco) then
+        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco) then
             if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
                 --LOG('Too few tech2 extractors to go tech3')
                 ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
