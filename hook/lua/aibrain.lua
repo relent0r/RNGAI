@@ -183,6 +183,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         mml=0,
                         aa=0,
                         shield=0,
+                        stealth=0,
                         bot=0
                     },
                     T3 = {
@@ -203,18 +204,16 @@ AIBrain = Class(RNGAIBrainClass) {
                         gunship=0
                     },
                     T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
+                        bomber=0,
+                        gunship=0,
+                        fighter=0,
+                        mercy=0,
+                        torpedo=0,
                     },
                     T3 = {
-                        tank=0,
-                        sniper=0,
-                        arty=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
+                        asf=0,
+                        bomber=0,
+                        gunship=0,
                     }
                 },
                 Naval = {
@@ -273,6 +272,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     interceptor=0,
                     bomber=0,
                     gunship=0,
+                    fighter=0,
+                    mercy=0,
+                    torpedo=0,
                     asf=0,
                 },
                 Naval = {
@@ -316,11 +318,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             bomber=22,
                         },
                         T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
+                            bomber=70,
+                            gunship=30,
+                            torpedo=0
                         },
                         T3 = {
                             tank=30,
@@ -340,8 +340,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             aa=12,
                         },
                         T2 = {
-                            tank=75,
+                            tank=55,
                             mml=5,
+                            bot=20,
                             aa=10,
                             shield=10
                         },
@@ -359,11 +360,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             bomber=22,
                         },
                         T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
+                            fighter=85,
+                            gunship=15,
+                            torpedo=0,
+                            mercy=0
                         },
                         T3 = {
                             tank=30,
@@ -404,11 +404,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             gunship=12,
                         },
                         T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
+                            bomber=85,
+                            gunship=15,
+                            torpedo=0
                         },
                         T3 = {
                             tank=30,
@@ -447,11 +445,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             bomber=22,
                         },
                         T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
+                            bomber=75,
+                            gunship=15,
+                            torpedo=0
                         },
                         T3 = {
                             tank=30,
@@ -492,11 +488,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             bomber=22,
                         },
                         T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
+                            bomber=75,
+                            gunship=15,
+                            torpedo=0
                         },
                         T3 = {
                             tank=30,
@@ -1592,7 +1586,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
                     -- Platoons still threatened
                     if threat and threat > (myThreat * 1.5) then
-                        LOG('* AI-RNG: Created Threat Alert')
+                        --LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -1606,14 +1600,14 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             -- If any platoons still want help; continue sounding
-            LOG('Alerted Platoons '..numPlatoons)
+            --LOG('Alerted Platoons '..numPlatoons)
             if numPlatoons > 0 then
                 self.BaseMonitor.PlatoonAlertSounded = true
             else
                 self.BaseMonitor.PlatoonAlertSounded = false
             end
             self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
-            LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+            --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
@@ -1722,8 +1716,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Land Threat Self '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Land Threat Enemy '..self.EnemyIntel.EnemyThreatCurrent.Land)
                     LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
-                    LOG('ARMY '..self.Nickname..' Army numbers:'..repr(self.amanager))
+                    LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
+                    LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
+                    LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -1738,10 +1735,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:TacticalThreatAnalysisRNG(ALLBPS)
             end
             self:CalculateMassMarkersRNG()
-            LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
-            LOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
-            LOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)
-            LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable)
+            --LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
+            --LOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
+            --LOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)
+            --LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable)
             WaitTicks(600)
         end
     end,
@@ -3172,8 +3169,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
         local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
-        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={interceptor=0,bomber=0,gunship=0,mercy=0},T3={asf=0,bomber=0,gunship=0}}
-        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0}
+        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={fighter=0,bomber=0,gunship=0,mercy=0},T3={asf=0,bomber=0,gunship=0}}
+        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0}
         local armyAirTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
         local facspend = {l=0,a=0,n=0}
@@ -3342,6 +3339,22 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
                     armyAirTiers.T2=armyAirTiers.T2+1
+                    if EntityCategoryContains(categories.BOMBER - categories.daa0206,unit) then
+                        armyAir.T2.bomber=armyAir.T2.bomber+1
+                        armyAirType.bomber=armyAirType.bomber+1
+                    elseif EntityCategoryContains(categories.xaa0202 - categories.EXPERIMENTAL,unit) then
+                        armyAir.T2.fighter=armyAir.T2.fighter+1
+                        armyAirType.fighter=armyAirType.fighter+1
+                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                        armyAir.T2.gunship=armyAir.T2.gunship+1
+                        armyAirType.gunship=armyAirType.gunship+1
+                    elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
+                        armyAir.T2.torpedo=armyAir.T2.torpedo+1
+                        armyAirType.torpedo=armyAirType.torpedo+1
+                    elseif EntityCategoryContains(categories.daa0206,unit) then
+                        armyAir.T2.mercy=armyAir.T2.mercy+1
+                        armyAirType.mercy=armyAirType.mercy+1
+                    end
                 elseif EntityCategoryContains(categories.TECH3,unit) then
                     armyAirTiers.T3=armyAirTiers.T3+1
                 end

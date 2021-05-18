@@ -102,7 +102,7 @@ end
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Intie T1',
         PlatoonTemplate = 'RNGAIFighterGroup',
         Priority = 700,
@@ -113,7 +113,7 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
         },
         BuilderType = 'Air',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
         PlatoonTemplate = 'RNGAIFighterGroup',
@@ -137,7 +137,7 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Gunship T1',
         PlatoonTemplate = 'T1Gunship',
         Priority = 750,
@@ -148,8 +148,8 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
         },
         BuilderType = 'Air',
-    },
-    Builder {	
+    },]]
+    --[[Builder {	
         BuilderName = 'RNGAI Factory Bomber T1 Response',	
         PlatoonTemplate = 'T1AirBomber',	
         Priority = 850,	
@@ -160,8 +160,8 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
         },	
         BuilderType = 'Air',	
-    },
-    Builder {
+    },]]
+    --[[Builder {
         BuilderName = 'RNGAI Air Attack Queue T1',
         PlatoonTemplate = 'RNGAIT1AirQueue',
         Priority = 0,
@@ -175,13 +175,13 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 1
         },
-    },
+    },]]
 }
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Air Attack Queue T2',
         PlatoonTemplate = 'RNGAIT2AirQueue',
         Priority = 0,
@@ -211,7 +211,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
@@ -224,7 +224,7 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory T2 FighterBomber ACUClose',
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 800,
@@ -273,7 +273,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
         },
         BuilderType = 'Air',
-    },
+    },]]
 }
 
 BuilderGroup {
