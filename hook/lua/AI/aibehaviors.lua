@@ -793,9 +793,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     local massProduction = unitBp.Economy.ProductionPerSecondMass or 0
     local energyProduction = unitBp.Economy.ProductionPerSecondEnergy or 0
     
-    local massTrendNeeded = ( math.min( 0,(massNeeded / buildtime) * buildrate) - massProduction) * .1
+    local massTrendNeeded = ( math.max( 0,(massNeeded / buildtime) * buildrate)) * .1
     --LOG('Mass Trend Needed for '..unitTech..' Extractor :'..massTrendNeeded)
-    local energyTrendNeeded = ( math.min( 0,(energyNeeded / buildtime) * buildrate) - energyProduction) * .1
+    local energyTrendNeeded = ( math.max( 0,(energyNeeded / buildtime) * buildrate)) * .1
     --LOG('Energy Trend Needed for '..unitTech..' Extractor :'..energyTrendNeeded)
     local energyMaintenance = (upgradebp.Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
 
@@ -930,9 +930,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: energyIncome'..energyIncome)
             energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyRequested'..energyRequested)
-            massTrend = GetEconomyTrend(aiBrain, 'MASS')
+            massTrend = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime
             --LOG('* AI-RNG: massTrend'..massTrend)
-            energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+            energyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
             --LOG('* AI-RNG: energyTrend'..energyTrend)
             --massEfficiency = math.min(massIncome / massRequested, 2)
             --LOG('* AI-RNG: massEfficiency'..massEfficiency)

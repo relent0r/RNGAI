@@ -642,7 +642,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'LessThanEconEfficiency', { 3.0, 1.2 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.1 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1 }},
             },
         BuilderData = {
             Assist = {
@@ -666,7 +666,7 @@ BuilderGroup {
             { EBC, 'LessThanEconEfficiency', { 3.0, 1.0 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.1 }},
             { EBC, 'LessThanEconStorageRatio', { 2.0, 0.8}},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1 }},
             },
         BuilderData = {
             Assist = {
