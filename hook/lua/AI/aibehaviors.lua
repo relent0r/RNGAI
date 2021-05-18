@@ -461,7 +461,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
-                    if not v.Dead then
+                    if v and not v.Dead then
                         if EntityCategoryContains(categories.COMMAND, v) then
                             if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
                                 enemyUnitThreat = enemyUnitThreat + 25
@@ -487,8 +487,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     --LOG('Enemy ACU is under HP limit we can draw')
-                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
+                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end
             end
@@ -897,7 +897,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-        if (not unit.MAINBASE and bypasseco) then
+        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco) then
             if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
                 --LOG('Too few tech2 extractors to go tech3')
                 ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
@@ -930,9 +930,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: energyIncome'..energyIncome)
             energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyRequested'..energyRequested)
-            massTrend = GetEconomyTrend(aiBrain, 'MASS')
+            massTrend = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime
             --LOG('* AI-RNG: massTrend'..massTrend)
-            energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+            energyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
             --LOG('* AI-RNG: energyTrend'..energyTrend)
             --massEfficiency = math.min(massIncome / massRequested, 2)
             --LOG('* AI-RNG: massEfficiency'..massEfficiency)
