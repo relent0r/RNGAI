@@ -17,7 +17,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 30',
         PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'MexBuildAIRNG',
-        Priority = 999,
+        Priority = 998,
         InstanceCount = 2,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 30, -500, 0, 0, 'AntiSurface', 1}},
@@ -114,7 +114,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 200',
         PlatoonTemplate = 'EngineerBuilderRNG',
         PlatoonAIPlan = 'MexBuildAIRNG',
-        Priority = 998,
+        Priority = 997,
         InstanceCount = 1,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 200, -500, 2, 0, 'AntiSurface', 1}},

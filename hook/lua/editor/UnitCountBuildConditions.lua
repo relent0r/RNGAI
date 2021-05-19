@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local AIUtils = import('/lua/ai/AIUtilities.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
@@ -48,12 +49,14 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
+        LOG('hydro condition failed due to invalid engineermanager')
         return false
     end
     local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
-    if markerTable[1] and VDist3(markerTable[1], engineerManager.Location) < distance then
-        return true
-    end
+        if markerTable[1] and VDist3Sq(markerTable[1], {engineerManager.Location[1],GetSurfaceHeight(engineerManager.Location[1],engineerManager.Location[3]),engineerManager.Location[3]}) < distance*distance then
+            return true
+        end
+    LOG('hydro condition failed due to sorted hydro location being outside range')
     return false
 end
 

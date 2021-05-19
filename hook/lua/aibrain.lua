@@ -1476,8 +1476,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     table.sort(self.InterestList.HighPriority, function(a, b)
                         if a.LastScouted == b.LastScouted then
                             local MainPos = self.BuilderManagers.MAIN.Position
-                            local distA = VDist2(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
-                            local distB = VDist2(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
+                            local distA = VDist2Sq(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
+                            local distB = VDist2Sq(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
 
                             return distA < distB
                         else
@@ -1658,7 +1658,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local highThreat = false
         local distance
         
-        if self.BaseMonitor.CDRDistress and VDist2(self.BaseMonitor.CDRDistress[1], self.BaseMonitor.CDRDistress[3], position[1], position[3]) < radius
+        if radius and self.BaseMonitor.CDRDistress and VDist2Sq(self.BaseMonitor.CDRDistress[1], self.BaseMonitor.CDRDistress[3], position[1], position[3]) < radius*radius
             and self.BaseMonitor.CDRThreatLevel > threshold then
             -- Commander scared and nearby; help it
             return self.BaseMonitor.CDRDistress

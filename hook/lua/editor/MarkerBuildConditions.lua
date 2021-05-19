@@ -10,10 +10,10 @@ function CanBuildOnMassLessThanDistance(aiBrain, locationType, distance, threatM
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
-    local position = engineerManager.Location
+    local position = {engineerManager.Location[1],GetSurfaceHeight(engineerManager.Location[1],engineerManager.Location[3]),engineerManager.Location[3]}
     
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
-    if markerTable[1] and VDist3( markerTable[1], position ) < distance then
+    if markerTable[1] and VDist3Sq( markerTable[1], position ) < distance*distance then
         return true
     end
     return false
@@ -27,7 +27,7 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
                 -- mass marker is too close to border, skip it.
                 continue
             end 
-            local mexDistance = VDist3( v.position, engPos )
+            local mexDistance = VDist3Sq( v.position, engPos )
             if mexDistance < distance and aiBrain:CanBuildStructureAt('ueb1103', v.position) then
                 LOG('mexDistance '..mexDistance)
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})
@@ -52,7 +52,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
                     -- mass marker is too close to border, skip it.
                     continue
                 end 
-                table.insert(MassMarker, {Position = v.position, Distance = VDist3( v.position, engPos ) })
+                table.insert(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, engPos ) })
             end
         end
         table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
@@ -71,7 +71,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
             --LOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
             if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
                 if threatCheck then
-                    threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+                    local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
                     if threat <= threatMin or threat >= threatMax then
                         continue
                     end
@@ -92,7 +92,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
             --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)
             return false
         end
-        local position = engineerManager.Location
+        local position = {engineerManager.Location[1],GetSurfaceHeight(engineerManager.Location[1],engineerManager.Location[3]),engineerManager.Location[3]}
         MassMarker = {}
         for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
@@ -100,7 +100,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
                     -- mass marker is too close to border, skip it.
                     continue
                 end 
-                table.insert(MassMarker, {Position = v.position, Distance = VDist3( v.position, position ) })
+                table.insert(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, position ) })
             end
         end
         table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
@@ -121,7 +121,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
             --LOG(_..'Checking marker with max maxDistance ['..maxDistance..'] minDistance ['..minDistance..'] . Actual marker has distance: ('..(v.Distance)..').')
             if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
                 if threatCheck then
-                    threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+                    local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
                     if threat <= threatMin or threat >= threatMax then
                         continue
                     end

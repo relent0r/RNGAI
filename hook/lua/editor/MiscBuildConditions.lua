@@ -162,9 +162,9 @@ function CanBuildAggressivebaseRNG( aiBrain, locationType, radius, tMin, tMax, t
 end
 
 function NumCloseMassMarkers(aiBrain, number)
-    massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
-    engPos = aiBrain.BuilderManagers.MAIN.Position
-    closeMarkers = 0
+    local massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
+    local engPos = aiBrain.BuilderManagers.MAIN.Position
+    local closeMarkers = 0
     for k, marker in massMarkers do
         if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 121 then
             closeMarkers = closeMarkers + 1

@@ -40,7 +40,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     end
     local pos = unit:GetPosition()
     -- don't check a path if we are in build range
-    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
+    if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 144 then
         return true
     end
 
@@ -53,8 +53,8 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
         if reason == 'NoGraph' then
             result = true
-        elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
-            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
+        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 200*200 then
+            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
             if unit.Dead or unit:BeenDestroyed() or IsDestroyed(unit) then
                 SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
@@ -346,8 +346,8 @@ function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatM
                 continue
             end
         end
-        local dist = VDist2(pos[1], pos[3], v.Position[1], v.Position[3])
-        if dist < radius then
+        local dist = VDist2Sq(pos[1], pos[3], v.Position[1], v.Position[3])
+        if dist < radius*radius then
             if not threatMin then
                 table.insert(returnMarkers, v)
             else
@@ -425,8 +425,8 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     --LOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
-            if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                closest = VDist3(pos, v.Position)
+            if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                closest = VDist3Sq(pos, v.Position)
                 retPos = v.Position
                 retName = v.Name
                 markerCount = v.MassSpotsInRange
@@ -434,8 +434,8 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
         else
             local managers = aiBrain.BuilderManagers[v.Name]
             if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
+                if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3Sq(pos, v.Position)
                     retPos = v.Position
                     retName = v.Name
                     markerCount = v.MassSpotsInRange
@@ -459,8 +459,8 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
             if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) <= tMax then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
+                if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3Sq(pos, v.Position)
                     retPos = v.Position
                     retName = v.Name
                     markerCount = v.MassSpotsInRange
@@ -469,8 +469,8 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
         else
             local managers = aiBrain.BuilderManagers[v.Name]
             if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
+                if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3Sq(pos, v.Position)
                     retPos = v.Position
                     retName = v.Name
                     markerCount = v.MassSpotsInRange
@@ -503,7 +503,7 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
         local x = v.Position[1]
         local y = v.Position[2]
         local z = v.Position[3]
-        distance = VDist2(startX, startZ, x, z)
+        distance = VDist2Sq(startX, startZ, x, z)
         if not lowest or distance < lowest then
             loc = v.Position
             name = v.Name
@@ -587,9 +587,9 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if numShields < maxShields and (not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance)) then
+                if numShields < maxShields and (not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance)) then
                     retUnit = unit
-                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end
