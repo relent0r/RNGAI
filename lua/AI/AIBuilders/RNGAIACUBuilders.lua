@@ -590,7 +590,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
         },
@@ -600,6 +600,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
             }
@@ -612,7 +613,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             --{ UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { MIBC, 'GreaterThanGameTimeRNG', { 120 } },
+            --{ MIBC, 'GreaterThanGameTimeRNG', { 120 } },
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 0.0 }},
             --{ EBC, 'LessThanEnergyTrendRNG', { 5.0 } }, -- If our energy is trending into negatives
             --{ UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
@@ -621,7 +622,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.75, 0.1 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
         BuilderType = 'Any',
@@ -633,6 +634,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 3,
                 BuildStructures = {
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
             }

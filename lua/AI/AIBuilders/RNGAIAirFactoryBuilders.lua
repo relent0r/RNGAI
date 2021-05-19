@@ -14,7 +14,7 @@ local AirMode = function(self, aiBrain, builderManager, builderData)
 end
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Air Builder T1',
+    BuilderGroupName = 'RNGAI Air Builder T1 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Air Scout',
@@ -68,110 +68,94 @@ BuilderGroup {
         },
     },
 }
---[[
+
 BuilderGroup {
-    BuilderGroupName = 'RNGAI AirBuilder T2',
+    BuilderGroupName = 'RNGAI Air Builder T2 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T2 Tank',
-        PlatoonTemplate = 'T2LandDFTank',
+        BuilderName = 'RNGAI T2 FighterBomber',
+        PlatoonTemplate = 'T2FighterBomber',
         Priority = 750,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'tank'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'bomber'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 2
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 Bot',
-        PlatoonTemplate = 'RNGAIT2AttackBot',
-        Priority = 749,
-        --PriorityFunction = LandMode,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 AA',
-        PlatoonTemplate = 'T2LandAA',
-        Priority = 746,
-        --PriorityFunction = LandMode,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Shield',
-        PlatoonTemplate = 'T2MobileShields',
-        Priority = 747,
-        --PriorityFunction = LandMode,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'shield'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 MML',
-        PlatoonTemplate = 'T2LandArtillery',
+        BuilderName = 'RNGAI T2 Gunship',
+        PlatoonTemplate = 'T2AirGunship',
         Priority = 748,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'gunship'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 2
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 Mobile Stealth',
-        PlatoonTemplate = 'RNGAIT2MobileStealth',
+        BuilderName = 'RNGAI T2 Fighter',
+        PlatoonTemplate = 'T2FighterBomber',
+        Priority = 749,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'fighter'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Torperdo Bomber',
+        PlatoonTemplate = 'T2AirTorpedoBomber',
+        Priority = 747,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'torpedo'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mercy',
+        PlatoonTemplate = 'T2AirMissile',
         Priority = 746,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'mercy'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 2
         },
     },
 }
-
+--[[
 BuilderGroup {
-    BuilderGroupName = 'RNGAI AirBuilder T3',
+    BuilderGroupName = 'RNGAI AirBuilder T3 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T3 Tank',
