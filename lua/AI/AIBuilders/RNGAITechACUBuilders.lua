@@ -307,7 +307,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 0.7, 8.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.30}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },

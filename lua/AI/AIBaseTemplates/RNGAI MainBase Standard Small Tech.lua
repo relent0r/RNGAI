@@ -62,7 +62,7 @@ BaseBuilderTemplate {
         'RNG Tech Hero FormBuilders',
 
         -- Land Factory Builders --
-        'RNGAI Factory Builder Land',
+        'RNG Tech Factory Builder Land',   
         --'RNG Tech Factory Builder Land',
         'RNG Tech Support Factory Builder Land',
         'RNG Tech Land Factory Reclaimer',
@@ -76,7 +76,7 @@ BaseBuilderTemplate {
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
-        'RNGAI Air Staging Platform',
+        'RNG Tech Air Staging Platform',
         
         -- Sea Factory Builders
         --'RNGAI Factory Builder Sea',
@@ -86,9 +86,9 @@ BaseBuilderTemplate {
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
-        'RNGAI Air Builder T1',
-        'RNGAI Air Builder T2',
-        'RNGAI Air Builder T3',
+        'RNGAI Air Builder T1 Ratio',
+        'RNGAI Air Builder T2 Ratio',
+        'RNGAI Air Builder T3 Ratio',
         'RNGAI TransportFactoryBuilders Small',
 
         -- Air Unit Formers --

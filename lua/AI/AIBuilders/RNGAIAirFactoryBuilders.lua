@@ -22,6 +22,8 @@ BuilderGroup {
         Priority = 744, -- After second engie group
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'scout'} },
+            { EBC, 'CoinFlipRNG', { 0.7 }},
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { -3, 500 } },
         },
         BuilderType = 'Air',
     },
@@ -32,6 +34,8 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'interceptor'} },
+            { EBC, 'CoinFlipRNG', { 0.7 }},
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { -3, 500 } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
@@ -46,6 +50,8 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'bomber'} },
+            { EBC, 'CoinFlipRNG', { 0.7 }},
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { -3, 500 } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
@@ -60,6 +66,8 @@ BuilderGroup {
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'gunship'} },
+            { EBC, 'CoinFlipRNG', { 0.7 }},
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { -3, 500 } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',

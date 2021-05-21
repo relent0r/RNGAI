@@ -43,6 +43,7 @@ BuilderGroup {
             { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+            { EBC, 'CoinFlipRNG', { 0.3 }},
         },
         BuilderType = 'All',
     },
