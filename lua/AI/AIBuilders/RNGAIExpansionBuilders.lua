@@ -45,7 +45,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Vacant Expansion Area 350 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
@@ -78,7 +78,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 250 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -109,7 +109,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Large Expansion Area 250 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -140,7 +140,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 250 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
         PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
@@ -205,7 +205,7 @@ BuilderGroup {
     },]]
     Builder {
         BuilderName = 'RNGAI T1 Large Expansion Area 1000 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -237,7 +237,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 1000 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {

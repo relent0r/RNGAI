@@ -94,6 +94,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassLessThanDistance', { 'LocationType', 120, -500, 0, 0, 'AntiSurface', 1}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -117,7 +118,7 @@ BuilderGroup {
         Priority = 997,
         InstanceCount = 1,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 200, -500, 2, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 50, 200, -500, 2, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -128,7 +129,7 @@ BuilderGroup {
                 MexThreat = true,
                 Type = 'Mass',
                 MaxDistance = 200,
-                MinDistance = 100,
+                MinDistance = 50,
                 ThreatMin = -500,
                 ThreatMax = 2,
                 ThreatType = 'AntiSurface',
@@ -383,12 +384,13 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.MASSSTORAGE } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.1, 1.1 }},
@@ -400,6 +402,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 AdjacencyDistance = 100,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,
@@ -429,6 +432,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 AdjacencyDistance = 500,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,
