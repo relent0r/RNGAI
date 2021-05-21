@@ -161,122 +161,104 @@ BuilderGroup {
         },
     },
 }
---[[
+
 BuilderGroup {
-    BuilderGroupName = 'RNGAI AirBuilder T3 Ratio',
+    BuilderGroupName = 'RNGAI Air Builder T3 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T3 Tank',
-        PlatoonTemplate = 'T3LandBot',
+        BuilderName = 'RNGAI T3 Scout',
+        PlatoonTemplate = 'T3AirScout',
         Priority = 755,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'tank'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'scout'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Armoured',
-        PlatoonTemplate = 'T3ArmoredAssault',
+        BuilderName = 'RNGAI T3 ASF',
+        PlatoonTemplate = 'T3AirFighter',
         Priority = 755,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'armoured'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'asf'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 AA',
-        PlatoonTemplate = 'T3LandAA',
-        Priority = 752,
+        BuilderName = 'RNGAI T3 Bomber',
+        PlatoonTemplate = 'T3AirBomber',
+        Priority = 754,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'aa'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'bomber'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Artillery',
-        PlatoonTemplate = 'T3LandArtillery',
+        BuilderName = 'RNGAI T3 Gunship',
+        PlatoonTemplate = 'T3AirGunship',
         Priority = 753,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'arty'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'gunship'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Mobile Shields',
-        PlatoonTemplate = 'T3MobileShields',
+        BuilderName = 'RNGAI T3 Torp Bomber',
+        PlatoonTemplate = 'T3TorpedoBomber',
         Priority = 751,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'shield'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'torpedo'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Mobile Sniper',
-        PlatoonTemplate = 'T3SniperBots',
-        Priority = 754,
+        BuilderName = 'RNGAI T3 Transport',
+        PlatoonTemplate = 'T3AirTransport',
+        Priority = 752,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'transport'} },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI T3 Mobile Missile',
-        PlatoonTemplate = 'T3MobileMissile',
-        Priority = 754,
-        --PriorityFunction = LandMode,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'mml'} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
+        BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
     },
 }
-
-]]

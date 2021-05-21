@@ -211,3 +211,11 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
 
     return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
 end
+
+function FactorySpendRatioRNG(aiBrain,uType,ratio)
+    if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < ratio then
+        return true
+    else
+        return false
+    end
+end

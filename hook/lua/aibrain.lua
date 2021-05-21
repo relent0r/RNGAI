@@ -211,9 +211,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         torpedo=0,
                     },
                     T3 = {
+                        scout=0,
                         asf=0,
                         bomber=0,
                         gunship=0,
+                        torpedo=0,
+                        transport=0
                     }
                 },
                 Naval = {
@@ -276,6 +279,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     mercy=0,
                     torpedo=0,
                     asf=0,
+                    transport=0,
                 },
                 Naval = {
                     scout=0,
@@ -323,11 +327,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             torpedo=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5
                         }
                     },
                 },
@@ -366,11 +370,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             mercy=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            torpedo=5
                         }
                     },
                 },
@@ -409,11 +413,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             torpedo=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10
                         }
                     },
                 },
@@ -450,11 +453,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             torpedo=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
+                            scout=11,
+                            asf=65,
+                            bomber=15
                         }
                     },
                 },
@@ -493,30 +494,29 @@ AIBrain = Class(RNGAIBrainClass) {
                             torpedo=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10
                         }
                     },
                 },
             },
         }
         self.smanager = {
-            fac = {
-                l =
+            fact = {
+                Land =
                 {
                     T1 = 0,
                     T2 = 0,
                     T3 = 0
                 },
-                a = {
+                Air = {
                     T1=0,
                     T2=0,
                     T3=0
                 },
-                n= {
+                Naval= {
                     T1=0,
                     T2=0,
                     T3=0
@@ -3160,7 +3160,7 @@ AIBrain = Class(RNGAIBrainClass) {
     HeavyEconomyForkRNG = function(self)
         local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
         LOG('units grabbed')
-        local factories = {l={T1=0,T2=0,T3=0},a={T1=0,T2=0,T3=0},n={T1=0,T2=0,T3=0}}
+        local factories = {Land={T1=0,T2=0,T3=0},Air={T1=0,T2=0,T3=0},Naval={T1=0,T2=0,T3=0}}
         local extractors = {T1=0,T2=0,T3=0}
         local fabs = {T2=0,T3=0}
         local coms = {acu=0,sacu=0}
@@ -3169,11 +3169,11 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
         local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
-        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0},T2={fighter=0,bomber=0,gunship=0,mercy=0},T3={asf=0,bomber=0,gunship=0}}
-        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0}
+        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
+        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0,torpedo=0,transport=0}
         local armyAirTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
-        local facspend = {l=0,a=0,n=0}
+        local facspend = {Land=0,Air=0,Naval=0}
         local mexspend = {T1=0,T2=0,T3=0}
         local engspend = {T1=0,T2=0,T3=0,com=0}
         local rincome = {m=0,e=0}
@@ -3227,31 +3227,31 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             elseif EntityCategoryContains(categories.FACTORY,unit) then
                 if EntityCategoryContains(categories.LAND,unit) then
-                    facspend.l=facspend.l+spendm
+                    facspend.Land=facspend.Land+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.l.T1=factories.l.T1+1
+                        factories.Land.T1=factories.Land.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.l.T2=factories.l.T2+1
+                        factories.Land.T2=factories.Land.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.l.T3=factories.l.T3+1
+                        factories.Land.T3=factories.Land.T3+1
                     end
                 elseif EntityCategoryContains(categories.AIR,unit) then
-                    facspend.a=facspend.a+spendm
+                    facspend.Air=facspend.Air+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.a.T1=factories.a.T1+1
+                        factories.Air.T1=factories.Air.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.a.T2=factories.a.T2+1
+                        factories.Air.T2=factories.Air.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.a.T3=factories.a.T3+1
+                        factories.Air.T3=factories.Air.T3+1
                     end
                 elseif EntityCategoryContains(categories.NAVAL,unit) then
-                    facspend.n=facspend.n+spendm
+                    facspend.Naval=facspend.Naval+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.n.T1=factories.n.T1+1
+                        factories.Naval.T1=factories.Naval.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.n.T2=factories.n.T2+1
+                        factories.Naval.T2=factories.Naval.T2+1
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.n.T3=factories.n.T3+1
+                        factories.Naval.T3=factories.Naval.T3+1
                     end
                 end
             elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
@@ -3336,6 +3336,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
                         armyAir.T1.gunship=armyAir.T1.gunship+1
                         armyAirType.gunship=armyAirType.gunship+1
+                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        armyAir.T1.transport=armyAir.T1.transport+1
+                        armyAirType.transport=armyAirType.transport+1
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
                     armyAirTiers.T2=armyAirTiers.T2+1
@@ -3354,9 +3357,31 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif EntityCategoryContains(categories.daa0206,unit) then
                         armyAir.T2.mercy=armyAir.T2.mercy+1
                         armyAirType.mercy=armyAirType.mercy+1
+                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        armyAir.T2.transport=armyAir.T2.transport+1
+                        armyAirType.transport=armyAirType.transport+1
                     end
                 elseif EntityCategoryContains(categories.TECH3,unit) then
                     armyAirTiers.T3=armyAirTiers.T3+1
+                    if EntityCategoryContains(categories.SCOUT,unit) then
+                        armyAir.T3.scout=armyAir.T3.scout+1
+                        armyAirType.scout=armyAirType.scout+1
+                    elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
+                        armyAir.T3.asf=armyAir.T3.asf+1
+                        armyAirType.asf=armyAirType.asf+1
+                    elseif EntityCategoryContains(categories.BOMBER,unit) then
+                        armyAir.T3.bomber=armyAir.T3.bomber+1
+                        armyAirType.bomber=armyAirType.bomber+1
+                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                        armyAir.T3.gunship=armyAir.T3.gunship+1
+                        armyAirType.gunship=armyAirType.gunship+1
+                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        armyAir.T3.transport=armyAir.T3.transport+1
+                        armyAirType.transport=armyAirType.transport+1
+                    elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
+                        armyAir.T3.torpedo=armyAir.T3.torpedo+1
+                        armyAirType.torpedo=armyAirType.torpedo+1
+                    end
                 end
             elseif EntityCategoryContains(categories.SILO,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
@@ -3375,7 +3400,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.cmanager.spend.m=tspend.m
         self.cmanager.spend.e=tspend.e
         self.cmanager.categoryspend.eng=engspend
-        self.cmanager.categoryspend.fac=facspend
+        self.cmanager.categoryspend.fact=facspend
         self.cmanager.categoryspend.silo=launcherspend
         self.cmanager.categoryspend.mex=mexspend
         self.cmanager.storage.current.m=storage.current.m
@@ -3390,7 +3415,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Current.Air=armyAir
         self.amanager.Total.Air=armyAirTiers
         self.amanager.Type.Air=armyAirType
-        self.smanager={fac=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
+        self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
     end,
 
 --[[

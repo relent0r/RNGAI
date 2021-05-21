@@ -478,7 +478,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     --LOG('Enemy ACU is under HP limit we can draw')
-                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
                     LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end

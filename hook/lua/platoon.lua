@@ -3011,11 +3011,11 @@ Platoon = Class(RNGAIPlatoon) {
         for _,marker in markerLocations do
             local markerThreat
             local enemyThreat
-            markerThreat = GetThreatAtPosition(aiBrain, marker.Position, 0, true, 'Economy')
+            markerThreat = GetThreatAtPosition(aiBrain, marker.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
             if self.MovementLayer == 'Water' then
-                enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSub')
+                enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, aiBrain.BrainIntel.IMAPConfig.Rings + 1, true, 'AntiSub')
             else
-                enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, 1, true, 'AntiSurface')
+                enemyThreat = GetThreatAtPosition(aiBrain, marker.Position, aiBrain.BrainIntel.IMAPConfig.Rings + 1, true, 'AntiSurface')
             end
             --LOG('Best pre calculation marker threat is '..markerThreat..' at position'..repr(marker.Position))
             --LOG('Surface Threat at marker is '..enemyThreat..' at position'..repr(marker.Position))
@@ -3711,7 +3711,7 @@ Platoon = Class(RNGAIPlatoon) {
         local pos = GetPlatoonPosition(self)
         while PlatoonExists(aiBrain, self) and pos do
             if not self.DistressCall then
-                local threat = GetThreatAtPosition(aiBrain, pos, 0, true, 'Land')
+                local threat = GetThreatAtPosition(aiBrain, pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
                 --LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
                     LOG('*RNGAI Mass Extractor Platoon Calling for help')
