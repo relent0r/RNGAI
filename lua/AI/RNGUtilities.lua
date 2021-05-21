@@ -10,6 +10,7 @@ local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GiveUnitToArmy = import('/lua/ScenarioFramework.lua').GiveUnitToArmy
+local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMass
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -2592,11 +2593,10 @@ UpdateExpansionAllegianceRNG = function(aiBrain,marker,num)
             end
         end
 end
-
 DisplayEconomyRNG = function(aiBrain)
     WaitTicks(150)
     if ArmyIsCivilian(aiBrain:GetArmyIndex()) then return end
-    if not aiBrain.locationstart then 
+    if not aiBrain.locationstart then
         local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
         local astartX, astartZ = aiBrain:GetArmyStartPos()
         local aiBrainstart = {Position={astartX, 0, astartZ}}
@@ -2629,6 +2629,14 @@ DisplayEconomyRNG = function(aiBrain)
                 facnum[x]=facnum[x]+i
             end
         end
+        local facspendtotals={Land=0,Air=0,Naval=0}
+        local fspendsum=0
+        for i,v in aiBrain.fmanager.spend do
+            if v.total then
+                facspendtotals[i]=v.total*facnum[i]
+                fspendsum=fspendsum+v.total*facnum[i]
+            end
+        end
         local rawm=aiBrain.cmanager.income.r.m
         local totalm=aiBrain.cmanager.income.t.m
         local spendm=aiBrain.cmanager.spend.m
@@ -2636,6 +2644,7 @@ DisplayEconomyRNG = function(aiBrain)
         local storem=aiBrain.cmanager.storage.current.m/10
         local rawe=aiBrain.cmanager.income.r.e/10
         local totale=aiBrain.cmanager.income.t.e/10
+        local neede=aiBrain.cmanager.income.neede/10
         local spende=aiBrain.cmanager.spend.e/10
         local storemaxe=aiBrain.cmanager.storage.max.e/30
         local storee=aiBrain.cmanager.storage.current.e/30
@@ -2653,13 +2662,14 @@ DisplayEconomyRNG = function(aiBrain)
             RenderPieRNG(aiBrain,home,math.sqrt(army.Total.Land.T3),18+2*math.sqrt(army.Total.Land.T2)+math.sqrt(army.Total.Land.T1)+math.sqrt(army.Total.Land.T3),-10,army.Current.Land.T3,armycolors)
             RenderPieRNG(aiBrain,home,math.sqrt(spendm),-10+math.sqrt(spendm)+math.max(spendm/widthm,totalm/widthm,rawm/widthm),9.05+1.5*widthm,spendcategories,scolors)
             RenderPieRNG(aiBrain,home,math.sqrt(facsum)*3,18-math.sqrt(facsum)*3-1.5*math.sqrt(army.Total.Land.T1),-10,facnum,fcolors)
+            RenderPieRNG(aiBrain,home,math.sqrt(fspendsum),18-math.sqrt(fspendsum)-math.sqrt(facsum)*6-1.5*math.sqrt(army.Total.Land.T1),-10,facspendtotals,fcolors)
             RenderBarRNG(aiBrain,home,rawm/widthm,widthm,1,'ff4CFF00')
             RenderBarRNG(aiBrain,home,totalm/widthm,widthm,1+widthm,'ff267F00')
             RenderBarRNG(aiBrain,home,spendm/widthm,widthm,1+2*widthm,'ffFF0000')
             RenderBarRNG(aiBrain,home,-storemaxm/3/widthm,3*widthm,1,'ff267F00')
             RenderBarRNG(aiBrain,home,-storem/3/widthm,3*widthm,1,'ff4CFF00')
             RenderBarRNG(aiBrain,home,rawe/widthe,widthe,1.5+3*widthm,'ffFFFF00')
-            RenderBarRNG(aiBrain,home,totale/widthe,widthe,1.5+3*widthm+widthe,'ffFFD800')
+            RenderBarRNG(aiBrain,home,neede/widthe,widthe,1.5+3*widthm+widthe,'ffFFD800')
             RenderBarRNG(aiBrain,home,spende/widthe,widthe,1.5+3*widthm+2*widthe,'ffFF5900')
             RenderBarRNG(aiBrain,home,-storemaxe/3/widthe,3*widthe,1.5+3*widthm,'ffFFD800')
             RenderBarRNG(aiBrain,home,-storee/3/widthe,3*widthe,1.5+3*widthm,'ffFFFF00')
@@ -2949,5 +2959,116 @@ ExpansionDangerCheckRNG = function(aiBrain)
             WaitTicks(20)
         end
         WaitTicks(10)
+    end
+end
+CountSoonMassSpotsRNG = function(aiBrain)
+    while not aiBrain.cmanager do WaitTicks(20) end
+    aiBrain.cmanager.unclaimedmexcount=0
+    local massmarkers={}
+        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                    -- mass marker is too close to border, skip it.
+                    continue
+                end 
+                table.insert(massmarkers,v)
+            end
+        end
+    while aiBrain.Result ~= "defeat" do
+        local markercache=table.copy(massmarkers)
+        for _=0,10 do
+            local unclaimedmexcount=0
+            for i,v in markercache do
+                if not aiBrain:CanBuildStructureAt('ueb1103', v.position) then 
+                    table.remove(markercache,i) 
+                    continue 
+                end
+                if aiBrain:GetNumUnitsAroundPoint(categories.MASSEXTRACTION + categories.ENGINEER, v.position, 40, 'Ally')>0 then
+                    unclaimedmexcount=unclaimedmexcount+1
+                end
+            end
+            aiBrain.cmanager.unclaimedmexcount=unclaimedmexcount
+            WaitTicks(20)
+        end
+    end
+end
+GetAvgSpendPerFactoryTypeRNG = function(aiBrain)
+    aiBrain.fmanager={spend={Land={T1=0,T2=0,T3=0,total=0},Air={T1=0,T2=0,T3=0,total=0},Naval={T1=0,T2=0,T3=0,total=0}}}
+    while aiBrain.Result ~= "defeat" do
+        local fmanager={spend={Land={T1=0,T2=0,T3=0,total=0},Air={T1=0,T2=0,T3=0,total=0},Naval={T1=0,T2=0,T3=0,total=0}}}
+        local fcount={Land={T1=0,T2=0,T3=0,total=0},Air={T1=0,T2=0,T3=0,total=0},Naval={T1=0,T2=0,T3=0,total=0}}
+        local factories=aiBrain:GetListOfUnits(categories.FACTORY * categories.STRUCTURE,false,false)
+        for _,unit in factories do
+            if unit:IsIdleState() then continue end
+            local spendm=GetConsumptionPerSecondMass(unit)
+            if spendm==0 then continue end
+            if EntityCategoryContains(categories.LAND,unit) then
+                fmanager.spend.Land.total=fmanager.spend.Land.total+spendm
+                fcount.Land.total=fcount.Land.total+1
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    fcount.Land.T1=fcount.Land.T1+1
+                    fmanager.spend.Land.T1=fmanager.spend.Land.T1+spendm
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    fcount.Land.T1=fcount.Land.T2+1
+                    fmanager.spend.Land.T2=fmanager.spend.Land.T2+spendm
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    fcount.Land.T1=fcount.Land.T3+1
+                    fmanager.spend.Land.T3=fmanager.spend.Land.T3+spendm
+                end
+            elseif EntityCategoryContains(categories.AIR,unit) then
+                fmanager.spend.Air.total=fmanager.spend.Air.total+spendm
+                fcount.Air.total=fcount.Air.total+1
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    fcount.Land.T1=fcount.Air.T1+1
+                    fmanager.spend.Air.T1=fmanager.spend.Air.T1+spendm
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    fcount.Land.T1=fcount.Air.T2+1
+                    fmanager.spend.Air.T2=fmanager.spend.Air.T2+spendm
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    fcount.Land.T1=fcount.Air.T3+1
+                    fmanager.spend.Air.T3=fmanager.spend.Air.T3+spendm
+                end
+            elseif EntityCategoryContains(categories.NAVAL,unit) then
+                fmanager.spend.Naval.total=fmanager.spend.Naval.total+spendm
+                fcount.Naval.total=fcount.Naval.total+1
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    fcount.Land.T1=fcount.Naval.T1+1
+                    fmanager.spend.Naval.T1=fmanager.spend.Naval.T1+spendm
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    fcount.Land.T1=fcount.Naval.T2+1
+                    fmanager.spend.Naval.T2=fmanager.spend.Naval.T2+spendm
+                elseif EntityCategoryContains(categories.TECH3,unit) then
+                    fcount.Land.T1=fcount.Naval.T3+1
+                    fmanager.spend.Naval.T3=fmanager.spend.Naval.T3+spendm
+                end
+            end
+        end
+        for i,x in fmanager.spend do
+            for j,v in x do
+                if v>0 then
+                    aiBrain.fmanager.spend[i][j]=(v/fcount[i][j]+aiBrain.fmanager.spend[i][j])/2
+                end
+            end
+        end
+        local factotal=aiBrain.smanager.fac
+        local facnum={Land=0,Air=0,Naval=0}
+        local facsum=0
+        for x,v in factotal do
+            for _,i in factotal[x] do
+                facsum=facsum+i
+                facnum[x]=facnum[x]+i
+            end
+        end
+        local facspendtotals={Land=0,Air=0,Naval=0}
+        local fspendsum=0
+        for i,v in aiBrain.fmanager.spend do
+            if v.total then
+                facspendtotals[i]=v.total*facnum[i]
+                fspendsum=fspendsum+v.total*facnum[i]
+            end
+        end
+        aiBrain.fmanager.buildpower=facspendtotals
+        aiBrain.fmanager.buildpower.total=fspendsum
+        WaitTicks(20)
     end
 end

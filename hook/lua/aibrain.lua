@@ -3174,418 +3174,415 @@ AIBrain = Class(RNGAIBrainClass) {
         if ArmyIsCivilian(self:GetArmyIndex()) then return end
         WaitTicks(math.random(80,100))
         LOG('Heavy Economy thread starting '..self.Nickname)
+        self:ForkThread(RUtils.CountSoonMassSpotsRNG)
+        self:ForkThread(RUtils.GetAvgSpendPerFactoryTypeRNG)
         -- This section is for debug
         ---[[
-        self.cmanager = {
-            income = {
-                r  = {
+            self.cmanager = {
+                income = {
+                    r  = {
+                        m = 0,
+                        e = 0,
+                    },
+                    t = {
+                        m = 0,
+                        e = 0,
+                    },
+                    neede=0
+                },
+                spend = {
                     m = 0,
                     e = 0,
                 },
-                t = {
-                    m = 0,
-                    e = 0,
+                categoryspend = {
+                    eng = {T1=0,T2=0,T3=0,com=0},
+                    fac = {Land=0,Air=0,Naval=0},
+                    silo = {T2=0,T3=0},
+                    mex = {T1=0,T2=0,T3=0},
                 },
-            },
-            spend = {
-                m = 0,
-                e = 0,
-            },
-            categoryspend = {
-                eng = {T1=0,T2=0,T3=0,com=0},
-                fac = {Land=0,Air=0,Naval=0},
-                silo = {T2=0,T3=0},
-                mex = {T1=0,T2=0,T3=0},
-            },
-            storage = {
-                current = {
-                    m = 0,
-                    e = 0,
+                storage = {
+                    current = {
+                        m = 0,
+                        e = 0,
+                    },
+                    max = {
+                        m = 0,
+                        e = 0,
+                    },
                 },
-                max = {
-                    m = 0,
-                    e = 0,
+            }
+            self.amanager = {
+                Current = {
+                    Land = {
+                        T1 = {
+                            scout=0,
+                            tank=0,
+                            arty=0,
+                            aa=0
+                        },
+                        T2 = {
+                            tank=0,
+                            mml=0,
+                            aa=0,
+                            shield=0,
+                            stealth=0,
+                            bot=0
+                        },
+                        T3 = {
+                            tank=0,
+                            sniper=0,
+                            arty=0,
+                            mml=0,
+                            aa=0,
+                            shield=0,
+                            armoured=0
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=0,
+                            interceptor=0,
+                            bomber=0,
+                            gunship=0
+                        },
+                        T2 = {
+                            bomber=0,
+                            gunship=0,
+                            fighter=0,
+                            mercy=0,
+                            torpedo=0,
+                        },
+                        T3 = {
+                            asf=0,
+                            bomber=0,
+                            gunship=0,
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=0,
+                            submarine=0,
+                            aa=0
+                        },
+                        T2 = {
+                            tank=0,
+                            mml=0,
+                            aa=0,
+                            shield=0
+                        },
+                        T3 = {
+                            tank=0,
+                            sniper=0,
+                            arty=0,
+                            mml=0,
+                            aa=0,
+                            shield=0
+                        }
+                    },
                 },
-            },
-        }
-        self.amanager = {
-            Current = {
-                Land = {
-                    T1 = {
+                Total = {
+                    Land = {
+                        T1 = 0,
+                        T2 = 0,
+                        T3 = 0,
+                    },
+                    Air = {
+                        T1 = 0,
+                        T2 = 0,
+                        T3 = 0,
+                    },
+                    Naval = {
+                        T1 = 0,
+                        T2 = 0,
+                        T3 = 0,
+                    }
+                },
+                Type = {
+                    Land = {
                         scout=0,
-                        tank=0,
-                        arty=0,
-                        aa=0
-                    },
-                    T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0,
-                        bot=0
-                    },
-                    T3 = {
                         tank=0,
                         sniper=0,
                         arty=0,
                         mml=0,
                         aa=0,
                         shield=0,
+                        bot=0,
                         armoured=0
-                    }
-                },
-                Air = {
-                    T1 = {
+                    },
+                    Air = {
                         scout=0,
                         interceptor=0,
                         bomber=0,
-                        gunship=0
+                        gunship=0,
+                        fighter=0,
+                        mercy=0,
+                        torpedo=0,
+                        asf=0,
                     },
-                    T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                    T3 = {
-                        tank=0,
-                        sniper=0,
-                        arty=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    }
-                },
-                Naval = {
-                    T1 = {
-                        frigate=0,
-                        submarine=0,
-                        aa=0
-                    },
-                    T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
-                        shield=0
-                    },
-                    T3 = {
+                    Naval = {
+                        scout=0,
                         tank=0,
                         sniper=0,
                         arty=0,
                         mml=0,
                         aa=0,
                         shield=0
-                    }
-                },
-            },
-            Total = {
-                Land = {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0,
-                },
-                Air = {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0,
-                },
-                Naval = {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0,
-                }
-            },
-            Type = {
-                Land = {
-                    scout=0,
-                    tank=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
-                    shield=0,
-                    bot=0,
-                    armoured=0
-                },
-                Air = {
-                    scout=0,
-                    interceptor=0,
-                    bomber=0,
-                    gunship=0,
-                    asf=0,
-                },
-                Naval = {
-                    scout=0,
-                    tank=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
-                    shield=0
-                },
-            },
-            Ratios = {
-                [1] = {
-                    Land = {
-                        T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
-                            aa=12,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
-                        }
-                    },
-                    Air = {
-                        T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
-                        }
                     },
                 },
-                [2] = {
-                    Land = {
-                        T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
-                            aa=12,
+                Ratios = {
+                    [1] = {
+                        Land = {
+                            T1 = {
+                                scout=11,
+                                tank=55,
+                                arty=22,
+                                aa=12,
+                            },
+                            T2 = {
+                                tank=55,
+                                mml=5,
+                                bot=20,
+                                aa=10,
+                                shield=10
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10
+                            }
                         },
-                        T2 = {
-                            tank=75,
-                            mml=5,
-                            aa=10,
-                            shield=10
+                        Air = {
+                            T1 = {
+                                scout=11,
+                                interceptor=55,
+                                bomber=22,
+                            },
+                            T2 = {
+                                bomber=70,
+                                gunship=30,
+                                torpedo=0
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10
+                            }
                         },
-                        T3 = {
-                            tank=45,
-                            arty=15,
-                            aa=10,
-                            sniper=30
-                        }
                     },
-                    Air = {
-                        T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
+                    [2] = {
+                        Land = {
+                            T1 = {
+                                scout=11,
+                                tank=55,
+                                arty=22,
+                                aa=12,
+                            },
+                            T2 = {
+                                tank=55,
+                                mml=5,
+                                bot=20,
+                                aa=10,
+                                shield=10
+                            },
+                            T3 = {
+                                tank=45,
+                                arty=15,
+                                aa=10,
+                                sniper=30
+                            }
                         },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
+                        Air = {
+                            T1 = {
+                                scout=11,
+                                interceptor=55,
+                                bomber=22,
+                            },
+                            T2 = {
+                                fighter=85,
+                                gunship=15,
+                                torpedo=0,
+                                mercy=0
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10
+                            }
                         },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
-                        }
+                    },
+                    [3] = {
+                        Land = {
+                            T1 = {
+                                scout=11,
+                                tank=55,
+                                arty=22,
+                                aa=12,
+                            },
+                            T2 = {
+                                tank=55,
+                                mml=5,
+                                bot=25,
+                                aa=10,
+                                stealth=5,
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                arty=15,
+                                aa=10,
+                            }
+                        },
+                        Air = {
+                            T1 = {
+                                scout=11,
+                                interceptor=55,
+                                bomber=22,
+                                gunship=12,
+                            },
+                            T2 = {
+                                bomber=85,
+                                gunship=15,
+                                torpedo=0
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10
+                            }
+                        },
+                    },
+                    [4] = {
+                        Land = {
+                            T1 = {
+                                scout=11,
+                                tank=55,
+                                arty=22,
+                                aa=12,
+                            },
+                            T2 = {
+                                bot=75,
+                                mml=10,
+                                aa=15,
+                            },
+                            T3 = {
+                                tank=45,
+                                arty=10,
+                                aa=10,
+                                sniper=30,
+                                shield=5,
+                            }
+                        },
+                        Air = {
+                            T1 = {
+                                scout=11,
+                                interceptor=55,
+                                bomber=22,
+                            },
+                            T2 = {
+                                bomber=75,
+                                gunship=15,
+                                torpedo=0
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10
+                            }
+                        },
+                    },
+                    [5] = {
+                        Land = {
+                            T1 = {
+                                scout=11,
+                                tank=55,
+                                arty=22,
+                                aa=12,
+                            },
+                            T2 = {
+                                tank=55,
+                                mml=5,
+                                bot=20,
+                                aa=10,
+                                shield=10,
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10,
+                            }
+                        },
+                        Air = {
+                            T1 = {
+                                scout=11,
+                                interceptor=55,
+                                bomber=22,
+                            },
+                            T2 = {
+                                bomber=75,
+                                gunship=15,
+                                torpedo=0
+                            },
+                            T3 = {
+                                tank=30,
+                                armoured=40,
+                                mml=5,
+                                arty=15,
+                                aa=10
+                            }
+                        },
                     },
                 },
-                [3] = {
-                    Land = {
-                        T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
-                            aa=12,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=25,
-                            aa=10,
-                            stealth=5,
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            arty=15,
-                            aa=10,
-                        }
-                    },
-                    Air = {
-                        T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
-                            gunship=12,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
-                        }
-                    },
-                },
-                [4] = {
-                    Land = {
-                        T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
-                            aa=12,
-                        },
-                        T2 = {
-                            bot=75,
-                            mml=10,
-                            aa=15,
-                        },
-                        T3 = {
-                            tank=45,
-                            arty=10,
-                            aa=10,
-                            sniper=30,
-                            shield=5,
-                        }
-                    },
-                    Air = {
-                        T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
-                        }
-                    },
-                },
-                [5] = {
-                    Land = {
-                        T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
-                            aa=12,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10,
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10,
-                        }
-                    },
-                    Air = {
-                        T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
-                        },
-                        T2 = {
-                            tank=55,
-                            mml=5,
-                            bot=20,
-                            aa=10,
-                            shield=10
-                        },
-                        T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
-                            aa=10
-                        }
-                    },
-                },
-            },
-        }
-        self.smanager = {
-            fac = {
-                Land =
-                {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0
-                },
-                Air = {
-                    T1=0,
-                    T2=0,
-                    T3=0
-                },
-                Naval= {
-                    T1=0,
-                    T2=0,
-                    T3=0
-                }
-            },
-            mex = {
-                T1=0,
-                T2=0,
-                T3=0
-            },
-            pgen = {
-                T1=0,
-                T2=0,
-                T3=0
-            },
-            silo = {
-                T2=0,
-                T3=0
-            },
-            fabs= {
-                T2=0,
-                T3=0
             }
-        }
+            self.smanager = {
+                fac = {
+                    Land =
+                    {
+                        T1 = 0,
+                        T2 = 0,
+                        T3 = 0
+                    },
+                    Air = {
+                        T1=0,
+                        T2=0,
+                        T3=0
+                    },
+                    Naval= {
+                        T1=0,
+                        T2=0,
+                        T3=0
+                    }
+                },
+                mex = {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                },
+                pgen = {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                },
+                silo = {
+                    T2=0,
+                    T3=0
+                },
+                fabs= {
+                    T2=0,
+                    T3=0
+                }
+            }
         --]]
         while not self.defeat do
             LOG('heavy economy loop started')
@@ -3615,6 +3612,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local mexspend = {T1=0,T2=0,T3=0}
         local engspend = {T1=0,T2=0,T3=0,com=0}
         local rincome = {m=0,e=0}
+        local airmanager = {total=0,fuelratiosum=0}
         local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
@@ -3810,6 +3808,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 elseif EntityCategoryContains(categories.TECH3,unit) then
                     armyAirTiers.T3=armyAirTiers.T3+1
                 end
+                if unit.HasFuel then
+                    airmanager.fuelratiosum = airmanager.fuelratiosum + unit:GetFuelRatio()
+                    airmanager.total = airmanager.total+1
+                end
             elseif EntityCategoryContains(categories.SILO,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
                     silo.T2=silo.T2+1
@@ -3824,6 +3826,13 @@ AIBrain = Class(RNGAIBrainClass) {
         self.cmanager.income.r.e=rincome.e
         self.cmanager.income.t.m=tincome.m
         self.cmanager.income.t.e=tincome.e
+        if self.cmanager.unclaimedmexcount and tspend.m>0 then
+            self.cmanager.income.neede=(tspend.e/tspend.m*(rincome.m+2*self.cmanager.unclaimedmexcount))
+        elseif tspend.m>0 then
+            self.cmanager.income.neede=(tspend.e/tspend.m*rincome.m)
+        else 
+            self.cmanager.income.neede=tspend.e
+        end
         self.cmanager.spend.m=tspend.m
         self.cmanager.spend.e=tspend.e
         self.cmanager.categoryspend.eng=engspend
@@ -3836,6 +3845,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.cmanager.storage.max.m=storage.max.m
             self.cmanager.storage.max.e=storage.max.e
         end
+        self.cmanager.needfuel=airmanager
         self.amanager.Current.Land=armyLand
         self.amanager.Total.Land=armyLandTiers
         self.amanager.Type.Land=armyLandType

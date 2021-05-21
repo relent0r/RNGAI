@@ -2527,8 +2527,8 @@ Platoon = Class(RNGAIPlatoon) {
                 self:PlatoonDisband()
                 return
             end
-            reference  = AIUtils.FindUnclutteredArea(aiBrain, cat, pos, radius, cons.maxUnits, cons.maxRadius, avoidCat)
-            buildFunction = AIBuildStructures.AIBuildAdjacency
+            reference  = AIUtils.FindUnclutteredAreaRNG(aiBrain, cat, pos, radius, cons.maxUnits, cons.maxRadius, avoidCat)
+            buildFunction = AIBuildStructures.AIBuildAdjacencyRNG
             table.insert(baseTmplList, baseTmpl)
         elseif cons.AdjacencyCategory then
             relative = false
@@ -2546,7 +2546,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             reference  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, cat, pos, radius, cons.ThreatMin,
                                                         cons.ThreatMax, cons.ThreatRings)
-            buildFunction = AIBuildStructures.AIBuildAdjacency
+            buildFunction = AIBuildStructures.AIBuildAdjacencyRNG
             table.insert(baseTmplList, baseTmpl)
         else
             table.insert(baseTmplList, baseTmpl)
@@ -6091,6 +6091,7 @@ Platoon = Class(RNGAIPlatoon) {
         platoon.evaluationradius=platoon.MaxWeaponRange*0.7
         LOG('platoon evaluationradius = '..repr(platoon.evaluationradius))
         while PlatoonExists(aiBrain, self) do
+            platoonUnits = GetPlatoonUnits(self)
             if platoon.navigating then 
                 while platoon.navigating do 
                     DrawCircle(platoon:GetPlatoonPosition(),5,'FFbb00FF')
@@ -6185,7 +6186,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if platoon.navigating then while platoon.navitating do WaitTicks(10) end end
                 if target then
-                    platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, targetPosition, 10, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, targetPosition, -20, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
                     if not platoon.path then 
                         platoon.target=nil
                         local mex=AIUtils.AIGetMarkerLocations(aiBrain, 'Mass')
@@ -6675,7 +6676,8 @@ Platoon = Class(RNGAIPlatoon) {
                 local pathcolor='8b00FFFF'
                 if platoon.path and (platoon.navigating or platoon.pathretreat) then
                     platoon.Pos=self:GetPlatoonPosition() 
-                    local path=table.copy(platoon.path)
+                    DrawLinePop(platoon.Pos,platoon.path[table.getn(platoon.path)],pathcolor)
+                    --[[local path=table.copy(platoon.path)
                     local pathline=table.copy(platoon.path)
                     local start=nil
                     table.sort(path,function(a,b) return VDist2Sq(a[1],a[3],platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3])*math.pow(VDist2Sq(a[1],a[3],platoon.Pos[1],platoon.Pos[3]),1.5)<VDist2Sq(b[1],b[3],platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3])*math.pow(VDist2Sq(b[1],b[3],platoon.Pos[1],platoon.Pos[3]),1.5) end)
@@ -6699,7 +6701,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                             DrawCircle(node,3,'bd6A00FF')
                         end
-                    end 
+                    end ]]
                 end
             WaitTicks(2)
         end
@@ -6783,7 +6785,7 @@ Platoon = Class(RNGAIPlatoon) {
         while not platoon.dead and PlatoonExists(aiBrain, self) do
             if not platoon.Pos then WaitTicks(10) continue end
             if not platoon.pathretreat and not platoon.navigating then WaitTicks(20) continue end
-            if VDist3Sq(platoon.path[table.getn(platoon.path)],platoon.Pos)<platoon.MaxWeaponRange*platoon.MaxWeaponRange then platoon.pathretreat=nil platoon.navigating=nil WaitTicks(20) continue end
+            if not platoon.path or VDist3Sq(platoon.path[table.getn(platoon.path)],platoon.Pos)<platoon.MaxWeaponRange*platoon.MaxWeaponRange then platoon.pathretreat=nil platoon.navigating=nil WaitTicks(20) continue end
             if platoon.navigating then
                 local enemy=self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.WALL)
                 if not enemy then
@@ -6802,15 +6804,30 @@ Platoon = Class(RNGAIPlatoon) {
             local snum=0
             for _,v in platoonUnits do
                 if not v or v.Dead then continue end
+                if VDist3Sq(v:GetPosition(),platoon.Pos)>platoon.MaxWeaponRange*platoon.MaxWeaponRange*2 then
+                    self:ForkThread(self.RemoveSingleUnit,aiBrain,v)
+                    continue
+                end
                 if VDist3Sq(v:GetPosition(),platoon.Pos)>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum then
-                    IssueClearCommands({v})
-                    if v.Sniper then
-                        IssueMove({v},RUtils.lerpy(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),v.MaxWeaponRange/10+math.sqrt(platoonNum)}))
+                    if v.dest then
+                        IssueClearCommands({v})
+                        if v.Sniper then
+                            IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/10+math.sqrt(platoonNum)}))
+                        else
+                            IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/6+math.sqrt(platoonNum)}))
+                        end
+                        spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                        snum=snum+1
                     else
-                        IssueMove({v},RUtils.lerpy(v:GetPosition(),platoon.Pos,{VDist3(v:GetPosition(),platoon.Pos),v.MaxWeaponRange/6+math.sqrt(platoonNum)}))
+                        IssueClearCommands({v})
+                        if v.Sniper then
+                            IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),-v.MaxWeaponRange/10-math.sqrt(platoonNum)}))
+                        else
+                            IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),-v.MaxWeaponRange/6-math.sqrt(platoonNum)}))
+                        end
+                        spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                        snum=snum+1
                     end
-                    spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                    snum=snum+1
                 end
             end
             if spread>0 then
@@ -6835,6 +6852,25 @@ Platoon = Class(RNGAIPlatoon) {
             end
             WaitTicks(30)
             continue
+        end
+    end,
+    RemoveSingleUnitRNG = function(self, aiBrain, unit)
+        -- Removes 1 uniy from a platoon without disbanding it.
+        if not unit.Dead then
+            unit.PlatoonHandle = nil
+            unit.AssistSet = nil
+            unit.AssistPlatoon = nil
+            unit.UnitBeingBuilt = nil
+            unit.ReclaimInProgress = nil
+            unit.CaptureInProgress = nil
+            unit.UnitBeingAssist = nil
+            if unit:IsPaused() then
+                unit:SetPaused( false )
+            end
+            aiBrain:AssignUnitsToPlatoon('ArmyPool', {unit}, 'Unassigned', 'NoFormation')
+            WaitTicks(3)
+            IssueStop({unit})
+            IssueClearCommands({unit})
         end
     end,
     ReclaimStructuresRNG = function(self)
@@ -6897,6 +6933,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
     MexBuildAIRNG = function(self)
+        WaitTicks(10)
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
         local armyIndex = aiBrain:GetArmyIndex()

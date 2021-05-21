@@ -824,7 +824,12 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     return false
 
 end
-
+function LessThanIdleEngineersRNG(aiBrain,num)
+    if (table.getn(aiBrain:GetListOfUnits(categories.ENGINEER * categories.MOBILE - categories.COMMAND, true))-aiBrain:GetCurrentUnits(categories.ENGINEER * categories.MOBILE - categories.COMMAND))<num then
+        return true
+    end
+    return false
+end
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

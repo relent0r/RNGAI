@@ -212,10 +212,110 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
 end
 
-function FactorySpendRatioRNG(aiBrain,uType,ratio)
-    if aiBrain.cmanager.categoryspend.fac[uType]/aiBrain.cmanager.income.r.m+math.random(-15,15)/100<ratio then
-        return true
+function FactorySpendRatioRNG(aiBrain,uType,ratio,greater)
+    if not greater or greater~='greater' then
+        if aiBrain.cmanager.categoryspend.fac[uType]/aiBrain.cmanager.income.r.m+math.random(-15,15)/200<ratio then
+            return true
+        else
+            return false
+        end
     else
-        return false
+        if aiBrain.cmanager.categoryspend.fac[uType]/aiBrain.cmanager.income.r.m>ratio then
+            return true
+        else
+            return false
+        end
+    end
+end
+function FutureProofEspendRNG(aiBrain,ratio,greater)
+    if not aiBrain.cmanager.income.neede then return false end
+    if not greater or greater~='greater' then
+        if aiBrain.cmanager.income.r.e/aiBrain.cmanager.income.neede<ratio then
+            return true
+        else
+            return false
+        end
+    else
+        if aiBrain.cmanager.income.r.e/aiBrain.cmanager.income.neede>ratio then
+            return true
+        else
+            return false
+        end
+    end
+end
+function MexesToBeClaimedRNG(aiBrain,num)
+    if aiBrain.cmanager.unclaimedmexcount>num then
+        return true
+    end
+    return false
+end
+function CoinFlipRNG(aiBrain,ratio)
+    if math.random()<ratio then
+        return true
+    end
+    return false
+end
+function FactoryTypeRatioRNG(aiBrain,uType,ratio,greater)
+    if not aiBrain.fmanager.buildpower then return false end
+    if not greater or greater~='greater' then
+        if aiBrain.fmanager.buildpower[uType]/aiBrain.fmanager.buildpower.total<ratio then
+            return true
+        else
+            return false
+        end
+    else
+        if aiBrain.fmanager.buildpower[uType]/aiBrain.fmanager.buildpower.total>ratio then
+            return true
+        else
+            return false
+        end
+    end
+end
+function FactorySpendRatioRNG(aiBrain,uType,ratio,greater)
+    if not aiBrain.fmanager.buildpower then return false end
+    if not greater or greater~='greater' then
+        if aiBrain.fmanager.buildpower[uType]/aiBrain.cmanager.income.r.m<ratio then
+            return true
+        else
+            return false
+        end
+    else
+        if aiBrain.fmanager.buildpower[uType]/aiBrain.cmanager.income.r.m>ratio then
+            return true
+        else
+            return false
+        end
+    end
+end
+function FactorySpendRatioUnitRNG(aiBrain,uType,ratio,greater)
+    if not aiBrain.fmanager.buildpower then return false end
+    if not greater or greater~='greater' then
+        if math.random()<ratio/(aiBrain.fmanager.buildpower[uType]/aiBrain.cmanager.income.r.m) then
+            return true
+        else
+            return false
+        end
+    else
+        if aiBrain.fmanager.buildpower[uType]/aiBrain.cmanager.income.r.m>ratio then
+            return true
+        else
+            return false
+        end
+    end
+end
+function AvgFuelRatioRNG(aiBrain,ratio,greater)
+    if not aiBrain.cmanager.needfuel or aiBrain.cmanager.needfuel.total<1 then return false end
+    if not greater or greater~='greater' then
+        if aiBrain.cmanager.needfuel.fuelratiosum/aiBrain.cmanager.needfuel.total<ratio then
+            return true
+        else
+            return false
+        end
+    else
+        if aiBrain.cmanager.needfuel.fuelratiosum/aiBrain.cmanager.needfuel.total>ratio then
+            return true
+        else
+            return false
+        end
     end
 end

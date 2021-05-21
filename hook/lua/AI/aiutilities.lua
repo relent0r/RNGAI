@@ -614,3 +614,18 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
 
     return false
 end
+function FindUnclutteredAreaRNG(aiBrain, category, location, radius, maxUnits, maxRadius, avoidCat)
+    local units = aiBrain:GetUnitsAroundPoint(category, location, radius, 'Ally')
+    local index = aiBrain:GetArmyIndex()
+    local retUnits = {}
+    for _, v in units do
+        if not v.Dead and v:GetAIBrain():GetArmyIndex() == index then
+            local nearby = aiBrain:GetNumUnitsAroundPoint(avoidCat, v:GetPosition(), maxRadius, 'Ally')
+            if nearby < maxUnits then
+                table.insert(retUnits, v)
+            end
+        end
+    end
+
+    return retUnits
+end
