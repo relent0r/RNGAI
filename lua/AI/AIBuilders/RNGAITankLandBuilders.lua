@@ -1080,6 +1080,7 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
+            ThreatType = 'Structures',
             ThreatSupport = 5,
             PrioritizedCategories = {
                 categories.COMMAND,

@@ -375,13 +375,13 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.1, 1.1 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },

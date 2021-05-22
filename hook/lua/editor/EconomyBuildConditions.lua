@@ -213,6 +213,8 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType,ratio)
+    LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
+    LOG('Desire Ratio '..ratio)
     if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < ratio then
         return true
     else
