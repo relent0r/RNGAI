@@ -216,8 +216,9 @@ function FactorySpendRatioRNG(aiBrain,uType,ratio)
     LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     LOG('Desire Ratio '..ratio)
     if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < ratio then
-        return true
-    else
-        return false
+        if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
+            return true
+        end
     end
+    return false
 end

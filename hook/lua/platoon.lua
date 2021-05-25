@@ -3053,7 +3053,7 @@ Platoon = Class(RNGAIPlatoon) {
         --LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 900 and self.MovementLayer ~= 'Water' then
-            --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
+            LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
             return self:SetAIPlanRNG('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
             LOG('Best Marker position was nil, select random')
@@ -4958,13 +4958,16 @@ Platoon = Class(RNGAIPlatoon) {
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
             eng:SetCustomName('I am assisting')
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                eng:SetCustomName('assist function break due to no UnitBeingAssist')
                 eng.UnitBeingAssist = nil
                 break
             end
             if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
+                eng:SetCustomName('Got asked to remove myself due to build power')
                 self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
             if not aiBrain.EngineerAssistManagerActive then
+                eng:SetCustomName('Got asked to remove myself due to assist manager being false')
                 self:EngineerAssistRemoveRNG(aiBrain, eng)
             end
             LOG('I am assisting with aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired being true :'..aiBrain.EngineerAssistManagerBuildPower..' > ' ..aiBrain.EngineerAssistManagerBuildPowerRequired)
