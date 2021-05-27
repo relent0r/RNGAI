@@ -797,7 +797,7 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     local factionIndex = aiBrain:GetFactionIndex()
     if factionIndex > 4 then factionIndex = 5 end
 
-    if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] then 
+    if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
         --LOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
     end

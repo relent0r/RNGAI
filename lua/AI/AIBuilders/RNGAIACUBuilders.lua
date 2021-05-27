@@ -467,7 +467,7 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -492,7 +492,7 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.30, 'FACTORY'}},
@@ -516,7 +516,7 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 0.7, 8.0}},
@@ -540,7 +540,7 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Air Factory Lower Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 750,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
@@ -764,7 +764,7 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
@@ -789,7 +789,7 @@ BuilderGroup {
         BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 800,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
@@ -815,7 +815,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
         PriorityFunction = NavalAdjust,
-        DelayEqualBuildPlattons = {'Factories', 3},
+        DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},

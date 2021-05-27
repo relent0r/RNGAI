@@ -23,7 +23,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air', 0.6} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
         },
         BuilderType = 'Air',
@@ -36,7 +36,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'interceptor'} },
             { EBC, 'FactorySpendRatioRNG', {'Air', 0.6} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -53,7 +53,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air', 0.6} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -70,7 +70,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'gunship'} },
             { EBC, 'FactorySpendRatioRNG', {'Air', 0.6} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1, 'AIR'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

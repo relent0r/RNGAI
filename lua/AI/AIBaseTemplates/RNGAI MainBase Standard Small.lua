@@ -66,7 +66,6 @@ BaseBuilderTemplate {
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
-        'RNGAI Air Builder T1',
         'RNGAI Air Staging Platform',
         
         -- Sea Factory Builders
@@ -77,6 +76,8 @@ BaseBuilderTemplate {
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
+        'RNGAI Air Builder T1',
+        'RNGAI Air Builder T2',
         'RNGAI Air Builder T1 Ratio',
         'RNGAI Air Builder T2 Ratio',
         'RNGAI Air Builder T3 Ratio',

@@ -161,7 +161,7 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
     local testCat = categories.TECH1 * categories.FACTORY
     local unitCount = aiBrain:GetCurrentUnits(testCat)
     # Find units of this type being built or about to be built
-    unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt(testCat)
+    unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt((categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.FACTORY)
 
     local massTotal = unitCount * t1Drain
 
@@ -213,8 +213,8 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType,ratio)
-    LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
-    LOG('Desire Ratio '..ratio)
+    --LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
+    --LOG('Desire Ratio '..ratio)
     if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < ratio then
         if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
             return true

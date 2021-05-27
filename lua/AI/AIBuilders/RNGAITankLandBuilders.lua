@@ -982,7 +982,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 6,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
@@ -1084,11 +1084,11 @@ BuilderGroup {
             ThreatSupport = 5,
             PrioritizedCategories = {
                 categories.COMMAND,
+                categories.MASSEXTRACTION,
                 categories.EXPERIMENTAL,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
-                categories.MASSEXTRACTION,
             },
         },    
     },
@@ -1124,7 +1124,7 @@ BuilderGroup {
             RequireTransport = false,
             AggressiveMove = true,
             LocationType = 'LocationType',
-            Defensive = true,
+            Defensive = false,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
                 categories.ENGINEER,
@@ -1171,12 +1171,12 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
+                categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
         },
@@ -1210,12 +1210,12 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
+                categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
         },
@@ -1406,11 +1406,11 @@ BuilderGroup {
             ThreatSupport = 5,
             PrioritizedCategories = {
                 categories.COMMAND,
+                categories.MASSEXTRACTION,
                 categories.EXPERIMENTAL,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
-                categories.MASSEXTRACTION,
             },
         },    
     },
@@ -1769,7 +1769,7 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = true,      
@@ -1808,7 +1808,7 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 9900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = false,
             AvoidBasesRadius = 150,
             AggressiveMove = true,      

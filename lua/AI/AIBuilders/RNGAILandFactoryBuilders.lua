@@ -21,8 +21,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandScout',
         Priority = 744, -- After second engie group
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
         },
@@ -34,8 +34,8 @@ BuilderGroup {
         Priority = 745,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -51,8 +51,8 @@ BuilderGroup {
         Priority = 743,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -68,8 +68,8 @@ BuilderGroup {
         Priority = 742,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -90,8 +90,8 @@ BuilderGroup {
         Priority = 750,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'tank'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'tank'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -107,8 +107,8 @@ BuilderGroup {
         Priority = 749,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -124,8 +124,8 @@ BuilderGroup {
         Priority = 746,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -141,8 +141,8 @@ BuilderGroup {
         Priority = 747,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'shield'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'shield'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -158,8 +158,8 @@ BuilderGroup {
         Priority = 748,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -175,8 +175,8 @@ BuilderGroup {
         Priority = 746,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -197,8 +197,8 @@ BuilderGroup {
         Priority = 755,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'tank'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'tank'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -214,8 +214,8 @@ BuilderGroup {
         Priority = 755,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'armoured'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'armoured'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -231,8 +231,8 @@ BuilderGroup {
         Priority = 752,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'aa'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'aa'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -248,8 +248,8 @@ BuilderGroup {
         Priority = 753,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'arty'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'arty'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -265,8 +265,8 @@ BuilderGroup {
         Priority = 751,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'shield'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'shield'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -282,8 +282,8 @@ BuilderGroup {
         Priority = 754,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -298,9 +298,8 @@ BuilderGroup {
         PlatoonTemplate = 'T3MobileMissile',
         Priority = 754,
         --PriorityFunction = LandMode,
-        BuilderConditions = {
+        BuilderConditions = {{ EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'mml'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 0.6} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },

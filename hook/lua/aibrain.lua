@@ -125,7 +125,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- Economy monitor for new skirmish - stores out econ over time to get trend over 10 seconds
         self.EconomyData = {}
-        self.EconomyTicksMonitor = 50
+        self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
@@ -455,7 +455,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         T3 = {
                             scout=11,
                             asf=65,
-                            bomber=15
+                            bomber=15,
+                            torpedo=0
                         }
                     },
                 },
@@ -1716,6 +1717,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..'Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
                     LOG('Land Threat Self '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Land Threat Enemy '..self.EnemyIntel.EnemyThreatCurrent.Land)
                     LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
                     LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))

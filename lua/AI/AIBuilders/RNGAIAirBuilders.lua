@@ -149,7 +149,7 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },]]
-    --[[Builder {	
+    Builder {	
         BuilderName = 'RNGAI Factory Bomber T1 Response',	
         PlatoonTemplate = 'T1AirBomber',	
         Priority = 850,	
@@ -160,7 +160,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
         },	
         BuilderType = 'Air',	
-    },]]
+    },
     --[[Builder {
         BuilderName = 'RNGAI Air Attack Queue T1',
         PlatoonTemplate = 'RNGAIT1AirQueue',
@@ -259,7 +259,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
@@ -273,7 +273,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrend', { 0.0, 0.0 } },
         },
         BuilderType = 'Air',
-    },]]
+    },
 }
 
 BuilderGroup {

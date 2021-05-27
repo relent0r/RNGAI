@@ -189,7 +189,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
