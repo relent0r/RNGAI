@@ -2111,59 +2111,61 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         self:AttackTarget(target)
                         while PlatoonExists(aiBrain, self) do
-                            SquadPosition = self:GetSquadPosition('Attack') or nil
-                            if not SquadPosition then break end
-                            local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
-                            if enemyUnitCount > 0 then
-                                --LOG('Strikeforce land detected close target starting micro')
-                                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
-                                local attackSquad = self:GetSquadUnits('Attack')
-                                IssueClearCommands(attackSquad)
-                                while PlatoonExists(aiBrain, self) do
-                                    if target and not target.Dead then
-                                        local targetPosition = target:GetPosition()
-                                        local microCap = 50
-                                        for _, unit in attackSquad do
-                                            microCap = microCap - 1
-                                            if microCap <= 0 then break end
-                                            if unit.Dead then continue end
-                                            if not unit.MaxWeaponRange then
-                                                continue
-                                            end
-                                            unitPos = unit:GetPosition()
-                                            alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                                            x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                                            y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                                            smartPos = { x, GetTerrainHeight( x, y), y }
-                                            -- check if the move position is new or target has moved
-                                            if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
-                                                -- clear move commands if we have queued more than 4
-                                                if table.getn(unit:GetCommandQueue()) > 2 then
-                                                    IssueClearCommands({unit})
-                                                    coroutine.yield(3)
+                            if data.AggressiveMove then
+                                SquadPosition = self:GetSquadPosition('Attack') or nil
+                                if not SquadPosition then break end
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                if enemyUnitCount > 0 then
+                                    --LOG('Strikeforce land detected close target starting micro')
+                                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
+                                    local attackSquad = self:GetSquadUnits('Attack')
+                                    IssueClearCommands(attackSquad)
+                                    while PlatoonExists(aiBrain, self) do
+                                        if target and not target.Dead then
+                                            local targetPosition = target:GetPosition()
+                                            local microCap = 50
+                                            for _, unit in attackSquad do
+                                                microCap = microCap - 1
+                                                if microCap <= 0 then break end
+                                                if unit.Dead then continue end
+                                                if not unit.MaxWeaponRange then
+                                                    continue
                                                 end
-                                                -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
-                                                IssueMove({unit}, smartPos )
-                                                if target.Dead then break end
-                                                IssueAttack({unit}, target)
-                                                --unit:SetCustomName('Fight micro moving')
-                                                unit.smartPos = smartPos
-                                                unit.TargetPos = targetPosition
-                                            -- in case we don't move, check if we can fire at the target
-                                            else
-                                                local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
-                                                if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
-                                                    --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                                                    IssueMove({unit}, targetPosition )
+                                                unitPos = unit:GetPosition()
+                                                alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                                                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
+                                                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
+                                                smartPos = { x, GetTerrainHeight( x, y), y }
+                                                -- check if the move position is new or target has moved
+                                                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                                                    -- clear move commands if we have queued more than 4
+                                                    if table.getn(unit:GetCommandQueue()) > 2 then
+                                                        IssueClearCommands({unit})
+                                                        coroutine.yield(3)
+                                                    end
+                                                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                                                    IssueMove({unit}, smartPos )
+                                                    if target.Dead then break end
+                                                    IssueAttack({unit}, target)
+                                                    --unit:SetCustomName('Fight micro moving')
+                                                    unit.smartPos = smartPos
+                                                    unit.TargetPos = targetPosition
+                                                -- in case we don't move, check if we can fire at the target
                                                 else
-                                                    --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                                    local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
+                                                    if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                                                        --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                                                        IssueMove({unit}, targetPosition )
+                                                    else
+                                                        --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                                                    end
                                                 end
                                             end
+                                        else
+                                            break
                                         end
-                                    else
-                                        break
+                                        WaitTicks(10)
                                     end
-                                    WaitTicks(10)
                                 end
                             end
                             if not target or target.Dead then
@@ -5104,9 +5106,6 @@ Platoon = Class(RNGAIPlatoon) {
         while not aiBrain.expansionMex do WaitSeconds(2) end
         local markerTable=table.copy(aiBrain.expansionMex)
         if eng.Dead then self:PlatoonDisband() end
-        for i,v in markerTable do
-            if not AIAttackUtils.CanGraphTo(eng,v.Position,'Amphibious') then table.remove(markerTable,i) end
-        end
         while eng and not eng.Dead do
             local platoonPos=self:GetPlatoonPosition()
             table.sort(markerTable,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist3Sq(aiBrain.emanager.enemy.Position,a.Position)/a.priority/a.priority<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist3Sq(aiBrain.emanager.enemy.Position,b.Position)/b.priority/b.priority end)
@@ -5120,7 +5119,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if not currentmexpos then self:PlatoonDisband() end
-            if not AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild) then table.remove(markerTable,curindex) continue end
+            if not AIAttackUtils.GeneratePathNoThreatRNG(aiBrain, eng, currentmexpos, whatToBuild) then table.remove(markerTable,curindex) continue end
             local firstmex=currentmexpos
             local initialized=nil
             for _=0,3,1 do

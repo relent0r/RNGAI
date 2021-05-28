@@ -996,6 +996,7 @@ BuilderGroup {
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             LocationType = 'LocationType',
             Defensive = true,
+            PlatoonLimit = 12,
             AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
@@ -1115,14 +1116,14 @@ BuilderGroup {
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 400 } }, -- don't build after 5 minutes
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 600 } }, -- don't build after 5 minutes
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             GetTargetsFromBase = true,
             RequireTransport = false,
-            AggressiveMove = true,
+            AggressiveMove = false,
             LocationType = 'LocationType',
             Defensive = false,
             AttackEnemyStrength = 200,                              
@@ -1772,7 +1773,7 @@ BuilderGroup {
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
-            AggressiveMove = true,      
+            AggressiveMove = false,      
             AvoidClosestRadius = 10,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 

@@ -152,7 +152,7 @@ BuilderGroup {
     Builder {	
         BuilderName = 'RNGAI Factory Bomber T1 Response',	
         PlatoonTemplate = 'T1AirBomber',	
-        Priority = 850,	
+        Priority = 890,	
         BuilderConditions = {	
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
