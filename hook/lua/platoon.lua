@@ -2802,7 +2802,6 @@ Platoon = Class(RNGAIPlatoon) {
                             LOG(repr(MassMarkerTable))
                             for _, v in MassMarkerTable do
                                 RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
-                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
                                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
                                 aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
                                 local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative}
