@@ -86,7 +86,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 400 MexBuild',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 995,
         InstanceCount = 1,
         BuilderConditions = { 

@@ -212,10 +212,9 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
 end
 
-function FactorySpendRatioRNG(aiBrain,uType,ratio)
+function FactorySpendRatioRNG(aiBrain,uType)
     --LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
-    --LOG('Desire Ratio '..ratio)
-    if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < ratio then
+    if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < aiBrain.ProductionRatios[uType] then
         if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
             return true
         end

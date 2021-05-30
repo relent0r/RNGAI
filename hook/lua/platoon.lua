@@ -5093,7 +5093,7 @@ Platoon = Class(RNGAIPlatoon) {
         buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
 
         --LOG("*AI DEBUG: Setting up Callbacks for " .. eng.Sync.id)
-        self.SetupEngineerCallbacksRNG(eng)
+        --self.SetupEngineerCallbacksRNG(eng)
         local whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
         -- wait in case we're still on a base
         if not eng.Dead then
@@ -5103,7 +5103,10 @@ Platoon = Class(RNGAIPlatoon) {
                 count = count + 1
             end
         end
+        eng:SetCustomName('MexBuild Platoon Checking for expansion mex')
+        LOG('MexBuild Platoon Checking for expansion mex')
         while not aiBrain.expansionMex do WaitSeconds(2) end
+        eng:SetCustomName('MexBuild Platoon has found aiBrain.expansionMex')
         local markerTable=table.copy(aiBrain.expansionMex)
         if eng.Dead then self:PlatoonDisband() end
         while eng and not eng.Dead do
@@ -5119,7 +5122,11 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if not currentmexpos then self:PlatoonDisband() end
-            if not AIAttackUtils.GeneratePathNoThreatRNG(aiBrain, eng, currentmexpos, whatToBuild) then table.remove(markerTable,curindex) continue end
+            if not AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', eng:GetPosition(), currentmexpos) then 
+                table.remove(markerTable,curindex) 
+                eng:SetCustomName('MexBuild Platoon has no path to aiBrain.currentmexpos, removing and moving to next')
+                continue 
+            end
             local firstmex=currentmexpos
             local initialized=nil
             for _=0,3,1 do
@@ -5133,6 +5140,8 @@ Platoon = Class(RNGAIPlatoon) {
                     for _,massMarker in markers do
                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position)
                     AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
+                    eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
+                    LOG('MexBuild Platoon Checking for expansion mex')
                     aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
                     local newEntry = {whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position}
                     table.insert(eng.EngineerBuildQueue, newEntry)
@@ -5149,12 +5158,15 @@ Platoon = Class(RNGAIPlatoon) {
                     for _,v in eng.EngineerBuildQueue do
                         RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.Position)
                         AIUtils.EngineerTryRepair(aiBrain, eng, v[1], v.Position)
+                        eng:SetCustomName('MexBuild Platoon attempting to build in while loop')
+                        LOG('MexBuild Platoon Checking for expansion mex')
                         aiBrain:BuildStructure(eng, v[1],v[2],v[3])
                     end
                     initialized=true
                 end
                 WaitTicks(20)
             end
+            eng:SetCustomName('Reset EngineerBuildQueue')
             eng.EngineerBuildQueue={}
             IssueClearCommands({eng})
             WaitTicks(20)

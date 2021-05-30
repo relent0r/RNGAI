@@ -137,6 +137,11 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerPriorityTable = {}
+        self.ProductionRatios = {
+            Land = 0.6,
+            Air = 0.7,
+            Naval = 0.5,
+        }
         self.cmanager = {
             income = {
                 r  = {
@@ -784,6 +789,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
         self:ForkThread(self.HeavyEconomyRNG)
+        self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:CalculateMassMarkersRNG()
     end,
 
@@ -3067,10 +3073,12 @@ AIBrain = Class(RNGAIBrainClass) {
                                 and totalThreat > self.BrainIntel.SelfThreat.LandNow 
                                 and self.EnemyIntel.EnemyLandFireBaseDetected then
                                     self.EnemyIntel.ChokeFlag = true
+                                    self.ProductionRatios.Land = 0.3
                                     --LOG('ChokeFlag is true')
                                 else
                                     --LOG('ChokeFlag is false')
                                     self.EnemyIntel.ChokeFlag = false
+                                    self.ProductionRatios.Land = 0.6
                                 end
                             end
                         elseif (not path and reason) then
