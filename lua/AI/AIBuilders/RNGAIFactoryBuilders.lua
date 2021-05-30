@@ -52,7 +52,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.80, 0.80 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.80, 1.00 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
@@ -237,7 +237,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1200 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.9 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.FACTORY * categories.LAND}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.FACTORY * categories.AIR * categories.TECH1 }},
@@ -262,7 +262,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.3 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.3 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

@@ -982,7 +982,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
@@ -1128,7 +1128,7 @@ BuilderGroup {
             Defensive = false,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
-                categories.ENGINEER,
+                categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
             },
             PrioritizedCategories = {   

@@ -53,7 +53,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
     },
