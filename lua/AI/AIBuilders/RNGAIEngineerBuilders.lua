@@ -618,6 +618,7 @@ BuilderGroup {
             },
         BuilderData = {
             Location = 'LocationType',
+            ReclaimMax = 5,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
         BuilderType = 'Any',
@@ -636,6 +637,7 @@ BuilderGroup {
             },
         BuilderData = {
             Location = 'LocationType',
+            ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
         BuilderType = 'Any',
@@ -655,6 +657,7 @@ BuilderGroup {
             },
         BuilderData = {
             Location = 'LocationType',
+            ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
         },
         BuilderType = 'Any',

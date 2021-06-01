@@ -716,7 +716,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
 
         if mapSizeX < 1000 and mapSizeZ < 1000  then
-            self.UpgradeIssuedLimit = 2
+            self.UpgradeIssuedLimit = 1
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         else
             self.UpgradeIssuedLimit = 3
@@ -1523,7 +1523,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
                 upgradeSpec.MassLowTrigger = 0.80
-                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 1.1
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -2052,6 +2052,8 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('Setting UpgradeMode to Normal')
             self.UpgradeMode = 'Normal'
             self.UpgradeIssuedLimit = 2
+        elseif gameTime > 360 and self.UpgradeIssuedLimit == 1 then
+            self.UpgradeIssuedLimit = self.UpgradeIssuedLimit + 1
         end
         self.EnemyIntel.EnemyThreatLocations = {}
         
