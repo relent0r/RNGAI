@@ -5029,7 +5029,13 @@ Platoon = Class(RNGAIPlatoon) {
         local reclaimunit
         local distance
         local allIdle
+        local reclaimCount = 0
+        local reclaimMax = data.ReclaimMax or 1
         while aiBrain:PlatoonExists(self) do
+            if reclaimCount >= reclaimMax then
+                self:PlatoonDisband()
+                return
+            end
             unitPos = self:GetPlatoonPosition()
             reclaimunit = false
             distance = false
@@ -5048,6 +5054,7 @@ Platoon = Class(RNGAIPlatoon) {
                 counter = 0
                 -- Set ReclaimInProgress to prevent repairing (see RepairAI)
                 reclaimunit.ReclaimInProgress = true
+                reclaimCount = reclaimCount + 1
                 IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
                 repeat
                     WaitSeconds(2)
