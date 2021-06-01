@@ -748,7 +748,7 @@ BuilderGroup {
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
-            AvoidClosestRadius = 10,
+            AvoidClosestRadius = 5,
             UseFormation = 'AttackFormation',
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
@@ -878,7 +878,7 @@ BuilderGroup {
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
-            AvoidClosestRadius = 10,
+            AvoidClosestRadius = 5,
             UseFormation = 'AttackFormation',
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
@@ -1097,7 +1097,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
@@ -1774,7 +1774,7 @@ BuilderGroup {
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
-            AvoidClosestRadius = 10,
+            AvoidClosestRadius = 15,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 
                 categories.MASSEXTRACTION,
@@ -1813,7 +1813,7 @@ BuilderGroup {
             AvoidBases = false,
             AvoidBasesRadius = 150,
             AggressiveMove = true,      
-            AvoidClosestRadius = 10,
+            AvoidClosestRadius = 15,
             UseFormation = 'NoFormation',
             TargetSearchPriorities = { 
                 categories.MASSEXTRACTION,

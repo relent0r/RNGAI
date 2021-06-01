@@ -214,7 +214,8 @@ end
 
 function FactorySpendRatioRNG(aiBrain,uType)
     --LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
-    if aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m < aiBrain.ProductionRatios[uType] then
+    local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
+    if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
         if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
             return true
         end

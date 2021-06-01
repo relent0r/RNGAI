@@ -2786,7 +2786,7 @@ Platoon = Class(RNGAIPlatoon) {
                 -- cancel all commands, also the buildcommand for blocking mex to check for reclaim or capture
                 eng.PlatoonHandle:Stop()
                 -- check to see if we need to reclaim or capture...
-                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation)
+                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
                     -- check to see if we can repair
                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
@@ -2798,10 +2798,10 @@ Platoon = Class(RNGAIPlatoon) {
                     if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
                         local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassEng2(aiBrain, buildLocation, 30)
                         if MexQueueBuild then
-                            LOG('We can build on a mass marker within 30')
-                            LOG(repr(MassMarkerTable))
+                            --LOG('We can build on a mass marker within 30')
+                            --LOG(repr(MassMarkerTable))
                             for _, v in MassMarkerTable do
-                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position)
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position, 5)
                                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
                                 aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
                                 local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative}
@@ -2886,7 +2886,6 @@ Platoon = Class(RNGAIPlatoon) {
         local aiBrain = self:GetBrain()
         --LOG('Platoon ID is : '..self:GetPlatoonUniqueName())
         local platLoc = GetPlatoonPosition(self)
-
         if not PlatoonExists(aiBrain, self) or not platLoc then
             return
         end
@@ -2936,6 +2935,7 @@ Platoon = Class(RNGAIPlatoon) {
 
         AIAttackUtils.GetMostRestrictiveLayer(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
+        
         local platoonUnits = GetPlatoonUnits(self)
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -5137,7 +5137,7 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('Mass Marker'..repr(massMarker))
                     --LOG('Attempting second mass marker')
                     for _,massMarker in markers do
-                    RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position)
+                    RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                     AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
                     eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
                     LOG('MexBuild Platoon Checking for expansion mex')
@@ -5155,7 +5155,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if eng:IsUnitState("Moving") and not initialized and VDist3Sq(self:GetPlatoonPosition(),firstmex)<12*12 then
                     IssueClearCommands({eng})
                     for _,v in eng.EngineerBuildQueue do
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.Position)
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.Position, 5)
                         AIUtils.EngineerTryRepair(aiBrain, eng, v[1], v.Position)
                         eng:SetCustomName('MexBuild Platoon attempting to build in while loop')
                         LOG('MexBuild Platoon Checking for expansion mex')

@@ -302,15 +302,18 @@ function GetMOARadii(bool)
     return BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea
 end
 
-function EngineerTryReclaimCaptureArea(aiBrain, eng, pos)
+function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     if not pos then
         return false
+    end
+    if not pointRadius then
+        pointRadius = 15
     end
     local Reclaiming = false
     --Temporary for troubleshooting
     --local GetBlueprint = moho.entity_methods.GetBlueprint
     -- Check if enemy units are at location
-    local checkUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, 15, 'Enemy')
+    local checkUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, pointRadius, 'Enemy')
     -- reclaim units near our building place.
     if checkUnits and table.getn(checkUnits) > 0 then
         for num, unit in checkUnits do

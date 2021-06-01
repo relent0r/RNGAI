@@ -578,19 +578,19 @@ function ScalePlatoonSizeRNG(aiBrain, locationType, type, unitCategory)
     local currentTime = GetGameTimeSeconds()
     if type == 'LAND' then
         if currentTime < 240  then
-            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end
         elseif currentTime < 480 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 5, unitCategory) then
                 return true
             end
         elseif currentTime < 720 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 7, unitCategory) then
                 return true
             end
         elseif currentTime > 900 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 9, unitCategory) then
                 return true
             end
         else
@@ -664,11 +664,11 @@ function ScalePlatoonSizeRNG(aiBrain, locationType, type, unitCategory)
                 return true
             end
         elseif currentTime < 900 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
                 return true
             end
         elseif currentTime > 1200 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end
         elseif currentTime < 900 then

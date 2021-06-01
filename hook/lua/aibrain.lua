@@ -161,7 +161,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 eng = 0,
                 fact = 0,
                 silo = 0,
-                mex = 0,
+                mex = {
+                      T1 = 0,
+                      T2 = 0,
+                      T3 = 0
+                      },
             },
             storage = {
                 current = {
@@ -322,9 +326,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
+                            scout=15,
+                            interceptor=60,
+                            bomber=25,
                         },
                         T2 = {
                             bomber=70,
@@ -364,9 +368,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
+                            scout=15,
+                            interceptor=60,
+                            bomber=25,
                         },
                         T2 = {
                             fighter=85,
@@ -448,9 +452,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
+                            scout=15,
+                            interceptor=60,
+                            bomber=25,
                         },
                         T2 = {
                             bomber=75,
@@ -490,9 +494,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=11,
-                            interceptor=55,
-                            bomber=22,
+                            scout=15,
+                            interceptor=60,
+                            bomber=25,
                         },
                         T2 = {
                             bomber=75,
@@ -1729,6 +1733,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
                     LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
+                    if self.cmanager.categoryspend.mex.T1 then
+                        LOG('Mex Spend '..(self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3))
+                    end
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
