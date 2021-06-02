@@ -2632,7 +2632,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     massStateCaution = false
                 end
             end
-            WaitTicks(30)
+            WaitTicks(20)
         end
     end,
 
@@ -2856,7 +2856,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     powerStateCaution = false
                 end
             end
-            WaitTicks(30)
+            WaitTicks(20)
         end
     end,
 
@@ -2868,6 +2868,22 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         return false
     end,
+
+    FactoryEcoManagerRNG = function(self, priorityUnit, units, action, type)
+
+        while true do
+            if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
+                if GetGameTimeSeconds() < 240 then
+                    WaitTicks(50)
+                    continue
+                end
+                local massStateCaution = self:EcoManagerMassStateCheck()
+                local unitTypePaused = false
+                if massStateCaution then
+
+            end
+        end
+    end
     
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --LOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
@@ -2952,7 +2968,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if not v.UnitBeingBuilt then continue end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
-                if table.getn(units) == 1 then continue end
+                if table.getn(units) <= 2 then continue end
                 if v:IsPaused() then continue end
                 --LOG('pausing LAND')
                 v:SetPaused(true)
