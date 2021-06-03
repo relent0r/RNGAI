@@ -793,6 +793,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
         self:ForkThread(self.HeavyEconomyRNG)
+        self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:CalculateMassMarkersRNG()
     end,
@@ -2869,8 +2870,7 @@ AIBrain = Class(RNGAIBrainClass) {
         return false
     end,
 
-    FactoryEcoManagerRNG = function(self, priorityUnit, units, action, type)
-
+    FactoryEcoManagerRNG = function(self)
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
@@ -2879,11 +2879,89 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 local massStateCaution = self:EcoManagerMassStateCheck()
                 local unitTypePaused = false
-                if massStateCaution then
-
+                local factType = 'Land'
+                if massStateCaution and self.cmanager.categoryspend.fact[factType] > (self.cmanager.income.r.m * self.ProductionRatios[factType]) then
+                    local deficit = self.cmanager.categoryspend.fact[factType] - (self.cmanager.income.r.m * self.ProductionRatios[factType])
+                    LOG('Factory Deficit is '..deficit)
+                    if self.BuilderManagers then
+                        for k, v in self.BuilderManagers do
+                            if self.BuilderManagers[k].FactoryManager then
+                                if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                        if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                            if not f.Offline then
+                                                f.Offline = true
+                                                LOG('T1 Factory Taken offline')
+                                                deficit = deficit - 4
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
+                                            if not f.Offline then
+                                                f.Offline = true
+                                                LOG('T2 Factory Taken offline')
+                                                deficit = deficit - 7
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                            if not f.Offline then
+                                                f.Offline = true
+                                                LOG('T3 Factory Taken offline')
+                                                deficit = deficit - 16
+                                            end
+                                        end
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            if deficit <= 0 then
+                                break
+                            end
+                        end
+                    end
+                end
+                if self.cmanager.categoryspend.fact[factType] < (self.cmanager.income.r.m * self.ProductionRatios[factType]) then
+                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios[factType]) - self.cmanager.categoryspend.fact[factType]
+                    LOG('Factory Surplus is '..surplus)
+                    if self.BuilderManagers then
+                        for k, v in self.BuilderManagers do
+                            if self.BuilderManagers[k].FactoryManager then
+                                if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                        if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('T1 Factory put online')
+                                                surplus = surplus - 4
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('T2 Factory put online')
+                                                surplus = surplus - 7
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('T3 Factory put online')
+                                                surplus = surplus - 16
+                                            end
+                                        end
+                                        if surplus <= 0 then
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            if surplus <= 0 then
+                                break
+                            end
+                        end
+                    end
+                end
             end
+            WaitTicks(20)
         end
-    end
+    end,
     
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --LOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)

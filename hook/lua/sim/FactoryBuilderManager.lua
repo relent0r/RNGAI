@@ -112,7 +112,14 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         factory.DelayThread = true
         WaitTicks(math.random(20,50))
         factory.DelayThread = false
-        self:AssignBuildOrder(factory,bType)
+        if factory.Offline then
+            while factory.Offline and factory and (not factory.Dead) do
+                LOG('Factory is offline, wait inside delaybuildorder')
+                WaitTicks(50)
+            end
+        else
+            self:AssignBuildOrder(factory,bType)
+        end
     end,
 
     FactoryFinishBuilding = function(self,factory,finishedUnit)
