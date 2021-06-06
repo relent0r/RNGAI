@@ -5115,7 +5115,7 @@ Platoon = Class(RNGAIPlatoon) {
         eng:SetCustomName('MexBuild Platoon has found aiBrain.expansionMex')
         local markerTable=table.copy(aiBrain.expansionMex)
         if eng.Dead then self:PlatoonDisband() end
-        while eng and not eng.Dead do
+        while PlatoonExists(aiBrain, self) and eng and not eng.Dead do
             local platoonPos=self:GetPlatoonPosition()
             table.sort(markerTable,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist3Sq(aiBrain.emanager.enemy.Position,a.Position)/a.priority/a.priority<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist3Sq(aiBrain.emanager.enemy.Position,b.Position)/b.priority/b.priority end)
             local currentmexpos=nil

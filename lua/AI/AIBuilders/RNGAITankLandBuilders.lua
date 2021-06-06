@@ -1126,6 +1126,7 @@ BuilderGroup {
             AggressiveMove = false,
             LocationType = 'LocationType',
             Defensive = false,
+            PlatoonLimit = 5,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
                 categories.ENGINEER - categories.COMMAND,

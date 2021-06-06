@@ -212,11 +212,17 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
 end
 
-function FactorySpendRatioRNG(aiBrain,uType)
+function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
     --LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
-        if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
+        if aiBrain.ChokeFlag then 
+            if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
+                return true
+            end
+        elseif noStorageCheck then
+            return true
+        elseif (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
             return true
         end
     end

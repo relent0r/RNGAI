@@ -33,11 +33,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Tank',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 745,
+        Priority = 749,
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { EBC, 'FactorySpendRatioRNG', {'Land', true}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
@@ -51,11 +51,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Artillery',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 743,
+        Priority = 749,
         --PriorityFunction = LandMode,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { EBC, 'FactorySpendRatioRNG', {'Land', true}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
             --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},

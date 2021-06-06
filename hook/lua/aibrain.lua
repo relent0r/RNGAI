@@ -139,7 +139,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerPriorityTable = {}
         self.ProductionRatios = {
             Land = 0.6,
-            Air = 0.7,
+            Air = 0.5,
             Naval = 0.5,
         }
         self.cmanager = {
@@ -1734,6 +1734,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
                     LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
+                    LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
+                    LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
                     if self.cmanager.categoryspend.mex.T1 then
                         LOG('Mex Spend '..(self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3))
                     end
@@ -2698,7 +2700,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND , false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'ENERGY')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -2959,6 +2961,23 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
+            --debug
+            --[[
+            local factories = GetListOfUnits(self, categories.FACTORY * categories.LAND, false, true)
+            local offlineFactoryCount = 0
+            local onlineFactoryCount = 0
+            for k, v in factories do
+                if v and not v.Dead then
+                    if v.Offline then
+                        offlineFactoryCount = offlineFactoryCount + 1
+                    else
+                        onlineFactoryCount = onlineFactoryCount + 1
+                    end
+                end
+            end
+            LOG('Offline Factory Count '..offlineFactoryCount)
+            LOG('Online Factory Count '..onlineFactoryCount)]]
+
             WaitTicks(20)
         end
     end,
@@ -3264,7 +3283,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
 
         while not self.defeat do
-            LOG('heavy economy loop started')
+            --LOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
             WaitTicks(50)
         end
@@ -3272,7 +3291,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     HeavyEconomyForkRNG = function(self)
         local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
-        LOG('units grabbed')
+        --LOG('units grabbed')
         local factories = {Land={T1=0,T2=0,T3=0},Air={T1=0,T2=0,T3=0},Naval={T1=0,T2=0,T3=0}}
         local extractors = {T1=0,T2=0,T3=0}
         local fabs = {T2=0,T3=0}

@@ -117,6 +117,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 LOG('Factory is offline, wait inside delaybuildorder')
                 WaitTicks(50)
             end
+            self:AssignBuildOrder(factory,bType)
         else
             self:AssignBuildOrder(factory,bType)
         end
