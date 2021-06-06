@@ -99,9 +99,10 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 5},
+        InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.7 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},

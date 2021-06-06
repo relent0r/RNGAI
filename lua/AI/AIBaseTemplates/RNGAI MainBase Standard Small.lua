@@ -78,6 +78,7 @@ BaseBuilderTemplate {
         'RNGAI ScoutAirBuilder',
         'RNGAI Air Builder T1',
         'RNGAI Air Builder T2',
+        'RNGAI Air Builder T3',
         'RNGAI Air Builder T1 Ratio',
         'RNGAI Air Builder T2 Ratio',
         'RNGAI Air Builder T3 Ratio',
@@ -130,8 +131,8 @@ BaseBuilderTemplate {
             SCU = 6,
         },
         FactoryCount = {
-            Land = 15,
-            Air = 5,
+            Land = 18,
+            Air = 6,
             Sea = 1,
             Gate = 1,
         },

@@ -135,7 +135,7 @@ BuilderGroup {
             TechLevel = 2
         },
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T2 Torperdo Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
         Priority = 747,
@@ -151,7 +151,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T2 Mercy',
         PlatoonTemplate = 'T2AirMissile',
@@ -242,7 +242,7 @@ BuilderGroup {
             TechLevel = 3
         },
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T3 Torp Bomber',
         PlatoonTemplate = 'T3TorpedoBomber',
         Priority = 751,
@@ -258,7 +258,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Transport',
         PlatoonTemplate = 'T3AirTransport',

@@ -58,6 +58,17 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAIR Factory Engineer T1 Excess Mass',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 775,
+        BuilderConditions = {
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.0}},
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T2 Power',
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 776,
@@ -970,7 +981,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 10.0 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'Land',
     },

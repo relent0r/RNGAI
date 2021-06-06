@@ -304,7 +304,7 @@ BuilderGroup {
             TechLevel = 3
         },
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T3 Air Queue',
         PlatoonTemplate = 'RNGAIT3AirQueue',
         Priority = 850,
@@ -335,7 +335,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
 }
 
 BuilderGroup {
