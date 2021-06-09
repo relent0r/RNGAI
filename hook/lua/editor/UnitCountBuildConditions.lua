@@ -20,6 +20,15 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
+local FactionIndexToCategory = {[1] = categories.UEF, [2] = categories.AEON, [3] = categories.CYBRAN, [4] = categories.SERAPHIM, [5] = categories.NOMADS, [6] = categories.ARM, [7] = categories.CORE }
+function CanBuildCategoryRNG(aiBrain,category)
+    -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
+    local FactionCat = FactionIndexToCategory[aiBrain:GetFactionIndex()] or categories.ALLUNITS
+    local numBuildableUnits = table.getn(EntityCategoryGetUnitList(category * FactionCat)) or -1
+    --LOG('* CanBuildCategory: FactionIndex: ('..repr(aiBrain:GetFactionIndex())..') numBuildableUnits:'..numBuildableUnits..' - '..repr( EntityCategoryGetUnitList(category * FactionCat) ))
+    return numBuildableUnits > 0
+end
+
 -- ##############################################################################################################
 -- # function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
 -- #
@@ -813,7 +822,7 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
         --LOG('Less than 1 unit of type '..unit)
         return true
-    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100) < aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] then
+    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier]) < (aiBrain.amanager.Ratios[factionIndex][uType][tier][unit]/aiBrain.amanager.Ratios[factionIndex][uType][tier].total) then
         --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
         return true
     end

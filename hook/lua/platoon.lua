@@ -2544,6 +2544,32 @@ Platoon = Class(RNGAIPlatoon) {
                                                         cons.ThreatMax, cons.ThreatRings)
             buildFunction = AIBuildStructures.AIBuildAdjacency
             table.insert(baseTmplList, baseTmpl)
+        elseif cons.AdjacencyPriority then
+            relative = false
+            local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
+            local cats = {}
+            LOG('setting up adjacencypriority... cats are '..repr(cons.AdjacencyPriority))
+            for _,v in cons.AdjacencyPriority do
+                table.insert(cats,v)
+            end
+            reference={}
+            if not pos or not pos then
+                WaitTicks(1)
+                self:PlatoonDisband()
+                return
+            end
+            for i,cat in cats do
+                -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
+                if type(cat) == 'string' then
+                    cat = ParseEntityCategory(cat)
+                end
+                local radius = (cons.AdjacencyDistance or 50)
+                local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cat, pos, radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
+                table.insert(reference,refunits)
+                LOG('cat '..i..' had '..repr(table.getn(refunits))..' units')
+            end
+            buildFunction = AIBuildStructures.AIBuildAdjacencyPriorityRNG
+            table.insert(baseTmplList, baseTmpl)
         else
             table.insert(baseTmplList, baseTmpl)
             relative = true
@@ -4941,6 +4967,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     --LOG('Engineer Assist issuing guard')
                                     IssueGuard({eng}, eng.UnitBeingAssist)
                                     eng:SetCustomName('Ive been ordered to guard')
+                                    WaitTicks(1)
                                     --LOG('For assist wait thread for engineer')
                                     self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
                                 end
@@ -4954,7 +4981,8 @@ Platoon = Class(RNGAIPlatoon) {
             WaitTicks(50)
             if aiBrain.EngineerAssistManagerBuildPower <= 0 then
                 LOG('No Engineers in platoon, disbanding')
-                self:PlatoonDisbandNoAssign()
+                WaitTicks(5)
+                self:PlatoonDisband()
                 return
             end
         end
@@ -4964,6 +4992,7 @@ Platoon = Class(RNGAIPlatoon) {
         WaitTicks(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
             eng:SetCustomName('I am assisting')
+            WaitTicks(1)
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                 eng:SetCustomName('assist function break due to no UnitBeingAssist')
                 eng.UnitBeingAssist = nil
@@ -5128,7 +5157,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if not currentmexpos then self:PlatoonDisband() end
-            if not AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', eng:GetPosition(), currentmexpos) then 
+            if not AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild) then
                 table.remove(markerTable,curindex) 
                 eng:SetCustomName('MexBuild Platoon has no path to aiBrain.currentmexpos, removing and moving to next')
                 continue 

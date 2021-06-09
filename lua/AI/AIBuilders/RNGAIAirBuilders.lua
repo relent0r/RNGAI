@@ -181,7 +181,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
-    --[[Builder {
+    Builder {
         BuilderName = 'RNGAI Air Attack Queue T2',
         PlatoonTemplate = 'RNGAIT2AirQueue',
         Priority = 0,
@@ -196,7 +196,7 @@ BuilderGroup {
             TechLevel = 2
         },
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
         PlatoonTemplate = 'RNGAIFighterGroupT2',
         Priority = 0,
@@ -246,7 +246,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T2 Air Mercy',
         PlatoonTemplate = 'T2AirMissile',
@@ -259,7 +259,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
@@ -319,7 +319,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Air Attack Queue',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
@@ -335,7 +335,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },]]
+    },
 }
 
 BuilderGroup {

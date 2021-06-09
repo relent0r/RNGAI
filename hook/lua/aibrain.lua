@@ -308,20 +308,23 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=55,
                             arty=22,
                             aa=12,
+                            total=0
                         },
                         T2 = {
                             tank=55,
                             mml=5,
                             bot=20,
                             aa=10,
-                            shield=10
+                            shield=10,
+                            total=0
                         },
                         T3 = {
                             tank=30,
                             armoured=40,
                             mml=5,
                             arty=15,
-                            aa=10
+                            aa=10,
+                            total=0
                         }
                     },
                     Air = {
@@ -329,18 +332,21 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             interceptor=60,
                             bomber=25,
+                            total=0
                         },
                         T2 = {
                             bomber=70,
                             gunship=30,
-                            torpedo=0
+                            torpedo=0,
+                            total=0
                         },
                         T3 = {
                             scout=11,
                             asf=55,
                             bomber=15,
                             gunship=10,
-                            transport=5
+                            transport=5,
+                            total=0
                         }
                     },
                 },
@@ -351,19 +357,22 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=55,
                             arty=22,
                             aa=12,
+                            total=0
                         },
                         T2 = {
                             tank=55,
                             mml=5,
                             bot=20,
                             aa=10,
-                            shield=10
+                            shield=10,
+                            total=0
                         },
                         T3 = {
                             tank=45,
                             arty=15,
                             aa=10,
-                            sniper=30
+                            sniper=30,
+                            total=0
                         }
                     },
                     Air = {
@@ -371,19 +380,21 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             interceptor=60,
                             bomber=25,
+                            total=0
                         },
                         T2 = {
                             fighter=85,
                             gunship=15,
                             torpedo=0,
-                            mercy=0
+                            total=0
                         },
                         T3 = {
                             scout=11,
                             asf=55,
                             bomber=15,
-                            gunship=10,
-                            torpedo=5
+                            gunship=15,
+                            torpedo=0,
+                            total=0
                         }
                     },
                 },
@@ -394,6 +405,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=55,
                             arty=22,
                             aa=12,
+                            total=0
                         },
                         T2 = {
                             tank=55,
@@ -401,12 +413,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             bot=25,
                             aa=10,
                             stealth=5,
+                            total=0
                         },
                         T3 = {
                             tank=30,
                             armoured=40,
                             arty=15,
                             aa=10,
+                            total=0
                         }
                     },
                     Air = {
@@ -415,17 +429,20 @@ AIBrain = Class(RNGAIBrainClass) {
                             interceptor=55,
                             bomber=22,
                             gunship=12,
+                            total=0
                         },
                         T2 = {
                             bomber=85,
                             gunship=15,
-                            torpedo=0
+                            torpedo=0,
+                            total=0
                         },
                         T3 = {
                             scout=11,
                             asf=55,
                             bomber=15,
-                            gunship=10
+                            gunship=10,
+                            total=0
                         }
                     },
                 },
@@ -436,11 +453,13 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=55,
                             arty=22,
                             aa=12,
+                            total=0
                         },
                         T2 = {
                             tank=75,
                             mml=10,
                             aa=15,
+                            total=0
                         },
                         T3 = {
                             tank=45,
@@ -448,6 +467,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             aa=10,
                             sniper=30,
                             shield=5,
+                            total=0
                         }
                     },
                     Air = {
@@ -455,17 +475,20 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             interceptor=60,
                             bomber=25,
+                            total=0
                         },
                         T2 = {
                             bomber=75,
                             gunship=15,
-                            torpedo=0
+                            torpedo=0,
+                            total=0
                         },
                         T3 = {
                             scout=11,
                             asf=65,
                             bomber=15,
-                            torpedo=0
+                            torpedo=0,
+                            total=0
                         }
                     },
                 },
@@ -476,6 +499,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=55,
                             arty=22,
                             aa=12,
+                            total=0
                         },
                         T2 = {
                             tank=55,
@@ -483,6 +507,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             bot=20,
                             aa=10,
                             shield=10,
+                            total=0
                         },
                         T3 = {
                             tank=30,
@@ -490,6 +515,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             mml=5,
                             arty=15,
                             aa=10,
+                            total=0
                         }
                     },
                     Air = {
@@ -497,17 +523,20 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             interceptor=60,
                             bomber=25,
+                            total=0
                         },
                         T2 = {
                             bomber=75,
                             gunship=15,
-                            torpedo=0
+                            torpedo=0,
+                            total=0
                         },
                         T3 = {
                             scout=11,
                             asf=55,
                             bomber=15,
-                            gunship=10
+                            gunship=10,
+                            total=0
                         }
                     },
                 },
@@ -1729,16 +1758,23 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
                     LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..'Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
-                    LOG('Land Threat Self '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Land Threat Enemy '..self.EnemyIntel.EnemyThreatCurrent.Land)
                     LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
                     LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
                     LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
                     LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
                     LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
+                    LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+                    LOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                    LOG(' My Naval Sub Threat : '..self.BrainIntel.SelfThreat.NavalSubNow..' Enemy Naval Sub Threat : '..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
                     if self.cmanager.categoryspend.mex.T1 then
                         LOG('Mex Spend '..(self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3))
                     end
+                    local factionIndex = self:GetFactionIndex()
+                    LOG('Air Current Ratio T1 Fighter: '..(self.amanager.Current['Air']['T1']['interceptor'] / self.amanager.Total['Air']['T1']))
+                    LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
+                    LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
+                    LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -3291,6 +3327,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     HeavyEconomyForkRNG = function(self)
         local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
+        local factionIndex = self:GetFactionIndex()
         --LOG('units grabbed')
         local factories = {Land={T1=0,T2=0,T3=0},Air={T1=0,T2=0,T3=0},Naval={T1=0,T2=0,T3=0}}
         local extractors = {T1=0,T2=0,T3=0}
@@ -3312,6 +3349,15 @@ AIBrain = Class(RNGAIBrainClass) {
         local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
+        for _,z in self.amanager.Ratios[factionIndex] do
+            for _,c in z do
+                c.total=0
+                for i,v in c do
+                    if i=='total' then continue end
+                    c.total=c.total+v
+                end
+            end
+        end
 
         for _,unit in units do
             if unit.Dead then continue end
