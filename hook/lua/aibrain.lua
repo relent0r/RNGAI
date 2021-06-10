@@ -2918,48 +2918,128 @@ AIBrain = Class(RNGAIBrainClass) {
                 local massStateCaution = self:EcoManagerMassStateCheck()
                 local unitTypePaused = false
                 local factType = 'Land'
-                if massStateCaution and self.cmanager.categoryspend.fact[factType] > (self.cmanager.income.r.m * self.ProductionRatios[factType]) then
-                    local deficit = self.cmanager.categoryspend.fact[factType] - (self.cmanager.income.r.m * self.ProductionRatios[factType])
-                    LOG('Factory Deficit is '..deficit)
-                    if self.BuilderManagers then
-                        for k, v in self.BuilderManagers do
-                            if self.BuilderManagers[k].FactoryManager then
-                                if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
-                                            if not f.Offline then
-                                                f.Offline = true
-                                                LOG('T1 Factory Taken offline')
-                                                deficit = deficit - 4
+                if massStateCaution then
+                    if self.cmanager.categoryspend.fact['Land'] > (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
+                        local deficit = self.cmanager.categoryspend.fact['Land'] - (self.cmanager.income.r.m * self.ProductionRatios['Land'])
+                        LOG('Land Factory Deficit is '..deficit)
+                        if self.BuilderManagers then
+                            for k, v in self.BuilderManagers do
+                                if self.BuilderManagers[k].FactoryManager then
+                                    if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Land T1 Factory Taken offline')
+                                                    deficit = deficit - 4
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Land T2 Factory Taken offline')
+                                                    deficit = deficit - 7
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Land T3 Factory Taken offline')
+                                                    deficit = deficit - 16
+                                                end
                                             end
-                                        elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
-                                            if not f.Offline then
-                                                f.Offline = true
-                                                LOG('T2 Factory Taken offline')
-                                                deficit = deficit - 7
+                                            if deficit <= 0 then
+                                                break
                                             end
-                                        elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
-                                            if not f.Offline then
-                                                f.Offline = true
-                                                LOG('T3 Factory Taken offline')
-                                                deficit = deficit - 16
-                                            end
-                                        end
-                                        if deficit <= 0 then
-                                            break
                                         end
                                     end
                                 end
+                                if deficit <= 0 then
+                                    break
+                                end
                             end
-                            if deficit <= 0 then
-                                break
+                        end
+                    end
+                    if self.cmanager.categoryspend.fact['Air'] > (self.cmanager.income.r.m * self.ProductionRatios['Air']) then
+                        local deficit = self.cmanager.categoryspend.fact['Air'] - (self.cmanager.income.r.m * self.ProductionRatios['Air'])
+                        LOG('Air Factory Deficit is '..deficit)
+                        if self.BuilderManagers then
+                            for k, v in self.BuilderManagers do
+                                if self.BuilderManagers[k].FactoryManager then
+                                    if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Air T1 Factory Taken offline')
+                                                    deficit = deficit - 4
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Air T2 Factory Taken offline')
+                                                    deficit = deficit - 7
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Air T3 Factory Taken offline')
+                                                    deficit = deficit - 16
+                                                end
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                                if deficit <= 0 then
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    if self.cmanager.categoryspend.fact['Naval'] > (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
+                        local deficit = self.cmanager.categoryspend.fact['Naval'] - (self.cmanager.income.r.m * self.ProductionRatios['Naval'])
+                        LOG('Naval Factory Deficit is '..deficit)
+                        if self.BuilderManagers then
+                            for k, v in self.BuilderManagers do
+                                if self.BuilderManagers[k].FactoryManager then
+                                    if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Naval T1 Factory Taken offline')
+                                                    deficit = deficit - 4
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Naval T2 Factory Taken offline')
+                                                    deficit = deficit - 7
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
+                                                if not f.Offline then
+                                                    f.Offline = true
+                                                    LOG('Naval T3 Factory Taken offline')
+                                                    deficit = deficit - 16
+                                                end
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                                if deficit <= 0 then
+                                    break
+                                end
                             end
                         end
                     end
                 end
-                if self.cmanager.categoryspend.fact[factType] < (self.cmanager.income.r.m * self.ProductionRatios[factType]) then
-                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios[factType]) - self.cmanager.categoryspend.fact[factType]
-                    LOG('Factory Surplus is '..surplus)
+                if self.cmanager.categoryspend.fact['Land'] < (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
+                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Land']) - self.cmanager.categoryspend.fact['Land']
+                    LOG('Land Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
                             if self.BuilderManagers[k].FactoryManager then
@@ -2968,19 +3048,97 @@ AIBrain = Class(RNGAIBrainClass) {
                                         if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('T1 Factory put online')
+                                                LOG('Land T1 Factory put online')
                                                 surplus = surplus - 4
                                             end
                                         elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('T2 Factory put online')
+                                                LOG('Land T2 Factory put online')
                                                 surplus = surplus - 7
                                             end
                                         elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('T3 Factory put online')
+                                                LOG('Land T3 Factory put online')
+                                                surplus = surplus - 16
+                                            end
+                                        end
+                                        if surplus <= 0 then
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            if surplus <= 0 then
+                                break
+                            end
+                        end
+                    end
+                end
+                if self.cmanager.categoryspend.fact['Air'] < (self.cmanager.income.r.m * self.ProductionRatios['Air']) then
+                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Air']) - self.cmanager.categoryspend.fact['Air']
+                    LOG('Air Factory Surplus is '..surplus)
+                    if self.BuilderManagers then
+                        for k, v in self.BuilderManagers do
+                            if self.BuilderManagers[k].FactoryManager then
+                                if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                        if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('Air T1 Factory put online')
+                                                surplus = surplus - 4
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('Air T2 Factory put online')
+                                                surplus = surplus - 7
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('Air T3 Factory put online')
+                                                surplus = surplus - 16
+                                            end
+                                        end
+                                        if surplus <= 0 then
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            if surplus <= 0 then
+                                break
+                            end
+                        end
+                    end
+                end
+                if self.cmanager.categoryspend.fact['Naval'] < (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
+                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Naval']) - self.cmanager.categoryspend.fact['Naval']
+                    LOG('Naval Factory Surplus is '..surplus)
+                    if self.BuilderManagers then
+                        for k, v in self.BuilderManagers do
+                            if self.BuilderManagers[k].FactoryManager then
+                                if table.getn(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
+                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                        if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('Naval T1 Factory put online')
+                                                surplus = surplus - 4
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('Naval T2 Factory put online')
+                                                surplus = surplus - 7
+                                            end
+                                        elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
+                                            if f.Offline then
+                                                f.Offline = false
+                                                LOG('Naval T3 Factory put online')
                                                 surplus = surplus - 16
                                             end
                                         end

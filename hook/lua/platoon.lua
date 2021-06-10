@@ -3085,7 +3085,7 @@ Platoon = Class(RNGAIPlatoon) {
 
         --LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
-        if bestMarker.Position == nil and GetGameTimeSeconds() > 900 and self.MovementLayer ~= 'Water' then
+        if bestMarker.Position == nil and GetGameTimeSeconds() > 600 and self.MovementLayer ~= 'Water' then
             LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
             return self:SetAIPlanRNG('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
@@ -5186,7 +5186,13 @@ Platoon = Class(RNGAIPlatoon) {
                     break
                 end
             end
-            LOG('engineer command queue'..repr(eng:GetCommandQueue()))
+            local engQueue = eng:GetCommandQueue()
+            LOG('Eng Command Queue')
+            for _, v in engQueue do
+                for _, c in v do
+                    LOG(repr(c))
+                end
+            end
             while not eng.Dead and 0<table.getn(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
                 if eng:IsUnitState("Moving") and not initialized and VDist3Sq(self:GetPlatoonPosition(),firstmex)<12*12 then
                     IssueClearCommands({eng})
