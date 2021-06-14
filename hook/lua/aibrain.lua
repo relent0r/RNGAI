@@ -231,7 +231,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Naval = {
                     T1 = {
                         frigate=0,
-                        submarine=0,
+                        sub=0,
                         aa=0
                     },
                     T2 = {
@@ -291,8 +291,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     transport=0,
                 },
                 Naval = {
-                    scout=0,
-                    tank=0,
+                    frigate=0,
+                    sub=0,
                     sniper=0,
                     arty=0,
                     mml=0,
@@ -338,6 +338,27 @@ AIBrain = Class(RNGAIBrainClass) {
                             bomber=70,
                             gunship=30,
                             torpedo=0,
+                            total=0
+                        },
+                        T3 = {
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
                             total=0
                         },
                         T3 = {
@@ -397,6 +418,28 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         }
                     },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            aaboat= 0,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
+                            total=0
+                        }
+                    },
                 },
                 [3] = {
                     Land = {
@@ -442,6 +485,27 @@ AIBrain = Class(RNGAIBrainClass) {
                             asf=55,
                             bomber=15,
                             gunship=10,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
                             total=0
                         }
                     },
@@ -491,6 +555,27 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         }
                     },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
+                            total=0
+                        }
+                    },
                 },
                 [5] = {
                     Land = {
@@ -536,6 +621,27 @@ AIBrain = Class(RNGAIBrainClass) {
                             asf=55,
                             bomber=15,
                             gunship=10,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=15,
+                            sub=60,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
                             total=0
                         }
                     },
@@ -912,8 +1018,8 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
-        LOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
-        LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable '..self.BrainIntel.SelfThreat.MassMarkerBuildable)
+        --LOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
+        --LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable '..self.BrainIntel.SelfThreat.MassMarkerBuildable)
     end,
 
     BaseMonitorThreadRNG = function(self)
@@ -1744,7 +1850,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                if true then
+                --[[if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1775,7 +1881,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                end
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -2502,13 +2608,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         local massPriorityTable = {}
                         local priorityNum = 0
                         local priorityUnit = false
-                        LOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                        --LOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
                         if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > self.EnemyIntel.EnemyThreatCurrent.Land then
                             massPriorityTable = self.EcoManager.MassPriorityTable.Advantage
-                            LOG('Land threat advantage mass priority table')
+                            --LOG('Land threat advantage mass priority table')
                         else
                             massPriorityTable = self.EcoManager.MassPriorityTable.Disadvantage
-                            LOG('Land thread disadvantage mass priority table')
+                            --LOG('Land thread disadvantage mass priority table')
                         end
                         massCycle = massCycle + 1
                         for k, v in massPriorityTable do
@@ -2921,7 +3027,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if massStateCaution then
                     if self.cmanager.categoryspend.fact['Land'] > (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
                         local deficit = self.cmanager.categoryspend.fact['Land'] - (self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                        LOG('Land Factory Deficit is '..deficit)
+                        --LOG('Land Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
                                 if self.BuilderManagers[k].FactoryManager then
@@ -2930,19 +3036,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Land T1 Factory Taken offline')
+                                                    --LOG('Land T1 Factory Taken offline')
                                                     deficit = deficit - 4
                                                 end
                                             elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Land T2 Factory Taken offline')
+                                                    --LOG('Land T2 Factory Taken offline')
                                                     deficit = deficit - 7
                                                 end
                                             elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Land T3 Factory Taken offline')
+                                                    --LOG('Land T3 Factory Taken offline')
                                                     deficit = deficit - 16
                                                 end
                                             end
@@ -2960,7 +3066,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if self.cmanager.categoryspend.fact['Air'] > (self.cmanager.income.r.m * self.ProductionRatios['Air']) then
                         local deficit = self.cmanager.categoryspend.fact['Air'] - (self.cmanager.income.r.m * self.ProductionRatios['Air'])
-                        LOG('Air Factory Deficit is '..deficit)
+                        --LOG('Air Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
                                 if self.BuilderManagers[k].FactoryManager then
@@ -2969,19 +3075,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Air T1 Factory Taken offline')
+                                                    --LOG('Air T1 Factory Taken offline')
                                                     deficit = deficit - 4
                                                 end
                                             elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Air T2 Factory Taken offline')
+                                                    --LOG('Air T2 Factory Taken offline')
                                                     deficit = deficit - 7
                                                 end
                                             elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Air T3 Factory Taken offline')
+                                                    --LOG('Air T3 Factory Taken offline')
                                                     deficit = deficit - 16
                                                 end
                                             end
@@ -2999,7 +3105,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if self.cmanager.categoryspend.fact['Naval'] > (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
                         local deficit = self.cmanager.categoryspend.fact['Naval'] - (self.cmanager.income.r.m * self.ProductionRatios['Naval'])
-                        LOG('Naval Factory Deficit is '..deficit)
+                        --LOG('Naval Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
                                 if self.BuilderManagers[k].FactoryManager then
@@ -3008,19 +3114,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Naval T1 Factory Taken offline')
+                                                    --LOG('Naval T1 Factory Taken offline')
                                                     deficit = deficit - 4
                                                 end
                                             elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Naval T2 Factory Taken offline')
+                                                    --LOG('Naval T2 Factory Taken offline')
                                                     deficit = deficit - 7
                                                 end
                                             elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
-                                                    LOG('Naval T3 Factory Taken offline')
+                                                    --LOG('Naval T3 Factory Taken offline')
                                                     deficit = deficit - 16
                                                 end
                                             end
@@ -3039,7 +3145,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if self.cmanager.categoryspend.fact['Land'] < (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
                     local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Land']) - self.cmanager.categoryspend.fact['Land']
-                    LOG('Land Factory Surplus is '..surplus)
+                    --LOG('Land Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
                             if self.BuilderManagers[k].FactoryManager then
@@ -3048,19 +3154,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                         if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Land T1 Factory put online')
+                                                --LOG('Land T1 Factory put online')
                                                 surplus = surplus - 4
                                             end
                                         elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Land T2 Factory put online')
+                                                --LOG('Land T2 Factory put online')
                                                 surplus = surplus - 7
                                             end
                                         elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Land T3 Factory put online')
+                                                --LOG('Land T3 Factory put online')
                                                 surplus = surplus - 16
                                             end
                                         end
@@ -3078,7 +3184,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if self.cmanager.categoryspend.fact['Air'] < (self.cmanager.income.r.m * self.ProductionRatios['Air']) then
                     local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Air']) - self.cmanager.categoryspend.fact['Air']
-                    LOG('Air Factory Surplus is '..surplus)
+                    --LOG('Air Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
                             if self.BuilderManagers[k].FactoryManager then
@@ -3087,19 +3193,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                         if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Air T1 Factory put online')
+                                                --LOG('Air T1 Factory put online')
                                                 surplus = surplus - 4
                                             end
                                         elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Air T2 Factory put online')
+                                                --LOG('Air T2 Factory put online')
                                                 surplus = surplus - 7
                                             end
                                         elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Air T3 Factory put online')
+                                                --LOG('Air T3 Factory put online')
                                                 surplus = surplus - 16
                                             end
                                         end
@@ -3117,7 +3223,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if self.cmanager.categoryspend.fact['Naval'] < (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
                     local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Naval']) - self.cmanager.categoryspend.fact['Naval']
-                    LOG('Naval Factory Surplus is '..surplus)
+                    --LOG('Naval Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
                             if self.BuilderManagers[k].FactoryManager then
@@ -3126,19 +3232,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                         if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Naval T1 Factory put online')
+                                                --LOG('Naval T1 Factory put online')
                                                 surplus = surplus - 4
                                             end
                                         elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Naval T2 Factory put online')
+                                                --LOG('Naval T2 Factory put online')
                                                 surplus = surplus - 7
                                             end
                                         elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                             if f.Offline then
                                                 f.Offline = false
-                                                LOG('Naval T3 Factory put online')
+                                                --LOG('Naval T3 Factory put online')
                                                 surplus = surplus - 16
                                             end
                                         end
@@ -3429,7 +3535,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if self.EngineerAssistManagerBuildPower <= 15 and self.EngineerAssistManagerBuildPowerRequired <= 8 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
-                LOG('EngineerAssistManager is Active')
+                --LOG('EngineerAssistManager is Active')
                 self.EngineerAssistManagerActive = true
             else
                 if self.EngineerAssistManagerBuildPowerRequired > 0 then
@@ -3450,7 +3556,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if index ~= selfIndex then
                         if IsAlly(selfIndex, brain:GetArmyIndex()) then
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
-                                LOG('Transfer Energy to team mate')
+                                --LOG('Transfer Energy to team mate')
                                 local amount
                                 amount = GetEconomyStored( self, 'ENERGY') / 100 * 10
                                 GiveResource(self, 'ENERGY', amount)
@@ -3466,7 +3572,7 @@ AIBrain = Class(RNGAIBrainClass) {
     HeavyEconomyRNG = function(self)
 
         WaitTicks(Random(80,100))
-        LOG('Heavy Economy thread starting '..self.Nickname)
+        --LOG('Heavy Economy thread starting '..self.Nickname)
         -- This section is for debug
         --[[
         self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
@@ -3499,6 +3605,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
         local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0,torpedo=0,transport=0}
         local armyAirTiers={T1=0,T2=0,T3=0}
+        local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,mercy=0,transport=0},T3={battleship=0}}
+        local armyNavalType={frigate=0,sub=0,shard=0,destroyer=0,cruiser=0,subhunter=0,battleship=0}
+        local armyNavalTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
         local facspend = {Land=0,Air=0,Naval=0}
         local mexspend = {T1=0,T2=0,T3=0}
@@ -3719,6 +3828,53 @@ AIBrain = Class(RNGAIBrainClass) {
                         armyAirType.torpedo=armyAirType.torpedo+1
                     end
                 end
+            elseif EntityCategoryContains(categories.NAVAL,unit) then
+                if EntityCategoryContains(categories.TECH1,unit) then
+                    armyNavalTiers.T1=armyNavalTiers.T1+1
+                    if EntityCategoryContains(categories.FRIGATE,unit) then
+                        armyNaval.T1.frigate=armyNaval.T1.frigate+1
+                        armyNavalType.frigate=armyNavalType.frigate+1
+                    elseif EntityCategoryContains(categories.T1SUBMARINE,unit) then
+                        armyNaval.T1.sub=armyNaval.T1.sub+1
+                        armyNavalType.sub=armyNavalType.sub+1
+                    elseif EntityCategoryContains(categories.uas0102,unit) then
+                        armyNaval.T1.aa=armyNaval.T1.aa+1
+                        armyNavalType.aa=armyNavalType.aa+1
+                    end
+                elseif EntityCategoryContains(categories.TECH2,unit) then
+                    armyNavalTiers.T2=armyNavalTiers.T2+1
+                    if EntityCategoryContains(categories.DESTROYER,unit) then
+                        armyNaval.T2.destroyer=armyNaval.T2.destroyer+1
+                        armyNavalType.destroyer=armyNavalType.destroyer+1
+                    elseif EntityCategoryContains(categories.CRUISER,unit) then
+                        armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
+                        armyNavalType.cruiser=armyNavalType.cruiser+1
+                    elseif EntityCategoryContains(categories.T2SUBMARINE + categories.xes0102,unit) then
+                        armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
+                        armyNavalType.subhunter=armyNavalType.subhunter+1
+                    end
+                --[[elseif EntityCategoryContains(categories.TECH3,unit) then
+                    armyNavalTiers.T3=armyNavalTiers.T3+1
+                    if EntityCategoryContains(categories.SCOUT,unit) then
+                        armyNaval.T3.scout=armyNaval.T3.scout+1
+                        armyNavalType.scout=armyNavalType.scout+1
+                    elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
+                        armyNaval.T3.asf=armyNaval.T3.asf+1
+                        armyNavalType.asf=armyNavalType.asf+1
+                    elseif EntityCategoryContains(categories.BOMBER,unit) then
+                        armyNaval.T3.bomber=armyNaval.T3.bomber+1
+                        armyNavalType.bomber=armyNavalType.bomber+1
+                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                        armyNaval.T3.gunship=armyNaval.T3.gunship+1
+                        armyNavalType.gunship=armyNavalType.gunship+1
+                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        armyNaval.T3.transport=armyNaval.T3.transport+1
+                        armyNavalType.transport=armyNavalType.transport+1
+                    elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
+                        armyNaval.T3.torpedo=armyNaval.T3.torpedo+1
+                        armyNavalType.torpedo=armyNavalType.torpedo+1
+                    end]]
+                end
             elseif EntityCategoryContains(categories.SILO,unit) then
                 if EntityCategoryContains(categories.TECH2,unit) then
                     silo.T2=silo.T2+1
@@ -3751,6 +3907,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Current.Air=armyAir
         self.amanager.Total.Air=armyAirTiers
         self.amanager.Type.Air=armyAirType
+        self.amanager.Current.Naval=armyNaval
+        self.amanager.Total.Naval=armyNavalTiers
+        self.amanager.Type.Naval=armyNavalType
         self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
     end,
 

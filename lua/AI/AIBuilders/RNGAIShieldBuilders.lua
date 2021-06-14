@@ -72,7 +72,7 @@ BuilderGroup {
                 --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
-                    categories.STRATEGIC * categories.STRUCTURE,
+                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM,
                     categories.ENERGYPRODUCTION * categories.TECH3,
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
@@ -114,7 +114,7 @@ BuilderGroup {
                 --maxRadius = 35,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
-                    categories.STRATEGIC * categories.STRUCTURE,
+                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM,
                     categories.ENERGYPRODUCTION * categories.TECH3,
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,

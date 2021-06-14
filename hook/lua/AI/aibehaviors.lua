@@ -328,9 +328,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                         local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         --LOG('enemyCDR is '..enemyCdrThreat)
                         local friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
-                        LOG('friendlyThreat is'..friendlyThreat)
+                        --LOG('friendlyThreat is'..friendlyThreat)
                         if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.3)) then
-                            LOG('Enemy Threat too high')
+                            --LOG('Enemy Threat too high')
                             break
                         end
                     end
@@ -446,7 +446,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if continueFighting == true then
                 local acuIMAPThreat = aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land') + (aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') / 2)
-                LOG('acuIMAPThreat '..acuIMAPThreat)
+                --LOG('acuIMAPThreat '..acuIMAPThreat)
 
                 local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER ), cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
@@ -479,7 +479,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     --LOG('Enemy ACU is under HP limit we can draw')
                 elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
+                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end
             end

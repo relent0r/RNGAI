@@ -29,7 +29,7 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
             end 
             local mexDistance = VDist3( v.position, engPos )
             if mexDistance < distance and aiBrain:CanBuildStructureAt('ueb1103', v.position) then
-                LOG('mexDistance '..mexDistance)
+                --LOG('mexDistance '..mexDistance)
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})
             end
         end

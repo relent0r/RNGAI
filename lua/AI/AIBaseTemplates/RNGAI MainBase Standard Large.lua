@@ -26,6 +26,7 @@ BaseBuilderTemplate {
         'RNGAI Assist Builders',
         'RNGAI Energy Production Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
+        'RNGAI Assist Manager BuilderGroup',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
@@ -75,6 +76,9 @@ BaseBuilderTemplate {
         'RNGAI Air Builder T1',
         'RNGAI Air Builder T2',
         'RNGAI Air Builder T3',
+        'RNGAI Air Builder T1 Ratio',
+        'RNGAI Air Builder T2 Ratio',
+        'RNGAI Air Builder T3 Ratio',
 
         -- Air Unit Formers --
         'RNGAI Air Response Formers',

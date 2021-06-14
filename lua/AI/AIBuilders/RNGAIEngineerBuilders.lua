@@ -1131,7 +1131,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAIR Engineer Unfinished Structures',
         PlatoonTemplate = 'T1EngineerFinishRNG',
-        Priority = 650,
+        Priority = 750,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 8,
         BuilderConditions = {

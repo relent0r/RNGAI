@@ -2168,9 +2168,9 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
             continue
         end
         if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > maxDistance  then
-            LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
-            LOG('Max Distance'..maxDistance)
-            LOG('mass marker MaxDistance Reached, breaking loop')
+            --LOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
+            --LOG('Max Distance'..maxDistance)
+            --LOG('mass marker MaxDistance Reached, breaking loop')
             break
         end
         if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
@@ -2183,7 +2183,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
             table.insert(newList, v)
         end
     end
-    LOG('Return marker list has '..table.getn(newList)..' entries')
+    --LOG('Return marker list has '..table.getn(newList)..' entries')
     return newList
 end
 

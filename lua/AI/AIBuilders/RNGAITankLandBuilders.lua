@@ -204,9 +204,9 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.70, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 60, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -219,9 +219,9 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.70, 'LAND'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -249,7 +249,7 @@ BuilderGroup {
         Priority = 500, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -1186,7 +1186,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
-        Priority = 560,                                                          -- Priority. 1000 is normal.
+        Priority = 710,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 15,                                                      -- Number of platoons that will be formed.
@@ -1458,7 +1458,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
-        Priority = 560,                                                          -- Priority. 1000 is normal.
+        Priority = 710,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.

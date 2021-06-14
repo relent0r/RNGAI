@@ -114,7 +114,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
-                LOG('Factory is offline, wait inside delaybuildorder')
+                --LOG('Factory is offline, wait inside delaybuildorder')
                 WaitTicks(50)
             end
             self:AssignBuildOrder(factory,bType)

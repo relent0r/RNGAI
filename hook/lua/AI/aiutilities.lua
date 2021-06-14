@@ -68,11 +68,11 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
     end
     local bUsedTransports = false
     -- Increase check to 300 for transports
-    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 200 * 200
+    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250
     and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
         -- If we can't path to our destination, we need, rather than want, transports
         local needTransports = not result and reason ~= 'PathOK'
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 200 * 200 then
+        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250 then
             needTransports = true
         end
 
