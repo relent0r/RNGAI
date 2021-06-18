@@ -154,7 +154,7 @@ BuilderGroup {
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 500 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 210 } }, -- don't build after 6 minutes
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
             { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -979,7 +979,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Small',                          -- Template Name. 
+        PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
@@ -989,7 +989,9 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER } },
         },
         BuilderData = {
-            SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
+            UseFormation = 'None',
+            LocationType = 'LocationType',
+            --[[SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
             DistressRange = BaseMilitaryArea,
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
@@ -1013,7 +1015,7 @@ BuilderGroup {
                 categories.ALLUNITS - categories.AIR - categories.NAVAL,
             },
             UseFormation = 'None',
-            ThreatSupport = 1,
+            ThreatSupport = 1,]]
         },
     },
     Builder {
@@ -1101,6 +1103,23 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+        },
+        BuilderData = {
+            UseFormation = 'None',
+            LocationType = 'LocationType',
+            },
+    },
+
+    Builder {
+        BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
+        Priority = 690,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
@@ -1121,7 +1140,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
-            GetTargetsFromBase = true,
+            GetTargetsFromBase = false,
             RequireTransport = false,
             AggressiveMove = false,
             LocationType = 'LocationType',

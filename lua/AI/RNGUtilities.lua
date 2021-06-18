@@ -2317,8 +2317,8 @@ CountSoonMassSpotsRNG = function(aiBrain)
         end
     while aiBrain.Result ~= "defeat" do
         local markercache=table.copy(massmarkers)
-        local soonmexes={}
         for _=0,10 do
+            local soonmexes={}
             local unclaimedmexcount=0
             for i,v in markercache do
                 if not aiBrain:CanBuildStructureAt('ueb1103', v.position) then 
@@ -2336,4 +2336,118 @@ CountSoonMassSpotsRNG = function(aiBrain)
             WaitTicks(20)
         end
     end
+end
+
+function DisplayMarkerAdjacency(aiBrain)
+    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
+    aiBrain.RNGAreas={}
+    for k,marker in expansionMarkers do
+        local node=false
+        for i, v in STR_GetTokens(marker.type,' ') do
+            if v=='Node' then
+                node=true
+                break
+            end
+        end
+        if node and not marker.RNGArea then
+            aiBrain.RNGAreas[k]={}
+            InfectMarkersRNG(aiBrain,marker,k)
+        end
+    end
+    --LOG('RNGAreas:')
+    --for k,v in aiBrain.RNGAreas do
+    --    LOG(repr(k)..' has '..repr(table.getn(v))..' nodes')
+    --end
+end
+
+function InfectMarkersRNG(aiBrain,marker,graphname)
+    marker.RNGArea=graphname
+    table.insert(aiBrain.RNGAreas[graphname],marker)
+    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
+        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
+            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+        end
+    end
+end
+
+-- TruePlatoon Support functions
+
+GrabPosDangerRNG = function(aiBrain,pos,radius)
+    local function GetWeightedHealthRatio(unit)
+        if unit.MyShield then
+            return (unit.MyShield:GetHealth()+unit:GetHealth())/(unit.MyShield:GetMaxHealth()+unit:GetMaxHealth())
+        else
+            return unit:GetHealthPercent()
+        end
+    end
+    local brainThreats = {ally=0,enemy=0}
+    local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+    local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
+            end
+        end
+    end
+    return brainThreats
+end
+
+GrabPosEconRNG = function(aiBrain,pos,radius)
+    local brainThreats = {ally=0,enemy=0}
+    if not GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Ally') then return brainThreats end
+    local allyunits=GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Ally')
+    local enemyunits=GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.EconomyThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.EconomyThreatLevel
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            local index = v:GetAIBrain():GetArmyIndex()
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.EconomyThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.EconomyThreatLevel
+            end
+        end
+    end
+    return brainThreats
 end

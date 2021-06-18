@@ -30,11 +30,20 @@ BuilderGroup {
             DesiresAssist = true,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                AdjacencyPriority = {
+                    categories.FACTORY * categories.AIR,
+                    categories.RADAR * categories.STRUCTURE,
+                    categories.MASSEXTRACTION * categories.TECH1,
+                    categories.FACTORY * categories.LAND,
+                    categories.ENERGYSTORAGE,   
+                    categories.INDIRECTFIRE * categories.DEFENSE,
+                    categories.SHIELD * categories.STRUCTURE,
+                    categories.ENERGYPRODUCTION * categories.STRUCTURE,
+                },
                 AvoidCategory = categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
-                maxUnits = 3,
-                maxRadius = 5,
+                maxUnits = 1,
+                maxRadius = 2.5,
                 BuildStructures = {
                     'T1EnergyProduction',
                     'T1EnergyProduction'
@@ -61,8 +70,20 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
-                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                AdjacencyPriority = {
+                    categories.FACTORY * categories.AIR,
+                    categories.RADAR * categories.STRUCTURE,
+                    categories.MASSEXTRACTION * categories.TECH1,
+                    categories.FACTORY * categories.LAND,
+                    categories.ENERGYSTORAGE,   
+                    categories.INDIRECTFIRE * categories.DEFENSE,
+                    categories.SHIELD * categories.STRUCTURE,
+                    categories.ENERGYPRODUCTION * categories.STRUCTURE,
+                },
+                AvoidCategory = categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
+                maxUnits = 1,
+                maxRadius = 2.5,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
@@ -86,10 +107,20 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * (categories.LAND + categories.AIR),
+                AdjacencyPriority = {
+                    categories.FACTORY * categories.AIR,
+                    categories.RADAR * categories.STRUCTURE,
+                    categories.MASSEXTRACTION * categories.TECH1,
+                    categories.FACTORY * categories.LAND,
+                    categories.ENERGYSTORAGE,   
+                    categories.INDIRECTFIRE * categories.DEFENSE,
+                    categories.SHIELD * categories.STRUCTURE,
+                    categories.ENERGYPRODUCTION * categories.STRUCTURE,
+                },
+                AvoidCategory = categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
-                BuildClose = true,
-                LocationType = 'LocationType',
+                maxUnits = 1,
+                maxRadius = 2.5,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },

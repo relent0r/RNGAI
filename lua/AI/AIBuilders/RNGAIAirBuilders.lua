@@ -758,6 +758,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirTransport',
         Priority = 700,
         BuilderConditions = {
+            { MIBC, 'MapGreaterThan', { 256, 256 }},
             { MIBC, 'ArmyNeedsTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
@@ -783,6 +784,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2AirTransport',
         Priority = 700,
         BuilderConditions = {
+            { MIBC, 'MapGreaterThan', { 256, 256 }},
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },

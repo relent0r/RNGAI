@@ -930,6 +930,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.HeavyEconomyRNG)
         self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
+        self:ForkThread(RUtils.DisplayMarkerAdjacency)
         self:CalculateMassMarkersRNG()
     end,
 
@@ -2079,7 +2080,7 @@ AIBrain = Class(RNGAIBrainClass) {
             selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
             selfExtractorCount = selfExtractorCount + 1
             -- This bit is important. This is so that if the AI is given or captures any extractors it will start an upgrade thread and distress thread on them.
-            if not v.PlatoonHandle then
+            if (not v.Dead) and (not v.PlatoonHandle) then
                 --LOG('This extractor has no platoon handle')
                 if not self.StructurePool then
                     RUtils.CheckCustomPlatoons(self)

@@ -4,7 +4,7 @@ local LastCheckMassMarker = {}
 local MassMarker = {}
 local LastMassBOOL = false
 
-function CanBuildOnMassLessThanDistance(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
+--[[function CanBuildOnMassDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
@@ -13,11 +13,8 @@ function CanBuildOnMassLessThanDistance(aiBrain, locationType, distance, threatM
     local position = engineerManager.Location
     
     local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
-    if markerTable[1] and VDist3( markerTable[1], position ) < distance then
-        return true
-    end
-    return false
-end
+    return VDist2Sq( markerTable[1][1], markerTable[1][3], position[1], position[3] ) < distance * distance
+end]]
 
 function CanBuildOnMassEng2(aiBrain, engPos, distance)
     local MassMarker = {}

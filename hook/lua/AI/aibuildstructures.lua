@@ -1,5 +1,5 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibuildstructures.lua' )
-
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 RNGAddToBuildQueue = AddToBuildQueue
