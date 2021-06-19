@@ -1392,15 +1392,8 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --LOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             --LOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', location, startloc, 10)
-            --local path, reason = AIAttackUtils.CanGraphToRNG(location, startloc, 'Land')
-            
-            if reason then
-                --LOG('Path position is is '..reason)
-            end
-            WaitTicks(2)
-            if path then
-                --LOG('Path reason is '..reason)
+            if AIAttackUtils.CanGraphToRNG(startloc, location, 'Land') then
+                --LOG('Can graph to enemy location for spam base')
                 --LOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
                 validLocation = true
                 break
@@ -2321,7 +2314,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
             local soonmexes={}
             local unclaimedmexcount=0
             for i,v in markercache do
-                if not aiBrain:CanBuildStructureAt('ueb1103', v.position) then 
+                if not CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then 
                     table.remove(markercache,i) 
                     continue 
                 end
@@ -2450,4 +2443,38 @@ GrabPosEconRNG = function(aiBrain,pos,radius)
         end
     end
     return brainThreats
+end
+
+PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
+    -- we need to figure a way to make sure we arn't to close to an existing tagged reclaim area
+    if aiBrain.ReclaimEnabled then
+        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+        local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
+        local platoonPos = platoon:GetPosition()
+        if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) < (BaseDMZArea * BaseDMZArea) then
+            local valueTrigger = 200
+            local currentValue = 0
+            local x1 = platoonPos[1] - 20
+            local x2 = platoonPos[1] + 20
+            local z1 = platoonPos[3] - 20
+            local z2 = platoonPos[3] + 20
+            local rect = Rect(x1, z1, x2, z2)
+            local reclaimRect = {}
+            reclaimRect = GetReclaimablesInRect(rect)
+            if not platoonPos then
+                WaitTicks(1)
+                return
+            end
+            if reclaimRect and table.getn( reclaimRect ) > 0 then
+                for k,v in reclaimRect do
+                    if not IsProp(v) or self.BadReclaimables[v] then continue end
+                    currentValue = currentValue + v.MaxMassReclaim
+                    if currentValue > valueTrigger then
+                        --insert into table stuff
+                        --break
+                    end
+                end
+            end
+        end
+    end
 end

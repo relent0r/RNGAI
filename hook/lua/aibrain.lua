@@ -232,7 +232,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     T1 = {
                         frigate=0,
                         sub=0,
-                        aa=0
+                        shard=0
                     },
                     T2 = {
                         tank=0,
@@ -293,10 +293,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 Naval = {
                     frigate=0,
                     sub=0,
-                    sniper=0,
-                    arty=0,
-                    mml=0,
-                    aa=0,
+                    cruiser=0,
+                    destroyer=0,
+                    battleship=0,
+                    shard=0,
                     shield=0
                 },
             },
@@ -421,7 +421,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     Naval = {
                         T1 = {
                             frigate=70,
-                            aaboat= 0,
+                            shard= 0,
                             sub=30,
                             total=0
                         },
@@ -3839,8 +3839,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         armyNaval.T1.sub=armyNaval.T1.sub+1
                         armyNavalType.sub=armyNavalType.sub+1
                     elseif EntityCategoryContains(categories.uas0102,unit) then
-                        armyNaval.T1.aa=armyNaval.T1.aa+1
-                        armyNavalType.aa=armyNavalType.aa+1
+                        armyNaval.T1.shard=armyNaval.T1.shard+1
+                        armyNavalType.shard=armyNavalType.shard+1
                     end
                 elseif EntityCategoryContains(categories.TECH2,unit) then
                     armyNavalTiers.T2=armyNavalTiers.T2+1

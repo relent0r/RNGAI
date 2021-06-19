@@ -1,4 +1,4 @@
-
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local LastGetMassMarker = 0
 local LastCheckMassMarker = {}
 local MassMarker = {}
@@ -25,7 +25,7 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
                 continue
             end 
             local mexDistance = VDist3( v.position, engPos )
-            if mexDistance < distance and aiBrain:CanBuildStructureAt('ueb1103', v.position) then
+            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
                 --LOG('mexDistance '..mexDistance)
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})
             end
@@ -66,7 +66,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
                 break
             end
             --LOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
-            if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+            if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                 if threatCheck then
                     threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
                     if threat <= threatMin or threat >= threatMax then
@@ -116,7 +116,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
                 break
             end
             --LOG(_..'Checking marker with max maxDistance ['..maxDistance..'] minDistance ['..minDistance..'] . Actual marker has distance: ('..(v.Distance)..').')
-            if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+            if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                 if threatCheck then
                     threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
                     if threat <= threatMin or threat >= threatMax then

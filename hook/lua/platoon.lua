@@ -3361,7 +3361,7 @@ Platoon = Class(RNGAIPlatoon) {
         else
             -- no marker found, disband!
             --LOG('no marker found, disband MASSRAID')
-            return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+            return self:SetAIPlanRNG('TruePlatoonRNG')
         end
     end,
 
@@ -5463,13 +5463,13 @@ Platoon = Class(RNGAIPlatoon) {
                 targetPosition=target:GetPosition()
                 platoon.target=targetPosition
                 targetDist=VDist2(targetPosition[1],targetPosition[3],platoon.Pos[1],platoon.Pos[3])
-                if not AIAttackUtils.CanGraphTo(AIAttackUtils.GetMostRestrictiveLayer(platoon),targetPosition,'Land') then
+                if not AIAttackUtils.CanGraphToRNG(platoon.Pos,targetPosition,'Land') then
                     target=nil
                     platoon.target=nil
                     targetPosition=nil
                 end
             end
-            if not target and not targetacu or targetDist>platoon.MaxWeaponRange*1.5 or (not target and targetacuDist>platoon.MaxWeaponRange*2) or target and not AIAttackUtils.CanGraphTo(AIAttackUtils.GetMostRestrictiveLayer(platoon),targetPosition,'Land') then
+            if not target and not targetacu or targetDist>platoon.MaxWeaponRange*1.5 or (not target and targetacuDist>platoon.MaxWeaponRange*2) or target and not AIAttackUtils.CanGraphToRNG(platoon.Pos,targetPosition,'Land') then
                 if platoon.path and VDist3Sq(platoon.path[table.getn(platoon.path)],platoon.Pos)<platoon.MaxWeaponRange then
                     platoon.path=nil
                 end
@@ -5488,7 +5488,7 @@ Platoon = Class(RNGAIPlatoon) {
                             if GetSurfaceHeight(v.Position[1],v.Position[3])>GetTerrainHeight(v.Position[1],v.Position[3]) then
                                 continue
                             end
-                            if not AIAttackUtils.CanGraphTo(AIAttackUtils.GetMostRestrictiveLayer(platoon),v.Position,'Land') then
+                            if not AIAttackUtils.CanGraphToRNG(platoon.Pos,v.Position,'Land') then
                                 continue
                             end
                             if RUtils.GrabPosEconRNG(aiBrain,v.Position,50).ally>0 then
@@ -5552,7 +5552,7 @@ Platoon = Class(RNGAIPlatoon) {
                         if VDist2Sq(v.Position[1],v.Position[3],platoon.Pos[1],platoon.Pos[3])<150*150 then
                             continue
                         end
-                        if not AIAttackUtils.GetMostRestrictiveLayer(platoon) or not AIAttackUtils.CanGraphTo(AIAttackUtils.GetMostRestrictiveLayer(platoon),v.Position,'Land') then
+                        if not AIAttackUtils.GetMostRestrictiveLayer(platoon) or not AIAttackUtils.CanGraphToRNG(platoon.Pos,v.Position,'Land') then
                             continue
                         end
                         table.insert(raidlocs,v)
@@ -6128,7 +6128,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
             end
-            if platoon.dest and not AIAttackUtils.CanGraphTo(AIAttackUtils.GetMostRestrictiveLayer(platoon),platoon.dest,'Land') or platoon.path and GetTerrainHeight(platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3])<GetSurfaceHeight(platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3]) then
+            if platoon.dest and not AIAttackUtils.CanGraphToRNG(platoon.Pos,platoon.dest,'Land') or platoon.path and GetTerrainHeight(platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3])<GetSurfaceHeight(platoon.path[table.getn(platoon.path)][1],platoon.path[table.getn(platoon.path)][3]) then
                 platoon.navigating=false
                 platoon.path=nil
                 WaitTicks(20)

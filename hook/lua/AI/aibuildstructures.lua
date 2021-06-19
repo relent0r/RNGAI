@@ -1,5 +1,6 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibuildstructures.lua' )
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 RNGAddToBuildQueue = AddToBuildQueue
@@ -154,7 +155,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             relative = false
             for _,v in markerTable do
                 if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance and VDist3( v.Position, relativeTo ) >= constructionData.MinDistance then
-                    if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+                    if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                         --LOG('MassPoint found for engineer')
                         location = table.copy(markerTable[Random(1,table.getn(markerTable))])
                         location = {location.Position[1], location.Position[3], location.Position[2]}
@@ -274,7 +275,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                             if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
                                 --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
                                 --table.insert(template[1], testPos)
-                                if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
                                         AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
                                         return true
@@ -287,7 +288,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                             if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                                 --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
                                 --table.insert(template[1], testPos2)
-                                if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
                                         AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
                                         return true
@@ -305,7 +306,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                             if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
                                 --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
                                 --table.insert(template[1], testPos)
-                                if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
                                         AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
                                         return true
@@ -318,7 +319,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                             if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                                 --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
                                 --table.insert(template[1], testPos2)
-                                if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
                                         AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
                                         return true

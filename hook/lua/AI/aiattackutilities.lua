@@ -377,17 +377,100 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
     return false
 end
 
+function GetPathGraphsRNG()
+    if ScenarioInfo.PathGraphsRNG then
+        return ScenarioInfo.PathGraphsRNG
+    else
+        ScenarioInfo.PathGraphsRNG = {}
+    end
+
+    local markerGroups = {
+        Land = AIUtils.AIGetMarkerLocationsEx(nil, 'Land Path Node') or {},
+        Water = AIUtils.AIGetMarkerLocationsEx(nil, 'Water Path Node') or {},
+        Air = AIUtils.AIGetMarkerLocationsEx(nil, 'Air Path Node') or {},
+        Amphibious = AIUtils.AIGetMarkerLocationsEx(nil, 'Amphibious Path Node') or {},
+    }
+
+    for gk, markerGroup in markerGroups do
+        for mk, marker in markerGroup do
+            --Create stuff if it doesn't exist
+            ScenarioInfo.PathGraphsRNG[gk] = ScenarioInfo.PathGraphsRNG[gk] or {}
+            ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
+            -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
+            if not (marker.adjacentTo) then
+                LOG('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
+                continue
+            end
+            --Add the marker to the graph.
+            ScenarioInfo.PathGraphsRNG[gk][marker.graph][marker.name] = {name = marker.name, layer = gk, graphName = marker.graph, position = marker.position, RNGArea = marker.RNGArea, adjacent = STR_GetTokens(marker.adjacentTo, ' '), color = marker.color}
+        end
+    end
+
+    return ScenarioInfo.PathGraphsRNG or {}
+end
+
+function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
+
+    local bestDist = radius*radius
+    local bestMarker = false
+
+    local graphTable =  GetPathGraphsRNG()[layer]
+
+    if graphTable then
+        for name, graph in graphTable do
+            for mn, markerInfo in graph do
+                local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
+
+                if dist2 < bestDist then
+                    bestDist = dist2
+                    bestMarker = markerInfo
+                end
+            end
+        end
+    end
+
+    return bestMarker
+end
+
+function GetClosestPathNodeInRadiusByGraphRNG(location, radius, graphName)
+    local bestDist = radius*radius
+    local bestMarker = false
+
+    for graphLayer, graphTable in GetPathGraphsRNG() do
+        for name, graph in graphTable do
+            if graphName == name then
+                for mn, markerInfo in graph do
+                    local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
+
+                    if dist2 < bestDist then
+                        bestDist = dist2
+                        bestMarker = markerInfo
+                    end
+                end
+            end
+        end
+    end
+
+    return bestMarker
+end
+
 function CanGraphToRNG(startPos, destPos, layer)
-    local startNode = GetClosestPathNodeInRadiusByLayer(startPos, 100, layer)
+    local startNode = GetClosestPathNodeInRadiusByLayerRNG(startPos, 100, layer)
     local endNode = false
 
     if startNode then
-        endNode = GetClosestPathNodeInRadiusByGraph(destPos, 100, startNode.graphName)
+        endNode = GetClosestPathNodeInRadiusByGraphRNG(destPos, 100, startNode.graphName)
     end
 
     if endNode then
-        return true, endNode.Position
+        if startNode.RNGArea == endNode.RNGArea then
+            --LOG('CanGraphToIsTrue for area '..startNode.RNGArea)
+            return true, endNode.Position
+        else
+            --LOG('CanGraphToIsFalse for start area '..startNode.RNGArea..' and end area of '..endNode.RNGArea)
+        end
     end
+    return false
 end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
