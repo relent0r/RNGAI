@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RNGSORT = table.sort
 
 
@@ -287,5 +288,17 @@ function MassPointRatioAvailable(aiBrain)
     if aiBrain.BrainIntel.SelfThreat.MassMarkerBuildable / (aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount) > 0 then
         return true
     end
+    return false
+end
+
+function ReclaimPlatoonsActive(aiBrain, numPlatoon)
+    --LOG('Number of reclaim platoons '..aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer'))
+    if aiBrain.ReclaimEnabled then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 and aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < numPlatoon then
+            --LOG('Less than 5 reclaim platoons')
+            return true
+        end
+    end
+    --LOG('More than 5 reclaim platoons')
     return false
 end

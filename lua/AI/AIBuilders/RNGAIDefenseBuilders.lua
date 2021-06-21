@@ -571,7 +571,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, 'DEFENSE'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -602,7 +602,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, 'DEFENSE'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -635,7 +635,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, 'DEFENSE'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -671,7 +671,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80, 'DEFENSE'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
         },
@@ -701,7 +701,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80, 'DEFENSE'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
