@@ -83,7 +83,7 @@ end
 
 function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistance, threatMin, threatMax, threatRings, threatType, maxNum )
     if LastGetMassMarker < GetGameTimeSeconds() then
-        LastGetMassMarker = GetGameTimeSeconds()+10
+        LastGetMassMarker = GetGameTimeSeconds()+5
         local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
         if not engineerManager then
             --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)

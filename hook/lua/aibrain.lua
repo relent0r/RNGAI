@@ -1871,7 +1871,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
                     LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
                     LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
-                    LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+                    LOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
+                    LOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+                    LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
                     LOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
                     LOG(' My Naval Sub Threat : '..self.BrainIntel.SelfThreat.NavalSubNow..' Enemy Naval Sub Threat : '..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
                     if self.cmanager.categoryspend.mex.T1 then
@@ -1896,6 +1898,29 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:TacticalThreatAnalysisRNG(ALLBPS)
             end
             self:CalculateMassMarkersRNG()
+            local enemyCount = 0
+            if self.EnemyIntel.EnemyCount > 0 then
+                enemyCount = self.EnemyIntel.EnemyCount
+            end
+            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) then
+                --LOG('Land Threat Higher, shift ratio to 0.5')
+                self.ProductionRatios.Land = 0.5
+            else
+                --LOG('Land Threat Lower, shift ratio to 0.6')
+                self.ProductionRatios.Land = 0.6
+            end
+            if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) then
+                --LOG('Air Threat Higher, shift ratio to 0.4')
+                self.ProductionRatios.Air = 0.4
+            else
+                --LOG('Air Threat lower, shift ratio to 0.5')
+                self.ProductionRatios.Air = 0.5
+            end
+            if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) then
+                self.ProductionRatios.Naval = 0.4
+            else
+                self.ProductionRatios.Naval = 0.5
+            end
             --LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
             --LOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
             --LOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)

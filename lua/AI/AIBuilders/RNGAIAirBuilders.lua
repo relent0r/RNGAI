@@ -379,7 +379,7 @@ BuilderGroup {
             SearchRadius = BaseMilitaryArea,
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
-            PlatoonLimit = 18,
+            PlatoonLimit = 5,
             PrioritizedCategories = {
                 categories.MOBILE * categories.EXPERIMENTAL,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,

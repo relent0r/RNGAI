@@ -674,7 +674,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.SUPPORTFACTORY}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 5, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 4, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanEconEfficiency', { 0.9, 2.0 }},
@@ -764,7 +764,6 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSecondsRNG', { 380 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'LessThanGameTimeSecondsRNG', { 900 } },
                 { EBC, 'LessThanEconStorageRatio', { 0.80, 2.0}},
             },
         BuilderData = {
@@ -790,7 +789,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 40
         },
         BuilderType = 'Any',
     },

@@ -66,6 +66,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local engPos = self:GetPosition()
         if not aiBrain.StartReclaimTaken then
+            --self:SetCustomName('StartReclaim Logic Start')
             --LOG('Reclaim Function - Starting reclaim is false')
             local sortedReclaimTable = {}
             if table.getn(aiBrain.StartReclaimTable) > 0 then
@@ -117,6 +118,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     WaitTicks(20)
                 end
             end
+            --self:SetCustomName('StartReclaim logic end')
         end
         local furtherestReclaim = nil
         local closestReclaim = nil
@@ -138,6 +140,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local reclaim = {}
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
         --LOG('* AI-RNG: Going through reclaim table')
+        --self:SetCustomName('Loop through reclaim table')
         if reclaimRect and table.getn( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
@@ -173,6 +176,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 end
             end
         else
+            --self:SetCustomName('No reclaim, increase 100 from '..initialRange)
             initialRange = initialRange + 100
             --LOG('* AI-RNG: initialRange is'..initialRange)
             if initialRange > 300 then
@@ -186,6 +190,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             continue
         end
         if closestDistance == 10000 then
+            --self:SetCustomName('closestDistance return 10000')
             initialRange = initialRange + 100
             --LOG('* AI-RNG: initialRange is'..initialRange)
             if initialRange > 200 then
@@ -207,10 +212,12 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('* AI-RNG: Attempting move to closest reclaim')
         --LOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
         if not closestReclaim then
+            --self:SetCustomName('no closestDistance')
             WaitTicks(2)
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
+            --self:SetCustomName('blocked reclaim')
             self.blocked = self.blocked + 1
             --LOG('* AI-RNG: Reclaim Blocked + 1 :'..self.blocked)
             if self.blocked > 3 then
@@ -227,29 +234,28 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
         --LOG('* AI-RNG: Attempting agressive move to furtherest reclaim')
         -- Clear Commands first
+        --self:SetCustomName('Aggressive move to reclaim')
         IssueClearCommands({self})
         IssueAggressiveMove({self}, furtherestReclaim)
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
+        local currentTime = 0
         local idleCount = 0
         while reclaiming do
             --LOG('* AI-RNG: Engineer is reclaiming')
-            WaitSeconds(max_time)
+            --self:SetCustomName('reclaim loop start')
+            WaitTicks(200)
+            currentTime = currentTime + 20
+            if currentTime > max_time then
+                reclaiming = false
+            end
             if self:IsIdleState() then
                 idleCount = idleCount + 1
-                if (max_time and (GetGameTick() - createTick)*10 > max_time) then
-                    --LOG('* AI-RNG: Engineer no longer reclaiming')
-                    reclaiming = false
-                end
                 if idleCount > 5 then
                     reclaiming = false
                 end
             end
-            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
-                self:SetPaused( true )
-                WaitTicks(50)
-                self:SetPaused( false )
-            end
+            --self:SetCustomName('reclaim loop end')
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
@@ -257,11 +263,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         IssueClearCommands({self})
         StartMoveDestination(self, location)
         WaitTicks(50)
+        --self:SetCustomName('moving back to base')
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
             --LOG('* AI-RNG: reclaimLopp = 5 returning')
             return
         end
+        --self:SetCustomName('end of reclaim function')
         WaitTicks(5)
     end
 end
