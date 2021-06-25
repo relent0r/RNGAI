@@ -80,27 +80,32 @@ function CommanderThreadRNG(cdr, platoon)
         end
 
         if not cdr.Dead then
+            --cdr:SetCustomName('CDREnhancementsRNG')
             CDREnhancementsRNG(aiBrain, cdr)
         end
         WaitTicks(2)
 
         if not cdr.Dead then 
+            --cdr:SetCustomName('CDROverChargeRNG')
             CDROverChargeRNG(aiBrain, cdr) 
         end
         WaitTicks(1)
 
         -- Go back to base
         if not cdr.Dead and aiBrain.ACUSupport.ReturnHome then 
+            --cdr:SetCustomName('CDRReturnHomeRNG')
             CDRReturnHomeRNG(aiBrain, cdr) 
         end
         WaitTicks(2)
         
         if not cdr.Dead then 
+            --cdr:SetCustomName('CDRUnitCompletion')
             CDRUnitCompletion(aiBrain, cdr) 
         end
         WaitTicks(2)
 
         if not cdr.Dead then
+            --cdr:SetCustomName('CDRHideBehaviorRNG')
             CDRHideBehaviorRNG(aiBrain, cdr)
         end
         WaitTicks(2)
@@ -112,6 +117,7 @@ function CommanderThreadRNG(cdr, platoon)
         and not cdr:IsUnitState("Upgrading") and not cdr:IsUnitState("Enhancing") 
         and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior and not cdr.Upgrading and not cdr.Combat then
             -- if we have nothing to build...
+            --cdr:SetCustomName('Look for thing to build')
             if not cdr.EngineerBuildQueue or table.getn(cdr.EngineerBuildQueue) == 0 then
                 -- check if the we have still a platton assigned to the CDR
                 if cdr.PlatoonHandle then
@@ -219,12 +225,13 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     elseif cdr:GetHealthPercent() > 0.8 and GetGameTimeSeconds() > 260 then
-        maxRadius = 130 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
+        maxRadius = 160 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
+    --LOG('CDR max range is '..maxRadius)
     
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
@@ -285,7 +292,8 @@ function CDROverChargeRNG(aiBrain, cdr)
             overCharging = false
             if counter >= 5 or not target or target.Dead or Utilities.XZDistanceTwoVectors(cdrPos, target:GetPosition()) > maxRadius then
                 counter = 0
-                searchRadius = 30
+                local searchRadius = 30
+                --cdr:SetCustomName('CDR searching for target')
                 repeat
                     searchRadius = searchRadius + 30
                     for k, v in priList do
@@ -313,6 +321,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
                 if target then
                     --LOG('Target Found')
+                    --cdr:SetCustomName('CDR target found')
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local cdrNewPos = {}
@@ -325,18 +334,20 @@ function CDROverChargeRNG(aiBrain, cdr)
                     if VDist2(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 45 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                         --LOG('enemyThreat is '..enemyThreat)
-                        enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
+                        local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         --LOG('enemyCDR is '..enemyCdrThreat)
-                        friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                        local friendlyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                         --LOG('friendlyThreat is'..friendlyThreat)
                         if (enemyThreat - enemyCdrThreat) >= (friendlyThreat + (cdrThreat / 1.3)) then
                             --LOG('Enemy Threat too high')
+                            --cdr:SetCustomName('target threat too high break logic')
                             break
                         end
                     end
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         --LOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
                         --LOG('Target is '..target.UnitId)
+                        --cdr:SetCustomName('CDR Overcharge logic')
                         overCharging = true
                         IssueClearCommands({cdr})
                         --LOG('* AI-RNG: Target Distance is '..targetDistance..' Weapong Range is '..weapon.Range)
@@ -369,6 +380,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         targetPos = target:GetPosition()
                         if target and not target.Dead and not target:BeenDestroyed() and ( VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < weapon.Range ) then
                             --LOG('Firing Overcharge')
+                            --cdr:SetCustomName('CDR fire overcharge')
                             IssueClearCommands({cdr})
                             IssueOverCharge({cdr}, target)
                         end
@@ -380,6 +392,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
                         --LOG('Target is '..target.UnitId)
+                        --cdr:SetCustomName('CDR standard pew pew logic')
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - weapon.Range})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (weapon.Range + 5) then
                             cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
@@ -404,13 +417,15 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if not target then
                         --LOG('No longer have target')
+                        --cdr:SetCustomName('CDR lost target')
                     end
 
                 elseif distressLoc then
                     --LOG('* AI-RNG: ACU Detected Distress Location')
+                    --cdr:SetCustomName('CDR distress location detected')
                     enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
-                    enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
-                    friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+                    local enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
+                    local friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
                     if enemyThreat - enemyCdrThreat >= friendlyThreat + (cdrThreat / 3) then
                         break
                     end
@@ -441,22 +456,20 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if GetNumUnitsAroundPoint(aiBrain, categories.LAND - categories.SCOUT, cdrPos, maxRadius, 'Enemy') <= 0
                 and (not distressLoc or Utilities.XZDistanceTwoVectors(distressLoc, cdrPos) > distressRange) then
+                    --cdr:SetCustomName('CDR no units visible, end combat')
                 continueFighting = false
             end
-            -- If com is down to yellow then dont keep fighting
-            if (cdr:GetHealthPercent() < 0.70) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
-                continueFighting = false
-                if not cdr.GunUpgradePresent then
-                    --LOG('ACU Low health and no gun upgrade, set required')
-                    cdr.GunUpgradeRequired = true
-                end
-            end
+
             if continueFighting == true then
+                --cdr:SetCustomName('CDR still good for combat, look for targets')
+                local acuIMAPThreat = aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land') + (aiBrain:GetThreatAtPosition(cdrPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') / 2)
+                --LOG('acuIMAPThreat '..acuIMAPThreat)
+
                 local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER ), cdr:GetPosition(), 70, 'Enemy')
                 local enemyUnitThreat = 0
                 local bp
                 for k,v in enemyUnits do
-                    if not v.Dead then
+                    if v and not v.Dead then
                         if EntityCategoryContains(categories.COMMAND, v) then
                             if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
                                 enemyUnitThreat = enemyUnitThreat + 25
@@ -482,14 +495,24 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
                 if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
                     --LOG('Enemy ACU is under HP limit we can draw')
-                elseif (enemyUnitThreat > acuThreatLimit) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
-                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat..' Unit ID is '..target.UnitId)
+                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                    --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
+                end
+            end
+            -- If com is down to yellow then dont keep fighting
+            if (cdr:GetHealthPercent() < 0.60) and Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 30 then
+                --cdr:SetCustomName('CDR health < 60%, retreat')
+                continueFighting = false
+                if not cdr.GunUpgradePresent then
+                    --LOG('ACU Low health and no gun upgrade, set required')
+                    cdr.GunUpgradeRequired = true
                 end
             end
             if (aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0) and (not cdr.GunUpgradePresent) and (GetGameTimeSeconds() < 1500) then
                 if CDRGunCheck(aiBrain, cdr) then
                     --LOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
+                    --cdr:SetCustomName('CDR retreat for gun upgrade')
                     cdr.GunUpgradeRequired = true
                     continueFighting = false
                 else
@@ -516,6 +539,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.BaseMonitor.CDRThreatLevel = 0
         --LOG('* AI-RNG: ACUSupport.Supported set to false')
     end
+    --cdr:SetCustomName('CDR end of overcharge function')
 end
 
 function CDRReturnHomeRNG(aiBrain, cdr)
@@ -684,11 +708,13 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     local unitList = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
     --LOG('Check for unit clump')
     for k, v in unitList do
-        local unitPos = v:GetPosition()
-        local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
-        if unitCount > 1 then
-            --LOG('Multiple Units found')
-            return true, v
+        if v and not v.Dead then
+            local unitPos = v:GetPosition()
+            local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+            if unitCount > 1 then
+                --LOG('Multiple Units found')
+                return true, v
+            end
         end
     end
     return false
@@ -832,7 +858,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     --LOG('Eco timeout for Tech '..unitTech..' Extractor is '..ecoTimeOut)
     --LOG('* AI-RNG: Initial Variables set')
     while initial_delay < (upgradeSpec.InitialDelay / multiplier) do
-		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 100 and unit:GetFractionComplete() == 1 then
+		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 900 and unit:GetFractionComplete() == 1 then
             initial_delay = initial_delay + 10
             unit.InitialDelay = true
             if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
@@ -882,7 +908,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-        if not unit.MAINBASE then
+        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco) then
             if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
                 --LOG('Too few tech2 extractors to go tech3')
                 ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
@@ -915,9 +941,9 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('* AI-RNG: energyIncome'..energyIncome)
             energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
             --LOG('* AI-RNG: energyRequested'..energyRequested)
-            massTrend = GetEconomyTrend(aiBrain, 'MASS')
+            massTrend = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime
             --LOG('* AI-RNG: massTrend'..massTrend)
-            energyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+            energyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
             --LOG('* AI-RNG: energyTrend'..energyTrend)
             --massEfficiency = math.min(massIncome / massRequested, 2)
             --LOG('* AI-RNG: massEfficiency'..massEfficiency)
@@ -953,11 +979,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 
                             upgradeIssued = true
                             IssueUpgrade({unit}, upgradeID)
-                            if bypasseco then
-                                --LOG('Upgrade Issued with bypass')
-                            else
-                                --LOG('Upgrade Issued without bypass')
-                            end
+
                             -- if upgrade issued and not completely full --
                             if massStorageRatio < 1 or energyStorageRatio < 1 then
                                 ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
@@ -970,7 +992,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                             end
 
                             repeat
-                               WaitTicks(50)
+                                WaitTicks(50)
                             until unit.Dead or (unit.UnitBeingBuilt:GetBlueprint().BlueprintId == upgradeID) -- Fix this!
                         end
 
@@ -1302,6 +1324,19 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         'RateOfFire'
     }
     cdr.Upgrading = true
+    if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
+        if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
+            --LOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
+            cdr.PlatoonHandle:PlatoonDisband(aiBrain)
+            
+        end
+        local plat = aiBrain:MakePlatoon('CDREnhancement', 'none')
+        --LOG('Set Platoon BuilderName')
+        plat.BuilderName = 'CDR Enhancement'
+        --LOG('Assign ACU to attack platoon')
+        aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
+    end
+    
     IssueStop({cdr})
     IssueClearCommands({cdr})
     
@@ -1404,7 +1439,7 @@ PlatoonRetreat = function (platoon)
                     if table.getn(v) > 3 then
                         local remotePlatoonPos = GetPlatoonPosition(v)
                         selfPlatoonPos = GetPlatoonPosition(platoon)
-                        local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[2], selfPlatoonPos[1], selfPlatoonPos[3])
+                        local platDistance = VDist2Sq(remotePlatoonPos[1], remotePlatoonPos[3], selfPlatoonPos[1], selfPlatoonPos[3])
                         --LOG('Remote Platoon distance is '..remotePlatoonDistance)
                         if platDistance < remotePlatoonDistance then
                             remotePlatoonDistance = platDistance

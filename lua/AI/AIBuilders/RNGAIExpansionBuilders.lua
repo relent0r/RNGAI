@@ -35,7 +35,7 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
         return 650
     else
         --LOG('NavalExpansionAdjust return 750')
-        return 750
+        return 850
     end
 end
 
@@ -53,7 +53,7 @@ BuilderGroup {
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -79,7 +79,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 250 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 700,
+        Priority = 750,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
@@ -110,7 +110,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Large Expansion Area 250 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 650,
+        Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
@@ -354,7 +354,7 @@ BuilderGroup {
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -387,7 +387,7 @@ BuilderGroup {
             { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheck', { 'LocationType' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {

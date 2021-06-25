@@ -154,3 +154,77 @@ function GreaterThanEconIncomeRNG(aiBrain, mIncome, eIncome)
     end
     return false
 end
+
+function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
+
+    # T1 Test
+    local testCat = categories.TECH1 * categories.FACTORY
+    local unitCount = aiBrain:GetCurrentUnits(testCat)
+    # Find units of this type being built or about to be built
+    unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt((categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.FACTORY)
+
+    local massTotal = unitCount * t1Drain
+
+    # T2 Test
+    testCat = categories.TECH2 * categories.FACTORY
+    unitCount = aiBrain:GetCurrentUnits(testCat)
+
+    massTotal = massTotal + (unitCount * t2Drain)
+
+    # T3 Test
+    testCat = categories.TECH3 * categories.FACTORY
+    unitCount = aiBrain:GetCurrentUnits(testCat)
+
+    massTotal = massTotal + (unitCount * t3Drain)
+
+    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, '>') then
+        --LOG('MassToFactoryRatio false')
+        --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        --LOG('Factory massTotal : '..massTotal)
+        return false
+    end
+    --LOG('MassToFactoryRatio true')
+    --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+    --LOG('Factory massTotal : '..massTotal)
+    return true
+end
+
+function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
+        return false
+    end
+
+    local t1
+    local t2
+    local t3
+    if aiBrain.CheatEnabled then
+        t1 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8) * tonumber(ScenarioInfo.Options.BuildMult)
+        t2 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20) * tonumber(ScenarioInfo.Options.BuildMult)
+        t3 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30) * tonumber(ScenarioInfo.Options.BuildMult)
+    else
+        t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
+        t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
+        t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+    end
+
+    return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
+end
+
+function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
+    --LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
+    local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
+    if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
+        if aiBrain.ChokeFlag and uType == 'Land' then 
+            if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
+                return true
+            end
+        elseif noStorageCheck then
+            return true
+        elseif (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
+            return true
+        end
+    end
+    return false
+end

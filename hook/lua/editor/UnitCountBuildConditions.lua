@@ -20,6 +20,15 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
+local FactionIndexToCategory = {[1] = categories.UEF, [2] = categories.AEON, [3] = categories.CYBRAN, [4] = categories.SERAPHIM, [5] = categories.NOMADS, [6] = categories.ARM, [7] = categories.CORE }
+function CanBuildCategoryRNG(aiBrain,category)
+    -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
+    local FactionCat = FactionIndexToCategory[aiBrain:GetFactionIndex()] or categories.ALLUNITS
+    local numBuildableUnits = table.getn(EntityCategoryGetUnitList(category * FactionCat)) or -1
+    --LOG('* CanBuildCategory: FactionIndex: ('..repr(aiBrain:GetFactionIndex())..') numBuildableUnits:'..numBuildableUnits..' - '..repr( EntityCategoryGetUnitList(category * FactionCat) ))
+    return numBuildableUnits > 0
+end
+
 -- ##############################################################################################################
 -- # function: HaveUnitsWithCategoryAndAlliance = BuildCondition	doc = "Please work function docs."
 -- #
@@ -578,19 +587,19 @@ function ScalePlatoonSizeRNG(aiBrain, locationType, type, unitCategory)
     local currentTime = GetGameTimeSeconds()
     if type == 'LAND' then
         if currentTime < 240  then
-            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end
         elseif currentTime < 480 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 4, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 5, unitCategory) then
                 return true
             end
         elseif currentTime < 720 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 6, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 7, unitCategory) then
                 return true
             end
         elseif currentTime > 900 then
-            if PoolGreaterAtLocation(aiBrain, locationType, 8, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 9, unitCategory) then
                 return true
             end
         else
@@ -664,11 +673,11 @@ function ScalePlatoonSizeRNG(aiBrain, locationType, type, unitCategory)
                 return true
             end
         elseif currentTime < 900 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 1, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
                 return true
             end
         elseif currentTime > 1200 and aiBrain.BrainIntel.AirAttackMode then
-            if PoolGreaterAtLocation(aiBrain, locationType, 2, unitCategory) then
+            if PoolGreaterAtLocation(aiBrain, locationType, 3, unitCategory) then
                 return true
             end
         elseif currentTime < 900 then
@@ -789,6 +798,37 @@ function EngineerAssistManagerNeedsEngineers(aiBrain)
     --LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
     --LOG('EngineerAssist condition is false')
     return false
+end
+
+function ArmyManagerBuild(aiBrain, uType, tier, unit)
+
+    --LOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
+    local factionIndex = aiBrain:GetFactionIndex()
+    if factionIndex > 4 then factionIndex = 5 end
+
+    if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
+        --LOG('Cant find unit '..unit..' in faction index ratio table') 
+        return false 
+    end
+    --[[if tier == 'T3' then
+        LOG('T3 query')
+        LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+        LOG('Ratio for '..unit)
+        LOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
+        LOG('Total '..aiBrain.amanager.Total[uType][tier])
+        LOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+    end]]
+    --LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+    if aiBrain.amanager.Current[uType][tier][unit] < 1 then
+        --LOG('Less than 1 unit of type '..unit)
+        return true
+    elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier]) < (aiBrain.amanager.Ratios[factionIndex][uType][tier][unit]/aiBrain.amanager.Ratios[factionIndex][uType][tier].total) then
+        --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
+        return true
+    end
+    --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
+    return false
+
 end
 
 --[[

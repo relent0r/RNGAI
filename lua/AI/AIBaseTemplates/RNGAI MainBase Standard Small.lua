@@ -57,6 +57,9 @@ BaseBuilderTemplate {
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land',
+        'RNGAI LandBuilder T1',
+        'RNGAI LandBuilder T2',
+        'RNGAI LandBuilder T3',
 
         -- Land Factory Formers --
         'RNGAI Land Upgrade Builders',
@@ -76,6 +79,9 @@ BaseBuilderTemplate {
         'RNGAI Air Builder T1',
         'RNGAI Air Builder T2',
         'RNGAI Air Builder T3',
+        'RNGAI Air Builder T1 Ratio',
+        'RNGAI Air Builder T2 Ratio',
+        'RNGAI Air Builder T3 Ratio',
         'RNGAI TransportFactoryBuilders Small',
 
         -- Air Unit Formers --
@@ -125,14 +131,14 @@ BaseBuilderTemplate {
             SCU = 6,
         },
         FactoryCount = {
-            Land = 15,
-            Air = 5,
+            Land = 18,
+            Air = 6,
             Sea = 1,
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 4,
-            T2Value = 11,
+            T1Value = 4.50,
+            T2Value = 12,
             T3Value = 19,
         },
 

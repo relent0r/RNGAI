@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RNGSORT = table.sort
 
 
@@ -201,12 +202,12 @@ function GreaterThanGameTimeRNG(aiBrain, num, caution)
     local time = GetGameTimeSeconds()
     local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
     if caution and aiBrain.UpgradeMode == 'Caution' then
-        if aiBrain.CheatEnabled and ((num / multiplier) * 1.3) < time then
+        if aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
             return true
         elseif num * 1.3 < time then
             return true
         end
-    elseif aiBrain.CheatEnabled and ((num / multiplier) * 1.2) < time then
+    elseif aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
         return true
     elseif num < time then
         return true
@@ -268,6 +269,7 @@ function ArmyNeedOrWantTransports(aiBrain)
     return false
 end
 
+-- Not in use
 function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
@@ -281,4 +283,22 @@ function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, thre
 
     return false
 end
-    
+
+function MassPointRatioAvailable(aiBrain)
+    if aiBrain.BrainIntel.SelfThreat.MassMarkerBuildable / (aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount) > 0 then
+        return true
+    end
+    return false
+end
+
+function ReclaimPlatoonsActive(aiBrain, numPlatoon)
+    --LOG('Number of reclaim platoons '..aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer'))
+    if aiBrain.ReclaimEnabled then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 and aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < numPlatoon then
+            --LOG('Less than 5 reclaim platoons')
+            return true
+        end
+    end
+    --LOG('More than 5 reclaim platoons')
+    return false
+end

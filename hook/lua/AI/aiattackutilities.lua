@@ -1,3 +1,5 @@
+WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aiattackutilities.lua' )
+
 --local GetDirectionInDegrees = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetDirectionInDegrees
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
@@ -375,17 +377,100 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
     return false
 end
 
+function GetPathGraphsRNG()
+    if ScenarioInfo.PathGraphsRNG then
+        return ScenarioInfo.PathGraphsRNG
+    else
+        ScenarioInfo.PathGraphsRNG = {}
+    end
+
+    local markerGroups = {
+        Land = AIUtils.AIGetMarkerLocationsEx(nil, 'Land Path Node') or {},
+        Water = AIUtils.AIGetMarkerLocationsEx(nil, 'Water Path Node') or {},
+        Air = AIUtils.AIGetMarkerLocationsEx(nil, 'Air Path Node') or {},
+        Amphibious = AIUtils.AIGetMarkerLocationsEx(nil, 'Amphibious Path Node') or {},
+    }
+
+    for gk, markerGroup in markerGroups do
+        for mk, marker in markerGroup do
+            --Create stuff if it doesn't exist
+            ScenarioInfo.PathGraphsRNG[gk] = ScenarioInfo.PathGraphsRNG[gk] or {}
+            ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
+            -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
+            if not (marker.adjacentTo) then
+                LOG('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
+                continue
+            end
+            --Add the marker to the graph.
+            ScenarioInfo.PathGraphsRNG[gk][marker.graph][marker.name] = {name = marker.name, layer = gk, graphName = marker.graph, position = marker.position, RNGArea = marker.RNGArea, adjacent = STR_GetTokens(marker.adjacentTo, ' '), color = marker.color}
+        end
+    end
+
+    return ScenarioInfo.PathGraphsRNG or {}
+end
+
+function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
+
+    local bestDist = radius*radius
+    local bestMarker = false
+
+    local graphTable =  GetPathGraphsRNG()[layer]
+
+    if graphTable then
+        for name, graph in graphTable do
+            for mn, markerInfo in graph do
+                local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
+
+                if dist2 < bestDist then
+                    bestDist = dist2
+                    bestMarker = markerInfo
+                end
+            end
+        end
+    end
+
+    return bestMarker
+end
+
+function GetClosestPathNodeInRadiusByGraphRNG(location, radius, graphName)
+    local bestDist = radius*radius
+    local bestMarker = false
+
+    for graphLayer, graphTable in GetPathGraphsRNG() do
+        for name, graph in graphTable do
+            if graphName == name then
+                for mn, markerInfo in graph do
+                    local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
+
+                    if dist2 < bestDist then
+                        bestDist = dist2
+                        bestMarker = markerInfo
+                    end
+                end
+            end
+        end
+    end
+
+    return bestMarker
+end
+
 function CanGraphToRNG(startPos, destPos, layer)
-    local startNode = GetClosestPathNodeInRadiusByLayer(startPos, 100, layer)
+    local startNode = GetClosestPathNodeInRadiusByLayerRNG(startPos, 100, layer)
     local endNode = false
 
     if startNode then
-        endNode = GetClosestPathNodeInRadiusByGraph(destPos, 100, startNode.graphName)
+        endNode = GetClosestPathNodeInRadiusByGraphRNG(destPos, 100, startNode.graphName)
     end
 
     if endNode then
-        return true, endNode.Position
+        if startNode.RNGArea == endNode.RNGArea then
+            --LOG('CanGraphToIsTrue for area '..startNode.RNGArea)
+            return true, endNode.Position
+        else
+            --LOG('CanGraphToIsFalse for start area '..startNode.RNGArea..' and end area of '..endNode.RNGArea)
+        end
     end
+    return false
 end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
@@ -398,7 +483,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
     local maxThreat = 200
     local airthreatMax = 20
 
-    # only get transports for land (or partial land) movement
+    -- only get transports for land (or partial land) movement
     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
 
         -- DUNCAN - commented out, why check it?
@@ -414,17 +499,17 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
         end
 
-        # if we don't *need* transports, then just call GetTransports...
+        -- if we don't *need* transports, then just call GetTransports...
         if not bRequired then
-            #  if it doesn't work, tell the aiBrain we want transports and bail
+            --  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransports(platoon) == false then
                 aiBrain.WantTransports = true
                 --LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
-            # we were told that transports are the only way to get where we want to go...
-            # ask for a transport every 10 seconds
+            -- we were told that transports are the only way to get where we want to go...
+            -- ask for a transport every 10 seconds
             local counter = 0
             local transportsNeeded = AIUtils.GetNumTransports(units)
             local numTransportsNeeded = math.ceil((transportsNeeded.Small + (transportsNeeded.Medium * 2) + (transportsNeeded.Large * 4)) / 10)
@@ -437,8 +522,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
             
             local bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransports(platoon)
-            while not bUsedTransports and counter < 9 do #DUNCAN - was 6
-                # if we have overflow, dump the overflow and just send what we can
+            while not bUsedTransports and counter < 9 do --DUNCAN - was 6
+                -- if we have overflow, dump the overflow and just send what we can
                 if not bUsedTransports and overflowSm+overflowMd+overflowLg > 0 then
                     local goodunits, overflow = AIUtils.SplitTransportOverflow(units, overflowSm, overflowMd, overflowLg)
                     local numOverflow = table.getn(overflow)
@@ -511,8 +596,8 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         local useGraph = 'Land'
         if not transportLocation then
-            # go directly to destination, do not pass go.  This move might kill you, fyi.
-            transportLocation = AIUtils.RandomLocation(destination[1],destination[3]) #Duncan - was platoon:GetPlatoonPosition()
+            -- go directly to destination, do not pass go.  This move might kill you, fyi.
+            transportLocation = AIUtils.RandomLocation(destination[1],destination[3]) --Duncan - was platoon:GetPlatoonPosition()
             useGraph = 'Air'
         end
 
@@ -557,20 +642,20 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             return false
         end
 
-        # then go to attack location
+        -- then go to attack location
         if not path then
-            # directly
+            -- directly
             if not bSkipLastMove then
                 platoon:AggressiveMoveToLocation(destination)
                 platoon.LastAttackDestination = {destination}
             end
         else
-            # or indirectly
-            # store path for future comparison
+            -- or indirectly
+            -- store path for future comparison
             platoon.LastAttackDestination = path
 
             local pathSize = table.getn(path)
-            #move to destination afterwards
+            --move to destination afterwards
             for wpidx,waypointPath in path do
                 if wpidx == pathSize then
                     if not bSkipLastMove then
@@ -587,6 +672,139 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
     end
     --LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
+end
+
+function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
+    local threatWeight = 0
+    -- Check if we have this path already cached.
+    if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then
+        -- Path is not older then 30 seconds. Is it a bad path? (the path is too dangerous)
+        if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path == 'bad' then
+            -- We can't move this way at the moment. Too dangerous.
+            return false
+        else
+            -- The cached path is newer then 30 seconds and not bad. Sounds good :) use it.
+            return aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path
+        end
+    end
+    -- loop over all path's and remove any path from the cache table that is older then 30 seconds
+    if aiBrain.PathCache then
+        local GameTime = GetGameTimeSeconds()
+        -- loop over all cached paths
+        for StartNodeName, CachedPaths in aiBrain.PathCache do
+            -- loop over all paths starting from StartNode
+            for EndNodeName, ThreatWeightedPaths in CachedPaths do
+                -- loop over every path from StartNode to EndNode stored by ThreatWeight
+                for ThreatWeight, PathNodes in ThreatWeightedPaths do
+                    -- check if the path is older then 30 seconds.
+                    if GameTime - 30 > PathNodes.settime then
+                        -- delete the old path from the cache.
+                        aiBrain.PathCache[StartNodeName][EndNodeName][ThreatWeight] = nil
+                    end
+                end
+            end
+        end
+    end
+    -- We don't have a path that is newer then 30 seconds. Let's generate a new one.
+    --Create path cache table. Paths are stored in this table and saved for 30 seconds, so
+    --any other platoons needing to travel the same route can get the path without any extra work.
+    aiBrain.PathCache = aiBrain.PathCache or {}
+    aiBrain.PathCache[startNode.name] = aiBrain.PathCache[startNode.name] or {}
+    aiBrain.PathCache[startNode.name][endNode.name] = aiBrain.PathCache[startNode.name][endNode.name] or {}
+    aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = {}
+    local fork = {}
+    -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
+    if startNode.name == endNode.name
+    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
+    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 50*50 then
+        -- store as path only our current destination.
+        fork.path = { { position = endPos } }
+        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
+        -- return the destination position as path
+        return fork
+    end
+    -- Set up local variables for our path search
+    local AlreadyChecked = {}
+    local curPath = {}
+    local lastNode = {}
+    local newNode = {}
+    local dist = 0
+    local lowestpathkey = 1
+    local lowestcost
+    local tableindex = 0
+    local mapSizeX = ScenarioInfo.size[1]
+    local mapSizeZ = ScenarioInfo.size[2]
+    -- Get all the waypoints that are from the same movementlayer than the start point.
+    local graph = GetPathGraphs()[startNode.layer][startNode.graphName]
+    -- For the beginning we store the startNode here as first path node.
+    local queue = {
+        {
+        cost = 0,
+        path = {startNode},
+        }
+    }
+    -- Now loop over all path's that are stored in queue. If we start, only the startNode is inside the queue
+    -- (We are using here the "A*(Star) search algorithm". An extension of "Edsger Dijkstra's" pathfinding algorithm used by "Shakey the Robot" in 1959)
+    while true do
+        -- remove the table (shortest path) from the queue table and store the removed table in curPath
+        -- (We remove the path from the queue here because if we don't find a adjacent marker and we
+        --  have not reached the destination, then we no longer need this path. It's a dead end.)
+        curPath = table.remove(queue,lowestpathkey)
+        if not curPath then break end
+        -- get the last node from the path, so we can check adjacent waypoints
+        lastNode = curPath.path[table.getn(curPath.path)]
+        -- Have we already checked this node for adjacenties ? then continue to the next node.
+        if not AlreadyChecked[lastNode] then
+            -- Check every node (marker) inside lastNode.adjacent
+            for i, adjacentNode in lastNode.adjacent do
+                -- get the node data from the graph table
+                newNode = graph[adjacentNode]
+                -- check, if we have found a node.
+                if newNode then
+                    -- copy the path from the startNode to the lastNode inside fork,
+                    -- so we can add a new marker at the end and make a new path with it
+                    fork = {
+                        cost = curPath.cost,            -- cost from the startNode to the lastNode
+                        path = {unpack(curPath.path)}, -- copy full path from starnode to the lastNode
+                    }
+                    -- get distance from new node to destination node
+                    dist = VDist2(newNode.position[1], newNode.position[3], endNode.position[1], endNode.position[3])
+                    -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
+                    dist = 100 * dist / ( mapSizeX + mapSizeZ )
+                    -- add as cost for the path the distance to the overall cost from the whole path
+                    fork.cost = fork.cost + dist
+                    -- add the newNode at the end of the path
+                    table.insert(fork.path, newNode)
+                    -- check if we have reached our destination
+                    if newNode.name == endNode.name then
+                        -- store the path inside the path cache
+                        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
+                        fork.pathLength = table.getn(fork.path)
+                        -- return the path
+                        return fork
+                    end
+                    -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
+                    table.insert(queue,fork)
+                end
+            end
+            -- Mark this node as checked
+            AlreadyChecked[lastNode] = true
+        end
+        -- Search for the shortest / safest path and store the table key in lowestpathkey
+        lowestcost = 100000000
+        lowestpathkey = 1
+        tableindex = 1
+        while queue[tableindex].cost do
+            if lowestcost > queue[tableindex].cost then
+                lowestcost = queue[tableindex].cost
+                lowestpathkey = tableindex
+            end
+            tableindex = tableindex + 1
+        end
+    end
+    -- At this point we have not found any path to the destination.
+    -- The path is to dangerous at the moment (or there is no path at all). We will check this again in 30 seconds.
+    return false
 end
 
 -- Sproutos work
@@ -743,7 +961,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 for iz, offsetZ in lookAroundTable do
                     local surf = GetSurfaceHeight(bestPos[1]+offsetX, bestPos[3]+offsetZ)
                     local terr = GetTerrainHeight(bestPos[1]+offsetX, bestPos[3]+offsetZ)
-                    # is it lower land... make it our new position to continue searching around
+                    -- is it lower land... make it our new position to continue searching around
                     if terr >= surf and terr < attackPosHeight then
                         bestPos[1] = bestPos[1] + offsetX
                         bestPos[3] = bestPos[3] + offsetZ
@@ -786,7 +1004,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                     --Couldn't find a valid pathing node. Just use shortest path.
                     platoon:AggressiveMoveToLocation(attackPos)
                 end
-                # force reevaluation
+                -- force reevaluation
                 platoon.LastAttackDestination = {attackPos}
             else
                 --LOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
