@@ -2486,3 +2486,95 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
         end
     end
 end
+
+function CalculateMassValue(expansionMarkers)
+    local MassMarker = {}
+    if not expansionMarkers then
+        WARN('No Expansion Markers Passed to calcuatemassvalue')
+    end
+    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                continue
+            end
+            table.insert(MassMarker, {Position = v.position})
+        end
+    end
+    for k, v in expansionMarkers do
+        local masscount = 0
+        for k2, v2 in MassMarker do
+            if VDist2Sq(v.Position[1], v.Position[3], v2.Position[1], v2.Position[3]) > 900 then
+                continue
+            end
+            masscount = masscount + 1
+        end        
+        -- insert mexcount into marker
+        v.MassPoints = masscount
+        --SPEW('* AI-RNG: CreateMassCount: Node: '..v.Type..' - MassSpotsInRange: '..v.MassPoints)
+    end
+    return expansionMarkers
+end
+
+function AIConfigureExpansionWatchTableRNG(aiBrain)
+    local markerList = {}
+    local armyStarts = {}
+    local expansionMarkers = ScenarioUtils.GetMarkers()
+    local massPointValidated = false
+    local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
+    --LOG('Run ExpansionWatchTable Config')
+
+    for i = 1, 16 do
+        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
+        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
+        if army and startPos then
+            table.insert(armyStarts, startPos)
+        end
+    end
+    --LOG(' Army Starts'..repr(armyStarts))
+
+    if expansionMarkers then
+        --LOG('Initial expansionMarker list is '..repr(markerList))
+        for k, v in expansionMarkers do
+            local startPosUsed = false
+            if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
+                for _, p in armyStarts do
+                    if p == v.position then
+                        --LOG('Position Taken '..repr(v)..' and '..repr(v.position))
+                        startPosUsed = true
+                        break
+                    end
+                end
+                if not startPosUsed then
+                    if v.MassSpotsInRange then
+                        massPointValidated = true
+                        table.insert(markerList, {Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                    else
+                        table.insert(markerList, {Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                    end
+                end
+            end
+        end
+    end
+    if not massPointValidated then
+        markerList = CalculateMassValue(markerList)
+    end
+    --LOG('Army Setup '..repr(ScenarioInfo.ArmySetup))
+    local startX, startZ = aiBrain:GetArmyStartPos()
+    table.sort(markerList,function(a,b) return VDist2(a.Position[1],a.Position[3],startX, startZ)>VDist2(b.Position[1],b.Position[3],startX, startZ) end)
+    aiBrain.BrainIntel.ExpansionWatchTable = markerList
+    LOG('ExpansionWatchTable is '..repr(markerList))
+end
+
+RenderBrainIntelRNG = function(aiBrain)
+
+    while aiBrain.Result ~= "defeat" do
+        for _,expansion in aiBrain.BrainIntel.ExpansionWatchTable do
+            if expansion.Position then
+                DrawCircle(expansion.Position,math.min(10,expansion.Commander/8),'FF9999FF')
+                DrawCircle(expansion.Position,math.min(10,expansion.Land/8),'FF99FF99')
+                DrawCircle(expansion.Position,math.min(10,expansion.Structures/8),'FF999999')
+            end
+        end
+        WaitTicks(2)
+    end
+end

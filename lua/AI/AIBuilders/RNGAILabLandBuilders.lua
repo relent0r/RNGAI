@@ -35,8 +35,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
         Priority = 1000,
         BuilderConditions = {  
-                { MIBC, 'LessThanGameTime', { 180 } },
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },      	
+                { MIBC, 'LessThanGameTime', { 280 } },
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },      	
             },
         BuilderData = {
             MarkerType = 'Mass',            
@@ -63,7 +63,7 @@ BuilderGroup {
                 categories.STRUCTURE,
             },
         },    
-        InstanceCount = 2,
+        InstanceCount = 4,
         BuilderType = 'Any',
     },
 }

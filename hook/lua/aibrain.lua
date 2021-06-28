@@ -799,6 +799,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.BrainIntel = {}
+        self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
             IMAPSize = 0,
@@ -832,6 +833,7 @@ AIBrain = Class(RNGAIBrainClass) {
             NavalSubNow = 0,
         }
         self.BrainIntel.ActiveExpansion = false
+        self.MassRaidTable = {}
         -- Structure Upgrade properties
         self.UpgradeIssued = 0
         
@@ -932,6 +934,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.DisplayMarkerAdjacency)
         self:CalculateMassMarkersRNG()
+        RUtils.AIConfigureExpansionWatchTableRNG(self)
+        self:ForkThread(self.ExpansionIntelScanRNG)
     end,
 
     EconomyMonitorRNG = function(self)
@@ -1187,9 +1191,9 @@ AIBrain = Class(RNGAIBrainClass) {
             aiBrain.InterestList.MustScout = {}
 
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
-            if aiBrain.EnemyIntel.EnemyThreatLocations then
-                for _, v in aiBrain.EnemyIntel.EnemyThreatLocations do
-                    -- Add any threat locations found in the must scout table
+            if aiBrain.BrainIntel.ExpansionWatchTable then
+                for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                    -- Add any expansion table locations to the must scout table
                     table.insert(aiBrain.InterestList.MustScout, 
                         {
                             Position = v.Position,
@@ -1851,7 +1855,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                --[[if true then
+                if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1884,7 +1888,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                end]]
+                    LOG('Mass Raid Table '..repr(self.MassRaidTable))
+                end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -3967,5 +3972,39 @@ AIBrain = Class(RNGAIBrainClass) {
         return count
     end,]]
 
-    
+    ExpansionIntelScanRNG = function(self)
+        LOG('Pre-Start ExpansionIntelScan')
+        WaitTicks(100)
+        if table.getn(self.BrainIntel.ExpansionWatchTable) == 0 then
+            LOG('ExpansionWatchTable not ready or is empty')
+            return
+        end
+        local threatTypes = {
+            'Land',
+            'Commander',
+            'Structures',
+        }
+        local rawThreat = 0
+        if ScenarioInfo.Options.AIDebugDisplay == 'displayOn' then
+            self:ForkThread(RUtils.RenderBrainIntelRNG)
+        end
+        LOG('Starting ExpansionIntelScan')
+        while self.Result ~= "defeat" do
+            for k, v in self.BrainIntel.ExpansionWatchTable do
+                if v.PlatoonAssigned.Dead then
+                    v.PlatoonAssigned = false
+                end
+                for _, t in threatTypes do
+                    rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
+                    if rawThreat > 0 then
+                        LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                    end
+                    self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
+                end
+            end
+            WaitTicks(50)
+            -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(self.BrainIntel.ExpansionWatchTable))
+        end
+    end,
+   
 }
