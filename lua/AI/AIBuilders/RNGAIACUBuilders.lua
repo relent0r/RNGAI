@@ -579,7 +579,13 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                RepeatBuild = false,
+                MexThreat = true,
+                Type = 'Mass',
                 MaxDistance = 30,
+                ThreatMin = -500,
+                ThreatMax = 20,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
