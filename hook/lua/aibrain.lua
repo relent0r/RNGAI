@@ -936,6 +936,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:CalculateMassMarkersRNG()
         RUtils.AIConfigureExpansionWatchTableRNG(self)
         self:ForkThread(self.ExpansionIntelScanRNG)
+        --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
 
     EconomyMonitorRNG = function(self)

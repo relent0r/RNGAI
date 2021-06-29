@@ -140,7 +140,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
 				return self:FactoryDestroyed(factory)
 			end
 		end
-        self.Brain:RemoveConsumption(self.LocationType, factory)
+        --self.Brain:RemoveConsumption(self.LocationType, factory)
         self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)
     end,
 
@@ -179,7 +179,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             end
         end
         self.LocationActive = false
-        self.Brain:RemoveConsumption(self.LocationType, factory)
+        --self.Brain:RemoveConsumption(self.LocationType, factory)
     end,
 
     BuilderParamCheckOld = function(self,builder,params)

@@ -1359,6 +1359,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         local order = { TaskName = "EnhanceTask", Enhancement = enhancement }
         IssueScript({cdr}, order)
     end
+    local enhancementPaused = false
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
         if cdr.Upgrading then
             --LOG('cdr.Upgrading is set to true')
@@ -1369,6 +1370,16 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             IssueClearCommands({cdr})
             cdr.Upgrading = false
             return false
+        end
+        if GetEconomyStoredRatio(aiBrain, 'ENERGY') < 0.2 and (not cdr.GunUpgradeRequired) then
+            if not enhancementPaused then
+                if cdr:IsUnitState('Enhancing') then
+                    cdr:SetPaused(true)
+                    paused=true
+                end
+            end
+        elseif enhancementPaused then
+            cdr:SetPaused(false)
         end
         coroutine.yield(10)
     end
@@ -2348,6 +2359,7 @@ GetStartingReclaim = function(aiBrain)
     local minRec = 70
     local reclaimTable = {}
     local reclaimScanArea = math.max(ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40) / 4
+    local reclaimTotal = 0
     --LOG('Reclaim Scan Area is '..reclaimScanArea)
     reclaimScanArea = math.max(50, reclaimScanArea)
     reclaimScanArea = math.min(120, reclaimScanArea)
@@ -2364,6 +2376,7 @@ GetStartingReclaim = function(aiBrain)
                 local rpos = v:GetCachePosition()
                 table.insert(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
                 --LOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
+                reclaimTotal = reclaimTotal + v.MaxMassReclaim
             end
         end
         --LOG('Sorting Reclaim table by distance ')

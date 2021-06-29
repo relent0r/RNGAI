@@ -975,7 +975,11 @@ Platoon = Class(RNGAIPlatoon) {
                 return vec
             end
             local function CheckRetreat(pos1,pos2,target)
-                local vel=target:GetVelocity()
+                local vel = {}
+                vel[1], vel[2], vel[3]=target:GetVelocity()
+                --LOG('vel is '..repr(vel))
+                --LOG(repr(pos1))
+                --LOG(repr(pos2))
                 local dotp=0
                 for i,k in pos2 do
                     if type(k)~='number' then continue end
@@ -1000,8 +1004,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
+                WaitTicks(20)
                 return
             else
+                WaitTicks(20)
                 return
             end
         end
