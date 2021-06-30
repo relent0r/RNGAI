@@ -4612,6 +4612,11 @@ Platoon = Class(RNGAIPlatoon) {
                             table.insert(readyTmlLaunchers, tml)
                         end
                     end
+                    if missileCount > 1 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStored(aiBrain, 'MASS') < 500 then
+                        tml:SetAutoMode(false)
+                    else
+                        tml:SetAutoMode(true)
+                    end
                 end
                 readyTmlLauncherCount = table.getn(readyTmlLaunchers)
                 --LOG('Ready TML Launchers is '..readyTmlLauncherCount)
