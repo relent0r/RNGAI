@@ -4596,11 +4596,17 @@ Platoon = Class(RNGAIPlatoon) {
                 local totalMissileCount = 0
                 local enemyTmdCount = 0
                 local enemyShieldHealth = 0
+                local ecoCaution = false 
                 readyTmlLaunchers = {}
                 WaitTicks(50)
                 platoonUnits = GetPlatoonUnits(self)
                 --LOG('Target Find cycle start')
                 --LOG('Number of units in platoon '..table.getn(platoonUnits))
+                if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStored(aiBrain, 'MASS') < 500 then
+                    ecoCaution = true
+                else
+                    ecoCaution = false
+                end
                 for k, tml in platoonUnits do
                     if not tml or tml.Dead or tml:BeenDestroyed() then
                         self:PlatoonDisbandNoAssign()
@@ -4612,7 +4618,7 @@ Platoon = Class(RNGAIPlatoon) {
                             table.insert(readyTmlLaunchers, tml)
                         end
                     end
-                    if missileCount > 1 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStored(aiBrain, 'MASS') < 500 then
+                    if missileCount > 1 and ecoCaution then
                         tml:SetAutoMode(false)
                     else
                         tml:SetAutoMode(true)
