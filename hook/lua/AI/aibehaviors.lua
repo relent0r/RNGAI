@@ -1375,7 +1375,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             if not enhancementPaused then
                 if cdr:IsUnitState('Enhancing') then
                     cdr:SetPaused(true)
-                    paused=true
+                    enhancementPaused=true
                 end
             end
         elseif enhancementPaused then

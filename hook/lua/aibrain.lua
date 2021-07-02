@@ -836,6 +836,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.MassRaidTable = {}
         -- Structure Upgrade properties
         self.UpgradeIssued = 0
+        self.EarlyQueueCompleted = false
         
         self.UpgradeIssuedPeriod = 120
         self.MapSize = 10
@@ -1890,6 +1891,14 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     LOG('Mass Raid Table '..repr(self.MassRaidTable))
+                    if self:IsAnyEngineerBuilding(categories.ENERGYPRODUCTION) then
+                        LOG('An Engineer is building power')
+                    else
+                        LOG('No Engineer is building power')
+                    end
+                    if self.EnemyIntel.ChokeFlag then
+                        LOG('Check Flag is true')
+                    end
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -1908,23 +1917,23 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EnemyIntel.EnemyCount > 0 then
                 enemyCount = self.EnemyIntel.EnemyCount
             end
-            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) then
+            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --LOG('Land Threat Higher, shift ratio to 0.5')
                 self.ProductionRatios.Land = 0.5
-            else
+            elseif not self.EnemyIntel.ChokeFlag then
                 --LOG('Land Threat Lower, shift ratio to 0.6')
                 self.ProductionRatios.Land = 0.6
             end
-            if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) then
+            if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --LOG('Air Threat Higher, shift ratio to 0.4')
                 self.ProductionRatios.Air = 0.4
-            else
+            elseif not self.EnemyIntel.ChokeFlag then
                 --LOG('Air Threat lower, shift ratio to 0.5')
                 self.ProductionRatios.Air = 0.5
             end
-            if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) then
+            if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 self.ProductionRatios.Naval = 0.4
-            else
+            elseif not self.EnemyIntel.ChokeFlag then
                 self.ProductionRatios.Naval = 0.5
             end
             --LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
@@ -2676,7 +2685,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -2781,7 +2790,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'MASS')
                         elseif v == 'STATIONPODS' then
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
@@ -3002,7 +3011,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'ENERGY')
                         elseif v == 'STATIONPODS' then
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
@@ -3529,7 +3538,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     self.EnemyIntel.ChokeFlag = true
                                     self.ProductionRatios.Land = 0.3
                                     --LOG('ChokeFlag is true')
-                                else
+                                elseif self.EnemyIntel.ChokeFlag then
                                     --LOG('ChokeFlag is false')
                                     self.EnemyIntel.ChokeFlag = false
                                     self.ProductionRatios.Land = 0.6
