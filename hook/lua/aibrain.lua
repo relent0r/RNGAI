@@ -935,7 +935,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.DisplayMarkerAdjacency)
         self:CalculateMassMarkersRNG()
-        RUtils.AIConfigureExpansionWatchTableRNG(self)
+        self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
         self:ForkThread(self.ExpansionIntelScanRNG)
         --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
@@ -3984,7 +3984,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ExpansionIntelScanRNG = function(self)
         LOG('Pre-Start ExpansionIntelScan')
-        WaitTicks(100)
+        WaitTicks(200)
         if table.getn(self.BrainIntel.ExpansionWatchTable) == 0 then
             LOG('ExpansionWatchTable not ready or is empty')
             return
@@ -4004,12 +4004,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v.PlatoonAssigned.Dead then
                     v.PlatoonAssigned = false
                 end
-                for _, t in threatTypes do
-                    rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
-                    if rawThreat > 0 then
-                        LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                if v.MassPoints > 2 then
+                    for _, t in threatTypes do
+                        rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
+                        if rawThreat > 0 then
+                            LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                        end
+                        self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
                     end
-                    self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
                 end
             end
             WaitTicks(50)

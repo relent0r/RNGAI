@@ -552,7 +552,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'FACTORY AIR TECH1' }},
+            { UCBC, 'IsEngineerNotBuilding', {categories.FACTORY * categories.AIR * categories.TECH1}},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -873,7 +873,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2 }},
         },
         BuilderType = 'Any',

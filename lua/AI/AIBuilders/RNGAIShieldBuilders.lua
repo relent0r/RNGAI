@@ -26,7 +26,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
         },
@@ -140,7 +140,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
         },
         BuilderType = 'Any',

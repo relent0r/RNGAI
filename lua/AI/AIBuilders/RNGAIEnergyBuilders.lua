@@ -62,7 +62,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.85, 0.1 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
         BuilderType = 'Any',
@@ -162,7 +162,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
         },
@@ -253,7 +253,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
