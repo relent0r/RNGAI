@@ -40,7 +40,7 @@ EngineerManager = Class(RNGEngineerManager) {
                 end
             end
         end
-        self.Brain:RemoveConsumption(self.LocationType, unit)
+        --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
     ManagerLoopBody = function(self,builder,bType)
@@ -190,7 +190,7 @@ EngineerManager = Class(RNGEngineerManager) {
             end
         end
 
-        self.Brain:RemoveConsumption(self.LocationType, unit)
+        --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
     LowMass = function(self)

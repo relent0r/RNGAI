@@ -964,6 +964,53 @@ Platoon = Class(RNGAIPlatoon) {
         local y
         local smartPos
         AIAttackUtils.GetMostRestrictiveLayer(self)
+        local function VariableKite(platoon,unit,target)
+            local function KiteDist(pos1,pos2,distance)
+                local vec={}
+                local dist=VDist3(pos1,pos2)
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    vec[i]=k+distance/dist*(pos1[i]-k)
+                end
+                return vec
+            end
+            local function CheckRetreat(pos1,pos2,target)
+                local vel = {}
+                vel[1], vel[2], vel[3]=target:GetVelocity()
+                --LOG('vel is '..repr(vel))
+                --LOG(repr(pos1))
+                --LOG(repr(pos2))
+                local dotp=0
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    dotp=dotp+(pos1[i]-k)*vel[i]
+                end
+                return dotp<0
+            end
+            if target.Dead then return end
+            if unit.Dead then return end
+                
+            local pos=unit:GetPosition()
+            local tpos=target:GetPosition()
+            local dest
+            local mod=0
+            if CheckRetreat(pos,tpos,target) then
+                mod=5
+            end
+            if unit.MaxWeaponRange then
+                dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod)
+            else
+                dest=KiteDist(pos,tpos,self.MaxWeaponRange+5-math.random(1,3)-mod)
+            end
+            if VDist3Sq(pos,dest)>6 then
+                IssueMove({unit},dest)
+                WaitTicks(20)
+                return
+            else
+                WaitTicks(20)
+                return
+            end
+        end
 
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -1089,7 +1136,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if target then
                         while PlatoonExists(aiBrain, self) do
                             if not target.Dead then
-                                targetPosition = target:GetPosition()
+                                --targetPosition = target:GetPosition()
                                 local microCap = 50
                                 for _, unit in attackSquad do
                                     microCap = microCap - 1
@@ -1098,7 +1145,9 @@ Platoon = Class(RNGAIPlatoon) {
                                     if not unit.MaxWeaponRange then
                                         continue
                                     end
-                                    unitPos = unit:GetPosition()
+                                    VariableKite(self,unit,target)
+                                    if target.Dead then break end
+                                    --[[unitPos = unit:GetPosition()
                                     alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
                                     x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
                                     y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
@@ -1127,7 +1176,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         else
                                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                         end
-                                    end
+                                    end]]
                                 end
                             else
                                 break
@@ -3134,46 +3183,66 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
             return self:SetAIPlanRNG('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
-            --LOG('Best Marker position was nil, select random')
-            if not self.MassMarkerTable then
-                self.MassMarkerTable = markerLocations
-            else
-                --LOG('Found old marker table, using that')
+            
+            if table.getn(aiBrain.BrainIntel.ExpansionWatchTable) > 0 then
+                for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                    local distSq = VDist2Sq(v.Position[1], v.Position[3], platLoc[1], platLoc[3])
+                    if distSq > (avoidClosestRadius * avoidClosestRadius) and AIAttackUtils.CanGraphToRNG(platLoc, v.Position, self.MovementLayer) then
+                        if not v.PlatoonAssigned then
+                            bestMarker = v
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
+                            LOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
+                            break
+                        end
+                    else
+                        LOG('Cant Graph to expansion marker location')
+                    end
+                    LOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
+                end
             end
-            if table.getn(self.MassMarkerTable) <= 2 then
-                self.LastMarker[1] = nil
-                self.LastMarker[2] = nil
-            end
-            local startX, startZ = aiBrain:GetArmyStartPos()
-
-            table.sort(self.MassMarkerTable,function(a,b) return VDist2(a.Position[1], a.Position[3],startX, startZ) / (VDist2(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],ScenarioInfo.size[1])) > VDist2(b.Position[1], b.Position[3], startX, startZ) / (VDist2(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],ScenarioInfo.size[1])) end)
-            --LOG('Sorted table '..repr(markerLocations))
-            --LOG('Marker table is before loop is '..table.getn(self.MassMarkerTable))
-
-            for k,marker in self.MassMarkerTable do
+            if not bestMarker then
+                --LOG('Best Marker position was nil, select random')
+                if not self.MassMarkerTable then
+                    self.MassMarkerTable = markerLocations
+                else
+                    --LOG('Found old marker table, using that')
+                end
                 if table.getn(self.MassMarkerTable) <= 2 then
                     self.LastMarker[1] = nil
                     self.LastMarker[2] = nil
-                    self.MassMarkerTable = false
-                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
-                local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
-                if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) and distSq > (avoidClosestRadius * avoidClosestRadius) then
-                    if self.LastMarker[1] and marker.Position[1] == self.LastMarker[1][1] and marker.Position[3] == self.LastMarker[1][3] then
-                        continue
+                local startX, startZ = aiBrain:GetArmyStartPos()
+
+                table.sort(self.MassMarkerTable,function(a,b) return VDist2(a.Position[1], a.Position[3],startX, startZ) / (VDist2(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],ScenarioInfo.size[1])) > VDist2(b.Position[1], b.Position[3], startX, startZ) / (VDist2(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],ScenarioInfo.size[1])) end)
+                --LOG('Sorted table '..repr(markerLocations))
+                --LOG('Marker table is before loop is '..table.getn(self.MassMarkerTable))
+
+                for k,marker in self.MassMarkerTable do
+                    if table.getn(self.MassMarkerTable) <= 2 then
+                        self.LastMarker[1] = nil
+                        self.LastMarker[2] = nil
+                        self.MassMarkerTable = false
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
-                    if self.LastMarker[2] and marker.Position[1] == self.LastMarker[2][1] and marker.Position[3] == self.LastMarker[2][3] then
-                        continue
+                    local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
+                    if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) and distSq > (avoidClosestRadius * avoidClosestRadius) then
+                        if self.LastMarker[1] and marker.Position[1] == self.LastMarker[1][1] and marker.Position[3] == self.LastMarker[1][3] then
+                            continue
+                        end
+                        if self.LastMarker[2] and marker.Position[1] == self.LastMarker[2][1] and marker.Position[3] == self.LastMarker[2][3] then
+                            continue
+                        end
+
+                        bestMarker = marker
+                        --LOG('Delete Marker '..repr(marker))
+                        self.MassMarkerTable[k] = nil
+                        break
                     end
-                    bestMarker = marker
-                    --LOG('Delete Marker '..repr(marker))
-                    self.MassMarkerTable[k] = nil
-                    break
                 end
+                self.MassMarkerTable = aiBrain:RebuildTable(self.MassMarkerTable)
+                --LOG('Marker table is after loop is '..table.getn(self.MassMarkerTable))
+                --LOG('bestMarker is '..repr(bestMarker))
             end
-            self.MassMarkerTable = aiBrain:RebuildTable(self.MassMarkerTable)
-            --LOG('Marker table is after loop is '..table.getn(self.MassMarkerTable))
-            --LOG('bestMarker is '..repr(bestMarker))
         end
 
         local usedTransports = false
@@ -4527,11 +4596,17 @@ Platoon = Class(RNGAIPlatoon) {
                 local totalMissileCount = 0
                 local enemyTmdCount = 0
                 local enemyShieldHealth = 0
+                local ecoCaution = false 
                 readyTmlLaunchers = {}
                 WaitTicks(50)
                 platoonUnits = GetPlatoonUnits(self)
                 --LOG('Target Find cycle start')
                 --LOG('Number of units in platoon '..table.getn(platoonUnits))
+                if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStored(aiBrain, 'MASS') < 500 then
+                    ecoCaution = true
+                else
+                    ecoCaution = false
+                end
                 for k, tml in platoonUnits do
                     if not tml or tml.Dead or tml:BeenDestroyed() then
                         self:PlatoonDisbandNoAssign()
@@ -4542,6 +4617,11 @@ Platoon = Class(RNGAIPlatoon) {
                             totalMissileCount = totalMissileCount + missileCount
                             table.insert(readyTmlLaunchers, tml)
                         end
+                    end
+                    if missileCount > 1 and ecoCaution then
+                        tml:SetAutoMode(false)
+                    else
+                        tml:SetAutoMode(true)
                     end
                 end
                 readyTmlLauncherCount = table.getn(readyTmlLaunchers)
@@ -6280,4 +6360,6 @@ Platoon = Class(RNGAIPlatoon) {
             self.chpdata.merging=false
         end
     end,
+
+
 }

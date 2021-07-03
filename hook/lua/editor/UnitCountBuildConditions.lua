@@ -2,6 +2,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
+local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 
 -- Check if less than num in seconds
 function LessThanGameTimeSecondsRNG(aiBrain, num)
@@ -829,6 +830,14 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
     return false
 
+end
+
+function IsEngineerNotBuilding(aiBrain, category)
+    -- Returns true if no engineer is building anything in the category
+    if IsAnyEngineerBuilding(aiBrain, category) then
+        return false
+    end
+    return true 
 end
 
 --[[

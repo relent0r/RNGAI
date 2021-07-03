@@ -806,6 +806,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.BrainIntel = {}
+        self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
             IMAPSize = 0,
@@ -839,8 +840,10 @@ AIBrain = Class(RNGAIBrainClass) {
             NavalSubNow = 0,
         }
         self.BrainIntel.ActiveExpansion = false
+        self.MassRaidTable = {}
         -- Structure Upgrade properties
         self.UpgradeIssued = 0
+        self.EarlyQueueCompleted = false
         
         self.UpgradeIssuedPeriod = 120
         self.MapSize = 10
@@ -939,6 +942,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.DisplayMarkerAdjacency)
         self:CalculateMassMarkersRNG()
+        self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
+        self:ForkThread(self.ExpansionIntelScanRNG)
+        --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
 
     EconomyMonitorRNG = function(self)
@@ -1194,9 +1200,9 @@ AIBrain = Class(RNGAIBrainClass) {
             aiBrain.InterestList.MustScout = {}
 
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
-            if aiBrain.EnemyIntel.EnemyThreatLocations then
-                for _, v in aiBrain.EnemyIntel.EnemyThreatLocations do
-                    -- Add any threat locations found in the must scout table
+            if aiBrain.BrainIntel.ExpansionWatchTable then
+                for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                    -- Add any expansion table locations to the must scout table
                     table.insert(aiBrain.InterestList.MustScout, 
                         {
                             Position = v.Position,
@@ -1858,7 +1864,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                --[[if true then
+                if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1891,7 +1897,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                end]]
+                    LOG('Mass Raid Table '..repr(self.MassRaidTable))
+                    if self:IsAnyEngineerBuilding(categories.ENERGYPRODUCTION) then
+                        LOG('An Engineer is building power')
+                    else
+                        LOG('No Engineer is building power')
+                    end
+                    if self.EnemyIntel.ChokeFlag then
+                        LOG('Check Flag is true')
+                    end
+                end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -1909,23 +1924,23 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EnemyIntel.EnemyCount > 0 then
                 enemyCount = self.EnemyIntel.EnemyCount
             end
-            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) then
+            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --LOG('Land Threat Higher, shift ratio to 0.5')
                 self.ProductionRatios.Land = 0.5
-            else
+            elseif not self.EnemyIntel.ChokeFlag then
                 --LOG('Land Threat Lower, shift ratio to 0.6')
                 self.ProductionRatios.Land = 0.6
             end
-            if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) then
+            if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --LOG('Air Threat Higher, shift ratio to 0.4')
                 self.ProductionRatios.Air = 0.4
-            else
+            elseif not self.EnemyIntel.ChokeFlag then
                 --LOG('Air Threat lower, shift ratio to 0.5')
                 self.ProductionRatios.Air = 0.5
             end
-            if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) then
+            if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 self.ProductionRatios.Naval = 0.4
-            else
+            elseif not self.EnemyIntel.ChokeFlag then
                 self.ProductionRatios.Naval = 0.5
             end
             --LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
@@ -2677,7 +2692,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 table.insert(unitTypePaused, priorityUnit)
                             end
                             --LOG('Engineer added to unitTypePaused')
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
@@ -2782,7 +2797,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'MASS')
                         elseif v == 'STATIONPODS' then
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
@@ -3003,7 +3018,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
-                            local Engineers = GetListOfUnits(self, categories.ENGINEER - categories.STATIONASSISTPOD - categories.COMMAND - categories.SUBCOMMANDER, false, false)
+                            local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'ENERGY')
                         elseif v == 'STATIONPODS' then
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
@@ -3530,7 +3545,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     self.EnemyIntel.ChokeFlag = true
                                     self.ProductionRatios.Land = 0.3
                                     --LOG('ChokeFlag is true')
-                                else
+                                elseif self.EnemyIntel.ChokeFlag then
                                     --LOG('ChokeFlag is false')
                                     self.EnemyIntel.ChokeFlag = false
                                     self.ProductionRatios.Land = 0.6
@@ -3636,9 +3651,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
         local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
-        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0,torpedo=0,transport=0}
+        local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0,torpedo=0,transport=0,mercy=0}
         local armyAirTiers={T1=0,T2=0,T3=0}
-        local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,mercy=0,transport=0},T3={battleship=0}}
+        local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,transport=0},T3={battleship=0}}
         local armyNavalType={frigate=0,sub=0,shard=0,destroyer=0,cruiser=0,subhunter=0,battleship=0}
         local armyNavalTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
@@ -3974,5 +3989,41 @@ AIBrain = Class(RNGAIBrainClass) {
         return count
     end,]]
 
-    
+    ExpansionIntelScanRNG = function(self)
+        LOG('Pre-Start ExpansionIntelScan')
+        WaitTicks(200)
+        if table.getn(self.BrainIntel.ExpansionWatchTable) == 0 then
+            LOG('ExpansionWatchTable not ready or is empty')
+            return
+        end
+        local threatTypes = {
+            'Land',
+            'Commander',
+            'Structures',
+        }
+        local rawThreat = 0
+        if ScenarioInfo.Options.AIDebugDisplay == 'displayOn' then
+            self:ForkThread(RUtils.RenderBrainIntelRNG)
+        end
+        LOG('Starting ExpansionIntelScan')
+        while self.Result ~= "defeat" do
+            for k, v in self.BrainIntel.ExpansionWatchTable do
+                if v.PlatoonAssigned.Dead then
+                    v.PlatoonAssigned = false
+                end
+                if v.MassPoints > 2 then
+                    for _, t in threatTypes do
+                        rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
+                        if rawThreat > 0 then
+                            LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                        end
+                        self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
+                    end
+                end
+            end
+            WaitTicks(50)
+            -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(self.BrainIntel.ExpansionWatchTable))
+        end
+    end,
+   
 }

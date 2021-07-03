@@ -761,6 +761,7 @@ BuilderGroup {
             },
             PrioritizedCategories = {
                 categories.EXPERIMENTAL,
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,   
@@ -890,6 +891,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {  
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE, 
@@ -1781,6 +1783,7 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND
             },
             PrioritizedCategories = {   
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
@@ -1823,6 +1826,7 @@ BuilderGroup {
             },
             PrioritizedCategories = {   
                 categories.EXPERIMENTAL * categories.LAND,
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
@@ -1862,6 +1866,7 @@ BuilderGroup {
             },
             PrioritizedCategories = {   
                 categories.EXPERIMENTAL * categories.LAND,
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
