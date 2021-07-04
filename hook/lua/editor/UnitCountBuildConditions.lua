@@ -3,6 +3,7 @@ local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 
 -- Check if less than num in seconds
 function LessThanGameTimeSecondsRNG(aiBrain, num)
@@ -838,6 +839,16 @@ function IsEngineerNotBuilding(aiBrain, category)
         return false
     end
     return true 
+end
+
+function ValidateLateGameBuild(aiBrain)
+    -- Returns true if no engineer is building anything in the category
+    if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM) then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.5 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.20 then
+            return false
+        end
+    end
+  return true
 end
 
 --[[

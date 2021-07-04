@@ -1196,6 +1196,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if aiBrain.BrainIntel.ExpansionWatchTable then
                 for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
                     -- Add any expansion table locations to the must scout table
+                    --LOG('Expansion of type '..v.Type..' found, seeting scout location')
                     table.insert(aiBrain.InterestList.MustScout, 
                         {
                             Position = v.Position,
@@ -1891,11 +1892,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     LOG('Mass Raid Table '..repr(self.MassRaidTable))
-                    if self:IsAnyEngineerBuilding(categories.ENERGYPRODUCTION) then
-                        LOG('An Engineer is building power')
-                    else
-                        LOG('No Engineer is building power')
-                    end
                     if self.EnemyIntel.ChokeFlag then
                         LOG('Check Flag is true')
                     end
@@ -3841,7 +3837,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         armyAir.T2.torpedo=armyAir.T2.torpedo+1
                         armyAirType.torpedo=armyAirType.torpedo+1
                     elseif EntityCategoryContains(categories.daa0206,unit) then
+                        LOG('ArmyAir')
                         armyAir.T2.mercy=armyAir.T2.mercy+1
+                        LOG('ArmyAirType')
                         armyAirType.mercy=armyAirType.mercy+1
                     elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
                         armyAir.T2.transport=armyAir.T2.transport+1
@@ -3984,7 +3982,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ExpansionIntelScanRNG = function(self)
         LOG('Pre-Start ExpansionIntelScan')
-        WaitTicks(200)
+        WaitTicks(50)
         if table.getn(self.BrainIntel.ExpansionWatchTable) == 0 then
             LOG('ExpansionWatchTable not ready or is empty')
             return
@@ -3998,11 +3996,16 @@ AIBrain = Class(RNGAIBrainClass) {
         if ScenarioInfo.Options.AIDebugDisplay == 'displayOn' then
             self:ForkThread(RUtils.RenderBrainIntelRNG)
         end
+        local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
         LOG('Starting ExpansionIntelScan')
         while self.Result ~= "defeat" do
             for k, v in self.BrainIntel.ExpansionWatchTable do
                 if v.PlatoonAssigned.Dead then
                     v.PlatoonAssigned = false
+                end
+                if not v.Zone then
+                    local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
+                    --LOG('Check for position '..repr(expansionNode))
                 end
                 if v.MassPoints > 2 then
                     for _, t in threatTypes do

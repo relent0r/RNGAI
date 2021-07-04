@@ -2387,15 +2387,15 @@ function DisplayMarkerAdjacency(aiBrain)
         g={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
         b={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
     }
-    WaitSeconds(10)
-    LOG('colortable is'..repr(tablecolors))
+    --WaitSeconds(10)
+    --LOG('colortable is'..repr(tablecolors))
     for i,v in ArmyBrains do
         if (not ArmyIsCivilian(v:GetArmyIndex())) or v.Result~="defeat" then  
             local astartX, astartZ = v:GetArmyStartPos()
             local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
             table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
-            LOG('closestpath is '..repr(closestpath))
+            --LOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
             local randy=nil
             if i<9 then
@@ -3011,7 +3011,7 @@ function CalculateMassValue(expansionMarkers)
 end
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
-    WaitTicks(200)
+    WaitTicks(5)
 
     local markerList = {}
     local armyStarts = {}
@@ -3044,9 +3044,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if not startPosUsed then
                     if v.MassSpotsInRange then
                         massPointValidated = true
-                        table.insert(markerList, {Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
                     else
-                        table.insert(markerList, {Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
                     end
                 end
             end
@@ -3074,6 +3074,18 @@ RenderBrainIntelRNG = function(aiBrain)
         end
         WaitTicks(2)
     end
+end
+
+QueryExpansionWatchTable = function(aiBrain, platoon)
+
+    for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
+        if v.Land > 0 and PlatoonAssigned == false then
+            --Do stuff here
+
+        end
+    end
+
+
 end
 
 function MexUpgradeManagerRNG(aiBrain)
