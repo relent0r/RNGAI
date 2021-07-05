@@ -363,7 +363,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T3 = {
                             scout=11,
-                            asf=55,
+                            asf=60,
                             bomber=15,
                             gunship=10,
                             transport=5,
@@ -381,9 +381,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            tank=55,
+                            tank=75,
                             mml=5,
-                            bot=20,
                             aa=10,
                             shield=10,
                             total=0
@@ -411,9 +410,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T3 = {
                             scout=11,
-                            asf=55,
+                            asf=60,
                             bomber=15,
-                            gunship=15,
+                            gunship=10,
                             torpedo=0,
                             total=0
                         }
@@ -482,7 +481,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T3 = {
                             scout=11,
-                            asf=55,
+                            asf=60,
                             bomber=15,
                             gunship=10,
                             total=0
@@ -936,7 +935,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.DisplayMarkerAdjacency)
         self:CalculateMassMarkersRNG()
         self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
-        self:ForkThread(self.ExpansionIntelScanRNG)
+        -- This is future goodies.
+        
+        --self:ForkThread(self.ExpansionIntelScanRNG)
         --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
 
@@ -1858,7 +1859,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                if true then
+                --[[if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1895,7 +1896,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.EnemyIntel.ChokeFlag then
                         LOG('Check Flag is true')
                     end
-                end
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -3837,9 +3838,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         armyAir.T2.torpedo=armyAir.T2.torpedo+1
                         armyAirType.torpedo=armyAirType.torpedo+1
                     elseif EntityCategoryContains(categories.daa0206,unit) then
-                        LOG('ArmyAir')
                         armyAir.T2.mercy=armyAir.T2.mercy+1
-                        LOG('ArmyAirType')
                         armyAirType.mercy=armyAirType.mercy+1
                     elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
                         armyAir.T2.transport=armyAir.T2.transport+1
@@ -3981,10 +3980,10 @@ AIBrain = Class(RNGAIBrainClass) {
     end,]]
 
     ExpansionIntelScanRNG = function(self)
-        LOG('Pre-Start ExpansionIntelScan')
+        --LOG('Pre-Start ExpansionIntelScan')
         WaitTicks(50)
         if table.getn(self.BrainIntel.ExpansionWatchTable) == 0 then
-            LOG('ExpansionWatchTable not ready or is empty')
+            --LOG('ExpansionWatchTable not ready or is empty')
             return
         end
         local threatTypes = {
@@ -3997,7 +3996,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self:ForkThread(RUtils.RenderBrainIntelRNG)
         end
         local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
-        LOG('Starting ExpansionIntelScan')
+        --LOG('Starting ExpansionIntelScan')
         while self.Result ~= "defeat" do
             for k, v in self.BrainIntel.ExpansionWatchTable do
                 if v.PlatoonAssigned.Dead then
@@ -4011,7 +4010,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     for _, t in threatTypes do
                         rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
                         if rawThreat > 0 then
-                            LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                            --LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
                         end
                         self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
                     end

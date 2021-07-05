@@ -838,7 +838,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Assist Manager',
         PlatoonTemplate = 'EngineerAssistManagerRNG',
-        Priority = 1500,
+        Priority = 999,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {

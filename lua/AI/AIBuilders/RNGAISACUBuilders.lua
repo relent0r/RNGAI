@@ -35,7 +35,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.SUBCOMMANDER } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.50}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },

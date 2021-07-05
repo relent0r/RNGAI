@@ -2343,285 +2343,6 @@ CountSoonMassSpotsRNG = function(aiBrain)
     end
 end
 -- start of supporting functions for zone area thingy
-function DisplayMarkerAdjacency(aiBrain)
-    --aiBrain:ForkThread(LastKnownThread)
-    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
-    aiBrain.RNGAreas={}
-    aiBrain.renderlines={}
-    aiBrain.expandspots={}
-    aiBrain.rendercircles={}
-    for k,marker in expansionMarkers do
-        local node=false
-        local expand=false
-        --LOG(repr(k)..' marker type is '..repr(marker.type))
-        for i, v in STR_GetTokens(marker.type,' ') do
-            if v=='Node' then
-                node=true
-                break
-            end
-            if v=='Expansion' then
-                expand=true
-                break
-            end
-        end
-        if node and not marker.RNGArea then
-            aiBrain.RNGAreas[k]={}
-            InfectMarkersRNG(aiBrain,marker,k)
-        end
-        if expand then
-            table.insert(aiBrain.expandspots,{marker,k})
-        end
-        if not node and not expand then
-            for _,v in STR_GetTokens(k,'_') do
-                if v=='ARMY' then
-                    table.insert(aiBrain.expandspots,{marker,k})
-                end
-            end
-        end
-    end
-    aiBrain.analysistablecolors={}
-    local tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
-    local colors=aiBrain.analysistablecolors
-    local colorcomponents={
-        r={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
-        g={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
-        b={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
-    }
-    --WaitSeconds(10)
-    --LOG('colortable is'..repr(tablecolors))
-    for i,v in ArmyBrains do
-        if (not ArmyIsCivilian(v:GetArmyIndex())) or v.Result~="defeat" then  
-            local astartX, astartZ = v:GetArmyStartPos()
-            local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
-            table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
-            --LOG('closestpath is '..repr(closestpath))
-            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
-            local randy=nil
-            if i<9 then
-                randy=math.random(table.getn(tablecolors)-7+i,table.getn(tablecolors))
-            else
-                randy=math.random(table.getn(tablecolors))
-            end
-            colors[aiBrain.expandspots[1][2]]=tablecolors[randy]
-            table.remove(tablecolors,randy)
-        end
-    end
-
-    local expands=true
-    local expandcolors={}
-    while aiBrain.renderthreadtracker do
-        WaitTicks(2)
-    end
-    if expands then
-        --tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
-        for _,expand in aiBrain.expandspots do
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
-            --LOG('closestpath is '..repr(closestpath))
-            aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
-            local randy=math.random(table.getn(tablecolors))
-            if colors[expand[2]] then continue end
-            colors[expand[2]]=tablecolors[randy]
-            table.remove(tablecolors,randy)
-        end
-    end
-
-    while aiBrain.renderthreadtracker do
-        WaitTicks(2)
-    end
-    local bestarmynum=0
-    for k,marker in Scenario.MasterChain._MASTERCHAIN_.Markers do
-        if marker.bestarmy then
-            local first=nil
-            local firstd=nil
-            local second=nil
-            local secondd=nil
-            for x,v in marker.armydists do
-                if not first or v<firstd then
-                    if first then
-                        second=first
-                        secondd=firstd
-                    end
-                    first=k
-                    firstd=v
-                elseif (not second or v<secondd) then
-                    second=k
-                    secondd=v
-                end
-            end
-            if secondd and math.abs(firstd-secondd)<0.15*(secondd) then
-                LOG('border point found- distances are '..repr(firstd)..' and '..repr(secondd))
-                table.insert(aiBrain.rendercircles,marker.position)
-                --marker.bestarmy=nil
-            end
-        end
-    end
-    local iter=0
-    for k,marker in Scenario.MasterChain._MASTERCHAIN_.Markers do
-        if marker.bestarmy then
-            local surround=0
-            local border=false
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                if not adjnode.bestarmy or adjnode.bestarmy~=marker.bestarmy then
-                    border=true
-                else
-                    surround=surround+1
-                end
-            end
-            local function midpoint(vec1,vec2,ratio)
-                local vec3={}
-                for z,v in vec1 do
-                    if type(v)=='number' then 
-                        vec3[z]=vec2[z]*(ratio)+v*(1-ratio)
-                    end
-                end
-                return vec3
-            end
-            local function crossp(vec1,vec2,n)
-                local z = vec2[3] + n * (vec2[1] - vec1[1])
-                local y = vec2[2] - n * (vec2[2] - vec1[2])
-                local x = vec2[1] - n * (vec2[3] - vec1[3])
-                return {x,y,z}
-            end
-            bestarmynum=bestarmynum+1
-            if not marker.renderlined then marker.renderlined={} end
-            local priority=nil
-            if border or surround<=3 then
-                priority=true
-            end
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                local tempdist=VDist3(marker.position,adjnode.position)
-                if adjnode.bestarmy==marker.bestarmy then
-                    if not adjnode.renderlined then adjnode.renderlined={} end
-                    --surround=surround+1
-                    if not adjnode.renderlined[k] and not marker.renderlined[node] then
-                        adjnode.renderlined[k]=true
-                        marker.renderlined[node]=true
-                        local p1={crossp(marker.position,adjnode.position,1/tempdist),crossp(adjnode.position,marker.position,1/tempdist)}
-                        local p2={crossp(marker.position,adjnode.position,-1/tempdist),crossp(adjnode.position,marker.position,-1/tempdist)}
-                        table.insert(aiBrain.renderlines,{p1[1],p1[2],marker.type,marker.bestarmy,priority})
-                        table.insert(aiBrain.renderlines,{p2[1],p2[2],marker.type,marker.bestarmy,priority})
-                    end
-                end
-                if not adjnode.bestarmy or adjnode.bestarmy~=marker.bestarmy then
-                    table.insert(aiBrain.renderlines,{crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+5)/tempdist/2),10/tempdist),crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+5)/tempdist/2),-10/tempdist),marker.type,marker.bestarmy,false})
-                    --border=true
-                end
-            end
-            --if border or surround<=3 then
-            --table.insert(aiBrain.rendercircles,marker.position)
-            --table.insert(aiBrain.renderlines,{marker.position,Scenario.MasterChain._MASTERCHAIN_.Markers[marker.closestarmy].position,marker.type})
-            iter=iter+1
-        end
-        if marker.bestexpand then
-            local surround=0
-            local border=false
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                if not adjnode.bestexpand or adjnode.bestexpand~=marker.bestexpand then
-                    border=true
-                else
-                    surround=surround+1
-                end
-            end
-            local function midpoint(vec1,vec2,ratio)
-                local vec3={}
-                for z,v in vec1 do
-                    if type(v)=='number' then 
-                        vec3[z]=vec2[z]*(ratio)+v*(1-ratio)
-                    end
-                end
-                return vec3
-            end
-            local function crossp(vec1,vec2,n)
-                local z = vec2[3] + n * (vec2[1] - vec1[1])
-                local y = vec2[2] - n * (vec2[2] - vec1[2])
-                local x = vec2[1] - n * (vec2[3] - vec1[3])
-                return {x,y,z}
-            end
-            if not marker.expandrenderlined then marker.expandrenderlined={} end
-            local priority=nil
-            if border or surround<=3 then
-                priority=true
-            end
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                local tempdist=VDist3(marker.position,adjnode.position)
-                if adjnode.bestexpand==marker.bestexpand then
-                    if not adjnode.expandrenderlined then adjnode.expandrenderlined={} end
-                    surround=surround+1
-                    if not adjnode.expandrenderlined[k] and not marker.expandrenderlined[node] then
-                        adjnode.expandrenderlined[k]=true
-                        marker.expandrenderlined[node]=true
-                        table.insert(aiBrain.renderlines,{marker.position,adjnode.position,marker.type,marker.bestexpand,priority})
-                    end
-                end
-                if not adjnode.bestexpand or adjnode.bestexpand~=marker.bestexpand then
-                    table.insert(aiBrain.renderlines,{crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+3)/tempdist/2),10/tempdist),crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+3)/tempdist/2),-10/tempdist),marker.type,marker.bestexpand,true})
-                    border=true
-                end
-            end
-            iter=iter+2
-        end
-        if iter>20 then 
-            --WaitTicks(1)
-            iter=0
-        end
-    end
-    LOG('RNGAreas:')
-    for k,v in aiBrain.RNGAreas do
-        LOG(repr(k)..' has '..repr(table.getn(v))..' nodes')
-    end
-    ---[[
-    --LOG('renderlines has '..table.getn(aiBrain.renderlines))
-    --LOG('bestarmy has '..repr(bestarmynum))
-    --LOG('renderlines are '..repr(aiBrain.renderlines))
-    --while not aiBrain.defeat do
-    --    for _,v in aiBrain.rendercircles do
-    --        DrawCircle(v,5,'FFBF9C1E')
-    --    end
-    --    for _,v in aiBrain.renderlines do
-    --        if v[4] then
-    --            local prefix='33'
-    --            if v[5] then
-    --                prefix='aa'
-    --            end
-    --            DrawLine(v[1],v[2],prefix..colors[v[4]])
-    --        else
-    --            if v[3]=='Land Path Node' then
-    --                DrawLine(v[1],v[2],'FFBF9C1E')
-    --            elseif v[3]=='Water Path Node' then
-    --                DrawLine(v[1],v[2],'FF7100FF')
-    --            end
-    --        end
-    --    end
-    --    WaitTicks(2)
-    --end
-    --]]
-end
-
 GenerateDistinctColorTable = function(num)
     local function factorial(n,min)
         if n>min and n>1 then
@@ -2686,60 +2407,108 @@ GenerateDistinctColorTable = function(num)
     end
     return colortable
 end
-GrabRandomDistinctColor = function(num)
-    local output=GenerateDistinctColorTable(num)
-    return output[math.random(table.getn(output))]
-end
-ShowLastKnown = function(aiBrain)
-    if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
-        return
-    end
-    while not aiBrain.lastknown do
-        WaitTicks(2)
-    end
-    while aiBrain.result ~= "defeat" do
-        local time=GetGameTimeSeconds()
-        local lastknown=table.copy(aiBrain.lastknown)
-        for _,v in lastknown do
-            if v.recent then
-                local ratio=(1-(time-v.time)/120)*(1-(time-v.time)/120)
-                local ratio2=(1-(time-v.time)/120)
-                local color=ToColorRNG(10,255,ratio2)
-                local color1=ToColorRNG(10,255,ratio)
-                local color2=ToColorRNG(10,100,math.random())
-                local color3=ToColorRNG(10,100,math.random())
-                DrawCircle(v.Position,3,color..color1..color2..color3)
-            else
-                DrawCircle(v.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+function DisplayMarkerAdjacency(aiBrain)
+    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
+    aiBrain.RNGAreas={}
+    aiBrain.armyspots={}
+    aiBrain.expandspots={}
+    for k,marker in expansionMarkers do
+        local node=false
+        local expand=false
+        --LOG(repr(k)..' marker type is '..repr(marker.type))
+        for i, v in STR_GetTokens(marker.type,' ') do
+            if v=='Node' then
+                node=true
+                break
+            end
+            if v=='Expansion' then
+                expand=true
+                break
             end
         end
-        WaitTicks(2)
-    end
-end
-ToColorRNG = function(min,max,ratio)
-    local ToBase16 = function(num)
-        if num<10 then
-            return tostring(num)
-        elseif num==10 then
-            return 'a'
-        elseif num==11 then
-            return 'b'
-        elseif num==12 then
-            return 'c'
-        elseif num==13 then
-            return 'd'
-        elseif num==14 then
-            return 'e'
-        else
-            return 'f'
+        if node and not marker.RNGArea then
+            aiBrain.RNGAreas[k]={}
+            InfectMarkersRNG(aiBrain,marker,k)
+        end
+        if expand then
+            table.insert(aiBrain.expandspots,{marker,k})
+        end
+        if not node and not expand then
+            for _,v in STR_GetTokens(k,'_') do
+                if v=='ARMY' then
+                    table.insert(aiBrain.armyspots,{marker,k})
+                    table.insert(aiBrain.expandspots,{marker,k})
+                end
+            end
         end
     end
-    local baseones=0
-    local basetwos=0
-    local numinit=math.abs(math.ceil((max-min)*ratio+min))
-    basetwos=math.floor(numinit/16)
-    baseones=numinit-basetwos*16
-    return ToBase16(basetwos)..ToBase16(baseones)
+    aiBrain.analysistablecolors={}
+    local tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
+    local colors=aiBrain.analysistablecolors
+    --WaitSeconds(10)
+    --LOG('colortable is'..repr(tablecolors))
+    local bases=false
+    if bases then
+        for _,army in aiBrain.armyspots do
+            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(army[1].position,25,'Land').name]
+            --LOG('closestpath is '..repr(closestpath))
+            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,army[2])
+            local randy=math.random(table.getn(tablecolors))
+            colors[army[2]]='FF'..tablecolors[randy]
+            table.remove(tablecolors,randy)
+        end
+    else
+        for i,v in ArmyBrains do
+            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+            local astartX, astartZ = v:GetArmyStartPos()
+            local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
+            table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
+            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
+            --LOG('closestpath is '..repr(closestpath))
+            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
+            local randy=nil
+            if i<9 then
+                randy=math.random(table.getn(tablecolors)-7+i,table.getn(tablecolors))
+            else
+                randy=math.random(table.getn(tablecolors))
+            end
+            colors[aiBrain.expandspots[1][2]]=tablecolors[randy]
+            table.remove(tablecolors,randy)
+        end
+    end
+    local expands=true
+    local expandcolors={}
+    while aiBrain.renderthreadtracker do
+        WaitTicks(2)
+    end
+    if expands then
+        --tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
+        for _,expand in aiBrain.expandspots do
+            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
+            --LOG('closestpath is '..repr(closestpath))
+            aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
+            local randy=math.random(table.getn(tablecolors))
+            if colors[expand[2]] then continue end
+            colors[expand[2]]=tablecolors[randy]
+            table.remove(tablecolors,randy)
+        end
+    end
+    while aiBrain.renderthreadtracker do
+        WaitTicks(2)
+    end
+    --LOG('RNGAreas:')
+    --for k,v in aiBrain.RNGAreas do
+    --    LOG(repr(k)..' has '..repr(table.getn(v))..' nodes')
+    --end
+end
+function InfectMarkersRNG(aiBrain,marker,graphname)
+    marker.RNGArea=graphname
+    table.insert(aiBrain.RNGAreas[graphname],marker)
+    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
+        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
+            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+        end
+    end
 end
 function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
@@ -2854,17 +2623,64 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
         aiBrain.renderthreadtracker=nil
     end
 end
--- end of supporting functions for zone area thingy
 
-function InfectMarkersRNG(aiBrain,marker,graphname)
-    marker.RNGArea=graphname
-    table.insert(aiBrain.RNGAreas[graphname],marker)
-    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
-            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+GrabRandomDistinctColor = function(num)
+    local output=GenerateDistinctColorTable(num)
+    return output[math.random(table.getn(output))]
+end
+ShowLastKnown = function(aiBrain)
+    if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
+        return
+    end
+    while not aiBrain.lastknown do
+        WaitTicks(2)
+    end
+    while aiBrain.result ~= "defeat" do
+        local time=GetGameTimeSeconds()
+        local lastknown=table.copy(aiBrain.lastknown)
+        for _,v in lastknown do
+            if v.recent then
+                local ratio=(1-(time-v.time)/120)*(1-(time-v.time)/120)
+                local ratio2=(1-(time-v.time)/120)
+                local color=ToColorRNG(10,255,ratio2)
+                local color1=ToColorRNG(10,255,ratio)
+                local color2=ToColorRNG(10,100,math.random())
+                local color3=ToColorRNG(10,100,math.random())
+                DrawCircle(v.Position,3,color..color1..color2..color3)
+            else
+                DrawCircle(v.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+            end
         end
+        WaitTicks(2)
     end
 end
+ToColorRNG = function(min,max,ratio)
+    local ToBase16 = function(num)
+        if num<10 then
+            return tostring(num)
+        elseif num==10 then
+            return 'a'
+        elseif num==11 then
+            return 'b'
+        elseif num==12 then
+            return 'c'
+        elseif num==13 then
+            return 'd'
+        elseif num==14 then
+            return 'e'
+        else
+            return 'f'
+        end
+    end
+    local baseones=0
+    local basetwos=0
+    local numinit=math.abs(math.ceil((max-min)*ratio+min))
+    basetwos=math.floor(numinit/16)
+    baseones=numinit-basetwos*16
+    return ToBase16(basetwos)..ToBase16(baseones)
+end
+
+-- end of supporting functions for zone area thingy
 
 -- TruePlatoon Support functions
 
@@ -3059,7 +2875,7 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     local startX, startZ = aiBrain:GetArmyStartPos()
     table.sort(markerList,function(a,b) return VDist2(a.Position[1],a.Position[3],startX, startZ)>VDist2(b.Position[1],b.Position[3],startX, startZ) end)
     aiBrain.BrainIntel.ExpansionWatchTable = markerList
-    LOG('ExpansionWatchTable is '..repr(markerList))
+    --LOG('ExpansionWatchTable is '..repr(markerList))
 end
 
 RenderBrainIntelRNG = function(aiBrain)

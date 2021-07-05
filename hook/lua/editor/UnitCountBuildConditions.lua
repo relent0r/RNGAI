@@ -63,6 +63,7 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
     end
     local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
     if markerTable[1] and VDist3(markerTable[1], engineerManager.Location) < distance then
+        --LOG('I can build on a hydro')
         return true
     end
     return false
@@ -842,9 +843,10 @@ function IsEngineerNotBuilding(aiBrain, category)
 end
 
 function ValidateLateGameBuild(aiBrain)
-    -- Returns true if no engineer is building anything in the category
+    -- Returns true if no engineer is building anything in the category and if the economy is good. 
+    -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
     if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.5 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.20 then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
             return false
         end
     end

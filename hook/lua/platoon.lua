@@ -3191,13 +3191,13 @@ Platoon = Class(RNGAIPlatoon) {
                         if not v.PlatoonAssigned then
                             bestMarker = v
                             aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
-                            LOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
+                            --LOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
                             break
                         end
                     else
-                        LOG('Cant Graph to expansion marker location')
+                        --LOG('Cant Graph to expansion marker location')
                     end
-                    LOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
+                    --LOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
                 end
             end
             if not bestMarker then
