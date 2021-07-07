@@ -164,6 +164,10 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
                     end
                 end
             end
+            if not location and EntityCategoryContains(categories.COMMAND,builder) then
+                --LOG('Location Returned by marker table is '..repr(location))
+                return false
+            end
         else
             location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, 'Enemy', relativeTo[1], relativeTo[3], 5)
         end

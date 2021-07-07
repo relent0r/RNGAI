@@ -111,6 +111,7 @@ function CommanderThreadRNG(cdr, platoon)
         WaitTicks(2)
 
         -- Call platoon resume building deal...
+        --LOG('ACU has '..table.getn(cdr.EngineerBuildQueue)..' items in the build queue')
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
         and not cdr:IsUnitState("Attacking") and not cdr:IsUnitState("Repairing")

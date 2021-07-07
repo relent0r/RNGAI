@@ -583,6 +583,7 @@ BuilderGroup {
                 MexThreat = true,
                 Type = 'Mass',
                 MaxDistance = 30,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 20,
                 ThreatType = 'AntiSurface',

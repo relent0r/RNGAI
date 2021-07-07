@@ -2513,7 +2513,7 @@ end
 function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
-    DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
+    --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
     if not marker.armydists then
         marker.armydists={}
     end
@@ -2570,7 +2570,7 @@ end
 function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
-    DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
+    --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
     if not marker.expanddists then
         marker.expanddists={}
     end
