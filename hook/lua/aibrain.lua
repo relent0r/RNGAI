@@ -125,7 +125,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- Economy monitor for new skirmish - stores out econ over time to get trend over 10 seconds
         self.EconomyData = {}
-        self.EconomyTicksMonitor = 80
+        self.EconomyTicksMonitor = 90
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
@@ -832,7 +832,6 @@ AIBrain = Class(RNGAIBrainClass) {
             NavalSubNow = 0,
         }
         self.BrainIntel.ActiveExpansion = false
-        self.MassRaidTable = {}
         -- Structure Upgrade properties
         self.UpgradeIssued = 0
         self.EarlyQueueCompleted = false
@@ -1002,7 +1001,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyOverTimeCurrent.MassEfficiencyOverTime = math.min(mIncome / mRequested, 2)
             self.EconomyOverTimeCurrent.EnergyTrendOverTime = eTrend / num
             self.EconomyOverTimeCurrent.MassTrendOverTime = mTrend / num
-            WaitTicks(50)
+            WaitTicks(25)
         end
     end,
 
@@ -1859,7 +1858,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                --[[if true then
+                if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1878,7 +1877,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
                     LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
+                    LOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
                     LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
+                    LOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
                     LOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
                     LOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
                     LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
@@ -1892,11 +1893,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                    LOG('Mass Raid Table '..repr(self.MassRaidTable))
                     if self.EnemyIntel.ChokeFlag then
                         LOG('Check Flag is true')
                     end
-                end]]
+                end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end

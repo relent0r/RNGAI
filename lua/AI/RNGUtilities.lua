@@ -2408,6 +2408,7 @@ GenerateDistinctColorTable = function(num)
     return colortable
 end
 function DisplayMarkerAdjacency(aiBrain)
+    aiBrain:ForkThread(LastKnownThread)
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     aiBrain.RNGAreas={}
     aiBrain.armyspots={}
@@ -2628,6 +2629,57 @@ GrabRandomDistinctColor = function(num)
     local output=GenerateDistinctColorTable(num)
     return output[math.random(table.getn(output))]
 end
+LastKnownThread = function(aiBrain)
+    aiBrain.lastknown={}
+    aiBrain:ForkThread(ShowLastKnown)
+    aiBrain:ForkThread(TruePlatoonPriorityDirector)
+    while not aiBrain.emanager.enemies do WaitSeconds(2) end
+    while aiBrain.Result ~= "defeat" do
+        local time=GetGameTimeSeconds()
+        for _=0,10 do
+            local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
+            for _,v in eunits do
+                if not v or v.Dead then continue end
+                local id=v.Sync.id
+                if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
+                    if not aiBrain.lastknown[id] then
+                        aiBrain.lastknown[id]={}
+                        if EntityCategoryContains(categories.MOBILE,v) then
+                            if EntityCategoryContains(categories.ENGINEER-categories.COMMAND,v) then
+                                aiBrain.lastknown[id].type='eng'
+                            elseif EntityCategoryContains(categories.COMMAND,v) then
+                                aiBrain.lastknown[id].type='acu'
+                            elseif EntityCategoryContains(categories.ANTIAIR,v) then
+                                aiBrain.lastknown[id].type='aa'
+                            elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
+                                aiBrain.lastknown[id].type='tank'
+                            elseif EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                                aiBrain.lastknown[id].type='arty'
+                            end
+                        elseif EntityCategoryContains(categories.MASSEXTRACTION,v) then
+                            aiBrain.lastknown[id].type='mex'
+                        elseif EntityCategoryContains(categories.RADAR,v) then
+                            aiBrain.lastknown[id].type='radar'
+                        end
+                    end
+                    aiBrain.lastknown[id].object=v
+                    aiBrain.lastknown[id].Position=table.copy(v:GetPosition())
+                    aiBrain.lastknown[id].time=time
+                    aiBrain.lastknown[id].recent=true
+                end
+            end
+            WaitSeconds(2)
+            time=GetGameTimeSeconds()
+        end
+        for i,v in aiBrain.lastknown do
+            if (v.object and v.object.Dead) then
+                aiBrain.lastknown[i]=nil
+            elseif time-v.time>120 or (v.object and v.object.Dead) or (time-v.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,v.Position,20,'Ally')>3) then
+                aiBrain.lastknown[i].recent=false
+            end
+        end
+    end
+end
 ShowLastKnown = function(aiBrain)
     if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
         return
@@ -2652,6 +2704,32 @@ ShowLastKnown = function(aiBrain)
             end
         end
         WaitTicks(2)
+    end
+end
+TruePlatoonPriorityDirector = function(aiBrain)
+    aiBrain.prioritypoints={}
+    while not aiBrain.lastknown do WaitSeconds(2) end
+    while aiBrain.Result ~= "defeat" do
+        aiBrain.prioritypoints={}
+        for _=0,5 do
+            for k,v in aiBrain.lastknown do
+                if not v.recent or aiBrain.prioritypoints[k] then continue end
+                local priority=0
+                if v.type then
+                    if v.type=='eng' then
+                        priority=30
+                    elseif v.type=='mex' then
+                        priority=20
+                    elseif v.type=='radar' then
+                        priority=100
+                    else
+                        priority=10
+                    end
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
+                end
+            end
+            WaitTicks(10)
+        end
     end
 end
 ToColorRNG = function(min,max,ratio)
