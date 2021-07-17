@@ -213,7 +213,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() > 230
+        and GetGameTimeSeconds() > 210
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
         if cdr.GunUpgradePresent then

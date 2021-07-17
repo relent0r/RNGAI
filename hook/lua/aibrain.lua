@@ -304,9 +304,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [1] = {
                     Land = {
                         T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
+                            scout=15,
+                            tank=65,
+                            arty=15,
                             aa=12,
                             total=0
                         },
@@ -374,9 +374,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [2] = {
                     Land = {
                         T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
+                            scout=15,
+                            tank=65,
+                            arty=15,
                             aa=12,
                             total=0
                         },
@@ -443,9 +443,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [3] = {
                     Land = {
                         T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
+                            scout=15,
+                            tank=65,
+                            arty=15,
                             aa=12,
                             total=0
                         },
@@ -512,9 +512,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [4] = {
                     Land = {
                         T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
+                            scout=15,
+                            tank=65,
+                            arty=15,
                             aa=12,
                             total=0
                         },
@@ -579,9 +579,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [5] = {
                     Land = {
                         T1 = {
-                            scout=11,
-                            tank=55,
-                            arty=22,
+                            scout=15,
+                            tank=65,
+                            arty=15,
                             aa=12,
                             total=0
                         },
@@ -936,7 +936,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
         -- This is future goodies.
         
-        --self:ForkThread(self.ExpansionIntelScanRNG)
+        self:ForkThread(self.ExpansionIntelScanRNG)
         --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
 
@@ -4003,8 +4003,44 @@ AIBrain = Class(RNGAIBrainClass) {
                     v.PlatoonAssigned = false
                 end
                 if not v.Zone then
-                    local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
-                    --LOG('Check for position '..repr(expansionNode))
+                    --[[
+                        This is the information available in the Path Node currently. subject to change 7/13/2021
+                        info: Check for position {
+                        info:   GraphArea="LandArea_133",
+                        info:   RNGArea="Land15-24",
+                        info:   adjacentTo="Land19-11 Land20-11 Land20-12 Land20-13 Land18-11",
+                        info:   armydists={ ARMY_1=209.15859985352, ARMY_2=218.62866210938 },
+                        info:   bestarmy="ARMY_1",
+                        info:   bestexpand="Expansion Area 6",
+                        info:   color="fff4a460",
+                        info:   expanddists={
+                        info:     ARMY_1=209.15859985352,
+                        info:     ARMY_2=218.62866210938,
+                        info:     ARMY_3=118.64562988281,
+                        info:     ARMY_4=290.41003417969,
+                        info:     ARMY_5=270.42752075195,
+                        info:     ARMY_6=125.28052520752,
+                        info:     Expansion Area 1=354.38958740234,
+                        info:     Expansion Area 2=354.2922668457,
+                        info:     Expansion Area 5=222.54640197754,
+                        info:     Expansion Area 6=0
+                        info:   },
+                        info:   graph="DefaultLand",
+                        info:   hint=true,
+                        info:   orientation={ 0, 0, 0 },
+                        info:   position={ 312, 16.21875, 200, type="VECTOR3" },
+                        info:   prop="/env/common/props/markers/M_Path_prop.bp",
+                        info:   type="Land Path Node"
+                        info: }
+
+                    ]]
+                    local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
+                    LOG('Check for position '..repr(expansionNode))
+                    if expansionNode then
+                        self.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.GraphArea
+                    else
+                        self.BrainIntel.ExpansionWatchTable[k].Zone = false
+                    end
                 end
                 if v.MassPoints > 2 then
                     for _, t in threatTypes do

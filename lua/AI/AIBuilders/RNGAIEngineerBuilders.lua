@@ -63,8 +63,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
         BuilderConditions = {
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -86,7 +86,7 @@ BuilderGroup {
         Priority = 776,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -132,7 +132,7 @@ BuilderGroup {
         Priority = 600, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 0.7 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
@@ -144,7 +144,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 0.8} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.1, 0.8} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
@@ -522,7 +522,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
 
-            { EBC, 'LessThanEnergyTrendRNG', { 100.0 }, true },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 100.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1009,7 +1009,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 10.0 } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 10.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'Land',

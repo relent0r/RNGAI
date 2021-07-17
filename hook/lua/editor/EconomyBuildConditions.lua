@@ -80,7 +80,7 @@ function LessThanMassTrendRNG(aiBrain, mTrend)
     end
 end
 
---            { EBC, 'LessThanEnergyTrendRNG', { 50.0 } },
+--            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 50.0 } },
 function LessThanEnergyTrendRNG(aiBrain, eTrend)
 
     if GetEconomyTrend(aiBrain, 'ENERGY') < eTrend then
@@ -113,6 +113,16 @@ function GreaterThanEconTrendOverTimeRNG(aiBrain, MassTrend, EnergyTrend)
     -- Using eco over time values from the EconomyOverTimeRNG thread.
     --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
     if (aiBrain.EconomyOverTimeCurrent.MassTrendOverTime >= MassTrend and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime >= EnergyTrend) then
+        --LOG('GreaterThanEconTrendOverTime Returned True')
+        return true
+    end
+    --LOG('GreaterThanEconTrendOverTime Returned False')
+    return false
+end
+
+function LessThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
+
+    if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then
         --LOG('GreaterThanEconTrendOverTime Returned True')
         return true
     end

@@ -1123,7 +1123,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
-        Priority = 690,                                                          -- Priority. 1000 is normal.
+        Priority = 710,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {

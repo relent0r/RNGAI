@@ -57,7 +57,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     --LOG('* AI-RNG: Start Reclaim Function')
     if aiBrain.StartReclaimTaken then
         --LOG('StartReclaimTaken set to true')
-        --LOG('Start Reclaim Table has '..table.getn(aiBrain.StartReclaimTable)..' items in it')
+        --LOG('Start Reclaim Table has '..RNGGETN(aiBrain.StartReclaimTable)..' items in it')
     end
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
@@ -73,7 +73,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --self:SetCustomName('StartReclaim Logic Start')
             --LOG('Reclaim Function - Starting reclaim is false')
             local sortedReclaimTable = {}
-            if table.getn(aiBrain.StartReclaimTable) > 0 then
+            if RNGGETN(aiBrain.StartReclaimTable) > 0 then
                 
                 --WaitTicks(10)
                 local reclaimCount = 0
@@ -106,11 +106,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --LOG('Set key to nil')
                     aiBrain.StartReclaimTable[k] = nil
                 end
-                --LOG('Pre Rebuild Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                --LOG('Pre Rebuild Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
-                --LOG('Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                --LOG('Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 
-                if table.getn(aiBrain.StartReclaimTable) == 0 then
+                if RNGGETN(aiBrain.StartReclaimTable) == 0 then
                     --LOG('Start Reclaim Taken set to true')
                     aiBrain.StartReclaimTaken = true
                 else
@@ -145,7 +145,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
         --LOG('* AI-RNG: Going through reclaim table')
         --self:SetCustomName('Loop through reclaim table')
-        if reclaimRect and table.getn( reclaimRect ) > 0 then
+        if reclaimRect and RNGGETN( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
                 local rpos = v:GetCachePosition()
@@ -327,7 +327,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     -- Check if enemy units are at location
     local checkUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, pointRadius, 'Enemy')
     -- reclaim units near our building place.
-    if checkUnits and table.getn(checkUnits) > 0 then
+    if checkUnits and RNGGETN(checkUnits) > 0 then
         for num, unit in checkUnits do
             --temporary for troubleshooting
             --unitdesc = GetBlueprint(unit).Description
@@ -353,7 +353,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     end
     -- reclaim rocks etc or we can't build mexes or hydros
     local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
-    if Reclaimables and table.getn( Reclaimables ) > 0 then
+    if Reclaimables and RNGGETN( Reclaimables ) > 0 then
         for k,v in Reclaimables do
             if v.MaxMassReclaim and v.MaxMassReclaim > 0 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 0 then
                 IssueReclaim({eng}, v)
@@ -372,7 +372,7 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
 
     local structureCat = ParseEntityCategory(whatToBuild)
     local checkUnits = GetUnitsAroundPoint(aiBrain, structureCat, pos, 1, 'Ally')
-    if checkUnits and table.getn(checkUnits) > 0 then
+    if checkUnits and RNGGETN(checkUnits) > 0 then
         for num, unit in checkUnits do
             IssueRepair({eng}, unit)
         end
@@ -735,7 +735,7 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
 end
 
 function InitialMassMarkersInWater(aiBrain)
-    if table.getn(AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
+    if RNGGETN(AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
         return true
     else
         return false
@@ -840,7 +840,7 @@ function TacticalMassLocations(aiBrain)
     local markerGroups = {}
     local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
     if markerLocations then
-        aiBrain.BrainIntel.MassMarker = table.getn(markerLocations)
+        aiBrain.BrainIntel.MassMarker = RNGGETN(markerLocations)
     end
     local group = 1
     local duplicateMarker = {}
@@ -858,7 +858,7 @@ function TacticalMassLocations(aiBrain)
                 end
             end
             markerLocations[key_1] = nil
-            if table.getn(groupSet['Markers']) > 2 then
+            if RNGGETN(groupSet['Markers']) > 2 then
                 table.insert(markerGroups, groupSet)
                 --LOG('Group Set Markers :'..repr(groupSet))
                 group = group + 1
@@ -935,7 +935,7 @@ function GenerateMassGroupMarkerLocations(aiBrain)
     -- Will generate locations for markers on the center point for each unmarked mass group
     local markerGroups = aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups
     local newMarkerLocations = {}
-    if table.getn(markerGroups) > 0 then
+    if RNGGETN(markerGroups) > 0 then
         for key, group in markerGroups do
             local position = MassGroupCenter(group)
             table.insert(newMarkerLocations, position)
@@ -1326,7 +1326,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 category = ParseEntityCategory(category)
             end
             distance = maxRange
-            --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..table.getn(TargetsInRange)..'  ')
+            --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..RNGGETN(TargetsInRange)..'  ')
             for num, Target in TargetsInRange do
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
@@ -1389,7 +1389,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
     local validLocation = false
     local enemyStarts = {}
 
-    if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+    if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
         --LOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
         --LOG('*AI RNG: SpamBase position is'..repr(location))
         enemyStarts = aiBrain.EnemyIntel.EnemyStartLocations
@@ -1798,7 +1798,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 	if positionselection then
 	
 		if type(positionselection) == 'boolean' then
-			positionselection = Random( 1, counter )	--table.getn(sortedList))
+			positionselection = Random( 1, counter )	--RNGGETN(sortedList))
 		end
 
 	end
@@ -2127,7 +2127,7 @@ function GetMarkersByType(markerType)
         end
         -- add the markers of this type to the cache
         markerTypeCache[markerType] = cache
-        --LOG("ScenarioUtils: Cached " .. table.getn(cache) .. " markers of type: " .. markerType)
+        --LOG("ScenarioUtils: Cached " .. RNGGETN(cache) .. " markers of type: " .. markerType)
     end
     -- return the cached markers
     return markerTypeCache[markerType]
@@ -2188,7 +2188,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
             table.insert(newList, v)
         end
     end
-    --LOG('Return marker list has '..table.getn(newList)..' entries')
+    --LOG('Return marker list has '..RNGGETN(newList)..' entries')
     return newList
 end
 
@@ -2381,7 +2381,7 @@ GenerateDistinctColorTable = function(num)
         table.insert(colortable,v..v..v)
         combinations[combintoid(k,k,k)]=1
     end]]
-    local max=ViableValues[table.getn(ViableValues)]
+    local max=ViableValues[RNGGETN(ViableValues)]
     local min=ViableValues[1]
     local primaries={min..min..min,max..max..min,max..min..max,min..max..max,max..min..min,min..max..min,min..min..max,max..max..max}
     combinations[combintoid(max,max,min)]=1
@@ -2444,7 +2444,7 @@ function DisplayMarkerAdjacency(aiBrain)
         end
     end
     aiBrain.analysistablecolors={}
-    local tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
+    local tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
     local colors=aiBrain.analysistablecolors
     --WaitSeconds(10)
     --LOG('colortable is'..repr(tablecolors))
@@ -2454,7 +2454,7 @@ function DisplayMarkerAdjacency(aiBrain)
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(army[1].position,25,'Land').name]
             --LOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,army[2])
-            local randy=math.random(table.getn(tablecolors))
+            local randy=math.random(RNGGETN(tablecolors))
             colors[army[2]]='FF'..tablecolors[randy]
             table.remove(tablecolors,randy)
         end
@@ -2469,9 +2469,9 @@ function DisplayMarkerAdjacency(aiBrain)
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
             local randy=nil
             if i<9 then
-                randy=math.random(table.getn(tablecolors)-7+i,table.getn(tablecolors))
+                randy=math.random(RNGGETN(tablecolors)-7+i,RNGGETN(tablecolors))
             else
-                randy=math.random(table.getn(tablecolors))
+                randy=math.random(RNGGETN(tablecolors))
             end
             colors[aiBrain.expandspots[1][2]]=tablecolors[randy]
             table.remove(tablecolors,randy)
@@ -2483,12 +2483,12 @@ function DisplayMarkerAdjacency(aiBrain)
         WaitTicks(2)
     end
     if expands then
-        --tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
+        --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
         for _,expand in aiBrain.expandspots do
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
             --LOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
-            local randy=math.random(table.getn(tablecolors))
+            local randy=math.random(RNGGETN(tablecolors))
             if colors[expand[2]] then continue end
             colors[expand[2]]=tablecolors[randy]
             table.remove(tablecolors,randy)
@@ -2499,7 +2499,7 @@ function DisplayMarkerAdjacency(aiBrain)
     end
     --LOG('RNGAreas:')
     --for k,v in aiBrain.RNGAreas do
-    --    LOG(repr(k)..' has '..repr(table.getn(v))..' nodes')
+    --    LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
@@ -2627,11 +2627,11 @@ end
 
 GrabRandomDistinctColor = function(num)
     local output=GenerateDistinctColorTable(num)
-    return output[math.random(table.getn(output))]
+    return output[math.random(RNGGETN(output))]
 end
 LastKnownThread = function(aiBrain)
     aiBrain.lastknown={}
-    aiBrain:ForkThread(ShowLastKnown)
+    --aiBrain:ForkThread(ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
     while not aiBrain.emanager.enemies do WaitSeconds(2) end
     while aiBrain.Result ~= "defeat" do
@@ -2706,7 +2706,7 @@ ShowLastKnown = function(aiBrain)
         WaitTicks(2)
     end
 end
-TruePlatoonPriorityDirector = function(aiBrain)
+--[[TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
     while not aiBrain.lastknown do WaitSeconds(2) end
     while aiBrain.Result ~= "defeat" do
@@ -2731,7 +2731,61 @@ TruePlatoonPriorityDirector = function(aiBrain)
             WaitTicks(10)
         end
     end
+end]]
+
+TruePlatoonPriorityDirector = function(aiBrain)
+    aiBrain.prioritypoints={}
+    while not aiBrain.lastknown do WaitSeconds(2) end
+    while aiBrain.Result ~= "defeat" do
+        LOG('Check Expansion table in priority directo')
+        if aiBrain.BrainIntel.ExpansionWatchTable then
+            for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                if v.Land > 0 or v.Structures > 0 then
+                    local priority=0
+                    local acuPresent = false
+                    if v.Structures > 0 then
+                        priority = priority + 40
+                    end
+                    if v.Land > 0 then 
+                        priority = priority + 30
+                    end
+                    if v.PlatoonAssigned then
+                        priority = priority - 20
+                    end
+                    if v.Commander > 0 then
+                        acuPresent = true
+                    end
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent}
+                else
+                    if aiBrain.prioritypoints[k] then
+                        aiBrain.prioritypoints[k].priority = 0
+                    end
+                end
+            end
+            WaitTicks(10)
+        end
+        LOG('Check lastknown')
+        for k,v in aiBrain.lastknown do
+            if not v.recent or aiBrain.prioritypoints[k] then continue end
+            local priority=0
+            if v.type then
+                if v.type=='eng' then
+                    priority=50
+                elseif v.type=='mex' then
+                    priority=40
+                elseif v.type=='radar' then
+                    priority=100
+                else
+                    priority=20
+                end
+                aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
+            end
+        end
+        WaitTicks(50)
+        --LOG('Priority Points'..repr(aiBrain.prioritypoints))
+    end
 end
+
 ToColorRNG = function(min,max,ratio)
     local ToBase16 = function(num)
         if num<10 then
@@ -2862,7 +2916,7 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
                 WaitTicks(1)
                 return
             end
-            if reclaimRect and table.getn( reclaimRect ) > 0 then
+            if reclaimRect and RNGGETN( reclaimRect ) > 0 then
                 for k,v in reclaimRect do
                     if not IsProp(v) or self.BadReclaimables[v] then continue end
                     currentValue = currentValue + v.MaxMassReclaim
