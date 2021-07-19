@@ -50,7 +50,7 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
         if i == NodeCount and NodeCount > 1 and VDist2(endPos[1], endPos[3], node.position[1], node.position[3]) < 20 then  
             continue
         end
-        table.insert(finalPath, node.position)
+        RNGINSERT(finalPath, node.position)
     end
 
     -- return the path
@@ -159,7 +159,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
                     -- add as cost for the path the path distance and threat to the overall cost from the whole path
                     fork.cost = fork.cost + dist + (threat * 1) * threatWeight
                     -- add the newNode at the end of the path
-                    table.insert(fork.path, newNode)
+                    RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
                     if newNode.name == endNode.name then
                         -- store the path inside the path cache
@@ -168,7 +168,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    table.insert(queue,fork)
+                    RNGINSERT(queue,fork)
                 end
             end
             -- Mark this node as checked
@@ -205,7 +205,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
     if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2(start[1], start[3], destination[1], destination[3]) <= 100
     or (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist)) then
-        table.insert(finalPath, destination)
+        RNGINSERT(finalPath, destination)
         return finalPath
     end
 
@@ -229,11 +229,11 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
     for i,node in path.path do
         if i > 1 and i < table.getn(path.path) then
-            table.insert(finalPath, node.position)
+            RNGINSERT(finalPath, node.position)
         end
     end
 
-    table.insert(finalPath, destination)
+    RNGINSERT(finalPath, destination)
 
     return finalPath, false, path.totalThreat
 end
@@ -344,7 +344,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                     fork.cost = fork.cost + dist + (threat * threatWeight)
                     fork.totalThreat = fork.totalThreat + (threat * threatWeight)
                     -- add the newNode at the end of the path
-                    table.insert(fork.path, newNode)
+                    RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
                     if newNode.name == endNode.name then
                         -- store the path inside the path cache
@@ -354,7 +354,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    table.insert(queue,fork)
+                    RNGINSERT(queue,fork)
                 end
             end
             -- Mark this node as checked
@@ -558,7 +558,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 local survivors = {}
                 for _,v in units do
                     if not v.Dead then
-                        table.insert(survivors, v)
+                        RNGINSERT(survivors, v)
                     end
                 end
                 units = survivors
@@ -774,7 +774,7 @@ function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
                     -- add as cost for the path the distance to the overall cost from the whole path
                     fork.cost = fork.cost + dist
                     -- add the newNode at the end of the path
-                    table.insert(fork.path, newNode)
+                    RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
                     if newNode.name == endNode.name then
                         -- store the path inside the path cache
@@ -784,7 +784,7 @@ function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    table.insert(queue,fork)
+                    RNGINSERT(queue,fork)
                 end
             end
             -- Mark this node as checked
@@ -1036,7 +1036,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         if not v.Dead then
             local unitCmdQ = v:GetCommandQueue()
             for cmdIdx,cmdVal in unitCmdQ do
-                table.insert(cmd, cmdVal)
+                RNGINSERT(cmd, cmdVal)
                 break
             end
         end
@@ -1048,15 +1048,15 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
     local catTable = {}
     local unitTable = {}
     for k,v in priTable do
-        table.insert(catTable, v)
-        table.insert(unitTable, {})
+        RNGINSERT(catTable, v)
+        RNGINSERT(unitTable, {})
     end
 
     local units = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, radius, alliance) or {}
     for num, unit in units do
         for tNum, catType in catTable do
             if EntityCategoryContains(catType, unit) then
-                table.insert(unitTable[tNum], unit)
+                RNGINSERT(unitTable[tNum], unit)
                 break
             end
         end

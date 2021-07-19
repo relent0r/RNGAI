@@ -15,6 +15,8 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local RNGGETN = table.getn
+local RNGINSERT = table.insert
+local WaitTicks = coroutine.yield
 
 RNGAIPlatoon = Platoon
 Platoon = Class(RNGAIPlatoon) {
@@ -35,16 +37,16 @@ Platoon = Class(RNGAIPlatoon) {
         local defensive = data.Defensive or false
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(atkPri, v)
+                RNGINSERT(atkPri, v)
                 if type(v) == 'string' then
-                    table.insert(categoryList, ParseEntityCategory(v))
+                    RNGINSERT(categoryList, ParseEntityCategory(v))
                 else
-                    table.insert(categoryList, v)
+                    RNGINSERT(categoryList, v)
                 end
             end
         else
-            table.insert(atkPri, categories.MOBILE * categories.AIR)
-            table.insert(categoryList, categories.MOBILE * categories.AIR)
+            RNGINSERT(atkPri, categories.MOBILE * categories.AIR)
+            RNGINSERT(categoryList, categories.MOBILE * categories.AIR)
         end
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
@@ -311,9 +313,9 @@ Platoon = Class(RNGAIPlatoon) {
 
         if self.PlatoonData.PrioritizedCategories then
             for k,v in self.PlatoonData.PrioritizedCategories do
-                table.insert(atkPri, v)
+                RNGINSERT(atkPri, v)
             end
-            table.insert(atkPri, 'ALLUNITS')
+            RNGINSERT(atkPri, 'ALLUNITS')
         end
         
         if IgnoreFriendlyBase then
@@ -1273,23 +1275,23 @@ Platoon = Class(RNGAIPlatoon) {
         if data.TargetSearchPriorities then
             --LOG('TargetSearch present for '..self.BuilderName)
             for k,v in data.TargetSearchPriorities do
-                table.insert(atkPri, v)
+                RNGINSERT(atkPri, v)
             end
         else
             if data.PrioritizedCategories then
                 for k,v in data.PrioritizedCategories do
-                    table.insert(atkPri, v)
+                    RNGINSERT(atkPri, v)
                 end
             end
         end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, v)
+                RNGINSERT(categoryList, v)
             end
         end
 
-        table.insert(atkPri, categories.ALLUNITS)
-        table.insert(categoryList, categories.ALLUNITS)
+        RNGINSERT(atkPri, categories.ALLUNITS)
+        RNGINSERT(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
 
         --local debugloop = 0
@@ -1675,23 +1677,23 @@ Platoon = Class(RNGAIPlatoon) {
         if data.TargetSearchPriorities then
             --LOG('TargetSearch present for '..self.BuilderName)
             for k,v in data.TargetSearchPriorities do
-                table.insert(atkPri, v)
+                RNGINSERT(atkPri, v)
             end
         else
             if data.PrioritizedCategories then
                 for k,v in data.PrioritizedCategories do
-                    table.insert(atkPri, v)
+                    RNGINSERT(atkPri, v)
                 end
             end
         end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, v)
+                RNGINSERT(categoryList, v)
             end
         end
 
-        table.insert(atkPri, 'ALLUNITS')
-        table.insert(categoryList, categories.ALLUNITS)
+        RNGINSERT(atkPri, 'ALLUNITS')
+        RNGINSERT(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Artillery', categoryList)
         self:SetPrioritizedTargetList('Attack', {categories.MOBILE * categories.NAVAL, categories.ALLUNITS})
 
@@ -2011,25 +2013,25 @@ Platoon = Class(RNGAIPlatoon) {
         if data.TargetSearchPriorities then
             --LOG('TargetSearch present for '..self.BuilderName)
             for k,v in data.TargetSearchPriorities do
-                table.insert(atkPri, v)
+                RNGINSERT(atkPri, v)
             end
         else
             if data.PrioritizedCategories then
                 for k,v in data.PrioritizedCategories do
-                    table.insert(atkPri, v)
+                    RNGINSERT(atkPri, v)
                 end
             end
         end
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(categoryList, v)
+                RNGINSERT(categoryList, v)
             end
         end
         AIAttackUtils.GetMostRestrictiveLayer(self)
         
         -- Removing ALLUNITS so we rely on the builder config. Stops bombers trying to attack fighters.
-        --table.insert(atkPri, categories.ALLUNITS)
-        --table.insert(categoryList, categories.ALLUNITS)
+        --RNGINSERT(atkPri, categories.ALLUNITS)
+        --RNGINSERT(categoryList, categories.ALLUNITS)
 
         --LOG('Platoon is '..self.BuilderName..' table'..repr(categoryList))
         self:SetPrioritizedTargetList('Attack', categoryList)
@@ -2045,7 +2047,7 @@ Platoon = Class(RNGAIPlatoon) {
             for k, v in aiBrain.EnemyIntel.ACU do
                 if v.OnField and v.Gun then
                     acuTargeting = true
-                    table.insert(acuTargetIndex, k)
+                    RNGINSERT(acuTargetIndex, k)
                 end
             end
         end
@@ -2066,7 +2068,7 @@ Platoon = Class(RNGAIPlatoon) {
                             --LOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..myThreat)
                             if ((v.Hp / 275) < myThreat or v.Hp < 2000) and ((GetGameTimeSeconds() - 120) < v.LastSpotted) then
                                 --LOG('ACU Target valid, adding to index list')
-                                table.insert(enemyACUIndexes, k)
+                                RNGINSERT(enemyACUIndexes, k)
                             end
                         end
                     end
@@ -2401,7 +2403,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             relative = false
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.OrderedTemplate then
             local relativeTo = table.copy(eng:GetPosition())
             --LOG('relativeTo is'..repr(relativeTo))
@@ -2415,7 +2417,7 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('reference is '..repr(reference))
             --LOG('World Pos '..repr(tmpReference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             --LOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
             --LOG('NearPerimeterPoints')
@@ -2424,7 +2426,7 @@ Platoon = Class(RNGAIPlatoon) {
             relative = false
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             for k,v in reference do
-                table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
+                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
             end
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
         elseif cons.NearBasePatrolPoints then
@@ -2432,7 +2434,7 @@ Platoon = Class(RNGAIPlatoon) {
             reference = AIUtils.GetBasePatrolPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 100)
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             for k,v in reference do
-                table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
+                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
             end
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
@@ -2536,7 +2538,7 @@ Platoon = Class(RNGAIPlatoon) {
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, eng, cons)
             end
             relative = false
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
             buildFunction = AIBuildStructures.AIBuildBaseTemplate
@@ -2549,7 +2551,7 @@ Platoon = Class(RNGAIPlatoon) {
                             cons.MarkerUnitCategory, cons.MarkerRadius, cons.MarkerUnitCount, (cons.ThreatMin or 0), (cons.ThreatMax or 1),
                             (cons.ThreatRings or 1), (cons.ThreatType or 'AntiSurface'))
 
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
 
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType and cons.NearMarkerType == 'Naval Defensive Point' then
@@ -2561,7 +2563,7 @@ Platoon = Class(RNGAIPlatoon) {
                             cons.MarkerUnitCategory, cons.MarkerRadius, cons.MarkerUnitCount, (cons.ThreatMin or 0), (cons.ThreatMax or 1),
                             (cons.ThreatRings or 1), (cons.ThreatType or 'AntiSurface'))
 
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
 
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType and (cons.NearMarkerType == 'Rally Point' or cons.NearMarkerType == 'Protected Experimental Construction') then
@@ -2578,7 +2580,7 @@ Platoon = Class(RNGAIPlatoon) {
             if not reference then
                 reference = pos
             end
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType then
             --WARN('*Data weird for builder named - ' .. self.BuilderName)
@@ -2597,7 +2599,7 @@ Platoon = Class(RNGAIPlatoon) {
             if cons.ExpansionBase and refName then
                 AIBuildStructures.AINewExpansionBase(aiBrain, refName, reference, (cons.ExpansionRadius or 100), cons.ExpansionTypes, nil, cons)
             end
-            table.insert(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.AdjacencyPriority then
             relative = false
@@ -2605,7 +2607,7 @@ Platoon = Class(RNGAIPlatoon) {
             local cats = {}
             --LOG('setting up adjacencypriority... cats are '..repr(cons.AdjacencyPriority))
             for _,v in cons.AdjacencyPriority do
-                table.insert(cats,v)
+                RNGINSERT(cats,v)
             end
             reference={}
             if not pos or not pos then
@@ -2620,11 +2622,11 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 local radius = (cons.AdjacencyDistance or 50)
                 local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cat, pos, radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
-                table.insert(reference,refunits)
+                RNGINSERT(reference,refunits)
                 --LOG('cat '..i..' had '..repr(RNGGETN(refunits))..' units')
             end
             buildFunction = AIBuildStructures.AIBuildAdjacencyPriorityRNG
-            table.insert(baseTmplList, baseTmpl)
+            RNGINSERT(baseTmplList, baseTmpl)
         elseif cons.AvoidCategory then
             relative = false
             local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
@@ -2646,7 +2648,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             reference  = AIUtils.FindUnclutteredArea(aiBrain, cat, pos, radius, cons.maxUnits, cons.maxRadius, avoidCat)
             buildFunction = AIBuildStructures.AIBuildAdjacency
-            table.insert(baseTmplList, baseTmpl)
+            RNGINSERT(baseTmplList, baseTmpl)
         elseif cons.AdjacencyCategory then
             relative = false
             local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
@@ -2664,9 +2666,9 @@ Platoon = Class(RNGAIPlatoon) {
             reference  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, cat, pos, radius, cons.ThreatMin,
                                                         cons.ThreatMax, cons.ThreatRings)
             buildFunction = AIBuildStructures.AIBuildAdjacency
-            table.insert(baseTmplList, baseTmpl)
+            RNGINSERT(baseTmplList, baseTmpl)
         else
-            table.insert(baseTmplList, baseTmpl)
+            RNGINSERT(baseTmplList, baseTmpl)
             relative = true
             reference = true
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
@@ -2926,7 +2928,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
                                 aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
                                 local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative}
-                                table.insert(eng.EngineerBuildQueue, newEntry)
+                                RNGINSERT(eng.EngineerBuildQueue, newEntry)
                             end
                         else
                             --LOG('Cant find mass within distance')
@@ -3100,18 +3102,18 @@ Platoon = Class(RNGAIPlatoon) {
         if self.PlatoonData.TargetSearchPriorities then
             --LOG('TargetSearch present for '..self.BuilderName)
             for k,v in self.PlatoonData.TargetSearchPriorities do
-                table.insert(atkPri, v)
+                RNGINSERT(atkPri, v)
             end
         else
             if self.PlatoonData.PrioritizedCategories then
                 for k,v in self.PlatoonData.PrioritizedCategories do
-                    table.insert(atkPri, v)
+                    RNGINSERT(atkPri, v)
                 end
             end
         end
         if self.PlatoonData.PrioritizedCategories then
             for k,v in self.PlatoonData.PrioritizedCategories do
-                table.insert(categoryList, v)
+                RNGINSERT(categoryList, v)
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
@@ -3506,7 +3508,7 @@ Platoon = Class(RNGAIPlatoon) {
             local strayTransports = {}
             for k,v in platoonUnits do
                 if EntityCategoryContains(categories.TRANSPORTATION, v) then
-                    table.insert(strayTransports, v)
+                    RNGINSERT(strayTransports, v)
                 end
             end
             if RNGGETN(strayTransports) > 0 then
@@ -3519,7 +3521,7 @@ Platoon = Class(RNGAIPlatoon) {
                 for k,v in platoonUnits do
                     local parent = v:GetParent()
                     if parent and EntityCategoryContains(categories.TRANSPORTATION, parent) then
-                        table.insert(strayTransports, parent)
+                        RNGINSERT(strayTransports, parent)
                         break
                     end
                 end
@@ -3551,7 +3553,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if not v.Dead then
                     local unitCmdQ = v:GetCommandQueue()
                     for cmdIdx,cmdVal in unitCmdQ do
-                        table.insert(cmdQ, cmdVal)
+                        RNGINSERT(cmdQ, cmdVal)
                         break
                     end
                 end
@@ -3703,7 +3705,7 @@ Platoon = Class(RNGAIPlatoon) {
                 local bValidUnits = false
                 for _,u in units do
                     if not u.Dead and not u:IsUnitState('Attached') then
-                        table.insert(validUnits, u)
+                        RNGINSERT(validUnits, u)
                         bValidUnits = true
                     end
                 end
@@ -3930,7 +3932,7 @@ Platoon = Class(RNGAIPlatoon) {
                             'STRUCTURE DEFENSE DIRECTFIRE', 'TECH3 MASSFABRICATION', 'TECH3 ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE DEFENSE', 'STRUCTURE', 'MOBILE', 'SPECIALLOWPRI', 'ALLUNITS' }
         local atkPriTable = {}
         for k,v in atkPri do
-            table.insert(atkPriTable, ParseEntityCategory(v))
+            RNGINSERT(atkPriTable, ParseEntityCategory(v))
         end
         self:SetPrioritizedTargetList('Attack', atkPriTable)
         local maxRadius = 6000
@@ -4008,7 +4010,7 @@ Platoon = Class(RNGAIPlatoon) {
         local MoveToCategories = {}
         if self.PlatoonData.MoveToCategories then
             for k,v in self.PlatoonData.MoveToCategories do
-                table.insert(MoveToCategories, v )
+                RNGINSERT(MoveToCategories, v )
             end
         else
             --LOG('* RNGAI: * SACUATTACKAIRNG: MoveToCategories missing in platoon '..self.BuilderName)
@@ -4016,7 +4018,7 @@ Platoon = Class(RNGAIPlatoon) {
         local WeaponTargetCategories = {}
         if self.PlatoonData.WeaponTargetCategories then
             for k,v in self.PlatoonData.WeaponTargetCategories do
-                table.insert(WeaponTargetCategories, v )
+                RNGINSERT(WeaponTargetCategories, v )
             end
         elseif self.PlatoonData.MoveToCategories then
             WeaponTargetCategories = MoveToCategories
@@ -4297,12 +4299,12 @@ Platoon = Class(RNGAIPlatoon) {
                 local guardee = assistee:GetGuardedUnit()
                 if guardee and not guardee.Dead and EntityCategoryContains(categories.FACTORY, guardee) then
                     local factories = AIUtils.AIReturnAssistingFactories(guardee)
-                    table.insert(factories, assistee)
+                    RNGINSERT(factories, assistee)
                     AIUtils.AIEngineersAssistFactories(aiBrain, platoonUnits, factories)
                     assistingBool = true
                 elseif RNGGETN(assistee:GetGuards()) > 0 then
                     local factories = AIUtils.AIReturnAssistingFactories(assistee)
-                    table.insert(factories, assistee)
+                    RNGINSERT(factories, assistee)
                     AIUtils.AIEngineersAssistFactories(aiBrain, platoonUnits, factories)
                     assistingBool = true
                 end
@@ -4623,7 +4625,7 @@ Platoon = Class(RNGAIPlatoon) {
                         missileCount = tml:GetTacticalSiloAmmoCount()
                         if missileCount > 0 then
                             totalMissileCount = totalMissileCount + missileCount
-                            table.insert(readyTmlLaunchers, tml)
+                            RNGINSERT(readyTmlLaunchers, tml)
                         end
                     end
                     if missileCount > 1 and ecoCaution then
@@ -4698,10 +4700,10 @@ Platoon = Class(RNGAIPlatoon) {
                                         if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
                                             if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
                                                 --LOG('Only 1 missile required')
-                                                table.insert(inRangeTmlLaunchers, tml)
+                                                RNGINSERT(inRangeTmlLaunchers, tml)
                                                 break
                                             else
-                                                table.insert(inRangeTmlLaunchers, tml)
+                                                RNGINSERT(inRangeTmlLaunchers, tml)
                                                 local readyTML = RNGGETN(inRangeTmlLaunchers)
                                                 if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
                                                     --LOG('inRangeTmlLaunchers table number is enough for kill')
@@ -4784,12 +4786,12 @@ Platoon = Class(RNGAIPlatoon) {
         local atkPriTable = {}
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
-                table.insert(atkPri, v)
-                table.insert(atkPriTable, v)
+                RNGINSERT(atkPri, v)
+                RNGINSERT(atkPriTable, v)
             end
         end
-        table.insert(atkPri, categories.ALLUNITS)
-        table.insert(atkPriTable, categories.ALLUNITS)
+        RNGINSERT(atkPri, categories.ALLUNITS)
+        RNGINSERT(atkPriTable, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', atkPriTable)
 
         local maxRadius = data.SearchRadius or 50
@@ -4895,7 +4897,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --LOG('NukeAIRNG : SML has '..missileCount..' missiles')
                 if missileCount > 0 then
                     readySmlLauncherCount = readySmlLauncherCount + 1
-                    table.insert(readySmlLaunchers, sml)
+                    RNGINSERT(readySmlLaunchers, sml)
                 end
             end
             --LOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
@@ -4936,7 +4938,7 @@ Platoon = Class(RNGAIPlatoon) {
         local atkPriTable = {}
         --LOG('Adding Target Priorities')
         for k,v in atkPri do
-            table.insert(atkPriTable, v)
+            RNGINSERT(atkPriTable, v)
         end
         --LOG('Setting artillery priorities')
         self:SetPrioritizedTargetList('artillery', atkPriTable)
@@ -5312,7 +5314,7 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('MexBuild Platoon Checking for expansion mex')
                     aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
                     local newEntry = {whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position}
-                    table.insert(eng.EngineerBuildQueue, newEntry)
+                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
                     currentmexpos=massMarker.Position
                     end
                 else
@@ -5557,7 +5559,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if VDist2Sq(v.Position[1],v.Position[3],platoon.Pos[1],platoon.Pos[3])<150*150 then
                     continue
                 end
-                table.insert(raidlocs,v)
+                RNGINSERT(raidlocs,v)
             end
             table.sort(raidlocs,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],platoon.Pos[1],platoon.Pos[3])*VDist2Sq(k1.Position[1],k1.Position[3],platoon.home[1],platoon.home[3])/VDist2Sq(k1.Position[1],k1.Position[3],platoon.base[1],platoon.base[3])<VDist2Sq(k2.Position[1],k2.Position[3],platoon.Pos[1],platoon.Pos[3])*VDist2Sq(k2.Position[1],k2.Position[3],platoon.home[1],platoon.home[3])/VDist2Sq(k2.Position[1],k2.Position[3],platoon.base[1],platoon.base[3]) end)
             platoon.dest=raidlocs[1].Position
@@ -5580,10 +5582,37 @@ Platoon = Class(RNGAIPlatoon) {
                 return false
             end
         end
-        local function SimpleDoRetreat(self,aiBrain,location)--basic "choose path and then start retreating" function
-            local platoon=self
-            if platoon.path and VDist3Sq(platoon.path[RNGGETN(platoon.path)],location)<20*20 then return end
-            platoon.path=AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, platoon.Pos, location, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+        local function SimpleDoRetreat(self,aiBrain)--basic "choose path and then start retreating" function
+            local location = false
+            local RangeList = {
+                [1] = 30,
+                [1] = 64,
+                [2] = 128,
+                [2] = 192,
+                [3] = 256,
+            }
+            for _, range in RangeList do
+                local retreatUnits = GetUnitsAroundPoint(aiBrain, (categories.MASSEXTRACTION + categories.ENGINEER), self.Pos, range, 'Ally')
+                if retreatUnits then
+                    for _, unit in retreatUnits do
+                        local unitPos = unit:GetPosition()
+                        if AIAttackUtils.CanGraphToRNG(self.Pos,unitPos,self.MovementLayer) then
+                            location = unitPos
+                            LOG('Retreat Position found for mex or engineer')
+                            break
+                        end
+                    end
+                end
+                if location then
+                    break
+                end
+            end
+            if (not location) then
+                location = self.home
+                LOG('No retreat location found, retreat to home')
+            end
+            if self.path and VDist3Sq(self.path[RNGGETN(self.path)],location)<20*20 then return end
+            self.path=AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, self.Pos, location, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
         end
         local function VariableKite(self,unit,target)--basic kiting function.. complicated as heck
             local function KiteDist(pos1,pos2,distance,healthmod)
@@ -5646,9 +5675,10 @@ Platoon = Class(RNGAIPlatoon) {
             local units=self:GetPlatoonUnits()
             for _,v in units do
                 if v.Dead or not v then continue end
-                table.sort(self.targetcandidates,function(a,b) return VDist3Sq(v:GetPosition(),a:GetPosition())*a.chpworth<VDist3Sq(v:GetPosition(),b:GetPosition())*b.chpworth end)
+                local unitPos = v:GetPosition()
+                table.sort(self.targetcandidates,function(a,b) return VDist3Sq(unitPos,a:GetPosition())*a.chpworth<VDist3Sq(unitPos,b:GetPosition())*b.chpworth end)
                 local target=self.targetcandidates[1]
-                if VDist3Sq(v:GetPosition(),target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                if VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                     IssueClearCommands({v}) 
                     IssueMove({v},target:GetPosition())
                     continue
@@ -5663,7 +5693,7 @@ Platoon = Class(RNGAIPlatoon) {
             local platoon=self
             for _,v in aiBrain.prioritypoints do
                 n=n+1
-                --table.insert(prioritypoints1,v)
+                --RNGINSERT(prioritypoints1,v)
                 --LOG('type'..repr(v.type))
             end
             if not prioritypoints or n==0 then
@@ -5764,6 +5794,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         UnitInitialize(self)
         self:Stop()
+        local startTime = GetGameTimeSeconds()
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target
@@ -5789,9 +5820,14 @@ Platoon = Class(RNGAIPlatoon) {
         platoon.enemyThreats = {}
         platoon.threats = {}
         while PlatoonExists(aiBrain, self) do
-            UnitInitialize(self)
-            self:ForkThread(self.CHPMergePlatoon,20)
+            
             platoonUnits = GetPlatoonUnits(self)
+            local platoonNum=RNGGETN(platoonUnits)
+            if platoonNum < 20 then
+                if self:CHPMergePlatoon(30) then
+                    UnitInitialize(self)
+                end
+            end
             if platoon.navigating then 
                 while platoon.navigating do 
                     if ScenarioInfo.Options.AIDebugDisplay == 'displayOn' then
@@ -5800,7 +5836,6 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(2) 
                 end 
             end
-            local platoonNum=RNGGETN(platoonUnits)
             local spread=0
             local snum=0
             platoon.clumpmode=false
@@ -5818,25 +5853,9 @@ Platoon = Class(RNGAIPlatoon) {
                     WaitTicks(math.ceil(math.sqrt(spread/platoonNum+10)))
                 end
             end
-            local alliedmexes=table.copy(aiBrain:GetListOfUnits(categories.MASSEXTRACTION + categories.ENGINEER, false, true))--decide where we are retreating to
-            local closestmex=nil
-            if alliedmexes[1] then
-                table.sort(alliedmexes,function(k1,k2) return VDist3Sq(k1:GetPosition(),platoon.Pos)<VDist3Sq(k2:GetPosition(),platoon.Pos) end)
-                for _,v in alliedmexes do
-                    if AIAttackUtils.CanGraphToRNG(self.Pos,v:GetPosition(),self.MovementLayer) then
-                        closestmex=v
-                        break
-                    end
-                end
-            end
-            if closestmex then
-                platoon.home=closestmex:GetPosition()
-            else 
-                platoon.home=platoon.base
-            end
             --LOG('trueplatoon distance from base is '..VDist2Sq(platoon.Pos[1], platoon.Pos[3], platoon.base[1], platoon.base[3]))
             if SimpleRetreat(self,aiBrain) then--retreat if we feel like it
-                SimpleDoRetreat(self,aiBrain,platoon.home)
+                SimpleDoRetreat(self,aiBrain)
             elseif VDist2Sq(platoon.Pos[1], platoon.Pos[3], platoon.base[1], platoon.base[3]) > 10000 and SimplePriority(self,aiBrain) then--do priority stuff next
 
             elseif SimpleTarget(self,aiBrain) then--do combat stuff
@@ -5849,6 +5868,8 @@ Platoon = Class(RNGAIPlatoon) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
+            startTime = GetGameTimeSeconds() - startTime
+            LOG('Trueplatoon Loop Time = '..startTime)
             WaitTicks(15)
         end
     end,
@@ -5989,7 +6010,7 @@ Platoon = Class(RNGAIPlatoon) {
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
             if platoonNum < 20 then
-                self:CHPMergePlatoon(20)
+                self:CHPMergePlatoon(30)
             end
             local spread=0
             local snum=0
@@ -6043,11 +6064,11 @@ Platoon = Class(RNGAIPlatoon) {
             for _,v in platoonUnits do
                 if v and not v.Dead then
                     if v.Role=='Artillery' or v.Role=='Silo' or v.Role=='Sniper' or v.Role=='Shield' then
-                        table.insert(supportsquad,v)
+                        RNGINSERT(supportsquad,v)
                     elseif v.Role=='Scout' then
-                        table.insert(scouts,v)
+                        RNGINSERT(scouts,v)
                     elseif v.Role=='AA' then
-                        table.insert(aa,v)
+                        RNGINSERT(aa,v)
                     end
                 end
             end
@@ -6102,7 +6123,7 @@ Platoon = Class(RNGAIPlatoon) {
             if not p or p==self or not aiBrain:PlatoonExists(p) or not p.chpdata.name or not p.chpdata.name==self.chpdata.name or VDist3Sq(self:GetPlatoonPosition(),p:GetPlatoonPosition())>best or RNGGETN(p:GetPlatoonUnits())>30 then  
                 --LOG('merge table removed '..repr(i)..' merge table now holds '..repr(RNGGETN(ps)))
             else
-                table.insert(ps,p)
+                RNGINSERT(ps,p)
             end
         end
         if RNGGETN(ps)<1 then 
@@ -6122,7 +6143,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local bValidUnits = false
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
-                            table.insert(validUnits, u)
+                            RNGINSERT(validUnits, u)
                             bValidUnits = true
                         end
                     end
@@ -6132,7 +6153,7 @@ Platoon = Class(RNGAIPlatoon) {
                     aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                     self.chpdata.merging=false
                     ps[1]:PlatoonDisbandNoAssign()
-                    return
+                    return true
                 end
             end
         else
@@ -6149,7 +6170,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local bValidUnits = false
                         for _,u in units do
                             if not u.Dead and not u:IsUnitState('Attached') then
-                                table.insert(validUnits, u)
+                                RNGINSERT(validUnits, u)
                                 bValidUnits = true
                             end
                         end
@@ -6159,7 +6180,7 @@ Platoon = Class(RNGAIPlatoon) {
                         aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                         self.chpdata.merging=false
                         other:PlatoonDisbandNoAssign()
-                        return
+                        return true
                     end
                 end
             end

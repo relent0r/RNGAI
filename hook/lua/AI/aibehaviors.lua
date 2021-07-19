@@ -19,6 +19,7 @@ local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
+local WaitTicks = coroutine.yield
 
 function CommanderBehaviorRNG(platoon)
     for _, v in platoon:GetPlatoonUnits() do

@@ -13,6 +13,7 @@ local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMas
 local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
+local WaitTicks = coroutine.yield
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
