@@ -5977,22 +5977,19 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(20)
                 continue
             end
-            if platoon.path then
-                local pathLength = RNGGETN(platoon.path)
-                if not (platoon.path[pathLength]==lastfinalpoint) and pathLength > 1 then
-                    pathmaxdist=0
-                    for i,v in platoon.path do
-                        if not v then continue end
-                        if not type(i)=='number' then continue end
-                        if i==pathLength then continue end
-                        --totaldist=totaldist+platoon.path[i+1].nodedist
-                        pathmaxdist=math.max(VDist3Sq(v,platoon.path[i+1]),pathmaxdist)
-                    end
-                    lastfinalpoint=platoon.path[pathLength]
-                    lastfinaldist=VDist3Sq(platoon.path[pathLength],platoon.path[pathLength-1])
-                end
-            end
             local nodenum=RNGGETN(platoon.path)
+            if not (platoon.path[nodenum]==lastfinalpoint) and nodenum > 1 then
+                pathmaxdist=0
+                for i,v in platoon.path do
+                    if not v then continue end
+                    if not type(i)=='number' then continue end
+                    if i==nodenum then continue end
+                    --totaldist=totaldist+platoon.path[i+1].nodedist
+                    pathmaxdist=math.max(VDist3Sq(v,platoon.path[i+1]),pathmaxdist)
+                end
+                lastfinalpoint=platoon.path[nodenum]
+                lastfinaldist=VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])
+            end
             if platoon.path[nodenum-1] and VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])>lastfinaldist*3 then
                 if AIAttackUtils.CanGraphToRNG(self.Pos,platoon.path[nodenum],self.MovementLayer) then
                     platoon.path=AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, self.MovementLayer, platoon.Pos, platoon.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
@@ -6000,7 +5997,7 @@ Platoon = Class(RNGAIPlatoon) {
                     continue
                 end
             end
-            if (platoon.dest and not AIAttackUtils.CanGraphToRNG(self.Pos,platoon.dest,self.MovementLayer)) or (platoon.path and GetTerrainHeight(platoon.path[RNGGETN(platoon.path)][1],platoon.path[RNGGETN(platoon.path)][3])<GetSurfaceHeight(platoon.path[RNGGETN(platoon.path)][1],platoon.path[RNGGETN(platoon.path)][3])) then
+            if (platoon.dest and not AIAttackUtils.CanGraphToRNG(self.Pos,platoon.dest,self.MovementLayer)) or (platoon.path and GetTerrainHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])<GetSurfaceHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])) then
                 platoon.navigating=false
                 platoon.path=nil
                 WaitTicks(20)
@@ -6074,7 +6071,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             platoon.Pos=self:GetPlatoonPosition() 
             self:Stop()
-            if RNGGETN(platoon.path)>=3 then
+            if nodenum>=3 then
                 platoon.dest={platoon.path[3][1]+math.random(-4,4),platoon.path[3][2],platoon.path[3][3]+math.random(-4,4)}
                 self:MoveToLocation(platoon.dest,false)
                 IssueClearCommands(supportsquad)
@@ -6088,14 +6085,14 @@ Platoon = Class(RNGAIPlatoon) {
                     --formd=false
                 --end
             else
-                platoon.dest={platoon.path[RNGGETN(platoon.path)][1]+math.random(-4,4),platoon.path[RNGGETN(platoon.path)][2],platoon.path[RNGGETN(platoon.path)][3]+math.random(-4,4)}
+                platoon.dest={platoon.path[nodenum][1]+math.random(-4,4),platoon.path[nodenum][2],platoon.path[nodenum][3]+math.random(-4,4)}
                 self:MoveToLocation(platoon.dest,false)
             end
             for i,v in platoon.path do
                 if not platoon.Pos then break end
                 if (not v) then continue end
                 if not type(i)=='number' or type(v)=='number' then continue end
-                if i==RNGGETN(platoon.path) then continue end
+                if i==nodenum then continue end
                 if VDist3Sq(v,platoon.Pos)<33*33 then
                     table.remove(platoon.path,i)
                 end
@@ -6103,9 +6100,7 @@ Platoon = Class(RNGAIPlatoon) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
-            WaitTicks(10)
-            WaitTicks(15)
-            continue
+            WaitTicks(20)
         end
     end,
 
@@ -6118,9 +6113,12 @@ Platoon = Class(RNGAIPlatoon) {
         local best = radius*radius
         local ps1 = table.copy(aiBrain:GetPlatoonsList())
         local ps = {}
-        if RNGGETN(self:GetPlatoonUnits())<1 or RNGGETN(self:GetPlatoonUnits())>30 then return end
+        local platoonPos = self:GetPlatoonPosition()
+        local platoonUnits = self:GetPlatoonUnits()
+        local platoonCount = RNGGETN(platoonUnits)
+        if platoonCount<1 or platoonCount>30 then return end
         for i, p in ps1 do
-            if not p or p==self or not aiBrain:PlatoonExists(p) or not p.chpdata.name or not p.chpdata.name==self.chpdata.name or VDist3Sq(self:GetPlatoonPosition(),p:GetPlatoonPosition())>best or RNGGETN(p:GetPlatoonUnits())>30 then  
+            if not p or p==self or not aiBrain:PlatoonExists(p) or not p.chpdata.name or not p.chpdata.name==self.chpdata.name or VDist3Sq(platoonPos,p:GetPlatoonPosition())>best or RNGGETN(p:GetPlatoonUnits())>30 then  
                 --LOG('merge table removed '..repr(i)..' merge table now holds '..repr(RNGGETN(ps)))
             else
                 RNGINSERT(ps,p)
@@ -6133,7 +6131,7 @@ Platoon = Class(RNGAIPlatoon) {
         elseif RNGGETN(ps)==1 then
             if ps[1].chpdata and self then
                 -- actually merge
-                if RNGGETN(self:GetPlatoonUnits())<RNGGETN(ps[1]:GetPlatoonUnits()) then
+                if platoonCount<RNGGETN(ps[1]:GetPlatoonUnits()) then
                     self.chpdata.merging=false
                     return
                 else
@@ -6157,11 +6155,11 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         else
-            table.sort(ps,function(a,b) return VDist3Sq(a:GetPlatoonPosition(),self:GetPlatoonPosition())<VDist3Sq(b:GetPlatoonPosition(),self:GetPlatoonPosition()) end)
+            table.sort(ps,function(a,b) return VDist3Sq(a:GetPlatoonPosition(),platoonPos)<VDist3Sq(b:GetPlatoonPosition(),platoonPos) end)
             for _,other in ps do
                 if other and self then
                     -- actually merge
-                    if RNGGETN(self:GetPlatoonUnits())<RNGGETN(other:GetPlatoonUnits()) then
+                    if platoonCount<RNGGETN(other:GetPlatoonUnits()) then
                         continue
                     else
                         local units = other:GetPlatoonUnits()
