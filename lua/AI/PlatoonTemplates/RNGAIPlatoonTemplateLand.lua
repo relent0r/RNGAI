@@ -157,7 +157,7 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 2, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
     },
 }
@@ -178,7 +178,7 @@ PlatoonTemplate {
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
+          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -241,7 +241,7 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 2, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
     },
 }
@@ -255,7 +255,7 @@ PlatoonTemplate {
           12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.SCOUT, 0, 2, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
     },
 }
@@ -375,7 +375,7 @@ PlatoonTemplate {
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
+          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -413,8 +413,11 @@ PlatoonTemplate { Name = 'RNGAIT2MobileStealth',
 PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
     FactionSquads = {
         UEF = {
-            { 'uel0105', 1, 5, 'support', 'None' },     -- Engineer
+            { 'uel0105', 1, 4, 'support', 'None' },     -- Engineer
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
+            { 'uel0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -430,8 +433,11 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'uel0201', 1, 4, 'Attack', 'none' },		-- Striker Medium Tank
          },
         Aeon = {
-            { 'ual0105', 1, 5, 'support', 'None' },     -- Engineer
+            { 'ual0105', 1, 4, 'support', 'None' },     -- Engineer
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
+            { 'ual0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
@@ -446,10 +452,12 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
-            { 'url0105', 1, 5, 'support', 'None' },     -- Engineer
+            { 'url0105', 1, 4, 'support', 'None' },     -- Engineer
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
+            { 'url0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
@@ -462,10 +470,12 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
-            { 'xsl0105', 1, 5, 'support', 'None' },     -- Engineer
+            { 'xsl0105', 1, 4, 'support', 'None' },     -- Engineer
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'xsl0105', 1, 2, 'support', 'None' },     -- Engineer
+            { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
             { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer

@@ -224,6 +224,7 @@ end
 function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
     --LOG('beginning adjacencypriority')
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
+    local VDist3Sq = VDist3Sq
     local Centered=cons.Centered
     local AdjacencyBias=cons.AdjacencyBias
     if AdjacencyBias then

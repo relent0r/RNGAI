@@ -239,6 +239,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
 end
 
 function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos)
+    local VDist2 = VDist2
     threatWeight = threatWeight or 1
     -- Check if we have this path already cached.
     if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then

@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local CanGraphToRNG = import('/lua/AI/aiattackutilities.lua').CanGraphToRNG
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
@@ -479,9 +480,9 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
             --LOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
+            --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --LOG('reason'..repr(reason))
-            if path then
+            if CanGraphToRNG(baseposition, EnemyUnit:GetPosition(), 'Water') then
                 --LOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
                 return true
             end

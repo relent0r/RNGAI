@@ -2237,6 +2237,7 @@ end
 
 CountSoonMassSpotsRNG = function(aiBrain)
     local enemies={}
+    local VDist2Sq = VDist2Sq
     for i,v in ArmyBrains do
         if ArmyIsCivilian(v:GetArmyIndex()) or not IsEnemy(aiBrain:GetArmyIndex(),v:GetArmyIndex()) or v.Result=="defeat" then continue end
         local index = v:GetArmyIndex()
@@ -2411,6 +2412,7 @@ end
 function DisplayMarkerAdjacency(aiBrain)
     aiBrain:ForkThread(LastKnownThread)
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
+    local VDist3Sq = VDist3Sq
     aiBrain.RNGAreas={}
     aiBrain.armyspots={}
     aiBrain.expandspots={}
@@ -2738,7 +2740,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
     while not aiBrain.lastknown do WaitSeconds(2) end
     while aiBrain.Result ~= "defeat" do
-        LOG('Check Expansion table in priority directo')
+        --LOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
             for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
                 if v.Land > 0 or v.Structures > 0 then
@@ -2753,6 +2755,11 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     if v.PlatoonAssigned then
                         priority = priority - 20
                     end
+                    if v.MassPoints >= 4 then
+                        priority = priority + 15
+                    elseif v.MassPoints >= 2 then
+                        priority = priority + 5
+                    end
                     if v.Commander > 0 then
                         acuPresent = true
                     end
@@ -2765,7 +2772,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             end
             WaitTicks(10)
         end
-        LOG('Check lastknown')
+        --LOG('Check lastknown')
         for k,v in aiBrain.lastknown do
             if not v.recent or aiBrain.prioritypoints[k] then continue end
             local priority=0
@@ -2961,7 +2968,7 @@ end
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
     WaitTicks(5)
-
+    local VDist2Sq = VDist2Sq
     local markerList = {}
     local armyStarts = {}
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
@@ -3006,7 +3013,7 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     end
     --LOG('Army Setup '..repr(ScenarioInfo.ArmySetup))
     local startX, startZ = aiBrain:GetArmyStartPos()
-    table.sort(markerList,function(a,b) return VDist2(a.Position[1],a.Position[3],startX, startZ)>VDist2(b.Position[1],b.Position[3],startX, startZ) end)
+    table.sort(markerList,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX, startZ)>VDist2Sq(b.Position[1],b.Position[3],startX, startZ) end)
     aiBrain.BrainIntel.ExpansionWatchTable = markerList
     --LOG('ExpansionWatchTable is '..repr(markerList))
 end
@@ -3039,6 +3046,7 @@ end
 
 function MexUpgradeManagerRNG(aiBrain)
     local homebasex,homebasey = aiBrain:GetArmyStartPos()
+    local VDist3Sq = VDist3Sq
     local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
     local ratio=0.35
     while not aiBrain.cmanager.categoryspend or GetGameTimeSeconds()<250 do
