@@ -3054,6 +3054,53 @@ Platoon = Class(RNGAIPlatoon) {
         local atkPri = {}
         local categoryList = {}
         local platoonThreat 
+        local function VariableKite(platoon,unit,target)
+            local function KiteDist(pos1,pos2,distance)
+                local vec={}
+                local dist=VDist3(pos1,pos2)
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    vec[i]=k+distance/dist*(pos1[i]-k)
+                end
+                return vec
+            end
+            local function CheckRetreat(pos1,pos2,target)
+                local vel = {}
+                vel[1], vel[2], vel[3]=target:GetVelocity()
+                --LOG('vel is '..repr(vel))
+                --LOG(repr(pos1))
+                --LOG(repr(pos2))
+                local dotp=0
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    dotp=dotp+(pos1[i]-k)*vel[i]
+                end
+                return dotp<0
+            end
+            if target.Dead then return end
+            if unit.Dead then return end
+                
+            local pos=unit:GetPosition()
+            local tpos=target:GetPosition()
+            local dest
+            local mod=0
+            if CheckRetreat(pos,tpos,target) then
+                mod=5
+            end
+            if unit.MaxWeaponRange then
+                dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod)
+            else
+                dest=KiteDist(pos,tpos,self.MaxWeaponRange+5-math.random(1,3)-mod)
+            end
+            if VDist3Sq(pos,dest)>6 then
+                IssueMove({unit},dest)
+                WaitTicks(20)
+                return
+            else
+                WaitTicks(20)
+                return
+            end
+        end
 
         AIAttackUtils.GetMostRestrictiveLayer(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
@@ -3332,7 +3379,8 @@ Platoon = Class(RNGAIPlatoon) {
                                                 if not unit.MaxWeaponRange then
                                                     continue
                                                 end
-                                                unitPos = unit:GetPosition()
+                                                VariableKite(self,unit,target)
+                                                --[[unitPos = unit:GetPosition()
                                                 alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
                                                 x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
                                                 y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRangeor or MaxPlatoonWeaponRange)
@@ -3360,7 +3408,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                     else
                                                         --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                                                     end
-                                                end
+                                                end]]
                                             end
                                         else
                                             break
@@ -3641,7 +3689,7 @@ Platoon = Class(RNGAIPlatoon) {
         local platRequiresScout = false
         for _,aPlat in AlliedPlatoons do
             if aPlat == self then continue end
-            if aPlat.PlanName == 'EngineerBuildAIRNG' then continue end
+            if aPlat.PlanName ~= 'MassRaidRNG' or aPlat.PlanName ~= 'HuntAIPATHRNG' or aPlat.PlanName ~= 'TruePlatoonRNG' or aPlat.PlanName ~= 'GuardMarkerRNG' then continue end
             if aPlat.UsingTransport then continue end
             if aPlat.ScoutPresent then continue end
             allyPlatPos = GetPlatoonPosition(aPlat)
@@ -3858,7 +3906,7 @@ Platoon = Class(RNGAIPlatoon) {
 
                         -- We found a location within our range! Activate!
                         if distressLocation then
-                            --LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
+                            LOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
                             --LOG('Distress response activated')
                             --LOG('PlatoonDistressTable'..repr(aiBrain.BaseMonitor.PlatoonDistressTable))
                             --LOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
@@ -3872,7 +3920,7 @@ Platoon = Class(RNGAIPlatoon) {
                             repeat
                                 moveLocation = distressLocation
                                 self:Stop()
-                                --LOG('Platoon responding to distress at location '..repr(distressLocation))
+                                LOG('Platoon responding to distress at location '..repr(distressLocation))
                                 self:SetPlatoonFormationOverride('NoFormation')
                                 local cmd = self:AggressiveMoveToLocation(distressLocation)
                                 repeat
@@ -3896,7 +3944,7 @@ Platoon = Class(RNGAIPlatoon) {
                             -- If no more calls or we are at the location; break out of the function
                             until not distressLocation or (distressLocation[1] == moveLocation[1] and distressLocation[3] == moveLocation[3])
 
-                            --LOG('*AI DEBUG: '..aiBrain.Name..' DISTRESS RESPONSE AI DEACTIVATION - oldPlan: '..oldPlan)
+                            LOG('*AI DEBUG: '..aiBrain.Name..' DISTRESS RESPONSE AI DEACTIVATION - oldPlan: '..oldPlan)
                             self:Stop()
                             self:SetAIPlanRNG(oldPlan)
                         end
@@ -3915,7 +3963,7 @@ Platoon = Class(RNGAIPlatoon) {
                 local threat = GetThreatAtPosition(aiBrain, pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
                 --LOG('Threat at Extractor :'..threat)
                 if threat and threat > 1 then
-                    --LOG('*RNGAI Mass Extractor Platoon Calling for help')
+                    LOG('*RNGAI Mass Extractor Platoon Calling for help with '..threat.. ' threat')
                     aiBrain:BaseMonitorPlatoonDistressRNG(self, threat)
                     self.DistressCall = true
                     aiBrain:AddScoutArea(pos)

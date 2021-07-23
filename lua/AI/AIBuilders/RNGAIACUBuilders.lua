@@ -623,16 +623,9 @@ BuilderGroup {
         Priority = 800,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
-            --{ UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            --{ MIBC, 'GreaterThanGameTimeRNG', { 120 } },
-            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 0.0 }},
-            --{ EBC, 'LessThanEnergyTrendOverTimeRNG', { 5.0 } }, -- If our energy is trending into negatives
-            --{ UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Scale'}},
-            --{ MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.80, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.85, 0.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
