@@ -65,6 +65,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     local initialRange = 40
     local createTick = GetGameTick()
     local reclaimLoop = 0
+    local VDist2 = VDist2
 
     self.BadReclaimables = self.BadReclaimables or {}
 
@@ -467,20 +468,17 @@ end
 
 function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
     local markerList = {}
-        local markers = ScenarioUtils.GetMarkers()
-        if markers then
-            for k, v in markers do
-                if v.type == 'Mass' then
-                    if waterOnly then
-                        if PositionInWater(v.position) then
-                            table.insert(markerList, {Position = v.position, Name = k})
-                        end
-                    elseif includeWater then
+        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                if waterOnly then
+                    if PositionInWater(v.position) then
                         table.insert(markerList, {Position = v.position, Name = k})
-                    else
-                        if not PositionInWater(v.position) then
-                            table.insert(markerList, {Position = v.position, Name = k})
-                        end
+                    end
+                elseif includeWater then
+                    table.insert(markerList, {Position = v.position, Name = k})
+                else
+                    if not PositionInWater(v.position) then
+                        table.insert(markerList, {Position = v.position, Name = k})
                     end
                 end
             end
@@ -495,15 +493,11 @@ end
 
 function GetClosestMassMarkerToPos(aiBrain, pos)
     local markerList = {}
-    local markers = ScenarioUtils.GetMarkers()
-    if markers then
-        for k, v in markers do
+        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
                 table.insert(markerList, {Position = v.position, Name = k})
             end
         end
-    end
-
     local loc, distance, lowest, name = nil
 
     for _, v in markerList do
@@ -526,12 +520,10 @@ end
 
 function GetClosestMassMarker(aiBrain, unit)
     local markerList = {}
-    local markers = ScenarioUtils.GetMarkers()
-    if markers then
-        for k, v in markers do
-            if v.type == 'Mass' then
-                table.insert(markerList, {Position = v.position, Name = k})
-            end
+
+    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            table.insert(markerList, {Position = v.position, Name = k})
         end
     end
 
@@ -651,7 +643,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
     if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
         return false
     end
-
+    local VDist2 = VDist2
     local RangeList = { [1] = maxRange }
     if maxRange > 512 then
         RangeList = {
@@ -1077,6 +1069,7 @@ end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
+    local VDist2 = VDist2
     if platoon.PlatoonData.GetTargetsFromBase then
         --LOG('Looking for targets from position '..platoon.PlatoonData.LocationType)
         position = aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Position
@@ -1208,6 +1201,7 @@ end
 
 function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
+    local VDist2 = VDist2
     local enemyThreat
     if not aiBrain or not position or not maxRange then
         return false
@@ -1295,6 +1289,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
     local enemyIndex = false
+    local VDist2 = VDist2
     local MyArmyIndex = aiBrain:GetArmyIndex()
     if enemyBrain then
         enemyIndex = enemyBrain:GetArmyIndex()
@@ -2139,6 +2134,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
     local threatCheck = false
     local maxDistance = 2000
     local minDistance = 0
+    local VDist2Sq = VDist2Sq
 
 
     local startX, startZ
@@ -2281,20 +2277,17 @@ CountSoonMassSpotsRNG = function(aiBrain)
             v.owner=nil
             table.insert(aiBrain.emanager.expands,v)
         end
-        local markers = ScenarioUtils.GetMarkers()
         aiBrain.expansionMex={}
         local expands={}
-        if markers then
-            for k, v in markers do
-                if v.type == 'Mass' then
-                    table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
-                    if VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
-                        table.insert(aiBrain.emanager.expands[1].mextable,{v,Position = v.position, Name = k})
-                        aiBrain.emanager.expands[1].mexnum=aiBrain.emanager.expands[1].mexnum+1
-                        table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k,ExpandMex=true})
-                    else
-                        table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k})
-                    end
+        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
+                if VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
+                    table.insert(aiBrain.emanager.expands[1].mextable,{v,Position = v.position, Name = k})
+                    aiBrain.emanager.expands[1].mexnum=aiBrain.emanager.expands[1].mexnum+1
+                    table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k,ExpandMex=true})
+                else
+                    table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k})
                 end
             end
         end
@@ -2575,6 +2568,7 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
+    if not marker then return end
     if not marker.expanddists then
         marker.expanddists={}
     end
@@ -2940,6 +2934,7 @@ end
 
 function CalculateMassValue(expansionMarkers)
     local MassMarker = {}
+    local VDist2Sq = VDist2Sq
     if not expansionMarkers then
         WARN('No Expansion Markers Passed to calcuatemassvalue')
     end

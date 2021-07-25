@@ -18,6 +18,7 @@ local RNGPI = math.pi
 local RNGCAT = table.cat
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
+    local VDist2Sq = VDist2Sq
     if not GetPathGraphs()[platoonLayer] then
         return false, 'NoGraph'
     end
@@ -43,11 +44,11 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     local NodeCount = table.getn(path.path)
     for i,node in path.path do
         -- IF this is the first AND not the only waypoint AND its nearer 30 THEN continue and don't add it to the finalpath
-        if i == 1 and NodeCount > 1 and VDist2(startPos[1], startPos[3], node.position[1], node.position[3]) < 30 then  
+        if i == 1 and NodeCount > 1 and VDist2Sq(startPos[1], startPos[3], node.position[1], node.position[3]) < 900 then  
             continue
         end
         -- IF this is the last AND not the only waypoint AND its nearer 20 THEN continue and don't add it to the finalpath
-        if i == NodeCount and NodeCount > 1 and VDist2(endPos[1], endPos[3], node.position[1], node.position[3]) < 20 then  
+        if i == NodeCount and NodeCount > 1 and VDist2Sq(endPos[1], endPos[3], node.position[1], node.position[3]) < 400 then  
             continue
         end
         RNGINSERT(finalPath, node.position)
@@ -99,8 +100,8 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     local fork = {}
     -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
     if startNode.name == endNode.name
-    or VDist2(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2(startPos[1], startPos[3], endPos[1], endPos[3]) < 50 then
+    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
+    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 2500 then
         -- store as path only our current destination.
         fork.path = { { position = endPos } }
         aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
@@ -203,7 +204,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     local finalPath = {}
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2(start[1], start[3], destination[1], destination[3]) <= 100
+    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2Sq(start[1], start[3], destination[1], destination[3]) <= 10000
     or (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist)) then
         RNGINSERT(finalPath, destination)
         return finalPath
@@ -853,6 +854,7 @@ end
 function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
 
     local markerlist = {}
+    local VDist2Sq = VDist2Sq
 
     -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
     for _,v in markerTypes do
@@ -885,7 +887,10 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             --LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
 
             -- can the platoon path safely from this marker to the final destination 
-            local landpath, reason = PlatoonGenerateSafePathToRNG(aiBrain, layer, v.Position, destination, threatMax, 160 )
+            if CanGraphToRNG(v.Position, destination, layer) then
+                return v.Position, v.Name
+            end
+            --[[local landpath, reason = PlatoonGenerateSafePathToRNG(aiBrain, layer, v.Position, destination, threatMax, 160 )
             if not landpath then
                 --LOG('No path to transport location from selected position')
             end
@@ -894,7 +899,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             if landpath then
                 --LOG('Selected Position')
                 return v.Position, v.Name
-            end
+            end]]
         end
     end
     --LOG('Safe landing Location returning false')
