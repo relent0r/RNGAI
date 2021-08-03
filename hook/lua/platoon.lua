@@ -936,7 +936,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --Can we get there safely?
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), targetData.Position, 50) --DUNCAN - Increase threatwieght from 100
 
-                IssueClearCommands(self)
+                self:Stop()
 
                 if path then
                     local pathLength = RNGGETN(path)
@@ -957,7 +957,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if self.PlatoonData.ExcessScout and platoonNeedScout then
                         if PlatoonExists(aiBrain, supportPlatoon) then
                             --LOG('Move to support platoon position')
-                            IssueClearCommands(self)
+                            self:Stop()
                             self:MoveToLocation(GetPlatoonPosition(supportPlatoon), false)
                             WaitTicks(20)
                         else
@@ -968,6 +968,7 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     if self.PlatoonData.ExcessScout and (not platoonNeedScout) and (not self.ExpansionsValidated) then
+                        LOG('Excess scout looking for expansion')
                         local scoutPos = scout:GetPosition()
                         local scoutMarker
                         if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  then
@@ -986,10 +987,10 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                         if scoutMarker then
-                            --LOG('Scout Marker Found, moving to position')
+                            LOG('Scout Marker Found, moving to position')
                             if PlatoonExists(aiBrain, self) then
                                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), scoutMarker.Position, 50)
-                                IssueClearCommands(self)
+                                self:Stop()
                                 if path then
                                     local pathLength = RNGGETN(path)
                                     for i=1, pathLength-1 do
@@ -998,7 +999,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     self:MoveToLocation(scoutMarker.Position, false)
                                 end
                                 while PlatoonExists(aiBrain, self) do
-                                    --LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
+                                    LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
                                     --LOG('Distance from scout marker is '..VDist2Sq(scoutPos[1],scoutPos[3], scoutMarker.Position[1],scoutMarker.Position[3]))
                                     WaitTicks(50)
                                     scoutPos = scout:GetPosition()
@@ -5875,26 +5876,26 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         local function SimplePriority(self,aiBrain)--use the aibrain priority table to do things
-            --local prioritypoints1={}
-            local prioritypoints=table.copy(aiBrain.prioritypoints)
-            local n=0
             local platoon=self
             local VDist2Sq = VDist2Sq
             local RNGMAX = math.max
-
-            for _,v in aiBrain.prioritypoints do
-                n=n+1
-                --RNGINSERT(prioritypoints1,v)
-                --LOG('type'..repr(v.type))
-            end
-            if not prioritypoints or n==0 then
+            if (not aiBrain.prioritypoints) or RNGGETN(aiBrain.prioritypoints)==0 then
                 return false
             end
-            local point = table.sort(prioritypoints,
-                function(a,b)
-                    return a.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],a.Position[1],a.Position[3]),30*30)+(a.danger or 0))>b.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],b.Position[1],b.Position[3]),30*30)+(b.danger or 0))
-                end)[1]
-            if not point then return false end
+            local pointHighest = 0
+            local point = false
+            for _, v in aiBrain.prioritypoints do
+                local tempPoint = v.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],v.Position[1],v.Position[3]),30*30)+(v.danger or 0))
+                if tempPoint > pointHighest then
+                    pointHighest = tempPoint
+                    point = v
+                end
+            end
+            if point then
+                LOG('point pos '..repr(point.Position))
+            else
+                return false
+            end
             if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
             if not self.combat and not self.retreat then
                 if point.type then

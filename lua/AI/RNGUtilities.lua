@@ -2741,7 +2741,9 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local priority=0
                     local acuPresent = false
                     if v.Structures > 0 then
-                        priority = priority + 40
+                        -- We divide by 100 because of mexes being 1000 and greater threat. If they ever fix the threat numbers of mexes then this can change
+                        priority = priority + (v.Structures / 100)
+                        --LOG('Structure Priority is '..priority)
                     end
                     if v.Land > 0 then 
                         priority = priority + 30
@@ -2784,6 +2786,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             end
         end
         WaitTicks(50)
+        
         --LOG('Priority Points'..repr(aiBrain.prioritypoints))
     end
 end
