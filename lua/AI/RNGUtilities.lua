@@ -2819,6 +2819,46 @@ end
 -- TruePlatoon Support functions
 
 GrabPosDangerRNG = function(aiBrain,pos,radius)
+
+    local brainThreats = {ally=0,enemy=0}
+    local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+    local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+    for _,v in allyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel*mult
+            end
+        end
+    end
+    for _,v in enemyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            local bp = __blueprints[v.UnitId].Defense
+            --LOG(repr(__blueprints[v.UnitId].Defense))
+            if bp.SurfaceThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel*mult
+            end
+        end
+    end
+    return brainThreats
+end
+
+GrabPosDangerRNGOriginal = function(aiBrain,pos,radius)
     local function GetWeightedHealthRatio(unit)
         if unit.MyShield then
             return (unit.MyShield:GetHealth()+unit:GetHealth())/(unit.MyShield:GetMaxHealth()+unit:GetMaxHealth())
@@ -2861,6 +2901,17 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
             end
         end
     end
+    return brainThreats
+end
+
+GrabPosDangerRNGold = function(aiBrain,pos,radius)
+    -- this is stupid, won't return ally commander threat >_<
+    local brainThreats = {ally=0,enemy=0}
+    brainThreats.ally = brainThreats.ally + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land', aiBrain:GetArmyIndex())
+    brainThreats.enemy = brainThreats.enemy + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
+    brainThreats.ally = brainThreats.ally + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander', aiBrain:GetArmyIndex())
+    brainThreats.enemy = brainThreats.enemy + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander')
+    LOG('GrabPosDanger ally :'..brainThreats.ally.. ' Enemy :'..brainThreats.enemy)
     return brainThreats
 end
 
@@ -2995,9 +3046,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if not startPosUsed then
                     if v.MassSpotsInRange then
                         massPointValidated = true
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false})
                     else
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false})
                     end
                 end
             end

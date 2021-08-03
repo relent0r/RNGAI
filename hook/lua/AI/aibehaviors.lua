@@ -1262,7 +1262,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
             end
             if NextEnhancement and HaveEcoForEnhancement then
                 --LOG('* RNGAI: * BuildACUEnhancements Building '..NextEnhancement)
-                if BuildEnhancement(aiBrain, cdr, NextEnhancement) then
+                if BuildEnhancementRNG(aiBrain, cdr, NextEnhancement) then
                     --LOG('* RNGAI: * BuildACUEnhancements returned true'..NextEnhancement)
                     return true
                 else
@@ -1316,8 +1316,8 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     return false
 end
 
-BuildEnhancement = function(aiBrain,cdr,enhancement)
-    --LOG('* RNGAI: * BuildEnhancement '..enhancement)
+BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
+    --LOG('* RNGAI: * BuildEnhancementRNG '..enhancement)
     local priorityUpgrades = {
         'HeavyAntiMatterCannon',
         'HeatSink',
@@ -1354,7 +1354,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             IssueScript({cdr}, order)
             coroutine.yield(10)
         end
-        --LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain.Nickname..' IssueScript: '..enhancement)
         if cdr.Upgrading then
             --LOG('cdr.Upgrading is set to true')
         end
@@ -1367,7 +1367,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             --LOG('cdr.Upgrading is set to true')
         end
         if cdr:GetHealthPercent() < 0.40 then
-            --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
             cdr.Upgrading = false
@@ -1385,7 +1385,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         end
         coroutine.yield(10)
     end
-    --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
     for k, v in priorityUpgrades do
         if enhancement == v then
             cdr.GunUpgradeRequired = false

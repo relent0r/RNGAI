@@ -1151,6 +1151,7 @@ BuilderGroup {
             GetTargetsFromBase = false,
             RequireTransport = false,
             AggressiveMove = false,
+            AvoidBases = true,
             LocationType = 'LocationType',
             Defensive = false,
             PlatoonLimit = 5,
@@ -1158,6 +1159,7 @@ BuilderGroup {
             TargetSearchPriorities = { 
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.FACTORY,
             },
             PrioritizedCategories = {   
                 categories.MASSEXTRACTION,

@@ -62,7 +62,7 @@ BuilderGroup {
         InstanceCount = 15,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.LAND * categories.SCOUT } },
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT } },
         },
         BuilderData = {
             LocationType = 'LocationType',
