@@ -999,7 +999,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     self:MoveToLocation(scoutMarker.Position, false)
                                 end
                                 while PlatoonExists(aiBrain, self) do
-                                    LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
+                                    --LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
                                     --LOG('Distance from scout marker is '..VDist2Sq(scoutPos[1],scoutPos[3], scoutMarker.Position[1],scoutMarker.Position[3]))
                                     WaitTicks(50)
                                     scoutPos = scout:GetPosition()
@@ -5892,7 +5892,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if point then
-                LOG('point pos '..repr(point.Position))
+                --LOG('point pos '..repr(point.Position))
             else
                 return false
             end

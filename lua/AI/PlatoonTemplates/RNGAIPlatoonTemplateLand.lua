@@ -508,7 +508,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'uel0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'uel0201', 1, 3, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
-            { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'uel0101', 1, 3, 'Scout', 'none' },		-- Land Scout
          },
         Aeon = {
             { 'ual0105', 1, 3, 'support', 'None' },     -- Engineer
@@ -525,7 +525,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'ual0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0103', 1, 1, 'Artillery', 'none' },	-- Artillery
-            { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'ual0101', 1, 3, 'Scout', 'none' },		-- Land Scout
         },
         Cybran = {
             { 'url0105', 1, 3, 'support', 'None' },     -- Engineer
@@ -542,7 +542,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'url0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
             { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
-            { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'url0101', 1, 3, 'Scout', 'none' },		-- Land Scout
         },
         Seraphim = {
             { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
@@ -558,7 +558,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'xsl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
-            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xsl0101', 1, 3, 'Scout', 'none' },		-- Land Scout
         },
     }
 }

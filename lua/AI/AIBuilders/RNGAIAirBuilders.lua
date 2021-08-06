@@ -243,7 +243,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
     },]]
@@ -257,7 +257,7 @@ BuilderGroup {
             { UCBC, 'ACUOnField', {false} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
     },
     Builder {

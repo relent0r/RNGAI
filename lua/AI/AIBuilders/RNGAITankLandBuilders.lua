@@ -502,7 +502,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 1.0 }},
@@ -516,7 +516,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
@@ -531,7 +531,7 @@ BuilderGroup {
         Priority = 920,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 1.0 }},
@@ -584,7 +584,7 @@ BuilderGroup {
         PriorityFunction = ACUClosePriority,
         Priority = 0,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -631,7 +631,7 @@ BuilderGroup {
         PriorityFunction = ACUClosePriority,
         Priority = 0,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },

@@ -195,7 +195,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 870,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
         },
         BuilderType = 'All',
@@ -570,7 +570,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
@@ -593,7 +593,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.ENGINEERSTATION }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},

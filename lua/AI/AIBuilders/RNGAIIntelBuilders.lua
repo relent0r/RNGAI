@@ -30,7 +30,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 950,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
@@ -58,7 +58,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
         },
@@ -83,7 +83,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 800,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, (categories.STRUCTURE * categories.SONAR) + categories.MOBILESONAR } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.STRUCTURE * categories.SONAR) + categories.MOBILESONAR } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
@@ -113,7 +113,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
         },
         BuilderType = 'Any',
@@ -175,7 +175,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.5, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
@@ -190,7 +190,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
         },

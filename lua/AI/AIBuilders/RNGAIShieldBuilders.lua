@@ -141,7 +141,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
         },
         BuilderType = 'Any',
         BuilderData = {

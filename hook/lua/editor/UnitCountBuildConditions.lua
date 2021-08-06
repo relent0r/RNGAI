@@ -5,6 +5,7 @@ local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 -- Check if less than num in seconds
 function LessThanGameTimeSecondsRNG(aiBrain, num)
@@ -852,6 +853,18 @@ function ValidateLateGameBuild(aiBrain)
         end
     end
   return true
+end
+
+function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
+
+	if aiBrain.BuilderManagers[locationType].EngineerManager then
+		if GetNumUnitsAroundPoint( aiBrain, testCat, aiBrain.BuilderManagers[locationType].Position, aiBrain.BuilderManagers[locationType].EngineerManager.Radius, 'Ally') < unitCount then
+            --LOG('Less than units is true')
+            return true
+        end
+	end
+    
+	return false
 end
 
 --[[

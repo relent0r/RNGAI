@@ -54,7 +54,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -91,7 +91,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -116,7 +116,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * (categories.LAND + categories.NAVAL) - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -145,7 +145,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -177,7 +177,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { TBC, 'EnemyACUCloseToBase', {}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.TECH2 * categories.ARTILLERY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
             NumAssistees = 2,
@@ -201,7 +201,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -231,7 +231,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -259,7 +259,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
@@ -287,7 +287,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.TACTICALMISSILEPLATFORM } },
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
@@ -315,7 +315,7 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
@@ -362,7 +362,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -398,7 +398,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -422,7 +422,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTINAVY}},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -451,7 +451,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * (categories.LAND + categories.NAVAL) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -479,7 +479,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -511,7 +511,7 @@ BuilderGroup {
         PriorityFunction = ActiveExpansion,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.TACTICALMISSILEPLATFORM}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0}},
             { UCBC, 'CheckUnitRange', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE + (categories.LAND * (categories.TECH2 + categories.TECH3)) } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -535,7 +535,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -570,7 +570,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -601,7 +601,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -634,7 +634,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
@@ -670,7 +670,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -700,7 +700,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
@@ -737,7 +737,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.70}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -771,7 +771,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  140, 'LocationType', 0, categories.STRUCTURE * categories.TECH2 * categories.DEFENSE }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
             NumAssistees = 2,
@@ -796,7 +796,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80, 'DEFENSE'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -829,7 +829,7 @@ BuilderGroup {
         PriorityFunction = ActiveExpansion,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
@@ -867,7 +867,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -901,7 +901,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2 }},
             { UCBC, 'UnitCapCheckLess', { .6 } },
@@ -936,7 +936,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -965,7 +965,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -994,7 +994,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.CRUISER * (categories.UEF + categories.SERAPHIM) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },

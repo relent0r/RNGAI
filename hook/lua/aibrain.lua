@@ -119,8 +119,21 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Map X size is : '..mapSizeX..'Map Z size is : '..mapSizeZ)
         -- Stores handles to all builders for quick iteration and updates to all
         self.BuilderHandles = {}
-        -- this is for chps fav map, when the masspoint are created they are not put in the scenariocache
-        self.crazyrush = false
+
+        self.MapSize = 10
+        local mapSizeX, mapSizeZ = GetMapSize()
+        if  mapSizeX > 1000 and mapSizeZ > 1000 then
+            self.DefaultLandRatio = 0.5
+            self.MapSize = 20
+        elseif mapSizeX > 500 and mapSizeZ > 500 then
+            self.DefaultLandRatio = 0.6
+            --LOG('10 KM Map Check true')
+            self.MapSize = 10
+        elseif mapSizeX > 200 and mapSizeZ > 200 then
+            self.DefaultLandRatio = 0.6
+            --LOG('5 KM Map Check true')
+            self.MapSize = 5
+        end
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -140,7 +153,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerPriorityTable = {}
         self.ProductionRatios = {
-            Land = 0.6,
+            Land = self.DefaultLandRatio,
             Air = 0.5,
             Naval = 0.5,
         }
@@ -839,19 +852,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EarlyQueueCompleted = false
         
         self.UpgradeIssuedPeriod = 120
-        self.MapSize = 10
-        local mapSizeX, mapSizeZ = GetMapSize()
-        if  mapSizeX > 1000 and mapSizeZ > 1000 then
-            --LOG('20 KM Map Check true')
-            self.MapSize = 20
-        elseif mapSizeX > 500 and mapSizeZ > 500 then
-            --LOG('10 KM Map Check true')
-            self.MapSize = 10
-        elseif mapSizeX > 200 and mapSizeZ > 200 then
-            --LOG('5 KM Map Check true')
-            self.MapSize = 5
-        end
-
 
         if mapSizeX < 1000 and mapSizeZ < 1000  then
             self.UpgradeIssuedLimit = 1
@@ -897,10 +897,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
-        if string.find(ScenarioInfo.name, 'crazyrush') then
-            --LOG('We are playing crazyrush')
-            self.crazyrush = true
-        end
+
         --[[ Below was used prior to Uveso adding the expansion generator to provide expansion in locations with multiple mass markers
         RUtils.TacticalMassLocations(self)
         RUtils.MarkTacticalMassLocations(self)
@@ -1913,12 +1910,12 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EnemyIntel.EnemyCount > 0 then
                 enemyCount = self.EnemyIntel.EnemyCount
             end
-            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
+            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) then
                 --LOG('Land Threat Higher, shift ratio to 0.5')
                 self.ProductionRatios.Land = 0.5
             elseif not self.EnemyIntel.ChokeFlag then
                 --LOG('Land Threat Lower, shift ratio to 0.6')
-                self.ProductionRatios.Land = 0.6
+                self.ProductionRatios.Land = self.DefaultLandRatio
             end
             if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --LOG('Air Threat Higher, shift ratio to 0.4')
@@ -3537,7 +3534,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 elseif self.EnemyIntel.ChokeFlag then
                                     --LOG('ChokeFlag is false')
                                     self.EnemyIntel.ChokeFlag = false
-                                    self.ProductionRatios.Land = 0.6
+                                    self.ProductionRatios.Land = self.DefaultLandRatio
                                 end
                             end
                         elseif (not path and reason) then
