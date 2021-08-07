@@ -14,6 +14,7 @@ local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondE
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local WaitTicks = coroutine.yield
+local ALLBPS = __blueprints
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -2824,24 +2825,7 @@ end
 GrabPosDangerRNG = function(aiBrain,pos,radius)
 
     local brainThreats = {ally=0,enemy=0}
-    local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
     local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
-    for _,v in allyunits do
-        if not v.Dead then
-            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-            --LOG('Unit ID is '..v.UnitId)
-            --bp = v:GetBlueprint().Defense
-            local mult=1
-            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
-                mult=0.3
-            end
-            local bp = __blueprints[v.UnitId].Defense
-            --LOG(repr(__blueprints[v.UnitId].Defense))
-            if bp.SurfaceThreatLevel ~= nil then
-                brainThreats.ally = brainThreats.ally + bp.SurfaceThreatLevel*mult
-            end
-        end
-    end
     for _,v in enemyunits do
         if not v.Dead then
             --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
@@ -2851,10 +2835,24 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
             if EntityCategoryContains(categories.INDIRECTFIRE,v) then
                 mult=0.3
             end
-            local bp = __blueprints[v.UnitId].Defense
-            --LOG(repr(__blueprints[v.UnitId].Defense))
-            if bp.SurfaceThreatLevel ~= nil then
-                brainThreats.enemy = brainThreats.enemy + bp.SurfaceThreatLevel*mult
+            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*mult
+            end
+        end
+    end
+
+    local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+    for _,v in allyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*mult
             end
         end
     end

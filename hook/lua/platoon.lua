@@ -5759,12 +5759,12 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local function SimpleRetreat(self,aiBrain)--basic retreat function
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self:GetPlatoonPosition(),self.MaxWeaponRange+20)
-            local platoon=self
+            LOG('Simple Retreat Threat Stats '..repr(threat))
             if threat.ally*1.1<threat.enemy then
-                platoon.retreat=true
+                self.retreat=true
                 return true
             else
-                platoon.retreat=false
+                self.retreat=false
                 return false
             end
         end
@@ -5862,21 +5862,32 @@ Platoon = Class(RNGAIPlatoon) {
             for k,unit in self.targetcandidates do
                 if not unit or unit.Dead or not unit.chpworth then LOG('Unit with no chpworth is '..unit.UnitId) table.remove(self.targetcandidates,k) end
             end
+            local target
+            local closestTarget = 9999999
             for _,v in units do
-                if v.Dead or not v then continue end
-                local unitPos = v:GetPosition()
-                table.sort(self.targetcandidates,function(a,b) return VDist3Sq(unitPos,a:GetPosition())*a.chpworth<VDist3Sq(unitPos,b:GetPosition())*b.chpworth end)
-                local target=self.targetcandidates[1]
-                if VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
-                    IssueClearCommands({v}) 
-                    IssueMove({v},target:GetPosition())
-                    continue
+                if v and not v.Dead then
+                    local unitPos = v:GetPosition()
+                    for l, m in self.targetcandidates do
+                        if m and not m.Dead then
+                            local tmpDistance = VDist3Sq(unitPos,m:GetPosition())*m.chpworth
+                            if tmpDistance < closestTarget then
+                                target = m
+                                closestTarget = tmpDistance
+                            end
+                        end
+                    end
+                    if target then
+                        if VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                            IssueClearCommands({v}) 
+                            IssueMove({v},target:GetPosition())
+                            continue
+                        end
+                        VariableKite(self,v,target)
+                    end
                 end
-                VariableKite(self,v,target)
             end
         end
         local function SimplePriority(self,aiBrain)--use the aibrain priority table to do things
-            local platoon=self
             local VDist2Sq = VDist2Sq
             local RNGMAX = math.max
             if (not aiBrain.prioritypoints) or RNGGETN(aiBrain.prioritypoints)==0 then
@@ -5903,42 +5914,42 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if point.type=='push' then
                     --SwitchState(platoon,'push')
-                    platoon.dest=point.Position
+                    self.dest=point.Position
                 elseif point.type=='raid' then
-                    if platoon.raid then
-                        if platoon.path and VDist3Sq(platoon.path[RNGGETN(platoon.path)],point.Position)>400 then
-                            platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
-                            --LOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(platoon.path[RNGGETN(platoon.path)],point.Position))
+                    if self.raid then
+                        if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
+                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                            --LOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                             return true
                         end
                     end
-                    platoon.rdest=point.Position
-                    platoon.raidunit=point.unit
-                    platoon.dest=point.Position
-                    platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
-                    platoon.navigating=true
-                    platoon.raid=true
-                    --SwitchState(platoon,'raid')
+                    self.rdest=point.Position
+                    self.raidunit=point.unit
+                    self.dest=point.Position
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.navigating=true
+                    self.raid=true
+                    --SwitchState(self,'raid')
                     
                     for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
                         --LOG('expansionwatchtable position '..repr(v.Position)..' vs platoon dest '..repr(platoon.dest))
-                        if platoon.dest == v.Position and (not aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned) then
-                            --LOG('Set platoon at expansionwatchtable at position '..repr(platoon.dest))
+                        if self.dest == v.Position and (not aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned) then
+                            --LOG('Set platoon at expansionwatchtable at position '..repr(self.dest))
                             aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
                             break
                         end
                     end
-                    LOG('Simple Priority is moving to '..repr(platoon.dest))
+                    LOG('Simple Priority is moving to '..repr(self.dest))
                     return true
                 elseif point.type=='garrison' then
                     --SwitchState(platoon,'garrison')
-                    platoon.dest=point.Position
+                    self.dest=point.Position
                 elseif point.type=='guard' then
                     --SwitchState(platoon,'guard')
-                    platoon.guard=point.unit
+                    self.guard=point.unit
                 elseif point.type=='acuhelp' then
                     --SwitchState(platoon,'acuhelp')
-                    platoon.guard=point.unit
+                    self.guard=point.unit
                 end
             end
         end
@@ -6008,7 +6019,6 @@ Platoon = Class(RNGAIPlatoon) {
         platoon.enemyThreats = {}
         platoon.threats = {}
         while PlatoonExists(aiBrain, self) do
-            local startTime = GetGameTimeSeconds()
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
             if platoonNum < 20 then
@@ -6057,36 +6067,32 @@ Platoon = Class(RNGAIPlatoon) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
-            startTime = GetGameTimeSeconds() - startTime
-            LOG('Trueplatoon Loop Time = '..startTime)
             WaitTicks(15)
         end
     end,
     PathNavigationRNG = function(self)
         local function ExitConditions(self,aiBrain)
-            local platoon=self
-            if not platoon.path then
+            if not self.path then
                 return true
             end
-            if VDist3Sq(platoon.path[RNGGETN(platoon.path)],platoon.Pos)<20*20 then
+            if VDist3Sq(self.path[RNGGETN(self.path)],self.Pos)<20*20 then
                 return true
             end
-            if platoon.navigating then
-                local enemies=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, platoon.Pos, self.MaxWeaponRange+40, 'Enemy')
+            if self.navigating then
+                local enemies=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, self.Pos, self.MaxWeaponRange+40, 'Enemy')
                 if enemies and RNGGETN(enemies)>0 then
-                    for _,v in platoon:GetPlatoonUnits() do
-                        local pos=v:GetPosition()
-                        for _,enemy in enemies do
-                            if enemy and not enemy.Dead and AIAttackUtils.CanGraphToRNG(self.Pos,enemy:GetPosition(),self.MovementLayer) then
-                                local dist=VDist3Sq(enemy:GetPosition(),pos)
-                                if platoon.raid or platoon.guard then
-                                    if dist<400 then
-                                        return true
-                                    end
-                                else
-                                    if dist<math.max(platoon.MaxWeaponRange*platoon.MaxWeaponRange*3,400) then
-                                        return true
-                                    end
+                    for _,enemy in enemies do
+                        if enemy and not enemy.Dead and AIAttackUtils.CanGraphToRNG(self.Pos,enemy:GetPosition(),self.MovementLayer) then
+                            local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
+                            if self.raid or self.guard then
+                                if dist<625 then
+                                    LOG('Exit Path Navigation for raid')
+                                    return true
+                                end
+                            else
+                                if dist<math.max(self.MaxWeaponRange*self.MaxWeaponRange*3,625) then
+                                    LOG('Exit Path Navigation')
+                                    return true
                                 end
                             end
                         end

@@ -75,9 +75,9 @@ end
 function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, locationType, numReq, category, constructionCat)
     local numUnits
     if constructionCat then
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRNG(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or 0
     else
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or 0
     end
     if numUnits > numReq then
         --LOG('HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG returning true')
@@ -92,9 +92,9 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, lo
         --LOG('Radius OverRide first function'..radiusOverride)
     end
     if constructionCat then
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or 0
     else
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain,locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRadiusRNG(aiBrain,locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or 0
     end
     if numUnits > numReq then
         return true
@@ -163,7 +163,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         return false
     end
     local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
-    local retUnits = {}
+    local unitCount = 0
     for k,v in filterUnits do
         -- Only assist if allowed
         if v.DesiresAssist == false then
@@ -185,10 +185,10 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
             continue
         end
-        table.insert(retUnits, v)
+        unitCount = unitCount + 1
     end
-    --LOG('Engineer Assist has '..table.getn(retUnits)..' units in return table')
-    return retUnits
+    --LOG('Engineer Assist has '..unitCount)
+    return unitCount
 end
 
 function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, buildingCategory, builderCategory)
@@ -221,7 +221,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
     end
     --LOG('Radius is '..radius)
     local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
-    local retUnits = {}
+    local unitCount = 0
     for k,v in filterUnits do
         -- Only assist if allowed
         if v.DesiresAssist == false then
@@ -243,9 +243,9 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
             continue
         end
-        table.insert(retUnits, v)
+        unitCount = unitCount + 1
     end
-    return retUnits
+    return unitCount
 end
 
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
