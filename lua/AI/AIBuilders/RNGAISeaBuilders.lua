@@ -157,6 +157,21 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Destroyer',
+        PlatoonTemplate = 'T2SeaDestroyer',
+        Priority = 750,
+        BuilderConditions = {
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'destroyer'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
     Builder { 
         BuilderName = 'RNGAI Destroyer Response',
         PlatoonTemplate = 'T2SeaDestroyer',
@@ -296,7 +311,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
-        Priority = 500,
+        Priority = 501,
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},

@@ -2512,6 +2512,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
     --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
+    if not marker then LOG('No Marker sent to army distance check') return end
     if not marker.armydists then
         marker.armydists={}
     end
@@ -2912,14 +2913,14 @@ GrabPosDangerRNGold = function(aiBrain,pos,radius)
     brainThreats.enemy = brainThreats.enemy + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
     brainThreats.ally = brainThreats.ally + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander', aiBrain:GetArmyIndex())
     brainThreats.enemy = brainThreats.enemy + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander')
-    LOG('GrabPosDanger ally :'..brainThreats.ally.. ' Enemy :'..brainThreats.enemy)
+    --LOG('GrabPosDanger ally :'..brainThreats.ally.. ' Enemy :'..brainThreats.enemy)
     return brainThreats
 end
 
 GrabPosEconRNG = function(aiBrain,pos,radius)
     local brainThreats = {ally=0,enemy=0}
-    if not GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Ally') then return brainThreats end
     local allyunits=GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Ally')
+    if not allyunits then return brainThreats end
     local enemyunits=GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Enemy')
     for _,v in allyunits do
         if not v.Dead then

@@ -400,7 +400,7 @@ function GetPathGraphsRNG()
             ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
             -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
             if not (marker.adjacentTo) then
-                LOG('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
+                WARN('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
                 continue
             end
             --Add the marker to the graph.

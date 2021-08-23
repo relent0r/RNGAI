@@ -1857,7 +1857,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                if true then
+                --[[if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1892,7 +1892,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.EnemyIntel.ChokeFlag then
                         LOG('Check Flag is true')
                     end
-                end
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -4033,7 +4033,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         info: }
                     ]]
                     local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
-                    LOG('Check for position '..repr(expansionNode))
+                    --LOG('Check for position '..repr(expansionNode))
                     if expansionNode then
                         self.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.GraphArea
                     else

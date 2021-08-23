@@ -895,6 +895,7 @@ Platoon = Class(RNGAIPlatoon) {
         local scout = GetPlatoonUnits(self)[1]
         local supportPlatoon = false
         local platoonNeedScout = false
+        
 
         -- build scoutlocations if not already done.
         if not aiBrain.InterestList then
@@ -911,6 +912,7 @@ Platoon = Class(RNGAIPlatoon) {
             --Head towards the the area that has not had a scout sent to it in a while
             local targetData = false
             local findPlatoonCounter = 0
+            local excessPathFailures = 0
 
             --For every scouts we send to all opponents, send one to scout a low pri area.
             if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents and RNGGETN(aiBrain.InterestList.HighPriority) > 0 then
@@ -968,7 +970,7 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     if self.PlatoonData.ExcessScout and (not platoonNeedScout) and (not self.ExpansionsValidated) then
-                        LOG('Excess scout looking for expansion')
+                        --LOG('Excess scout looking for expansion')
                         local scoutPos = scout:GetPosition()
                         local scoutMarker
                         if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  then
@@ -987,7 +989,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                         if scoutMarker then
-                            LOG('Scout Marker Found, moving to position')
+                            --LOG('Scout Marker Found, moving to position')
                             if PlatoonExists(aiBrain, self) then
                                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), scoutMarker.Position, 50)
                                 self:Stop()
@@ -997,6 +999,8 @@ Platoon = Class(RNGAIPlatoon) {
                                         self:MoveToLocation(path[i], false)
                                     end
                                     self:MoveToLocation(scoutMarker.Position, false)
+                                else
+                                    excessPathFailures = excessPathFailures + 1
                                 end
                                 while PlatoonExists(aiBrain, self) do
                                     --LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
@@ -1295,7 +1299,7 @@ Platoon = Class(RNGAIPlatoon) {
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
         local LocationType = self.PlatoonData.LocationType or 'MAIN'
-        local maxRadius = data.SearchRadius or 200
+        local maxRadius = data.SearchRadius or 250
         local mainBasePos
         local scoutUnit
         if LocationType then
@@ -3328,7 +3332,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self.EarlyRaidSet = true
             end
             if not bestMarker then
-                LOG('Best Marker position was nil, select random')
+                --LOG('Best Marker position was nil, select random')
                 if not self.MassMarkerTable then
                     self.MassMarkerTable = markerLocations
                 else
@@ -5759,7 +5763,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local function SimpleRetreat(self,aiBrain)--basic retreat function
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self:GetPlatoonPosition(),self.MaxWeaponRange+20)
-            LOG('Simple Retreat Threat Stats '..repr(threat))
+            --LOG('Simple Retreat Threat Stats '..repr(threat))
             if threat.ally*1.1<threat.enemy then
                 self.retreat=true
                 return true
@@ -5784,7 +5788,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local unitPos = unit:GetPosition()
                         if AIAttackUtils.CanGraphToRNG(self.Pos,unitPos,self.MovementLayer) then
                             location = unitPos
-                            LOG('Retreat Position found for mex or engineer')
+                            --LOG('Retreat Position found for mex or engineer')
                             break
                         end
                     end
@@ -5795,7 +5799,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if (not location) then
                 location = self.home
-                LOG('No retreat location found, retreat to home')
+                --LOG('No retreat location found, retreat to home')
             end
             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],location)<400 then return end
             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, location, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
@@ -5910,7 +5914,7 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
             if not self.combat and not self.retreat then
                 if point.type then
-                    LOG('switching to state '..point.type)
+                    --LOG('switching to state '..point.type)
                 end
                 if point.type=='push' then
                     --SwitchState(platoon,'push')
@@ -5939,7 +5943,7 @@ Platoon = Class(RNGAIPlatoon) {
                             break
                         end
                     end
-                    LOG('Simple Priority is moving to '..repr(self.dest))
+                    --LOG('Simple Priority is moving to '..repr(self.dest))
                     return true
                 elseif point.type=='garrison' then
                     --SwitchState(platoon,'garrison')
@@ -6018,6 +6022,7 @@ Platoon = Class(RNGAIPlatoon) {
         platoon.friendlyThreats = {}
         platoon.enemyThreats = {}
         platoon.threats = {}
+        local pathTimeout = 0
         while PlatoonExists(aiBrain, self) do
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
@@ -6062,11 +6067,14 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(10)
             elseif SimpleEarlyPatrol(self,aiBrain) then--do raid stuff
             else
+                --LOG('Nothing to target, setting path timeout')
+                pathTimeout = pathTimeout + 1
                 --SimpleGuard(self,aiBrain)--guard stuff with nearest mex
             end
             if not PlatoonExists(aiBrain, self) then
                 return
             end
+            if pathTimeout > 10 then return self:SetAIPlanRNG('HuntAIPATHRNG') end
             WaitTicks(15)
         end
     end,
@@ -6086,12 +6094,12 @@ Platoon = Class(RNGAIPlatoon) {
                             local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
                             if self.raid or self.guard then
                                 if dist<625 then
-                                    LOG('Exit Path Navigation for raid')
+                                    --LOG('Exit Path Navigation for raid')
                                     return true
                                 end
                             else
                                 if dist<math.max(self.MaxWeaponRange*self.MaxWeaponRange*3,625) then
-                                    LOG('Exit Path Navigation')
+                                    --LOG('Exit Path Navigation')
                                     return true
                                 end
                             end

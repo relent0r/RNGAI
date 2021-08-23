@@ -126,7 +126,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     -- first try to find a path with markers. 
     local result, bestPos
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
-    LOG('EngineerGenerateSafePathToRNG reason is'..reason)
+    --LOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.

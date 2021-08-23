@@ -999,6 +999,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            SearchRadius = BaseEnemyArea,
             --[[SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
             DistressRange = BaseMilitaryArea,
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
