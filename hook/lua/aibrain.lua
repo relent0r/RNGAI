@@ -766,6 +766,8 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = {},
             Range = 0,
         }
+        self.EnemyIntel.FrigateRaid = false
+        self.EnemyIntel.FrigateRaidMarkers = {}
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
@@ -932,6 +934,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.DisplayMarkerAdjacency)
         self:CalculateMassMarkersRNG()
+        RUtils.InitialNavalAttackCheck(self)
         self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
         -- This is future goodies.
         

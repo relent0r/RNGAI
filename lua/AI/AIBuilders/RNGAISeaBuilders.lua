@@ -91,7 +91,7 @@ BuilderGroup {
         Priority = 749,
         --PriorityFunction = LandMode,
         BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
             { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T1', 'frigate'} },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
@@ -465,6 +465,43 @@ BuilderGroup {
         BuilderData = {
             MarkerType = 'Mass',            
             WaterOnly = true,
+            MoveFirst = 'Random',
+            MoveNext = 'Threat',
+            ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
+            FindHighestThreat = true,			-- Don't find high threat targets
+            MaxThreatThreshold = 2900,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
+            AvoidBases = false,
+            AvoidBasesRadius = 75,
+            AggressiveMove = true,      
+            AvoidClosestRadius = 50,
+            TargetSearchPriorities = { 
+                categories.MASSEXTRACTION,
+                categories.MOBILE * categories.NAVAL
+            },
+            PrioritizedCategories = {   
+                categories.MOBILE * categories.NAVAL,
+                categories.STRUCTURE * categories.ANTINAVY,
+                categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.NAVAL,
+                categories.COMMAND,
+                categories.EXPERIMENTAL * categories.MOBILE
+            },
+        },    
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Sea Mass Raid Frigate',
+        PlatoonTemplate = 'RNGAI Sea Mass Raid T1 Frigate',
+        Priority = 600,
+        InstanceCount = 2,
+        BuilderConditions = {  
+            { MIBC, 'FrigateRaidTrue', {} },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1 }},
+            },
+        BuilderData = {
+            MarkerType = 'Mass',            
+            WaterOnly = false,
             MoveFirst = 'Random',
             MoveNext = 'Threat',
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks

@@ -15,6 +15,15 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI Sea Mass Raid T1 Frigate',
+    Plan = 'MassRaidRNG',
+    GlobalSquads = {
+        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1, 0, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1, 1, 20, 'Attack', 'GrowthFormation' },
+    },
+}
+
+PlatoonTemplate {
     Name = 'RNGAI Sea Attack T1',
     Plan = 'NavalForceAI',
     GlobalSquads = {

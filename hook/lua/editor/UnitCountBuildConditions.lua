@@ -472,7 +472,12 @@ function BuildOnlyOnLocationRNG(aiBrain, LocationType, AllowedLocationType)
     return false
 end
 
-function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
+function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, raid)
+    if raid then
+        if aiBrain.EnemyIntel.FrigateRaid then
+            return true
+        end
+    end
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --LOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))

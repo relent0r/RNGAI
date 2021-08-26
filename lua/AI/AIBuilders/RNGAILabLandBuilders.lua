@@ -34,10 +34,12 @@ BuilderGroup {
         BuilderName = 'RNGAI Lab Early Game',
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
         Priority = 1000,
+        InstanceCount = 4,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 280 } },
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },      	
             },
+        BuilderType = 'Any',
         BuilderData = {
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
@@ -63,7 +65,5 @@ BuilderGroup {
                 categories.STRUCTURE,
             },
         },    
-        InstanceCount = 4,
-        BuilderType = 'Any',
     },
 }

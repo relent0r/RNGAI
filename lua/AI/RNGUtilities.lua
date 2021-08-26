@@ -3159,3 +3159,60 @@ function MexUpgradeManagerRNG(aiBrain)
         WaitSeconds(4)
     end
 end
+
+function InitialNavalAttackCheck(aiBrain)
+    -- This function will check if there are mass markers that can be hit by frigates. This can trigger faster naval factory builds initially.
+    -- points = number of points around the extractor, doesn't need to have too many.
+    -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
+    -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
+
+    local function drawCirclePoints(points, radius, center)
+        local extractorPoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(extractorPoints, { newX, 0 , newY})
+        end
+        return extractorPoints
+    end
+    local frigateRaidMarkers = {}
+    local markers = AIGetMassMarkerLocations(aiBrain, false, false)
+    if markers then
+        local markerCount = 0
+        local markerCountNotBlocked = 0
+        local markerCountBlocked = 0
+        for _, v in markers do 
+            local checkPoints = drawCirclePoints(6, 26, v.Position)
+            if checkPoints then
+                for _, m in checkPoints do
+                    if PositionInWater(m) then
+                        LOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
+                        LOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
+                        LOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
+                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3])
+                        markerCount = markerCount + 1
+                        if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.Position, 'none') then
+                            LOG('This marker is not blocked')
+                            markerCountNotBlocked = markerCountNotBlocked + 1
+                            table.insert( frigateRaidMarkers, v )
+                        else
+                            markerCountBlocked = markerCountBlocked + 1
+                        end
+                        break
+                    end
+                end
+            end
+        end
+        LOG('There are potentially '..markerCount..' markers that are in range for frigates')
+        LOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+        LOG('There are '..markerCountBlocked..' markers that ARE blocked')
+        LOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+        if markerCountNotBlocked > 8 then
+            aiBrain.EnemyIntel.FrigateRaid = true
+            LOG('Frigate Raid is true')
+            aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
+        end
+    end
+end
