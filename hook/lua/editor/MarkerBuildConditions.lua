@@ -132,4 +132,18 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
     return LastMassBOOL
 end
 
+function MassMarkerLessThanDistanceRNG(aiBrain, distance)
+
+    local startX, startZ = aiBrain:GetArmyStartPos()
+    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            if VDist2Sq(startX, startZ, v.position[1], v.position[3]) < distance * distance then
+                --LOG('Mass marker less than '..distance)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 

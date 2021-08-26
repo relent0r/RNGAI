@@ -19,6 +19,7 @@ local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
+local WaitTicks = coroutine.yield
 
 function CommanderBehaviorRNG(platoon)
     for _, v in platoon:GetPlatoonUnits() do
@@ -111,6 +112,7 @@ function CommanderThreadRNG(cdr, platoon)
         WaitTicks(2)
 
         -- Call platoon resume building deal...
+        --LOG('ACU has '..table.getn(cdr.EngineerBuildQueue)..' items in the build queue')
         if not cdr.Dead and cdr:IsIdleState() and not cdr.GoingHome and not cdr:IsUnitState("Moving")
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
         and not cdr:IsUnitState("Attacking") and not cdr:IsUnitState("Repairing")
@@ -212,7 +214,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local maxRadius = weapon.MaxRadius + 20
     local mapSizeX, mapSizeZ = GetMapSize()
     if cdr:GetHealthPercent() > 0.8
-        and GetGameTimeSeconds() > 230
+        and GetGameTimeSeconds() > 210
         and mapSizeX <= 512 and mapSizeZ <= 512
         then
         if cdr.GunUpgradePresent then
@@ -1260,7 +1262,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
             end
             if NextEnhancement and HaveEcoForEnhancement then
                 --LOG('* RNGAI: * BuildACUEnhancements Building '..NextEnhancement)
-                if BuildEnhancement(aiBrain, cdr, NextEnhancement) then
+                if BuildEnhancementRNG(aiBrain, cdr, NextEnhancement) then
                     --LOG('* RNGAI: * BuildACUEnhancements returned true'..NextEnhancement)
                     return true
                 else
@@ -1314,8 +1316,8 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     return false
 end
 
-BuildEnhancement = function(aiBrain,cdr,enhancement)
-    --LOG('* RNGAI: * BuildEnhancement '..enhancement)
+BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
+    --LOG('* RNGAI: * BuildEnhancementRNG '..enhancement)
     local priorityUpgrades = {
         'HeavyAntiMatterCannon',
         'HeatSink',
@@ -1352,7 +1354,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             IssueScript({cdr}, order)
             coroutine.yield(10)
         end
-        --LOG('* RNGAI: * BuildEnhancement: '..aiBrain.Nickname..' IssueScript: '..enhancement)
+        --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain.Nickname..' IssueScript: '..enhancement)
         if cdr.Upgrading then
             --LOG('cdr.Upgrading is set to true')
         end
@@ -1365,7 +1367,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
             --LOG('cdr.Upgrading is set to true')
         end
         if cdr:GetHealthPercent() < 0.40 then
-            --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+            --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
             cdr.Upgrading = false
@@ -1383,7 +1385,7 @@ BuildEnhancement = function(aiBrain,cdr,enhancement)
         end
         coroutine.yield(10)
     end
-    --LOG('* RNGAI: * BuildEnhancement: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
+    --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
     for k, v in priorityUpgrades do
         if enhancement == v then
             cdr.GunUpgradeRequired = false

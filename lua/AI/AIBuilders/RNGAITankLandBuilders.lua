@@ -502,7 +502,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 1.0 }},
@@ -516,7 +516,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
@@ -531,7 +531,7 @@ BuilderGroup {
         Priority = 920,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 1.0 }},
@@ -584,7 +584,7 @@ BuilderGroup {
         PriorityFunction = ACUClosePriority,
         Priority = 0,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -631,7 +631,7 @@ BuilderGroup {
         PriorityFunction = ACUClosePriority,
         Priority = 0,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -999,6 +999,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            SearchRadius = BaseEnemyArea,
             --[[SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
             DistressRange = BaseMilitaryArea,
             GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
@@ -1030,7 +1031,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',
         PlatoonTemplate = 'RNGAI Antiair Small',
         Priority = 1000,
-        InstanceCount = 5,
+        InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.AIR * (categories.ANTIAIR + categories.BOMBER + categories.GROUNDATTACK) - categories.SCOUT }},
@@ -1123,7 +1124,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
-        Priority = 690,                                                          -- Priority. 1000 is normal.
+        Priority = 710,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1151,6 +1152,7 @@ BuilderGroup {
             GetTargetsFromBase = false,
             RequireTransport = false,
             AggressiveMove = false,
+            AvoidBases = true,
             LocationType = 'LocationType',
             Defensive = false,
             PlatoonLimit = 5,
@@ -1158,6 +1160,7 @@ BuilderGroup {
             TargetSearchPriorities = { 
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.FACTORY,
             },
             PrioritizedCategories = {   
                 categories.MASSEXTRACTION,
@@ -1267,6 +1270,17 @@ BuilderGroup {
             DistressRange = 100,
             ThreatSupport = 2,
             LocationType = 'LocationType',
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MASSEXTRACTION,
+                categories.ALLUNITS,
+            }, 
             },
     },
     Builder {

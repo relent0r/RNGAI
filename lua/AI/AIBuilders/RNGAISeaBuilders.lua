@@ -55,7 +55,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
         },
         BuilderType = 'Sea',
@@ -67,7 +67,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
         },
         BuilderType = 'Sea',
@@ -156,6 +156,21 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Destroyer',
+        PlatoonTemplate = 'T2SeaDestroyer',
+        Priority = 750,
+        BuilderConditions = {
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'destroyer'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder { 
         BuilderName = 'RNGAI Destroyer Response',
@@ -296,7 +311,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
-        Priority = 500,
+        Priority = 501,
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},

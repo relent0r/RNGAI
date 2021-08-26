@@ -13,6 +13,8 @@ local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMas
 local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
+local WaitTicks = coroutine.yield
+local ALLBPS = __blueprints
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -57,13 +59,14 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     --LOG('* AI-RNG: Start Reclaim Function')
     if aiBrain.StartReclaimTaken then
         --LOG('StartReclaimTaken set to true')
-        --LOG('Start Reclaim Table has '..table.getn(aiBrain.StartReclaimTable)..' items in it')
+        --LOG('Start Reclaim Table has '..RNGGETN(aiBrain.StartReclaimTable)..' items in it')
     end
     IssueClearCommands({self})
     local locationType = self.PlatoonData.LocationType
     local initialRange = 40
     local createTick = GetGameTick()
     local reclaimLoop = 0
+    local VDist2 = VDist2
 
     self.BadReclaimables = self.BadReclaimables or {}
 
@@ -73,7 +76,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --self:SetCustomName('StartReclaim Logic Start')
             --LOG('Reclaim Function - Starting reclaim is false')
             local sortedReclaimTable = {}
-            if table.getn(aiBrain.StartReclaimTable) > 0 then
+            if RNGGETN(aiBrain.StartReclaimTable) > 0 then
                 
                 --WaitTicks(10)
                 local reclaimCount = 0
@@ -106,11 +109,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --LOG('Set key to nil')
                     aiBrain.StartReclaimTable[k] = nil
                 end
-                --LOG('Pre Rebuild Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                --LOG('Pre Rebuild Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
-                --LOG('Reclaim table has '..table.getn(aiBrain.StartReclaimTable)..' reclaim left')
+                --LOG('Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 
-                if table.getn(aiBrain.StartReclaimTable) == 0 then
+                if RNGGETN(aiBrain.StartReclaimTable) == 0 then
                     --LOG('Start Reclaim Taken set to true')
                     aiBrain.StartReclaimTaken = true
                 else
@@ -145,7 +148,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
         --LOG('* AI-RNG: Going through reclaim table')
         --self:SetCustomName('Loop through reclaim table')
-        if reclaimRect and table.getn( reclaimRect ) > 0 then
+        if reclaimRect and RNGGETN( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
                 local rpos = v:GetCachePosition()
@@ -327,7 +330,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     -- Check if enemy units are at location
     local checkUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, pointRadius, 'Enemy')
     -- reclaim units near our building place.
-    if checkUnits and table.getn(checkUnits) > 0 then
+    if checkUnits and RNGGETN(checkUnits) > 0 then
         for num, unit in checkUnits do
             --temporary for troubleshooting
             --unitdesc = GetBlueprint(unit).Description
@@ -353,7 +356,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     end
     -- reclaim rocks etc or we can't build mexes or hydros
     local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
-    if Reclaimables and table.getn( Reclaimables ) > 0 then
+    if Reclaimables and RNGGETN( Reclaimables ) > 0 then
         for k,v in Reclaimables do
             if v.MaxMassReclaim and v.MaxMassReclaim > 0 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 0 then
                 IssueReclaim({eng}, v)
@@ -372,7 +375,7 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
 
     local structureCat = ParseEntityCategory(whatToBuild)
     local checkUnits = GetUnitsAroundPoint(aiBrain, structureCat, pos, 1, 'Ally')
-    if checkUnits and table.getn(checkUnits) > 0 then
+    if checkUnits and RNGGETN(checkUnits) > 0 then
         for num, unit in checkUnits do
             IssueRepair({eng}, unit)
         end
@@ -466,20 +469,17 @@ end
 
 function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
     local markerList = {}
-        local markers = ScenarioUtils.GetMarkers()
-        if markers then
-            for k, v in markers do
-                if v.type == 'Mass' then
-                    if waterOnly then
-                        if PositionInWater(v.position) then
-                            table.insert(markerList, {Position = v.position, Name = k})
-                        end
-                    elseif includeWater then
+        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                if waterOnly then
+                    if PositionInWater(v.position) then
                         table.insert(markerList, {Position = v.position, Name = k})
-                    else
-                        if not PositionInWater(v.position) then
-                            table.insert(markerList, {Position = v.position, Name = k})
-                        end
+                    end
+                elseif includeWater then
+                    table.insert(markerList, {Position = v.position, Name = k})
+                else
+                    if not PositionInWater(v.position) then
+                        table.insert(markerList, {Position = v.position, Name = k})
                     end
                 end
             end
@@ -494,15 +494,11 @@ end
 
 function GetClosestMassMarkerToPos(aiBrain, pos)
     local markerList = {}
-    local markers = ScenarioUtils.GetMarkers()
-    if markers then
-        for k, v in markers do
+        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
                 table.insert(markerList, {Position = v.position, Name = k})
             end
         end
-    end
-
     local loc, distance, lowest, name = nil
 
     for _, v in markerList do
@@ -525,12 +521,10 @@ end
 
 function GetClosestMassMarker(aiBrain, unit)
     local markerList = {}
-    local markers = ScenarioUtils.GetMarkers()
-    if markers then
-        for k, v in markers do
-            if v.type == 'Mass' then
-                table.insert(markerList, {Position = v.position, Name = k})
-            end
+
+    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == 'Mass' then
+            table.insert(markerList, {Position = v.position, Name = k})
         end
     end
 
@@ -650,7 +644,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
     if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
         return false
     end
-
+    local VDist2 = VDist2
     local RangeList = { [1] = maxRange }
     if maxRange > 512 then
         RangeList = {
@@ -735,7 +729,7 @@ function StructureUpgradeInitialize(finishedUnit, aiBrain)
 end
 
 function InitialMassMarkersInWater(aiBrain)
-    if table.getn(AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
+    if RNGGETN(AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
         return true
     else
         return false
@@ -840,7 +834,7 @@ function TacticalMassLocations(aiBrain)
     local markerGroups = {}
     local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
     if markerLocations then
-        aiBrain.BrainIntel.MassMarker = table.getn(markerLocations)
+        aiBrain.BrainIntel.MassMarker = RNGGETN(markerLocations)
     end
     local group = 1
     local duplicateMarker = {}
@@ -858,7 +852,7 @@ function TacticalMassLocations(aiBrain)
                 end
             end
             markerLocations[key_1] = nil
-            if table.getn(groupSet['Markers']) > 2 then
+            if RNGGETN(groupSet['Markers']) > 2 then
                 table.insert(markerGroups, groupSet)
                 --LOG('Group Set Markers :'..repr(groupSet))
                 group = group + 1
@@ -935,7 +929,7 @@ function GenerateMassGroupMarkerLocations(aiBrain)
     -- Will generate locations for markers on the center point for each unmarked mass group
     local markerGroups = aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups
     local newMarkerLocations = {}
-    if table.getn(markerGroups) > 0 then
+    if RNGGETN(markerGroups) > 0 then
         for key, group in markerGroups do
             local position = MassGroupCenter(group)
             table.insert(newMarkerLocations, position)
@@ -1076,6 +1070,7 @@ end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
+    local VDist2 = VDist2
     if platoon.PlatoonData.GetTargetsFromBase then
         --LOG('Looking for targets from position '..platoon.PlatoonData.LocationType)
         position = aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Position
@@ -1207,6 +1202,7 @@ end
 
 function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat, index)
     local position = platoon:GetPlatoonPosition()
+    local VDist2 = VDist2
     local enemyThreat
     if not aiBrain or not position or not maxRange then
         return false
@@ -1294,6 +1290,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
     local enemyIndex = false
+    local VDist2 = VDist2
     local MyArmyIndex = aiBrain:GetArmyIndex()
     if enemyBrain then
         enemyIndex = enemyBrain:GetArmyIndex()
@@ -1326,7 +1323,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 category = ParseEntityCategory(category)
             end
             distance = maxRange
-            --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..table.getn(TargetsInRange)..'  ')
+            --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..RNGGETN(TargetsInRange)..'  ')
             for num, Target in TargetsInRange do
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
@@ -1389,7 +1386,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
     local validLocation = false
     local enemyStarts = {}
 
-    if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+    if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
         --LOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
         --LOG('*AI RNG: SpamBase position is'..repr(location))
         enemyStarts = aiBrain.EnemyIntel.EnemyStartLocations
@@ -1798,7 +1795,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 	if positionselection then
 	
 		if type(positionselection) == 'boolean' then
-			positionselection = Random( 1, counter )	--table.getn(sortedList))
+			positionselection = Random( 1, counter )	--RNGGETN(sortedList))
 		end
 
 	end
@@ -2127,7 +2124,7 @@ function GetMarkersByType(markerType)
         end
         -- add the markers of this type to the cache
         markerTypeCache[markerType] = cache
-        --LOG("ScenarioUtils: Cached " .. table.getn(cache) .. " markers of type: " .. markerType)
+        --LOG("ScenarioUtils: Cached " .. RNGGETN(cache) .. " markers of type: " .. markerType)
     end
     -- return the cached markers
     return markerTypeCache[markerType]
@@ -2138,6 +2135,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
     local threatCheck = false
     local maxDistance = 2000
     local minDistance = 0
+    local VDist2Sq = VDist2Sq
 
 
     local startX, startZ
@@ -2188,7 +2186,7 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
             table.insert(newList, v)
         end
     end
-    --LOG('Return marker list has '..table.getn(newList)..' entries')
+    --LOG('Return marker list has '..RNGGETN(newList)..' entries')
     return newList
 end
 
@@ -2236,6 +2234,7 @@ end
 
 CountSoonMassSpotsRNG = function(aiBrain)
     local enemies={}
+    local VDist2Sq = VDist2Sq
     for i,v in ArmyBrains do
         if ArmyIsCivilian(v:GetArmyIndex()) or not IsEnemy(aiBrain:GetArmyIndex(),v:GetArmyIndex()) or v.Result=="defeat" then continue end
         local index = v:GetArmyIndex()
@@ -2279,20 +2278,17 @@ CountSoonMassSpotsRNG = function(aiBrain)
             v.owner=nil
             table.insert(aiBrain.emanager.expands,v)
         end
-        local markers = ScenarioUtils.GetMarkers()
         aiBrain.expansionMex={}
         local expands={}
-        if markers then
-            for k, v in markers do
-                if v.type == 'Mass' then
-                    table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
-                    if VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
-                        table.insert(aiBrain.emanager.expands[1].mextable,{v,Position = v.position, Name = k})
-                        aiBrain.emanager.expands[1].mexnum=aiBrain.emanager.expands[1].mexnum+1
-                        table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k,ExpandMex=true})
-                    else
-                        table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k})
-                    end
+        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+            if v.type == 'Mass' then
+                table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
+                if VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
+                    table.insert(aiBrain.emanager.expands[1].mextable,{v,Position = v.position, Name = k})
+                    aiBrain.emanager.expands[1].mexnum=aiBrain.emanager.expands[1].mexnum+1
+                    table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k,ExpandMex=true})
+                else
+                    table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k})
                 end
             end
         end
@@ -2343,285 +2339,6 @@ CountSoonMassSpotsRNG = function(aiBrain)
     end
 end
 -- start of supporting functions for zone area thingy
-function DisplayMarkerAdjacency(aiBrain)
-    --aiBrain:ForkThread(LastKnownThread)
-    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
-    aiBrain.RNGAreas={}
-    aiBrain.renderlines={}
-    aiBrain.expandspots={}
-    aiBrain.rendercircles={}
-    for k,marker in expansionMarkers do
-        local node=false
-        local expand=false
-        --LOG(repr(k)..' marker type is '..repr(marker.type))
-        for i, v in STR_GetTokens(marker.type,' ') do
-            if v=='Node' then
-                node=true
-                break
-            end
-            if v=='Expansion' then
-                expand=true
-                break
-            end
-        end
-        if node and not marker.RNGArea then
-            aiBrain.RNGAreas[k]={}
-            InfectMarkersRNG(aiBrain,marker,k)
-        end
-        if expand then
-            table.insert(aiBrain.expandspots,{marker,k})
-        end
-        if not node and not expand then
-            for _,v in STR_GetTokens(k,'_') do
-                if v=='ARMY' then
-                    table.insert(aiBrain.expandspots,{marker,k})
-                end
-            end
-        end
-    end
-    aiBrain.analysistablecolors={}
-    local tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
-    local colors=aiBrain.analysistablecolors
-    local colorcomponents={
-        r={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
-        g={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
-        b={ToColorRNG(0,256,1),ToColorRNG(0,256,1),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.75),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.5),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.35),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0.25),ToColorRNG(0,256,0),ToColorRNG(0,256,0)},
-    }
-    WaitSeconds(10)
-    LOG('colortable is'..repr(tablecolors))
-    for i,v in ArmyBrains do
-        if (not ArmyIsCivilian(v:GetArmyIndex())) or v.Result~="defeat" then  
-            local astartX, astartZ = v:GetArmyStartPos()
-            local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
-            table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
-            LOG('closestpath is '..repr(closestpath))
-            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
-            local randy=nil
-            if i<9 then
-                randy=math.random(table.getn(tablecolors)-7+i,table.getn(tablecolors))
-            else
-                randy=math.random(table.getn(tablecolors))
-            end
-            colors[aiBrain.expandspots[1][2]]=tablecolors[randy]
-            table.remove(tablecolors,randy)
-        end
-    end
-
-    local expands=true
-    local expandcolors={}
-    while aiBrain.renderthreadtracker do
-        WaitTicks(2)
-    end
-    if expands then
-        --tablecolors=GenerateDistinctColorTable(table.getn(aiBrain.expandspots))
-        for _,expand in aiBrain.expandspots do
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
-            --LOG('closestpath is '..repr(closestpath))
-            aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
-            local randy=math.random(table.getn(tablecolors))
-            if colors[expand[2]] then continue end
-            colors[expand[2]]=tablecolors[randy]
-            table.remove(tablecolors,randy)
-        end
-    end
-
-    while aiBrain.renderthreadtracker do
-        WaitTicks(2)
-    end
-    local bestarmynum=0
-    for k,marker in Scenario.MasterChain._MASTERCHAIN_.Markers do
-        if marker.bestarmy then
-            local first=nil
-            local firstd=nil
-            local second=nil
-            local secondd=nil
-            for x,v in marker.armydists do
-                if not first or v<firstd then
-                    if first then
-                        second=first
-                        secondd=firstd
-                    end
-                    first=k
-                    firstd=v
-                elseif (not second or v<secondd) then
-                    second=k
-                    secondd=v
-                end
-            end
-            if secondd and math.abs(firstd-secondd)<0.15*(secondd) then
-                LOG('border point found- distances are '..repr(firstd)..' and '..repr(secondd))
-                table.insert(aiBrain.rendercircles,marker.position)
-                --marker.bestarmy=nil
-            end
-        end
-    end
-    local iter=0
-    for k,marker in Scenario.MasterChain._MASTERCHAIN_.Markers do
-        if marker.bestarmy then
-            local surround=0
-            local border=false
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                if not adjnode.bestarmy or adjnode.bestarmy~=marker.bestarmy then
-                    border=true
-                else
-                    surround=surround+1
-                end
-            end
-            local function midpoint(vec1,vec2,ratio)
-                local vec3={}
-                for z,v in vec1 do
-                    if type(v)=='number' then 
-                        vec3[z]=vec2[z]*(ratio)+v*(1-ratio)
-                    end
-                end
-                return vec3
-            end
-            local function crossp(vec1,vec2,n)
-                local z = vec2[3] + n * (vec2[1] - vec1[1])
-                local y = vec2[2] - n * (vec2[2] - vec1[2])
-                local x = vec2[1] - n * (vec2[3] - vec1[3])
-                return {x,y,z}
-            end
-            bestarmynum=bestarmynum+1
-            if not marker.renderlined then marker.renderlined={} end
-            local priority=nil
-            if border or surround<=3 then
-                priority=true
-            end
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                local tempdist=VDist3(marker.position,adjnode.position)
-                if adjnode.bestarmy==marker.bestarmy then
-                    if not adjnode.renderlined then adjnode.renderlined={} end
-                    --surround=surround+1
-                    if not adjnode.renderlined[k] and not marker.renderlined[node] then
-                        adjnode.renderlined[k]=true
-                        marker.renderlined[node]=true
-                        local p1={crossp(marker.position,adjnode.position,1/tempdist),crossp(adjnode.position,marker.position,1/tempdist)}
-                        local p2={crossp(marker.position,adjnode.position,-1/tempdist),crossp(adjnode.position,marker.position,-1/tempdist)}
-                        table.insert(aiBrain.renderlines,{p1[1],p1[2],marker.type,marker.bestarmy,priority})
-                        table.insert(aiBrain.renderlines,{p2[1],p2[2],marker.type,marker.bestarmy,priority})
-                    end
-                end
-                if not adjnode.bestarmy or adjnode.bestarmy~=marker.bestarmy then
-                    table.insert(aiBrain.renderlines,{crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+5)/tempdist/2),10/tempdist),crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+5)/tempdist/2),-10/tempdist),marker.type,marker.bestarmy,false})
-                    --border=true
-                end
-            end
-            --if border or surround<=3 then
-            --table.insert(aiBrain.rendercircles,marker.position)
-            --table.insert(aiBrain.renderlines,{marker.position,Scenario.MasterChain._MASTERCHAIN_.Markers[marker.closestarmy].position,marker.type})
-            iter=iter+1
-        end
-        if marker.bestexpand then
-            local surround=0
-            local border=false
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                if not adjnode.bestexpand or adjnode.bestexpand~=marker.bestexpand then
-                    border=true
-                else
-                    surround=surround+1
-                end
-            end
-            local function midpoint(vec1,vec2,ratio)
-                local vec3={}
-                for z,v in vec1 do
-                    if type(v)=='number' then 
-                        vec3[z]=vec2[z]*(ratio)+v*(1-ratio)
-                    end
-                end
-                return vec3
-            end
-            local function crossp(vec1,vec2,n)
-                local z = vec2[3] + n * (vec2[1] - vec1[1])
-                local y = vec2[2] - n * (vec2[2] - vec1[2])
-                local x = vec2[1] - n * (vec2[3] - vec1[3])
-                return {x,y,z}
-            end
-            if not marker.expandrenderlined then marker.expandrenderlined={} end
-            local priority=nil
-            if border or surround<=3 then
-                priority=true
-            end
-            for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-                local adjnode=nil
-                if Scenario.MasterChain._MASTERCHAIN_.Markers[node] then
-                    adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-                else
-                    continue
-                end
-                local tempdist=VDist3(marker.position,adjnode.position)
-                if adjnode.bestexpand==marker.bestexpand then
-                    if not adjnode.expandrenderlined then adjnode.expandrenderlined={} end
-                    surround=surround+1
-                    if not adjnode.expandrenderlined[k] and not marker.expandrenderlined[node] then
-                        adjnode.expandrenderlined[k]=true
-                        marker.expandrenderlined[node]=true
-                        table.insert(aiBrain.renderlines,{marker.position,adjnode.position,marker.type,marker.bestexpand,priority})
-                    end
-                end
-                if not adjnode.bestexpand or adjnode.bestexpand~=marker.bestexpand then
-                    table.insert(aiBrain.renderlines,{crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+3)/tempdist/2),10/tempdist),crossp(marker.position,midpoint(marker.position,adjnode.position,(tempdist+3)/tempdist/2),-10/tempdist),marker.type,marker.bestexpand,true})
-                    border=true
-                end
-            end
-            iter=iter+2
-        end
-        if iter>20 then 
-            --WaitTicks(1)
-            iter=0
-        end
-    end
-    LOG('RNGAreas:')
-    for k,v in aiBrain.RNGAreas do
-        LOG(repr(k)..' has '..repr(table.getn(v))..' nodes')
-    end
-    ---[[
-    --LOG('renderlines has '..table.getn(aiBrain.renderlines))
-    --LOG('bestarmy has '..repr(bestarmynum))
-    --LOG('renderlines are '..repr(aiBrain.renderlines))
-    --while not aiBrain.defeat do
-    --    for _,v in aiBrain.rendercircles do
-    --        DrawCircle(v,5,'FFBF9C1E')
-    --    end
-    --    for _,v in aiBrain.renderlines do
-    --        if v[4] then
-    --            local prefix='33'
-    --            if v[5] then
-    --                prefix='aa'
-    --            end
-    --            DrawLine(v[1],v[2],prefix..colors[v[4]])
-    --        else
-    --            if v[3]=='Land Path Node' then
-    --                DrawLine(v[1],v[2],'FFBF9C1E')
-    --            elseif v[3]=='Water Path Node' then
-    --                DrawLine(v[1],v[2],'FF7100FF')
-    --            end
-    --        end
-    --    end
-    --    WaitTicks(2)
-    --end
-    --]]
-end
-
 GenerateDistinctColorTable = function(num)
     local function factorial(n,min)
         if n>min and n>1 then
@@ -2660,7 +2377,7 @@ GenerateDistinctColorTable = function(num)
         table.insert(colortable,v..v..v)
         combinations[combintoid(k,k,k)]=1
     end]]
-    local max=ViableValues[table.getn(ViableValues)]
+    local max=ViableValues[RNGGETN(ViableValues)]
     local min=ViableValues[1]
     local primaries={min..min..min,max..max..min,max..min..max,min..max..max,max..min..min,min..max..min,min..min..max,max..max..max}
     combinations[combintoid(max,max,min)]=1
@@ -2686,65 +2403,116 @@ GenerateDistinctColorTable = function(num)
     end
     return colortable
 end
-GrabRandomDistinctColor = function(num)
-    local output=GenerateDistinctColorTable(num)
-    return output[math.random(table.getn(output))]
-end
-ShowLastKnown = function(aiBrain)
-    if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
-        return
-    end
-    while not aiBrain.lastknown do
-        WaitTicks(2)
-    end
-    while aiBrain.result ~= "defeat" do
-        local time=GetGameTimeSeconds()
-        local lastknown=table.copy(aiBrain.lastknown)
-        for _,v in lastknown do
-            if v.recent then
-                local ratio=(1-(time-v.time)/120)*(1-(time-v.time)/120)
-                local ratio2=(1-(time-v.time)/120)
-                local color=ToColorRNG(10,255,ratio2)
-                local color1=ToColorRNG(10,255,ratio)
-                local color2=ToColorRNG(10,100,math.random())
-                local color3=ToColorRNG(10,100,math.random())
-                DrawCircle(v.Position,3,color..color1..color2..color3)
-            else
-                DrawCircle(v.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+function DisplayMarkerAdjacency(aiBrain)
+    aiBrain:ForkThread(LastKnownThread)
+    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
+    local VDist3Sq = VDist3Sq
+    aiBrain.RNGAreas={}
+    aiBrain.armyspots={}
+    aiBrain.expandspots={}
+    for k,marker in expansionMarkers do
+        local node=false
+        local expand=false
+        --LOG(repr(k)..' marker type is '..repr(marker.type))
+        for i, v in STR_GetTokens(marker.type,' ') do
+            if v=='Node' then
+                node=true
+                break
+            end
+            if v=='Expansion' then
+                expand=true
+                break
             end
         end
-        WaitTicks(2)
-    end
-end
-ToColorRNG = function(min,max,ratio)
-    local ToBase16 = function(num)
-        if num<10 then
-            return tostring(num)
-        elseif num==10 then
-            return 'a'
-        elseif num==11 then
-            return 'b'
-        elseif num==12 then
-            return 'c'
-        elseif num==13 then
-            return 'd'
-        elseif num==14 then
-            return 'e'
-        else
-            return 'f'
+        if node and not marker.RNGArea then
+            aiBrain.RNGAreas[k]={}
+            InfectMarkersRNG(aiBrain,marker,k)
+        end
+        if expand then
+            table.insert(aiBrain.expandspots,{marker,k})
+        end
+        if not node and not expand then
+            for _,v in STR_GetTokens(k,'_') do
+                if v=='ARMY' then
+                    table.insert(aiBrain.armyspots,{marker,k})
+                    table.insert(aiBrain.expandspots,{marker,k})
+                end
+            end
         end
     end
-    local baseones=0
-    local basetwos=0
-    local numinit=math.abs(math.ceil((max-min)*ratio+min))
-    basetwos=math.floor(numinit/16)
-    baseones=numinit-basetwos*16
-    return ToBase16(basetwos)..ToBase16(baseones)
+    aiBrain.analysistablecolors={}
+    local tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
+    local colors=aiBrain.analysistablecolors
+    --WaitSeconds(10)
+    --LOG('colortable is'..repr(tablecolors))
+    local bases=false
+    if bases then
+        for _,army in aiBrain.armyspots do
+            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(army[1].position,25,'Land').name]
+            --LOG('closestpath is '..repr(closestpath))
+            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,army[2])
+            local randy=math.random(RNGGETN(tablecolors))
+            colors[army[2]]='FF'..tablecolors[randy]
+            table.remove(tablecolors,randy)
+        end
+    else
+        for i,v in ArmyBrains do
+            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+            local astartX, astartZ = v:GetArmyStartPos()
+            local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
+            table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
+            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
+            --LOG('closestpath is '..repr(closestpath))
+            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
+            local randy=nil
+            if i<9 then
+                randy=math.random(RNGGETN(tablecolors)-7+i,RNGGETN(tablecolors))
+            else
+                randy=math.random(RNGGETN(tablecolors))
+            end
+            colors[aiBrain.expandspots[1][2]]=tablecolors[randy]
+            table.remove(tablecolors,randy)
+        end
+    end
+    local expands=true
+    local expandcolors={}
+    while aiBrain.renderthreadtracker do
+        WaitTicks(2)
+    end
+    if expands then
+        --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
+        for _,expand in aiBrain.expandspots do
+            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
+            --LOG('closestpath is '..repr(closestpath))
+            aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
+            local randy=math.random(RNGGETN(tablecolors))
+            if colors[expand[2]] then continue end
+            colors[expand[2]]=tablecolors[randy]
+            table.remove(tablecolors,randy)
+        end
+    end
+    while aiBrain.renderthreadtracker do
+        WaitTicks(2)
+    end
+    --LOG('RNGAreas:')
+    --for k,v in aiBrain.RNGAreas do
+    --    LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
+    --end
+end
+function InfectMarkersRNG(aiBrain,marker,graphname)
+    marker.RNGArea=graphname
+    table.insert(aiBrain.RNGAreas[graphname],marker)
+    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
+        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
+            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+        end
+    end
 end
 function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
-    DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
+    --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
+    if not marker then LOG('No Marker sent to army distance check') return end
     if not marker.armydists then
         marker.armydists={}
     end
@@ -2801,7 +2569,8 @@ end
 function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
-    DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
+    --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
+    if not marker then return end
     if not marker.expanddists then
         marker.expanddists={}
     end
@@ -2854,21 +2623,244 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
         aiBrain.renderthreadtracker=nil
     end
 end
--- end of supporting functions for zone area thingy
 
-function InfectMarkersRNG(aiBrain,marker,graphname)
-    marker.RNGArea=graphname
-    table.insert(aiBrain.RNGAreas[graphname],marker)
-    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
-            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+GrabRandomDistinctColor = function(num)
+    local output=GenerateDistinctColorTable(num)
+    return output[math.random(RNGGETN(output))]
+end
+LastKnownThread = function(aiBrain)
+    aiBrain.lastknown={}
+    --aiBrain:ForkThread(ShowLastKnown)
+    aiBrain:ForkThread(TruePlatoonPriorityDirector)
+    while not aiBrain.emanager.enemies do WaitSeconds(2) end
+    while aiBrain.Result ~= "defeat" do
+        local time=GetGameTimeSeconds()
+        for _=0,10 do
+            local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
+            for _,v in eunits do
+                if not v or v.Dead then continue end
+                local id=v.Sync.id
+                if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
+                    if not aiBrain.lastknown[id] then
+                        aiBrain.lastknown[id]={}
+                        if EntityCategoryContains(categories.MOBILE,v) then
+                            if EntityCategoryContains(categories.ENGINEER-categories.COMMAND,v) then
+                                aiBrain.lastknown[id].type='eng'
+                            elseif EntityCategoryContains(categories.COMMAND,v) then
+                                aiBrain.lastknown[id].type='acu'
+                            elseif EntityCategoryContains(categories.ANTIAIR,v) then
+                                aiBrain.lastknown[id].type='aa'
+                            elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
+                                aiBrain.lastknown[id].type='tank'
+                            elseif EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                                aiBrain.lastknown[id].type='arty'
+                            end
+                        elseif EntityCategoryContains(categories.MASSEXTRACTION,v) then
+                            aiBrain.lastknown[id].type='mex'
+                        elseif EntityCategoryContains(categories.RADAR,v) then
+                            aiBrain.lastknown[id].type='radar'
+                        end
+                    end
+                    aiBrain.lastknown[id].object=v
+                    aiBrain.lastknown[id].Position=table.copy(v:GetPosition())
+                    aiBrain.lastknown[id].time=time
+                    aiBrain.lastknown[id].recent=true
+                end
+            end
+            WaitSeconds(2)
+            time=GetGameTimeSeconds()
+        end
+        for i,v in aiBrain.lastknown do
+            if (v.object and v.object.Dead) then
+                aiBrain.lastknown[i]=nil
+            elseif time-v.time>120 or (v.object and v.object.Dead) or (time-v.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,v.Position,20,'Ally')>3) then
+                aiBrain.lastknown[i].recent=false
+            end
         end
     end
 end
+ShowLastKnown = function(aiBrain)
+    if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
+        return
+    end
+    while not aiBrain.lastknown do
+        WaitTicks(2)
+    end
+    while aiBrain.result ~= "defeat" do
+        local time=GetGameTimeSeconds()
+        local lastknown=table.copy(aiBrain.lastknown)
+        for _,v in lastknown do
+            if v.recent then
+                local ratio=(1-(time-v.time)/120)*(1-(time-v.time)/120)
+                local ratio2=(1-(time-v.time)/120)
+                local color=ToColorRNG(10,255,ratio2)
+                local color1=ToColorRNG(10,255,ratio)
+                local color2=ToColorRNG(10,100,math.random())
+                local color3=ToColorRNG(10,100,math.random())
+                DrawCircle(v.Position,3,color..color1..color2..color3)
+            else
+                DrawCircle(v.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+            end
+        end
+        WaitTicks(2)
+    end
+end
+--[[TruePlatoonPriorityDirector = function(aiBrain)
+    aiBrain.prioritypoints={}
+    while not aiBrain.lastknown do WaitSeconds(2) end
+    while aiBrain.Result ~= "defeat" do
+        aiBrain.prioritypoints={}
+        for _=0,5 do
+            for k,v in aiBrain.lastknown do
+                if not v.recent or aiBrain.prioritypoints[k] then continue end
+                local priority=0
+                if v.type then
+                    if v.type=='eng' then
+                        priority=30
+                    elseif v.type=='mex' then
+                        priority=20
+                    elseif v.type=='radar' then
+                        priority=100
+                    else
+                        priority=10
+                    end
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
+                end
+            end
+            WaitTicks(10)
+        end
+    end
+end]]
+
+TruePlatoonPriorityDirector = function(aiBrain)
+    aiBrain.prioritypoints={}
+    while not aiBrain.lastknown do WaitSeconds(2) end
+    while aiBrain.Result ~= "defeat" do
+        --LOG('Check Expansion table in priority directo')
+        if aiBrain.BrainIntel.ExpansionWatchTable then
+            for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                if v.Land > 0 or v.Structures > 0 then
+                    local priority=0
+                    local acuPresent = false
+                    if v.Structures > 0 then
+                        -- We divide by 100 because of mexes being 1000 and greater threat. If they ever fix the threat numbers of mexes then this can change
+                        priority = priority + (v.Structures / 100)
+                        --LOG('Structure Priority is '..priority)
+                    end
+                    if v.Land > 0 then 
+                        priority = priority + 30
+                    end
+                    if v.PlatoonAssigned then
+                        priority = priority - 20
+                    end
+                    if v.MassPoints >= 4 then
+                        priority = priority + 15
+                    elseif v.MassPoints >= 2 then
+                        priority = priority + 5
+                    end
+                    if v.Commander > 0 then
+                        acuPresent = true
+                    end
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent}
+                else
+                    if aiBrain.prioritypoints[k] then
+                        aiBrain.prioritypoints[k].priority = 0
+                    end
+                end
+            end
+            WaitTicks(10)
+        end
+        --LOG('Check lastknown')
+        for k,v in aiBrain.lastknown do
+            if not v.recent or aiBrain.prioritypoints[k] then continue end
+            local priority=0
+            if v.type then
+                if v.type=='eng' then
+                    priority=50
+                elseif v.type=='mex' then
+                    priority=40
+                elseif v.type=='radar' then
+                    priority=100
+                else
+                    priority=20
+                end
+                aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
+            end
+        end
+        WaitTicks(50)
+        
+        --LOG('Priority Points'..repr(aiBrain.prioritypoints))
+    end
+end
+
+ToColorRNG = function(min,max,ratio)
+    local ToBase16 = function(num)
+        if num<10 then
+            return tostring(num)
+        elseif num==10 then
+            return 'a'
+        elseif num==11 then
+            return 'b'
+        elseif num==12 then
+            return 'c'
+        elseif num==13 then
+            return 'd'
+        elseif num==14 then
+            return 'e'
+        else
+            return 'f'
+        end
+    end
+    local baseones=0
+    local basetwos=0
+    local numinit=math.abs(math.ceil((max-min)*ratio+min))
+    basetwos=math.floor(numinit/16)
+    baseones=numinit-basetwos*16
+    return ToBase16(basetwos)..ToBase16(baseones)
+end
+
+-- end of supporting functions for zone area thingy
 
 -- TruePlatoon Support functions
 
 GrabPosDangerRNG = function(aiBrain,pos,radius)
+
+    local brainThreats = {ally=0,enemy=0}
+    local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+    for _,v in enemyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                brainThreats.enemy = brainThreats.enemy + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*mult
+            end
+        end
+    end
+
+    local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+    for _,v in allyunits do
+        if not v.Dead then
+            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
+            --LOG('Unit ID is '..v.UnitId)
+            --bp = v:GetBlueprint().Defense
+            local mult=1
+            if EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                mult=0.3
+            end
+            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                brainThreats.ally = brainThreats.ally + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*mult
+            end
+        end
+    end
+    return brainThreats
+end
+
+GrabPosDangerRNGOriginal = function(aiBrain,pos,radius)
     local function GetWeightedHealthRatio(unit)
         if unit.MyShield then
             return (unit.MyShield:GetHealth()+unit:GetHealth())/(unit.MyShield:GetMaxHealth()+unit:GetMaxHealth())
@@ -2914,10 +2906,21 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
     return brainThreats
 end
 
+GrabPosDangerRNGold = function(aiBrain,pos,radius)
+    -- this is stupid, won't return ally commander threat >_<
+    local brainThreats = {ally=0,enemy=0}
+    brainThreats.ally = brainThreats.ally + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land', aiBrain:GetArmyIndex())
+    brainThreats.enemy = brainThreats.enemy + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
+    brainThreats.ally = brainThreats.ally + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander', aiBrain:GetArmyIndex())
+    brainThreats.enemy = brainThreats.enemy + aiBrain:GetThreatAtPosition(pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander')
+    --LOG('GrabPosDanger ally :'..brainThreats.ally.. ' Enemy :'..brainThreats.enemy)
+    return brainThreats
+end
+
 GrabPosEconRNG = function(aiBrain,pos,radius)
     local brainThreats = {ally=0,enemy=0}
-    if not GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Ally') then return brainThreats end
     local allyunits=GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Ally')
+    if not allyunits then return brainThreats end
     local enemyunits=GetUnitsAroundPoint(aiBrain, categories.STRUCTURE,pos,radius,'Enemy')
     for _,v in allyunits do
         if not v.Dead then
@@ -2968,7 +2971,7 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
                 WaitTicks(1)
                 return
             end
-            if reclaimRect and table.getn( reclaimRect ) > 0 then
+            if reclaimRect and RNGGETN( reclaimRect ) > 0 then
                 for k,v in reclaimRect do
                     if not IsProp(v) or self.BadReclaimables[v] then continue end
                     currentValue = currentValue + v.MaxMassReclaim
@@ -2984,6 +2987,7 @@ end
 
 function CalculateMassValue(expansionMarkers)
     local MassMarker = {}
+    local VDist2Sq = VDist2Sq
     if not expansionMarkers then
         WARN('No Expansion Markers Passed to calcuatemassvalue')
     end
@@ -3011,8 +3015,8 @@ function CalculateMassValue(expansionMarkers)
 end
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
-    WaitTicks(200)
-
+    WaitTicks(5)
+    local VDist2Sq = VDist2Sq
     local markerList = {}
     local armyStarts = {}
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
@@ -3044,9 +3048,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if not startPosUsed then
                     if v.MassSpotsInRange then
                         massPointValidated = true
-                        table.insert(markerList, {Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false})
                     else
-                        table.insert(markerList, {Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false})
                     end
                 end
             end
@@ -3057,9 +3061,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     end
     --LOG('Army Setup '..repr(ScenarioInfo.ArmySetup))
     local startX, startZ = aiBrain:GetArmyStartPos()
-    table.sort(markerList,function(a,b) return VDist2(a.Position[1],a.Position[3],startX, startZ)>VDist2(b.Position[1],b.Position[3],startX, startZ) end)
+    table.sort(markerList,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX, startZ)>VDist2Sq(b.Position[1],b.Position[3],startX, startZ) end)
     aiBrain.BrainIntel.ExpansionWatchTable = markerList
-    LOG('ExpansionWatchTable is '..repr(markerList))
+    --LOG('ExpansionWatchTable is '..repr(markerList))
 end
 
 RenderBrainIntelRNG = function(aiBrain)
@@ -3076,8 +3080,21 @@ RenderBrainIntelRNG = function(aiBrain)
     end
 end
 
+QueryExpansionWatchTable = function(aiBrain, platoon)
+
+    for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
+        if v.Land > 0 and PlatoonAssigned == false then
+            --Do stuff here
+
+        end
+    end
+
+
+end
+
 function MexUpgradeManagerRNG(aiBrain)
     local homebasex,homebasey = aiBrain:GetArmyStartPos()
+    local VDist3Sq = VDist3Sq
     local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
     local ratio=0.35
     while not aiBrain.cmanager.categoryspend or GetGameTimeSeconds()<250 do

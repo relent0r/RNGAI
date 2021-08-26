@@ -44,6 +44,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -73,6 +74,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -103,6 +105,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
@@ -133,6 +136,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
@@ -161,6 +165,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
+            { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
@@ -190,6 +195,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
+            { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },

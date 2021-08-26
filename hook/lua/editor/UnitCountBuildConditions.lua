@@ -1,8 +1,11 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local CanGraphToRNG = import('/lua/AI/aiattackutilities.lua').CanGraphToRNG
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 -- Check if less than num in seconds
 function LessThanGameTimeSecondsRNG(aiBrain, num)
@@ -62,6 +65,7 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
     end
     local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
     if markerTable[1] and VDist3(markerTable[1], engineerManager.Location) < distance then
+        --LOG('I can build on a hydro')
         return true
     end
     return false
@@ -71,9 +75,9 @@ end
 function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, locationType, numReq, category, constructionCat)
     local numUnits
     if constructionCat then
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRNG(aiBrain, locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or 0
     else
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or 0
     end
     if numUnits > numReq then
         --LOG('HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG returning true')
@@ -88,9 +92,9 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, lo
         --LOG('Radius OverRide first function'..radiusOverride)
     end
     if constructionCat then
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or 0
     else
-        numUnits = table.getn( GetUnitsBeingBuiltLocationRadiusRNG(aiBrain,locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or {} )
+        numUnits = GetUnitsBeingBuiltLocationRadiusRNG(aiBrain,locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or 0
     end
     if numUnits > numReq then
         return true
@@ -159,7 +163,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         return false
     end
     local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
-    local retUnits = {}
+    local unitCount = 0
     for k,v in filterUnits do
         -- Only assist if allowed
         if v.DesiresAssist == false then
@@ -181,10 +185,10 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
             continue
         end
-        table.insert(retUnits, v)
+        unitCount = unitCount + 1
     end
-    --LOG('Engineer Assist has '..table.getn(retUnits)..' units in return table')
-    return retUnits
+    --LOG('Engineer Assist has '..unitCount)
+    return unitCount
 end
 
 function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, buildingCategory, builderCategory)
@@ -217,7 +221,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
     end
     --LOG('Radius is '..radius)
     local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
-    local retUnits = {}
+    local unitCount = 0
     for k,v in filterUnits do
         -- Only assist if allowed
         if v.DesiresAssist == false then
@@ -239,9 +243,9 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         if not beingBuiltUnit or not EntityCategoryContains(buildingCategory, beingBuiltUnit) then
             continue
         end
-        table.insert(retUnits, v)
+        unitCount = unitCount + 1
     end
-    return retUnits
+    return unitCount
 end
 
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
@@ -477,9 +481,9 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
             --LOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
+            --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --LOG('reason'..repr(reason))
-            if path then
+            if CanGraphToRNG(baseposition, EnemyUnit:GetPosition(), 'Water') then
                 --LOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
                 return true
             end
@@ -838,6 +842,29 @@ function IsEngineerNotBuilding(aiBrain, category)
         return false
     end
     return true 
+end
+
+function ValidateLateGameBuild(aiBrain)
+    -- Returns true if no engineer is building anything in the category and if the economy is good. 
+    -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
+    if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM) then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+            return false
+        end
+    end
+  return true
+end
+
+function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
+
+	if aiBrain.BuilderManagers[locationType].EngineerManager then
+		if GetNumUnitsAroundPoint( aiBrain, testCat, aiBrain.BuilderManagers[locationType].Position, aiBrain.BuilderManagers[locationType].EngineerManager.Radius, 'Ally') < unitCount then
+            --LOG('Less than units is true')
+            return true
+        end
+	end
+    
+	return false
 end
 
 --[[

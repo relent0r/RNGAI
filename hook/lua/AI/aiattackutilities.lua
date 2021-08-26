@@ -18,6 +18,7 @@ local RNGPI = math.pi
 local RNGCAT = table.cat
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
+    local VDist2Sq = VDist2Sq
     if not GetPathGraphs()[platoonLayer] then
         return false, 'NoGraph'
     end
@@ -43,14 +44,14 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     local NodeCount = table.getn(path.path)
     for i,node in path.path do
         -- IF this is the first AND not the only waypoint AND its nearer 30 THEN continue and don't add it to the finalpath
-        if i == 1 and NodeCount > 1 and VDist2(startPos[1], startPos[3], node.position[1], node.position[3]) < 30 then  
+        if i == 1 and NodeCount > 1 and VDist2Sq(startPos[1], startPos[3], node.position[1], node.position[3]) < 900 then  
             continue
         end
         -- IF this is the last AND not the only waypoint AND its nearer 20 THEN continue and don't add it to the finalpath
-        if i == NodeCount and NodeCount > 1 and VDist2(endPos[1], endPos[3], node.position[1], node.position[3]) < 20 then  
+        if i == NodeCount and NodeCount > 1 and VDist2Sq(endPos[1], endPos[3], node.position[1], node.position[3]) < 400 then  
             continue
         end
-        table.insert(finalPath, node.position)
+        RNGINSERT(finalPath, node.position)
     end
 
     -- return the path
@@ -99,8 +100,8 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     local fork = {}
     -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
     if startNode.name == endNode.name
-    or VDist2(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2(startPos[1], startPos[3], endPos[1], endPos[3]) < 50 then
+    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
+    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 2500 then
         -- store as path only our current destination.
         fork.path = { { position = endPos } }
         aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
@@ -159,7 +160,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
                     -- add as cost for the path the path distance and threat to the overall cost from the whole path
                     fork.cost = fork.cost + dist + (threat * 1) * threatWeight
                     -- add the newNode at the end of the path
-                    table.insert(fork.path, newNode)
+                    RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
                     if newNode.name == endNode.name then
                         -- store the path inside the path cache
@@ -168,7 +169,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    table.insert(queue,fork)
+                    RNGINSERT(queue,fork)
                 end
             end
             -- Mark this node as checked
@@ -203,9 +204,9 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     local finalPath = {}
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2(start[1], start[3], destination[1], destination[3]) <= 100
+    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2Sq(start[1], start[3], destination[1], destination[3]) <= 10000
     or (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist)) then
-        table.insert(finalPath, destination)
+        RNGINSERT(finalPath, destination)
         return finalPath
     end
 
@@ -229,16 +230,17 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
     for i,node in path.path do
         if i > 1 and i < table.getn(path.path) then
-            table.insert(finalPath, node.position)
+            RNGINSERT(finalPath, node.position)
         end
     end
 
-    table.insert(finalPath, destination)
+    RNGINSERT(finalPath, destination)
 
     return finalPath, false, path.totalThreat
 end
 
 function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos)
+    local VDist2 = VDist2
     threatWeight = threatWeight or 1
     -- Check if we have this path already cached.
     if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then
@@ -344,7 +346,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                     fork.cost = fork.cost + dist + (threat * threatWeight)
                     fork.totalThreat = fork.totalThreat + (threat * threatWeight)
                     -- add the newNode at the end of the path
-                    table.insert(fork.path, newNode)
+                    RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
                     if newNode.name == endNode.name then
                         -- store the path inside the path cache
@@ -354,7 +356,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    table.insert(queue,fork)
+                    RNGINSERT(queue,fork)
                 end
             end
             -- Mark this node as checked
@@ -398,7 +400,7 @@ function GetPathGraphsRNG()
             ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
             -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
             if not (marker.adjacentTo) then
-                LOG('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
+                WARN('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
                 continue
             end
             --Add the marker to the graph.
@@ -558,7 +560,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 local survivors = {}
                 for _,v in units do
                     if not v.Dead then
-                        table.insert(survivors, v)
+                        RNGINSERT(survivors, v)
                     end
                 end
                 units = survivors
@@ -774,7 +776,7 @@ function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
                     -- add as cost for the path the distance to the overall cost from the whole path
                     fork.cost = fork.cost + dist
                     -- add the newNode at the end of the path
-                    table.insert(fork.path, newNode)
+                    RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
                     if newNode.name == endNode.name then
                         -- store the path inside the path cache
@@ -784,7 +786,7 @@ function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
                         return fork
                     end
                     -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    table.insert(queue,fork)
+                    RNGINSERT(queue,fork)
                 end
             end
             -- Mark this node as checked
@@ -852,6 +854,7 @@ end
 function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
 
     local markerlist = {}
+    local VDist2Sq = VDist2Sq
 
     -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
     for _,v in markerTypes do
@@ -884,7 +887,10 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             --LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
 
             -- can the platoon path safely from this marker to the final destination 
-            local landpath, reason = PlatoonGenerateSafePathToRNG(aiBrain, layer, v.Position, destination, threatMax, 160 )
+            if CanGraphToRNG(v.Position, destination, layer) then
+                return v.Position, v.Name
+            end
+            --[[local landpath, reason = PlatoonGenerateSafePathToRNG(aiBrain, layer, v.Position, destination, threatMax, 160 )
             if not landpath then
                 --LOG('No path to transport location from selected position')
             end
@@ -893,7 +899,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             if landpath then
                 --LOG('Selected Position')
                 return v.Position, v.Name
-            end
+            end]]
         end
     end
     --LOG('Safe landing Location returning false')
@@ -1036,7 +1042,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         if not v.Dead then
             local unitCmdQ = v:GetCommandQueue()
             for cmdIdx,cmdVal in unitCmdQ do
-                table.insert(cmd, cmdVal)
+                RNGINSERT(cmd, cmdVal)
                 break
             end
         end
@@ -1048,15 +1054,15 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
     local catTable = {}
     local unitTable = {}
     for k,v in priTable do
-        table.insert(catTable, v)
-        table.insert(unitTable, {})
+        RNGINSERT(catTable, v)
+        RNGINSERT(unitTable, {})
     end
 
     local units = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, radius, alliance) or {}
     for num, unit in units do
         for tNum, catType in catTable do
             if EntityCategoryContains(catType, unit) then
-                table.insert(unitTable[tNum], unit)
+                RNGINSERT(unitTable[tNum], unit)
                 break
             end
         end

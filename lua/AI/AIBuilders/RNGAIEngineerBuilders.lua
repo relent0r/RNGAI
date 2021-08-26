@@ -25,7 +25,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
 end
 
 local LandAdvantage = function(self, aiBrain, builderManager)
-    if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) > aiBrain.EnemyIntel.EnemyThreatCurrent.Land then
+    if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) > aiBrain.EnemyIntel.EnemyThreatCurrent.Land * 1.3 then
         return 750
     end
     return 740
@@ -63,8 +63,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
         BuilderConditions = {
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -86,7 +86,7 @@ BuilderGroup {
         Priority = 776,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -98,7 +98,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -121,7 +121,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 800, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
@@ -132,7 +132,7 @@ BuilderGroup {
         Priority = 600, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 0.7 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
@@ -144,7 +144,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 0.8} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.1, 0.8} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
@@ -195,7 +195,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 870,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 2, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
         },
         BuilderType = 'All',
@@ -522,7 +522,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
 
-            { EBC, 'LessThanEnergyTrendRNG', { 100.0 }, true },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 100.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -570,7 +570,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, 'ENGINEERSTATION' }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
@@ -593,7 +593,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 6, categories.ENGINEERSTATION }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
@@ -744,7 +744,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSecondsRNG', { 420 } }, -- don't build after 7 minutes
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
                 
             },
         BuilderData = {
@@ -838,7 +838,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Assist Manager',
         PlatoonTemplate = 'EngineerAssistManagerRNG',
-        Priority = 1500,
+        Priority = 999,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
@@ -1009,7 +1009,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 10.0 } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 10.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'Land',

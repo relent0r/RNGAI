@@ -178,6 +178,7 @@ BuilderGroup {
                 MexThreat = true,
                 Type = 'Mass',
                 MaxDistance = 480,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 2,
                 ThreatType = 'AntiSurface',
@@ -207,6 +208,7 @@ BuilderGroup {
                 MexThreat = true,
                 Type = 'Mass',
                 MaxDistance = 2000,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 4,
                 ThreatType = 'AntiSurface',
@@ -382,7 +384,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.00, 1.00 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
@@ -405,13 +407,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T2 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 800,
+        Priority = 850,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * categories.TECH3}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 80, -3, 0, 0}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
@@ -440,7 +442,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
@@ -499,7 +501,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 5, 0}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconStorageRatio', { -0.1, 0.1 }},
             { EBC, 'LessThanEconStorageRatio', { 1, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
@@ -528,7 +530,7 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
-            { MABC, 'MarkerLessThanDistance',  { 'Mass', 500, -3, 0, 0}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'LessThanEconStorageRatio', { 0.2, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
             { UCBC, 'UnitCapCheckLess', { .8 } },

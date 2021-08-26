@@ -243,7 +243,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.AIR * categories.GROUNDATTACK * categories.TECH2} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
     },]]
@@ -257,7 +257,7 @@ BuilderGroup {
             { UCBC, 'ACUOnField', {false} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitsLessAtLocation', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
     },
     Builder {
@@ -599,6 +599,7 @@ BuilderGroup {
                 categories.ENGINEER * categories.TECH1,
                 categories.MOBILE * categories.ANTIAIR,
                 categories.ENERGYPRODUCTION,
+                categories.SUBCOMMANDER,
                 categories.MOBILE * categories.LAND,
                 categories.MASSEXTRACTION,
                 categories.STRUCTURE,
@@ -627,6 +628,7 @@ BuilderGroup {
                 categories.TECH3 * categories.ARTILLERY * categories.STRUCTURE,
                 categories.ENERGYSTORAGE,
                 categories.ENERGYPRODUCTION,
+                categories.SUBCOMMANDER,
                 categories.MASSEXTRACTION,
                 categories.ENGINEER * categories.MOBILE,
                 categories.MOBILE * categories.ANTIAIR,
