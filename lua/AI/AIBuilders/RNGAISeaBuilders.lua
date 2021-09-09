@@ -341,13 +341,51 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Sea Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
+        BuilderName = 'RNGAI Intelli Sea Attack T1',
+        PlatoonTemplate = 'RNGAI Intelli Sea Attack T1',
+        Priority = 300,
+        InstanceCount = 20,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
+            --{ SeaAttackCondition, { 'LocationType', 14 } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
+            DistressRange = 180,
+            UseFormation = 'None',
+            AggressiveMove = false,
+            ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSEXTRACTION,
+                categories.MASSFABRICATION,
+                categories.ALLUNITS,
+            },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.NAVAL,
+                categories.STRUCTURE * categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.ALLUNITS,
+            },
+        },
+        BuilderType = 'Any',
+    },
+    --[[Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T1',
         PlatoonTemplate = 'RNGAI Sea Attack T1',
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         Priority = 300,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
@@ -365,8 +403,8 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
-    },
-    Builder {
+    },]]
+    --[[Builder {
         BuilderName = 'RNGAI Frequent Sea Attack T23',
         PlatoonTemplate = 'RNGAI Sea Attack T123',
         --PlatoonAddBehaviors = { 'TacticalResponse' },
@@ -391,12 +429,50 @@ BuilderGroup {
             },
         },
         BuilderType = 'Any',
+    },]]
+    Builder {
+        BuilderName = 'RNGAI Intelli Sea Attack T23',
+        PlatoonTemplate = 'RNGAI Intelli Sea Attack T123',
+        Priority = 310,
+        InstanceCount = 20,
+        BuilderConditions = {
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
+            --{ SeaAttackCondition, { 'LocationType', 14 } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
+            DistressRange = 180,
+            UseFormation = 'None',
+            AggressiveMove = false,
+            ThreatSupport = 5,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSEXTRACTION,
+                categories.MASSFABRICATION,
+                categories.ALLUNITS,
+            },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.NAVAL,
+                categories.STRUCTURE * categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.ALLUNITS,
+            },
+        },
+        BuilderType = 'Any',
     },
     Builder {
         BuilderName = 'RNGAI Ranged Sea Attack T23',
         PlatoonTemplate = 'RNGAI Sea Attack Ranged T123',
         --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 300,
+        Priority = 310,
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ) * ( categories.CRUISER + categories.xas0306 + categories.NUKE ) - categories.EXPERIMENTAL } },
@@ -435,7 +511,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Sea Hunters',
         PlatoonTemplate = 'RNGAI Sea Hunt',
         --PlatoonAddPlans = {'DistressResponseAI'},
-        Priority = 300,
+        Priority = 310,
         PriorityFunction = SeaDefenseForm,
         InstanceCount = 20,
         BuilderType = 'Any',
@@ -444,7 +520,7 @@ BuilderGroup {
         },
         BuilderConditions = {
             -- Change to NUKESUB once the Cybran BP is updated
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.NAVAL * (categories.SUBMERSIBLE + categories.xes0102) - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.NAVAL * categories.ANTINAVY - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
     },

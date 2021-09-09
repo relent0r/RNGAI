@@ -3191,7 +3191,7 @@ function InitialNavalAttackCheck(aiBrain)
                         LOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
                         LOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
                         LOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
-                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3])
+                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.35
                         markerCount = markerCount + 1
                         if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.Position, 'none') then
                             LOG('This marker is not blocked')

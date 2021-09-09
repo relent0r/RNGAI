@@ -60,7 +60,6 @@ BuilderGroup {
                     'T1LandFactory',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
-                    'T1EnergyProduction',
                 },
             }
         }
@@ -271,7 +270,6 @@ BuilderGroup {
                 MaxDistance = 30,
                 BuildStructures = {
                     'T1LandFactory',
-                    'T1EnergyProduction',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
@@ -877,6 +875,7 @@ BuilderGroup {
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
                     'T1EnergyProduction',
+                    'T1EnergyProduction',
                 },
             }
         }
@@ -899,6 +898,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
+                    'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
             }

@@ -748,7 +748,7 @@ BuilderGroup {
             IgnoreFriendlyBase = true,
             LocationType = 'LocationType',
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = true,			-- Don't find high threat targets
+            FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
@@ -999,6 +999,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            Defensive = true,
             SearchRadius = BaseEnemyArea,
             --[[SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
             DistressRange = BaseMilitaryArea,
@@ -1193,9 +1194,9 @@ BuilderGroup {
             ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
+                categories.MASSEXTRACTION,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
-                categories.MASSEXTRACTION,
                 categories.MASSFABRICATION,
                 categories.STRUCTURE,
                 categories.ALLUNITS,
@@ -1203,11 +1204,11 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.ALLUNITS,
             },
@@ -1812,7 +1813,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Medium',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
         PlatoonAddBehaviors = { 'PlatoonRetreat' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
@@ -1826,7 +1827,7 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = false,			-- Don't find high threat targets
+            FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
@@ -1852,7 +1853,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Medium',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
         PlatoonAddBehaviors = { 'PlatoonRetreat' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
@@ -1866,7 +1867,7 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = false,			-- Don't find high threat targets
+            FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 9900,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
             AvoidBases = false,
