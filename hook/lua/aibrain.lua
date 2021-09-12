@@ -856,7 +856,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.UpgradeIssuedPeriod = 120
 
         if mapSizeX < 1000 and mapSizeZ < 1000  then
-            self.UpgradeIssuedLimit = 1
+            self.UpgradeIssuedLimit = 2
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         else
             self.UpgradeIssuedLimit = 3
@@ -1860,7 +1860,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                if true then
+                --[[if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1895,7 +1895,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.EnemyIntel.ChokeFlag then
                         LOG('Check Flag is true')
                     end
-                end
+                end]]
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end

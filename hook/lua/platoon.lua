@@ -459,7 +459,9 @@ Platoon = Class(RNGAIPlatoon) {
                             IssueFormAggressiveMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
                         else
                             --self:MoveToLocation(path[i], false)
-                            IssueFormMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
+                            IssueFormMove( self:GetSquadUnits('Guard'), path[i], PlatoonFormation, direction)
+                            IssueFormMove( self:GetSquadUnits('Attack'), path[i], PlatoonFormation, direction)
+                            IssueFormAggressiveMove( self:GetSquadUnits('Artillery'), path[i], PlatoonFormation, direction)
                         end
                         while PlatoonExists(aiBrain, self) do
                             platoonPosition = GetPlatoonPosition(self)
@@ -2012,7 +2014,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     NavalAttackAIRNG = function(self)
-        LOG('* AI-RNG: * NavalAttackAIRNG: Starting')
+        --LOG('* AI-RNG: * NavalAttackAIRNG: Starting')
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target
@@ -2101,13 +2103,13 @@ Platoon = Class(RNGAIPlatoon) {
         self:SetPrioritizedTargetList('Guard', categories.NAVAL + categories.AMPHIBIOUS)
 
         while PlatoonExists(aiBrain, self) do
-            LOG('* AI-RNG: * NavalAttackAIRNG:: Check for attack position')
+            --LOG('* AI-RNG: * NavalAttackAIRNG:: Check for attack position')
             --attackPosition = RUtils.AIFindRangedAttackPositionRNG(aiBrain, self, MaxPlatoonWeaponRange)
             local attackPosition = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
-            LOG('position to attack '..repr(attackPosition))
+            --LOG('position to attack '..repr(attackPosition))
             --target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
             platoonThreat = self:CalculatePlatoonThreat('Naval', categories.ALLUNITS)
-            LOG('Platoon Naval Threat is '..platoonThreat)
+            --('Platoon Naval Threat is '..platoonThreat)
             local platoonCount = RNGGETN(GetPlatoonUnits(self))
             if attackPosition then
                 local platoonPos = GetPlatoonPosition(self)
@@ -2124,7 +2126,7 @@ Platoon = Class(RNGAIPlatoon) {
                             if merged then
                                 self:SetPlatoonFormationOverride('AttackFormation')
                                 WaitTicks(40)
-                                LOG('NavalAttackAIRNG merge and formation completed')
+                                --LOG('NavalAttackAIRNG merge and formation completed')
                                 continue
                             else
                                 --LOG('No merge done')
@@ -2153,7 +2155,7 @@ Platoon = Class(RNGAIPlatoon) {
                             --LOG('Cant path to target position')
                         end
                         local pathNodesCount = RNGGETN(path)
-                        LOG('NavalAttackAIRNG moving to attack position, check for squads that dont move')
+                        --LOG('NavalAttackAIRNG moving to attack position, check for squads that dont move')
                         for i=1, pathNodesCount do
                             local PlatoonPosition
                             --LOG('* AI-RNG: * HuntAIPATH:: moving to destination. i: '..i..' coords '..repr(path[i]))
@@ -2429,6 +2431,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 
                 if not target then
+                    --LOG('Standard Target search for strikeforce platoon ')
                     if data.ACUOnField then
                         --LOG('Platoon has ACUOnField data, searching for energy to kill')
                         target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri, false, myThreat, acuTargetIndex)
@@ -2645,7 +2648,7 @@ Platoon = Class(RNGAIPlatoon) {
                             break
                         end
                     end
-                    --LOG('StrikefoceAI base distance is baseDist')
+                    --LOG('StrikeforceAI base distance is '..baseDist)
                     WaitTicks(50)
                 end
                 --LOG('MergeRequired, performing merge')
@@ -4417,12 +4420,12 @@ Platoon = Class(RNGAIPlatoon) {
             if targetDistance < distanceToTarget then
                 distanceToTarget = targetDistance
             elseif targetDistance == distanceToTarget then
-                LOG('NavalHuntAI distance to attack position hasnt changed')
+                --LOG('NavalHuntAI distance to attack position hasnt changed')
                 blockCounter = blockCounter + 1
             end
             if blockCounter > 3 then
                 if target then
-                    LOG('NavalHuntAI is stuck or attack something that is terrainblocked')
+                    --LOG('NavalHuntAI is stuck or attack something that is terrainblocked')
                     self:Stop()
                     self:AttackTarget(target)
                     distanceToTarget = 9999999999
@@ -5985,7 +5988,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             platoon.target=nil
             if self.PlatoonData.Defensive then
-                LOG('Defensive Posture Targets')
+                --LOG('Defensive Posture Targets')
                 platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, platoon.base, 120, 'Enemy')
             else
                 platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, position, self.MaxWeaponRange+40, 'Enemy')

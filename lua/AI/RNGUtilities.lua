@@ -3188,13 +3188,13 @@ function InitialNavalAttackCheck(aiBrain)
             if checkPoints then
                 for _, m in checkPoints do
                     if PositionInWater(m) then
-                        LOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
-                        LOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
-                        LOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
+                        --LOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
+                        --LOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
+                        --LOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
                         local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.35
                         markerCount = markerCount + 1
                         if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.Position, 'none') then
-                            LOG('This marker is not blocked')
+                            --LOG('This marker is not blocked')
                             markerCountNotBlocked = markerCountNotBlocked + 1
                             table.insert( frigateRaidMarkers, v )
                         else
@@ -3205,13 +3205,13 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
         end
-        LOG('There are potentially '..markerCount..' markers that are in range for frigates')
-        LOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
-        LOG('There are '..markerCountBlocked..' markers that ARE blocked')
-        LOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+        --LOG('There are potentially '..markerCount..' markers that are in range for frigates')
+        --LOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+        --LOG('There are '..markerCountBlocked..' markers that ARE blocked')
+        --LOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
         if markerCountNotBlocked > 8 then
             aiBrain.EnemyIntel.FrigateRaid = true
-            LOG('Frigate Raid is true')
+            --LOG('Frigate Raid is true')
             aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
         end
     end

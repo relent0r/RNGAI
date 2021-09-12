@@ -76,7 +76,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.0}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.70, 0.0}},
         },
         BuilderType = 'All',
     },

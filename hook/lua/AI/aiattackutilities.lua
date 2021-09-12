@@ -349,7 +349,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                     end
                     -- add as cost for the path the distance and threat to the overall cost from the whole path
                     fork.cost = fork.cost + dist + (threat * threatWeight)
-                    fork.totalThreat = fork.totalThreat + (threat * threatWeight)
+                    fork.totalThreat = fork.totalThreat + threat
                     -- add the newNode at the end of the path
                     RNGINSERT(fork.path, newNode)
                     -- check if we have reached our destination
@@ -1139,7 +1139,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     
     local PrimaryTargetThreatType = 'Naval'
     local SecondaryTargetThreatType = 'StructuresNotMex'
-    LOG('GetBestNavalTargetRNG Running')
+    --LOG('GetBestNavalTargetRNG Running')
 
 
     -- These are the values that are used to weight the two types of "threats"
@@ -1215,7 +1215,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     if not platoonPosition then
         #Platoon no longer exists.
-        LOG('GetBestNavalTarget platoon position is nil returned false ')
+        --LOG('GetBestNavalTarget platoon position is nil returned false ')
         return false
     end
 
@@ -1251,17 +1251,17 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local threatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'OverallNotAssigned', enemyIndex)
 
     if table.empty(threatTable) then
-        LOG('GetBestNavalTarget threat table is empty returned false ')
+        --LOG('GetBestNavalTarget threat table is empty returned false ')
         return false
     end
 
     local platoonUnits = platoon:GetPlatoonUnits()
     #eval platoon threat
     local myThreat = GetThreatOfUnits(platoon)
-    LOG('GetBestNavalTarget myThreat is '..myThreat)
+    --LOG('GetBestNavalTarget myThreat is '..myThreat)
     local friendlyThreat = aiBrain:GetThreatAtPosition(platoonPosition, 1, true, ThreatTable[platoon.MovementLayer], aiBrain:GetArmyIndex()) - myThreat
     friendlyThreat = friendlyThreat * -1
-    LOG('GetBestNavalTarget friendlyThreat is '..friendlyThreat)
+    --LOG('GetBestNavalTarget friendlyThreat is '..friendlyThreat)
 
     local threatDist
     local curMaxThreat = -99999999
@@ -1279,17 +1279,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     if platoon.MovementLayer == 'Water' then
         maxRange, selectedWeaponArc = GetNavalPlatoonMaxRange(aiBrain, platoon)
     end
-    if maxRange then
-        LOG('Naval Platoon Max Range is '..maxRange)
-    else
-        LOG('maxRange was returned as false')
-    end
-    if selectedWeaponArc then
-        LOG('selectedWeaponArc is '..selectedWeaponArc)
-    else
-        LOG('No Selected Weapon Arc')
-    end
-    LOG('GetBestNavalTarget final threat table was '..repr(threatTable))
+    --LOG('GetBestNavalTarget final threat table was '..repr(threatTable))
 
     for tIndex,threat in threatTable do
         --check if we can path to the position or a position nearby
@@ -1320,7 +1310,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         -- We are multipling the structure threat because the default threat allocation is shit. A T1 naval factory is only worth 3 threat which is not enough to make
         -- frigates / subs want to attack them over something else.
         secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, 1, true, SecondaryTargetThreatType, enemyIndex) * 2
-        LOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
+        --LOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
 
         baseThreat = primaryThreat + secondaryThreat
 
@@ -1392,12 +1382,6 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     --no pathable threat found (or no threats at all)
     if not foundPathableThreat or curMaxThreat == 0 then
-        if not foundPathableThreat then
-            LOG('GetBestNavalTarget foundPathableThreat is nil')
-        end
-        if curMaxThreat == 0 then
-            LOG('curMaxThreat is zero ')
-        end
         return false
     end
     local x = threatTable[curMaxIndex][1]
@@ -1417,7 +1401,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
 
     --if this threat is in the water, see if we can get to it
     if inWater then
-        LOG('Naval Location is in water')
+        --LOG('Naval Location is in water')
         if CanGraphToRNG(platoonPosition, location, platoon.MovementLayer) then
             bestGoalPos = location
             success = true
@@ -1475,9 +1459,9 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
         end
     end
     if bestGoalPos then
-        LOG('bestGoalPos returned is '..repr(bestGoalPos))
+        --LOG('bestGoalPos returned is '..repr(bestGoalPos))
     else
-        LOG('bestGoalPos is nil ')
+        --LOG('bestGoalPos is nil ')
     end
 
     return bestGoalPos
