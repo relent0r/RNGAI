@@ -154,8 +154,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerPriorityTable = {}
         self.ProductionRatios = {
             Land = self.DefaultLandRatio,
-            Air = 0.5,
-            Naval = 0.5,
+            Air = 0.4,
+            Naval = 0.4,
         }
         self.cmanager = {
             income = {
@@ -377,11 +377,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=60,
-                            bomber=15,
-                            gunship=10,
-                            transport=5,
+                            battleship=80,
                             total=0
                         }
                     },
@@ -446,11 +442,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=55,
-                            bomber=15,
-                            gunship=10,
-                            transport=5,
+                            battleship=80,
                             total=0
                         }
                     },
@@ -515,11 +507,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=55,
-                            bomber=15,
-                            gunship=10,
-                            transport=5,
+                            battleship=80,
                             total=0
                         }
                     },
@@ -582,11 +570,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=55,
-                            bomber=15,
-                            gunship=10,
-                            transport=5,
+                            battleship=80,
                             total=0
                         }
                     },

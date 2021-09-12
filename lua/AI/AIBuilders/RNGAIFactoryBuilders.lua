@@ -159,7 +159,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.40}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.40}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -399,37 +399,10 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.STRUCTURE * categories.FACTORY * categories.NAVAL - categories.SUPPORTFACTORY } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                NearMarkerType = 'Naval Area',
-                LocationRadius = 90,
-                Location = 'LocationType',
-                BuildStructures = {
-                    'T1SeaFactory',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNG Factory Builder Sea T1 Enemy',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
-        DelayEqualBuildPlattons = {'Factories', 5},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
-            -- Have we the eco to build it ?
-            { UCBC, 'HaveThreatRatioVersusEnemyRNG', { 1.00, 'NAVAL' } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } }, -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80}},             -- Ratio from 0 to 1. (1=100%)
-            -- When do we want to build this ?
-            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-            
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -478,38 +451,12 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.STRUCTURE * categories.FACTORY * categories.NAVAL - categories.SUPPORTFACTORY } },
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                NearMarkerType = 'Naval Area',
-                LocationRadius = 90,
-                Location = 'LocationType',
-                BuildStructures = {
-                    'T1SeaFactory',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNG Factory Builder Sea T1 Enemy Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
-        DelayEqualBuildPlattons = {'Factories', 5},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Factories' }},
-            -- Have we the eco to build it ?
-            { UCBC, 'HaveThreatRatioVersusEnemyRNG', { 1.00, 'NAVAL' } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } }, -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},             -- Ratio from 0 to 1. (1=100%)
-            -- When do we want to build this ?
-            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-            
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -788,7 +735,6 @@ BuilderGroup {
             OverideUpgradeBlueprint = { 'zeb9502', 'zab9502', 'zrb9502', 'zsb9502', 'znb9502' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
         },
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2}},
@@ -1028,7 +974,7 @@ BuilderGroup {
         Priority = 700,
         InstanceCount = 1,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 450 } },
+                { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
                 { EBC, 'GreaterThanEconIncomeRNG',  { 5.5, 50.0}},
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
@@ -1047,11 +993,9 @@ BuilderGroup {
             OverideUpgradeBlueprint = { 'zeb9503', 'zab9503', 'zrb9503', 'zsb9503', 'znb9503' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
         },
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 7, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENGINEER * categories.TECH2}},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1 }},
             },
         BuilderType = 'Any',
