@@ -1164,6 +1164,7 @@ BuilderGroup {
                 categories.STRUCTURE * categories.FACTORY,
             },
             PrioritizedCategories = {   
+                categories.ENGINEER,
                 categories.MASSEXTRACTION,
                 categories.EXPERIMENTAL * categories.AIR,
                 categories.MOBILE * categories.LAND,
@@ -1371,47 +1372,6 @@ BuilderGroup {
                 IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
             },
         },         
-    },
-    Builder {
-        BuilderName = 'RNGAI Attack AntiAir Structures',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack AA Structures',                          -- Template Name.
-        Priority = 700,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.LAND * categories.DIRECTFIRE * categories.MOBILE - categories.EXPERIMENTAL}},
-            { MIBC, 'AirAttackModeCheck', {} },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            LocationType = 'LocationType',
-            UseFormation = 'None',
-            AggressiveMove = true,
-            ThreatSupport = 5,
-            PlatoonLimit = 18,
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL * categories.LAND,
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MASSEXTRACTION,
-                categories.ENGINEER,
-            },
-            PrioritizedCategories = {                                           -- Attack these targets.
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.MOBILE * categories.ANTIAIR,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MASSEXTRACTION,
-                categories.ENERGYPRODUCTION,
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.COMMAND,
-                categories.MASSFABRICATION,
-                categories.SHIELD,
-                categories.STRUCTURE,
-                categories.ALLUNITS,
-            },
-            UseFormation = 'GrowthFormation',
-        },
     },
 }
 
@@ -1640,44 +1600,6 @@ BuilderGroup {
             },
         },         
     },
-    Builder {
-        BuilderName = 'RNGAI Attack AntiAir Structures Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack AA Structures',                          -- Template Name.
-        Priority = 700,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 1,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.LAND * categories.DIRECTFIRE * categories.MOBILE - categories.EXPERIMENTAL}},
-            { MIBC, 'AirAttackModeCheck', {} },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            LocationType = 'LocationType',
-            UseFormation = 'None',
-            AggressiveMove = true,
-            ThreatSupport = 5,
-            PlatoonLimit = 18,
-            TargetSearchPriorities = {
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE,
-            },
-            PrioritizedCategories = {                                           -- Attack these targets.
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.MOBILE * categories.ANTIAIR,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MASSEXTRACTION,
-                categories.ENERGYPRODUCTION,
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.COMMAND,
-                categories.MASSFABRICATION,
-                categories.SHIELD,
-                categories.STRUCTURE,
-                categories.ALLUNITS,
-            },
-            UseFormation = 'GrowthFormation',
-        },
-    },
 }
 
 BuilderGroup {
@@ -1815,7 +1737,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
         PlatoonAddBehaviors = { 'PlatoonRetreat' },
-        Priority = 600,                                                          -- Priority. 1000 is normal.
+        Priority = 610,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     

@@ -670,11 +670,12 @@ BuilderGroup {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Land Mass Stall',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         PlatoonAIPlan = 'ReclaimStructuresRNG',
+        DelayEqualBuildPlattons = {'Reclaim', 12},
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.SUPPORTFACTORY}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 4, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanEconEfficiency', { 0.9, 2.0 }},
@@ -690,6 +691,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Land Mass Stall',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         PlatoonAIPlan = 'ReclaimStructuresRNG',
+        DelayEqualBuildPlattons = {'Reclaim', 12},
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {

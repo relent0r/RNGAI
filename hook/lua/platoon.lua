@@ -308,7 +308,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -459,9 +459,12 @@ Platoon = Class(RNGAIPlatoon) {
                             IssueFormAggressiveMove( self:GetPlatoonUnits(), path[i], PlatoonFormation, direction)
                         else
                             --self:MoveToLocation(path[i], false)
-                            IssueFormMove( self:GetSquadUnits('Guard'), path[i], PlatoonFormation, direction)
-                            IssueFormMove( self:GetSquadUnits('Attack'), path[i], PlatoonFormation, direction)
-                            IssueFormAggressiveMove( self:GetSquadUnits('Artillery'), path[i], PlatoonFormation, direction)
+                            if self:GetSquadUnits('Attack') and RNGGETN(self:GetSquadUnits('Attack')) > 0 then
+                                IssueFormMove( self:GetSquadUnits('Attack'), path[i], PlatoonFormation, direction)
+                            end
+                            if self:GetSquadUnits('Artillery') and RNGGETN(self:GetSquadUnits('Artillery')) > 0 then
+                                IssueFormAggressiveMove( self:GetSquadUnits('Artillery'), path[i], PlatoonFormation, direction)
+                            end
                         end
                         while PlatoonExists(aiBrain, self) do
                             platoonPosition = GetPlatoonPosition(self)
@@ -1144,7 +1147,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -1353,7 +1356,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -1738,7 +1741,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -2072,7 +2075,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -2346,7 +2349,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -3223,7 +3226,13 @@ Platoon = Class(RNGAIPlatoon) {
                             break
                         end
                     end
-
+                    if (whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103') then
+                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, buildLocation, 1, 'Ally') > 0 then
+                            LOG('Extractor already present with 1 radius, return')
+                            eng.PlatoonHandle:Stop()
+                            return
+                        end
+                    end
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
                             local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
@@ -3242,6 +3251,9 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                             end
                         end
+                    end
+                    if eng.Upgrading or eng.Combat then
+                        return
                     end
                     WaitTicks(7)
                 end
@@ -3489,7 +3501,7 @@ Platoon = Class(RNGAIPlatoon) {
                     v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
-                        WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                     end
                 end
             end
@@ -3731,35 +3743,6 @@ Platoon = Class(RNGAIPlatoon) {
                                                     continue
                                                 end
                                                 VariableKite(self,unit,target)
-                                                --[[unitPos = unit:GetPosition()
-                                                alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                                                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                                                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRangeor or MaxPlatoonWeaponRange)
-                                                smartPos = { x, GetTerrainHeight( x, y), y }
-                                                -- check if the move position is new or target has moved
-                                                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
-                                                    -- clear move commands if we have queued more than 4
-                                                    if RNGGETN(unit:GetCommandQueue()) > 2 then
-                                                        IssueClearCommands({unit})
-                                                        coroutine.yield(3)
-                                                    end
-                                                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
-                                                    IssueMove({unit}, smartPos )
-                                                    if target.Dead then break end
-                                                    IssueAttack({unit}, target)
-                                                    --unit:SetCustomName('Fight micro moving')
-                                                    unit.smartPos = smartPos
-                                                    unit.TargetPos = targetPosition
-                                                -- in case we don't move, check if we can fire at the target
-                                                else
-                                                    local dist = VDist2( unit.smartPos[1], unit.smartPos[3], unit.TargetPos[1], unit.TargetPos[3] )
-                                                    if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
-                                                        --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                                                        IssueMove({unit}, targetPosition )
-                                                    else
-                                                        --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
-                                                    end
-                                                end]]
                                             end
                                         else
                                             break
@@ -3833,7 +3816,28 @@ Platoon = Class(RNGAIPlatoon) {
             -- we're there... wait here until we're done
             local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
-                WaitTicks(Random(50,100))
+                local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, GetPlatoonPosition(self), 'Attack', 20, (categories.LAND + categories.NAVAL + categories.STRUCTURE), atkPri, false)
+                local attackSquad = self:GetSquadUnits('Attack')
+                IssueClearCommands(attackSquad)
+                while PlatoonExists(aiBrain, self) do
+                    if target and not target.Dead then
+                        local targetPosition = target:GetPosition()
+                        local microCap = 50
+                        for _, unit in attackSquad do
+                            microCap = microCap - 1
+                            if microCap <= 0 then break end
+                            if unit.Dead then continue end
+                            if not unit.MaxWeaponRange then
+                                continue
+                            end
+                            VariableKite(self,unit,target)
+                        end
+                    else
+                        break
+                    end
+                WaitTicks(10)
+                end
+                WaitTicks(Random(40,80))
                 --LOG('Still enemy stuff around marker position')
                 numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
             end
@@ -5938,7 +5942,7 @@ Platoon = Class(RNGAIPlatoon) {
                         v:RemoveCommandCap('RULEUCC_Reclaim')
                         v:RemoveCommandCap('RULEUCC_Repair')
                         if not v.MaxWeaponRange then
-                            WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
+                            --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
                             continue
                         end
                         if not platoon.MaxWeaponRange or v.MaxWeaponRange>platoon.MaxWeaponRange then
@@ -6200,8 +6204,9 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if point then
-                --LOG('point pos '..repr(point.Position))
+                --LOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
             else
+                --LOG('No priority found')
                 return false
             end
             if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
@@ -6354,8 +6359,9 @@ Platoon = Class(RNGAIPlatoon) {
             if SimpleRetreat(self,aiBrain) then--retreat if we feel like it
                 SimpleDoRetreat(self,aiBrain)
             elseif VDist2Sq(platoon.Pos[1], platoon.Pos[3], platoon.base[1], platoon.base[3]) > 10000 and SimplePriority(self,aiBrain) then--do priority stuff next
-
+                --LOG('SimplePriority being used')
             elseif SimpleTarget(self,aiBrain) then--do combat stuff
+                --LOG('SimpleTarget being used')
                 SimpleCombat(self,aiBrain)
                 WaitTicks(10)
             elseif SimpleEarlyPatrol(self,aiBrain) then--do raid stuff

@@ -2754,9 +2754,9 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         priority = priority - 20
                     end
                     if v.MassPoints >= 4 then
-                        priority = priority + 15
+                        priority = priority + 30
                     elseif v.MassPoints >= 2 then
-                        priority = priority + 5
+                        priority = priority + 15
                     end
                     if v.Commander > 0 then
                         acuPresent = true
@@ -3092,13 +3092,85 @@ QueryExpansionWatchTable = function(aiBrain, platoon)
 
 end
 
-function MexUpgradeManagerRNG(aiBrain)
+--[[function MexUpgradeManagerRNG(aiBrain)
     local homebasex,homebasey = aiBrain:GetArmyStartPos()
     local VDist3Sq = VDist3Sq
     local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
     local ratio=0.35
     while not aiBrain.cmanager.categoryspend or GetGameTimeSeconds()<250 do
         WaitSeconds(10)
+    end
+    while not aiBrain.defeat do
+        local mexes1 = aiBrain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH3, true, false)
+        local time=GetGameTimeSeconds()
+        --if aiBrain.EcoManagerPowerStateCheck(aiBrain) then
+        --    WaitSeconds(4)
+        --    continue
+        --end
+        local currentupgradecost=0
+        local mexes={}
+        for i,v in mexes1 do
+            --if not v.UCost then
+            if v:IsUnitState('Upgrading') and v.UCost then currentupgradecost=currentupgradecost+v.UCost table.remove(mexes,i) continue end
+            local spende=GetConsumptionPerSecondEnergy(v)
+            local producem=GetProductionPerSecondMass(v)
+            local unit=v:GetBlueprint()
+            if spende<unit.Economy.MaintenanceConsumptionPerSecondEnergy and spende>0 then
+                v.UEmult=spende/unit.Economy.MaintenanceConsumptionPerSecondEnergy
+            else
+                v.UEmult=1
+            end
+            if producem>unit.Economy.ProductionPerSecondMass then
+                v.UMmult=producem/unit.Economy.ProductionPerSecondMass
+            else
+                v.UMmult=1
+            end
+            local uunit=aiBrain:GetUnitBlueprint(unit.General.UpgradesTo)
+            local mcost=uunit.Economy.BuildCostMass/uunit.Economy.BuildTime*unit.Economy.BuildRate
+            local ecost=uunit.Economy.BuildCostEnergy/uunit.Economy.BuildTime*unit.Economy.BuildRate
+            v.UCost=mcost
+            v.UECost=ecost
+            v.TMCost=uunit.Economy.BuildCostMass
+            v.Uupgrade=unit.General.UpgradesTo
+        --end
+            if not v.UAge then
+                v.UAge=time
+            end
+            v.TAge=1/(1+math.min(120,time-v.UAge)/120)
+            table.insert(mexes,v)
+        end
+        --if 10>aiBrain.cmanager.income.r.m*ratio then
+        --    WaitSeconds(3)
+        --    continue
+        --end
+        if currentupgradecost<aiBrain.cmanager.income.r.m*ratio then
+            table.sort(mexes,function(a,b) return (1+VDist3Sq(a:GetPosition(),homepos)/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*(1-VDist3Sq(aiBrain.emanager.enemy.Position,a:GetPosition())/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*a.UCost*a.TMCost*a.UECost*a.UEmult*a.TAge/a.UMmult/a.UMmult<(1+VDist3Sq(b:GetPosition(),homepos)/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*(1-VDist3Sq(aiBrain.emanager.enemy.Position,b:GetPosition())/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*b.UCost*b.TMCost*b.UECost*b.UEmult*b.TAge/b.UMmult/b.UMmult end)
+            local startval=aiBrain.cmanager.income.r.m*ratio-currentupgradecost
+            --local starte=aiBrain.cmanager.income.r.e*1.3-aiBrain.cmanager.spend.e
+            for _,v in mexes do
+                if startval>0 then
+                    IssueUpgrade({v}, v.Uupgrade)
+                    startval=startval-v.UCost
+                else
+                    break
+                end
+            end
+        end
+        WaitSeconds(4)
+    end
+end]]
+
+function MexUpgradeManagerRNG(aiBrain)
+    local homebasex,homebasey = aiBrain:GetArmyStartPos()
+    local VDist3Sq = VDist3Sq
+    local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
+    local ratio=0.35
+    local currentlyUpgrading = 0
+    while not aiBrain.defeat or GetGameTimeSeconds()<250 do
+        local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
+
+
+        WaitTicks(40)
     end
     while not aiBrain.defeat do
         local mexes1 = aiBrain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH3, true, false)
@@ -3216,3 +3288,20 @@ function InitialNavalAttackCheck(aiBrain)
         end
     end
 end
+--[[
+LOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
+LOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)
+LOG('upgradeID is '..upgradeID)
+if not unit.Dead and (unit.UnitBeingBuilt:GetBlueprint().BlueprintId ~= upgradeID) then
+    if upgradePauseLimit < 5 and (GetEconomyStored(aiBrain, 'MASS') <= 20 or GetEconomyStored(aiBrain, 'ENERGY') <= 200) then
+        LOG('Extractor upgrade economy low')
+        upgradePauseLimit = upgradePauseLimit + 1
+        if not unit:IsPaused() then
+            LOG('Extractor Paused')
+            unit:SetPaused( true )
+        end
+    elseif unit:IsPaused() then
+        LOG('Extractor UnPaused')
+        unit:SetPaused( false )
+    end
+end]]

@@ -65,7 +65,6 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
     end
     local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
     if markerTable[1] and VDist2Sq(markerTable[1][1],markerTable[1][3], engineerManager.Location[1],engineerManager.Location[3]) < distance * distance then
-        --LOG('I can build on a hydro')
         return true
     end
     return false

@@ -124,13 +124,19 @@ AIBrain = Class(RNGAIBrainClass) {
         local mapSizeX, mapSizeZ = GetMapSize()
         if  mapSizeX > 1000 and mapSizeZ > 1000 then
             self.DefaultLandRatio = 0.5
+            self.DefaultAirRatio = 0.4
+            self.DefaultNavalRatio = 0.4
             self.MapSize = 20
         elseif mapSizeX > 500 and mapSizeZ > 500 then
             self.DefaultLandRatio = 0.6
+            self.DefaultAirRatio = 0.4
+            self.DefaultNavalRatio = 0.4
             --LOG('10 KM Map Check true')
             self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
             self.DefaultLandRatio = 0.6
+            self.DefaultAirRatio = 0.4
+            self.DefaultNavalRatio = 0.4
             --LOG('5 KM Map Check true')
             self.MapSize = 5
         end
@@ -154,8 +160,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerPriorityTable = {}
         self.ProductionRatios = {
             Land = self.DefaultLandRatio,
-            Air = 0.4,
-            Naval = 0.4,
+            Air = self.DefaultAirRatio,
+            Naval = self.DefaultNavalRatio,
         }
         self.cmanager = {
             income = {
@@ -703,11 +709,11 @@ AIBrain = Class(RNGAIBrainClass) {
             SHIELD = 8,
             AIR = 9,
             NAVAL = 5,
-            LAND = 2,
-            RADAR = 4,
-            MASSEXTRACTION = 3,
+            RADAR = 3,
+            MASSEXTRACTION = 4,
             MASSFABRICATION = 7,
             NUKE = 6,
+            LAND = 2,
         }
         self.EcoManager.MassPriorityTable = {
             Advantage = {
@@ -1653,7 +1659,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
                 upgradeSpec.MassLowTrigger = 0.80
-                upgradeSpec.EnergyLowTrigger = 1.1
+                upgradeSpec.EnergyLowTrigger = 1.0
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -1662,7 +1668,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
                 upgradeSpec.MassLowTrigger = 0.90
-                upgradeSpec.EnergyLowTrigger = 1.2
+                upgradeSpec.EnergyLowTrigger = 1.1
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -1863,10 +1869,14 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
                     LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
+                    LOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
                     LOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
                     LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
+                    LOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
                     LOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
                     LOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
+                    LOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
+                    LOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
                     LOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
                     LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
                     LOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
@@ -1909,12 +1919,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.ProductionRatios.Air = 0.4
             elseif not self.EnemyIntel.ChokeFlag then
                 --LOG('Air Threat lower, shift ratio to 0.5')
-                self.ProductionRatios.Air = 0.5
+                self.ProductionRatios.Air = self.DefaultAirRatio
             end
             if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 self.ProductionRatios.Naval = 0.4
             elseif not self.EnemyIntel.ChokeFlag then
-                self.ProductionRatios.Naval = 0.5
+                self.ProductionRatios.Naval = self.DefaultNavalRatio
             end
             --LOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
             --LOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
@@ -2802,7 +2812,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    EcoManagerPowerStateCheck = function(self)
+    --[[EcoManagerPowerStateCheck = function(self)
 
         local stallTime = GetEconomyStored(self, 'ENERGY') / ((GetEconomyRequested(self, 'ENERGY') * 10) - (GetEconomyIncome(self, 'ENERGY') * 10))
         --LOG('Time to stall for '..stallTime)
@@ -2812,6 +2822,16 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif stallTime > 20 then
                 return false
             end
+        end
+        return false
+    end,]]
+
+    EcoManagerPowerStateCheck = function(self)
+
+        if self.EconomyOverTimeCurrent.EnergyTrendOverTime <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2 then
+            return true
+        else
+            return false
         end
         return false
     end,
@@ -3316,7 +3336,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
+                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end
@@ -4044,5 +4064,4 @@ AIBrain = Class(RNGAIBrainClass) {
             -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(self.BrainIntel.ExpansionWatchTable))
         end
     end,
-   
 }
