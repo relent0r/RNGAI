@@ -134,9 +134,9 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('10 KM Map Check true')
             self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
-            self.DefaultLandRatio = 0.6
-            self.DefaultAirRatio = 0.4
-            self.DefaultNavalRatio = 0.4
+            self.DefaultLandRatio = 0.7
+            self.DefaultAirRatio = 0.3
+            self.DefaultNavalRatio = 0.3
             --LOG('5 KM Map Check true')
             self.MapSize = 5
         end
@@ -843,7 +843,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.UpgradeIssued = 0
         self.EarlyQueueCompleted = false
         
-        self.UpgradeIssuedPeriod = 120
+        self.UpgradeIssuedPeriod = 100
 
         if mapSizeX < 1000 and mapSizeZ < 1000  then
             self.UpgradeIssuedLimit = 2
@@ -2413,6 +2413,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Energy = {},
             Intel = {},
             Defense = {},
+            Factory = {},
             Mass = {},
             Factory = {},
             Combat = {},
@@ -2421,6 +2422,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local strategicUnits = {}
         local defensiveUnits = {}
         local intelUnits = {}
+        local factoryUnits = {}
         local gameTime = GetGameTimeSeconds()
         local scanRadius = 0
         local IMAPSize = 0
@@ -2464,6 +2466,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                                 --LOG('Inserting Enemy Intel Structure '..unit.UnitId)
                                 RNGINSERT(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                            elseif EntityCategoryContains( categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER, unit) then
+                                --LOG('Inserting Enemy Intel Structure '..unit.UnitId)
+                                RNGINSERT(factoryUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             end
                         end
                     end
@@ -2547,6 +2552,20 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.DirectorData.Intel = intelUnits
         end
+        if RNGGETN(factoryUnits) > 0 then
+            for k, unit in factoryUnits do
+                for k, threat in self.EnemyIntel.EnemyThreatLocations do
+                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
+                        unit.Air = threat.Threat
+                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
+                        unit.Land = threat.Threat
+                    end
+                end
+                LOG('Enemy Factory HQ Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+            end
+            self.EnemyIntel.DirectorData.Factory = factoryUnits
+        end
+        WaitTicks(1)
     end,
 
     CheckDirectorTargetAvailable = function(self, threatType, platoonThreat)
@@ -2602,8 +2621,56 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        if self.EnemyIntel.DirectorData.Factory and RNGGETN(self.EnemyIntel.DirectorData.Factory) > 0 then
+            for k, v in self.EnemyIntel.DirectorData.Factory do
+                --LOG('Energy Target Data ')
+                --LOG('Air Threat Around unit is '..v.Air)
+                --LOG('Land Threat Around unit is '..v.Land)
+                --LOG('Enemy Index of unit is '..v.EnemyIndex)
+                --LOG('Unit ID is '..v.Object.UnitId)
+                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    if threatType and platoonThreat then
+                        if threatType == 'AntiAir' then
+                            if v.Air > platoonThreat then
+                                continue
+                            end
+                        elseif threatType == 'Land' then
+                            if v.Land > platoonThreat then
+                                continue
+                            end
+                        end
+                    end
+                    potentialTargetValue = v.Value
+                    potentialTarget = v.Object
+                end
+            end
+        end
+        if self.EnemyIntel.DirectorData.Strategic and RNGGETN(self.EnemyIntel.DirectorData.Strategic) > 0 then
+            for k, v in self.EnemyIntel.DirectorData.Strategic do
+                --LOG('Energy Target Data ')
+                --LOG('Air Threat Around unit is '..v.Air)
+                --LOG('Land Threat Around unit is '..v.Land)
+                --LOG('Enemy Index of unit is '..v.EnemyIndex)
+                --LOG('Unit ID is '..v.Object.UnitId)
+                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    if threatType and platoonThreat then
+                        if threatType == 'AntiAir' then
+                            if v.Air > platoonThreat then
+                                continue
+                            end
+                        elseif threatType == 'Land' then
+                            if v.Land > platoonThreat then
+                                continue
+                            end
+                        end
+                    end
+                    potentialTargetValue = v.Value
+                    potentialTarget = v.Object
+                end
+            end
+        end
         if potentialTarget and not potentialTarget.Dead then
-            --LOG('Target being returned is '..potentialTarget.UnitId)
+            LOG('Target being returned is '..potentialTarget.UnitId)
             return potentialTarget
         end
         return false

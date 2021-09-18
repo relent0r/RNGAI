@@ -2753,10 +2753,10 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     if v.PlatoonAssigned then
                         priority = priority - 20
                     end
-                    if v.MassPoints >= 4 then
-                        priority = priority + 30
+                    if v.MassPoints >= 3 then
+                        priority = priority + 50
                     elseif v.MassPoints >= 2 then
-                        priority = priority + 15
+                        priority = priority + 20
                     end
                     if v.Commander > 0 then
                         acuPresent = true
