@@ -461,7 +461,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -473,7 +473,7 @@ BuilderGroup {
         Priority = 890,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -485,7 +485,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -728,6 +728,25 @@ BuilderGroup {
     },
 }
 
+BuilderGroup {
+    BuilderGroupName = 'RNGAI TankLandBuilder Islands',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI Factory Land T1 Island Expansion',
+        PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
+        Priority = 700, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+
+}
 -- Land Formers
 
 BuilderGroup {

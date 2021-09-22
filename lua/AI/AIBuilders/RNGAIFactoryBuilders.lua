@@ -204,7 +204,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Path Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 700,
+        Priority = 750,
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
@@ -562,7 +562,7 @@ BuilderGroup {
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 --{ EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
             },
         BuilderType = 'Any',
     },
@@ -993,6 +993,7 @@ BuilderGroup {
             OverideUpgradeBlueprint = { 'zeb9503', 'zab9503', 'zrb9503', 'zsb9503', 'znb9503' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
         },
         BuilderConditions = {
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.NAVAL * categories.TECH2 - categories.SUPPORTFACTORY}},
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 7, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},

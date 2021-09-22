@@ -31,7 +31,7 @@ BaseBuilderTemplate {
 
                 -- Air Unit Formers --
                 'RNGAI Air Platoon Builder',
-                'RNGAI Perimeter Defenses Expansions',
+                
         
                 -- Land Factory Builders --
                 --'RNGAI Factory Builder Land',
@@ -41,7 +41,7 @@ BaseBuilderTemplate {
                
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',
-                'RNGAI Perimeter Defenses Small',
+                'RNGAI Perimeter Defenses Expansions',
                 'RNGAI T2 Defense FormBuilders',
                 'RNGAI T2 Expansion TML',
                 'RNGAI Shield Builder Expansion',

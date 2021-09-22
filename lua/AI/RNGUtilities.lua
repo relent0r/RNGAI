@@ -629,6 +629,22 @@ function LerpyRotate(vec1, vec2, distance)
     return {x,y,z}
 end
 
+-- This is softles, I was curious to see what it looked like compared to lerpy. Used in scouts avoiding enemy tanks.
+function AvoidLocation(pos,target,dist)
+    if not target then
+        return pos
+    elseif not pos then
+        return target
+    end
+    local delta = VDiff(target,pos)
+    local norm = math.max(VDist2(delta[1],delta[3],0,0),1)
+    local x = pos[1]+dist*delta[1]/norm
+    local z = pos[3]+dist*delta[3]/norm
+    x = math.min(ScenarioInfo.size[1]-5,math.max(5,x))
+    z = math.min(ScenarioInfo.size[2]-5,math.max(5,z))
+    return {x,GetSurfaceHeight(x,z),z}
+end
+
 function CheckCustomPlatoons(aiBrain)
     if not aiBrain.StructurePool then
         --LOG('* AI-RNG: Creating Structure Pool Platoon')
@@ -1571,7 +1587,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 		if not Orient then
 			-- tracks if we used threat to determine Orientation
 			local Direction = false
-			local threats = aiBrain:GetThreatsAroundPosition( location, 32, true, 'Economy' )
+			local threats = aiBrain:GetThreatsAroundPosition( location, 16, true, 'Economy' )
 			RNGSORT( threats, function(a,b) return VDist2(a[1],a[2],location[1],location[3]) + a[3] < VDist2(b[1],b[2],location[1],location[3]) + b[3] end )
 			for _,v in threats do
 				Direction = GetDirectionInDegrees( {v[1],location[2],v[2]}, location )
@@ -2410,9 +2426,11 @@ function DisplayMarkerAdjacency(aiBrain)
     aiBrain.RNGAreas={}
     aiBrain.armyspots={}
     aiBrain.expandspots={}
+    aiBrain.masspoints = {}
     for k,marker in expansionMarkers do
         local node=false
         local expand=false
+        local mass=false
         --LOG(repr(k)..' marker type is '..repr(marker.type))
         for i, v in STR_GetTokens(marker.type,' ') do
             if v=='Node' then
@@ -2423,6 +2441,10 @@ function DisplayMarkerAdjacency(aiBrain)
                 expand=true
                 break
             end
+            if v=='Mass' then
+                mass=true
+                break
+            end
         end
         if node and not marker.RNGArea then
             aiBrain.RNGAreas[k]={}
@@ -2431,7 +2453,10 @@ function DisplayMarkerAdjacency(aiBrain)
         if expand then
             table.insert(aiBrain.expandspots,{marker,k})
         end
-        if not node and not expand then
+        if mass then
+            table.insert(aiBrain.masspoints,{marker,k})
+        end
+        if not node and not expand and not mass then
             for _,v in STR_GetTokens(k,'_') do
                 if v=='ARMY' then
                     table.insert(aiBrain.armyspots,{marker,k})
@@ -2490,6 +2515,10 @@ function DisplayMarkerAdjacency(aiBrain)
             colors[expand[2]]=tablecolors[randy]
             table.remove(tablecolors,randy)
         end
+    end
+    for _, mass in aiBrain.masspoints do
+        local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(mass[1].position,25,'Land').name]
+        aiBrain.renderthreadtracker=ForkThread(DoMassPointInfect,aiBrain,closestpath,mass[2])
     end
     while aiBrain.renderthreadtracker do
         WaitTicks(2)
@@ -2616,6 +2645,11 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     for k,v in marker.expanddists do
         if not marker.bestexpand or marker.expanddists[marker.bestexpand]>v then
             marker.bestexpand=k
+            -- Important. Extension to chps logic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
+            if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea then
+                Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea = marker.RNGArea
+                LOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
+            end
         end
     end
     WaitTicks(1)
@@ -2623,6 +2657,22 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
         aiBrain.renderthreadtracker=nil
     end
 end
+
+function DoMassPointInfect(aiBrain,marker,masspoint)
+    aiBrain.renderthreadtracker=CurrentThread()
+    WaitTicks(1)
+    --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
+    if not marker then return end
+    if not Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea then
+        Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea = marker.RNGArea
+        LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
+    end
+    WaitTicks(1)
+    if aiBrain.renderthreadtracker==CurrentThread() then
+        aiBrain.renderthreadtracker=nil
+    end
+end
+
 
 GrabRandomDistinctColor = function(num)
     local output=GenerateDistinctColorTable(num)
@@ -3048,9 +3098,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if not startPosUsed then
                     if v.MassSpotsInRange then
                         massPointValidated = true
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false})
                     else
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false, Zone = false})
                     end
                 end
             end

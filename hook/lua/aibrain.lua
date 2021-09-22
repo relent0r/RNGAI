@@ -1850,7 +1850,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SelfThreatCheckRNG(ALLBPS)
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
-                --[[if true then
+                if true then
                     local EnergyIncome = GetEconomyIncome(self,'ENERGY')
                     local MassIncome = GetEconomyIncome(self,'MASS')
                     local EnergyRequested = GetEconomyRequested(self,'ENERGY')
@@ -1882,14 +1882,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
                     LOG(' My Naval Sub Threat : '..self.BrainIntel.SelfThreat.NavalSubNow..' Enemy Naval Sub Threat : '..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
                     local factionIndex = self:GetFactionIndex()
-                    LOG('Air Current Ratio T1 Fighter: '..(self.amanager.Current['Air']['T1']['interceptor'] / self.amanager.Total['Air']['T1']))
-                    LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                    LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
-                    LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
+                    --LOG('Air Current Ratio T1 Fighter: '..(self.amanager.Current['Air']['T1']['interceptor'] / self.amanager.Total['Air']['T1']))
+                    --LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
+                    --LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
+                    --LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     if self.EnemyIntel.ChokeFlag then
-                        LOG('Check Flag is true')
+                        LOG('Choke Flag is true')
+                    else
+                        LOG('Choke Flag is false')
                     end
-                end]]
+
+                end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
         end
@@ -2485,7 +2488,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                --LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Unit has an economic value of '..unit.Value)
             end
             self.EnemyIntel.DirectorData.Energy = energyUnits
         end
@@ -2562,6 +2566,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 LOG('Enemy Factory HQ Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                LOG('Unit has an economic value of '..unit.Value)
             end
             self.EnemyIntel.DirectorData.Factory = factoryUnits
         end

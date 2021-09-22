@@ -577,6 +577,7 @@ BuilderGroup {
             },
         BuilderData = {
             MarkerType = 'Mass',            
+            FrigateRaid = true,
             WaterOnly = false,
             MoveFirst = 'Random',
             MoveNext = 'Threat',

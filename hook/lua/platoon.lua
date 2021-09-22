@@ -898,8 +898,11 @@ Platoon = Class(RNGAIPlatoon) {
 
         local aiBrain = self:GetBrain()
         local scout = GetPlatoonUnits(self)[1]
+        local intelRange = ALLBPS[scout.UnitId].Intel.RadarRadius
+        local enemyUnitCheck = false
         local supportPlatoon = false
         local platoonNeedScout = false
+        local scoutPos = false
         
 
         -- build scoutlocations if not already done.
@@ -942,104 +945,123 @@ Platoon = Class(RNGAIPlatoon) {
             if targetData then
                 --Can we get there safely?
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), targetData.Position, 50) --DUNCAN - Increase threatwieght from 100
-
                 self:Stop()
-
+                WaitTicks(20)
+                --Scout until we reach our destination
                 if path then
                     local pathLength = RNGGETN(path)
-                    for i=1, pathLength-1 do
+                    for i=1, pathLength do
+                        self:Stop()
                         self:MoveToLocation(path[i], false)
-                    end
-                end
-
-                self:MoveToLocation(targetData.Position, false)
-                WaitTicks(20)
-
-                --Scout until we reach our destination
-                while not scout.Dead and not scout:IsIdleState() do
-                    if self.PlatoonData.ExcessScout and (not platoonNeedScout) and findPlatoonCounter < 5 then
-                        --LOG('Look for platoon that needs a scout')
-                        platoonNeedScout, supportPlatoon = self:ScoutFindNearbyPlatoonsRNG(250)
-                    end
-                    if self.PlatoonData.ExcessScout and platoonNeedScout then
-                        if PlatoonExists(aiBrain, supportPlatoon) then
-                            --LOG('Move to support platoon position')
-                            self:Stop()
-                            self:MoveToLocation(GetPlatoonPosition(supportPlatoon), false)
-                            WaitTicks(20)
-                        else
-                            platoonNeedScout = false
-                            findPlatoonCounter = findPlatoonCounter + 1
-                            self:Stop()
-                            break
-                        end
-                    end
-                    if self.PlatoonData.ExcessScout and (not platoonNeedScout) and (not self.ExpansionsValidated) then
-                        --LOG('Excess scout looking for expansion')
-                        local scoutPos = scout:GetPosition()
-                        local scoutMarker
-                        if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  then
-                            for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
-                                local distSq = VDist3Sq(v.Position, scoutPos)
-                                if AIAttackUtils.CanGraphToRNG(scoutPos, v.Position, self.MovementLayer) then
-                                    if not v.ScoutAssigned then
-                                        scoutMarker = v
-                                        aiBrain.BrainIntel.ExpansionWatchTable[k].ScoutAssigned = self
-                                        --LOG('Expansion Best marker selected is index '..k..' at '..repr(scoutMarker.Position))
-                                        break
+                        while not scout.Dead and not scout:IsIdleState() do
+                            if self.PlatoonData.ExcessScout and (not platoonNeedScout) and findPlatoonCounter < 5 then
+                                --LOG('Look for platoon that needs a scout')
+                                WaitTicks(10)
+                                platoonNeedScout, supportPlatoon = self:ScoutFindNearbyPlatoonsRNG(250)
+                            end
+                            if self.PlatoonData.ExcessScout and platoonNeedScout then
+                                if PlatoonExists(aiBrain, supportPlatoon) then
+                                    while not scout.Dead and PlatoonExists(aiBrain, supportPlatoon) do
+                                        --LOG('Move to support platoon position')
+                                        self:Stop()
+                                        self:MoveToLocation(GetPlatoonPosition(supportPlatoon), false)
+                                        WaitTicks(15)
                                     end
                                 else
-                                    WaitTicks(2)
+                                    platoonNeedScout = false
+                                    findPlatoonCounter = findPlatoonCounter + 1
+                                    self:Stop()
+                                    break
                                 end
                             end
-                        end
-                        if scoutMarker then
-                            --LOG('Scout Marker Found, moving to position')
-                            if PlatoonExists(aiBrain, self) then
-                                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), scoutMarker.Position, 50)
-                                self:Stop()
-                                if path then
-                                    local pathLength = RNGGETN(path)
-                                    for i=1, pathLength-1 do
-                                        self:MoveToLocation(path[i], false)
-                                    end
-                                    self:MoveToLocation(scoutMarker.Position, false)
-                                else
-                                    excessPathFailures = excessPathFailures + 1
-                                end
-                                while PlatoonExists(aiBrain, self) do
-                                    --LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
-                                    --LOG('Distance from scout marker is '..VDist2Sq(scoutPos[1],scoutPos[3], scoutMarker.Position[1],scoutMarker.Position[3]))
-                                    WaitTicks(50)
-                                    scoutPos = scout:GetPosition()
-                                    if scout.UnitId == 'xsl0101' and VDist2Sq(scoutPos[1],scoutPos[3], scoutMarker.Position[1],scoutMarker.Position[3]) < 625 then
-                                        IssueStop({scout})
-                                        --LOG('Scout has arrived at expansion, scanning for engineers')
-                                        while PlatoonExists(aiBrain, self) do
-                                            if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), scoutPos, 25, 'Enemy') > 0 then
-                                                local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), scoutPos, 25, 'Enemy')
-                                                if enemyEngineer[1] and not enemyEngineer[1].Dead then
-                                                    --LOG('Scout Marker enemy engineer found, attacking')
-                                                    while enemyEngineer[1] and not enemyEngineer[1].Dead do
-                                                        IssueStop({scout})
-                                                        IssueAttack({scout}, enemyEngineer[1])
-                                                        WaitTicks(30)
-                                                    end
-                                                    self:MoveToLocation(scoutMarker.Position, false)
-                                                    WaitTicks(30)
-                                                    IssueStop({scout})
-                                                end
+                            if self.PlatoonData.ExcessScout and (not platoonNeedScout) and (not self.ExpansionsValidated) then
+                                --LOG('Excess scout looking for expansion')
+                                local scoutPos = scout:GetPosition()
+                                local scoutMarker
+                                if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  then
+                                    for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                                        local distSq = VDist3Sq(v.Position, scoutPos)
+                                        if AIAttackUtils.CanGraphToRNG(scoutPos, v.Position, self.MovementLayer) then
+                                            if not v.ScoutAssigned then
+                                                scoutMarker = v
+                                                aiBrain.BrainIntel.ExpansionWatchTable[k].ScoutAssigned = self
+                                                --LOG('Expansion Best marker selected is index '..k..' at '..repr(scoutMarker.Position))
+                                                break
                                             end
-                                            WaitTicks(50)
+                                        else
+                                            WaitTicks(2)
                                         end
                                     end
                                 end
+                                if scoutMarker then
+                                    --LOG('Scout Marker Found, moving to position')
+                                    if PlatoonExists(aiBrain, self) then
+                                        local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scout:GetPosition(), scoutMarker.Position, 50)
+                                        self:Stop()
+                                        if path then
+                                            local pathLength = RNGGETN(path)
+                                            for i=1, pathLength-1 do
+                                                self:MoveToLocation(path[i], false)
+                                            end
+                                            self:MoveToLocation(scoutMarker.Position, false)
+                                        else
+                                            excessPathFailures = excessPathFailures + 1
+                                        end
+                                        while PlatoonExists(aiBrain, self) do
+                                            --LOG('Scout Marker Found, waiting to arrive, unit ID is '..scout.UnitId)
+                                            --LOG('Distance from scout marker is '..VDist2Sq(scoutPos[1],scoutPos[3], scoutMarker.Position[1],scoutMarker.Position[3]))
+                                            WaitTicks(50)
+                                            scoutPos = scout:GetPosition()
+                                            if scout.UnitId == 'xsl0101' and VDist2Sq(scoutPos[1],scoutPos[3], scoutMarker.Position[1],scoutMarker.Position[3]) < 625 then
+                                                IssueStop({scout})
+                                                --LOG('Scout has arrived at expansion, scanning for engineers')
+                                                while PlatoonExists(aiBrain, self) do
+                                                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), scoutPos, 25, 'Enemy') > 0 then
+                                                        local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), scoutPos, 25, 'Enemy')
+                                                        if enemyEngineer[1] and not enemyEngineer[1].Dead then
+                                                            --LOG('Scout Marker enemy engineer found, attacking')
+                                                            while enemyEngineer[1] and not enemyEngineer[1].Dead do
+                                                                IssueStop({scout})
+                                                                IssueAttack({scout}, enemyEngineer[1])
+                                                                WaitTicks(30)
+                                                            end
+                                                            self:MoveToLocation(scoutMarker.Position, false)
+                                                            WaitTicks(30)
+                                                            IssueStop({scout})
+                                                        end
+                                                    end
+                                                    WaitTicks(50)
+                                                end
+                                            end
+                                        end
+                                    end
+                                else
+                                    self.ExpansionsValidated = true
+                                end
                             end
-                        else
-                            self.ExpansionsValidated = true
+                            WaitTicks(20)
+                            if not scout.Dead then
+                                scoutPos = scout:GetPosition()
+                                if VDist2Sq(scoutPos[1], scoutPos[3], targetData.Position[1], targetData.Position[3]) > 14400 then
+                                    enemyUnitCheck = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.SCOUT, scoutPos, intelRange, 'Enemy')
+                                    if RNGGETN(enemyUnitCheck) > 0 then
+                                        for _, v in enemyUnitCheck do
+                                            if not v.Dead then
+                                                self:Stop()
+                                                self:MoveToLocation(RUtils.AvoidLocation(v:GetPosition(), scoutPos, intelRange - 10), false)
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                                if VDist2Sq(scoutPos[1], scoutPos[3], path[i][1], path[i][3]) < 400 then
+                                    break
+                                end
+                            end
                         end
                     end
-                    WaitTicks(25)
+                else
+                    WaitTicks(50)
                 end
             end
             WaitTicks(10)
@@ -3228,7 +3250,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     if (whatToBuild == 'ueb1103' or whatToBuild == 'uab1103' or whatToBuild == 'urb1103' or whatToBuild == 'xsb1103') then
                         if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, buildLocation, 1, 'Ally') > 0 then
-                            LOG('Extractor already present with 1 radius, return')
+                            --LOG('Extractor already present with 1 radius, return')
                             eng.PlatoonHandle:Stop()
                             return
                         end
@@ -3525,9 +3547,11 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
-
-        markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
-        
+        if self.PlatoonData.FrigateRaid and aiBrain.EnemyIntel.FrigateRaid then
+            markerLocations = aiBrain.EnemyIntel.FrigateRaidMarkers
+        else
+            markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
+        end
         local bestMarker = false
 
         if not self.LastMarker then
