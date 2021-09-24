@@ -2070,6 +2070,9 @@ Platoon = Class(RNGAIPlatoon) {
                 if not v.Dead then
                     for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
+                        if weapon.WeaponCategory == 'Anti Air' then
+                            continue
+                        end
                         if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
                             -- save the weaponrange 
                             v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
@@ -2131,8 +2134,11 @@ Platoon = Class(RNGAIPlatoon) {
             --LOG('* AI-RNG: * NavalAttackAIRNG:: Check for attack position')
             --attackPosition = RUtils.AIFindRangedAttackPositionRNG(aiBrain, self, MaxPlatoonWeaponRange)
             local attackPosition = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
-            --LOG('position to attack '..repr(attackPosition))
-            --target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
+            if attackPosition then
+                LOG('position to attack '..repr(attackPosition))
+            else
+                LOG('No position to attack for intelli naval')
+            end
             platoonThreat = self:CalculatePlatoonThreat('Naval', categories.ALLUNITS)
             --('Platoon Naval Threat is '..platoonThreat)
             local platoonCount = RNGGETN(GetPlatoonUnits(self))

@@ -146,6 +146,10 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- Economy monitor for new skirmish - stores out econ over time to get trend over 10 seconds
         self.EconomyData = {}
+        self.GraphZones = { 
+            FirstRun = true,
+            HasRun = false
+        }
         self.EconomyTicksMonitor = 90
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
@@ -1002,18 +1006,32 @@ AIBrain = Class(RNGAIBrainClass) {
         local MassMarker = {}
         local massMarkerBuildable = 0
         local markerCount = 0
+        local graphCheck = false
         for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
                     continue
                 end 
+                if v.RNGArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
+                    graphCheck = true
+                    if not self.GraphZones[v.RNGArea] then
+                        self.GraphZones[v.RNGArea] = {}
+                        if self.GraphZones[v.RNGArea].MassMarkersInZone == nil then
+                            self.GraphZones[v.RNGArea].MassMarkersInZone = 0
+                        end
+                    end
+                    self.GraphZones[v.RNGArea].MassMarkersInZone = self.GraphZones[v.RNGArea].MassMarkersInZone + 1
+                end
                 if CanBuildStructureAt(self, 'ueb1103', v.position) then
                     massMarkerBuildable = massMarkerBuildable + 1
                 end
                 markerCount = markerCount + 1
                 RNGINSERT(MassMarker, v)
             end
+        end
+        if graphCheck then
+            self.GraphZones.HasRun = true
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
@@ -1891,6 +1909,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     else
                         LOG('Choke Flag is false')
                     end
+                    --LOG('Graph Zone Table '..repr(self.GraphZones))
+                    --LOG('Total Mass Markers according to infect'..self.BrainIntel.MassMarker)
+                    --LOG('Total Mass Markers according to count '..self.BrainIntel.SelfThreat.MassMarker)
 
                 end
             end

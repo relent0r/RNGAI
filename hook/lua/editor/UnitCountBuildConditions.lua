@@ -70,6 +70,11 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
     return false
 end
 
+function NavalBaseLimitRNG(aiBrain)
+    local expBaseCount = aiBrain:GetManagerCount('Naval Area')
+    return CompareBody(expBaseCount, 2, '<')
+end
+
 --    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
 function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, locationType, numReq, category, constructionCat)
     local numUnits
@@ -284,6 +289,14 @@ function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadiu
         return true
     end
     --LOG('UnmarkedExpansionNeedsEngineer is False')
+    return false
+end
+
+function ExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    local pos, name = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        return true
+    end
     return false
 end
 

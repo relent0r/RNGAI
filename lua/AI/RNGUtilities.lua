@@ -907,7 +907,7 @@ function MarkTacticalMassLocations(aiBrain)
     'Weather Generator',]]
 
     local massGroups = aiBrain.TacticalMonitor.TacticalMassLocations
-    local expansionMarkers = ScenarioUtils.GetMarkers()
+    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local markerList = {}
     --LOG('Pre Sorted MassGroups'..repr(massGroups))
     if massGroups then
@@ -2516,10 +2516,13 @@ function DisplayMarkerAdjacency(aiBrain)
             table.remove(tablecolors,randy)
         end
     end
+    local massPointCount = 0
     for _, mass in aiBrain.masspoints do
+        massPointCount = massPointCount + 1
         local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(mass[1].position,25,'Land').name]
         aiBrain.renderthreadtracker=ForkThread(DoMassPointInfect,aiBrain,closestpath,mass[2])
     end
+    aiBrain.BrainIntel.MassMarker = massPointCount
     while aiBrain.renderthreadtracker do
         WaitTicks(2)
     end
@@ -2527,6 +2530,9 @@ function DisplayMarkerAdjacency(aiBrain)
     --for k,v in aiBrain.RNGAreas do
     --    LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
+    if aiBrain.GraphZones.FirstRun then
+        aiBrain.GraphZones.FirstRun = false
+    end
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
     marker.RNGArea=graphname
@@ -2662,10 +2668,10 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
-    if not marker then return end
+    if not marker then LOG('No path node close to mass marker '..repr(masspoint))return end
     if not Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea then
         Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea = marker.RNGArea
-        LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
+        --LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
     WaitTicks(1)
     if aiBrain.renderthreadtracker==CurrentThread() then

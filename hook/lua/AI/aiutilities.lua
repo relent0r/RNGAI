@@ -25,7 +25,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
             end
         end
     else
-        local markers = ScenarioUtils.GetMarkers()
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
         if markers then
             for k, v in markers do
                 if v.type == markerType then
@@ -479,7 +479,7 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
             end
         end
     else
-        local markers = ScenarioUtils.GetMarkers()
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
         if markers then
             for k, v in markers do
                 if v.type == markerType then

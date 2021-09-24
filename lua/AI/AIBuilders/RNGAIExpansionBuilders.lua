@@ -152,7 +152,7 @@ BuilderGroup {
         PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'NavalBaseLimitRNG', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE }},
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},

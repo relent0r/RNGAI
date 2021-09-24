@@ -740,12 +740,11 @@ BuilderGroup {
             { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
     },
-
 }
 -- Land Formers
 
@@ -834,7 +833,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon Expansion',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. 
+        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon Intelli',                          -- Template Name. 
         Priority = 650,                                                          -- Priority. 1000 is normal.
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

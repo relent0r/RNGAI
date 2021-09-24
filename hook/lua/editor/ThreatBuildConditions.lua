@@ -102,7 +102,7 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local landNode = AIAttackUtils.GetClosestPathNodeInRadiusByLayerRNG(factoryManager.Location, 100, 'Land')
     if not landNode.RNGArea then
-        LOG('Missing RNGArea for expansion land node or no path markers')
+        WARN('Missing RNGArea for expansion land node or no path markers')
         return false
     end
     if expansionMarkers then
@@ -112,8 +112,8 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
                 if v.RNGArea then
                     if v.RNGArea == landNode.RNGArea then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
-                        if threat > 0 then
-                            LOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
+                        if threat > 2 then
+                            --LOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
                             return true
                         end
                     end

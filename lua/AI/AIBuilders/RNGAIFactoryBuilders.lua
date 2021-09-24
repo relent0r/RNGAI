@@ -8,6 +8,7 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
 
 local ACUClosePriority = function(self, aiBrain)
@@ -307,6 +308,35 @@ BuilderGroup {
         }
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Factory Builder Air Expansion',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T1 Expansion',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Factories', 5},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.1 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR * categories.TECH1 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+}
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Air Large',
     BuildersType = 'EngineerBuilder',
@@ -1011,7 +1041,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 - categories.SUPPORTFACTORY } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.5}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 }},
         },
@@ -1363,6 +1393,32 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T1 Island Expansion',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 5},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND }},
          },
         BuilderType = 'Any',
         BuilderData = {
