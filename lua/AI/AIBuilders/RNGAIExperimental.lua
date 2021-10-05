@@ -18,7 +18,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 400.0 }},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 400.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -46,8 +46,6 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -75,7 +73,6 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
@@ -107,7 +104,6 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -137,8 +133,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -166,8 +161,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -195,8 +189,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 600.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -230,7 +223,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 7.0, 400.0 }},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 400.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -349,7 +342,7 @@ BuilderGroup {
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 40.0, 60.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 40.0, 60.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -377,7 +370,7 @@ BuilderGroup {
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 20.0, 60.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 20.0, 60.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -405,7 +398,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },
-            { EBC, 'GreaterThanEconIncomeRNG', { 50.0, 60.0 }},                    -- Base income
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 50.0, 60.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {

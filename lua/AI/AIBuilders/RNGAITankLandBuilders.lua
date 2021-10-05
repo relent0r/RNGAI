@@ -762,6 +762,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
         },
         BuilderData = {
+            Avoid        = true,
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             LocationType = 'LocationType',
@@ -1143,7 +1144,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
-        Priority = 710,                                                          -- Priority. 1000 is normal.
+        Priority = 700,                                                          -- Priority. 1000 is normal.
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1154,42 +1155,6 @@ BuilderGroup {
             UseFormation = 'None',
             LocationType = 'LocationType',
             },
-    },
-    
-    Builder {
-        BuilderName = 'RNGAI Mass Strike Early',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI Mass Strike Small',                          -- Template Name. 
-        Priority = 810,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 600 } }, -- don't build after 5 minutes
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            GetTargetsFromBase = false,
-            RequireTransport = false,
-            AggressiveMove = false,
-            AvoidBases = true,
-            LocationType = 'LocationType',
-            Defensive = false,
-            PlatoonLimit = 5,
-            AttackEnemyStrength = 200,                              
-            TargetSearchPriorities = { 
-                categories.ENGINEER - categories.COMMAND,
-                categories.MASSEXTRACTION,
-                categories.STRUCTURE * categories.FACTORY,
-            },
-            PrioritizedCategories = {   
-                categories.ENGINEER,
-                categories.MASSEXTRACTION,
-                categories.EXPERIMENTAL * categories.AIR,
-                categories.MOBILE * categories.LAND,
-                categories.STRUCTURE,
-            },
-            UseFormation = 'None',
-        },
     },
     
     Builder {
@@ -1720,6 +1685,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {
+            Avoid        = true,
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
             IncludeWater = false,
@@ -1762,6 +1728,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {
+            Avoid        = true,
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
             IncludeWater = false,

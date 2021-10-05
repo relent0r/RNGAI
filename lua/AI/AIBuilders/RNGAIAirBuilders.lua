@@ -494,6 +494,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
         },
         BuilderData = {
+            StaticCategories = true,
             AvoidBases = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',

@@ -883,7 +883,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('Eco Bypass is True')
             bypasseco = true
         end
-        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > ( massNeeded * 1.8 ) and GetEconomyStored( aiBrain, 'ENERGY') > energyNeeded ) then
+        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > ( massNeeded * 1.6 ) and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.0 ) then
             upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
             if unitTech == 'TECH1' then
                 extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
@@ -896,10 +896,6 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 WaitTicks(10)
                 continue
             end
-        else
-            --LOG('Not Bypass Eco')
-            --LOG('Mass Storage is : '..GetEconomyStored( aiBrain, 'MASS')..' Storage needed is : '..(massNeeded * .7))
-            --LOG('Energy Storage is : '..GetEconomyStored( aiBrain, 'ENERGY')..' Energy needed is : '..(energyNeeded * .7 ))
         end
 
 
@@ -910,7 +906,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco) then
+        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco and GetEconomyStored( aiBrain, 'MASS') < (massNeeded * 0.5)) then
             if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
                 --LOG('Too few tech2 extractors to go tech3')
                 ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait

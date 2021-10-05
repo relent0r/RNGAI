@@ -20,7 +20,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Scout',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 744, -- After second engie group
+        Priority = 755, -- After second engie group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},

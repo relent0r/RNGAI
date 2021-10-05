@@ -46,6 +46,8 @@ Valid Threat Options:
             Economy
             Unknown
     
+            It should be noted that calculateplatoonthreat does not use imap values but looks to perform a string search through the blueprints
+            of the threat types. e.g there is no antisurface, but there is a surface. If you use a non valid threat type you will get overall.
         self:SetUpAttackVectorsToArmy(categories.STRUCTURE - (categories.MASSEXTRACTION))
         --LOG('Attack Vectors'..repr(self:GetAttackVectors()))
 
@@ -1212,6 +1214,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                 return retUnit
             end
         end
+        coroutine.yield(1)
     end
     return false
 end
@@ -1311,6 +1314,8 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     if enemyBrain then
         enemyIndex = enemyBrain:GetArmyIndex()
     end
+    local acuPresent = false
+    local acuUnit = false
     local RangeList = {
         [1] = 10,
         [2] = maxRange,
@@ -1348,6 +1353,10 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 EnemyStrength = 0
                 -- check if we have a special player as enemy
                 if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
+                if EntityCategoryContains(categories.COMMAND, Target) then
+                    acuPresent = true
+                    acuUnit = Target
+                end
                 -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
                 if not Target.Dead and not Target.CaptureInProgress and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
                     -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
@@ -1370,14 +1379,14 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --LOG('Target Found in target aquisition function')
-                return TargetUnit
+                return TargetUnit, acuPresent, acuUnit
             end
-           coroutine.yield(10)
+           coroutine.yield(5)
         end
         coroutine.yield(1)
     end
     --LOG('NO Target Found in target aquisition function')
-    return TargetUnit
+    return TargetUnit, acuPresent, acuUnit
 end
 
 function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, assisteeCategory)
@@ -2654,7 +2663,7 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
             -- Important. Extension to chps logic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
             if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea then
                 Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea = marker.RNGArea
-                LOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
+                --LOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
             end
         end
     end
@@ -2668,7 +2677,7 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
     aiBrain.renderthreadtracker=CurrentThread()
     WaitTicks(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
-    if not marker then LOG('No path node close to mass marker '..repr(masspoint))return end
+    if not marker then return end
     if not Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea then
         Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea = marker.RNGArea
         --LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
@@ -3058,7 +3067,7 @@ function CalculateMassValue(expansionMarkers)
     for k, v in expansionMarkers do
         local masscount = 0
         for k2, v2 in MassMarker do
-            if VDist2Sq(v.Position[1], v.Position[3], v2.Position[1], v2.Position[3]) > 900 then
+            if VDist2Sq(v.Position[1], v.Position[3], v2.Position[1], v2.Position[3]) > 6400 then
                 continue
             end
             masscount = masscount + 1
@@ -3134,18 +3143,6 @@ RenderBrainIntelRNG = function(aiBrain)
         end
         WaitTicks(2)
     end
-end
-
-QueryExpansionWatchTable = function(aiBrain, platoon)
-
-    for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
-        if v.Land > 0 and PlatoonAssigned == false then
-            --Do stuff here
-
-        end
-    end
-
-
 end
 
 --[[function MexUpgradeManagerRNG(aiBrain)
@@ -3344,6 +3341,80 @@ function InitialNavalAttackCheck(aiBrain)
         end
     end
 end
+
+function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
+    -- Should be a multipurpose Expansion query that can provide units, acus a place to go
+    if not aiBrain.BrainIntel.ExpansionWatchTable then
+        WARN('No ExpansionWatchTable. Maybe it hasnt been created yet or something is broken')
+        WaitTicks(50)
+        return false
+    end
+    
+
+    local MainPos = aiBrain.BuilderManagers.MAIN.Position
+    if VDist2Sq(location[1], location[3], MainPos[1], MainPos[3]) > 3600 then
+        return false
+    end
+    local positionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(location, radius, movementLayer).name]
+    local centerPoint = aiBrain.MapCenterPoint
+    local mainBaseToCenter = VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3])
+    local bestExpansions = {}
+    local options = {}
+    local currentGameTime = GetGameTimeSeconds()
+
+    if positionNode.RNGArea then
+        for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
+            if expansion.Zone == positionNode.RNGArea then
+                LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
+                -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
+                LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 then
+                    if VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]) < radius * radius then
+                        LOG('Expansion Zone is within radius')
+                        if VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
+                            LOG('Expansion is not behind us, we are at '..repr(location))
+                            LOG('Expansion has '..expansion.MassPoints..' mass points')
+                            LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            if expansion.MassPoints > 1 then
+                                if expansion.MassPoints < 3 then
+                                    RNGINSERT(options, {Expansion = expansion, Value = 2, Key = k})
+                                elseif expansion.MassPoints < 4 then
+                                    RNGINSERT(options, {Expansion = expansion, Value = 3, Key = k})
+                                elseif expansion.MassPoints > 3 then
+                                    RNGINSERT(options, {Expansion = expansion, Value = 5, Key = k})
+                                end
+                            end
+                        else
+                            LOG('Expansion is beyond the center point')
+                            LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            LOG('Should be less than ')
+                            LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                        end
+                    end
+                else
+                    LOG('This expansion has already been checked in the last 45 seconds')
+                end
+            end
+        end
+        local optionCount = 0
+        for k, withinRadius in options do
+            if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
+                LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                RNGINSERT(bestExpansions, withinRadius)
+            else
+                LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+            end
+        end
+    else
+        WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
+    end
+    LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
+    if RNGGETN(bestExpansions) > 0 then
+        return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
+    end
+    return false
+end
+
 --[[
 LOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
 LOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)

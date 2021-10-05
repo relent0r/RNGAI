@@ -140,6 +140,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('5 KM Map Check true')
             self.MapSize = 5
         end
+        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), 0 ,(ScenarioInfo.size[2] / 2) }
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -150,11 +151,11 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
-        self.EconomyTicksMonitor = 90
+        self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
-        self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
+        --self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
         self.EngineerAssistManagerEngineerCountDesired = 0
@@ -184,7 +185,11 @@ AIBrain = Class(RNGAIBrainClass) {
             },
             categoryspend = {
                 eng = 0,
-                fact = 0,
+                fact = {
+                    Land = 0,
+                    Air = 0,
+                    Naval = 0
+                },
                 silo = 0,
                 mex = {
                       T1 = 0,
@@ -850,10 +855,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.UpgradeIssuedPeriod = 100
 
         if mapSizeX < 1000 and mapSizeZ < 1000  then
-            self.UpgradeIssuedLimit = 2
+            self.UpgradeIssuedLimit = 1
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         else
-            self.UpgradeIssuedLimit = 3
+            self.UpgradeIssuedLimit = 2
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
 
@@ -937,6 +942,113 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EconomyMonitorRNG = function(self)
+        -- This over time thread is based on Sprouto's LOUD AI.
+        self.EconomyData = { ['EnergyIncome'] = {}, ['EnergyRequested'] = {}, ['EnergyStorage'] = {}, ['EnergyTrend'] = {}, ['MassIncome'] = {}, ['MassRequested'] = {}, ['MassStorage'] = {}, ['MassTrend'] = {}, ['Period'] = 300 }
+        -- number of sample points
+        -- local point
+        local samplerate = 10
+        local samples = self.EconomyData['Period'] / samplerate
+    
+        -- create the table to store the samples
+        for point = 1, samples do
+            self.EconomyData['EnergyIncome'][point] = 0
+            self.EconomyData['EnergyRequested'][point] = 0
+            self.EconomyData['EnergyStorage'][point] = 0
+            self.EconomyData['EnergyTrend'][point] = 0
+            self.EconomyData['MassIncome'][point] = 0
+            self.EconomyData['MassRequested'][point] = 0
+            self.EconomyData['MassStorage'][point] = 0
+            self.EconomyData['MassTrend'][point] = 0
+        end    
+    
+        local RNGMIN = math.min
+        local RNGMAX = math.max
+        local WaitTicks = coroutine.yield
+    
+        -- array totals
+        local eIncome = 0
+        local mIncome = 0
+        local eRequested = 0
+        local mRequested = 0
+        local eStorage = 0
+        local mStorage = 0
+        local eTrend = 0
+        local mTrend = 0
+    
+        -- this will be used to multiply the totals
+        -- to arrive at the averages
+        local samplefactor = 1/samples
+    
+        local EcoData = self.EconomyData
+    
+        local EcoDataEnergyIncome = EcoData['EnergyIncome']
+        local EcoDataMassIncome = EcoData['MassIncome']
+        local EcoDataEnergyRequested = EcoData['EnergyRequested']
+        local EcoDataMassRequested = EcoData['MassRequested']
+        local EcoDataEnergyTrend = EcoData['EnergyTrend']
+        local EcoDataMassTrend = EcoData['MassTrend']
+        local EcoDataEnergyStorage = EcoData['EnergyStorage']
+        local EcoDataMassStorage = EcoData['MassStorage']
+        
+        local e,m
+    
+        while true do
+    
+            for point = 1, samples do
+    
+                -- remove this point from the totals
+                eIncome = eIncome - EcoDataEnergyIncome[point]
+                mIncome = mIncome - EcoDataMassIncome[point]
+                eRequested = eRequested - EcoDataEnergyRequested[point]
+                mRequested = mRequested - EcoDataMassRequested[point]
+                eTrend = eTrend - EcoDataEnergyTrend[point]
+                mTrend = mTrend - EcoDataMassTrend[point]
+                
+                -- insert the new data --
+                EcoDataEnergyIncome[point] = GetEconomyIncome( self, 'ENERGY')
+                EcoDataMassIncome[point] = GetEconomyIncome( self, 'MASS')
+                EcoDataEnergyRequested[point] = GetEconomyRequested( self, 'ENERGY')
+                EcoDataMassRequested[point] = GetEconomyRequested( self, 'MASS')
+    
+                e = GetEconomyTrend( self, 'ENERGY')
+                m = GetEconomyTrend( self, 'MASS')
+    
+                if e then
+                    EcoDataEnergyTrend[point] = e
+                else
+                    EcoDataEnergyTrend[point] = 0.1
+                end
+                
+                if m then
+                    EcoDataMassTrend[point] = m
+                else
+                    EcoDataMassTrend[point] = 0.1
+                end
+    
+                -- add the new data to totals
+                eIncome = eIncome + EcoDataEnergyIncome[point]
+                mIncome = mIncome + EcoDataMassIncome[point]
+                eRequested = eRequested + EcoDataEnergyRequested[point]
+                mRequested = mRequested + EcoDataMassRequested[point]
+                eTrend = eTrend + EcoDataEnergyTrend[point]
+                mTrend = mTrend + EcoDataMassTrend[point]
+                
+                -- calculate new OverTime values --
+                self.EconomyOverTimeCurrent.EnergyIncome = eIncome * samplefactor
+                self.EconomyOverTimeCurrent.MassIncome = mIncome * samplefactor
+                self.EconomyOverTimeCurrent.EnergyRequested = eRequested * samplefactor
+                self.EconomyOverTimeCurrent.MassRequested = mRequested * samplefactor
+                self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime = RNGMIN( (eIncome * samplefactor) / (eRequested * samplefactor), 2)
+                self.EconomyOverTimeCurrent.MassEfficiencyOverTime = RNGMIN( (mIncome * samplefactor) / (mRequested * samplefactor), 2)
+                self.EconomyOverTimeCurrent.EnergyTrendOverTime = eTrend * samplefactor
+                self.EconomyOverTimeCurrent.MassTrendOverTime = mTrend * samplefactor
+                
+                WaitTicks(samplerate)
+            end
+        end
+    end,
+    --[[
+    EconomyMonitorRNG = function(self)
         -- build "eco trend over time" table
         for i = 1, self.EconomyTicksMonitor do
             self.EconomyData[i] = { EnergyIncome=0, EnergyRequested=0, MassIncome=0, MassRequested=0 }
@@ -997,9 +1109,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyOverTimeCurrent.MassEfficiencyOverTime = math.min(mIncome / mRequested, 2)
             self.EconomyOverTimeCurrent.EnergyTrendOverTime = eTrend / num
             self.EconomyOverTimeCurrent.MassTrendOverTime = mTrend / num
-            WaitTicks(25)
+            WaitTicks(20)
         end
-    end,
+    end,]]
 
     
     CalculateMassMarkersRNG = function(self)
@@ -1674,19 +1786,20 @@ AIBrain = Class(RNGAIBrainClass) {
 
     GetUpgradeSpec = function(self, unit)
         local upgradeSpec = {}
+        
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
                 upgradeSpec.MassLowTrigger = 0.80
-                upgradeSpec.EnergyLowTrigger = 1.0
+                upgradeSpec.EnergyLowTrigger = 0.95
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 50
+                upgradeSpec.InitialDelay = 40
                 upgradeSpec.EnemyThreatLimit = 10
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
                 upgradeSpec.MassLowTrigger = 0.90
-                upgradeSpec.EnergyLowTrigger = 1.1
+                upgradeSpec.EnergyLowTrigger = 1.05
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -1699,7 +1812,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
-                upgradeSpec.InitialDelay = 80
+                upgradeSpec.InitialDelay = 90
                 upgradeSpec.EnemyThreatLimit = 0
                 return upgradeSpec
             end
@@ -1869,50 +1982,54 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
                 if true then
-                    local EnergyIncome = GetEconomyIncome(self,'ENERGY')
-                    local MassIncome = GetEconomyIncome(self,'MASS')
-                    local EnergyRequested = GetEconomyRequested(self,'ENERGY')
-                    local MassRequested = GetEconomyRequested(self,'MASS')
-                    local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
-                    local MassEfficiency = math.min(MassIncome / MassRequested, 2)
-                    LOG('Eco Stats for :'..self.Nickname)
-                    LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
-                    LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
-                    LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
-                    LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..'Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                    LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..'Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
-                    LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
-                    LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
-                    LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
-                    LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
-                    LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
-                    LOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
-                    LOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                    LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
-                    LOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
-                    LOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
-                    LOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
-                    LOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
-                    LOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
-                    LOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-                    LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
-                    LOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
-                    LOG(' My Naval Sub Threat : '..self.BrainIntel.SelfThreat.NavalSubNow..' Enemy Naval Sub Threat : '..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
-                    local factionIndex = self:GetFactionIndex()
+                    --local EnergyIncome = GetEconomyIncome(self,'ENERGY')
+                    --local MassIncome = GetEconomyIncome(self,'MASS')
+                    --local EnergyRequested = GetEconomyRequested(self,'ENERGY')
+                    --local MassRequested = GetEconomyRequested(self,'MASS')
+                    --local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
+                    --local MassEfficiency = math.min(MassIncome / MassRequested, 2)
+                    --LOG('Eco Stats for :'..self.Nickname)
+                    --LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
+                    --LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
+                    --LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
+                    if self.UpgradeIssued then
+                        LOG('aiBrain.UpgradeIssued is '..self.UpgradeIssued)
+                    end
+                    LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
+                    local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
+                    LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
+                    --LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
+                    --LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
+                    --LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
+                    --LOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
+                    --LOG('Current Land Ratio is '..self.ProductionRatios['Land'])
+                    --LOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
+                    --LOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
+                    --LOG('Current Air Ratio is '..self.ProductionRatios['Air'])
+                    --LOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
+                    --LOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
+                    --LOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
+                    --LOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
+                    --LOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
+                    --LOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+                    --LOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
+                    --LOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                    --LOG(' My Naval Sub Threat : '..self.BrainIntel.SelfThreat.NavalSubNow..' Enemy Naval Sub Threat : '..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+                    --local factionIndex = self:GetFactionIndex()
                     --LOG('Air Current Ratio T1 Fighter: '..(self.amanager.Current['Air']['T1']['interceptor'] / self.amanager.Total['Air']['T1']))
                     --LOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     --LOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     --LOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                    if self.EnemyIntel.ChokeFlag then
-                        LOG('Choke Flag is true')
-                    else
-                        LOG('Choke Flag is false')
-                    end
+                    --if self.EnemyIntel.ChokeFlag then
+                    --    LOG('Choke Flag is true')
+                    --else
+                    --    LOG('Choke Flag is false')
+                    --end
                     --LOG('Graph Zone Table '..repr(self.GraphZones))
                     --LOG('Total Mass Markers according to infect'..self.BrainIntel.MassMarker)
                     --LOG('Total Mass Markers according to count '..self.BrainIntel.SelfThreat.MassMarker)
-
                 end
             end
             WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
@@ -2243,16 +2360,25 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(Random(1,7))
         --LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
+        local multiplier
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
+        LOG('Upgrade Mode is  '..self.UpgradeMode)
+        if self.CheatEnabled then
+            multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        else
+            multiplier = 1
+        end
 
         local gameTime = GetGameTimeSeconds()
         --LOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
-        if gameTime > 600 and self.UpgradeMode == 'Caution' then
+        if self.EnemyIntel.EnemyCount < 2 and gameTime < (240 / multiplier) then
+            self.UpgradeMode = 'Caution'
+        elseif gameTime > (240 / multiplier) and self.UpgradeMode == 'Caution' then
             --LOG('Setting UpgradeMode to Normal')
             self.UpgradeMode = 'Normal'
-            self.UpgradeIssuedLimit = 2
-        elseif gameTime > 360 and self.UpgradeIssuedLimit == 1 then
+            self.UpgradeIssuedLimit = 1
+        elseif gameTime > (240 / multiplier) and self.UpgradeIssuedLimit == 1 and self.UpgradeMode == 'Aggresive' then
             self.UpgradeIssuedLimit = self.UpgradeIssuedLimit + 1
         end
         self.EnemyIntel.EnemyThreatLocations = {}
@@ -2480,7 +2606,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if not ArmyIsCivilian(unitIndex) then
                             if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                                 --LOG('Inserting Enemy Energy Structure '..unit.UnitId)
-                                RNGINSERT(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                                RNGINSERT(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
                                 --LOG('Inserting Enemy Defensive Structure '..unit.UnitId)
                                 RNGINSERT(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
@@ -2509,8 +2635,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-                LOG('Unit has an economic value of '..unit.Value)
+                --LOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Unit has an economic value of '..unit.Value)
             end
             self.EnemyIntel.DirectorData.Energy = energyUnits
         end
@@ -2586,8 +2712,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         unit.Land = threat.Threat
                     end
                 end
-                LOG('Enemy Factory HQ Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-                LOG('Unit has an economic value of '..unit.Value)
+                --LOG('Enemy Factory HQ Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+                --LOG('Unit has an economic value of '..unit.Value)
             end
             self.EnemyIntel.DirectorData.Factory = factoryUnits
         end
@@ -2696,7 +2822,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if potentialTarget and not potentialTarget.Dead then
-            LOG('Target being returned is '..potentialTarget.UnitId)
+            --LOG('Target being returned is '..potentialTarget.UnitId)
             return potentialTarget
         end
         return false
@@ -2919,12 +3045,16 @@ AIBrain = Class(RNGAIBrainClass) {
         return false
     end,]]
 
-    EcoManagerPowerStateCheck = function(self)
-
-        if self.EconomyOverTimeCurrent.EnergyTrendOverTime <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2 then
+    EcoManagerMassStateCheck = function(self)
+        if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200 then
             return true
-        else
-            return false
+        end
+        return false
+    end,
+
+    EcoManagerPowerStateCheck = function(self)
+        if GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2 then
+            return true
         end
         return false
     end,
@@ -3137,15 +3267,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             WaitTicks(20)
         end
-    end,
-
-    EcoManagerMassStateCheck = function(self)
-        if self.EconomyOverTimeCurrent.MassTrendOverTime <= 0.0 and GetEconomyStored(self, 'MASS') <= 200 then
-            return true
-        else
-            return false
-        end
-        return false
     end,
 
     FactoryEcoManagerRNG = function(self)
@@ -4135,7 +4256,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
                     --LOG('Check for position '..repr(expansionNode))
                     if expansionNode then
-                        self.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.GraphArea
+                        self.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.RNGArea
                     else
                         self.BrainIntel.ExpansionWatchTable[k].Zone = false
                     end

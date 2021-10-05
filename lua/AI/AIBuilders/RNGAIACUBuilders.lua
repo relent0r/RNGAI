@@ -40,7 +40,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 0M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -68,7 +68,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 1M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -98,7 +98,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 2M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -129,7 +129,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 3M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -161,7 +161,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 4M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -193,7 +193,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 5+M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -206,6 +206,7 @@ BuilderGroup {
         BuilderData = {
             ScanWait = 40,
             Construction = {
+                MexThreat = true,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
                 MaxDistance = 30,
@@ -223,7 +224,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Close',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -252,7 +253,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Large 0M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -280,7 +281,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Large 1M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -310,7 +311,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Large 2M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -341,7 +342,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Large 3M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -373,7 +374,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Large 4M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -406,7 +407,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Land Standard Large Close 5+M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -419,6 +420,7 @@ BuilderGroup {
         BuilderData = {
             ScanWait = 40,
             Construction = {
+                MexThreat = true,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
                 MaxDistance = 30,
@@ -436,7 +438,7 @@ BuilderGroup {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1000,
+        Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
@@ -470,7 +472,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.05}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
@@ -517,10 +519,11 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncomeRNG',  { 0.7, 8.0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.30}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 0.7, 8.0}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.4, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -570,7 +573,7 @@ BuilderGroup {
         Priority = 1005,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 30, nil, nil, 0, 'AntiSurface', 1}},
-            { EBC, 'LessThanEconEfficiency', { 0.8, 2.0 }},
+            { EBC, 'LessThanEconEfficiencyRNG', { 0.8, 2.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -609,7 +612,6 @@ BuilderGroup {
             Construction = {
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
-                    'T1EnergyProduction',
                     'T1EnergyProduction',
                 },
             }
@@ -769,7 +771,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 0.5, 5.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
@@ -820,7 +822,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 5},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 5.0}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 0.5, 5.0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
@@ -850,7 +852,14 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                RepeatBuild = false,
+                MexThreat = true,
+                Type = 'Mass',
                 MaxDistance = 30,
+                MinDistance = 0,
+                ThreatMin = -500,
+                ThreatMax = 20,
+                ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
                 },
@@ -1050,7 +1059,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,60, categories.STRUCTURE * categories.HYDROCARBON, }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.HYDROCARBON }},
-            { EBC, 'GreaterThanEconIncomeRNG',  { 0.5, 0.0}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 0.5, 0.0}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1064,25 +1073,26 @@ BuilderGroup {
             },
         }
     },
-    --[[
+    
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
         PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 700,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9}},
         },
         BuilderType = 'Any',
         BuilderData = {
             Assist = {
                 AssisteeType = categories.FACTORY,
-                AssistRange = 60,
+                AssistRange = 30,
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = {categories.ALLUNITS},
-                Time = 30,
+                Time = 20,
             },
         }
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Structure',
         PlatoonTemplate = 'CommanderAssistRNG',
@@ -1114,7 +1124,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'HeavyAntiMatterCannon', false }},
                 { MIBC, 'FactionIndex', {1}},
             },
@@ -1133,7 +1143,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'CrysalisBeam', false }},
                 { MIBC, 'FactionIndex', {2}},
             },
@@ -1152,7 +1162,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'CoolingUpgrade', false }},
                 { MIBC, 'FactionIndex', {3}},
             },
@@ -1171,7 +1181,7 @@ BuilderGroup {
                 { MIBC, 'IsIsland', { false } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 65.0}},
+                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
                 { UCBC, 'CmdrHasUpgrade', { 'RateOfFire', false }},
                 { MIBC, 'FactionIndex', {4}},
             },
@@ -1195,7 +1205,7 @@ BuilderGroup {
                 { MIBC, 'GreaterThanGameTimeRNG', { 1500 } },
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
-                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 120.0}},
+                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 120.0}},
                 --{ MIBC, 'FactionIndex', {4}},
             },
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
@@ -1215,7 +1225,7 @@ BuilderGroup {
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
-                { EBC, 'GreaterThanEconIncomeRNG',  { 1.2, 120.0}},
+                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 120.0}},
                 --{ MIBC, 'FactionIndex', {4}},
             },
         PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
