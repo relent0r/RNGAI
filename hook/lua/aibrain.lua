@@ -1461,6 +1461,30 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    UnderEnergyThreshold = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.UnderEnergyThreshold(self)
+        end
+    end,
+
+    OverEnergyThreshold = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.OverEnergyThreshold(self)
+        end
+    end,
+
+    UnderMassThreshold = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.UnderMassThreshold(self)
+        end
+    end,
+
+    OverMassThreshold = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.OverMassThreshold(self)
+        end
+    end,
+
     PickEnemyRNG = function(self)
         while true do
             self:PickEnemyLogicRNG()
@@ -1992,14 +2016,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     --LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     --LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
-                    if self.UpgradeIssued then
-                        LOG('aiBrain.UpgradeIssued is '..self.UpgradeIssued)
-                    end
-                    LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                    LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
-                    local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
-                    LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
+                    --LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+                    --LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    --LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
+                    --local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
+                    --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
                     --LOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
                     --LOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
@@ -2363,7 +2384,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local multiplier
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local startX, startZ = self:GetArmyStartPos()
-        LOG('Upgrade Mode is  '..self.UpgradeMode)
+        --LOG('Upgrade Mode is  '..self.UpgradeMode)
         if self.CheatEnabled then
             multiplier = tonumber(ScenarioInfo.Options.BuildMult)
         else

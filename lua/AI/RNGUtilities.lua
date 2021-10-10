@@ -271,7 +271,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
-        WaitTicks(50)
+        WaitTicks(30)
         --self:SetCustomName('moving back to base')
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
@@ -3365,16 +3365,16 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
     if positionNode.RNGArea then
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == positionNode.RNGArea then
-                LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
+                --LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
-                LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                --LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 then
                     if VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]) < radius * radius then
-                        LOG('Expansion Zone is within radius')
+                        --LOG('Expansion Zone is within radius')
                         if VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
-                            LOG('Expansion is not behind us, we are at '..repr(location))
-                            LOG('Expansion has '..expansion.MassPoints..' mass points')
-                            LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            --LOG('Expansion is not behind us, we are at '..repr(location))
+                            --LOG('Expansion has '..expansion.MassPoints..' mass points')
+                            --LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
                             if expansion.MassPoints > 1 then
                                 if expansion.MassPoints < 3 then
                                     RNGINSERT(options, {Expansion = expansion, Value = 2, Key = k})
@@ -3385,30 +3385,30 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
                                 end
                             end
                         else
-                            LOG('Expansion is beyond the center point')
-                            LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
-                            LOG('Should be less than ')
-                            LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                            --LOG('Expansion is beyond the center point')
+                            --LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            --LOG('Should be less than ')
+                            --LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
                         end
                     end
                 else
-                    LOG('This expansion has already been checked in the last 45 seconds')
+                    --LOG('This expansion has already been checked in the last 45 seconds')
                 end
             end
         end
         local optionCount = 0
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
-                LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
                 RNGINSERT(bestExpansions, withinRadius)
             else
-                LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
             end
         end
     else
         WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
     end
-    LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
+    --LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
     if RNGGETN(bestExpansions) > 0 then
         return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
     end

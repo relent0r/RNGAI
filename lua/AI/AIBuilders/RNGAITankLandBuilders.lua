@@ -1161,7 +1161,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1241,7 +1241,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. 
         Priority = 500,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1420,7 +1420,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1720,7 +1720,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
-        PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         Priority = 610,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1761,7 +1761,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
-        PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

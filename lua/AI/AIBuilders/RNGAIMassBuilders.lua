@@ -306,13 +306,14 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 30, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 30, -500, 2, 0, 'AntiSurface', 1}},
             },
         BuilderType = 'Any',
         BuilderData = {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                MexThreat = true,
                 MaxDistance = 30,
                 ThreatMin = -500,
                 ThreatMax = 30,

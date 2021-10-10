@@ -70,9 +70,30 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
     return false
 end
 
-function NavalBaseLimitRNG(aiBrain)
+function NavalBaseLimitRNG(aiBrain, limit)
     local expBaseCount = aiBrain:GetManagerCount('Naval Area')
-    return CompareBody(expBaseCount, 2, '<')
+    return CompareBody(expBaseCount, limit, '<')
+end
+
+function LessThanOneLandExpansion(aiBrain)
+    -- We are checking if we have any expansions.
+    -- I use this to rush the first expansion on large maps without having engineers trying to make expansions everywhere.
+    local count = 0
+    for k, v in aiBrain.BuilderManagers do
+        if not v.BaseType then
+            continue
+        end
+        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' then
+            count = count + 1
+        end
+        if count > 0 then
+            --LOG('We have 1 expansion')
+            return false
+        end
+        --LOG('Expansion Base Type is '..v.BaseType)
+    end
+    --LOG('We have no expansions')
+    return true
 end
 
 --    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
@@ -865,10 +886,14 @@ function ValidateLateGameBuild(aiBrain)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
     if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
             return false
         end
+        --LOG('Validate late game bulid is returning true even tho an experimental is being built')
+        --LOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+        --LOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
     end
+    --LOG('Validate late game bulid is returning true')
   return true
 end
 

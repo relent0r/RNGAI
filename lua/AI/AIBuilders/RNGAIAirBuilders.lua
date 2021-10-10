@@ -662,28 +662,6 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Energy Attack ACUOnField',
-        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
-        Priority = 910,
-        InstanceCount = 2,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ACUOnField', {true} },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            ACUOnField = true,
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.ENERGYSTORAGE,
-                categories.ENERGYPRODUCTION * categories.TECH3,
-                categories.ENERGYPRODUCTION * categories.TECH2,
-                categories.ENERGYPRODUCTION * categories.TECH1,
-            },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 890,
@@ -1019,28 +997,6 @@ BuilderGroup {
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND,
                 categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAIR Energy Attack ACUOnField',
-        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
-        Priority = 910,
-        InstanceCount = 2,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ACUOnField', {true} },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            ACUOnField = true,
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.ENERGYSTORAGE,
-                categories.ENERGYPRODUCTION * categories.TECH3,
-                categories.ENERGYPRODUCTION * categories.TECH2,
-                categories.ENERGYPRODUCTION * categories.TECH1,
             },
         },
     },

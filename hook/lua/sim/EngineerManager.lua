@@ -194,7 +194,7 @@ EngineerManager = Class(RNGEngineerManager) {
     end,
 
     LowMass = function(self)
-        -- We have a seperate eco manager, this also uses storage for mass where as we use trend.
+        -- See eco manager.
         if not self.Brain.RNG then
             return RNGEngineerManager.LowMass(self)
         end
@@ -202,10 +202,24 @@ EngineerManager = Class(RNGEngineerManager) {
     end,
 
     LowEnergy = function(self)
-        -- We have a seperate eco manager, this also uses storage for mass where as we use something else.
+        -- See eco manager.
         if not self.Brain.RNG then
             return RNGEngineerManager.LowEnergy(self)
         end
         --LOG('LowEnergy Condition detected by default eco manager')
+    end,
+
+    RestoreEnergy = function(self)
+        -- See eco manager.
+        if not self.Brain.RNG then
+            return RNGEngineerManager.RestoreEnergy(self)
+        end
+    end,
+
+    RestoreMass = function(self)
+        -- See eco manager.
+        if not self.Brain.RNG then
+            return RNGEngineerManager.RestoreMass(self)
+        end
     end,
 }
