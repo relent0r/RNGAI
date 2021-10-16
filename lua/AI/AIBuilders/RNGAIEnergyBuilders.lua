@@ -382,7 +382,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T1 Energy Storage Builder OverCharge',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
+        Priority = 850,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},

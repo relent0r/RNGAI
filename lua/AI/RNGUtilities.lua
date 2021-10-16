@@ -3376,13 +3376,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
                             --LOG('Expansion has '..expansion.MassPoints..' mass points')
                             --LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
                             if expansion.MassPoints > 1 then
-                                if expansion.MassPoints < 3 then
-                                    RNGINSERT(options, {Expansion = expansion, Value = 2, Key = k})
-                                elseif expansion.MassPoints < 4 then
-                                    RNGINSERT(options, {Expansion = expansion, Value = 3, Key = k})
-                                elseif expansion.MassPoints > 3 then
-                                    RNGINSERT(options, {Expansion = expansion, Value = 5, Key = k})
-                                end
+                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints, Key = k})
                             end
                         else
                             --LOG('Expansion is beyond the center point')

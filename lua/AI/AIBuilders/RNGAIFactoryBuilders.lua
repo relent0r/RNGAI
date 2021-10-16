@@ -608,7 +608,7 @@ BuilderGroup {
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 2000, 4000 } },
+                { EBC, 'GreaterThanEconStorageCurrentRNG', { 2000, 3990 } },
             },
         BuilderType = 'Any',
     },

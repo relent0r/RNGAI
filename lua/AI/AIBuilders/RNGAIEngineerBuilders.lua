@@ -1130,7 +1130,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         InstanceCount = 12,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, false, categories.SUBCOMMANDER}},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.SUBCOMMANDER}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50}},
@@ -1154,7 +1154,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         InstanceCount = 5,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, false, categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY}},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.50}},
         },
@@ -1195,7 +1195,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, false, categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2 + categories.MASSSTORAGE) }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2 + categories.MASSSTORAGE) }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1217,7 +1217,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, false, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH3 }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 } },
         },
         BuilderType = 'Any',
@@ -1241,7 +1241,7 @@ BuilderGroup {
         InstanceCount = 20,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, false, categories.EXPERIMENTAL * categories.MOBILE }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.50}},
         },
         BuilderType = 'Any',

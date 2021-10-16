@@ -579,11 +579,13 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
         else
             local managers = aiBrain.BuilderManagers[v.Name]
             if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
-                    retPos = v.Position
-                    retName = v.Name
-                    markerCount = v.MassSpotsInRange
+                if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) <= tMax then
+                    if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                        closest = VDist3(pos, v.Position)
+                        retPos = v.Position
+                        retName = v.Name
+                        markerCount = v.MassSpotsInRange
+                    end
                 end
             end
         end

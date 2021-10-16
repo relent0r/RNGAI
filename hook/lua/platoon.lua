@@ -88,7 +88,7 @@ Platoon = Class(RNGAIPlatoon) {
             if target then
                 local targetPos = target:GetPosition()
                 local platoonCount = RNGGETN(GetPlatoonUnits(self))
-                if (threatCountLimit < 5 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') > platoonThreat) and platoonCount < platoonLimit then
+                if (threatCountLimit < 5 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') * 1.3 > platoonThreat) and platoonCount < platoonLimit then
                     --LOG('Target air threat too high')
                     threatCountLimit = threatCountLimit + 1
                     self:MoveToLocation(homeBaseLocation, false)
@@ -273,6 +273,7 @@ Platoon = Class(RNGAIPlatoon) {
         local y
         local smartPos
         local platoonUnits = GetPlatoonUnits(self)
+        local rangeModifier = 0
         local atkPri = {}
         local platoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
 
@@ -560,6 +561,7 @@ Platoon = Class(RNGAIPlatoon) {
                         if acuUnit and platoonThreat > 30 then
                             --LOG('ACU is close and we have decent threat')
                             target = acuUnit
+                            rangeModifier = 5
                         end
                         local targetPosition = target:GetPosition()
                         local microCap = 50
@@ -572,8 +574,8 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                             unitPos = unit:GetPosition()
                             alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                            x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                            y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
+                            x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or MaxPlatoonWeaponRange)
+                            y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or MaxPlatoonWeaponRange)
                             smartPos = { x, GetTerrainHeight( x, y), y }
                             -- check if the move position is new or target has moved
                             if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
@@ -1370,6 +1372,7 @@ Platoon = Class(RNGAIPlatoon) {
         local x
         local y
         local smartPos
+        local rangeModifier = 0
         local platoonThreat = false
         
         if platoonUnits > 0 then
@@ -1627,6 +1630,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             if acuUnit and platoonThreat > 30 then
                                                 --LOG('ACU is close and we have decent threat')
                                                 target = acuUnit
+                                                rangeModifier = 5
                                             end
                                             targetPosition = target:GetPosition()
                                             local microCap = 50
@@ -1639,8 +1643,8 @@ Platoon = Class(RNGAIPlatoon) {
                                                 end
                                                 unitPos = unit:GetPosition()
                                                 alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                                                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
-                                                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange or MaxPlatoonWeaponRange)
+                                                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or MaxPlatoonWeaponRange)
+                                                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or MaxPlatoonWeaponRange)
                                                 smartPos = { x, GetTerrainHeight( x, y), y }
                                                 -- check if the move position is new or target has moved
                                                 if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
@@ -6367,9 +6371,9 @@ Platoon = Class(RNGAIPlatoon) {
             platoon.target=nil
             if self.PlatoonData.Defensive and VDist2Sq(position[1], position[3], platoon.base[1], platoon.base[3]) < 14400 then
                 --LOG('Defensive Posture Targets')
-                platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, platoon.base, 120, 'Enemy')
+                platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL, platoon.base, 120, 'Enemy')
             else
-                platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, position, self.MaxWeaponRange+40, 'Enemy')
+                platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL, position, self.MaxWeaponRange+40, 'Enemy')
             end
             for i,unit in platoon.targetcandidates do
                 if not ViableTargetCheck(unit) then table.remove(platoon.targetcandidates,i) continue end

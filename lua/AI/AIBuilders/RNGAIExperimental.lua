@@ -44,6 +44,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'ValidateLateGameBuild', { }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -74,6 +75,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
@@ -102,6 +104,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'ValidateLateGameBuild', { }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.05 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
@@ -133,6 +136,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -161,6 +165,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -189,6 +194,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlattonDelay', { 'MobileExperimental' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -282,7 +288,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconIncome', { 30.0, 0.0 } },
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG', { 30.0, 0.0 } },
             { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
         },
         BuilderType = 'Any',

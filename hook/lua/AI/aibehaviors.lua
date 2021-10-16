@@ -241,6 +241,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local acuUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.COMMAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
     local distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdrPos)
     local overCharging = false
+    cdr.SnipeMode = false
 
     -- Don't move if upgrading
     if cdr:IsUnitState("Upgrading") or cdr:IsUnitState("Enhancing") then
@@ -345,6 +346,17 @@ function CDROverChargeRNG(aiBrain, cdr)
                             --cdr:SetCustomName('target threat too high break logic')
                             break
                         end
+                    end
+                    if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 5000 then
+                        if not cdr.SnipeMode then
+                            --LOG('Enemy ACU is under HP limit we can potentially draw')
+                            SetAcuSnipeMode(cdr, true)
+                            cdr.SnipeMode = true
+                        end
+                    elseif cdr.SnipeMode then
+                        --LOG('Target is not acu, setting default target priorities')
+                        SetAcuSnipeMode(cdr, false)
+                        cdr.SnipeMode = false
                     end
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         --LOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
@@ -495,9 +507,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Total Enemy Threat '..enemyUnitThreat)
                 --LOG('ACU Cutoff Threat '..acuThreatLimit)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
-                if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
-                    --LOG('Enemy ACU is under HP limit we can draw')
-                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                if ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
                     --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end
@@ -764,6 +774,38 @@ function ACUDetection(platoon)
         end
     else
             WARN('No EnemyIntel ACU Table found, is the game still initializing?')
+    end
+end
+
+function SetAcuSnipeMode(unit, bool)
+    local targetPriorities = {}
+    --LOG('Set ACU weapon priorities.')
+    if bool then
+       targetPriorities = {
+                categories.COMMAND,
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.MOBILE * categories.TECH1,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --LOG('Setting to snipe mode')
+    else
+       targetPriorities = {
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.MOBILE * categories.TECH1,
+                categories.COMMAND,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --LOG('Setting to default weapon mode')
+    end
+    for i = 1, unit:GetWeaponCount() do
+        local wep = unit:GetWeapon(i)
+        wep:SetWeaponPriorities(targetPriorities)
     end
 end
 

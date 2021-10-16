@@ -359,9 +359,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=15,
+                            scout=20,
                             interceptor=60,
-                            bomber=25,
+                            bomber=20,
                             total=0
                         },
                         T2 = {
@@ -423,9 +423,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=15,
+                            scout=20,
                             interceptor=60,
-                            bomber=25,
+                            bomber=20,
                             total=0
                         },
                         T2 = {
@@ -489,10 +489,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=11,
+                            scout=15,
                             interceptor=55,
-                            bomber=22,
-                            gunship=12,
+                            bomber=20,
+                            gunship=10,
                             total=0
                         },
                         T2 = {
@@ -553,9 +553,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=15,
+                            scout=20,
                             interceptor=60,
-                            bomber=25,
+                            bomber=20,
                             total=0
                         },
                         T2 = {
@@ -1047,72 +1047,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
     end,
-    --[[
-    EconomyMonitorRNG = function(self)
-        -- build "eco trend over time" table
-        for i = 1, self.EconomyTicksMonitor do
-            self.EconomyData[i] = { EnergyIncome=0, EnergyRequested=0, MassIncome=0, MassRequested=0 }
-        end
-        -- make counters local (they are not used anywhere else)
-        local EconomyTicksMonitor = self.EconomyTicksMonitor
-        local EconomyCurrentTick = self.EconomyCurrentTick
-        -- loop until the AI is dead
-        while self.Result ~= "defeat" do
-            self.EconomyData[EconomyCurrentTick].EnergyIncome = GetEconomyIncome(self, 'ENERGY')
-            self.EconomyData[EconomyCurrentTick].MassIncome = GetEconomyIncome(self, 'MASS')
-            self.EconomyData[EconomyCurrentTick].EnergyRequested = GetEconomyRequested(self, 'ENERGY')
-            self.EconomyData[EconomyCurrentTick].MassRequested = GetEconomyRequested(self, 'MASS')
-            self.EconomyData[EconomyCurrentTick].EnergyTrend = GetEconomyTrend(self, 'ENERGY')
-            self.EconomyData[EconomyCurrentTick].MassTrend = GetEconomyTrend(self, 'MASS')
-            -- store eco trend for the last 50 ticks (5 seconds)
-            EconomyCurrentTick = EconomyCurrentTick + 1
-            if EconomyCurrentTick > EconomyTicksMonitor then
-                EconomyCurrentTick = 1
-            end
-            WaitTicks(2)
-        end
-    end,
-
-    EconomyOverTimeRNG = function(self)
-        if not self.EconomyMonitorThread then
-            WARN('RNGAI : Error EconomyMonitorThread not running')
-            return
-        end
-        while self.Result ~= "defeat" do
-            local eIncome = 0
-            local mIncome = 0
-            local eRequested = 0
-            local mRequested = 0
-            local eTrend = 0
-            local mTrend = 0
-            local num = 0
-            for k, v in self.EconomyData do
-                num = k
-                eIncome = eIncome + v.EnergyIncome
-                mIncome = mIncome + v.MassIncome
-                eRequested = eRequested + v.EnergyRequested
-                mRequested = mRequested + v.MassRequested
-                
-                if v.EnergyTrend then
-                    eTrend = eTrend + v.EnergyTrend
-                end
-                if v.EnergyTrend then
-                    mTrend = mTrend + v.MassTrend
-                end
-            end
-
-            self.EconomyOverTimeCurrent.EnergyIncome = eIncome / num
-            self.EconomyOverTimeCurrent.MassIncome = mIncome / num
-            self.EconomyOverTimeCurrent.EnergyRequested = eRequested / num
-            self.EconomyOverTimeCurrent.MassRequested = mRequested / num
-            self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime = math.min(eIncome / eRequested, 2)
-            self.EconomyOverTimeCurrent.MassEfficiencyOverTime = math.min(mIncome / mRequested, 2)
-            self.EconomyOverTimeCurrent.EnergyTrendOverTime = eTrend / num
-            self.EconomyOverTimeCurrent.MassTrendOverTime = mTrend / num
-            WaitTicks(20)
-        end
-    end,]]
-
     
     CalculateMassMarkersRNG = function(self)
         local MassMarker = {}

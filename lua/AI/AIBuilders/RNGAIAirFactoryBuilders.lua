@@ -19,7 +19,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Scout',
         PlatoonTemplate = 'T1AirScout',
-        Priority = 749, -- After second engie group
+        Priority = 750, -- After second engie group
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
