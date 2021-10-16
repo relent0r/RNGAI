@@ -88,7 +88,7 @@ BuilderGroup {
         Priority = 200,
         BuilderConditions = {
 
-            { EBC, 'GreaterThanEconIncomeRNG',  { 2.8, 30}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 1.0 }},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { MIBC, 'GreaterThanGameTimeRNG', { 1500 } },
@@ -105,7 +105,7 @@ BuilderGroup {
         BuilderConditions = {
             {UCBC, 'HaveUnitRatio', {0.80, categories.MASSEXTRACTION * categories.TECH1, '<=', categories.MASSEXTRACTION * categories.TECH2}},
 
-            { EBC, 'GreaterThanEconIncomeRNG',  { 2.8, 30}},
+            { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 2.8, 30}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.MASSEXTRACTION } },

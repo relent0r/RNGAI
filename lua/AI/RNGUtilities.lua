@@ -46,6 +46,8 @@ Valid Threat Options:
             Economy
             Unknown
     
+            It should be noted that calculateplatoonthreat does not use imap values but looks to perform a string search through the blueprints
+            of the threat types. e.g there is no antisurface, but there is a surface. If you use a non valid threat type you will get overall.
         self:SetUpAttackVectorsToArmy(categories.STRUCTURE - (categories.MASSEXTRACTION))
         --LOG('Attack Vectors'..repr(self:GetAttackVectors()))
 
@@ -269,7 +271,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
-        WaitTicks(50)
+        WaitTicks(30)
         --self:SetCustomName('moving back to base')
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
@@ -629,6 +631,22 @@ function LerpyRotate(vec1, vec2, distance)
     return {x,y,z}
 end
 
+-- This is softles, I was curious to see what it looked like compared to lerpy. Used in scouts avoiding enemy tanks.
+function AvoidLocation(pos,target,dist)
+    if not target then
+        return pos
+    elseif not pos then
+        return target
+    end
+    local delta = VDiff(target,pos)
+    local norm = math.max(VDist2(delta[1],delta[3],0,0),1)
+    local x = pos[1]+dist*delta[1]/norm
+    local z = pos[3]+dist*delta[3]/norm
+    x = math.min(ScenarioInfo.size[1]-5,math.max(5,x))
+    z = math.min(ScenarioInfo.size[2]-5,math.max(5,z))
+    return {x,GetSurfaceHeight(x,z),z}
+end
+
 function CheckCustomPlatoons(aiBrain)
     if not aiBrain.StructurePool then
         --LOG('* AI-RNG: Creating Structure Pool Platoon')
@@ -891,7 +909,7 @@ function MarkTacticalMassLocations(aiBrain)
     'Weather Generator',]]
 
     local massGroups = aiBrain.TacticalMonitor.TacticalMassLocations
-    local expansionMarkers = ScenarioUtils.GetMarkers()
+    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local markerList = {}
     --LOG('Pre Sorted MassGroups'..repr(massGroups))
     if massGroups then
@@ -1196,6 +1214,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
                 return retUnit
             end
         end
+        coroutine.yield(1)
     end
     return false
 end
@@ -1295,6 +1314,8 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     if enemyBrain then
         enemyIndex = enemyBrain:GetArmyIndex()
     end
+    local acuPresent = false
+    local acuUnit = false
     local RangeList = {
         [1] = 10,
         [2] = maxRange,
@@ -1332,6 +1353,10 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 EnemyStrength = 0
                 -- check if we have a special player as enemy
                 if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
+                if EntityCategoryContains(categories.COMMAND, Target) then
+                    acuPresent = true
+                    acuUnit = Target
+                end
                 -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
                 if not Target.Dead and not Target.CaptureInProgress and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
                     -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
@@ -1354,14 +1379,14 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --LOG('Target Found in target aquisition function')
-                return TargetUnit
+                return TargetUnit, acuPresent, acuUnit
             end
-           coroutine.yield(10)
+           coroutine.yield(5)
         end
         coroutine.yield(1)
     end
     --LOG('NO Target Found in target aquisition function')
-    return TargetUnit
+    return TargetUnit, acuPresent, acuUnit
 end
 
 function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, assisteeCategory)
@@ -1571,7 +1596,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 		if not Orient then
 			-- tracks if we used threat to determine Orientation
 			local Direction = false
-			local threats = aiBrain:GetThreatsAroundPosition( location, 32, true, 'Economy' )
+			local threats = aiBrain:GetThreatsAroundPosition( location, 16, true, 'Economy' )
 			RNGSORT( threats, function(a,b) return VDist2(a[1],a[2],location[1],location[3]) + a[3] < VDist2(b[1],b[2],location[1],location[3]) + b[3] end )
 			for _,v in threats do
 				Direction = GetDirectionInDegrees( {v[1],location[2],v[2]}, location )
@@ -2410,9 +2435,11 @@ function DisplayMarkerAdjacency(aiBrain)
     aiBrain.RNGAreas={}
     aiBrain.armyspots={}
     aiBrain.expandspots={}
+    aiBrain.masspoints = {}
     for k,marker in expansionMarkers do
         local node=false
         local expand=false
+        local mass=false
         --LOG(repr(k)..' marker type is '..repr(marker.type))
         for i, v in STR_GetTokens(marker.type,' ') do
             if v=='Node' then
@@ -2423,6 +2450,10 @@ function DisplayMarkerAdjacency(aiBrain)
                 expand=true
                 break
             end
+            if v=='Mass' then
+                mass=true
+                break
+            end
         end
         if node and not marker.RNGArea then
             aiBrain.RNGAreas[k]={}
@@ -2431,7 +2462,10 @@ function DisplayMarkerAdjacency(aiBrain)
         if expand then
             table.insert(aiBrain.expandspots,{marker,k})
         end
-        if not node and not expand then
+        if mass then
+            table.insert(aiBrain.masspoints,{marker,k})
+        end
+        if not node and not expand and not mass then
             for _,v in STR_GetTokens(k,'_') do
                 if v=='ARMY' then
                     table.insert(aiBrain.armyspots,{marker,k})
@@ -2491,6 +2525,13 @@ function DisplayMarkerAdjacency(aiBrain)
             table.remove(tablecolors,randy)
         end
     end
+    local massPointCount = 0
+    for _, mass in aiBrain.masspoints do
+        massPointCount = massPointCount + 1
+        local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(mass[1].position,25,'Land').name]
+        aiBrain.renderthreadtracker=ForkThread(DoMassPointInfect,aiBrain,closestpath,mass[2])
+    end
+    aiBrain.BrainIntel.MassMarker = massPointCount
     while aiBrain.renderthreadtracker do
         WaitTicks(2)
     end
@@ -2498,6 +2539,9 @@ function DisplayMarkerAdjacency(aiBrain)
     --for k,v in aiBrain.RNGAreas do
     --    LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
+    if aiBrain.GraphZones.FirstRun then
+        aiBrain.GraphZones.FirstRun = false
+    end
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
     marker.RNGArea=graphname
@@ -2616,6 +2660,11 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     for k,v in marker.expanddists do
         if not marker.bestexpand or marker.expanddists[marker.bestexpand]>v then
             marker.bestexpand=k
+            -- Important. Extension to chps logic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
+            if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea then
+                Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea = marker.RNGArea
+                --LOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
+            end
         end
     end
     WaitTicks(1)
@@ -2623,6 +2672,22 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
         aiBrain.renderthreadtracker=nil
     end
 end
+
+function DoMassPointInfect(aiBrain,marker,masspoint)
+    aiBrain.renderthreadtracker=CurrentThread()
+    WaitTicks(1)
+    --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
+    if not marker then return end
+    if not Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea then
+        Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea = marker.RNGArea
+        --LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
+    end
+    WaitTicks(1)
+    if aiBrain.renderthreadtracker==CurrentThread() then
+        aiBrain.renderthreadtracker=nil
+    end
+end
+
 
 GrabRandomDistinctColor = function(num)
     local output=GenerateDistinctColorTable(num)
@@ -2753,10 +2818,10 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     if v.PlatoonAssigned then
                         priority = priority - 20
                     end
-                    if v.MassPoints >= 4 then
-                        priority = priority + 15
+                    if v.MassPoints >= 3 then
+                        priority = priority + 50
                     elseif v.MassPoints >= 2 then
-                        priority = priority + 5
+                        priority = priority + 20
                     end
                     if v.Commander > 0 then
                         acuPresent = true
@@ -3002,7 +3067,7 @@ function CalculateMassValue(expansionMarkers)
     for k, v in expansionMarkers do
         local masscount = 0
         for k2, v2 in MassMarker do
-            if VDist2Sq(v.Position[1], v.Position[3], v2.Position[1], v2.Position[3]) > 900 then
+            if VDist2Sq(v.Position[1], v.Position[3], v2.Position[1], v2.Position[3]) > 6400 then
                 continue
             end
             masscount = masscount + 1
@@ -3048,9 +3113,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if not startPosUsed then
                     if v.MassSpotsInRange then
                         massPointValidated = true
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false})
                     else
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false, Zone = false})
                     end
                 end
             end
@@ -3080,25 +3145,85 @@ RenderBrainIntelRNG = function(aiBrain)
     end
 end
 
-QueryExpansionWatchTable = function(aiBrain, platoon)
-
-    for _, v in aiBrain.BrainIntel.ExpansionWatchTable do
-        if v.Land > 0 and PlatoonAssigned == false then
-            --Do stuff here
-
-        end
-    end
-
-
-end
-
-function MexUpgradeManagerRNG(aiBrain)
+--[[function MexUpgradeManagerRNG(aiBrain)
     local homebasex,homebasey = aiBrain:GetArmyStartPos()
     local VDist3Sq = VDist3Sq
     local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
     local ratio=0.35
     while not aiBrain.cmanager.categoryspend or GetGameTimeSeconds()<250 do
         WaitSeconds(10)
+    end
+    while not aiBrain.defeat do
+        local mexes1 = aiBrain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH3, true, false)
+        local time=GetGameTimeSeconds()
+        --if aiBrain.EcoManagerPowerStateCheck(aiBrain) then
+        --    WaitSeconds(4)
+        --    continue
+        --end
+        local currentupgradecost=0
+        local mexes={}
+        for i,v in mexes1 do
+            --if not v.UCost then
+            if v:IsUnitState('Upgrading') and v.UCost then currentupgradecost=currentupgradecost+v.UCost table.remove(mexes,i) continue end
+            local spende=GetConsumptionPerSecondEnergy(v)
+            local producem=GetProductionPerSecondMass(v)
+            local unit=v:GetBlueprint()
+            if spende<unit.Economy.MaintenanceConsumptionPerSecondEnergy and spende>0 then
+                v.UEmult=spende/unit.Economy.MaintenanceConsumptionPerSecondEnergy
+            else
+                v.UEmult=1
+            end
+            if producem>unit.Economy.ProductionPerSecondMass then
+                v.UMmult=producem/unit.Economy.ProductionPerSecondMass
+            else
+                v.UMmult=1
+            end
+            local uunit=aiBrain:GetUnitBlueprint(unit.General.UpgradesTo)
+            local mcost=uunit.Economy.BuildCostMass/uunit.Economy.BuildTime*unit.Economy.BuildRate
+            local ecost=uunit.Economy.BuildCostEnergy/uunit.Economy.BuildTime*unit.Economy.BuildRate
+            v.UCost=mcost
+            v.UECost=ecost
+            v.TMCost=uunit.Economy.BuildCostMass
+            v.Uupgrade=unit.General.UpgradesTo
+        --end
+            if not v.UAge then
+                v.UAge=time
+            end
+            v.TAge=1/(1+math.min(120,time-v.UAge)/120)
+            table.insert(mexes,v)
+        end
+        --if 10>aiBrain.cmanager.income.r.m*ratio then
+        --    WaitSeconds(3)
+        --    continue
+        --end
+        if currentupgradecost<aiBrain.cmanager.income.r.m*ratio then
+            table.sort(mexes,function(a,b) return (1+VDist3Sq(a:GetPosition(),homepos)/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*(1-VDist3Sq(aiBrain.emanager.enemy.Position,a:GetPosition())/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*a.UCost*a.TMCost*a.UECost*a.UEmult*a.TAge/a.UMmult/a.UMmult<(1+VDist3Sq(b:GetPosition(),homepos)/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*(1-VDist3Sq(aiBrain.emanager.enemy.Position,b:GetPosition())/ScenarioInfo.size[2]/ScenarioInfo.size[2]/2)*b.UCost*b.TMCost*b.UECost*b.UEmult*b.TAge/b.UMmult/b.UMmult end)
+            local startval=aiBrain.cmanager.income.r.m*ratio-currentupgradecost
+            --local starte=aiBrain.cmanager.income.r.e*1.3-aiBrain.cmanager.spend.e
+            for _,v in mexes do
+                if startval>0 then
+                    IssueUpgrade({v}, v.Uupgrade)
+                    startval=startval-v.UCost
+                else
+                    break
+                end
+            end
+        end
+        WaitSeconds(4)
+    end
+end]]
+
+function MexUpgradeManagerRNG(aiBrain)
+    local homebasex,homebasey = aiBrain:GetArmyStartPos()
+    local VDist3Sq = VDist3Sq
+    local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
+    local ratio=0.35
+    local currentlyUpgrading = 0
+    while not aiBrain.defeat or GetGameTimeSeconds()<250 do
+        local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
+
+
+        WaitTicks(40)
     end
     while not aiBrain.defeat do
         local mexes1 = aiBrain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH3, true, false)
@@ -3159,3 +3284,145 @@ function MexUpgradeManagerRNG(aiBrain)
         WaitSeconds(4)
     end
 end
+
+function InitialNavalAttackCheck(aiBrain)
+    -- This function will check if there are mass markers that can be hit by frigates. This can trigger faster naval factory builds initially.
+    -- points = number of points around the extractor, doesn't need to have too many.
+    -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
+    -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
+
+    local function drawCirclePoints(points, radius, center)
+        local extractorPoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(extractorPoints, { newX, 0 , newY})
+        end
+        return extractorPoints
+    end
+    local frigateRaidMarkers = {}
+    local markers = AIGetMassMarkerLocations(aiBrain, false, false)
+    if markers then
+        local markerCount = 0
+        local markerCountNotBlocked = 0
+        local markerCountBlocked = 0
+        for _, v in markers do 
+            local checkPoints = drawCirclePoints(6, 26, v.Position)
+            if checkPoints then
+                for _, m in checkPoints do
+                    if PositionInWater(m) then
+                        --LOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
+                        --LOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
+                        --LOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
+                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.35
+                        markerCount = markerCount + 1
+                        if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.Position, 'none') then
+                            --LOG('This marker is not blocked')
+                            markerCountNotBlocked = markerCountNotBlocked + 1
+                            table.insert( frigateRaidMarkers, v )
+                        else
+                            markerCountBlocked = markerCountBlocked + 1
+                        end
+                        break
+                    end
+                end
+            end
+        end
+        --LOG('There are potentially '..markerCount..' markers that are in range for frigates')
+        --LOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+        --LOG('There are '..markerCountBlocked..' markers that ARE blocked')
+        --LOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+        if markerCountNotBlocked > 8 then
+            aiBrain.EnemyIntel.FrigateRaid = true
+            --LOG('Frigate Raid is true')
+            aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
+        end
+    end
+end
+
+function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
+    -- Should be a multipurpose Expansion query that can provide units, acus a place to go
+    if not aiBrain.BrainIntel.ExpansionWatchTable then
+        WARN('No ExpansionWatchTable. Maybe it hasnt been created yet or something is broken')
+        WaitTicks(50)
+        return false
+    end
+    
+
+    local MainPos = aiBrain.BuilderManagers.MAIN.Position
+    if VDist2Sq(location[1], location[3], MainPos[1], MainPos[3]) > 3600 then
+        return false
+    end
+    local positionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(location, radius, movementLayer).name]
+    local centerPoint = aiBrain.MapCenterPoint
+    local mainBaseToCenter = VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3])
+    local bestExpansions = {}
+    local options = {}
+    local currentGameTime = GetGameTimeSeconds()
+
+    if positionNode.RNGArea then
+        for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
+            if expansion.Zone == positionNode.RNGArea then
+                --LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
+                -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
+                --LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 then
+                    if VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]) < radius * radius then
+                        --LOG('Expansion Zone is within radius')
+                        if VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
+                            --LOG('Expansion is not behind us, we are at '..repr(location))
+                            --LOG('Expansion has '..expansion.MassPoints..' mass points')
+                            --LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            if expansion.MassPoints > 1 then
+                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints, Key = k})
+                            end
+                        else
+                            --LOG('Expansion is beyond the center point')
+                            --LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            --LOG('Should be less than ')
+                            --LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                        end
+                    end
+                else
+                    --LOG('This expansion has already been checked in the last 45 seconds')
+                end
+            end
+        end
+        local optionCount = 0
+        for k, withinRadius in options do
+            if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
+                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                RNGINSERT(bestExpansions, withinRadius)
+            else
+                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+            end
+        end
+    else
+        WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
+    end
+    --LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
+    if RNGGETN(bestExpansions) > 0 then
+        return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
+    end
+    return false
+end
+
+--[[
+LOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
+LOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)
+LOG('upgradeID is '..upgradeID)
+if not unit.Dead and (unit.UnitBeingBuilt:GetBlueprint().BlueprintId ~= upgradeID) then
+    if upgradePauseLimit < 5 and (GetEconomyStored(aiBrain, 'MASS') <= 20 or GetEconomyStored(aiBrain, 'ENERGY') <= 200) then
+        LOG('Extractor upgrade economy low')
+        upgradePauseLimit = upgradePauseLimit + 1
+        if not unit:IsPaused() then
+            LOG('Extractor Paused')
+            unit:SetPaused( true )
+        end
+    elseif unit:IsPaused() then
+        LOG('Extractor UnPaused')
+        unit:SetPaused( false )
+    end
+end]]

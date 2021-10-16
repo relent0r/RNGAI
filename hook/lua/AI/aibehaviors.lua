@@ -241,6 +241,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local acuUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.COMMAND - categories.SCOUT, cdrPos, (maxRadius), 'Enemy')
     local distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdrPos)
     local overCharging = false
+    cdr.SnipeMode = false
 
     -- Don't move if upgrading
     if cdr:IsUnitState("Upgrading") or cdr:IsUnitState("Enhancing") then
@@ -345,6 +346,17 @@ function CDROverChargeRNG(aiBrain, cdr)
                             --cdr:SetCustomName('target threat too high break logic')
                             break
                         end
+                    end
+                    if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 5000 then
+                        if not cdr.SnipeMode then
+                            --LOG('Enemy ACU is under HP limit we can potentially draw')
+                            SetAcuSnipeMode(cdr, true)
+                            cdr.SnipeMode = true
+                        end
+                    elseif cdr.SnipeMode then
+                        --LOG('Target is not acu, setting default target priorities')
+                        SetAcuSnipeMode(cdr, false)
+                        cdr.SnipeMode = false
                     end
                     if aiBrain:GetEconomyStored('ENERGY') >= overCharge.EnergyRequired and target and not target.Dead then
                         --LOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..overCharge.EnergyRequired)
@@ -495,9 +507,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --LOG('Total Enemy Threat '..enemyUnitThreat)
                 --LOG('ACU Cutoff Threat '..acuThreatLimit)
                 --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
-                if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 4000 then
-                    --LOG('Enemy ACU is under HP limit we can draw')
-                elseif ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
+                if ((enemyUnitThreat or acuIMAPThreat) > acuThreatLimit * cdr:GetHealthPercent()) and (Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()) > 40) then
                     --LOG('* AI-RNG: Enemy unit threat too high cease fighting, unitThreat :'..enemyUnitThreat)
                     continueFighting = false
                 end
@@ -767,6 +777,38 @@ function ACUDetection(platoon)
     end
 end
 
+function SetAcuSnipeMode(unit, bool)
+    local targetPriorities = {}
+    --LOG('Set ACU weapon priorities.')
+    if bool then
+       targetPriorities = {
+                categories.COMMAND,
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.MOBILE * categories.TECH1,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --LOG('Setting to snipe mode')
+    else
+       targetPriorities = {
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.MOBILE * categories.TECH1,
+                categories.COMMAND,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --LOG('Setting to default weapon mode')
+    end
+    for i = 1, unit:GetWeaponCount() do
+        local wep = unit:GetWeapon(i)
+        wep:SetWeaponPriorities(targetPriorities)
+    end
+end
+
 -- 80% of the below was Sprouto's work
 function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
     --LOG('* AI-RNG: Starting structure thread upgrade for'..aiBrain.Nickname)
@@ -847,7 +889,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (880 / multiplier)
+        ecoTimeOut = (860 / multiplier)
     elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
         ecoTimeOut = (420 / multiplier)
     elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
@@ -883,7 +925,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             --LOG('Eco Bypass is True')
             bypasseco = true
         end
-        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > ( massNeeded * 1.8 ) and GetEconomyStored( aiBrain, 'ENERGY') > energyNeeded ) then
+        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > ( massNeeded * 1.6 ) and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.0 ) then
             upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
             if unitTech == 'TECH1' then
                 extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
@@ -896,10 +938,6 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 WaitTicks(10)
                 continue
             end
-        else
-            --LOG('Not Bypass Eco')
-            --LOG('Mass Storage is : '..GetEconomyStored( aiBrain, 'MASS')..' Storage needed is : '..(massNeeded * .7))
-            --LOG('Energy Storage is : '..GetEconomyStored( aiBrain, 'ENERGY')..' Energy needed is : '..(energyNeeded * .7 ))
         end
 
 
@@ -910,7 +948,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
             WaitTicks(10)
             continue
         end
-        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco) then
+        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco and GetEconomyStored( aiBrain, 'MASS') < (massNeeded * 0.5)) then
             if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
                 --LOG('Too few tech2 extractors to go tech3')
                 ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
@@ -1308,7 +1346,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
             --LOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
-    elseif aiBrain:GetEconomyTrend('MASS')*10 >= drainMass and aiBrain:GetEconomyTrend('ENERGY')*10 >= drainEnergy
+    elseif aiBrain.EconomyOverTimeCurrent.MassTrendOverTime*10 >= (drainMass * 1.2) and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime*10 >= (drainEnergy * 1.2)
     and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
         return true
     end

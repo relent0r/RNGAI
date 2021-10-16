@@ -5,6 +5,9 @@
         Threat Build Conditions
 ]]
 local MAPBASEPOSTITIONSRNG = {}
+local AIUtils = import('/lua/ai/AIUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue, threatType, rings, builder)
     local testRings = rings or 10
@@ -85,6 +88,36 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
                 return true
             elseif (VDist2Sq(start[1], start[3], estartX, estartZ) > radius * radius) and not inrange then
                 return true
+            end
+        end
+    end
+    return false
+end
+
+function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
+    local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
+    if not factoryManager then
+        return false
+    end
+    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
+    local landNode = AIAttackUtils.GetClosestPathNodeInRadiusByLayerRNG(factoryManager.Location, 100, 'Land')
+    if not landNode.RNGArea then
+        WARN('Missing RNGArea for expansion land node or no path markers')
+        return false
+    end
+    if expansionMarkers then
+        --LOG('Initial expansionMarker list is '..repr(expansionMarkers))
+        for k, v in expansionMarkers do
+            if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
+                if v.RNGArea then
+                    if v.RNGArea == landNode.RNGArea then
+                        local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
+                        if threat > 2 then
+                            --LOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
+                            return true
+                        end
+                    end
+                end
             end
         end
     end

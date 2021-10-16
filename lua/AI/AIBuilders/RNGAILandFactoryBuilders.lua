@@ -20,7 +20,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Scout',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 744, -- After second engie group
+        Priority = 755, -- After second engie group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -326,6 +326,60 @@ BuilderGroup {
         BuilderType = 'Land',
         BuilderData = {
             TechLevel = 3
+        },
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI LandBuilder T1 Islands',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Scout Islands',
+        PlatoonTemplate = 'T1LandScout',
+        Priority = 744, -- After second engie group
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Tank Islands',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 748,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { EBC, 'FactorySpendRatioRNG', {'Land', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Artillery Islands',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 747,
+        --PriorityFunction = LandMode,
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { EBC, 'FactorySpendRatioRNG', {'Land', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
+            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
         },
     },
 }

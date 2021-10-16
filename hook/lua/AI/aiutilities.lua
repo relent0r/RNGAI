@@ -25,7 +25,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
             end
         end
     else
-        local markers = ScenarioUtils.GetMarkers()
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
         if markers then
             for k, v in markers do
                 if v.type == markerType then
@@ -125,14 +125,14 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
 
     -- first try to find a path with markers. 
     local result, bestPos
-    local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+    local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination, nil, 300)
     --LOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
         if reason == 'NoGraph' then
             result = true
-        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 200*200 then
+        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 300*300 then
             SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
             if eng.Dead or eng:BeenDestroyed() or IsDestroyed(eng) then
@@ -142,13 +142,14 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             result, bestPos = eng:CanPathTo(destination)
         end 
     end
+    --LOG('EngineerGenerateSafePathToRNG move to next bit')
     local bUsedTransports = false
     -- Increase check to 300 for transports
-    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 200 * 200
+    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300
     and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
         -- If we can't path to our destination, we need, rather than want, transports
         local needTransports = not result and reason ~= 'PathOK'
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 200 * 200 then
+        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300 then
             needTransports = true
         end
 
@@ -174,6 +175,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
         end
         if path then
+            --LOG('We have a path')
             if not whatToBuildM then
                 local cons = eng.PlatoonHandle.PlatoonData.Construction
                 local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
@@ -188,6 +190,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             --LOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
             local pathSize = table.getn(path)
             -- Move to way points (but not to destination... leave that for the final command)
+            --LOG('We are issuing move commands for the path')
             for widx, waypointPath in path do
                 if widx>=3 then
                     local bool,markers=MABC.CanBuildOnMassEng2(aiBrain, waypointPath, 30)
@@ -479,7 +482,7 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
             end
         end
     else
-        local markers = ScenarioUtils.GetMarkers()
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
         if markers then
             for k, v in markers do
                 if v.type == markerType then
@@ -576,11 +579,13 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
         else
             local managers = aiBrain.BuilderManagers[v.Name]
             if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
-                    retPos = v.Position
-                    retName = v.Name
-                    markerCount = v.MassSpotsInRange
+                if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) <= tMax then
+                    if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                        closest = VDist3(pos, v.Position)
+                        retPos = v.Position
+                        retName = v.Name
+                        markerCount = v.MassSpotsInRange
+                    end
                 end
             end
         end

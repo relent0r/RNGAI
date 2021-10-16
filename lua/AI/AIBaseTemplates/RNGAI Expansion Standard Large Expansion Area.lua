@@ -36,9 +36,10 @@ BaseBuilderTemplate {
         
                 -- Land Factory Formers --
                 'RNGAI T1 Upgrade Builders Expansion',
+                'RNGAI TankLandBuilder Islands',
         
                 -- Air Factory Builders --
-                'RNGAI Factory Builder Air',
+                'RNGAI Factory Builder Air Expansion',
         
                 -- Air Unit Builders T1 --
                 'RNGAI ScoutAirBuilder',

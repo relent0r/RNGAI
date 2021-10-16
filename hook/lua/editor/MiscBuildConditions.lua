@@ -302,3 +302,11 @@ function ReclaimPlatoonsActive(aiBrain, numPlatoon)
     --LOG('More than 5 reclaim platoons')
     return false
 end
+
+function FrigateRaidTrue(aiBrain)
+    -- Will check if frigate raiding is enabled
+    if aiBrain.EnemyIntel.FrigateRaid then
+        return true
+    end
+    return false
+end

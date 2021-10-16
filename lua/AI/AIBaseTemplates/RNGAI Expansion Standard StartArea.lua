@@ -28,6 +28,7 @@ BaseBuilderTemplate {
                 'RNGAI ScoutLandBuilder',
                 'RNGAI TankLandBuilder Small',
                 'RNGAI Reaction Tanks',
+                'RNGAI TankLandBuilder Islands',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
@@ -71,7 +72,7 @@ BaseBuilderTemplate {
         
         FactoryCount = {
             Land = 5,
-            Air = 2,
+            Air = 1,
             Sea = 0,
             Gate = 0,
         },

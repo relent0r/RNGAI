@@ -70,12 +70,13 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Air Excess',
         PlatoonTemplate = 'RNGAI AirScoutForm',
         PlatoonAddBehaviors = {'ACUDetection',},
-        InstanceCount = 15,
+        InstanceCount = 20,
         Priority = 890,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            ExpansionPatrol = true,
             ScanWait = 20,
         },
         LocationType = 'LocationType',

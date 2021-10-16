@@ -43,6 +43,14 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, m
     return false
 end
 
+function LessThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio)
+
+    if GetEconomyStoredRatio(aiBrain, 'MASS') < mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') < eStorageRatio then
+        return true
+    end
+    return false
+end
+
 function GreaterThanEconTrendRNG(aiBrain, MassTrend, EnergyTrend)
 
     if GetEconomyTrend(aiBrain, 'MASS') >= MassTrend and GetEconomyTrend(aiBrain, 'ENERGY') >= EnergyTrend then
@@ -143,6 +151,19 @@ function GreaterThanEconEfficiencyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
     return false
 end
 
+function LessThanEconEfficiencyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
+
+    local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
+    local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
+    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    if (MassEfficiencyOverTime <= MassEfficiency and EnergyEfficiencyOverTime <= EnergyEfficiency) then
+        --LOG('LessThanEconEfficiencyOverTime Returned True')
+        return true
+    end
+    --LOG('LessThanEconEfficiencyOverTime Returned False')
+    return false
+end
+
 function GreaterThanEconStorageCurrentRNG(aiBrain, mStorage, eStorage)
 
     if (GetEconomyStored(aiBrain, 'MASS') >= mStorage and GetEconomyStored(aiBrain, 'ENERGY') >= eStorage) then
@@ -197,6 +218,20 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
     --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
     --LOG('Factory massTotal : '..massTotal)
     return true
+end
+
+function GreaterThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
+    if aiBrain.EconomyOverTimeCurrent.MassIncome > massIncome and aiBrain.EconomyOverTimeCurrent.EnergyIncome > energyIncome then
+        return true
+    end
+    return false
+end
+
+function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
+    if aiBrain.EconomyOverTimeCurrent.MassIncome < massIncome and aiBrain.EconomyOverTimeCurrent.EnergyIncome < energyIncome then
+        return true
+    end
+    return false
 end
 
 function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)

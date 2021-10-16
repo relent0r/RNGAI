@@ -26,7 +26,7 @@ BaseBuilderTemplate {
         FactoryCount = {
             Land = 0,
             Air = 0,
-            Sea = 8,
+            Sea = 6,
             Gate = 0,
         },
         EngineerCount = {
@@ -36,9 +36,9 @@ BaseBuilderTemplate {
             SCU = 0,
         },
         MassToFactoryValues = {
-            T1Value = 4,
-            T2Value = 11,
-            T3Value = 19
+            T1Value = 7,
+            T2Value = 18,
+            T3Value = 28
         },
     },
     ExpansionFunction = function(aiBrain, location, markerType)

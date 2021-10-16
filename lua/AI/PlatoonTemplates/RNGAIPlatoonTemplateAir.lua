@@ -45,6 +45,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI BomberAttack T1',
+    Plan = 'StrikeForceAIRNG',
+    GlobalSquads = {
+        { categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1, 1, 1, 'Attack', 'GrowthFormation' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
     Plan = 'StrikeForceAIRNG',
     GlobalSquads = {

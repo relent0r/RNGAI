@@ -64,11 +64,36 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
         return false
     end
     local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
-    if markerTable[1] and VDist3(markerTable[1], engineerManager.Location) < distance then
-        --LOG('I can build on a hydro')
+    if markerTable[1] and VDist2Sq(markerTable[1][1],markerTable[1][3], engineerManager.Location[1],engineerManager.Location[3]) < distance * distance then
         return true
     end
     return false
+end
+
+function NavalBaseLimitRNG(aiBrain, limit)
+    local expBaseCount = aiBrain:GetManagerCount('Naval Area')
+    return CompareBody(expBaseCount, limit, '<')
+end
+
+function LessThanOneLandExpansion(aiBrain)
+    -- We are checking if we have any expansions.
+    -- I use this to rush the first expansion on large maps without having engineers trying to make expansions everywhere.
+    local count = 0
+    for k, v in aiBrain.BuilderManagers do
+        if not v.BaseType then
+            continue
+        end
+        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' then
+            count = count + 1
+        end
+        if count > 0 then
+            --LOG('We have 1 expansion')
+            return false
+        end
+        --LOG('Expansion Base Type is '..v.BaseType)
+    end
+    --LOG('We have no expansions')
+    return true
 end
 
 --    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
@@ -288,6 +313,14 @@ function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadiu
     return false
 end
 
+function ExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    local pos, name = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+    if pos then
+        return true
+    end
+    return false
+end
+
 function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
     local numUnits
     local testCat = category
@@ -472,7 +505,12 @@ function BuildOnlyOnLocationRNG(aiBrain, LocationType, AllowedLocationType)
     return false
 end
 
-function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory)
+function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, raid)
+    if raid then
+        if aiBrain.EnemyIntel.FrigateRaid then
+            return true
+        end
+    end
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --LOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
@@ -848,10 +886,14 @@ function ValidateLateGameBuild(aiBrain)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
     if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
             return false
         end
+        --LOG('Validate late game bulid is returning true even tho an experimental is being built')
+        --LOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+        --LOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
     end
+    --LOG('Validate late game bulid is returning true')
   return true
 end
 
