@@ -125,6 +125,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
@@ -215,6 +216,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT3' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
         },
@@ -313,6 +315,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
         },
         BuilderType = 'Any',

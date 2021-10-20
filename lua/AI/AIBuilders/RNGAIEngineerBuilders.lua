@@ -64,7 +64,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 5.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 5.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -86,7 +86,7 @@ BuilderGroup {
         Priority = 776,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -97,7 +97,7 @@ BuilderGroup {
         Priority = 777,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -365,7 +365,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Structures',
         PlatoonTemplate = 'T1EngineerFinishRNG',
-        Priority = 900,
+        Priority = 990,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 3,
         BuilderConditions = {
@@ -532,7 +532,6 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 100.0 }},
         },
         BuilderType = 'Any',

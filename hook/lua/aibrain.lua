@@ -873,6 +873,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- ACU Support Data
         self.ACUSupport = {}
+        self.ACUSupport.EnemyACUClose = 0
         self.ACUMaxSearchRadius = 0
         self.ACUSupport.Supported = false
         self.ACUSupport.PlatoonCount = 0
@@ -1940,19 +1941,20 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
                 if true then
-                    --local EnergyIncome = GetEconomyIncome(self,'ENERGY')
-                    --local MassIncome = GetEconomyIncome(self,'MASS')
-                    --local EnergyRequested = GetEconomyRequested(self,'ENERGY')
-                    --local MassRequested = GetEconomyRequested(self,'MASS')
-                    --local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
-                    --local MassEfficiency = math.min(MassIncome / MassRequested, 2)
+                    local EnergyIncome = GetEconomyIncome(self,'ENERGY')
+                    local MassIncome = GetEconomyIncome(self,'MASS')
+                    local EnergyRequested = GetEconomyRequested(self,'ENERGY')
+                    local MassRequested = GetEconomyRequested(self,'MASS')
+                    local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
+                    local MassEfficiency = math.min(MassIncome / MassRequested, 2)
                     --LOG('Eco Stats for :'..self.Nickname)
-                    --LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     --LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
-                    --LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
-                    --LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-                    --LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                    --LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
+                    LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
+                    LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+                    LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
+                    LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
+                    LOG('Latest ACU Intel '..repr(self.EnemyIntel.ACU))
                     --local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
                     --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))

@@ -3342,7 +3342,7 @@ function InitialNavalAttackCheck(aiBrain)
     end
 end
 
-function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
+function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, type)
     -- Should be a multipurpose Expansion query that can provide units, acus a place to go
     if not aiBrain.BrainIntel.ExpansionWatchTable then
         WARN('No ExpansionWatchTable. Maybe it hasnt been created yet or something is broken')
@@ -3361,35 +3361,39 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat)
     local bestExpansions = {}
     local options = {}
     local currentGameTime = GetGameTimeSeconds()
-
+    -- Note, the expansions zones are land only. Need to fix this to include amphib zone.
     if positionNode.RNGArea then
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == positionNode.RNGArea then
-                --LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
+                LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
                 --LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
-                if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 then
+                if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
                     if VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]) < radius * radius then
-                        --LOG('Expansion Zone is within radius')
-                        if VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
-                            --LOG('Expansion is not behind us, we are at '..repr(location))
-                            --LOG('Expansion has '..expansion.MassPoints..' mass points')
-                            --LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                        LOG('Expansion Zone is within radius')
+                        if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
+                            LOG('Expansion has '..expansion.MassPoints..' mass points')
+                            LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
                             if expansion.MassPoints > 1 then
+                                if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= expansion.MassPoints then
+                                    LOG('ACU Location has enough masspoints to indicate its already taken')
+                                    continue
+                                end
                                 RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints, Key = k})
                             end
                         else
-                            --LOG('Expansion is beyond the center point')
-                            --LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
-                            --LOG('Should be less than ')
-                            --LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                            LOG('Expansion is beyond the center point')
+                            LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            LOG('Should be less than ')
+                            LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
                         end
                     end
                 else
-                    --LOG('This expansion has already been checked in the last 45 seconds')
+                    LOG('This expansion has already been checked in the last 45 seconds')
                 end
             end
         end
+        LOG('Number of options from first cycle '..table.getn(options))
         local optionCount = 0
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then

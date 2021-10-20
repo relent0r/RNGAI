@@ -7,6 +7,7 @@ local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
+local GetPosition = moho.entity_methods.GetPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
 local SUtils = import('/lua/AI/sorianutilities.lua')
@@ -1130,7 +1131,7 @@ Platoon = Class(RNGAIPlatoon) {
                             WaitTicks(20)
                             if not scout.Dead then
                                 scoutPos = scout:GetPosition()
-                                if VDist2Sq(scoutPos[1], scoutPos[3], targetData.Position[1], targetData.Position[3]) > 14400 then
+                                if VDist2Sq(scoutPos[1], scoutPos[3], targetData.Position[1], targetData.Position[3]) > 3600 then
                                     enemyUnitCheck = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.SCOUT, scoutPos, intelRange, 'Enemy')
                                     if RNGGETN(enemyUnitCheck) > 0 then
                                         for _, v in enemyUnitCheck do
@@ -3323,7 +3324,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     end
-                    if eng.Upgrading or eng.Combat then
+                    if eng.Upgrading or eng.Combat or eng.Active then
                         return
                     end
                     WaitTicks(7)
@@ -3599,7 +3600,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.atkPri = atkPri
 
         if self.MovementLayer == 'Land' and not self.PlatoonData.EarlyRaid then
-            local stageExpansion = RUtils.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10)
+            local stageExpansion = RUtils.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10, 'raid')
             if stageExpansion then
                 --LOG('Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
                 platLoc = GetPlatoonPosition(self) or nil
@@ -5165,7 +5166,7 @@ Platoon = Class(RNGAIPlatoon) {
         local eng = GetPlatoonUnits(self)[1]
         self:EconAssistBodyRNG()
         WaitTicks(10)
-        if eng.Upgrading or eng.Combat then
+        if eng.Upgrading or eng.Combat or eng.Active then
             --LOG('eng.Upgrading is True at start of assist function')
         end
         -- do we assist until the building is finished ?
@@ -5187,13 +5188,13 @@ Platoon = Class(RNGAIPlatoon) {
                     break
                 end
                 -- wait 1.5 seconds until we loop again
-                if eng.Upgrading or eng.Combat then
+                if eng.Upgrading or eng.Combat or eng.Active then
                     --LOG('eng.Upgrading is True inside Assist function for assistuntilfinished')
                 end
                 WaitTicks(30)
             end
         else
-            if eng.Upgrading or eng.Combat then
+            if eng.Upgrading or eng.Combat or eng.Active then
                 --LOG('eng.Upgrading is True inside Assist function for assist time')
             end
             WaitSeconds(self.PlatoonData.Assist.Time or 60)

@@ -602,6 +602,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
@@ -654,6 +655,7 @@ BuilderGroup {
             { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
@@ -683,6 +685,7 @@ BuilderGroup {
             { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
         },
