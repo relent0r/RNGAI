@@ -272,7 +272,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { EBC, 'LessThanMassTrendRNG', { 5.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } }, -- relative income
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
             -- Don't build it if...
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.MASSFABRICATION } },
             -- Respect UnitCap

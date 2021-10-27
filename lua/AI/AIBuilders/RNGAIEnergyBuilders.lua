@@ -60,7 +60,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.90, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 0.1 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
@@ -128,7 +128,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -161,7 +161,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 120.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.00}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
@@ -218,7 +218,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -251,7 +251,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT3' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 500.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 0.5 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.0}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 }},
@@ -286,7 +286,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -387,11 +387,11 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 850,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYSTORAGE }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.85, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.9 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -410,7 +410,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENERGYSTORAGE }},
         },

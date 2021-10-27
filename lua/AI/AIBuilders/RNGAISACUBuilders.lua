@@ -11,7 +11,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.SUBCOMMANDER } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.75}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
@@ -23,7 +23,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.SUBCOMMANDER } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.75}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
@@ -52,7 +52,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.SUBCOMMANDER } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.75}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
@@ -64,7 +64,7 @@ BuilderGroup {
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.SUBCOMMANDER } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.75}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
@@ -76,7 +76,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'SCU' } },
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50}},
         },
         BuilderType = 'Gate',

@@ -802,6 +802,7 @@ AIBrain = Class(RNGAIBrainClass) {
             DefenseSub = 0,
             ACUGunUpgrades = 0,
         }
+        local selfIndex = self:GetArmyIndex()
         for _, v in ArmyBrains do
             self.EnemyIntel.ACU[v:GetArmyIndex()] = {
                 Position = {},
@@ -810,6 +811,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Hp = 0,
                 OnField = false,
                 Gun = false,
+                Ally = IsAlly(selfIndex, v:GetArmyIndex()),
             }
         end
 
@@ -868,6 +870,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
         self.StartReclaimTaken = false
+        self.MapReclaimTable = {}
 
         self.UpgradeMode = 'Normal'
 
@@ -933,6 +936,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.DisplayMarkerAdjacency)
+        self:ForkThread(RUtils.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
         RUtils.InitialNavalAttackCheck(self)
         self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
@@ -1954,7 +1958,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
                     LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
-                    LOG('Latest ACU Intel '..repr(self.EnemyIntel.ACU))
                     --local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
                     --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
@@ -2290,9 +2293,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
 
         if maxmapdimension == 256 then
-            self.BrainIntel.IMAPConfig.OgridRadius = 11.5
-            self.BrainIntel.IMAPConfig.IMAPSize = 16
-            self.BrainIntel.IMAPConfig.Rings = 3
+            self.BrainIntel.IMAPConfig.OgridRadius = 22.5
+            self.BrainIntel.IMAPConfig.IMAPSize = 32
+            self.BrainIntel.IMAPConfig.Rings = 2
         elseif maxmapdimension == 512 then
             self.BrainIntel.IMAPConfig.OgridRadius = 22.5
             self.BrainIntel.IMAPConfig.IMAPSize = 32

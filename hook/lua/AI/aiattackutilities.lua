@@ -240,6 +240,50 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     return finalPath, false, path.totalThreat
 end
 
+function PlatoonGeneratePathToRNG(aiBrain, platoonLayer, start, destination, optMaxMarkerDist, testPathDist)
+    -- if we don't have markers for the platoonLayer, then we can't build a path.
+    if not GetPathGraphs()[platoonLayer] then
+        return false, 'NoGraph'
+    end
+    local location = start
+    optMaxMarkerDist = optMaxMarkerDist or 250
+    local finalPath = {}
+
+    --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
+    if (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist) then
+        RNGINSERT(finalPath, destination)
+        return finalPath
+    end
+
+    --Get the closest path node at the platoon's position
+    local startNode
+
+    startNode = GetClosestPathNodeInRadiusByLayer(location, optMaxMarkerDist, platoonLayer)
+    if not startNode then return false, 'NoStartNode' end
+
+    --Get the matching path node at the destiantion
+    local endNode
+
+    endNode = GetClosestPathNodeInRadiusByGraph(destination, optMaxMarkerDist, startNode.graphName)
+    if not endNode then return false, 'NoEndNode' end
+
+    --Generate the safest path between the start and destination
+    local path
+    path = GeneratePathNoThreatRNG(aiBrain, startNode, endNode, destination, location, platoonLayer)
+
+    if not path then return false, 'NoPath' end
+    -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
+    for i,node in path.path do
+        if i > 1 and i < table.getn(path.path) then
+            RNGINSERT(finalPath, node.position)
+        end
+    end
+
+    RNGINSERT(finalPath, destination)
+
+    return finalPath, false
+end
+
 function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer)
     local VDist2 = VDist2
     threatWeight = threatWeight or 1
@@ -809,7 +853,7 @@ function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
         end
     end
     -- At this point we have not found any path to the destination.
-    -- The path is to dangerous at the moment (or there is no path at all). We will check this again in 30 seconds.
+    -- We will check this again in 30 seconds.
     return false
 end
 

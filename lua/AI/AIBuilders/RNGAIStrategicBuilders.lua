@@ -152,7 +152,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -183,7 +183,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -214,7 +214,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -316,7 +316,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -348,7 +348,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -380,7 +380,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {

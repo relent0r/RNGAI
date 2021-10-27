@@ -26,7 +26,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Scout',
         PlatoonTemplate = 'T1LandScout',
-        Priority = 700, -- After second engie group
+        Priority = 750, -- After second engie group
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},

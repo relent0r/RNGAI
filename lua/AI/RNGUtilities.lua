@@ -74,6 +74,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local engPos = self:GetPosition()
+        local minRec = platoon.PlatoonData.MinimumReclaim
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
             --LOG('Reclaim Function - Starting reclaim is false')
@@ -82,6 +83,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 
                 --WaitTicks(10)
                 local reclaimCount = 0
+                self.CustomReclaim = true
                 aiBrain.StartReclaimTaken = true
                 for k, r in aiBrain.StartReclaimTable do
                     if r.Reclaim and not IsDestroyed(r.Reclaim) then
@@ -126,14 +128,153 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --LOG('Waiting Ticks '..i)
                     WaitTicks(20)
                 end
+                self.CustomReclaim = false
             end
             --self:SetCustomName('StartReclaim logic end')
+        end
+        if platoon.PlatoonData.ReclaimTable then
+            LOG('We are going to lookup the reclaim table for high reclaim positions')
+            if aiBrain.MapReclaimTable then
+                local reclaimOptions = {}
+                local maxReclaimCount = 30
+                local validLocation = false
+                for _, v in aiBrain.MapReclaimTable do
+                    if v.TotalReclaim > 500 then
+                        RNGINSERT(reclaimOptions, {Position = v.Position, TotalReclaim = v.TotalReclaim, Distance=VDist2Sq(engPos[1], engPos[3], v.Position[1], v.Position[3])})
+                    end
+                end
+                table.sort(reclaimOptions, function(a,b) return a.Distance < b.Distance end)
+                for _, v in reclaimOptions do
+                    if platoon.PlatoonData.Early and v.Distance > 14400 then
+                        LOG('Early reclaim and its too far away lets go for something closer')
+                        break
+                    end
+                    if GetThreatAtPosition( aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 2 then
+                        if AIAttackUtils.CanGraphToRNG(engPos, v.Position, 'Amphibious') then
+                            LOG('Lets go to reclaim at '..repr(v))
+                            validLocation = v.Position
+                            break
+                        elseif not platoon.PlatoonData.Early then
+                            LOG('We want to go to this reclaim but cant graph to it, transport time? '..repr(v))
+                            validLocation = v.Position
+                            break
+                        end
+                    end
+                end
+                if validLocation then
+                    LOG('We have a valid reclaim location')
+                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation) then
+                        LOG('We have issued move orders to get to the reclaim location')
+                        if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
+                            return
+                        end
+                        local engStuckCount = 0
+                        local Lastdist
+                        local dist
+                        while not self.Dead and aiBrain:PlatoonExists(platoon) do
+                            engPos = self:GetPosition()
+                            dist = VDist2Sq(engPos[1], engPos[3], validLocation[1], validLocation[3])
+                            if dist < 144 then
+                                LOG('We are at the grid square location, dist is '..dist)
+                                IssueClearCommands({self})
+                                break
+                            end
+                            if Lastdist ~= dist then
+                                engStuckCount = 0
+                                Lastdist = dist
+                            else
+                                engStuckCount = engStuckCount + 1
+                                --LOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                                if engStuckCount > 40 and not self:IsUnitState('Reclaiming') then
+                                    --LOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                                    break
+                                end
+                            end
+                            if self:IsUnitState("Moving") then
+                                if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                                    local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
+                                    if enemyEngineer then
+                                        local enemyEngPos
+                                        for _, unit in enemyEngineer do
+                                            if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                                enemyEngPos = unit:GetPosition()
+                                                if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                                    IssueStop({self})
+                                                    IssueClearCommands({self})
+                                                    IssueReclaim({self}, enemyEngineer[1])
+                                                    break
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            WaitTicks(30)
+                        end
+                        if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
+                            return
+                        end
+                        self.CustomReclaim = true
+                        local x1 = engPos[1] - 40
+                        local x2 = engPos[1] + 40
+                        local z1 = engPos[3] - 40
+                        local z2 = engPos[3] + 40
+                        local rect = Rect(x1, z1, x2, z2)
+                        local reclaimRect = {}
+                        reclaimRect = GetReclaimablesInRect(rect)
+                        if reclaimRect and RNGGETN( reclaimRect ) > 0 then
+                            LOG('Looping through reclaimables')
+                            local reclaimCount = 0
+                            for k,v in reclaimRect do
+                                if not IsProp(v) or self.BadReclaimables[v] then continue end
+                                local rpos = v:GetCachePosition()
+                                -- Start Blacklisted Props
+                                local blacklisted = false
+                                for _, BlackPos in PropBlacklist do
+                                    if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
+                                        blacklisted = true
+                                        break
+                                    end
+                                end
+                                if blacklisted then continue end
+                                -- End Blacklisted Props
+                                if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
+                                    if not self.BadReclaimables[v] then
+                                        IssueReclaim({self}, v)
+                                        reclaimCount = reclaimCount + 1
+                                        if reclaimCount > maxReclaimCount then
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            local idleCounter = 0
+                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                engPos = self:GetPosition()
+                                self:SetCustomName('Engineer in reclaim loop')
+                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                    LOG('We are not reclaiming or moving in the reclaim loop')
+                                    LOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                    idleCounter = idleCounter + 1
+                                    if idleCounter > 15 then
+                                        LOG('idleCounter hit, breaking loop')
+                                        break
+                                    end
+                                end
+                                LOG('We are reclaiming stuff')
+                                WaitTicks(30)
+                            end
+                        end
+                        self:SetCustomName('Engineer out of reclaim loop')
+                        self.CustomReclaim = false
+                    end
+                end
+            end
         end
         local furtherestReclaim = nil
         local closestReclaim = nil
         local closestDistance = 10000
         local furtherestDistance = 0
-        local minRec = platoon.PlatoonData.MinimumReclaim
         local x1 = engPos[1] - initialRange
         local x2 = engPos[1] + initialRange
         local z1 = engPos[3] - initialRange
@@ -658,7 +799,9 @@ function CheckCustomPlatoons(aiBrain)
 end
 
 function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxRange, atkPri, enemyBrain)
-    local position = platoon:GetPlatoonPosition()
+    if not position then
+        position = platoon:GetPlatoonPosition()
+    end
     if not aiBrain or not position or not maxRange or not platoon or not enemyBrain then
         return false
     end
@@ -1086,8 +1229,10 @@ function ExtractorsBeingUpgraded(aiBrain)
     return {TECH1 = tech1ExtNumBuilding, TECH2 = tech2ExtNumBuilding}
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index)
-    local position = platoon:GetPlatoonPosition()
+function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index)
+    if not position then
+        position = platoon:GetPlatoonPosition()
+    end
     local VDist2 = VDist2
     if platoon.PlatoonData.GetTargetsFromBase then
         --LOG('Looking for targets from position '..platoon.PlatoonData.LocationType)
@@ -1219,8 +1364,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri, 
     return false
 end
 
-function AIFindACUTargetInRangeRNG(aiBrain, platoon, squad, maxRange, platoonThreat, index)
-    local position = platoon:GetPlatoonPosition()
+function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, platoonThreat, index)
     local VDist2 = VDist2
     local enemyThreat
     if not aiBrain or not position or not maxRange then
@@ -1387,6 +1531,93 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     end
     --LOG('NO Target Found in target aquisition function')
     return TargetUnit, acuPresent, acuUnit
+end
+
+function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
+    if type(TargetSearchCategory) == 'string' then
+        TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
+    end
+    local enemyIndex = false
+    local VDist2 = VDist2
+    local MyArmyIndex = aiBrain:GetArmyIndex()
+    if enemyBrain then
+        enemyIndex = enemyBrain:GetArmyIndex()
+    end
+    local totalThreat = 0
+    local acuPresent = false
+    local acuUnit = false
+    local RangeList = {
+        [1] = 10,
+        [2] = maxRange,
+        [3] = maxRange + 30,
+    }
+    local TargetUnit = false
+    local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
+    for _, range in RangeList do
+        if not position then
+            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: position is empty')
+            return false
+        end
+        if not range then
+            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: range is empty')
+            return false
+        end
+        if not TargetSearchCategory then
+            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            return false
+        end
+        TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
+        --DrawCircle(position, range, '0000FF')
+        for _, v in TargetSearchCategory do
+            category = v
+            if type(category) == 'string' then
+                category = ParseEntityCategory(category)
+            end
+            distance = maxRange
+            --LOG('* AIFindNearestCategoryTargetInRange: numTargets '..RNGGETN(TargetsInRange)..'  ')
+            for num, Target in TargetsInRange do
+                totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                if Target.Dead or Target:BeenDestroyed() then
+                    continue
+                end
+                TargetPosition = Target:GetPosition()
+                EnemyStrength = 0
+                -- check if we have a special player as enemy
+                if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
+                if EntityCategoryContains(categories.COMMAND, Target) then
+                    acuPresent = true
+                    acuUnit = Target
+                end
+                -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
+                if not Target.Dead and not Target.CaptureInProgress and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
+                    -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
+                    if not IsEnemy( MyArmyIndex, Target:GetAIBrain():GetArmyIndex() ) then continue end
+                    if Target.ReclaimInProgress then
+                        --WARN('* AIFindNearestCategoryTargetInRange: ReclaimInProgress !!! Ignoring the target.')
+                        continue
+                    end
+                    if Target.CaptureInProgress then
+                        --WARN('* AIFindNearestCategoryTargetInRange: CaptureInProgress !!! Ignoring the target.')
+                        continue
+                    end
+                    targetRange = VDist2(position[1],position[3],TargetPosition[1],TargetPosition[3])
+                    -- check if the target is in range of the unit and in range of the base
+                    if targetRange < distance then
+                        TargetUnit = Target
+                        distance = targetRange
+                    end
+                end
+            end
+            if TargetUnit then
+                --LOG('Target Found in target aquisition function')
+                return TargetUnit, acuPresent, acuUnit, totalThreat
+            end
+           coroutine.yield(5)
+        end
+        coroutine.yield(1)
+    end
+    --LOG('NO Target Found in target aquisition function')
+    return TargetUnit, acuPresent, acuUnit, totalThreat
 end
 
 function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, assisteeCategory)
@@ -3411,6 +3642,49 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
     end
     return false
+end
+
+MapReclaimAnalysis = function(aiBrain)
+    -- Loops through map grid squares that roughly match IMAP 
+    local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+    local gridCount
+    if maxmapdimension < 500 then
+        gridCount = 8
+    else
+        gridCount = 16
+    end
+
+    WaitTicks(100)
+    while not aiBrain.defeat do
+        if aiBrain.ReclaimEnabled then
+            local reclaimGrid = {}
+            local reclaimScanArea = aiBrain.BrainIntel.IMAPConfig.IMAPSize
+            local mapSizeX, mapSizeZ = GetMapSize()
+            local gridSizeX = mapSizeX / reclaimScanArea
+            local gridSizeZ = mapSizeZ / reclaimScanArea
+            for gridX = 1, gridCount do
+                for gridZ = 1, gridCount do
+                    local reclaimTotal = 0
+                    local xCenter = ((gridX - 1) * gridSizeX) + (gridX * gridSizeX)
+                    local zCenter = ((gridZ - 1) * gridSizeZ) + (gridZ * gridSizeZ)
+                    local reclaimRaw = GetReclaimablesInRect(xCenter - (reclaimScanArea / 2), zCenter - (reclaimScanArea / 2), xCenter + (reclaimScanArea / 2), zCenter + (reclaimScanArea / 2))
+                    if reclaimRaw and table.getn(reclaimRaw) > 0 then
+                        for k,v in reclaimRaw do
+                            if not IsProp(v) then continue end
+                            if v.MaxMassReclaim and v.MaxMassReclaim > 30 then
+                                reclaimTotal = reclaimTotal + v.MaxMassReclaim
+                            end
+                        end
+                    end
+                    table.insert( reclaimGrid, {Position = {xCenter, GetSurfaceHeight(xCenter, zCenter), zCenter}, TotalReclaim=reclaimTotal} )
+                    WaitTicks(1)
+                end
+            end
+            aiBrain.MapReclaimTable = reclaimGrid
+            LOG('ReclaimGrid is '..repr(reclaimGrid))
+        end
+        WaitTicks(1800)
+    end
 end
 
 --[[

@@ -42,6 +42,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.ENGINEER - categories.INSIGNIFICANTUNIT, '<',categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 14, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -65,6 +66,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 5.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -87,6 +89,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -98,6 +101,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
         },
         BuilderType = 'All',
@@ -134,6 +138,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
         },
         BuilderType = 'All',
     },
@@ -166,6 +171,7 @@ BuilderGroup {
         Priority = 850, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
@@ -175,7 +181,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.30 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.1, 0.8} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
         },
@@ -434,7 +440,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
         },
         BuilderType = 'Any',
@@ -530,7 +536,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
         InstanceCount = 12,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 100.0 }},
         },
@@ -583,7 +589,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.2 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -606,7 +612,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.95, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.2 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -645,7 +651,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
-                { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+                { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
@@ -664,7 +670,7 @@ BuilderGroup {
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
-                { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
+                { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.TECH3 * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
@@ -756,10 +762,13 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanGameTimeSecondsRNG', { 420 } }, -- don't build after 7 minutes
                 { MIBC, 'CheckIfReclaimEnabled', {}},
+                { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
                 
             },
         BuilderData = {
+            Early = true,
+            ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
             MinimumReclaim = 8
@@ -776,10 +785,12 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSecondsRNG', { 380 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
+                { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
             LocationType = 'LocationType',
+            ReclaimTable = true,
             ReclaimTime = 80,
             MinimumReclaim = 15
         },
@@ -880,6 +891,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
             MinimumReclaim = 4
