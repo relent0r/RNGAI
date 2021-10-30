@@ -21,7 +21,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 5.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 8.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
@@ -388,7 +388,6 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.9 }},

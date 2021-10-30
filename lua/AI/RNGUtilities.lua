@@ -83,7 +83,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 
                 --WaitTicks(10)
                 local reclaimCount = 0
-                self.CustomReclaim = true
                 aiBrain.StartReclaimTaken = true
                 for k, r in aiBrain.StartReclaimTable do
                     if r.Reclaim and not IsDestroyed(r.Reclaim) then
@@ -128,7 +127,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --LOG('Waiting Ticks '..i)
                     WaitTicks(20)
                 end
-                self.CustomReclaim = false
             end
             --self:SetCustomName('StartReclaim logic end')
         end
@@ -214,7 +212,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             return
                         end
-                        self.CustomReclaim = true
                         local x1 = engPos[1] - 40
                         local x2 = engPos[1] + 40
                         local z1 = engPos[3] - 40
@@ -261,12 +258,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                         break
                                     end
                                 end
-                                LOG('We are reclaiming stuff')
+                                --LOG('We are reclaiming stuff')
                                 WaitTicks(30)
                             end
                         end
                         self:SetCustomName('Engineer out of reclaim loop')
-                        self.CustomReclaim = false
                     end
                 end
             end
@@ -392,7 +388,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local currentTime = 0
         local idleCount = 0
         while reclaiming do
-            --LOG('* AI-RNG: Engineer is reclaiming')
+            LOG('* AI-RNG: Engineer is reclaiming')
             --self:SetCustomName('reclaim loop start')
             WaitTicks(200)
             currentTime = currentTime + 20
@@ -3044,7 +3040,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         --LOG('Structure Priority is '..priority)
                     end
                     if v.Land > 0 then 
-                        priority = priority + 30
+                        priority = priority + 50
                     end
                     if v.PlatoonAssigned then
                         priority = priority - 20
@@ -3083,8 +3079,36 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
             end
         end
+        if aiBrain.CDRUnit.Active then
+            --[[
+                local minpri=300
+                local dangerpri=500
+                local healthcutoff=5000
+                local dangerfactor = cdr.EnemyThreatCurrent/cdr.FriendlyThreatCurrent
+                Danger factor doesn't quite fit in yet. More work.
+                local healthdanger = minpri + (dangerpri - minpri) * healthcutoff / aiBrain.CDRUnit:GetHealth() * dangerfactor
+            ]]
+            local healthdanger = 2500000 / aiBrain.CDRUnit.Health 
+            LOG('CDR health is '..aiBrain.CDRUnit.Health)
+            LOG('Health Danger is '..healthdanger)
+            local enemyThreat
+            local friendlyThreat
+            if aiBrain.CDRUnit.EnemyThreatCurrent > 0 then
+                enemyThreat = aiBrain.CDRUnit.EnemyThreatCurrent
+            else
+                enemyThreat = 1
+            end
+
+            if aiBrain.CDRUnit.FriendlyThreatCurrent > 0 then
+                friendlyThreat = aiBrain.CDRUnit.FriendlyThreatCurrent
+            else
+                friendlyThreat = 1
+            end
+            LOG('Priority Based on threat would be '..(healthdanger * (enemyThreat / friendlyThreat)))
+            LOG('Instead is it '..healthdanger)
+            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=healthdanger,danger=GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
+        end
         WaitTicks(50)
-        
         --LOG('Priority Points'..repr(aiBrain.prioritypoints))
     end
 end
@@ -3596,11 +3620,12 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     if positionNode.RNGArea then
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == positionNode.RNGArea then
-                LOG('Distance to expansion '..VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]))
+                local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
+                LOG('Distance to expansion '..expansionDistance)
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
                 --LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
-                    if VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3]) < radius * radius then
+                    if expansionDistance < radius * radius then
                         LOG('Expansion Zone is within radius')
                         if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
                             LOG('Expansion has '..expansion.MassPoints..' mass points')
@@ -3610,7 +3635,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                                     LOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
-                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints, Key = k})
+                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints, Key = k, Distance = expansionDistance})
                             end
                         else
                             LOG('Expansion is beyond the center point')
@@ -3626,6 +3651,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         end
         LOG('Number of options from first cycle '..table.getn(options))
         local optionCount = 0
+        
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
                 --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
@@ -3639,7 +3665,40 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     end
     --LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
     if RNGGETN(bestExpansions) > 0 then
-        return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
+        if type == 'acu' then
+            local bestOption = false
+            local secondBestOption = false
+            local bestValue = 9999999999
+            for _, v in options do
+                local alreadySecure = false
+                for k, b in aiBrain.BuilderManagers do
+                    if k == v.Expansion.Name and RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                        LOG('Already a builder manager with factory present, set')
+                        alreadySecure = true
+                        break
+                    end
+                end
+                if alreadySecure then
+                    LOG('Position already secured, ignore and move to next expansion')
+                    continue
+                end
+                local expansionValue = v.Distance * v.Distance / v.Value
+                if expansionValue < bestValue then
+                    secondBestOption = bestOption
+                    bestOption = v
+                    bestValue = expansionValue
+                end
+            end
+            if secondBestOption and bestOption then
+                local acuOptions = { bestOption, secondBestOption }
+                LOG('ACU is having a random expansion returned')
+                return acuOptions[Random(1,2)]
+            end
+            LOG('ACU is having the best expansion returned')
+            return bestOption
+        else
+            return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
+        end
     end
     return false
 end
@@ -3681,7 +3740,7 @@ MapReclaimAnalysis = function(aiBrain)
                 end
             end
             aiBrain.MapReclaimTable = reclaimGrid
-            LOG('ReclaimGrid is '..repr(reclaimGrid))
+            --LOG('ReclaimGrid is '..repr(reclaimGrid))
         end
         WaitTicks(1800)
     end

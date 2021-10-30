@@ -204,9 +204,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     optThreatWeight = optThreatWeight or 1
     local finalPath = {}
 
-    --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    if (aiBrain.Sorian or aiBrain.Duncan) and (VDist2Sq(start[1], start[3], destination[1], destination[3]) <= 10000
-    or (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist)) then
+    if testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist then
         RNGINSERT(finalPath, destination)
         return finalPath
     end

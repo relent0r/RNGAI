@@ -756,7 +756,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Early', -- Try to get that early reclaim
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -778,7 +777,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 900,
         InstanceCount = 4,
@@ -799,7 +797,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 500,
         InstanceCount = 15,
@@ -819,7 +816,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T2 Excess',
         PlatoonTemplate = 'RNGAI T2EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 100,
         InstanceCount = 1,
@@ -838,7 +834,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T3 Excess',
         PlatoonTemplate = 'RNGAI T3EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 100,
         InstanceCount = 1,
         BuilderConditions = {
@@ -882,7 +877,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
         PlatoonTemplate = 'RNGAI T12EngineerReclaimer',
-        PlatoonAIPlan = 'ReclaimAIRNG',
         Priority = 900,
         InstanceCount = 6,
         BuilderConditions = {

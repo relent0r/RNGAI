@@ -1958,6 +1958,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
                     LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
+                    if self.CDRUnit.Caution then
+                        LOG('CDR is in caution mode')
+                    end
                     --local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
                     --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
@@ -3023,7 +3026,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Watches for low power states
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
-                if GetGameTimeSeconds() < 300 then
+                if GetGameTimeSeconds() < 240 then
                     WaitTicks(50)
                     continue
                 end
@@ -4226,6 +4229,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
                         if rawThreat > 0 then
                             --LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                            --LOG('Expansion is '..v.Name)
+                            --LOG('Position is '..repr(v.Position))
                         end
                         self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
                     end

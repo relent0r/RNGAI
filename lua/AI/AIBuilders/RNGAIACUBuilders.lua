@@ -185,6 +185,7 @@ BuilderGroup {
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
+                    'T1EnergyProduction',
                 },
             }
         }
@@ -399,6 +400,7 @@ BuilderGroup {
                     'T1Resource',
                     'T1EnergyProduction',
                     'T1EnergyProduction',
+                    'T1EnergyProduction',
                 },
             }
         }
@@ -568,11 +570,11 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU Mass 30',
+        BuilderName = 'RNGAI ACU Mass 40',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 30, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 40, nil, nil, 0, 'AntiSurface', 1}},
             { EBC, 'LessThanEconEfficiencyRNG', { 0.8, 2.0 }},
         },
         BuilderType = 'Any',
@@ -583,7 +585,7 @@ BuilderGroup {
                 RepeatBuild = false,
                 MexThreat = true,
                 Type = 'Mass',
-                MaxDistance = 30,
+                MaxDistance = 40,
                 MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 20,

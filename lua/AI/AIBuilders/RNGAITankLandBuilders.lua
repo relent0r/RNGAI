@@ -1678,6 +1678,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PriorityFunction = NoSmallFrys,
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1715,12 +1716,12 @@ BuilderGroup {
             },
             DistressRange = 100,
             DistressReactionTime = 8,
-            ThreatSupport = 10,
+            ThreatSupport = 0,
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
-        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 610,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1757,6 +1758,9 @@ BuilderGroup {
                 categories.STRUCTURE,
             },
             },
+            DistressRange = 100,
+            DistressReactionTime = 8,
+            ThreatSupport = 0,
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Large',                              -- Random Builder Name.
