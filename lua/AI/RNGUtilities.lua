@@ -3084,7 +3084,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 local minpri=300
                 local dangerpri=500
                 local healthcutoff=5000
-                local dangerfactor = cdr.EnemyThreatCurrent/cdr.FriendlyThreatCurrent
+                local dangerfactor = cdr.CurrentEnemyThreat/cdr.CurrentFriendlyThreat
                 Danger factor doesn't quite fit in yet. More work.
                 local healthdanger = minpri + (dangerpri - minpri) * healthcutoff / aiBrain.CDRUnit:GetHealth() * dangerfactor
             ]]
@@ -3093,20 +3093,23 @@ TruePlatoonPriorityDirector = function(aiBrain)
             LOG('Health Danger is '..healthdanger)
             local enemyThreat
             local friendlyThreat
-            if aiBrain.CDRUnit.EnemyThreatCurrent > 0 then
-                enemyThreat = aiBrain.CDRUnit.EnemyThreatCurrent
+            if aiBrain.CDRUnit.CurrentEnemyThreat > 0 then
+                enemyThreat = aiBrain.CDRUnit.CurrentEnemyThreat
             else
                 enemyThreat = 1
             end
 
-            if aiBrain.CDRUnit.FriendlyThreatCurrent > 0 then
-                friendlyThreat = aiBrain.CDRUnit.FriendlyThreatCurrent
+            if aiBrain.CDRUnit.CurrentFriendlyThreat > 0 then
+                friendlyThreat = aiBrain.CDRUnit.CurrentFriendlyThreat
             else
                 friendlyThreat = 1
             end
+            LOG('prioritypoint friendly threat is '..friendlyThreat)
+            LOG('prioritypoint enemy threat is '..enemyThreat)
             LOG('Priority Based on threat would be '..(healthdanger * (enemyThreat / friendlyThreat)))
             LOG('Instead is it '..healthdanger)
-            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=healthdanger,danger=GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
+            local acuPriority = healthdanger * (enemyThreat / friendlyThreat)
+            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
         end
         WaitTicks(50)
         --LOG('Priority Points'..repr(aiBrain.prioritypoints))
@@ -3635,7 +3638,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                                     LOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
-                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints, Key = k, Distance = expansionDistance})
+                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints * expansion.MassPoints, Key = k, Distance = expansionDistance})
                             end
                         else
                             LOG('Expansion is beyond the center point')
@@ -3672,7 +3675,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             for _, v in options do
                 local alreadySecure = false
                 for k, b in aiBrain.BuilderManagers do
-                    if k == v.Expansion.Name and RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                    if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
                         LOG('Already a builder manager with factory present, set')
                         alreadySecure = true
                         break

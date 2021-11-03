@@ -10,6 +10,7 @@ local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GiveResource = moho.aibrain_methods.GiveResource
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
@@ -770,6 +771,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
+        self.EnemyIntel.LandPhase = 1
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},
@@ -2111,6 +2113,17 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
                     end
                     WaitTicks(1)
+                    if self.EnemyIntel.LandPhase < 2 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.LAND) > 0 then
+                            LOG('Enemy has moved to T2')
+                            self.EnemyIntel.LandPhase = 2
+                        end
+                    elseif self.EnemyIntel.LandPhase < 3 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * categories.LAND) > 0 then
+                            LOG('Enemy has moved to T3')
+                            self.EnemyIntel.LandPhase = 3
+                        end
+                    end
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
                     for _,v in enemyACU do
                         local factionIndex = enemy:GetFactionIndex()
@@ -3553,7 +3566,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if not v.UnitBeingBuilt then continue end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
-                if RNGGETN(units) == 1 then continue end
+                --if RNGGETN(units) == 1 then continue end
                 if v:IsPaused() then continue end
                 --LOG('pausing AIR')
                 v:SetPaused(true)

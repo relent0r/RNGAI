@@ -139,26 +139,18 @@ function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
     return retUnits
 end
 
-function EnemyHasUnitOfCategoryRNG(aiBrain, category)
+function EnemyLandPhaseRNG(aiBrain, phase)
     local selfIndex = aiBrain:GetArmyIndex()
-    local enemyBrains = {}
 
     --LOG('Starting Threat Check at'..GetGameTick())
-    for index, brain in ArmyBrains do
-        if IsEnemy(selfIndex, brain:GetArmyIndex()) then
-            table.insert(enemyBrains, brain)
-        end
-    end
-    if table.getn(enemyBrains) > 0 then
-        for k, enemy in enemyBrains do
-            local enemyUnits = GetCurrentUnits( enemy, category)
-            if enemyUnits > 0 then
-                return true
-            end
-        end
+    if phase == 2 and aiBrain.EnemyIntel.LandPhase == 2 then
+        --LOG('EnemyLandPhase Condition for 2 is true')
+        return true
+    elseif phase == 3 and aiBrain.EnemyIntel.LandPhase == 3 then
+        --LOG('EnemyLandPhase Condition for 3 is true')
+        return true
     end
     return false
-    --LOG('Completing Threat Check'..GetGameTick())
 end
 
 function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, builderCategory)
