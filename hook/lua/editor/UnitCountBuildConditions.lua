@@ -452,7 +452,6 @@ end
 
 function CheckBuildPlatoonDelayRNG(aiBrain, PlatoonName)
     if aiBrain.DelayEqualBuildPlattons[PlatoonName] and aiBrain.DelayEqualBuildPlattons[PlatoonName] > GetGameTimeSeconds() then
-        --LOG('Platoon Delay is false')
         return false
     end
     return true

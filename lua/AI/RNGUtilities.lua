@@ -1289,9 +1289,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                         if unit:GetAIBrain():GetArmyIndex() == v then
                             if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                 local unitPos = unit:GetPosition()
-                                if not retUnit or VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                                if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                                     retUnit = unit
-                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                                 end
                                 if platoon.MovementLayer == 'Air' and platoonThreat then
                                     enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
@@ -1303,7 +1303,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
                                 if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                                     retUnit = unit
-                                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                                     targetShields = numShields
                                 end
                             end
@@ -1330,9 +1330,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                             end
                         end
                         local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
-                            distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
@@ -1456,6 +1456,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     end
     local acuPresent = false
     local acuUnit = false
+    local totalThreat = 0
     local RangeList = {
         [1] = 10,
         [2] = maxRange,
@@ -1489,6 +1490,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
                 end
+                totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                 TargetPosition = Target:GetPosition()
                 EnemyStrength = 0
                 -- check if we have a special player as enemy
@@ -1519,14 +1521,14 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --LOG('Target Found in target aquisition function')
-                return TargetUnit, acuPresent, acuUnit
+                return TargetUnit, acuPresent, acuUnit, totalThreat
             end
            coroutine.yield(5)
         end
         coroutine.yield(1)
     end
     --LOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit
+    return TargetUnit, acuPresent, acuUnit, totalThreat
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)

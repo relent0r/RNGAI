@@ -73,6 +73,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.CurrentFriendlyThreat = false
     cdr.Phase = false
     cdr.Position = {}
+    cdr.TargetPosition = {}
     cdr.atkPri = {
         categories.COMMAND,
         categories.EXPERIMENTAL,
@@ -220,6 +221,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
                             LOG('Waiting for build to finish')
                             WaitTicks(10)
+                            if cdr.Caution then
+                                break
+                            end
                         end
                         LOG('Build Queue item should be finished '..k)
                         cdr.EngineerBuildQueue[k] = nil
@@ -238,7 +242,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
             local alreadyHaveExpansion = false
             for k, manager in aiBrain.BuilderManagers do
                 LOG('Checking through expansion '..k)
-                if RNGGETN(manager.FactoryManager.FactoryList) > 1 and k ~= 'MAIN' then
+                if RNGGETN(manager.FactoryManager.FactoryList) > 0 and k ~= 'MAIN' then
                     LOG('We already have an expansion with a factory')
                     alreadyHaveExpansion = true
                     break
@@ -317,6 +321,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
                                             LOG('Waiting for build to finish')
                                             WaitTicks(10)
+                                            if cdr.Caution then
+                                                break
+                                            end
                                         end
                                         LOG('Build Queue item should be finished '..k)
                                         cdr.EngineerBuildQueue[k] = nil
@@ -494,10 +501,15 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             IssueClearCommands({cdr})
                             return
                         end
-                        if platoonDistance < 14400 then
+                        if platoonDistance < 22500 then
                             LOG('Retarget movement to platoon position')
                             IssueClearCommands({cdr})
                             IssueMove({cdr}, platoonPosition)
+                        end
+                        if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 14400 then
+                            LOG('EnemyThreat low, cancel retreat')
+                            IssueClearCommands({cdr})
+                            return
                         end
                     end
                 end
@@ -797,6 +809,9 @@ function CDRThreatAssessmentRNG(cdr)
             end
             for k,v in enemyUnits do
                 if v and not v.Dead then
+                    if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, v) then
+                        enemyUnitThreat = enemyUnitThreat + 10
+                    end
                     if EntityCategoryContains(categories.COMMAND, v) then
                         if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
                             enemyUnitThreat = enemyUnitThreat + 25
@@ -820,10 +835,10 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             LOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
-            if enemyUnitThreat * 1.2 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if enemyUnitThreat * 1.1 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 LOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
-            elseif enemyUnitThreat * 1.3 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
+            elseif enemyUnitThreat * 1.2 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 LOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
             end
@@ -882,7 +897,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxRadius * maxRadius then
         LOG('ACU is beyond maxRadius')
-        return CDRRetreatRNG(aiBrain, cdr)
+        return CDRRetreatRNG(aiBrain, cdr, true)
     end
 
     if numUnits > 1 then
@@ -949,8 +964,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local cdrNewPos = {}
-                    aiBrain.BaseMonitor.CDRDistress = targetPos
-                    aiBrain.BaseMonitor.CDRThreatLevel = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
+                    cdr.TargetPosition = targetPos
                     --LOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     LOG('Target Distance is '..targetDistance..' from acu to target')
@@ -1136,7 +1150,6 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.ReturnHome = true
         aiBrain.ACUSupport.TargetPosition = false
         aiBrain.ACUSupport.Supported = false
-        aiBrain.BaseMonitor.CDRDistress = false
         aiBrain.BaseMonitor.CDRThreatLevel = 0
         --LOG('* AI-RNG: ACUSupport.Supported set to false')
     end
@@ -1175,81 +1188,12 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         distSqAway = 4225
     end
 
-    if not cdr.Dead and (not cdr.Active or cdr.Phase > 2) and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) >= distSqAway then
+    if not cdr.Dead and cdr.Phase > 2 and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) >= distSqAway then
         --LOG('CDR further than distSqAway')
         cdr.GoingHome = true
         CDRMoveToPosition(aiBrain, cdr, loc, 2025)
-        --[[local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
-        aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
-        repeat
-            IssueClearCommands({cdr})
-            local acuPos1 = table.copy(cdrPos)
-            --LOG('ACU Pos 1 :'..repr(acuPos1))
-            --LOG('Home location is :'..repr(loc))
-            if not PlatoonExists(aiBrain, plat) then
-                local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
-                aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
-            end
-            cdr:SetCustomName('Moving to home base CDRReturnHomeRNG')
-            cdr.PlatoonHandle:MoveToLocation(loc, false)
-            WaitTicks(40)
-            local acuPos2 = table.copy(cdrPos)
-            local headingVec = {(2 * (10 * acuPos2[1] - acuPos1[1]*9) + loc[1])/3, 0, (2 * (10 * acuPos2[3] - acuPos1[3]*9) + loc[3])/3}
-            local movePosTable = SetArcPoints(headingVec,acuPos2, 15, 3, 8)
-            local indexVar = math.random(1,3)
-            IssueClearCommands({cdr})
-            --LOG('movePos Table '..repr(movePosTable[indexVar]))
-            if movePosTable[indexVar] ~= nil then
-                if not PlatoonExists(aiBrain, plat) then
-                    local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
-                    aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
-                end
-                cdr:SetCustomName('Moving to alt home vector for dodge')
-                cdr.PlatoonHandle:MoveToLocation(movePosTable[indexVar], false)
-            else
-                if not PlatoonExists(aiBrain, plat) then
-                    local plat = aiBrain:MakePlatoon('CDRReturnHome', 'none')
-                    aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'support', 'None')
-                end
-                cdr:SetCustomName('No alt home vector for dodge, move home')
-                cdr.PlatoonHandle:MoveToLocation(loc, false)
-            end
-            WaitTicks(20)
-            if (cdr.HealthPercent > 0.75) and not cdr.GunUpgradeRequired then
-                if (GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND, loc, maxRadius, 'ENEMY') > 0 ) then
-                    local enemyUnits = aiBrain:GetUnitsAroundPoint((categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT - categories.ENGINEER - categories.COMMAND), cdr:GetPosition(), 70, 'Enemy')
-                    local enemyUnitThreat = 0
-                    local bp
-                    for k,v in enemyUnits do
-                        if not v.Dead then
-                            --LOG('Unit Defense is'..repr(v:GetBlueprint().Defense))
-                            --LOG('Unit ID is '..v.UnitId)
-                            --bp = v:GetBlueprint().Defense
-                            bp = ALLBPS[v.UnitId].Defense
-                            --LOG(repr(ALLBPS[v.UnitId].Defense))
-                            if bp.SurfaceThreatLevel ~= nil then
-                                enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
-                                if enemyUnitThreat > cdr.ThreatLimit then
-                                    break
-                                end
-                            end
-                        end
-                    end
-                    --LOG('Total Enemy Threat '..enemyUnitThreat)
-                    --LOG('ACU Cutoff Threat '..cdr.ThreatLimit)
-                    --LOG('Distance from home '..Utilities.XZDistanceTwoVectors(cdr.CDRHome, cdr:GetPosition()))
-                    if (enemyUnitThreat < cdr.ThreatLimit) then
-                        --LOG('* AI-RNG: Enemy unit threat low enough to return to fighting :'..enemyUnitThreat)
-                        cdr.GoingHome = false
-                        IssueStop({cdr})
-                        cdr:SetCustomName('Health is back up lets fight again')
-                        return CDROverChargeRNG(aiBrain, cdr)
-                    end
-                end
-            end
-        until cdr.Dead or VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway or not aiBrain:PlatoonExists(plat)
-        ]]
-        cdr:SetCustomName('We should be at home')
+        LOG('We should be at home')
+        cdr.Active = false
         cdr.GoingHome = false
         IssueClearCommands({cdr})
     end
@@ -1258,10 +1202,6 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.Supported = false
     end
     cdr.GoingHome = false
-    if aiBrain.BaseMonitor.CDRDistress then
-        aiBrain.BaseMonitor.CDRDistress = false
-        aiBrain.BaseMonitor.CDRThreatLevel = 0
-    end
 end
 
 function CDRRetreatRNG(aiBrain, cdr, base)
@@ -1330,11 +1270,13 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 LOG('Base Name '..baseName)
                 LOG('Base Position '..repr(base.Position))
                 LOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-                local baseDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3])
-                if baseDistance > 1600 or baseName == 'MAIN' then
-                    if baseDistance < closestDistance then
-                        closestBase = baseName
-                        closestDistance = baseDistance
+                if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+                    local baseDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3])
+                    if baseDistance > 1600 or baseName == 'MAIN' then
+                        if baseDistance < closestDistance then
+                            closestBase = baseName
+                            closestDistance = baseDistance
+                        end
                     end
                 end
             end
@@ -1942,9 +1884,9 @@ function CDREnhancementsRNG(aiBrain, cdr)
     --LOG('Enhancement Thread run at '..gameTime)
     if aiBrain.BuilderManagers then
         for baseName, base in aiBrain.BuilderManagers do
-            LOG('ACU Enhancement Base Name '..baseName)
-            LOG('ACU Enhancement Base Position '..repr(base.Position))
-            LOG('ACU Enhancement Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
+            --LOG('ACU Enhancement Base Name '..baseName)
+            --LOG('ACU Enhancement Base Position '..repr(base.Position))
+            --LOG('ACU Enhancement Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
             if VDist2Sq(cdrPos[1], cdrPos[3], base.Position[1], base.Position[3]) < distSqAway then
                 inRange = true
                 break

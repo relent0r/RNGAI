@@ -741,7 +741,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 TML = 12,
                 STATIONPODS = 10,
                 ENGINEER = 11,
-                AIR = 6,
                 NAVAL = 7,
                 NUKE = 9,
             }
@@ -1143,11 +1142,10 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     GetStructureVectorsRNG = function(self)
+        -- This will get the closest IMAPposition  based on where the structure is. Though I don't think it works on 5km maps because the imap grid is different.
         local structures = GetListOfUnits(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
-        -- Add all points around location
         local tempGridPoints = {}
         local indexChecker = {}
-
         for k, v in structures do
             if not v.Dead then
                 local pos = AIUtils.GetUnitBaseStructureVector(v)
@@ -1162,7 +1160,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-
         return tempGridPoints
     end,
 
@@ -1192,7 +1189,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGINSERT(self.BaseMonitor.BaseMonitorPoints,
                         {
                             Position = v,
-                            Threat = GetThreatAtPosition(self, v, 0, true, 'Land'),
+                            Threat = GetThreatAtPosition(self, v, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'),
                             Alert = false
                         }
                     )
@@ -1217,7 +1214,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local alertThreat = self.BaseMonitor.AlertLevel
             for k, v in self.BaseMonitor.BaseMonitorPoints do
                 if not v.Alert then
-                    v.Threat = GetThreatAtPosition(self, v.Position, 0, true, 'Land')
+                    v.Threat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                     if v.Threat > alertThreat then
                         v.Alert = true
                         RNGINSERT(self.BaseMonitor.AlertsTable,
@@ -1860,10 +1857,10 @@ AIBrain = Class(RNGAIBrainClass) {
         local highThreat = false
         local distance
         
-        if self.BaseMonitor.CDRDistress and VDist2(self.BaseMonitor.CDRDistress[1], self.BaseMonitor.CDRDistress[3], position[1], position[3]) < radius
-            and self.BaseMonitor.CDRThreatLevel > threshold then
+        if self.CDRUnit.Caution and VDist2(self.CDRUnit.Position[1], self.CDRUnit.Position[3], position[1], position[3]) < radius
+            and self.CDRUnit.CurrentEnemyThreat > threshold then
             -- Commander scared and nearby; help it
-            return self.BaseMonitor.CDRDistress
+            return self.CDRUnit.Position
         end
         if self.BaseMonitor.AlertSounded then
             --LOG('Base Alert Sounded')

@@ -118,11 +118,9 @@ function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEff
         local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
         --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
         if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
-            --LOG('GreaterThanEconEfficiency Returned True')
             return true
         end
     end
-    --LOG('GreaterThanEconEfficiencyCombined Returned False')
     return false
 end
 
@@ -221,6 +219,16 @@ function GreaterThanEconIncomeRNG(aiBrain, mIncome, eIncome)
 
     if (GetEconomyIncome(aiBrain,'MASS') >= mIncome and GetEconomyIncome(aiBrain,'ENERGY') >= eIncome) then
         return true
+    end
+    return false
+end
+
+function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
+
+    if aiBrain.EconomyOverTimeCurrent.MassIncome > mIncome and aiBrain.EconomyOverTimeCurrent.EnergyIncome > eIncome then
+        if (GetEconomyIncome(aiBrain,'MASS') >= mIncome and GetEconomyIncome(aiBrain,'ENERGY') >= eIncome) then
+            return true
+        end
     end
     return false
 end
