@@ -6,6 +6,8 @@ local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local RNGGETN = table.getn
+local RNGINSERT = table.insert
 
 -- Check if less than num in seconds
 function LessThanGameTimeSecondsRNG(aiBrain, num)
@@ -28,7 +30,7 @@ local FactionIndexToCategory = {[1] = categories.UEF, [2] = categories.AEON, [3]
 function CanBuildCategoryRNG(aiBrain,category)
     -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
     local FactionCat = FactionIndexToCategory[aiBrain:GetFactionIndex()] or categories.ALLUNITS
-    local numBuildableUnits = table.getn(EntityCategoryGetUnitList(category * FactionCat)) or -1
+    local numBuildableUnits = RNGGETN(EntityCategoryGetUnitList(category * FactionCat)) or -1
     --LOG('* CanBuildCategory: FactionIndex: ('..repr(aiBrain:GetFactionIndex())..') numBuildableUnits:'..numBuildableUnits..' - '..repr( EntityCategoryGetUnitList(category * FactionCat) ))
     return numBuildableUnits > 0
 end
@@ -87,7 +89,7 @@ function LessThanOneLandExpansion(aiBrain)
             count = count + 1
         end
         if count > 0 then
-            --LOG('We have 1 expansion')
+            --LOG('We have 1 expansion called '..v.BaseType)
             return false
         end
         --LOG('Expansion Base Type is '..v.BaseType)
@@ -133,7 +135,7 @@ function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
     local retUnits = {}
     for _, v in units do
         if not v.Dead and v:GetAIBrain():GetArmyIndex() == index then
-            table.insert(retUnits, v)
+            RNGINSERT(retUnits, v)
         end
     end
     return retUnits
@@ -191,7 +193,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         if v.NumAssistees then
             --LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
         end]]
-        if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
+        if v.NumAssistees and RNGGETN(v:GetGuards()) >= v.NumAssistees then
             continue
         end
         -- skip the unit, if it's not building or upgrading.
@@ -249,7 +251,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         if v.NumAssistees then
             --LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
         end]]
-        if v.NumAssistees and table.getn(v:GetGuards()) >= v.NumAssistees then
+        if v.NumAssistees and RNGGETN(v:GetGuards()) >= v.NumAssistees then
             continue
         end
         -- skip the unit, if it's not building or upgrading.
@@ -268,10 +270,10 @@ end
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindStartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('StartLocationNeedsEngineer is True')
+        --LOG('StartLocationNeedsEngineer is True at pos '..repr(pos)..' for radius '..locationRadius)
         return true
     end
-    --LOG('StartLocationNeedsEngineer is False')
+    --LOG('StartLocationNeedsEngineer is False for radius '..locationRadius)
     return false
 end
 
@@ -322,7 +324,7 @@ function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
     if not idleReq then
         numUnits = aiBrain:GetCurrentUnits(testCat)
     else
-        numUnits = table.getn(aiBrain:GetListOfUnits(testCat, true))
+        numUnits = RNGGETN(aiBrain:GetListOfUnits(testCat, true))
     end
     if numUnits > numReq then
         --LOG('Greater than units with category returned true')
@@ -429,6 +431,39 @@ end
 function EnemyUnitsGreaterAtLocationRadiusRNG(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '>')
 end
+
+function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
+    if aiBrain.BasePerimeterMonitor[locationType] then
+        if type == 'LAND' then
+            if aiBrain.BasePerimeterMonitor[locationType].LandUnits > number then
+                --LOG('Land units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'AIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+                --LOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTISURFACEAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+                --LOG('AntiSurfaceAir units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'NAVAL' then
+            if aiBrain.BasePerimeterMonitor[locationType].NavalUnits > number then
+                --LOG('Naval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'LANDNAVAL' then
+            if aiBrain.BasePerimeterMonitor[locationType].NavalUnits > number or aiBrain.BasePerimeterMonitor[locationType].LandUnits > number then
+                --LOG('LandNaval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 --            { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
 function EnemyUnitsLessAtLocationRadiusRNG(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
@@ -898,6 +933,20 @@ function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
 	end
     
 	return false
+end
+
+function DynamicExpansionAvailableRNG(aiBrain)
+    local expansionCount = 0
+    if aiBrain.BrainIntel.DynamicExpansionPositions and RNGGETN(aiBrain.BrainIntel.DynamicExpansionPositions) > 0 then
+        for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
+            if aiBrain.BuilderManagers[v.Zone] then
+                continue
+            end
+            LOG('DynamicExpansionAvailableRNG is true')
+            return true
+        end
+    end
+    return false
 end
 
 --[[

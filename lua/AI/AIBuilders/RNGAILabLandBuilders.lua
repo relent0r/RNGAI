@@ -44,6 +44,7 @@ BuilderGroup {
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',
+            Avoid        = true,
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 3900,			-- If threat is higher than this, do not attack

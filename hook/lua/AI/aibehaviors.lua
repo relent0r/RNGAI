@@ -264,9 +264,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     for templateName, baseData in BaseBuilderTemplates do
                         local baseValue = baseData.ExpansionFunction(aiBrain, object.dataobject.Position, markerType)
                         table.insert(baseValues, { Base = templateName, Value = baseValue })
-                        SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+                        --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
                         if not highPri or baseValue > highPri then
-                            SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+                            --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
                             highPri = baseValue
                         end
                     end
@@ -478,7 +478,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
         if cdr.Caution then
             LOG('CDR is in caution mode')
         end
-        if retreat then
+        if retreat and not cdr.Dead then
             cdr:SetAutoOvercharge(true)
         end
         for i=1, RNGGETN(path) do
@@ -506,7 +506,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             IssueClearCommands({cdr})
                             IssueMove({cdr}, platoonPosition)
                         end
-                        if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 14400 then
+                        if cdr.CurrentEnemyThreat * 1.3 < cdr.CurrentFriendlyThreat and platoonDistance < 10000 then
                             LOG('EnemyThreat low, cancel retreat')
                             IssueClearCommands({cdr})
                             return
@@ -610,6 +610,9 @@ function CDRExpansionRNG(aiBrain, cdr)
         cdr.Initialized = true
     end
     if cdr.HealthPercent < 0.60 or cdr.Phase == 3 then
+        return
+    end
+    if cdr.Initialized and GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT, cdr.CDRHome, 60, 'Enemy') > 0 then
         return
     end
     local stageExpansion = RUtils.QueryExpansionTable(aiBrain, cdr.Position, 512, 'Land', 10, 'acu')
@@ -872,17 +875,18 @@ function CDROverChargeRNG(aiBrain, cdr)
     if cdr.Health > 5000 and cdr.Phase < 3
         and GetGameTimeSeconds() > 210
         and aiBrain.MapSize <= 10
+        and cdr.Initialized
         then
         maxRadius = 512 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
-    elseif cdr.Health > 5000 and GetGameTimeSeconds() > 260 then
+    elseif cdr.Health > 5000 and GetGameTimeSeconds() > 260 and cdr.Initialized then
         maxRadius = 160 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 60 then 
             maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
-    --LOG('CDR max range is '..maxRadius)
+    LOG('CDR max range is '..maxRadius)
     
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
@@ -1197,6 +1201,9 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         cdr.GoingHome = false
         IssueClearCommands({cdr})
     end
+    if not cdr.Dead and VDist2Sq(cdrPos[1], cdrPos[3], loc[1], loc[3]) <= distSqAway and not aiBrain.BaseMonitor.AlertSounded then
+        cdr.Active = false
+    end
     --LOG('Sometimes the combat platoon gets disbanded, hard to find the reason')
     if aiBrain.ACUSupport.Supported then
         aiBrain.ACUSupport.Supported = false
@@ -1263,7 +1270,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         end
     else
         LOG('No platoon found, trying for base')
-        closestDistance = 160000
+        closestDistance = 1048576
         local closestBase = false
         if aiBrain.BuilderManagers then
             for baseName, base in aiBrain.BuilderManagers do
@@ -1325,9 +1332,9 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
         local category = false
         local runShield = false
         local runPos = false
-        local nmaShield = GetNumUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, cdr:GetPosition(), 100, 'Ally')
-        local nmaPD = GetNumUnitsAroundPoint(aiBrain, categories.DIRECTFIRE * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
-        local nmaAA = GetNumUnitsAroundPoint(aiBrain, categories.ANTIAIR * categories.DEFENSE, cdr:GetPosition(), 100, 'Ally')
+        local nmaShield = GetNumUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, cdr.Position, 100, 'Ally')
+        local nmaPD = GetNumUnitsAroundPoint(aiBrain, categories.DIRECTFIRE * categories.DEFENSE, cdr.Position, 100, 'Ally')
+        local nmaAA = GetNumUnitsAroundPoint(aiBrain, categories.ANTIAIR * categories.DEFENSE, cdr.Position, 100, 'Ally')
 
         if nmaShield > 0 then
             category = categories.SHIELD * categories.STRUCTURE

@@ -100,8 +100,8 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
         return false
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
-    local landNode = AIAttackUtils.GetClosestPathNodeInRadiusByLayerRNG(factoryManager.Location, 100, 'Land')
-    if not landNode.RNGArea then
+    local graphArea = aiBrain.BuilderManagers[locationtype].GraphArea
+    if not graphArea then
         WARN('Missing RNGArea for expansion land node or no path markers')
         return false
     end
@@ -110,11 +110,17 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
         for k, v in expansionMarkers do
             if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
                 if v.RNGArea then
-                    if v.RNGArea == landNode.RNGArea then
+                    if v.RNGArea == graphArea then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
                         if threat > 2 then
-                            --LOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
-                            return true
+                            -- I had to do this because neutral civilians show up as structure threat
+                            if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy') > 0 then
+                                --LOG('Number of enemy structure '..aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy'))
+                                --LOG('StructuresNotMex threat present for base '..locationtype)
+                                --LOG('Expansion position detected is '..repr(v.position))
+                                --LOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
+                                return true
+                            end
                         end
                     end
                 end

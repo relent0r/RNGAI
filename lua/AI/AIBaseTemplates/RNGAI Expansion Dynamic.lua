@@ -1,12 +1,12 @@
 --[[
-    File    :   /lua/AI/AIBaseTemplates/RNGAI Expansion Standard Small.lua
+    File    :   /lua/AI/AIBaseTemplates/RNGAI Expansion Dynamic.lua
     Author  :   relentless
     Summary :
         Expansion Template
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard Aggressive',
+    BaseTemplateName = 'RNGAI Expansion Standard Dynamic',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders Expansion',
@@ -23,7 +23,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder Small Expansions',
+                'RNGAI TankLandBuilder Islands',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
@@ -69,7 +69,7 @@ BaseBuilderTemplate {
         if not aiBrain.RNG then
             return -1
         end
-        if markerType ~= 'Aggressive' then
+        if markerType ~= 'Dynamic' then
             return -1
         end
         

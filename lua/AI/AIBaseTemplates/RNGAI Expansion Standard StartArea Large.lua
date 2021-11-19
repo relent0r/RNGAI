@@ -48,7 +48,7 @@ BaseBuilderTemplate {
                 'RNGAI Land Upgrade Builders Expansions',
         
                 -- Air Factory Builders --
-                'RNGAI Factory Builder Air Large',
+                'RNGAI Factory Builder Air Large Expansion',
 
                 -- Air Factory Formers
                 'RNGAI Air Upgrade Builders Expansion',

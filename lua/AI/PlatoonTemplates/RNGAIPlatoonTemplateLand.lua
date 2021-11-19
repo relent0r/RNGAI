@@ -332,7 +332,7 @@ PlatoonTemplate { Name = 'RNGAIT2MobileStealth',
 PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
     FactionSquads = {
         UEF = {
-            { 'uel0105', 1, 4, 'support', 'None' },     -- Engineer
+            { 'uel0105', 1, 3, 'support', 'None' },     -- Engineer
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
@@ -352,7 +352,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'uel0201', 1, 4, 'Attack', 'none' },		-- Striker Medium Tank
          },
         Aeon = {
-            { 'ual0105', 1, 4, 'support', 'None' },     -- Engineer
+            { 'ual0105', 1, 3, 'support', 'None' },     -- Engineer
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
@@ -371,7 +371,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'ual0201', 1, 4, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
-            { 'url0105', 1, 4, 'support', 'None' },     -- Engineer
+            { 'url0105', 1, 3, 'support', 'None' },     -- Engineer
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
@@ -389,11 +389,11 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
-            { 'xsl0105', 1, 4, 'support', 'None' },     -- Engineer
+            { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
             { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'xsl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'xsl0105', 1, 2, 'support', 'None' },     -- Engineer
+            { 'xsl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
@@ -406,6 +406,25 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild20k',
             { 'xsl0105', 1, 3, 'support', 'None' },     -- Engineer
             { 'xsl0103', 1, 3, 'Artillery', 'none' },	-- Artillery
             { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
+        },
+        Nomads = {
+            { 'xnl0105', 1, 3, 'support', 'None' },     -- Engineer
+            { 'xnl0106', 1, 2, 'Attack', 'none' },		-- Grass Hopper
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 2, 'support', 'None' },     -- Engineer
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0107', 1, 2, 'Attack', 'none' },		-- Tank Destroyer
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0103', 1, 2, 'Guard', 'none' },		-- AA
+            { 'xnl0105', 1, 3, 'support', 'None' },     -- Engineer
+            { 'xnl0107', 1, 2, 'Attack', 'none' },		-- Tank Destroyer
+            { 'xnl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
         },
     }
 }
@@ -491,6 +510,26 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild10k',
             { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
             { 'xsl0101', 1, 3, 'Scout', 'none' },		-- Land Scout
         },
+        Nomads = {
+            { 'xnl0105', 1, 3, 'support', 'None' },     -- Engineer
+            { 'xnl0106', 1, 2, 'Attack', 'none' },		-- Grass Hopper
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0201', 1, 1, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0107', 1, 2, 'Attack', 'none' },		-- Tank Destroyer
+            { 'xnl0103', 1, 2, 'Guard', 'none' },		-- AA
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 3, 'Scout', 'none' },		-- Land Scout
+        },
     }
 }
 
@@ -549,9 +588,9 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
             { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
             { 'url0101', 1, 2, 'Scout', 'none' },		-- Land Scout
-            { 'url0104', 1, 2, 'Guard', 'none' },		-- AA
-            { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
-            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
+            { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
+            { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
+            { 'url0107', 1, 4, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
             { 'xsl0105', 1, 2, 'support', 'None' },     -- Engineer
@@ -570,6 +609,25 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'xsl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 4, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+        },
+        Nomads = {
+            { 'xnl0105', 1, 3, 'support', 'None' },     -- Engineer
+            { 'xnl0106', 1, 2, 'Attack', 'none' },		-- Grass Hopper
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0201', 1, 1, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0107', 1, 2, 'Attack', 'none' },		-- Tank Destroyer
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0103', 1, 2, 'Guard', 'none' },		-- AA
+            { 'xnl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xnl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
+            { 'xnl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xnl0101', 1, 3, 'Scout', 'none' },		-- Land Scout
         },
     }
 }

@@ -430,7 +430,11 @@ function GetPathGraphsRNG()
     if ScenarioInfo.PathGraphsRNG then
         return ScenarioInfo.PathGraphsRNG
     else
-        ScenarioInfo.PathGraphsRNG = {}
+        if ScenarioInfo.MarkersInfectedRNG then
+            ScenarioInfo.PathGraphsRNG = {}
+        else 
+            return false
+        end
     end
 
     local markerGroups = {
@@ -464,6 +468,9 @@ function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
     local bestMarker = false
 
     local graphTable =  GetPathGraphsRNG()[layer]
+    if graphTable == false then
+        return false
+    end
 
     if graphTable then
         for name, graph in graphTable do

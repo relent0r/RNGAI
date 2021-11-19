@@ -2,7 +2,7 @@
 BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval Large',
     Builders = {
-        'RNGAI Engineer Builder Expansion',
+        'RNGAI Engineer Builder Naval Expansion',
         'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
 
@@ -36,9 +36,9 @@ BaseBuilderTemplate {
             SCU = 0,
         },
         MassToFactoryValues = {
-            T1Value = 4,
-            T2Value = 11,
-            T3Value = 19
+            T1Value = 7,
+            T2Value = 19,
+            T3Value = 28
         },
     },
     ExpansionFunction = function(aiBrain, location, markerType)

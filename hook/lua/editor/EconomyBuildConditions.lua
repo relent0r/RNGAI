@@ -165,6 +165,17 @@ function LessThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
     return false
 end
 
+function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend)
+
+    if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then
+        if GetEconomyTrend(aiBrain, 'ENERGY') < EnergyTrend then
+            return true
+        end
+    end
+    --LOG('GreaterThanEconTrendOverTime Returned False')
+    return false
+end
+
 function GreaterThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > EnergyTrend then
@@ -230,6 +241,12 @@ function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
             return true
         end
     end
+    --LOG('MassIncome Required '..mIncome)
+    --LOG('EnergyIncome Required '..eIncome)
+    --LOG('Mass Income Over time'..aiBrain.EconomyOverTimeCurrent.MassIncome)
+    --LOG('Mass Income '..GetEconomyIncome(aiBrain,'MASS'))
+    --LOG('Energy Income Over time'..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
+    --LOG('Energy Income '..GetEconomyIncome(aiBrain,'ENERGY'))
     return false
 end
 

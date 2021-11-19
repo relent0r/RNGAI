@@ -1,11 +1,11 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibrain.lua' )
-
+local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
-
+local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
@@ -818,6 +818,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BrainIntel = {}
         self.BrainIntel.ExpansionWatchTable = {}
+        self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
             IMAPSize = 0,
@@ -928,8 +929,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
+        self:ForkThread(self.CivilianPDCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoMassManagerRNG)
+        self:ForkThread(self.BasePerimeterMonitorRNG)
         self:ForkThread(self.EnemyChokePointTestRNG)
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
@@ -944,6 +947,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- This is future goodies.
         
         self:ForkThread(self.ExpansionIntelScanRNG)
+        self:ForkThread(self.DynamicExpansionRequiredRNG)
         --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
 
@@ -1054,6 +1058,63 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
     
+    AddBuilderManagers = function(self, position, radius, baseName, useCenter)
+        if not self.RNG then
+            return RNGAIBrainClass.AddBuilderManagers(self, position, radius, baseName, useCenter)
+        end
+
+        -- Set the layer of the builder manager so that factory managers and platoon managers know if we should be graphing to land or naval production.
+        -- Used for identifying if we can graph to an enemy factory for multi landmass situations
+        local baseLayer = 'Land'
+		position[2] = GetTerrainHeight( position[1], position[3] )
+        if GetSurfaceHeight( position[1], position[3] ) > position[2] then
+            position[2] = GetSurfaceHeight( position[1], position[3] )
+			baseLayer = 'Water'
+        end
+        self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
+
+        self.BuilderManagers[baseName] = {
+            FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
+            PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
+            EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
+            StrategyManager = StratManager.CreateStrategyManager(self, baseName, position, radius),
+            BuilderHandles = {},
+            Position = position,
+            Layer = baseLayer,
+            GraphArea = false,
+            BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
+        }
+        self.NumBases = self.NumBases + 1
+    end,
+
+    GetGraphArea = function(self, position, baseName, baseLayer)
+        -- This will set the graph area of the factory manager so we don't need to look it up every time
+        -- Needs to wait a while for the RNGArea properties to be populated
+        local graphAreaSet = false
+        while not graphAreaSet do
+            local graphArea
+            if baseLayer then
+                if baseLayer == 'Water' then
+                    graphArea = GetClosestPathNodeInRadiusByLayerRNG(position, 30, 'Water')
+                else
+                    graphArea = GetClosestPathNodeInRadiusByLayerRNG(position, 30, 'Land')
+                end
+            end
+            if not graphArea.RNGArea then
+                WARN('Missing RNGArea for builder manager land node or no path markers')
+            end
+            if graphArea.RNGArea then
+                --LOG('Graph Area for buildermanager is '..graphArea.RNGArea)
+                graphAreaSet = true
+                self.BuilderManagers[baseName].GraphArea = graphArea.RNGArea
+            end
+            if not graphAreaSet then
+                --LOG('Graph Area not set yet')
+                WaitTicks(30)
+            end
+        end
+    end,
+
     CalculateMassMarkersRNG = function(self)
         local MassMarker = {}
         local massMarkerBuildable = 0
@@ -1069,10 +1130,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     graphCheck = true
                     if not self.GraphZones[v.RNGArea] then
                         self.GraphZones[v.RNGArea] = {}
+                        self.GraphZones[v.RNGArea].MassMarkers = {}
                         if self.GraphZones[v.RNGArea].MassMarkersInZone == nil then
                             self.GraphZones[v.RNGArea].MassMarkersInZone = 0
                         end
                     end
+                    RNGINSERT(self.GraphZones[v.RNGArea].MassMarkers, v)
                     self.GraphZones[v.RNGArea].MassMarkersInZone = self.GraphZones[v.RNGArea].MassMarkersInZone + 1
                 end
                 if CanBuildStructureAt(self, 'ueb1103', v.position) then
@@ -1092,11 +1155,12 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     BaseMonitorThreadRNG = function(self)
+        
         while true do
             if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
                 self:BaseMonitorCheckRNG()
             end
-            WaitSeconds(self.BaseMonitor.BaseMonitorTime)
+            WaitTicks(40)
         end
     end,
 
@@ -1121,13 +1185,13 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Threat level must be greater than this number to sound a base alert
             AlertLevel = spec.AlertLevel or 0,
             -- Delay time for checking base
-            BaseMonitorTime = spec.BaseMonitorTime or 11,
+            BaseMonitorTime = 11,
             -- Default distance a platoon will travel to help around the base
             DefaultDistressRange = spec.DefaultDistressRange or 75,
             -- Default how often platoons will check if the base is under duress
             PlatoonDefaultReactionTime = spec.PlatoonDefaultReactionTime or 5,
             -- Default duration for an alert to time out
-            DefaultAlertTimeout = spec.DefaultAlertTimeout or 10,
+            DefaultAlertTimeout = spec.DefaultAlertTimeout or 5,
 
             PoolDistressThreshold = 1,
 
@@ -1143,7 +1207,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     GetStructureVectorsRNG = function(self)
         -- This will get the closest IMAPposition  based on where the structure is. Though I don't think it works on 5km maps because the imap grid is different.
-        local structures = GetListOfUnits(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, false)
+        local structures = GetListOfUnits(self, categories.STRUCTURE - categories.DEFENSE - categories.WALL - categories.MASSEXTRACTION, false)
         local tempGridPoints = {}
         local indexChecker = {}
         for k, v in structures do
@@ -1172,64 +1236,113 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BaseMonitor.PoolDistressRange = 130
             self.AlertLevel = 5
         end
-
-        local vecs = self:GetStructureVectorsRNG()
-        if RNGGETN(vecs) > 0 then
-            -- Find new points to monitor
-            for k, v in vecs do
-                local found = false
-                for subk, subv in self.BaseMonitor.BaseMonitorPoints do
-                    if v[1] == subv.Position[1] and v[3] == subv.Position[3] then
-                        found = true
-                        -- if we found this point already stored, we don't need to continue searching the rest
-                        break
+        local alertThreat = self.BaseMonitor.AlertLevel
+        if self.BasePerimeterMonitor then
+            for k, v in self.BasePerimeterMonitor do
+                if self.BasePerimeterMonitor[k].LandUnits > 0 then
+                    if self.BasePerimeterMonitor[k].LandThreat > alertThreat then
+                        if not self.BaseMonitor.AlertsTable[k] then
+                            self.BaseMonitor.AlertsTable[k] = {}
+                        end
+                        if not self.BaseMonitor.AlertsTable[k]['Land'] then
+                            self.BaseMonitor.AlertsTable[k]['Land'] = { Location = k, Position = self.BuilderManagers[k].FactoryManager.Location, Threat = self.BasePerimeterMonitor[k].LandThreat, Type = 'Land' }
+                            self.BaseMonitor.AlertSounded = true
+                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, self.BuilderManagers[k].FactoryManager.Location, k, 'Land')
+                            self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
+                        end
                     end
                 end
-                if not found then
-                    RNGINSERT(self.BaseMonitor.BaseMonitorPoints,
-                        {
-                            Position = v,
-                            Threat = GetThreatAtPosition(self, v, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'),
-                            Alert = false
-                        }
-                    )
-                end
-            end
-            --LOG('BaseMonitorPoints Threat Data '..repr(self.BaseMonitor.BaseMonitorPoints))
-            -- Remove any points that we dont monitor anymore
-            for k, v in self.BaseMonitor.BaseMonitorPoints do
-                local found = false
-                for subk, subv in vecs do
-                    if v.Position[1] == subv[1] and v.Position[3] == subv[3] then
-                        found = true
-                        break
+                if self.BasePerimeterMonitor[k].AirUnits > 0 then
+                    if self.BasePerimeterMonitor[k].AirThreat > alertThreat then
+                        if not self.BaseMonitor.AlertsTable[k] then
+                            self.BaseMonitor.AlertsTable[k] = {}
+                        end
+                        if not self.BaseMonitor.AlertsTable[k]['Air'] then
+                            self.BaseMonitor.AlertsTable[k]['Air'] = { Location = k, Position = self.BuilderManagers[k].FactoryManager.Location, Threat = self.BasePerimeterMonitor[k].AirThreat, Type = 'Air' }
+                            self.BaseMonitor.AlertSounded = true
+                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, self.BuilderManagers[k].FactoryManager.Location, k, 'Air')
+                            self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
+                        end
                     end
                 end
-                -- If point not in list and the num units around the point is small
-                if not found and self:GetNumUnitsAroundPoint(categories.STRUCTURE, v.Position, 16, 'Ally') <= 1 then
-                    table.remove(self.BaseMonitor.BaseMonitorPoints, k)
-                end
-            end
-            -- Check monitor points for change
-            local alertThreat = self.BaseMonitor.AlertLevel
-            for k, v in self.BaseMonitor.BaseMonitorPoints do
-                if not v.Alert then
-                    v.Threat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                    if v.Threat > alertThreat then
-                        v.Alert = true
-                        RNGINSERT(self.BaseMonitor.AlertsTable,
-                            {
-                                Position = v.Position,
-                                Threat = v.Threat,
-                            }
-                        )
-                        self.BaseMonitor.AlertSounded = true
-                        self:ForkThread(self.BaseMonitorAlertTimeout, v.Position)
-                        self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
+                if self.BasePerimeterMonitor[k].NavalUnits > 0 then
+                    if self.BasePerimeterMonitor[k].NavalThreat > alertThreat then
+                        if not self.BaseMonitor.AlertsTable[k] then
+                            self.BaseMonitor.AlertsTable[k] = {}
+                        end
+                        if not self.BaseMonitor.AlertsTable[k]['Naval'] then
+                            self.BaseMonitor.AlertsTable[k]['Naval'] = { Location = k, Position = self.BuilderManagers[k].FactoryManager.Location, Threat = self.BasePerimeterMonitor[k].NavalThreat, Type = 'Naval' }
+                            self.BaseMonitor.AlertSounded = true
+                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, self.BuilderManagers[k].FactoryManager.Location, k, 'Naval')
+                            self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
+                        end
                     end
                 end
             end
         end
+    end,
+
+    BaseMonitorAlertTimeoutRNG = function(self, pos, location, type)
+        local timeout = self.BaseMonitor.DefaultAlertTimeout
+        local threat
+        local threshold = self.BaseMonitor.AlertLevel
+        local myThreat
+        local alertBreak = false
+        LOG('Base monitor raised for '..location..' of type '..type)
+        repeat
+            WaitSeconds(timeout)
+            LOG('BaseMonitorAlert Timeout Reached')
+            if type == 'Land' then
+                if self.BasePerimeterMonitor[location].LandUnits and self.BasePerimeterMonitor[location].LandUnits > 0 and self.BasePerimeterMonitor[location].LandThreat > threshold then
+                    LOG('Land Units at base '..self.BasePerimeterMonitor[location].LandUnits)
+                    LOG('Land Threats at base '..self.BasePerimeterMonitor[location].LandThreat)
+                    threat = self.BasePerimeterMonitor[location].LandThreat
+                    self.BaseMonitor.AlertsTable[location]['Land'].Threat = self.BasePerimeterMonitor[location].LandThreat
+                    LOG('Still land units present, restart AlertTimeout')
+                    continue
+                else
+                    LOG('No Longer alert threat, cancel base alert')
+                    self.BaseMonitor.AlertsTable[location]['Land'] = nil
+                    alertBreak = true
+                end
+            elseif type == 'Air' then
+                if self.BasePerimeterMonitor[location].AirUnits and self.BasePerimeterMonitor[location].AirUnits > 0 and self.BasePerimeterMonitor[location].AirThreat > threshold then
+                    LOG('Air Units at base '..self.BasePerimeterMonitor[location].AirUnits)
+                    LOG('Air Threats at base '..self.BasePerimeterMonitor[location].AirThreat)
+                    threat = self.BasePerimeterMonitor[location].AirThreat
+                    self.BaseMonitor.AlertsTable[location]['Air'].Threat = self.BasePerimeterMonitor[location].AirThreat
+                    LOG('Still air units present, restart AlertTimeout')
+                    continue
+                else
+                    LOG('No Longer alert threat, cancel base alert')
+                    self.BaseMonitor.AlertsTable[location]['Air'] = nil
+                    alertBreak = true
+                end
+            elseif type == 'Naval' then
+                if self.BasePerimeterMonitor[location].NavalUnits and self.BasePerimeterMonitor[location].NavalUnits > 0 and self.BasePerimeterMonitor[location].NavalThreat > threshold then
+                    LOG('Naval Units at base '..self.BasePerimeterMonitor[location].NavalUnits)
+                    LOG('Naval Threats at base '..self.BasePerimeterMonitor[location].NavalThreat)
+                    threat = self.BasePerimeterMonitor[location].NavalThreat
+                    self.BaseMonitor.AlertsTable[location]['Naval'].Threat = self.BasePerimeterMonitor[location].NavalThreat
+                    LOG('Still naval units present, restart AlertTimeout')
+                    continue
+                else
+                    LOG('No Longer alert threat, cancel base alert')
+                    self.BaseMonitor.AlertsTable[location]['Naval'] = nil
+                    alertBreak = true
+                end
+            end
+        until alertBreak
+        LOG('Base monitor finished for '..location..' of type '..type)
+        LOG('Alert Table for location '..repr(self.BaseMonitor.AlertsTable[location]))
+        if self.BaseMonitor.AlertsTable[location][type] then
+            WARNING('BaseMonitor Alert Table exist when it possibly shouldnt'..repr(self.BaseMonitor.AlertsTable[location][type]))
+        end
+        self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts - 1
+        if self.BaseMonitor.ActiveAlerts == 0 then
+            self.BaseMonitor.AlertSounded = false
+        end
+        LOG('Number of active alerts = '..self.BaseMonitor.ActiveAlerts)
     end,
 
     BuildScoutLocationsRNG = function(self)
@@ -1450,6 +1563,8 @@ AIBrain = Class(RNGAIBrainClass) {
             }
             -- Share resources with friends but don't regard their strength
             if ArmyIsCivilian(v:GetArmyIndex()) then
+                local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', v:GetArmyIndex())
+                --LOG('User Structure threat for index '..v:GetArmyIndex()..' '..repr(enemyStructureThreat))
                 continue
             elseif IsAlly(selfIndex, v:GetArmyIndex()) then
                 self:SetResourceSharing(true)
@@ -1814,18 +1929,111 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
 
+    BasePerimeterMonitorRNG = function(self)
+        -- This monitor base perimeters for enemy units
+        -- I did this to replace using multiple calls on builder conditions
+        WaitTicks(Random(5,20))
+        local ALLBPS = __blueprints
+        self.BasePerimeterMonitor = {}
+        while true do
+            for k, v in self.BuilderManagers do
+                local landUnits = 0
+                local airUnits = 0
+                local antiSurfaceAir = 0
+                local navalUnits = 0
+                local landThreat = 0
+                local airThreat = 0
+                local navalThreat = 0
+                if self.BuilderManagers[k].FactoryManager and RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                    if not self.BasePerimeterMonitor[k] then
+                        self.BasePerimeterMonitor[k] = {}
+                    end
+                    local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, BaseRestrictedArea , 'Enemy')
+                    for _, unit in enemyUnits do
+                        if unit and not unit.Dead then
+                            if EntityCategoryContains( categories.MOBILE * categories.LAND, unit) then
+                                landUnits = landUnits + 1
+                                landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                                continue
+                            end
+                            if EntityCategoryContains( categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER), unit) then
+                                antiSurfaceAir = antiSurfaceAir + 1
+                                airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                continue
+                            end
+                            if EntityCategoryContains( categories.MOBILE * categories.AIR, unit) then
+                                airUnits = airUnits + 1
+                                airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                continue
+                            end
+                            if EntityCategoryContains( categories.MOBILE * categories.NAVAL, unit) then
+                                navalUnits = navalUnits + 1
+                                navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                                continue
+                            end
+                        end
+                    end
+                    self.BasePerimeterMonitor[k].LandUnits = landUnits
+                    self.BasePerimeterMonitor[k].AirUnits = airUnits
+                    self.BasePerimeterMonitor[k].AntiSurfaceAirUnits = antiSurfaceAir
+                    self.BasePerimeterMonitor[k].NavalUnits = navalUnits
+                    self.BasePerimeterMonitor[k].NavalThreat = navalThreat
+                    self.BasePerimeterMonitor[k].AirThreat = airThreat
+                    self.BasePerimeterMonitor[k].LandThreat = landThreat
+                else
+                    if self.BasePerimeterMonitor[k] then
+                        self.BasePerimeterMonitor[k] = nil
+                    end
+                end
+                WaitTicks(2)
+            end
+            WaitTicks(20)
+        end
+    end,
+
     BaseMonitorPlatoonDistressThreadRNG = function(self)
         self.BaseMonitor.PlatoonAlertSounded = true
+        local ALLBPS = __blueprints
         while true do
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
-                    local threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'Land')
-                    local myThreat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), 0, true, 'Overall', self:GetArmyIndex())
+                    local threat = 0
+                    local myThreat = 0
+                    local platoonPos = v.Platoon:GetPlatoonPosition()
+                    if RUtils.PositionOnWater(platoonPos[1], platoonPos[3]) then
+                        threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), self.BrainIntel.IMAPConfig.Rings, true, 'AntiSub')
+                        local unitsAtPosition = GetUnitsAroundPoint(self, categories.ANTINAVY * categories.MOBILE,  platoonPos, 60, 'Ally')
+                        for k, v in unitsAtPosition do
+                            if v and not v.Dead then
+                                --LOG('Unit ID is '..v.UnitId)
+                                bp = ALLBPS[v.UnitId].Defense
+                                --LOG(repr(ALLBPS[v.UnitId].Defense))
+                                if bp.SubThreatLevel ~= nil then
+                                    myThreat = myThreat + bp.SubThreatLevel
+                                end
+                            end
+                        end
+                    else
+                        threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                        local unitsAtPosition = GetUnitsAroundPoint(self, categories.LAND * categories.MOBILE,  platoonPos, 60, 'Ally')
+                        for k, v in unitsAtPosition do
+                            if v and not v.Dead then
+                                --LOG('Unit ID is '..v.UnitId)
+                                bp = ALLBPS[v.UnitId].Defense
+                                --LOG(repr(ALLBPS[v.UnitId].Defense))
+                                if bp.SubThreatLevel ~= nil then
+                                    myThreat = myThreat + bp.SurfaceThreatLevel
+                                end
+                            end
+                        end
+                    end
+                    --LOG('Platoon Threat Validation')
                     --LOG('* AI-RNG: Threat of attacker'..threat)
                     --LOG('* AI-RNG: Threat of platoon'..myThreat)
+                    --LOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
                     -- Platoons still threatened
-                    if threat and threat > (myThreat * 1.5) then
+                    if threat and threat > (myThreat * 1.3) then
                         --LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
@@ -1848,54 +2056,69 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
             --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+            LOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
 
-    BaseMonitorDistressLocationRNG = function(self, position, radius, threshold)
+    BaseMonitorDistressLocationRNG = function(self, position, radius, threshold, movementLayer)
         local returnPos = false
-        local highThreat = false
+        local returnThreat = 0
+        local threatPriority = 0
         local distance
+
         
         if self.CDRUnit.Caution and VDist2(self.CDRUnit.Position[1], self.CDRUnit.Position[3], position[1], position[3]) < radius
-            and self.CDRUnit.CurrentEnemyThreat > threshold then
+            and self.CDRUnit.CurrentEnemyThreat * 1.3 > self.CDRUnit.CurrentFriendlyThreat then
             -- Commander scared and nearby; help it
             return self.CDRUnit.Position
         end
         if self.BaseMonitor.AlertSounded then
-            --LOG('Base Alert Sounded')
+            LOG('Base Alert Sounded')
+            LOG('Movement layer is '..movementLayer)
+            local priorityValue = 0
+            local threatLayer = false
+            if movementLayer == 'Land' or movementLayer == 'Amphibious' or movementLayer == 'Air' then
+                threatLayer = 'Land'
+            elseif movementLayer == 'Water' then
+                threatLayer = 'Naval'
+            else
+                WARNING('Unknown movement layer passed to BaseMonitorDistressLocations')
+            end
             for k, v in self.BaseMonitor.AlertsTable do
-                local tempDist = VDist2(position[1], position[3], v.Position[1], v.Position[3])
-
-                -- Too far away
-                if tempDist > radius then
-                    continue
+                LOG('Checking AlertsTable')
+                for c, n in v do
+                    if c == threatLayer then
+                        LOG('Found Alert of type '..threatLayer)
+                        local tempDist = VDist2(position[1], position[3], n.Position[1], n.Position[3])
+                        -- stops strange things if the distance is zero
+                        if tempDist < 1 then
+                            tempDist = 1
+                        end
+                        if tempDist > radius then
+                            continue
+                        end
+                        -- Not enough threat in location
+                        if n.Threat < threshold then
+                            continue
+                        end
+                        priorityValue = 2500 / tempDist * n.Threat
+                        if priorityValue > threatPriority then
+                            --LOG('We are replacing the following in base monitor')
+                            LOG('threatPriority was '..priorityValue)
+                            LOG('Threat at position was '..n.Threat)
+                            LOG('With position '..repr(n.Position))
+                            threatPriority = priorityValue
+                            returnPos = n.Position
+                            returnThreat = n.Threat
+                        end
+                    end
                 end
-
-                -- Not enough threat in location
-                if v.Threat < threshold then
-                    continue
-                end
-
-                -- Threat lower than or equal to a threat we already have
-                if v.Threat <= highThreat then
-                    continue
-                end
-
-                -- Get real height
-                local height = GetTerrainHeight(v.Position[1], v.Position[3])
-                local surfHeight = GetSurfaceHeight(v.Position[1], v.Position[3])
-                if surfHeight > height then
-                    height = surfHeight
-                end
-
-                -- currently our winner in high threat
-                returnPos = {v.Position[1], height, v.Position[3]}
-                distance = tempDist
             end
         end
         if self.BaseMonitor.PlatoonAlertSounded then
             --LOG('Platoon Alert Sounded')
+            local priorityValue = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
                     local platPos = v.Platoon:GetPlatoonPosition()
@@ -1904,7 +2127,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     local tempDist = VDist2(position[1], position[3], platPos[1], platPos[3])
-
+                    -- stops strange things if the distance is zero
+                    if tempDist < 1 then
+                        tempDist = 1
+                    end
                     -- Platoon too far away to help
                     if tempDist > radius then
                         continue
@@ -1914,19 +2140,32 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v.Threat < threshold then
                         continue
                     end
-
-                    -- Further away than another call for help
-                    if tempDist > distance then
-                        continue
+                    priorityValue = 2500 / tempDist * v.Threat
+                    if priorityValue > threatPriority then
+                        --LOG('We are replacing the following in platoon monitor')
+                        --LOG('threatPriority was '..threatPriority)
+                        --LOG('Position was '..returnThreat)
+                        --LOG('With position '..repr(platPos))
+                        threatPriority = priorityValue
+                        returnPos = platPos
+                        returnThreat = v.Threat
                     end
-
-                    -- Our current winners
-                    returnPos = platPos
-                    distance = tempDist
                 end
             end
         end
-        return returnPos
+        if returnPos then
+        -- Get real height
+            local height = GetTerrainHeight(returnPos[1], returnPos[3])
+            local surfHeight = GetSurfaceHeight(returnPos[1], returnPos[3])
+            if surfHeight > height then
+                height = surfHeight
+            end
+            returnPos = {returnPos[1], height, returnPos[3]}
+            LOG('BaseMonitorDistressLocation returning the following')
+            LOG('Return Position '..repr(returnPos))
+            LOG('Return Threat '..returnThreat)
+            return returnPos, returnThreat
+        end
     end,
 
     TacticalMonitorInitializationRNG = function(self, spec)
@@ -1937,6 +2176,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorThreadRNG = function(self, ALLBPS)
         --LOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
+        WaitTicks(Random(2,10))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
@@ -1950,16 +2190,33 @@ AIBrain = Class(RNGAIBrainClass) {
                     local MassRequested = GetEconomyRequested(self,'MASS')
                     local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
                     local MassEfficiency = math.min(MassIncome / MassRequested, 2)
-                    --LOG('Eco Stats for :'..self.Nickname)
-                    --LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
+                    LOG('Eco Stats for :'..self.Nickname)
+                    LOG('Game Time '..GetGameTimeSeconds())
+                    LOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
                     LOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
                     LOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                     LOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
                     LOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                    LOG('Mass Income :'..MassIncome..' Energy Income :'..EnergyIncome)
                     LOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
                     if self.CDRUnit.Caution then
                         LOG('CDR is in caution mode')
                     end
+                    LOG('BasePerimeterMonitor table')
+                    LOG(repr(self.BasePerimeterMonitor))
+                    if self.BaseMonitor.AlertSounded then
+                        LOG('Base Monitor Alert is on')
+                    end
+                    --[[if self.GraphZones.HasRun then
+                        LOG('We should have graph zones now')
+                        for k, v in self.BuilderManagers do
+                            if v.GraphArea then
+                                LOG('Graph Area for '..k.. ' is '..v.GraphArea)
+                            else
+                                LOG('No Graph Area for base '..k)
+                            end
+                        end
+                    end]]
                     --local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
                     --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --LOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
@@ -2000,7 +2257,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalAnalysisThreadRNG = function(self)
         local ALLBPS = __blueprints
-        WaitTicks(200)
+        WaitTicks(Random(150,200))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 self:TacticalThreatAnalysisRNG(ALLBPS)
@@ -2513,9 +2770,9 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
         --LOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
         --LOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        --LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+        LOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
         --LOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        --LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+        LOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
         --LOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
         --LOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
         --LOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
@@ -3243,6 +3500,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     FactoryEcoManagerRNG = function(self)
+        WaitTicks(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
@@ -3685,7 +3943,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfStartPos = self.BuilderManagers['MAIN'].Position
         local enemyTestTable = {}
 
-        WaitTicks(100)
+        WaitTicks(Random(80,100))
         if self.EnemyIntel.EnemyCount > 0 then
             for index, brain in ArmyBrains do
                 if IsEnemy(selfIndex, index) and not ArmyIsCivilian(index) then
@@ -4171,7 +4429,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ExpansionIntelScanRNG = function(self)
         --LOG('Pre-Start ExpansionIntelScan')
-        WaitTicks(50)
+        WaitTicks(Random(30,70))
         if RNGGETN(self.BrainIntel.ExpansionWatchTable) == 0 then
             --LOG('ExpansionWatchTable not ready or is empty')
             return
@@ -4251,6 +4509,102 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             WaitTicks(50)
             -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(self.BrainIntel.ExpansionWatchTable))
+        end
+    end,
+
+    CivilianPDCheckRNG = function(self)
+        -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
+        --LOG('Reveal Civilian PD')
+        WaitTicks(2)
+        local AIIndex = self:GetArmyIndex()
+        for i,v in ArmyBrains do
+            local brainIndex = v:GetArmyIndex()
+            if ArmyIsCivilian(brainIndex) then
+                --LOG('Found Civilian brain')
+                local real_state = IsAlly(AIIndex, brainIndex) and 'Ally' or IsEnemy(AIIndex, brainIndex) and 'Enemy' or 'Neutral'
+                --LOG('Set Alliance to Ally')
+                SetAlliance(AIIndex, brainIndex, 'Ally')
+                WaitTicks(5)
+                --LOG('Set Alliance back to '..real_state)
+                SetAlliance(AIIndex, brainIndex, real_state)
+            end
+        end
+    end,
+
+    DynamicExpansionRequiredRNG = function(self)
+
+        -- What does this shit do?
+        -- Its going to look at the expansion table which holds information on expansion markers.
+        -- Then its going to see what the mass value of the graph zone is so we can see if its even worth looking
+        -- Then if its worth it we'll see if we have an expansion in this zone and if not then we should look to establish a presense
+        -- But what if an enemy already has structure threat around the expansion marker?
+        -- Then we are going to try and create a dynamic expansion in the zone somewhere so we can try and take it.
+        -- By default if someone already has the expansion marker the AI will give up. But that doesn't stop humans and it shouldn't stop us.
+        -- When debuging, dont repr the expansions as they might have a unit assigned to them.
+        WaitTicks(Random(300,500))
+        while true do
+            local structureThreat
+            local potentialExpansionZones = {}
+            for k, v in self.BrainIntel.ExpansionWatchTable do
+                local invalidZone = false
+                if v.Zone then
+                    if self.GraphZones then
+                        LOG('Graph Zone has '..self.GraphZones[v.Zone].MassMarkersInZone..' Mass Markers')
+                        if self.GraphZones[v.Zone].MassMarkersInZone > 4 then
+                            for c, b in self.BuilderManagers do
+                                if b.GraphArea and b.GraphArea == v.Zone then
+                                    LOG('Builder Manager GraphArea '..b.GraphArea)
+                                    LOG('Expansion Zone '..v.Zone)
+                                    LOG('We have an expansion on this Graph Area')
+                                    invalidZone = true
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+                if not invalidZone then
+                    if not potentialExpansionZones[v.Zone] then
+                        potentialExpansionZones[v.Zone] = {}
+                        potentialExpansionZones[v.Zone].Expansions = {}
+                        RNGINSERT(potentialExpansionZones[v.Zone].Expansions, v)
+                    end
+                end
+            end
+            LOG('These are the potentialExpansionZones')
+            LOG('Mass Markers Per Zone')
+            local foundMarker = false
+            local loc = false
+            self.BrainIntel.DynamicExpansionPositions = {}
+            for k, v in potentialExpansionZones do
+                if v.Expansions then
+                    for c, b in v.Expansions do
+                        LOG('Position for expansion is ')
+                        LOG(repr(b.Position))
+                        local distance, highest
+                        for n, m in self.GraphZones[k].MassMarkers do
+                            distance = VDist2Sq(b.Position[1], b.Position[3], m.position[1], m.position[3])
+                            if not highest or distance > highest then
+                                loc = m.position
+                                highest = distance
+                            end
+                        end
+                        if loc then
+                            LOG('Mass Marker Found')
+                            foundMarker = true
+                            break
+                        else
+                            LOG('No marker found for expansion in zone '..k)
+                        end
+                    end
+                end
+                table.insert(self.BrainIntel.DynamicExpansionPositions, {Zone = k, Position = loc})
+            end
+            if foundMarker then
+                LOG('Marker we could have a dynamic expansion on the following positions')
+                LOG(repr(self.BrainIntel.DynamicExpansionPositions))
+            end
+            WaitTicks(100)
         end
     end,
 }

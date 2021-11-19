@@ -42,8 +42,10 @@ end
 local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
     if aiBrain.EnemyIntel.FrigateRaid then
+        --LOG('Frigate Raid priority function is 995')
         return 995
     end
+    --LOG('Frigate Raid priority function is 0')
     return 0
 end
 
@@ -453,9 +455,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant StartArea Area 500 Large First',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 900,
+        Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
+            --{ UCBC, 'DynamicExpansionRequiredRNG', { } }, -- test dont forget to delete this
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanOneLandExpansion', { } },
             { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 500, -1000, 0, 2, 'AntiSurface' } },
@@ -476,6 +479,38 @@ BuilderGroup {
                 ThreatRings = 2,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {                    
+                    'T1LandFactory',
+                }
+            },
+            NeedGuard = true,
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Dynamic Expansion Large',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'DynamicExpansionAvailableRNG', { } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                DynamicExpansion = true,
+                NearMarkerType = 'Dynamic',
+                ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                LocationRadius = 1000,
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 2,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {                    
+                    'T1LandFactory',
                     'T1LandFactory',
                 }
             },

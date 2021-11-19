@@ -2,6 +2,20 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 RNGBuilderManager = BuilderManager
 BuilderManager = Class(RNGBuilderManager) {
+
+    Create = function(self, brain)
+        self.Trash = TrashBag()
+        self.Brain = brain
+        self.BuilderData = {}
+        self.BuilderCheckInterval = 13
+        self.BuilderList = false
+        self.Active = false
+        self.NumBuilders = 0
+        self:SetEnabled(true)
+
+        self.NumGet = 0
+    end,
+    
     ManagerLoopBody = function(self,builder,bType)
         if not self.Brain.RNG then
             return RNGBuilderManager.ManagerLoopBody(self,builder,bType)
