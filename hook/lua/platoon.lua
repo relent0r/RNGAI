@@ -3872,7 +3872,11 @@ Platoon = Class(RNGAIPlatoon) {
                 WaitTicks(10)
             else
                 self:AggressiveMoveToLocation(bestMarker.Position)
-                WaitTicks(10)
+                if self.scoutUnit and (not self.scoutUnit.Dead) then
+                    IssueClearCommands({self.scoutUnit})
+                    --IssueMove({self.scoutUnit}, bestMarker.Position)
+                end
+                WaitTicks(15)
             end
 
             -- we're there... wait here until we're done
@@ -6380,14 +6384,13 @@ Platoon = Class(RNGAIPlatoon) {
                     --LOG('Mass Marker'..repr(markers))
                     --LOG('Attempting second mass marker')
                     for _,massMarker in markers do
-                    RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
-                    AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
-                    --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
-                    --LOG('MexBuild Platoon Checking for expansion mex')
-                    aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                    local newEntry = {whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position}
-                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
-                    currentmexpos=massMarker.Position
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
+                        AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
+                        --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
+                        aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                        local newEntry = {whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position}
+                        RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                        currentmexpos=massMarker.Position
                     end
                 else
                     --LOG('No markers reported')
@@ -6398,10 +6401,10 @@ Platoon = Class(RNGAIPlatoon) {
                 if eng:IsUnitState("Moving") and not initialized and VDist3Sq(self:GetPlatoonPosition(),firstmex)<12*12 then
                     IssueClearCommands({eng})
                     for _,v in eng.EngineerBuildQueue do
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.Position, 5)
-                        AIUtils.EngineerTryRepair(aiBrain, eng, v[1], v.Position)
+                        LOG('Reclaim position check '..repr({v[2][1], v[2][3], v[2][2]}))
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, {v[2][1], v[2][3], v[2][2]}, 5)
+                        AIUtils.EngineerTryRepair(aiBrain, eng, v[1], {v[2][1], v[2][3], v[2][2]})
                         --eng:SetCustomName('MexBuild Platoon attempting to build in while loop')
-                        --LOG('MexBuild Platoon Checking for expansion mex')
                         aiBrain:BuildStructure(eng, v[1],v[2],v[3])
                     end
                     initialized=true

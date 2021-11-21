@@ -1049,7 +1049,7 @@ BuilderGroup {
         Priority = 850,
         DelayEqualBuildPlattons = {'ACUAssist', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.3}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.3}},
         },
         BuilderType = 'Any',
         BuilderData = {

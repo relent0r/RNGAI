@@ -89,14 +89,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 990,
-        InstanceCount = 3,
+        Priority = 1050,
+        InstanceCount = 2,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 0.1 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
@@ -172,6 +172,7 @@ BuilderGroup {
             Construction = {
                 --AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
                 --AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                AdjacencyBias = 'Back',
                 AdjacencyPriority = {
                     categories.SHIELD * categories.STRUCTURE,
                     categories.STRUCTURE * categories.FACTORY * categories.AIR,
@@ -266,6 +267,7 @@ BuilderGroup {
             Construction = {
                 --AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
                 --AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyBias = 'Back',
                 AdjacencyPriority = {
                     categories.SHIELD * categories.STRUCTURE,
                     categories.STRUCTURE * categories.FACTORY * categories.AIR,

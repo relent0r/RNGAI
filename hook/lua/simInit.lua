@@ -1,7 +1,11 @@
+
+local RNGBeginSession = import('/mods/RNGAI/lua/FlowAI/Mapping.lua').BeginSession
 local RNGAIBeginSessionFunction = BeginSession
+
 
 function BeginSession()
     RNGAIBeginSessionFunction()
+    RNGBeginSession()
     if ScenarioInfo.Options.AIThreatDisplay ~= 'threatOff' then
         ForkThread(DrawIMAPThreatsRNG)
     end

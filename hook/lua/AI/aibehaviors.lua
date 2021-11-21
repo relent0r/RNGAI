@@ -61,6 +61,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.WeaponRange = false
     cdr.OverCharge = false
     cdr.ThreatLimit = 22
+    cdr.Confidence = 0
     cdr.EnemyCDRPresent = false
     cdr.Caution = false
     cdr.HealthPercent = 0
@@ -791,6 +792,8 @@ function CDRThreatAssessmentRNG(cdr)
             local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 60, 'Ally')
             local enemyUnitThreat = 0
             local friendlyUnitThreat = 0
+            local friendlyThreatConfidenceModifier = 0
+            local enemyThreatConfidenceModifier = 0
             local bp
             for k,v in friendlyUnits do
                 if v and not v.Dead then
@@ -838,6 +841,7 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             LOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
+            LOG('Current CDR Confidence '..cdr.Confidence)
             if enemyUnitThreat * 1.1 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 LOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
@@ -845,6 +849,24 @@ function CDRThreatAssessmentRNG(cdr)
                 LOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
             end
+            if aiBrain.BrainIntel.SelfThreat.LandNow > 0 then
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + aiBrain.BrainIntel.SelfThreat.LandNow
+            else
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + 0.1
+            end
+            if aiBrain.BrainIntel.SelfThreat.AllyLandThreat > 0 then
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + aiBrain.BrainIntel.SelfThreat.AllyLandThreat
+            else 
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + 0.1
+            end
+            if aiBrain.EnemyIntel.EnemyThreatCurrent.Land > 0 then
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + aiBrain.EnemyIntel.EnemyThreatCurrent.Land
+            else
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + 0.1
+            end
+            friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + friendlyUnitThreat
+            enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
+            cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
         end
         WaitTicks(20)
     end
@@ -1242,7 +1264,8 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                     local aPlatPos = GetPlatoonPosition(aPlat)
                     local aPlatDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],aPlatPos[1],aPlatPos[3])
                     local homeDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],cdr.CDRHome[1],cdr.CDRHome[3])
-                    if aPlatDistance > 1600 then
+                    local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
+                    if aPlatDistance > 1600 and aPlatToHomeDistance < homeDistance then
                         local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                         local platoonValue = aPlatDistance * aPlatDistance / threat
                         if not closestDistance then

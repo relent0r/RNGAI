@@ -212,6 +212,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             return
                         end
+                        engPos = self:GetPosition()
                         local x1 = engPos[1] - 40
                         local x2 = engPos[1] + 40
                         local z1 = engPos[3] - 40
@@ -220,6 +221,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local reclaimRect = {}
                         reclaimRect = GetReclaimablesInRect(rect)
                         if reclaimRect and RNGGETN( reclaimRect ) > 0 then
+                            local reclaimSort = {}
                             LOG('Looping through reclaimables')
                             local reclaimCount = 0
                             for k,v in reclaimRect do
@@ -237,13 +239,18 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 -- End Blacklisted Props
                                 if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                                     if not self.BadReclaimables[v] then
-                                        IssueReclaim({self}, v)
+                                        table.insert( reclaimSort, {Reclaim = v, Distance = VDist2Sq(engPos[1], engPos[3], rpos[1], rpos[3])} )
                                         reclaimCount = reclaimCount + 1
                                         if reclaimCount > maxReclaimCount then
                                             break
                                         end
                                     end
                                 end
+
+                            end
+                            table.sort(reclaimSort, function(a,b) return a.Distance < b.Distance end)
+                            for k, v in reclaimSort do
+                                IssueReclaim({self}, v.Reclaim)
                             end
                             local idleCounter = 0
                             while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
@@ -494,10 +501,10 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
         Reclaiming = true
     end
     -- reclaim rocks etc or we can't build mexes or hydros
-    local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
+    local Reclaimables = GetReclaimablesInRect(Rect(pos[1] - 1, pos[3] - 1, pos[1] + 1, pos[3] + 1))
     if Reclaimables and RNGGETN( Reclaimables ) > 0 then
         for k,v in Reclaimables do
-            if v.MaxMassReclaim and v.MaxMassReclaim > 0 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 0 then
+            if v.MaxMassReclaim and v.MaxMassReclaim > 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
                 IssueReclaim({eng}, v)
             end
         end
@@ -3059,16 +3066,22 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     if v.MassPoints >= 3 then
                         priority = priority + 50
                     elseif v.MassPoints >= 2 then
-                        priority = priority + 20
+                        priority = priority + 30
                     end
                     if v.Commander > 0 then
                         acuPresent = true
                     end
                     aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent}
                 else
-                    if aiBrain.prioritypoints[k] then
-                        aiBrain.prioritypoints[k].priority = 0
+                    local acuPresent = false
+                    local priority=0
+                    if v.MassPoints >= 2 then
+                        priority = priority + 30
                     end
+                    if v.Commander > 0 then
+                        acuPresent = true
+                    end
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=0,unit=v.object, ACUPresent=acuPresent}
                 end
             end
             WaitTicks(10)

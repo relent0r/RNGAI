@@ -934,25 +934,13 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
         --LOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then
-        
             --LOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
             --LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
             --LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
-
             -- can the platoon path safely from this marker to the final destination 
             if CanGraphToRNG(v.Position, destination, layer) then
                 return v.Position, v.Name
             end
-            --[[local landpath, reason = PlatoonGenerateSafePathToRNG(aiBrain, layer, v.Position, destination, threatMax, 160 )
-            if not landpath then
-                --LOG('No path to transport location from selected position')
-            end
-
-            -- can the transports reach that marker ?
-            if landpath then
-                --LOG('Selected Position')
-                return v.Position, v.Name
-            end]]
         end
     end
     --LOG('Safe landing Location returning false')

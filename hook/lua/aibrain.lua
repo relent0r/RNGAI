@@ -4549,17 +4549,15 @@ AIBrain = Class(RNGAIBrainClass) {
                 local invalidZone = false
                 if v.Zone then
                     if self.GraphZones then
-                        LOG('Graph Zone has '..self.GraphZones[v.Zone].MassMarkersInZone..' Mass Markers')
                         if self.GraphZones[v.Zone].MassMarkersInZone > 4 then
                             for c, b in self.BuilderManagers do
                                 if b.GraphArea and b.GraphArea == v.Zone then
-                                    LOG('Builder Manager GraphArea '..b.GraphArea)
-                                    LOG('Expansion Zone '..v.Zone)
-                                    LOG('We have an expansion on this Graph Area')
                                     invalidZone = true
                                     break
                                 end
                             end
+                        else
+                            invalidZone = true
                         end
                     end
                 end
