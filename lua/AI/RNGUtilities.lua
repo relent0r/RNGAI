@@ -81,7 +81,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             local sortedReclaimTable = {}
             if RNGGETN(aiBrain.StartReclaimTable) > 0 then
                 
-                --WaitTicks(10)
+                --coroutine.yield(10)
                 local reclaimCount = 0
                 aiBrain.StartReclaimTaken = true
                 for k, r in aiBrain.StartReclaimTable do
@@ -90,17 +90,17 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         --LOG('Reclaim Function - Issuing reclaim')
                         --LOG('Reclaim distance is '..r.Distance)
                         IssueReclaim({self}, r.Reclaim)
-                        WaitTicks(20)
+                        coroutine.yield(20)
                         local reclaimTimeout = 0
                         while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
                             reclaimTimeout = reclaimTimeout + 1
                             --LOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
                                 self:SetPaused( true )
-                                WaitTicks(50)
+                                coroutine.yield(50)
                                 self:SetPaused( false )
                             end
-                            WaitTicks(20)
+                            coroutine.yield(20)
                         end
                         --LOG('Reclaim Count is '..reclaimCount)
                         if reclaimCount > 10 then
@@ -125,7 +125,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 end
                 for i=1, 10 do
                     --LOG('Waiting Ticks '..i)
-                    WaitTicks(20)
+                    coroutine.yield(20)
                 end
             end
             --self:SetCustomName('StartReclaim logic end')
@@ -207,7 +207,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     end
                                 end
                             end
-                            WaitTicks(30)
+                            coroutine.yield(30)
                         end
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             return
@@ -266,7 +266,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     end
                                 end
                                 --LOG('We are reclaiming stuff')
-                                WaitTicks(30)
+                                coroutine.yield(30)
                             end
                         end
                         self:SetCustomName('Engineer out of reclaim loop')
@@ -286,7 +286,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local reclaimRect = {}
         reclaimRect = GetReclaimablesInRect(rect)
         if not engPos then
-            WaitTicks(1)
+            coroutine.yield(1)
             return
         end
 
@@ -339,7 +339,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                 return
             end
-            WaitTicks(2)
+            coroutine.yield(2)
             continue
         end
         if closestDistance == 10000 then
@@ -353,7 +353,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                 return
             end
-            WaitTicks(2)
+            coroutine.yield(2)
             continue
         end
         if self.Dead then 
@@ -366,7 +366,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
         if not closestReclaim then
             --self:SetCustomName('no closestDistance')
-            WaitTicks(2)
+            coroutine.yield(2)
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
@@ -397,7 +397,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         while reclaiming do
             LOG('* AI-RNG: Engineer is reclaiming')
             --self:SetCustomName('reclaim loop start')
-            WaitTicks(200)
+            coroutine.yield(200)
             currentTime = currentTime + 20
             if currentTime > max_time then
                 reclaiming = false
@@ -415,7 +415,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --LOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})
         StartMoveDestination(self, location)
-        WaitTicks(30)
+        coroutine.yield(30)
         --self:SetCustomName('moving back to base')
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
@@ -423,7 +423,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             return
         end
         --self:SetCustomName('end of reclaim function')
-        WaitTicks(5)
+        coroutine.yield(5)
     end
 end
 
@@ -436,7 +436,7 @@ function StartMoveDestination(self,destination)
         count = count + 1
         IssueClearCommands({self})
         IssueMove( {self}, destination )
-        WaitTicks(10)
+        coroutine.yield(10)
     end
 end
 -- Get the military operational areas of the map. Credit to Uveso, this is based on his zones but a little more for small map sizes.
@@ -1154,7 +1154,7 @@ function GeneratePointsAroundPosition(position,radius,num)
         zzz = position[3] + radius * math.sin (nnn/num* (2 * math.pi))
         table.insert(coords, {xxx, zzz})
         nnn = nnn + 1
-        WaitTicks(1)
+        coroutine.yield(1)
     end
     return coords
 end
@@ -1204,7 +1204,7 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
         zzz = enemyPosition[3] + radius * math.sin (nnn/num1* (arcangle)+angoffset-arcangle/2)
         table.insert(coords, {xxx,0,zzz})
         nnn = nnn + 1
-        WaitTicks(1)
+        coroutine.yield(1)
     end
     --LOG('Resulting Table :'..repr(coords))
     return coords
@@ -2496,7 +2496,7 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
             pos2=chosenstart.Position
             DrawLinePop(pos1,pos2,'ffFF0000')
         end
-        WaitTicks(2)
+        coroutine.yield(2)
     end
 end
 
@@ -2512,7 +2512,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
     end
     local startX, startZ = aiBrain:GetArmyStartPos()
     table.sort(enemies,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX,startZ)<VDist2Sq(b.Position[1],b.Position[3],startX,startZ) end)
-    while not aiBrain.cmanager do WaitTicks(20) end
+    while not aiBrain.cmanager do coroutine.yield(20) end
     if not aiBrain.expansionMex or not aiBrain.expansionMex[1].priority then
         --initialize expansion priority
         local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
@@ -2602,7 +2602,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
             aiBrain.cmanager.unclaimedmexcount=(aiBrain.cmanager.unclaimedmexcount+unclaimedmexcount)/2
             aiBrain.emanager.soonmexes=soonmexes
             --LOG(repr(aiBrain.Nickname)..' unclaimedmex='..repr(aiBrain.cmanager.unclaimedmexcount))
-            WaitTicks(20)
+            coroutine.yield(20)
         end
     end
 end
@@ -2755,7 +2755,7 @@ function DisplayMarkerAdjacency(aiBrain)
     local expands=true
     local expandcolors={}
     while aiBrain.renderthreadtracker do
-        WaitTicks(2)
+        coroutine.yield(2)
     end
     if expands then
         --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
@@ -2777,7 +2777,7 @@ function DisplayMarkerAdjacency(aiBrain)
     end
     aiBrain.BrainIntel.MassMarker = massPointCount
     while aiBrain.renderthreadtracker do
-        WaitTicks(2)
+        coroutine.yield(2)
     end
     --LOG('RNGAreas:')
     --for k,v in aiBrain.RNGAreas do
@@ -2799,7 +2799,7 @@ function InfectMarkersRNG(aiBrain,marker,graphname)
 end
 function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
-    WaitTicks(1)
+    coroutine.yield(1)
     --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
     if not marker then LOG('No Marker sent to army distance check') return end
     if not marker.armydists then
@@ -2850,14 +2850,14 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
             marker.bestarmy=k
         end
     end
-    WaitTicks(1)
+    coroutine.yield(1)
     if aiBrain.renderthreadtracker==CurrentThread() then
         aiBrain.renderthreadtracker=nil
     end
 end
 function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     aiBrain.renderthreadtracker=CurrentThread()
-    WaitTicks(1)
+    coroutine.yield(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
     if not marker then return end
     if not marker.expanddists then
@@ -2912,7 +2912,7 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
             end
         end
     end
-    WaitTicks(1)
+    coroutine.yield(1)
     if aiBrain.renderthreadtracker==CurrentThread() then
         aiBrain.renderthreadtracker=nil
     end
@@ -2920,14 +2920,14 @@ end
 
 function DoMassPointInfect(aiBrain,marker,masspoint)
     aiBrain.renderthreadtracker=CurrentThread()
-    WaitTicks(1)
+    coroutine.yield(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
     if not marker then return end
     if not Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea then
         Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint].RNGArea = marker.RNGArea
         --LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
-    WaitTicks(1)
+    coroutine.yield(1)
     if aiBrain.renderthreadtracker==CurrentThread() then
         aiBrain.renderthreadtracker=nil
     end
@@ -2994,7 +2994,7 @@ ShowLastKnown = function(aiBrain)
         return
     end
     while not aiBrain.lastknown do
-        WaitTicks(2)
+        coroutine.yield(2)
     end
     while aiBrain.result ~= "defeat" do
         local time=GetGameTimeSeconds()
@@ -3012,7 +3012,7 @@ ShowLastKnown = function(aiBrain)
                 DrawCircle(v.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
             end
         end
-        WaitTicks(2)
+        coroutine.yield(2)
     end
 end
 --[[TruePlatoonPriorityDirector = function(aiBrain)
@@ -3037,7 +3037,7 @@ end
                     aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
                 end
             end
-            WaitTicks(10)
+            coroutine.yield(10)
         end
     end
 end]]
@@ -3084,7 +3084,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=0,unit=v.object, ACUPresent=acuPresent}
                 end
             end
-            WaitTicks(10)
+            coroutine.yield(10)
         end
         --LOG('Check lastknown')
         for k,v in aiBrain.lastknown do
@@ -3139,7 +3139,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             end
             aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
         end
-        WaitTicks(50)
+        coroutine.yield(50)
         --LOG('Priority Points'..repr(aiBrain.prioritypoints))
     end
 end
@@ -3319,7 +3319,7 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
             local reclaimRect = {}
             reclaimRect = GetReclaimablesInRect(rect)
             if not platoonPos then
-                WaitTicks(1)
+                coroutine.yield(1)
                 return
             end
             if reclaimRect and RNGGETN( reclaimRect ) > 0 then
@@ -3366,7 +3366,7 @@ function CalculateMassValue(expansionMarkers)
 end
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
-    WaitTicks(5)
+    coroutine.yield(5)
     
     local VDist2Sq = VDist2Sq
     local markerList = {}
@@ -3428,7 +3428,7 @@ RenderBrainIntelRNG = function(aiBrain)
                 DrawCircle(expansion.Position,math.min(10,expansion.Structures/8),'FF999999')
             end
         end
-        WaitTicks(2)
+        coroutine.yield(2)
     end
 end
 
@@ -3510,7 +3510,7 @@ function MexUpgradeManagerRNG(aiBrain)
         local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
 
 
-        WaitTicks(40)
+        coroutine.yield(40)
     end
     while not aiBrain.defeat do
         local mexes1 = aiBrain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH3, true, false)
@@ -3633,7 +3633,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     -- Should be a multipurpose Expansion query that can provide units, acus a place to go
     if not aiBrain.BrainIntel.ExpansionWatchTable then
         WARN('No ExpansionWatchTable. Maybe it hasnt been created yet or something is broken')
-        WaitTicks(50)
+        coroutine.yield(50)
         return false
     end
     
@@ -3750,7 +3750,7 @@ MapReclaimAnalysis = function(aiBrain)
         gridCount = 16
     end
 
-    WaitTicks(100)
+    coroutine.yield(100)
     while not aiBrain.defeat do
         if aiBrain.ReclaimEnabled then
             local reclaimGrid = {}
@@ -3773,13 +3773,13 @@ MapReclaimAnalysis = function(aiBrain)
                         end
                     end
                     table.insert( reclaimGrid, {Position = {xCenter, GetSurfaceHeight(xCenter, zCenter), zCenter}, TotalReclaim=reclaimTotal} )
-                    WaitTicks(1)
+                    coroutine.yield(1)
                 end
             end
             aiBrain.MapReclaimTable = reclaimGrid
             --LOG('ReclaimGrid is '..repr(reclaimGrid))
         end
-        WaitTicks(1800)
+        coroutine.yield(1800)
     end
 end
 

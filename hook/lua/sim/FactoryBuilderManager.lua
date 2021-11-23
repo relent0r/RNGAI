@@ -110,12 +110,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             return
         end
         factory.DelayThread = true
-        WaitTicks(math.random(10,30))
+        coroutine.yield(math.random(10,30))
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
                 --LOG('Factory is offline, wait inside delaybuildorder')
-                WaitTicks(25)
+                coroutine.yield(25)
             end
             self:AssignBuildOrder(factory,bType)
         else

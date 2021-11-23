@@ -1053,7 +1053,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.EconomyOverTimeCurrent.EnergyTrendOverTime = eTrend * samplefactor
                 self.EconomyOverTimeCurrent.MassTrendOverTime = mTrend * samplefactor
                 
-                WaitTicks(samplerate)
+                coroutine.yield(samplerate)
             end
         end
     end,
@@ -1110,7 +1110,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if not graphAreaSet then
                 --LOG('Graph Area not set yet')
-                WaitTicks(30)
+                coroutine.yield(30)
             end
         end
     end,
@@ -1160,7 +1160,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
                 self:BaseMonitorCheckRNG()
             end
-            WaitTicks(40)
+            coroutine.yield(40)
         end
     end,
 
@@ -1252,7 +1252,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-                if self.BasePerimeterMonitor[k].AirUnits > 0 then
+                if self.BasePerimeterMonitor[k].AntiSurfaceAirUnits > 0 then
                     if self.BasePerimeterMonitor[k].AirThreat > alertThreat then
                         if not self.BaseMonitor.AlertsTable[k] then
                             self.BaseMonitor.AlertsTable[k] = {}
@@ -1539,11 +1539,12 @@ AIBrain = Class(RNGAIBrainClass) {
     PickEnemyRNG = function(self)
         while true do
             self:PickEnemyLogicRNG()
-            WaitTicks(1200)
+            coroutine.yield(1200)
         end
     end,
 
     PickEnemyLogicRNG = function(self)
+        local ALLBPS = __blueprints
         local armyStrengthTable = {}
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
@@ -1585,10 +1586,8 @@ AIBrain = Class(RNGAIBrainClass) {
 
             if insertTable.Enemy == false then
                 local ecoStructures = GetUnitsAroundPoint(self, categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
-                local GetBlueprint = moho.entity_methods.GetBlueprint
                 for _, v in ecoStructures do
-                    local bp = v:GetBlueprint()
-                    local ecoStructThreat = bp.Defense.EconomyThreatLevel
+                    local ecoStructThreat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
                     --LOG('* AI-RNG: Eco Structure'..ecoStructThreat)
                     ecoThreat = ecoThreat + ecoStructThreat
                 end
@@ -1799,7 +1798,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end)
                 end
             end
-            WaitTicks(70)
+            coroutine.yield(70)
         end
     end,
 
@@ -1930,9 +1929,21 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     BasePerimeterMonitorRNG = function(self)
-        -- This monitor base perimeters for enemy units
-        -- I did this to replace using multiple calls on builder conditions
-        WaitTicks(Random(5,20))
+        --[[ 
+        This monitors base perimeters for enemy units
+        I did this to replace using multiple calls on builder conditions for defensive triggers, but it also generates the base alerting system data.
+        The resulting table will look like something like this
+        ARMY_3={
+            AirThreat=0,
+            AirUnits=0,
+            AntiSurfaceAirUnits=0,
+            LandThreat=0,
+            LandUnits=0,
+            NavalThreat=0,
+            NavalUnits=0
+            },
+        ]]
+        coroutine.yield(Random(5,20))
         local ALLBPS = __blueprints
         self.BasePerimeterMonitor = {}
         while true do
@@ -1985,9 +1996,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         self.BasePerimeterMonitor[k] = nil
                     end
                 end
-                WaitTicks(2)
+                coroutine.yield(2)
             end
-            WaitTicks(20)
+            coroutine.yield(20)
         end
     end,
 
@@ -2028,13 +2039,13 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     end
-                    --LOG('Platoon Threat Validation')
-                    --LOG('* AI-RNG: Threat of attacker'..threat)
-                    --LOG('* AI-RNG: Threat of platoon'..myThreat)
-                    --LOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
+                    LOG('Platoon Threat Validation')
+                    LOG('* AI-RNG: Threat of attacker'..threat)
+                    LOG('* AI-RNG: Threat of platoon'..myThreat)
+                    LOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
                     -- Platoons still threatened
                     if threat and threat > (myThreat * 1.3) then
-                        --LOG('* AI-RNG: Created Threat Alert')
+                        LOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -2056,6 +2067,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
             --LOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+            LOG('Number of platoon alerts currently '..table.getn(self.BaseMonitor.PlatoonDistressTable))
             LOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
@@ -2075,6 +2087,8 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if self.BaseMonitor.AlertSounded then
             LOG('Base Alert Sounded')
+            LOG('There are '..table.getn(self.BaseMonitor.AlertsTable)..' alerts currently')
+            LOG('There are '..self.BaseMonitor.ActiveAlerts.. ' Active alerts')
             LOG('Movement layer is '..movementLayer)
             local priorityValue = 0
             local threatLayer = false
@@ -2117,7 +2131,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if self.BaseMonitor.PlatoonAlertSounded then
-            --LOG('Platoon Alert Sounded')
+            LOG('Platoon Alert Sounded')
             local priorityValue = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
@@ -2176,7 +2190,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorThreadRNG = function(self, ALLBPS)
         --LOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
-        WaitTicks(Random(2,10))
+        coroutine.yield(Random(2,10))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --LOG('* AI-RNG: Tactical Monitor Is Active')
@@ -2251,13 +2265,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('Total Mass Markers according to count '..self.BrainIntel.SelfThreat.MassMarker)
                 end
             end
-            WaitTicks(self.TacticalMonitor.TacticalMonitorTime)
+            coroutine.yield(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
 
     TacticalAnalysisThreadRNG = function(self)
         local ALLBPS = __blueprints
-        WaitTicks(Random(150,200))
+        coroutine.yield(Random(150,200))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 self:TacticalThreatAnalysisRNG(ALLBPS)
@@ -2290,7 +2304,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
             --LOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)
             --LOG('self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable)
-            WaitTicks(600)
+            coroutine.yield(600)
         end
     end,
 
@@ -2323,7 +2337,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local lastSpotted = 0
                 local enemyIndex = enemy:GetArmyIndex()
                 if not ArmyIsCivilian(enemyIndex) then
-                    local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE, false, false)
+                    local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.INSIGNIFICANTUNIT, false, false)
                     for _,v in enemyAir do
                         -- previous method of getting unit ID before the property was added.
                         --local unitbpId = v:GetUnitId()
@@ -2333,7 +2347,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
                     end
-                    WaitTicks(1)
+                    coroutine.yield(1)
                     local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                     for _,v in enemyExtractors do
                         bp = ALLBPS[v.UnitId].Defense
@@ -2341,7 +2355,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
                         enemyExtractorCount = enemyExtractorCount + 1
                     end
-                    WaitTicks(1)
+                    coroutine.yield(1)
                     local enemyNaval = GetListOfUnits( enemy, categories.NAVAL * ( categories.MOBILE + categories.DEFENSE ), false, false )
                     for _,v in enemyNaval do
                         bp = ALLBPS[v.UnitId].Defense
@@ -2350,13 +2364,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
                         enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
                     end
-                    WaitTicks(1)
-                    local enemyLand = GetListOfUnits( enemy, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+                    coroutine.yield(1)
+                    local enemyLand = GetListOfUnits( enemy, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND - categories.INSIGNIFICANTUNIT , false, false)
                     for _,v in enemyLand do
                         bp = ALLBPS[v.UnitId].Defense
                         enemyLandThreat = enemyLandThreat + bp.SurfaceThreatLevel
                     end
-                    WaitTicks(1)
+                    coroutine.yield(1)
                     local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
                     for _,v in enemyDefense do
                         bp = ALLBPS[v.UnitId].Defense
@@ -2366,7 +2380,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
                         enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
                     end
-                    WaitTicks(1)
+                    coroutine.yield(1)
                     if self.EnemyIntel.LandPhase < 2 then
                         if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.LAND) > 0 then
                             LOG('Enemy has moved to T2')
@@ -2470,15 +2484,14 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BrainIntel.Average.Air = averageSelfThreat / RNGGETN(self.BrainIntel.SelfThreat.Air)
             --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end]]
-        WaitTicks(1)
+        coroutine.yield(1)
         local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
-        local exBp
 
         for _,v in brainExtractors do
             exBp = ALLBPS[v.UnitId].Defense
-            selfExtractorThreat = selfExtractorThreat + exBp.EconomyThreatLevel
+            selfExtractorThreat = selfExtractorThreat + ALLBPS[v.UnitId].Defense.EconomyThreatLevel
             selfExtractorCount = selfExtractorCount + 1
             -- This bit is important. This is so that if the AI is given or captures any extractors it will start an upgrade thread and distress thread on them.
             if (not v.Dead) and (not v.PlatoonHandle) then
@@ -2486,13 +2499,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not self.StructurePool then
                     RUtils.CheckCustomPlatoons(self)
                 end
-                local unitBp = v:GetBlueprint()
                 local StructurePool = self.StructurePool
-                --LOG('* AI-RNG: Assigning built extractor to StructurePool')
+                LOG('* AI-RNG: Assigning built extractor to StructurePool')
                 self:AssignUnitsToPlatoon(StructurePool, {v}, 'Support', 'none' )
-                local upgradeID = unitBp.General.UpgradesTo or false
-                if upgradeID and unitBp then
-                    --LOG('* AI-RNG: UpgradeID')
+                local upgradeID = ALLBPS[v.UnitId].General.UpgradesTo or false
+                if upgradeID and ALLBPS[v.UnitId] then
+                    LOG('* AI-RNG: UpgradeID')
                     RUtils.StructureUpgradeInitialize(v, self)
                 end
             end
@@ -2511,7 +2523,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyExtractorthreat = 0
         local allyLandThreat = 0
         --LOG('Number of Allies '..RNGGETN(allyBrains))
-        WaitTicks(1)
+        coroutine.yield(1)
         if RNGGETN(allyBrains) > 0 then
             for k, ally in allyBrains do
                 local allyExtractors = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
@@ -2535,7 +2547,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --LOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
         --LOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
-        WaitTicks(1)
+        coroutine.yield(1)
         local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
         local navalThreat = 0
         local navalSubThreat = 0
@@ -2547,7 +2559,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.NavalNow = navalThreat
         self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
 
-        WaitTicks(1)
+        coroutine.yield(1)
         local brainLandUnits = GetListOfUnits( self, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
         local landThreat = 0
         for _,v in brainLandUnits do
@@ -2587,7 +2599,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
-        WaitTicks(Random(1,7))
+        coroutine.yield(Random(1,7))
         --LOG('* AI-RNG: Tactical Monitor Threat Pass')
         local enemyBrains = {}
         local multiplier
@@ -2662,7 +2674,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         --LOG('Potential Threats :'..repr(potentialThreats))
-        WaitTicks(2)
+        coroutine.yield(2)
         local phaseTwoThreats = {}
         local threatLimit = 20
         -- Set a raw threat table that is replaced on each loop so we can get a snapshot of current enemy strength across the map.
@@ -2728,7 +2740,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             --LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
-        WaitTicks(2)
+        coroutine.yield(2)
 
         local landThreatAroundBase = 0
         --LOG(repr(self.EnemyIntel.EnemyThreatLocations))
@@ -2782,7 +2794,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
         --LOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         --LOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
-        WaitTicks(2)
+        coroutine.yield(2)
     end,
 
     TacticalThreatAnalysisRNG = function(self, ALLBPS)
@@ -2852,7 +2864,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     end
-                    WaitTicks(1)
+                    coroutine.yield(1)
                 end
             end
         end
@@ -2870,7 +2882,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.DirectorData.Energy = energyUnits
         end
-        WaitTicks(1)
+        coroutine.yield(1)
         if RNGGETN(defensiveUnits) > 0 then
             for k, unit in defensiveUnits do
                 for q, threat in self.EnemyIntel.EnemyThreatLocations do
@@ -2905,7 +2917,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
-        WaitTicks(1)
+        coroutine.yield(1)
         if RNGGETN(strategicUnits) > 0 then
             for k, unit in strategicUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
@@ -2919,7 +2931,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.DirectorData.Strategic = strategicUnits
         end
-        WaitTicks(1)
+        coroutine.yield(1)
         if RNGGETN(intelUnits) > 0 then
             for k, unit in intelUnits do
                 for k, threat in self.EnemyIntel.EnemyThreatLocations do
@@ -2947,7 +2959,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.EnemyIntel.DirectorData.Factory = factoryUnits
         end
-        WaitTicks(1)
+        coroutine.yield(1)
     end,
 
     CheckDirectorTargetAvailable = function(self, threatType, platoonThreat)
@@ -3060,12 +3072,12 @@ AIBrain = Class(RNGAIBrainClass) {
     
     EcoExtractorUpgradeCheckRNG = function(self)
         -- Keep track of how many extractors are currently upgrading
-            WaitTicks(Random(1,7))
+            coroutine.yield(Random(1,7))
             while true do
                 local upgradingExtractors = RUtils.ExtractorsBeingUpgraded(self)
                 self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1
                 self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2
-                WaitTicks(30)
+                coroutine.yield(30)
             end
         end,
 
@@ -3074,7 +3086,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
-                    WaitTicks(50)
+                    coroutine.yield(50)
                     continue
                 end
                 local massStateCaution = self:EcoManagerMassStateCheck()
@@ -3212,19 +3224,19 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
-                        WaitTicks(20)
+                        coroutine.yield(20)
                         massStateCaution = self:EcoManagerMassStateCheck()
                         if massStateCaution then
                             --LOG('Power State Caution still true after first pass')
                             if massCycle > 8 then
                                 --LOG('Power Cycle Threashold met, waiting longer')
-                                WaitTicks(100)
+                                coroutine.yield(100)
                                 massCycle = 0
                             end
                         else
                             --LOG('Power State Caution is now false')
                         end
-                        WaitTicks(5)
+                        coroutine.yield(5)
                         --LOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
                     for k, v in unitTypePaused do
@@ -3257,7 +3269,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     massStateCaution = false
                 end
             end
-            WaitTicks(20)
+            coroutine.yield(20)
         end
     end,
 
@@ -3294,7 +3306,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
-                    WaitTicks(50)
+                    coroutine.yield(50)
                     continue
                 end
                 local powerStateCaution = self:EcoManagerPowerStateCheck()
@@ -3447,19 +3459,19 @@ AIBrain = Class(RNGAIBrainClass) {
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                         end
-                        WaitTicks(20)
+                        coroutine.yield(20)
                         powerStateCaution = self:EcoManagerPowerStateCheck()
                         if powerStateCaution then
                             --LOG('Power State Caution still true after first pass')
                             if powerCycle > 11 then
                                 --LOG('Power Cycle Threashold met, waiting longer')
-                                WaitTicks(100)
+                                coroutine.yield(100)
                                 powerCycle = 0
                             end
                         else
                             --LOG('Power State Caution is now false')
                         end
-                        WaitTicks(5)
+                        coroutine.yield(5)
                         --LOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
                     for k, v in unitTypePaused do
@@ -3495,16 +3507,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     powerStateCaution = false
                 end
             end
-            WaitTicks(20)
+            coroutine.yield(20)
         end
     end,
 
     FactoryEcoManagerRNG = function(self)
-        WaitTicks(Random(1,7))
+        coroutine.yield(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
-                    WaitTicks(50)
+                    coroutine.yield(50)
                     continue
                 end
                 local massStateCaution = self:EcoManagerMassStateCheck()
@@ -3523,19 +3535,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Land T1 Factory Taken offline')
-                                                    deficit = deficit - 4
+                                                    deficit = deficit - 5
                                                 end
                                             elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Land T2 Factory Taken offline')
-                                                    deficit = deficit - 7
+                                                    deficit = deficit - 8
                                                 end
                                             elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Land T3 Factory Taken offline')
-                                                    deficit = deficit - 16
+                                                    deficit = deficit - 17
                                                 end
                                             end
                                             if deficit <= 0 then
@@ -3574,7 +3586,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Air T3 Factory Taken offline')
-                                                    deficit = deficit - 16
+                                                    deficit = deficit - 17
                                                 end
                                             end
                                             if deficit <= 0 then
@@ -3607,13 +3619,13 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Naval T2 Factory Taken offline')
-                                                    deficit = deficit - 7
+                                                    deficit = deficit - 10
                                                 end
                                             elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Naval T3 Factory Taken offline')
-                                                    deficit = deficit - 16
+                                                    deficit = deficit - 20
                                                 end
                                             end
                                             if deficit <= 0 then
@@ -3641,19 +3653,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Land T1 Factory put online')
-                                                surplus = surplus - 4
+                                                surplus = surplus - 5
                                             end
                                         elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Land T2 Factory put online')
-                                                surplus = surplus - 7
+                                                surplus = surplus - 8
                                             end
                                         elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Land T3 Factory put online')
-                                                surplus = surplus - 16
+                                                surplus = surplus - 17
                                             end
                                         end
                                         if surplus <= 0 then
@@ -3692,7 +3704,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Air T3 Factory put online')
-                                                surplus = surplus - 16
+                                                surplus = surplus - 17
                                             end
                                         end
                                         if surplus <= 0 then
@@ -3725,13 +3737,13 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Naval T2 Factory put online')
-                                                surplus = surplus - 7
+                                                surplus = surplus - 10
                                             end
                                         elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Naval T3 Factory put online')
-                                                surplus = surplus - 16
+                                                surplus = surplus - 20
                                             end
                                         end
                                         if surplus <= 0 then
@@ -3764,7 +3776,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Offline Factory Count '..offlineFactoryCount)
             LOG('Online Factory Count '..onlineFactoryCount)]]
 
-            WaitTicks(20)
+            coroutine.yield(20)
         end
     end,
     
@@ -3943,7 +3955,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfStartPos = self.BuilderManagers['MAIN'].Position
         local enemyTestTable = {}
 
-        WaitTicks(Random(80,100))
+        coroutine.yield(Random(80,100))
         if self.EnemyIntel.EnemyCount > 0 then
             for index, brain in ArmyBrains do
                 if IsEnemy(selfIndex, index) and not ArmyIsCivilian(index) then
@@ -3999,15 +4011,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     --LOG('Current enemy chokepoint data for index '..k)
                     --LOG(repr(self.EnemyIntel.ChokePoints[k]))
-                    WaitTicks(20)
+                    coroutine.yield(20)
                 end
             end
-            WaitTicks(1200)
+            coroutine.yield(1200)
         end
     end,
 
     EngineerAssistManagerBrainRNG = function(self, type)
-        WaitTicks(1800)
+        coroutine.yield(1800)
         while true do
             self.EngineerAssistManagerPriorityTable = {
                 MASSEXTRACTION = 1,
@@ -4029,13 +4041,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 --self.EngineerAssistManagerActive = false
             end
-            WaitTicks(30)
+            coroutine.yield(30)
         end
     end,
 
     AllyEconomyHelpThread = function(self)
         local selfIndex = self:GetArmyIndex()
-        WaitTicks(180)
+        coroutine.yield(180)
         while true do
             if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
                 for index, brain in ArmyBrains do
@@ -4051,13 +4063,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            WaitTicks(100)
+            coroutine.yield(100)
         end
     end,
 
     HeavyEconomyRNG = function(self)
 
-        WaitTicks(Random(80,100))
+        coroutine.yield(Random(80,100))
         --LOG('Heavy Economy thread starting '..self.Nickname)
         -- This section is for debug
         --[[
@@ -4071,7 +4083,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while not self.defeat do
             --LOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
-            WaitTicks(50)
+            coroutine.yield(50)
         end
     end,
 
@@ -4429,7 +4441,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ExpansionIntelScanRNG = function(self)
         --LOG('Pre-Start ExpansionIntelScan')
-        WaitTicks(Random(30,70))
+        coroutine.yield(Random(30,70))
         if RNGGETN(self.BrainIntel.ExpansionWatchTable) == 0 then
             --LOG('ExpansionWatchTable not ready or is empty')
             return
@@ -4507,7 +4519,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.BrainIntel.ExpansionWatchTable[k]['Structures'] = rawThreat
                 end
             end
-            WaitTicks(50)
+            coroutine.yield(50)
             -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(self.BrainIntel.ExpansionWatchTable))
         end
     end,
@@ -4515,7 +4527,7 @@ AIBrain = Class(RNGAIBrainClass) {
     CivilianPDCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
         --LOG('Reveal Civilian PD')
-        WaitTicks(2)
+        coroutine.yield(2)
         local AIIndex = self:GetArmyIndex()
         for i,v in ArmyBrains do
             local brainIndex = v:GetArmyIndex()
@@ -4524,7 +4536,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local real_state = IsAlly(AIIndex, brainIndex) and 'Ally' or IsEnemy(AIIndex, brainIndex) and 'Enemy' or 'Neutral'
                 --LOG('Set Alliance to Ally')
                 SetAlliance(AIIndex, brainIndex, 'Ally')
-                WaitTicks(5)
+                coroutine.yield(5)
                 --LOG('Set Alliance back to '..real_state)
                 SetAlliance(AIIndex, brainIndex, real_state)
             end
@@ -4541,7 +4553,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Then we are going to try and create a dynamic expansion in the zone somewhere so we can try and take it.
         -- By default if someone already has the expansion marker the AI will give up. But that doesn't stop humans and it shouldn't stop us.
         -- When debuging, dont repr the expansions as they might have a unit assigned to them.
-        WaitTicks(Random(300,500))
+        coroutine.yield(Random(300,500))
         while true do
             local structureThreat
             local potentialExpansionZones = {}
@@ -4602,7 +4614,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 LOG('Marker we could have a dynamic expansion on the following positions')
                 LOG(repr(self.BrainIntel.DynamicExpansionPositions))
             end
-            WaitTicks(100)
+            coroutine.yield(100)
         end
     end,
 }

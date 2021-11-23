@@ -601,7 +601,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 counter = counter + 1
                 --LOG('Counter is now '..counter..'Waiting 10 seconds')
                 --LOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
-                WaitTicks(100)
+                coroutine.yield(100)
                 if not aiBrain:PlatoonExists(platoon) then
                     aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
                     if aiBrain.NeedTransports < 0 then
@@ -930,7 +930,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
 
         -- test the real values for that position
         local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        WaitTicks(1)
+        coroutine.yield(1)
         --LOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then

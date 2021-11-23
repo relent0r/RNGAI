@@ -322,7 +322,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
 
     local attached = true
     repeat
-        WaitTicks(20)
+        coroutine.yield(20)
         local allDead = true
         local transDead = true
         for k, v in units do
@@ -690,7 +690,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
 
     local numUnits = table.getn(platoon:GetPlatoonUnits())
     local maxShields = math.ceil(numUnits / 7)
-    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, v in atkPri do
         local retUnit = false
         local distance = false

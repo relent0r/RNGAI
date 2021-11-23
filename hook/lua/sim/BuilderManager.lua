@@ -54,7 +54,7 @@ BuilderManager = Class(RNGBuilderManager) {
                 for bNum,bData in bTypeData.Builders do
                     numTested = numTested + 1
                     if numTested >= numPerTick then
-                        WaitTicks(1)
+                        coroutine.yield(1)
                         if self.NumGet > 1 then
                             #LOG('*AI STAT: NumGet = ' .. self.NumGet)
                         end
@@ -66,7 +66,7 @@ BuilderManager = Class(RNGBuilderManager) {
                 end
             end
             if numTicks <= (self.BuilderCheckInterval * 10) then
-                WaitTicks((self.BuilderCheckInterval * 10) - numTicks)
+                coroutine.yield((self.BuilderCheckInterval * 10) - numTicks)
             end
         end
     end,

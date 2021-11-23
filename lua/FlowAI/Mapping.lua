@@ -270,7 +270,7 @@
                       coroutine.yield(100)
                       while true do
                           self:DrawLand()
-                          WaitTicks(2)
+                          coroutine.yield(2)
                       end
                   end
               )
