@@ -21,7 +21,6 @@ local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondE
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local VDist2Sq = VDist2Sq
-local WaitTicks = coroutine.yield
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RNGINSERT = table.insert
@@ -973,7 +972,6 @@ AIBrain = Class(RNGAIBrainClass) {
     
         local RNGMIN = math.min
         local RNGMAX = math.max
-        local WaitTicks = coroutine.yield
     
         -- array totals
         local eIncome = 0
@@ -2485,7 +2483,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end]]
         coroutine.yield(1)
-        local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+        local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, true)
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
 
@@ -2495,17 +2493,19 @@ AIBrain = Class(RNGAIBrainClass) {
             selfExtractorCount = selfExtractorCount + 1
             -- This bit is important. This is so that if the AI is given or captures any extractors it will start an upgrade thread and distress thread on them.
             if (not v.Dead) and (not v.PlatoonHandle) then
-                --LOG('This extractor has no platoon handle')
-                if not self.StructurePool then
-                    RUtils.CheckCustomPlatoons(self)
-                end
-                local StructurePool = self.StructurePool
-                LOG('* AI-RNG: Assigning built extractor to StructurePool')
-                self:AssignUnitsToPlatoon(StructurePool, {v}, 'Support', 'none' )
-                local upgradeID = ALLBPS[v.UnitId].General.UpgradesTo or false
-                if upgradeID and ALLBPS[v.UnitId] then
-                    LOG('* AI-RNG: UpgradeID')
-                    RUtils.StructureUpgradeInitialize(v, self)
+                if v:GetFractionComplete() == 1 then
+                    --LOG('This extractor has no platoon handle')
+                    if not self.StructurePool then
+                        RUtils.CheckCustomPlatoons(self)
+                    end
+                    local StructurePool = self.StructurePool
+                    --LOG('* AI-RNG: Assigning built extractor to StructurePool')
+                    self:AssignUnitsToPlatoon(StructurePool, {v}, 'Support', 'none' )
+                    local upgradeID = ALLBPS[v.UnitId].General.UpgradesTo or false
+                    if upgradeID and ALLBPS[v.UnitId] then
+                        --LOG('* AI-RNG: UnitID '..v.UnitId)
+                        RUtils.StructureUpgradeInitialize(v, self)
+                    end
                 end
             end
         end
@@ -4561,7 +4561,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local invalidZone = false
                 if v.Zone then
                     if self.GraphZones then
-                        if self.GraphZones[v.Zone].MassMarkersInZone > 4 then
+                        if self.GraphZones[v.Zone].MassMarkersInZone > 5 then
                             for c, b in self.BuilderManagers do
                                 if b.GraphArea and b.GraphArea == v.Zone then
                                     invalidZone = true
@@ -4572,20 +4572,21 @@ AIBrain = Class(RNGAIBrainClass) {
                             invalidZone = true
                         end
                     end
-                end
-                if not invalidZone then
-                    if not potentialExpansionZones[v.Zone] then
-                        potentialExpansionZones[v.Zone] = {}
-                        potentialExpansionZones[v.Zone].Expansions = {}
-                        RNGINSERT(potentialExpansionZones[v.Zone].Expansions, v)
+                    if not invalidZone then
+                        if not potentialExpansionZones[v.Zone] then
+                            potentialExpansionZones[v.Zone] = {}
+                            potentialExpansionZones[v.Zone].Expansions = {}
+                            RNGINSERT(potentialExpansionZones[v.Zone].Expansions, v)
+                        end
                     end
                 end
             end
-            LOG('These are the potentialExpansionZones')
-            LOG('Mass Markers Per Zone')
+            --LOG('These are the potentialExpansionZones')
+            --LOG('Mass Markers Per Zone')
             local foundMarker = false
             local loc = false
             self.BrainIntel.DynamicExpansionPositions = {}
+            --LOG('Graph Zones '..repr(self.GraphZones))
             for k, v in potentialExpansionZones do
                 if v.Expansions then
                     for c, b in v.Expansions do

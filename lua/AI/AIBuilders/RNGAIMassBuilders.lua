@@ -123,6 +123,7 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 120,
+                MinDistance = 1,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',

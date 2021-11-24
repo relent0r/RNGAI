@@ -20,7 +20,6 @@ local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
-local WaitTicks = coroutine.yield
 local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -92,12 +91,12 @@ function SetCDRDefaults(aiBrain, cdr)
     for k, v in ALLBPS[cdr.UnitId].Weapon do
         if v.Label == 'OverCharge' then
             cdr.OverCharge = v
-            LOG('* AI-RNG: ACU Overcharge is set ')
+            --LOG('* AI-RNG: ACU Overcharge is set ')
             continue
         end
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             cdr.WeaponRange = v.MaxRadius - 2
-            LOG('* AI-RNG: ACU Weapon Range is :'..cdr.WeaponRange)
+            --LOG('* AI-RNG: ACU Weapon Range is :'..cdr.WeaponRange)
         end
     end
 end
@@ -496,7 +495,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                 cdrPosition = cdr:GetPosition()
                 if platoonRetreat then
                     if platoon and aiBrain:PlatoonExists(platoon) then
-                        local platoonPosition = platoon:GetPlatoonPosition()
+                        local platoonPosition = GetPlatoonPosition(platoon)
                         local platoonDistance = VDist2Sq(cdrPosition[1], cdrPosition[3], platoonPosition[1], platoonPosition[3])
                         if platoonDistance < 225 then
                             LOG('Close to platoon position clear and return')
@@ -2667,6 +2666,9 @@ local SurfacePrioritiesRNG = {
     'TECH3 MOBILE LAND',
     'TECH2 MOBILE LAND',
     'TECH1 MOBILE LAND',
+    'TECH3 MOBILE NAVAL',
+    'TECH2 MOBILE NAVAL',
+    'TECH1 MOBILE NAVAL',
 }
 
 AssignExperimentalPrioritiesRNG = function(platoon)
@@ -2726,7 +2728,7 @@ FindExperimentalTargetRNG = function(self)
                     mostUnits = numUnitsAtBase
                     bestUnit = notDeadUnit
                 elseif numUnitsAtBase == mostUnits then
-                    local myPos = self:GetPlatoonPosition()
+                    local myPos = GetPlatoonPosition(self)
                     local dist1 = VDist2(myPos[1], myPos[3], base.Position[1], base.Position[3])
                     local dist2 = VDist2(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
 
@@ -2789,7 +2791,7 @@ function BehemothBehaviorRNG(self, id)
             end
             -- If no target jump out
             if not targetUnit or targetUnit.Dead then break end
-            local unitPos = self:GetPlatoonPosition()
+            local unitPos = GetPlatoonPosition(self)
             local targetPos = targetUnit:GetPosition()
             if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
                 if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
@@ -2820,7 +2822,7 @@ function BehemothBehaviorRNG(self, id)
                 -- Wait for shield to die loop
                 while not closestBlockingShield.Dead and not experimental.Dead do
                     coroutine.yield(20)
-                    unitPos = self:GetPlatoonPosition()
+                    unitPos = GetPlatoonPosition(self)
                     shieldPosition = closestBlockingShield:GetPosition()
                     if VDist2Sq(unitPos[1], unitPos[3], shieldPosition[1], shieldPosition[3]) < 6400 then
                         IssueClearCommands({experimental})

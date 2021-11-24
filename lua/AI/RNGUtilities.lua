@@ -13,7 +13,6 @@ local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMas
 local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
-local WaitTicks = coroutine.yield
 local ALLBPS = __blueprints
 
 -- TEMPORARY LOUD LOCALS
@@ -905,8 +904,10 @@ function PositionOnWater(positionX, positionZ)
     --Check if a position is under water. Used to identify if threat/unit position is over water
     -- Terrain >= Surface = Target is on land
     -- Terrain < Surface = Target is in water
-
-    return GetTerrainHeight( positionX, positionZ ) < GetSurfaceHeight( positionX, positionZ )
+    if positionX and positionZ then
+        return GetTerrainHeight( positionX, positionZ ) < GetSurfaceHeight( positionX, positionZ )
+    end
+    return false
 end
 
 function ManualBuildStructure(aiBrain, eng, structureType, tech, position)

@@ -205,13 +205,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Path Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 750,
+        Priority = 950,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.00 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},

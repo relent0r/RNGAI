@@ -474,7 +474,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Sea Hunters',
         PlatoonTemplate = 'RNGAI Sea Hunt',
-        PlatoonAddPlans = {'DistressResponseAI'},
+        PlatoonAddPlans = {'DistressResponseAIRNG'},
         Priority = 310,
         PriorityFunction = SeaDefenseForm,
         InstanceCount = 20,
