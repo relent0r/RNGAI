@@ -3525,7 +3525,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if massStateCaution then
                     if self.cmanager.categoryspend.fact['Land'] > (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
                         local deficit = self.cmanager.categoryspend.fact['Land'] - (self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                        --LOG('Land Factory Deficit is '..deficit)
+                        LOG('Land Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
                                 if self.BuilderManagers[k].FactoryManager then
@@ -3537,13 +3537,33 @@ AIBrain = Class(RNGAIBrainClass) {
                                                     --LOG('Land T1 Factory Taken offline')
                                                     deficit = deficit - 5
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                        LOG('Finished T1 Loop Land Factory Deficit is '..deficit)
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Land T2 Factory Taken offline')
                                                     deficit = deficit - 8
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                        LOG('Finished T2 Loop Land Factory Deficit is '..deficit)
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Land T3 Factory Taken offline')
@@ -3554,6 +3574,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
+                                        LOG('Finished T3 Loop Land Factory Deficit is '..deficit)
                                     end
                                 end
                                 if deficit <= 0 then
@@ -3576,13 +3597,33 @@ AIBrain = Class(RNGAIBrainClass) {
                                                     --LOG('Air T1 Factory Taken offline')
                                                     deficit = deficit - 4
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                        LOG('Finished T1 Loop Air Factory Deficit is '..deficit)
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Air T2 Factory Taken offline')
                                                     deficit = deficit - 7
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                        LOG('Finished T2 Loop Air Factory Deficit is '..deficit)
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Air T3 Factory Taken offline')
@@ -3593,6 +3634,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
+                                        LOG('Finished T3 Loop Air Factory Deficit is '..deficit)
                                     end
                                 end
                                 if deficit <= 0 then
@@ -3615,13 +3657,33 @@ AIBrain = Class(RNGAIBrainClass) {
                                                     --LOG('Naval T1 Factory Taken offline')
                                                     deficit = deficit - 4
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                        LOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Naval T2 Factory Taken offline')
                                                     deficit = deficit - 10
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
+                                            end
+                                            if deficit <= 0 then
+                                                break
+                                            end
+                                        end
+                                        LOG('Finished T2 Loop Naval Factory Deficit is '..deficit)
+                                        if deficit <= 0 then
+                                            break
+                                        end
+                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
+                                            if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                                 if not f.Offline then
                                                     f.Offline = true
                                                     --LOG('Naval T3 Factory Taken offline')
@@ -3632,6 +3694,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
+                                        LOG('Finished T3 Loop Naval Factory Deficit is '..deficit)
                                     end
                                 end
                                 if deficit <= 0 then
@@ -3649,7 +3712,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                        if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Land T1 Factory put online')
@@ -3661,7 +3724,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 --LOG('Land T2 Factory put online')
                                                 surplus = surplus - 8
                                             end
-                                        elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                        elseif EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Land T3 Factory put online')
@@ -3688,7 +3751,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
+                                        if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Air T1 Factory put online')
@@ -3700,7 +3763,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 --LOG('Air T2 Factory put online')
                                                 surplus = surplus - 7
                                             end
-                                        elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                        elseif EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Air T3 Factory put online')
@@ -3727,7 +3790,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
+                                        if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Naval T1 Factory put online')
@@ -3739,7 +3802,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 --LOG('Naval T2 Factory put online')
                                                 surplus = surplus - 10
                                             end
-                                        elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
+                                        elseif EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                             if f.Offline then
                                                 f.Offline = false
                                                 --LOG('Naval T3 Factory put online')

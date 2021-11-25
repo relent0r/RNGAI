@@ -59,6 +59,8 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
     cdr.WeaponRange = false
+    cdr.DefaultRange = 256
+    cdr.MaxBaseRange = 0
     cdr.OverCharge = false
     cdr.ThreatLimit = 22
     cdr.Confidence = 0
@@ -610,12 +612,13 @@ function CDRExpansionRNG(aiBrain, cdr)
         end
         cdr.Initialized = true
     end
-    if cdr.HealthPercent < 0.60 or cdr.Phase == 3 then
+    if cdr.HealthPercent < 0.60 or cdr.Phase > 1 then
         return
     end
-    if cdr.Initialized and GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT, cdr.CDRHome, 60, 'Enemy') > 0 then
+    if cdr.Initialized and aiBrain.BasePerimeterMonitor['MAIN'].LandThreat > 0 then
         return
     end
+    
     local stageExpansion = RUtils.QueryExpansionTable(aiBrain, cdr.Position, 512, 'Land', 10, 'acu')
     if stageExpansion then
         cdr.Active = true
@@ -867,6 +870,8 @@ function CDRThreatAssessmentRNG(cdr)
             friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + friendlyUnitThreat
             enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
             cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
+            cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
+            LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
     end
@@ -956,6 +961,10 @@ function CDROverChargeRNG(aiBrain, cdr)
         
         repeat
             overCharging = false
+            if VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
+                LOG('OverCharge running but ACU is beyond its MaxBaseRange property')
+                return CDRRetreatRNG(aiBrain, cdr)
+            end
             if counter >= 5 or not target or target.Dead or VDist3Sq(cdrPos, target:GetPosition()) > maxRadius * maxRadius then
                 counter = 0
                 local searchRadius = 30
@@ -2078,7 +2087,9 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
             --LOG('* RNGAI: * Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
             local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
             IssueScript({cdr}, order)
-            preReqRequired = true
+            if tempEnhanceBp.Prerequisite then
+                preReqRequired = true
+            end
             coroutine.yield(10)
         end
         --LOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain.Nickname..' IssueScript: '..enhancement)

@@ -21,6 +21,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 8.0 } }, -- If our energy is trending into negatives
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 0.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
