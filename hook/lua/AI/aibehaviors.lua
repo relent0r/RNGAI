@@ -879,6 +879,18 @@ end
 
 function CDROverChargeRNG(aiBrain, cdr)
 
+    local function drawCirclePoints(points, radius, center)
+        local extractorPoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(extractorPoints, { newX, 0 , newY})
+        end
+        return extractorPoints
+    end
+
     CDRWeaponCheckRNG(aiBrain, cdr)
 
     -- Added for ACUs starting near each other
@@ -1068,12 +1080,28 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 3 )})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                            LOG('Blocking terrain for acu')
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
                                 plat.BuilderName = 'CDR Combat'
                                 aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                             end
-                            cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            local checkPoints = drawCirclePoints(6, 10, movePos)
+                            local alternateFirePos = false
+                            for k, v in checkPoints do
+                                LOG('Check points for alternative fire position '..repr(v))
+                                if not aiBrain:CheckBlockingTerrain(v, targetPos, 'none') then
+                                    LOG('Found alternate position due to terrain blocking, attempting move')
+                                    movePos = v
+                                    alternateFirePos = true
+                                    break
+                                end
+                            end
+                            if alternateFirePos then
+                                cdr.PlatoonHandle:MoveToLocation(movePos, false)
+                            else
+                                cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            end
                             coroutine.yield(30)
                             IssueClearCommands({cdr})
                             continue
@@ -1103,7 +1131,28 @@ function CDROverChargeRNG(aiBrain, cdr)
                         cdr:SetCustomName('CDR standard pew pew logic')
                         local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
                         if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
-                            cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            LOG('Blocking terrain for acu')
+                            if not PlatoonExists(aiBrain, plat) then
+                                local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
+                                plat.BuilderName = 'CDR Combat'
+                                aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
+                            end
+                            local checkPoints = drawCirclePoints(6, 10, movePos)
+                            local alternateFirePos = false
+                            for k, v in checkPoints do
+                                LOG('Check points for alternative fire position '..repr(v))
+                                if not aiBrain:CheckBlockingTerrain(v, targetPos, 'none') then
+                                    LOG('Found alternate position due to terrain blocking, attempting move')
+                                    movePos = v
+                                    alternateFirePos = true
+                                    break
+                                end
+                            end
+                            if alternateFirePos then
+                                cdr.PlatoonHandle:MoveToLocation(movePos, false)
+                            else
+                                cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            end
                             coroutine.yield(30)
                             IssueClearCommands({cdr})
                             continue

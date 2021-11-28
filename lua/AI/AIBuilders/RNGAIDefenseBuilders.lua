@@ -977,7 +977,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},
             --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTINAVY}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.TECH2 * categories.ANTINAVY}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },

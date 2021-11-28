@@ -500,7 +500,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
         Reclaiming = true
     end
     -- reclaim rocks etc or we can't build mexes or hydros
-    local Reclaimables = GetReclaimablesInRect(Rect(pos[1] - 1, pos[3] - 1, pos[1] + 1, pos[3] + 1))
+    local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
     if Reclaimables and RNGGETN( Reclaimables ) > 0 then
         for k,v in Reclaimables do
             if v.MaxMassReclaim and v.MaxMassReclaim > 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
@@ -3815,6 +3815,34 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
         return retPos, retName
     end
     return false
+end
+
+function getAngle(myX, myZ, myDestX, myDestZ, theirX, theirZ)
+    --[[ Softles gave me this to help improve the mass point retreat mechanic
+       If (myX,myZ) is the platoon, (myDestX,myDestZ) the mass point, and (theirX, theirZ) the enemy threat
+       Then 0 => mass point in same direction as enemy, 1 => mass point in complete opposite direction
+       You, your dest, and them form a triangle.
+       First work out side lengths
+    ]]
+    local aSq = (myX - myDestX)*(myX - myDestX) + (myZ - myDestZ)*(myZ - myDestZ)
+    local bSq = (myX - theirX)*(myX - theirX) + (myZ - theirZ)*(myZ - theirZ)
+    local cSq = (myDestX - theirX)*(myDestX - theirX) + (myDestZ - theirZ)*(myDestZ - theirZ)
+    -- Quick check to see if anything is a 0 length (a problem, since it then wouldn't be a triangle)
+    if aSq == 0 or bSq == 0 or cSq == 0 then
+        return 0
+    end
+    -- Now use cosine rule to get angle
+    -- c^2 = b^2 + a^2 - 2ab*cos(angle) => angle = acos((a^2+b^2-c^2)/2ab)
+    local prepStep = (bSq + aSq - cSq)/(2*math.sqrt(aSq*bSq))
+    -- Quickly check it is between 1 and -1, if it gets rounded (because computers) to -1.0000001 then we'd throw an error (bad!)
+    if prepStep > 1 then
+        return 0
+    elseif prepStep < -1 then
+        return 1
+    end
+    local angle = math.acos(prepStep)
+    -- Now normalise into a [0 to 1] value
+    return angle/math.pi
 end
 
 --[[

@@ -745,8 +745,8 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -866,6 +866,7 @@ BuilderGroup {
                 categories.EXPERIMENTAL,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
+                categories.FACTORY,
                 categories.MASSEXTRACTION,
                 categories.MASSFABRICATION,
                 categories.ALLUNITS,
