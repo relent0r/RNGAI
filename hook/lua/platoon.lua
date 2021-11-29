@@ -522,7 +522,7 @@ Platoon = Class(RNGAIPlatoon) {
             local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 30, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 --LOG('GuardMarker has enemy units around marker position, looking for target')
-                local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, bestMarker.Position, 'Attack', enemyRadius, (categories.LAND + categories.NAVAL + categories.STRUCTURE), atkPri, false)
+                local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, bestMarker.Position, 'Attack', self.EnemyRadius, (categories.LAND + categories.NAVAL + categories.STRUCTURE), atkPri, false)
                 --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                 local attackSquad = self:GetSquadUnits('Attack')
                 IssueClearCommands(attackSquad)
@@ -1247,7 +1247,7 @@ Platoon = Class(RNGAIPlatoon) {
                     IssueMove({scoutUnit}, platoonPos)
                 end
                 if not platoonPos then break end
-                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
+                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
                 if enemyUnitCount > 0 then
                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                     attackSquad = self:GetSquadUnits('Attack')
@@ -1504,7 +1504,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     IssueClearCommands({scoutUnit})
                                     IssueMove({scoutUnit}, SquadPosition)
                                 end
-                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 and (not currentLayerSeaBed) then
                                     if DEBUG then
                                         for _, v in platoonUnits do
@@ -1513,7 +1513,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             end
                                         end
                                     end
-                                    target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, SquadPosition, 'Attack', enemyRadius, categories.LAND * (categories.STRUCTURE + categories.MOBILE), atkPri, false)
+                                    target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, SquadPosition, 'Attack', self.EnemyRadius, categories.LAND * (categories.STRUCTURE + categories.MOBILE), atkPri, false)
                                     --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
@@ -1660,7 +1660,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         local platoonUnits = GetPlatoonUnits(self)
-        local enemyRadius = 40
+        self.EnemyRadius = 40
         local data = self.PlatoonData
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
@@ -1806,10 +1806,10 @@ Platoon = Class(RNGAIPlatoon) {
                                 platoonPos = GetPlatoonPosition(self)
                                 if not platoonPos then break end
                                 local targetPosition
-                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL) - categories.SCOUT - categories.WALL)
-                                    target, acuInRange = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', enemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, atkPri, false)
+                                    target, acuInRange = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, atkPri, false)
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do
@@ -1998,7 +1998,7 @@ Platoon = Class(RNGAIPlatoon) {
         local categoryList = {}
         local atkPri = {}
         local platoonUnits = GetPlatoonUnits(self)
-        local enemyRadius = 60
+        self.EnemyRadius = 60
         local data = self.PlatoonData
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
@@ -2161,10 +2161,10 @@ Platoon = Class(RNGAIPlatoon) {
                                 platoonPos = GetPlatoonPosition(self)
                                 if not platoonPos then break end
                                 local targetPosition
-                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER - categories.AIR, platoonPos, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER - categories.AIR, platoonPos, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     --target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL)
-                                    target, acuInRange = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', enemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, atkPri, false)
+                                    target, acuInRange = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, atkPri, false)
                                     local attackSquad = self:GetSquadUnits('Attack')
                                     IssueClearCommands(attackSquad)
                                     while PlatoonExists(aiBrain, self) do
@@ -2527,7 +2527,7 @@ Platoon = Class(RNGAIPlatoon) {
                             if data.AggressiveMove then
                                 SquadPosition = self:GetSquadPosition('Attack') or nil
                                 if not SquadPosition then break end
-                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, enemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     --LOG('Strikeforce land detected close target starting micro')
                                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL)
@@ -3120,7 +3120,164 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
-
+    CommanderInitializeAIRNG = function(self)
+        -- Why did I do this.
+        -- Cause I had multiple builders based on the number of mass points around the acu spawn and this was all good and fine
+        -- until I needed to increase efficiency when a hydro is/isnt present and I just got annoyed with trying to figure out a builder based method.
+        -- Yea I know its a little ocd. On the bright side I can now make those initial pgens adjacent to the factory.
+        -- This is just a scripted engineer build, nothing special.
+        local aiBrain = self:GetBrain()
+        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
+        local whatToBuild, location, relativeLoc
+        local hydroPresent = false
+        local buildLocation = false
+        local buildMassPoints = {}
+        
+        local factionIndex = aiBrain:GetFactionIndex()
+        local platoonUnits = GetPlatoonUnits(self)
+        local eng
+        for k, v in platoonUnits do
+            if not v.Dead and EntityCategoryContains(categories.ENGINEER, v) then
+                IssueClearCommands({v})
+                if not eng then
+                    eng = v
+                end
+            end
+        end
+        eng.Active = true
+        baseTmplFile = import(self.PlatoonData.Construction.BaseTemplateFile or '/lua/BaseTemplates.lua')
+        baseTmplDefault = import('/lua/BaseTemplates.lua')
+        buildingTmplFile = import(self.PlatoonData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
+        buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+        
+        local engPos = eng:GetPosition()
+        massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
+        local closeMarkers = 0
+        for k, marker in massMarkers do
+            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 121 then
+                closeMarkers = closeMarkers + 1
+                if closeMarkers > 3 then
+                    break
+                end
+                RNGINSERT(buildMassPoints, marker)
+            end
+        end
+        eng.EngineerBuildQueue={}
+        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+        RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        LOG('Number of close mass markers '..closeMarkers)
+        LOG('Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
+        LOG('Mex build stage 1')
+        if RNGGETN(buildMassPoints) > 0 then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            for k, v in buildMassPoints do
+                LOG('MassPoint '..repr(v))
+                RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                buildMassPoints[k] = nil
+                break
+            end
+            buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+        end
+        LOG('Attempt structure build')
+        LOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
+        if RNGGETN(eng.EngineerBuildQueue) > 0 then
+            IssueClearCommands({eng})
+            for k,v in eng.EngineerBuildQueue do
+                LOG('Attempt to build queue item of '..repr(v))
+                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
+                LOG('Build Queue item should be finished '..k)
+                eng.EngineerBuildQueue[k] = nil
+            end
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                LOG('Waiting for build to finish')
+                coroutine.yield(5)
+            end
+        end
+        LOG('Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
+        eng.EngineerBuildQueue={}
+        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
+        RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        LOG('Energy Production stage 1')
+        LOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
+        if RNGGETN(eng.EngineerBuildQueue) > 0 then
+            IssueClearCommands({eng})
+            for k,v in eng.EngineerBuildQueue do
+                LOG('Attempt to build queue item of '..repr(v))
+                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
+                LOG('Build Queue item should be finished '..k)
+                eng.EngineerBuildQueue[k] = nil
+            end
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                LOG('Waiting for build to finish')
+                coroutine.yield(5)
+            end
+        end
+        eng.EngineerBuildQueue={}
+        if RNGGETN(buildMassPoints) > 0 then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            for k, v in buildMassPoints do
+                RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                buildMassPoints[k] = nil
+            end
+        end
+        LOG('Mex build stage 2')
+        LOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
+        if RNGGETN(eng.EngineerBuildQueue) > 0 then
+            IssueClearCommands({eng})
+            for k,v in eng.EngineerBuildQueue do
+                LOG('Attempt to build queue item of '..repr(v))
+                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
+                LOG('Build Queue item should be finished '..k)
+                eng.EngineerBuildQueue[k] = nil
+            end
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                LOG('Waiting for build to finish')
+                coroutine.yield(5)
+            end
+        end
+        local hydroTable = AIUtils.AIGetSortedHydroLocations(aiBrain, 1, -1000, 100, 0, 'AntiSurface', engPos)
+        LOG('hydroTable '..repr(hydroTable))
+        if hydroTable[1] and VDist2Sq(hydroTable[1][1],hydroTable[1][3], engPos[1],engPos[3]) < 4225 then
+            hydroPresent = true
+        end
+        
+        eng.EngineerBuildQueue={}
+        local energyCount = 2
+        LOG('Energy Production stage 2')
+        if not hydroPresent then
+            LOG('No hydro present, we should be building a little more power')
+            if closeMarkers > 0 then
+                if closeMarkers < 4 then
+                    energyCount = 3
+                else
+                    energyCount = 4
+                end
+                for i=1, energyCount do
+                    buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
+                    RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, true})
+                end
+            end
+        else
+            LOG('Hydro is present we shouldnt need any more pgens during initialization')
+        end
+        LOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
+        if RNGGETN(eng.EngineerBuildQueue) > 0 then
+            IssueClearCommands({eng})
+            for k,v in eng.EngineerBuildQueue do
+                LOG('Attempt to build queue item of '..repr(v))
+                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
+                LOG('Build Queue item should be finished '..k)
+                eng.EngineerBuildQueue[k] = nil
+            end
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                LOG('Waiting for build to finish')
+                coroutine.yield(5)
+            end
+        end
+        eng.EngineerBuildQueue={}
+        eng.Active = false
+        self:PlatoonDisband()
+    end,
 
     -------------------------------------------------------
     --   Function: ProcessBuildCommand
@@ -5208,7 +5365,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         break
                                     end
                                     if retreatCount < 5 then
-                                        local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, self.enemyRadius, 'Enemy')
+                                        local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, self.EnemyRadius, 'Enemy')
                                         --LOG('* AI-RNG: * SACUATTACKAIRNG: EnemyCount :'..enemyUnitCount)
                                         if enemyUnitCount > 2 and i > 2 then
                                             --LOG('* AI-RNG: * SACUATTACKAIRNG: Enemy Units Detected, retreating..')

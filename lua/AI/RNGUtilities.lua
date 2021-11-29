@@ -3817,7 +3817,92 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     return false
 end
 
-function getAngle(myX, myZ, myDestX, myDestZ, theirX, theirZ)
+function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
+    -- A small note that caught me out.
+    -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
+    -- and you wont understand why.
+    LOG('GetBuildLocationRNG Function')
+    local buildLocation = false
+    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    local engPos = eng:GetPosition()
+    if adjacent then
+        LOG('Request for Adjacency')
+        local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, radius, 'Ally')
+        LOG('Test units have '..RNGGETN(testUnits)..' number of units')
+        local index = aiBrain:GetArmyIndex()
+        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
+        local template = {}
+        table.insert(template, {})
+        table.insert(template[1], { buildUnit })
+        local closeUnits = {}
+        for _, v in testUnits do
+            if not v.Dead and not v:IsBeingBuilt() and v:GetAIBrain():GetArmyIndex() == index then
+                table.insert(closeUnits, v)
+            end
+        end
+        if RNGGETN(closeUnits) > 0 then
+            for k,v in closeUnits do
+                if not v.Dead then
+                    local targetSize = v:GetBlueprint().Physics
+                    local targetPos = v:GetPosition()
+                    targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
+                    targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)
+                    -- Top/bottom of unit
+                    for i=0,((targetSize.SkirtSizeX/2)-1) do
+                        local testPos = { targetPos[1] + 1 + (i * 2), targetPos[3]-(unitSize.SkirtSizeZ/2), 0 }
+                        local testPos2 = { targetPos[1] + 1 + (i * 2), targetPos[3]+targetSize.SkirtSizeZ+(unitSize.SkirtSizeZ/2), 0 }
+                        -- check if the buildplace is to close to the border or inside buildable area
+                        if VDist2Sq(testPos[1],testPos[2],engPos[1],engPos[3])>3 and testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                            table.insert(template[1], testPos)
+                        end
+                        if VDist2Sq(testPos2[1],testPos2[2],engPos[1],engPos[3])>3 and testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                            table.insert(template[1], testPos2)
+                        end
+                    end
+                    -- Sides of unit
+                    for i=0,((targetSize.SkirtSizeZ/2)-1) do
+                        local testPos = { targetPos[1]+targetSize.SkirtSizeX + (unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i * 2), 0 }
+                        local testPos2 = { targetPos[1]-(unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i*2), 0 }
+                        if VDist2Sq(testPos[1],testPos[2],engPos[1],engPos[3])>3 and testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                            table.insert(template[1], testPos)
+                        end
+                        if VDist2Sq(testPos2[1],testPos2[2],engPos[1],engPos[3])>3 and testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                            table.insert(template[1], testPos2)
+                        end
+                    end
+                end
+            end
+            LOG('template contents '..repr(template))
+            local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, template, false, eng, nil, engPos[1], engPos[3])
+            --if location and relative then
+            --    local relativeLoc = {location[1], 0, location[2]}
+            --    buildLocation = {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}
+            --else
+            if location then
+                buildLocation = location
+            end
+        end
+    else
+        LOG('Request for Non Adjacency')
+        LOG('buildUnit '..buildUnit)
+        LOG('whatToBuild '..whatToBuild)
+        local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
+        if location and relative then
+            local relativeLoc = {location[1], 0, location[2]}
+            buildLocation = {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}
+        else
+            buildLocation = location
+        end
+    end
+    if buildLocation then
+        LOG('Build Location returned '..repr(buildLocation))
+        return buildLocation, whatToBuild
+    end
+    return false
+end
+
+
+function GetAngleRNG(myX, myZ, myDestX, myDestZ, theirX, theirZ)
     --[[ Softles gave me this to help improve the mass point retreat mechanic
        If (myX,myZ) is the platoon, (myDestX,myDestZ) the mass point, and (theirX, theirZ) the enemy threat
        Then 0 => mass point in same direction as enemy, 1 => mass point in complete opposite direction

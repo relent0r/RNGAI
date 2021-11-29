@@ -39,6 +39,27 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small Close 0M',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
+        PlatoonTemplate = 'CommanderInitializeRNG',
+        Priority = 2000,
+        PriorityFunction = function(self, aiBrain)
+			return 0, false
+		end,
+        BuilderConditions = {
+            { IBC, 'NotPreBuilt', {}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        BuilderData = {
+            ScanWait = 40,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
+                BaseTemplate = 'ACUBaseTemplate',
+            }
+        }
+    },
+    --[[Builder {
+        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 0M',
+        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -220,7 +241,7 @@ BuilderGroup {
                 },
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Close',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
@@ -1065,7 +1086,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI CDR Assist Assist Hydro',
         PlatoonTemplate = 'CommanderAssistRNG',
-        Priority = 860,
+        Priority = 1000,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,60, categories.STRUCTURE * categories.HYDROCARBON, }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.HYDROCARBON }},
