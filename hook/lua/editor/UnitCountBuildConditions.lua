@@ -58,7 +58,7 @@ function HaveUnitsWithCategoryAndAllianceRNG(aiBrain, greater, numReq, category,
     --LOG('HaveUnitsWithCategory Cat is false')
     return false
 end
---    Uveso Function          { SBC, 'CanBuildOnHydroLessThanDistance', { 'LocationType', 1000, -1000, 100, 1, 'AntiSurface', 1 }},
+
 function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then

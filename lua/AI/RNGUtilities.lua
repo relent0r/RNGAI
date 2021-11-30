@@ -3930,6 +3930,41 @@ function GetAngleRNG(myX, myZ, myDestX, myDestZ, theirX, theirZ)
     return angle/math.pi
 end
 
+function ClosestMarkersWithinRadius(aiBrain, pos, markerType, radius, canBuild, maxThreat, threatType)
+    local markerTable = {}
+    local radiusLimit = radius * radius
+    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == markerType then
+            RNGINSERT(markerTable, {Position = v.position, Name = k, Distance = VDist2Sq(pos[1], pos[3], v.position[1], v.position[3])})
+        end
+    end
+    LOG('Hydro Marker Table '..repr(markerTable))
+    table.sort(markerTable, function(a,b) return a.Distance < b.Distance end)
+    for k, v in markerTable do
+        if v.Distance <= radiusLimit then
+            LOG('Marker is within distance with '..v.Distance)
+            if canBuild then
+                if CanBuildStructureAt(aiBrain, 'ueb1102', v.Position) then
+                    if maxThreat and threatType then
+                        if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType) < maxThreat then
+                            return v
+                        end
+                    else
+                        return v
+                    end
+                end
+            else
+                return v
+            end
+            
+        end
+    end
+    return false
+end
+
+
+
+
 --[[
 LOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
 LOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)

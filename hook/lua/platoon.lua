@@ -3156,10 +3156,10 @@ Platoon = Class(RNGAIPlatoon) {
         for k, marker in massMarkers do
             if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 121 then
                 closeMarkers = closeMarkers + 1
+                RNGINSERT(buildMassPoints, marker)
                 if closeMarkers > 3 then
                     break
                 end
-                RNGINSERT(buildMassPoints, marker)
             end
         end
         eng.EngineerBuildQueue={}
@@ -3195,7 +3195,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         LOG('Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
         eng.EngineerBuildQueue={}
-        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
+        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
         RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
         LOG('Energy Production stage 1')
         LOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
@@ -3235,9 +3235,10 @@ Platoon = Class(RNGAIPlatoon) {
                 coroutine.yield(5)
             end
         end
-        local hydroTable = AIUtils.AIGetSortedHydroLocations(aiBrain, 1, -1000, 100, 0, 'AntiSurface', engPos)
-        LOG('hydroTable '..repr(hydroTable))
-        if hydroTable[1] and VDist2Sq(hydroTable[1][1],hydroTable[1][3], engPos[1],engPos[3]) < 4225 then
+        local closestHydro = RUtils.ClosestMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
+        LOG('HydroTable '..repr(closestHydro))
+        if closestHydro then
+            LOG('Hydro Within 65 units of spawn')
             hydroPresent = true
         end
         
@@ -3245,6 +3246,7 @@ Platoon = Class(RNGAIPlatoon) {
         local energyCount = 2
         LOG('Energy Production stage 2')
         if not hydroPresent then
+            IssueClearCommands({eng})
             LOG('No hydro present, we should be building a little more power')
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
@@ -3252,28 +3254,23 @@ Platoon = Class(RNGAIPlatoon) {
                 else
                     energyCount = 4
                 end
-                for i=1, energyCount do
-                    buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
-                    RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, true})
-                end
+            end
+            for i=1, energyCount do
+                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
+                LOG('Execute Build Structure with the following data')
+                LOG('whatToBuild '..whatToBuild)
+                LOG('Build Location '..repr(buildLocation))
+                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
             end
         else
             LOG('Hydro is present we shouldnt need any more pgens during initialization')
         end
         LOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
-        if RNGGETN(eng.EngineerBuildQueue) > 0 then
-            IssueClearCommands({eng})
-            for k,v in eng.EngineerBuildQueue do
-                LOG('Attempt to build queue item of '..repr(v))
-                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
-                LOG('Build Queue item should be finished '..k)
-                eng.EngineerBuildQueue[k] = nil
-            end
-            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
-                LOG('Waiting for build to finish')
-                coroutine.yield(5)
-            end
+        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+            LOG('Waiting for build to finish')
+            coroutine.yield(5)
         end
+
         eng.EngineerBuildQueue={}
         eng.Active = false
         self:PlatoonDisband()

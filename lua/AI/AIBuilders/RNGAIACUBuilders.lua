@@ -37,7 +37,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 0M',
+        BuilderName = 'RNGAI CDR Initial Land Standard Small',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderInitializeRNG',
         Priority = 2000,
@@ -57,193 +57,8 @@ BuilderGroup {
             }
         }
     },
-    --[[Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 0M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 0 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
     Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 1M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 1 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 2M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 2 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 3M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 3 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 4M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 4 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Small Close 5+M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 5 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                MexThreat = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },]]
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small Close',
+        BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 2000,
@@ -272,16 +87,15 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Large',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large 0M',
+        BuilderName = 'RNGAI CDR Initial Land Standard Large',
         PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderInitializeRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
 		end,
         BuilderConditions = {
             { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 0 }}
         },
         InstantCheck = true,
         BuilderType = 'Any',
@@ -290,170 +104,6 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large 1M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 1 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large 2M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 2 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large 3M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 3 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large 4M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 4 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large Close 5+M',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG', 'ACUDetection'},
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-            { MIBC, 'NumCloseMassMarkers', { 5 }}
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            ScanWait = 40,
-            Construction = {
-                MexThreat = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-                MaxDistance = 30,
-                BuildStructures = {
-                    'T1LandFactory',
-                    'T1EnergyProduction',
-                    'T1Resource',
-                    'T1Resource',
-                    'T1EnergyProduction',
-                },
             }
         }
     },
