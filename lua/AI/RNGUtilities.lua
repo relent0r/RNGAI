@@ -26,6 +26,7 @@ local RNGFLOOR = math.floor
 local RNGCEIL = math.ceil
 local RNGPI = math.pi
 local RNGCAT = table.cat
+local RNGCOPY = table.copy
 
 --[[
 Valid Threat Options:
@@ -3764,6 +3765,11 @@ MapReclaimAnalysis = function(aiBrain)
                     local reclaimTotal = 0
                     local xCenter = ((gridX - 1) * gridSizeX) + (gridX * gridSizeX)
                     local zCenter = ((gridZ - 1) * gridSizeZ) + (gridZ * gridSizeZ)
+                    for k, v in reclaimGrid do
+                        if v.Position[1] == xCenter and v.Position[3] == zCenter then
+                            continue
+                        end
+                    end
                     local reclaimRaw = GetReclaimablesInRect(xCenter - (reclaimScanArea / 2), zCenter - (reclaimScanArea / 2), xCenter + (reclaimScanArea / 2), zCenter + (reclaimScanArea / 2))
                     if reclaimRaw and table.getn(reclaimRaw) > 0 then
                         for k,v in reclaimRaw do
@@ -3783,6 +3789,64 @@ MapReclaimAnalysis = function(aiBrain)
         coroutine.yield(1800)
     end
 end
+--[[
+    Bit of a throw away concept..doesnt actually work properly yet, idea was to break a map into chunks of territory of control.
+MapMassGridAnalysis = function(aiBrain)
+    -- Loops through map grid squares that roughly match IMAP 
+    local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+    local gridCount
+    if maxmapdimension < 500 then
+        gridCount = 4
+    else
+        gridCount = 8
+    end
+    local Zones = {}
+    local reclaimScanArea = aiBrain.BrainIntel.IMAPConfig.IMAPSize * 2
+    local mapSizeX, mapSizeZ = GetMapSize()
+    local gridSizeX = mapSizeX / reclaimScanArea
+    local gridSizeZ = mapSizeZ / reclaimScanArea
+    local gridNumber = 1
+    for gridX = 1, gridCount do
+        for gridZ = 1, gridCount do
+            local reclaimTotal = 0
+            local xCenter = ((gridX - 1) * gridSizeX) + (gridX * gridSizeX)
+            local zCenter = ((gridZ - 1) * gridSizeZ) + (gridZ * gridSizeZ)
+            local edge1 = xCenter - (reclaimScanArea / 2)
+            local edge2 = zCenter - (reclaimScanArea / 2)
+            local edge3 = xCenter + (reclaimScanArea / 2)
+            local edge4 = zCenter + (reclaimScanArea / 2)
+            if not Zones[gridNumber] then
+                Zones[gridNumber] = {}
+            end
+            local alreadyChecked = false
+            for k, v in Zones do
+                if v.CenterX == xCenter and v.CenterZ == zCenter then
+                    alreadyChecked = true
+                    break
+                end
+            end
+            if alreadyChecked then
+                continue
+            end
+            LOG('Rectange')
+            LOG(repr(Rect(edge1, edge2, edge3, edge4)))
+            for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+                if v.type == 'Mass' then
+                    if v.position[1] > edge1 and v.position[1] < edge3 and v.position[3] > edge2 and v.position[3] < edge4 then
+                        LOG('Mass Point of position '..repr(v.position).. ' is within the edges')
+                        LOG('xCenter '..xCenter..' Edge1 '..edge1..' Edge3 '..edge3)
+                        LOG('zCenter '..xCenter..' Edge2 '..edge2..' Edge4 '..edge4)
+                        RNGINSERT(Zones[gridNumber], {CenterX = xCenter, CenterZ = zCenter, Position = v.position, Name = k, Edge1 = edge1, Edge2 = edge2, Edge3 = edge3, Edge4 = edge4})
+                    end
+                end
+            end
+            gridNumber = gridNumber + 1
+            coroutine.yield(1)
+        end
+    end
+    LOG('Total grid count '..gridNumber)
+    LOG('Grid Zone Mass Point Dump '..repr(Zones))
+end]]
 
 AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatMin, threatMax, threatRings, threatType)
     local pos = aiBrain:PBMGetLocationCoords(locationType)
@@ -3938,15 +4002,18 @@ function ClosestMarkersWithinRadius(aiBrain, pos, markerType, radius, canBuild, 
             RNGINSERT(markerTable, {Position = v.position, Name = k, Distance = VDist2Sq(pos[1], pos[3], v.position[1], v.position[3])})
         end
     end
-    LOG('Hydro Marker Table '..repr(markerTable))
     table.sort(markerTable, function(a,b) return a.Distance < b.Distance end)
     for k, v in markerTable do
         if v.Distance <= radiusLimit then
-            LOG('Marker is within distance with '..v.Distance)
+            --LOG('Marker is within distance with '..v.Distance)
             if canBuild then
                 if CanBuildStructureAt(aiBrain, 'ueb1102', v.Position) then
+                    --LOG('We can build on this hydro '..repr(v.Position))
                     if maxThreat and threatType then
+                        --LOG('Threat at position is '..GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType))
+                        --LOG('Max Threat is')
                         if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType) < maxThreat then
+                            --LOG('Return true with threat check')
                             return v
                         end
                     else
@@ -3959,10 +4026,104 @@ function ClosestMarkersWithinRadius(aiBrain, pos, markerType, radius, canBuild, 
             
         end
     end
+    --LOG('ClosestMarkersWithin radius failing '..radius)
     return false
 end
 
 
+
+function GenerateMapZonesRNG(aiBrain)
+
+    local function CreateZoneRNG(pos,weight,id,radius,start)
+        return { Pos = RNGCOPY(pos), Weight = weight, Edges = {}, ID = id, Radius = radius, Start = start}
+    end
+
+    LOG('Start Generate Map Zones')
+    local zones = {}
+    local massPoints = {}
+    local zoneID = 1
+    local zoneRadius = 60 * 60
+    
+    local armyStarts = {}
+    for i = 1, 16 do
+        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
+        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
+        if army and startPos then
+            table.insert(armyStarts, startPos)
+        end
+    end
+    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        if v.type == "Mass" or v.type == "Hydrocarbon" then
+            table.insert(massPoints, { pos=v.position, claimed = false, weight = 1, aggX = v.position[1], aggZ = v.position[3] })
+        end
+    end
+    complete = (RNGGETN(massPoints) == 0)
+    LOG('Start while loop')
+    while not complete do
+        complete = true
+        -- Update weights
+        local startPos = false
+        for _, v in massPoints do
+            v.weight = 1
+            v.aggX = v.pos[1]
+            v.aggZ = v.pos[3]
+        end
+        for _, v1 in massPoints do
+            if not v1.claimed then
+                for _, v2 in massPoints do
+                    if (not v2.claimed) and VDist2Sq(v1.pos[1], v1.pos[3], v2.pos[1], v2.pos[3]) < zoneRadius then
+                        v1.weight = v1.weight + 1
+                        v1.aggX = v1.aggX + v2.pos[1]
+                        v1.aggZ = v1.aggZ + v2.pos[3]
+                    end
+                end
+            end
+        end
+        -- Find next point to add
+        local best = nil
+        for _, v in massPoints do
+            if (not v.claimed) and ((not best) or best.weight < v.weight) then
+                best = v
+            end
+        end
+        -- Add next point
+        local massGroup = {best.pos}
+        best.claimed = true
+        local x = best.aggX/best.weight
+        local z = best.aggZ/best.weight
+        for _, p in armyStarts do
+            if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
+                --LOG('Position Taken '..repr(v)..' and '..repr(v.position))
+                startPos = true
+                break
+            end
+        end
+        table.insert(zones,CreateZoneRNG({x,GetSurfaceHeight(x,z),z},best.weight,zoneID, 60, startPos))
+        -- Claim nearby points
+        for _, v in massPoints do
+            if (not v.claimed) and VDist2Sq(v.pos[1], v.pos[3], best.pos[1], best.pos[3]) < zoneRadius then
+                table.insert(massGroup, v.pos)
+                v.claimed = true
+            elseif not v.claimed then
+                complete = false
+            end
+        end
+        
+        --zones[zoneID].MassPoints = {}
+        --zones[zoneID].MassPoints = massGroup
+        for k, v in zones do
+            if v.ID == zoneID then
+                if not v.MassPoints then
+                    v.MassPoints = {}
+                end
+                v.MassPoints = massGroup
+                break
+            end
+        end
+        zoneID = zoneID + 1
+    end
+    LOG('Zone Table '..repr(zones))
+end
 
 
 --[[

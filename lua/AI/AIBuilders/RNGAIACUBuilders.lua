@@ -327,8 +327,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
@@ -357,8 +356,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
         },
@@ -601,7 +599,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
@@ -630,7 +628,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
         },
@@ -738,7 +736,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 1000,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,60, categories.STRUCTURE * categories.HYDROCARBON, }},
+            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG', { 'LocationType', 0,65, categories.STRUCTURE * categories.HYDROCARBON, }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.HYDROCARBON }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.5, 0.0}},
         },
@@ -773,146 +771,4 @@ BuilderGroup {
             },
         }
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI CDR Assist T1 Structure',
-        PlatoonTemplate = 'CommanderAssistRNG',
-        Priority = 700,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.6} },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssisteeType = categories.STRUCTURE',
-                AssistRange = 60,
-                AssistLocation = 'LocationType',
-                BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},
-                Time = 30,
-            },
-        }
-    },]]
 }
---[[
-BuilderGroup { 
-    BuilderGroupName = 'RNGAI ACU Enhancements Gun',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'UEF CDR Enhancement HeavyAntiMatter',
-        PlatoonTemplate = 'CommanderEnhance',
-        Priority = 900,
-        BuilderConditions = {
-                { MIBC, 'IsIsland', { false } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
-                { UCBC, 'CmdrHasUpgrade', { 'HeavyAntiMatterCannon', false }},
-                { MIBC, 'FactionIndex', {1}},
-            },
-        BuilderType = 'Any',
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
-        BuilderData = {
-            Enhancement = { 'HeavyAntiMatterCannon' },
-        },
-
-    },
-    Builder {
-        BuilderName = 'Aeon CDR Enhancement Crysalis',
-        PlatoonTemplate = 'CommanderEnhance',
-        Priority = 900,
-        BuilderConditions = {
-                { MIBC, 'IsIsland', { false } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
-                { UCBC, 'CmdrHasUpgrade', { 'CrysalisBeam', false }},
-                { MIBC, 'FactionIndex', {2}},
-            },
-        BuilderType = 'Any',
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
-        BuilderData = {
-            TimeBetweenEnhancements = 20,
-            Enhancement = { 'HeatSink', 'CrysalisBeam'},
-        },
-    },
-    Builder {
-        BuilderName = 'Cybran CDR Enhancement CoolingUpgrade',
-        PlatoonTemplate = 'CommanderEnhance',
-        Priority = 900,
-        BuilderConditions = {
-                { MIBC, 'IsIsland', { false } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
-                { UCBC, 'CmdrHasUpgrade', { 'CoolingUpgrade', false }},
-                { MIBC, 'FactionIndex', {3}},
-            },
-        BuilderType = 'Any',
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
-        BuilderData = {
-            Enhancement = { 'CoolingUpgrade'},
-        },
-
-    },
-    Builder {
-        BuilderName = 'Seraphim CDR Enhancement RateOfFire',
-        PlatoonTemplate = 'CommanderEnhance',
-        Priority = 900,
-        BuilderConditions = {
-                { MIBC, 'IsIsland', { false } },
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, 'FACTORY' }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 6, 'MASSEXTRACTION' }},
-                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 65.0}},
-                { UCBC, 'CmdrHasUpgrade', { 'RateOfFire', false }},
-                { MIBC, 'FactionIndex', {4}},
-            },
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
-        BuilderType = 'Any',
-        BuilderData = {
-            Enhancement = { 'RateOfFire' },
-        },
-
-    },
-}
-
-BuilderGroup { 
-    BuilderGroupName = 'RNGAI ACU Enhancements Tier',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'CDR Enhancement AdvancedEngineering Mid Game',
-        PlatoonTemplate = 'CommanderEnhance',
-        Priority = 900,
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 1500 } },
-                { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-                { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
-                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 120.0}},
-                --{ MIBC, 'FactionIndex', {4}},
-            },
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
-        BuilderType = 'Any',
-        BuilderData = {
-            Enhancement = { 'AdvancedEngineering' },
-        },
-    },
-}
-BuilderGroup { 
-    BuilderGroupName = 'RNGAI ACU Enhancements Tier Large',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'CDR Enhancement AdvancedEngineering Mid Game Large',
-        PlatoonTemplate = 'CommanderEnhance',
-        Priority = 900,
-        BuilderConditions = {
-                { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-                { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', false }},
-                { EBC, 'GreaterThanEconIncomeOverTimeRNG',  { 1.2, 120.0}},
-                --{ MIBC, 'FactionIndex', {4}},
-            },
-        PlatoonAddFunctions = { {SAI, 'BuildOnce'}, },
-        BuilderType = 'Any',
-        BuilderData = {
-            Enhancement = { 'AdvancedEngineering' },
-        },
-    },
-}]]

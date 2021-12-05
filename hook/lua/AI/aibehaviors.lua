@@ -222,7 +222,6 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         LOG('ACU attempting to build in while loop')
                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
-                            LOG('Waiting for build to finish')
                             coroutine.yield(10)
                             if cdr.Caution then
                                 break
@@ -322,7 +321,6 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                         LOG('ACU attempting to build in while loop')
                                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
-                                            LOG('Waiting for build to finish')
                                             coroutine.yield(10)
                                             if cdr.Caution then
                                                 break
@@ -388,7 +386,6 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         LOG('ACU attempting to build in while loop')
                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
-                            LOG('Waiting for build to finish')
                             coroutine.yield(10)
                         end
                         LOG('Build Queue item should be finished '..k)
@@ -509,7 +506,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             IssueClearCommands({cdr})
                             IssueMove({cdr}, platoonPosition)
                         end
-                        if cdr.CurrentEnemyThreat * 1.3 < cdr.CurrentFriendlyThreat and platoonDistance < 10000 then
+                        if cdr.CurrentEnemyThreat * 1.3 < cdr.CurrentFriendlyThreat and platoonDistance < 6400 then
                             LOG('EnemyThreat low, cancel retreat')
                             IssueClearCommands({cdr})
                             return
@@ -975,6 +972,8 @@ function CDROverChargeRNG(aiBrain, cdr)
             overCharging = false
             if VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
                 LOG('OverCharge running but ACU is beyond its MaxBaseRange property')
+                cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                coroutine.yield(40)
                 return CDRRetreatRNG(aiBrain, cdr)
             end
             if counter >= 5 or not target or target.Dead or VDist3Sq(cdrPos, target:GetPosition()) > maxRadius * maxRadius then

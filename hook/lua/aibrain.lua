@@ -942,6 +942,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
         RUtils.InitialNavalAttackCheck(self)
+        RUtils.GenerateMapZonesRNG(self)
+        --self:ForkThread(RUtils.MapMassGridAnalysis)
         self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
         -- This is future goodies.
         

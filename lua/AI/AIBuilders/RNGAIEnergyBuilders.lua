@@ -57,7 +57,7 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 60 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'LessThanEnergyTrendRNG', { 8.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -389,7 +389,7 @@ BuilderGroup {
         Priority = 1010,
         InstanceCount = 1,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 65, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 65, 1, 'AntiSurface'}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -409,7 +409,7 @@ BuilderGroup {
         Priority = 780,
         InstanceCount = 2,
         BuilderConditions = { 
-            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 256, -1000, 100, 1, 'AntiSurface', 1 }},
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 256, 1, 'AntiSurface'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',

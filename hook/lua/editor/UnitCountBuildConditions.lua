@@ -59,14 +59,15 @@ function HaveUnitsWithCategoryAndAllianceRNG(aiBrain, greater, numReq, category,
     return false
 end
 
-function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum)
+function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, threatMax, threatType)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
         --WARN('*AI WARNING: Invalid location - ' .. locationType)
         return false
     end
-    local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
-    if markerTable[1] and VDist2Sq(markerTable[1][1],markerTable[1][3], engineerManager.Location[1],engineerManager.Location[3]) < distance * distance then
+    --local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
+    local closestBuildableMarker = RUtils.ClosestMarkersWithinRadius(aiBrain, engineerManager.Location, 'Hydrocarbon', distance, true, threatMax, threatType)
+    if closestBuildableMarker then
         return true
     end
     return false
