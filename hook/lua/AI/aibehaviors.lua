@@ -1040,7 +1040,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 end
                             end
                         end
-                        LOG('ACU OverCharge Friendly Threat is '..enemyThreat)
+                        LOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
                         if (enemyThreat - (enemyCdrThreat / 1.4)) >= friendlyUnitThreat then
                             --LOG('Enemy Threat too high')
                             cdr:SetCustomName('target threat too high break logic')

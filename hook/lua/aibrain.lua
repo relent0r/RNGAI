@@ -1,6 +1,8 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibrain.lua' )
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local Mapping = import('/mods/RNGAI/lua/FlowAI/Mapping.lua')
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
@@ -895,6 +897,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BuilderManagers = {}
         SUtils.AddCustomUnitSupport(self)
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
+        -- Generates the zones and updates the resource marker table with Zone IDs
+        IntelManagerRNG.GenerateMapZonesRNG(self)
 
         if RUtils.InitialMassMarkersInWater(self) then
             --LOG('* AI-RNG: Map has mass markers in water')
@@ -938,16 +942,12 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.HeavyEconomyRNG)
         self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
-        self:ForkThread(RUtils.DisplayMarkerAdjacency)
+        self:ForkThread(RUtils.LastKnownThread)
+        self:ForkThread(Mapping.SetMarkerInformation)
         self:ForkThread(RUtils.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
-        RUtils.InitialNavalAttackCheck(self)
-        RUtils.GenerateMapZonesRNG(self)
-        --self:ForkThread(RUtils.MapMassGridAnalysis)
-        self:ForkThread(RUtils.AIConfigureExpansionWatchTableRNG)
-        -- This is future goodies.
-        
-        self:ForkThread(self.ExpansionIntelScanRNG)
+        IntelManagerRNG.InitialNavalAttackCheck(self)
+        self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         --self:ForkThread(RUtils.MexUpgradeManagerRNG)
     end,
@@ -1120,7 +1120,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local massMarkerBuildable = 0
         local markerCount = 0
         local graphCheck = false
-        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        for _, v in AdaptiveResourceMarkerTableRNG do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
@@ -4504,90 +4504,7 @@ AIBrain = Class(RNGAIBrainClass) {
         return count
     end,]]
 
-    ExpansionIntelScanRNG = function(self)
-        --LOG('Pre-Start ExpansionIntelScan')
-        coroutine.yield(Random(30,70))
-        if RNGGETN(self.BrainIntel.ExpansionWatchTable) == 0 then
-            --LOG('ExpansionWatchTable not ready or is empty')
-            return
-        end
-        local threatTypes = {
-            'Land',
-            'Commander',
-            'Structures',
-        }
-        local rawThreat = 0
-        if ScenarioInfo.Options.AIDebugDisplay == 'displayOn' then
-            self:ForkThread(RUtils.RenderBrainIntelRNG)
-        end
-        local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
-        --LOG('Starting ExpansionIntelScan')
-        while self.Result ~= "defeat" do
-            for k, v in self.BrainIntel.ExpansionWatchTable do
-                if v.PlatoonAssigned.Dead then
-                    v.PlatoonAssigned = false
-                end
-                if v.ScoutAssigned.Dead then
-                    v.ScoutAssigned = false
-                end
-                if not v.Zone then
-                    --[[
-                        This is the information available in the Path Node currently. subject to change 7/13/2021
-                        info: Check for position {
-                        info:   GraphArea="LandArea_133",
-                        info:   RNGArea="Land15-24",
-                        info:   adjacentTo="Land19-11 Land20-11 Land20-12 Land20-13 Land18-11",
-                        info:   armydists={ ARMY_1=209.15859985352, ARMY_2=218.62866210938 },
-                        info:   bestarmy="ARMY_1",
-                        info:   bestexpand="Expansion Area 6",
-                        info:   color="fff4a460",
-                        info:   expanddists={
-                        info:     ARMY_1=209.15859985352,
-                        info:     ARMY_2=218.62866210938,
-                        info:     ARMY_3=118.64562988281,
-                        info:     ARMY_4=290.41003417969,
-                        info:     ARMY_5=270.42752075195,
-                        info:     ARMY_6=125.28052520752,
-                        info:     Expansion Area 1=354.38958740234,
-                        info:     Expansion Area 2=354.2922668457,
-                        info:     Expansion Area 5=222.54640197754,
-                        info:     Expansion Area 6=0
-                        info:   },
-                        info:   graph="DefaultLand",
-                        info:   hint=true,
-                        info:   orientation={ 0, 0, 0 },
-                        info:   position={ 312, 16.21875, 200, type="VECTOR3" },
-                        info:   prop="/env/common/props/markers/M_Path_prop.bp",
-                        info:   type="Land Path Node"
-                        info: }
-                    ]]
-                    local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
-                    --LOG('Check for position '..repr(expansionNode))
-                    if expansionNode then
-                        self.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.RNGArea
-                    else
-                        self.BrainIntel.ExpansionWatchTable[k].Zone = false
-                    end
-                end
-                if v.MassPoints > 2 then
-                    for _, t in threatTypes do
-                        rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, t)
-                        if rawThreat > 0 then
-                            --LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
-                            --LOG('Expansion is '..v.Name)
-                            --LOG('Position is '..repr(v.Position))
-                        end
-                        self.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
-                    end
-                elseif v.MassPoints == 2 then
-                    rawThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, 'Structures')
-                    self.BrainIntel.ExpansionWatchTable[k]['Structures'] = rawThreat
-                end
-            end
-            coroutine.yield(50)
-            -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(self.BrainIntel.ExpansionWatchTable))
-        end
-    end,
+    
 
     CivilianPDCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's

@@ -114,6 +114,8 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         self:AggressiveMoveToLocation(targetPos)
                     end
+                else
+                    return
                 end
                 while PlatoonExists(aiBrain, self) do
                     currentPlatPos = GetPlatoonPosition(self)
@@ -142,6 +144,8 @@ Platoon = Class(RNGAIPlatoon) {
                                                     --LOG('Returnairhuntai')
                                                     return self:SetAIPlanRNG('AirHuntAIRNG')
                                                 end
+                                            else
+                                                return
                                             end
                                         end
                                     end
@@ -598,8 +602,10 @@ Platoon = Class(RNGAIPlatoon) {
         else
             -- no marker found, disband!
             --LOG('* AI-RNG: GuardmarkerRNG No best marker. Disbanding.')
+            coroutine.yield(20)
             self:PlatoonDisband()
         end
+        coroutine.yield(10)
     end,
     
     ReclaimAIRNG = function(self)
@@ -1298,6 +1304,8 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     self:MoveToLocation((v), false)
                 end
+            else
+                coroutine.yield(20)
             end
             if not target.dead then
                 coroutine.yield(40)
@@ -3715,6 +3723,9 @@ Platoon = Class(RNGAIPlatoon) {
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             platLoc = GetPlatoonPosition(self)
+            if not platLoc then
+                return
+            end
             if aiBrain:CheckBlockingTerrain(platLoc, bestMarker.Position, 'none') then
                 self:MoveToLocation(bestMarker.Position, false)
                 coroutine.yield(10)
@@ -4746,6 +4757,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self:MoveToLocation(bestBase.Position, false)
             end
         end
+        coroutine.yield(20)
         -- return 
         self:PlatoonDisband()
     end,
@@ -5284,6 +5296,7 @@ Platoon = Class(RNGAIPlatoon) {
             else
                 return
             end
+            coroutine.yield(2)
         end
     end,
 
@@ -5927,6 +5940,7 @@ Platoon = Class(RNGAIPlatoon) {
             moveToLocation = self.PlatoonData.MoveToLocationType
         end
         --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..')')
+        coroutine.yield(5)
         if not aiBrain.BuilderManagers[moveToLocation] then
             --LOG('* AI-RNG: * TransferAIRNG: Location ('..moveToLocation..') has no BuilderManager!')
             self:PlatoonDisband()
@@ -5935,6 +5949,7 @@ Platoon = Class(RNGAIPlatoon) {
         local eng = GetPlatoonUnits(self)[1]
         if eng and not eng.Dead and eng.BuilderManagerData.EngineerManager then
             --LOG('* AI-RNG: * TransferAIRNG: Moving transfer-units to - ' .. moveToLocation)
+            
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, aiBrain.BuilderManagers[moveToLocation].Position) then
                 --LOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
                 eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)

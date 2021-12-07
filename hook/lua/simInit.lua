@@ -11,6 +11,13 @@ function BeginSession()
     end
 end
 
+RNGCreateResourceDeposit = CreateResourceDeposit
+local CreateMarkerRNG = import('/mods/RNGAI/lua/FlowAI/Mapping.lua').CreateMarkerRNG
+CreateResourceDeposit = function(t,x,y,z,size)
+    CreateMarkerRNG(t,x,y,z,size)
+    RNGCreateResourceDeposit(t,x,y,z,size)
+end
+
 function DrawIMAPThreatsRNG()
     coroutine.yield(100)
     --LOG('Starting IMAP Threat Thread')

@@ -1,8 +1,8 @@
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
-local LastGetMassMarker = 0
-local LastCheckMassMarker = {}
-local MassMarker = {}
-local LastMassBOOL = false
+local LastGetMassMarkerRNG = 0
+local LastCheckMassMarkerRNG = {}
+local MassMarkerRNG = {}
+local LastMassBOOLRNG = false
 
 --[[function CanBuildOnMassDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
@@ -40,28 +40,28 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
 end
 
 function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
-    if LastGetMassMarker < GetGameTimeSeconds() then
-        LastGetMassMarker = GetGameTimeSeconds()+10
-        MassMarker = {}
+    if LastGetMassMarkerRNG < GetGameTimeSeconds() then
+        LastGetMassMarkerRNG = GetGameTimeSeconds()+10
+        MassMarkerRNG = {}
         for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
                     continue
                 end 
-                table.insert(MassMarker, {Position = v.position, Distance = VDist3( v.position, engPos ) })
+                table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, engPos ) })
             end
         end
-        table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
+        table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
     end
-    if not LastCheckMassMarker[distance] or LastCheckMassMarker[distance] < GetGameTimeSeconds() then
-        LastCheckMassMarker[distance] = GetGameTimeSeconds()
+    if not LastCheckMassMarkerRNG[distance] or LastCheckMassMarkerRNG[distance] < GetGameTimeSeconds() then
+        LastCheckMassMarkerRNG[distance] = GetGameTimeSeconds()
         local threatCheck = false
         if threatMin and threatMax and threatRings then
             threatCheck = true
         end
-        LastMassBOOL = false
-        for _, v in MassMarker do
+        LastMassBOOLRNG = false
+        for _, v in MassMarkerRNG do
             if v.Distance > distance then
                 break
             end
@@ -73,43 +73,43 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
                         continue
                     end
                 end
-                LastMassBOOL = true
+                LastMassBOOLRNG = true
                 break
             end
         end
     end
-    return LastMassBOOL
+    return LastMassBOOLRNG
 end
 
 function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistance, threatMin, threatMax, threatRings, threatType, maxNum )
-    if LastGetMassMarker < GetGameTimeSeconds() then
-        LastGetMassMarker = GetGameTimeSeconds()+5
+    if LastGetMassMarkerRNG < GetGameTimeSeconds() then
+        LastGetMassMarkerRNG = GetGameTimeSeconds()+5
         local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
         if not engineerManager then
             --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)
             return false
         end
         local position = engineerManager.Location
-        MassMarker = {}
+        MassMarkerRNG = {}
         for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
                     continue
                 end 
-                table.insert(MassMarker, {Position = v.position, Distance = VDist3( v.position, position ) })
+                table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
             end
         end
-        table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
+        table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
     end
-    if not LastCheckMassMarker[maxDistance] or LastCheckMassMarker[maxDistance] < GetGameTimeSeconds() then
-        LastCheckMassMarker[maxDistance] = GetGameTimeSeconds()
+    if not LastCheckMassMarkerRNG[maxDistance] or LastCheckMassMarkerRNG[maxDistance] < GetGameTimeSeconds() then
+        LastCheckMassMarkerRNG[maxDistance] = GetGameTimeSeconds()
         local threatCheck = false
         if threatMin and threatMax and threatRings then
             threatCheck = true
         end
-        LastMassBOOL = false
-        for _, v in MassMarker do
+        LastMassBOOLRNG = false
+        for _, v in MassMarkerRNG do
             if v.Distance < minDistance then
                 continue
             elseif v.Distance > maxDistance then
@@ -124,12 +124,12 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
                     end
                 end
                 --LOG('Returning MassMarkerDistance True')
-                LastMassBOOL = true
+                LastMassBOOLRNG = true
                 break
             end
         end
     end
-    return LastMassBOOL
+    return LastMassBOOLRNG
 end
 
 function MassMarkerLessThanDistanceRNG(aiBrain, distance)
