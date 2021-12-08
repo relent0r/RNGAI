@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
@@ -3504,7 +3505,7 @@ Platoon = Class(RNGAIPlatoon) {
         self:SetPrioritizedTargetList('Attack', categoryList)
 
         if self.MovementLayer == 'Land' and not self.PlatoonData.EarlyRaid then
-            local stageExpansion = RUtils.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10, 'raid')
+            local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10, 'raid')
             if stageExpansion then
                 --LOG('Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
                 platLoc = GetPlatoonPosition(self) or nil
@@ -6720,15 +6721,15 @@ Platoon = Class(RNGAIPlatoon) {
                 unit.chpworth=unit.chpvalue/GetTrueHealth(unit)
                 unit.chpdistance[id]=VDist3(position,unit:GetPosition())
                 unit.chppriority[id]=unit.chpworth/math.max(30,unit.chpdistance[id])/unit.chpdanger
+                LOG('CheckPriority On Units '..repr(unit.chppriority))
             end
-            if RNGGETN(platoon.targetcandidates)<1 then 
-                platoon.target=nil 
-                return false
-            else
+            if RNGGETN(platoon.targetcandidates) > 0 then
                 table.sort(platoon.targetcandidates, function(a,b) return a.chppriority[id]>b.chppriority[id] end)
                 platoon.target=platoon.targetcandidates[1]
                 return true
             end
+            platoon.target=nil 
+            return false
         end
         local function SimpleEarlyPatrol(self,aiBrain)--basic raid function
             local mex=RUtils.AIGetMassMarkerLocations(aiBrain, false)

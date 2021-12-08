@@ -2,6 +2,7 @@ local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
 local RNGGETN = table.getn
@@ -34,7 +35,7 @@ function GenerateMapZonesRNG(aiBrain)
             table.insert(armyStarts, startPos)
         end
     end
-    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+    for _, v in AdaptiveResourceMarkerTableRNG do
         if v.type == "Mass" or v.type == "Hydrocarbon" then
             table.insert(massPoints, { pos=v.position, claimed = false, weight = 1, aggX = v.position[1], aggZ = v.position[3] })
         end
@@ -256,6 +257,36 @@ ExpansionIntelScanRNG = function(aiBrain)
     end
 end
 
+ZoneIntelMonitorRNG = function(aiBrain)
+    local threatTypes = {
+        'Land',
+        'Commander',
+        'Structures',
+    }
+    local rawThreat = 0
+    --[[
+        Each Zone currently looks like this
+        Dont repr the entire zone set
+        {
+        pos={x,y,z},
+        friendlythreat=0,
+        weight=6,
+        id=6,
+        edges = {adjacent zones live in here}
+        enemythreat=0,
+        startpositionclose="false"
+        }
+    ]]
+    WaitTicks(50)
+    while aiBrain.Result ~= "defeat" do
+        for k, v in aiBrain.Zones.Land.zones do
+            aiBrain.Zones.Land.zones[k].enemythreat = GetThreatAtPosition(aiBrain, v.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+            coroutine.yield(1)
+        end
+        coroutine.yield(2)
+    end
+end
+
 function InitialNavalAttackCheck(aiBrain)
     -- This function will check if there are mass markers that can be hit by frigates. This can trigger faster naval factory builds initially.
     -- points = number of points around the extractor, doesn't need to have too many.
@@ -340,4 +371,115 @@ function CalculateMassValue(expansionMarkers)
         --SPEW('* AI-RNG: CreateMassCount: Node: '..v.Type..' - MassSpotsInRange: '..v.MassPoints)
     end
     return expansionMarkers
+end
+
+function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, type)
+    -- Should be a multipurpose Expansion query that can provide units, acus a place to go
+    if not aiBrain.BrainIntel.ExpansionWatchTable then
+        WARN('No ExpansionWatchTable. Maybe it hasnt been created yet or something is broken')
+        coroutine.yield(50)
+        return false
+    end
+    
+
+    local MainPos = aiBrain.BuilderManagers.MAIN.Position
+    if VDist2Sq(location[1], location[3], MainPos[1], MainPos[3]) > 3600 then
+        return false
+    end
+    local positionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayerRNG(location, radius, movementLayer).name]
+    local centerPoint = aiBrain.MapCenterPoint
+    local mainBaseToCenter = VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3])
+    local bestExpansions = {}
+    local options = {}
+    local currentGameTime = GetGameTimeSeconds()
+    -- Note, the expansions zones are land only. Need to fix this to include amphib zone.
+    if positionNode.RNGArea then
+        for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
+            if expansion.Zone == positionNode.RNGArea then
+                local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
+                LOG('Distance to expansion '..expansionDistance)
+                -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
+                --LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
+                    if expansionDistance < radius * radius then
+                        LOG('Expansion Zone is within radius')
+                        if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
+                            LOG('Expansion has '..expansion.MassPoints..' mass points')
+                            LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            if expansion.MassPoints > 1 then
+                                -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
+                                if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
+                                    LOG('Threat at location too high for easy building')
+                                    continue
+                                end
+                                if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= expansion.MassPoints then
+                                    LOG('ACU Location has enough masspoints to indicate its already taken')
+                                    continue
+                                end
+                                RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints * expansion.MassPoints, Key = k, Distance = expansionDistance})
+                            end
+                        else
+                            LOG('Expansion is beyond the center point')
+                            LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            LOG('Should be less than ')
+                            LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                        end
+                    end
+                else
+                    LOG('This expansion has already been checked in the last 45 seconds')
+                end
+            end
+        end
+        LOG('Number of options from first cycle '..table.getn(options))
+        local optionCount = 0
+        
+        for k, withinRadius in options do
+            if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
+                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                RNGINSERT(bestExpansions, withinRadius)
+            else
+                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+            end
+        end
+    else
+        WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
+    end
+    --LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
+    if RNGGETN(bestExpansions) > 0 then
+        if type == 'acu' then
+            local bestOption = false
+            local secondBestOption = false
+            local bestValue = 9999999999
+            for _, v in options do
+                local alreadySecure = false
+                for k, b in aiBrain.BuilderManagers do
+                    if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                        LOG('Already a builder manager with factory present, set')
+                        alreadySecure = true
+                        break
+                    end
+                end
+                if alreadySecure then
+                    LOG('Position already secured, ignore and move to next expansion')
+                    continue
+                end
+                local expansionValue = v.Distance * v.Distance / v.Value
+                if expansionValue < bestValue then
+                    secondBestOption = bestOption
+                    bestOption = v
+                    bestValue = expansionValue
+                end
+            end
+            if secondBestOption and bestOption then
+                local acuOptions = { bestOption, secondBestOption }
+                LOG('ACU is having a random expansion returned')
+                return acuOptions[Random(1,2)]
+            end
+            LOG('ACU is having the best expansion returned')
+            return bestOption
+        else
+            return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
+        end
+    end
+    return false
 end

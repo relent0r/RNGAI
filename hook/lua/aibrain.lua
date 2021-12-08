@@ -2,7 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
-local Mapping = import('/mods/RNGAI/lua/FlowAI/Mapping.lua')
+local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
@@ -874,6 +874,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StartReclaimTable = {}
         self.StartReclaimTaken = false
         self.MapReclaimTable = {}
+        self.Zones = { }
 
         self.UpgradeMode = 'Normal'
 
@@ -898,7 +899,7 @@ AIBrain = Class(RNGAIBrainClass) {
         SUtils.AddCustomUnitSupport(self)
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
         -- Generates the zones and updates the resource marker table with Zone IDs
-        IntelManagerRNG.GenerateMapZonesRNG(self)
+        --IntelManagerRNG.GenerateMapZonesRNG(self)
 
         if RUtils.InitialMassMarkersInWater(self) then
             --LOG('* AI-RNG: Map has mass markers in water')
@@ -947,10 +948,22 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
         IntelManagerRNG.InitialNavalAttackCheck(self)
+        self:ForkThread(IntelManagerRNG.ZoneIntelMonitorRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
+        self:ForkThread(self.ZoneSetup)
+        
         --self:ForkThread(RUtils.MexUpgradeManagerRNG)
+        LOG('Zone Set for RNGLandResourceSet index 1 '..repr(self.Zones.Land))
     end,
+
+    ZoneSetup = function(self)
+        WaitTicks(1)
+        LOG('Set land zone for brain')
+        local Mapping = Mapping.GetMap()
+        self.Zones.Land = Mapping:GetZoneSet('RNGLandResourceSet',1)
+    end,
+
 
     EconomyMonitorRNG = function(self)
         -- This over time thread is based on Sprouto's LOUD AI.
@@ -2220,6 +2233,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     LOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
                         LOG('Base Monitor Alert is on')
+                    end
+                    for k, v in self.Zones.Land.zones do
+                        LOG('EnemyThreat in zone is '..v.enemythreat)
+                        if v.enemythreat > 0 then
+                            LOG('Enemy Threat at zone '..v.id)
+                            LOG(RUtils.DebugArrayRNG(v))
+                        end
                     end
                     --[[if self.GraphZones.HasRun then
                         LOG('We should have graph zones now')

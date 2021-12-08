@@ -95,6 +95,9 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
 end
 
 function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
+    --LOG('ThreatPresentInGraphRNG')
+    --LOG('LocationType '..locationtype)
+    --LOG('Threat Type '..tType)
     local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
     if not factoryManager then
         return false
@@ -110,6 +113,7 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
         for k, v in expansionMarkers do
             if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
                 if v.RNGArea then
+                    --LOG('Expansion Graph Area is '..v.RNGArea)
                     if v.RNGArea == graphArea then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
                         if threat > 2 then
@@ -127,5 +131,6 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
             end
         end
     end
+    --LOG('No threat in graph area')
     return false
 end

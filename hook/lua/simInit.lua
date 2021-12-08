@@ -1,5 +1,5 @@
 
-local RNGBeginSession = import('/mods/RNGAI/lua/FlowAI/Mapping.lua').BeginSession
+local RNGBeginSession = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').BeginSession
 local RNGAIBeginSessionFunction = BeginSession
 
 
@@ -12,10 +12,17 @@ function BeginSession()
 end
 
 RNGCreateResourceDeposit = CreateResourceDeposit
-local CreateMarkerRNG = import('/mods/RNGAI/lua/FlowAI/Mapping.lua').CreateMarkerRNG
+local CreateMarkerRNG = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').CreateMarkerRNG
 CreateResourceDeposit = function(t,x,y,z,size)
     CreateMarkerRNG(t,x,y,z,size)
     RNGCreateResourceDeposit(t,x,y,z,size)
+end
+
+RNGSetPlayableRect = SetPlayableRect
+local RNGSetPlayableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').SetPlayableArea
+SetPlayableRect = function(minx,minz,maxx,maxz)
+    RNGSetPlayableRect(minx,minz,maxx,maxz)
+    RNGSetPlayableArea(minx,minz,maxx,maxz)
 end
 
 function DrawIMAPThreatsRNG()

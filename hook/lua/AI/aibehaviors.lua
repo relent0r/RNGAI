@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 
 local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local lerpy = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').lerpy
 local SetArcPoints = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').SetArcPoints
 local GeneratePointsAroundPosition = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GeneratePointsAroundPosition
@@ -616,7 +617,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         return
     end
     
-    local stageExpansion = RUtils.QueryExpansionTable(aiBrain, cdr.Position, 512, 'Land', 10, 'acu')
+    local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, 512, 'Land', 10, 'acu')
     if stageExpansion then
         cdr.Active = true
         if cdr.UnitBeingBuilt then
