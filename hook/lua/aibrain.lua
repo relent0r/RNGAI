@@ -923,13 +923,9 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Begin the base monitor process
 
         self:BaseMonitorInitializationRNG()
-        --LOG(repr(Scenario))
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
-        --local perlocations, orient, positionsel = RUtils.GetBasePerimeterPoints(self, 'MAIN', 50, 'FRONT', false, 'Land', true)
-        --LOG('Perimeter Points '..repr(perlocations))
-        --LOG('Orient is '..orient)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
@@ -947,21 +943,21 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(Mapping.SetMarkerInformation)
         self:ForkThread(RUtils.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
-        IntelManagerRNG.InitialNavalAttackCheck(self)
-        self:ForkThread(IntelManagerRNG.ZoneIntelMonitorRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
+        self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
+        self.intelmanager = IntelManagerRNG.CreateIntelManager(self)
+        self.intelmanager:Run()
         
-        --self:ForkThread(RUtils.MexUpgradeManagerRNG)
-        LOG('Zone Set for RNGLandResourceSet index 1 '..repr(self.Zones.Land))
     end,
 
     ZoneSetup = function(self)
         WaitTicks(1)
         LOG('Set land zone for brain')
-        local Mapping = Mapping.GetMap()
-        self.Zones.Land = Mapping:GetZoneSet('RNGLandResourceSet',1)
+        --local Mapping = Mapping.GetMap()
+        self.Zones.Land = Mapping.GetMap():GetZoneSet('RNGLandResourceSet',1)
+        self.ZonesInitialized = true
     end,
 
 
@@ -1156,6 +1152,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 markerCount = markerCount + 1
                 RNGINSERT(MassMarker, v)
+            end
+            if not v.zoneid and self.ZonesInitialized then
+                if RUtils.PositionOnWater(v.position[1], v.position[3]) then
+                    -- tbd define water based zones
+                    v.zoneid = water
+                else
+                    v.zoneid = Mapping.GetMap():GetZoneID(v.position,self.Zones.Land.index)
+                end
             end
         end
         if graphCheck then
@@ -2113,7 +2117,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 WARNING('Unknown movement layer passed to BaseMonitorDistressLocations')
             end
             for k, v in self.BaseMonitor.AlertsTable do
-                LOG('Checking AlertsTable')
                 for c, n in v do
                     if c == threatLayer then
                         LOG('Found Alert of type '..threatLayer)
@@ -2235,12 +2238,18 @@ AIBrain = Class(RNGAIBrainClass) {
                         LOG('Base Monitor Alert is on')
                     end
                     for k, v in self.Zones.Land.zones do
-                        LOG('EnemyThreat in zone is '..v.enemythreat)
+                        if v.friendlythreat > 0 then
+                            LOG('Friend Threat at zone '..v.id)
+                            LOG('Key for zone is '..k)
+                            LOG('Friendly Threat is '..v.friendlythreat)
+                        end
                         if v.enemythreat > 0 then
                             LOG('Enemy Threat at zone '..v.id)
-                            LOG(RUtils.DebugArrayRNG(v))
+                            LOG('Key for zone is '..k)
+                            LOG('Enemy Threat is '..v.enemythreat)
                         end
                     end
+                    --LOG('Mass Marker Table '..repr(AdaptiveResourceMarkerTableRNG))
                     --[[if self.GraphZones.HasRun then
                         LOG('We should have graph zones now')
                         for k, v in self.BuilderManagers do

@@ -77,7 +77,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             -- Add next point
-            local massGroup = {best.position}
+            local massGroup = {best}
             best.claimed = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
@@ -88,40 +88,18 @@ RNGLandResourceSet = Class(ZoneSet){
                     break
                 end
             end
-            --table.insert(zones,CreateZoneRNG({x,GetSurfaceHeight(x,z),z},best.weight,zoneID, 60, startPos))
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0})
+
             -- Claim nearby points
             for _, v in markers do
                 if (not v.claimed) and VDist2Sq(v.position[1], v.position[3], best.position[1], best.position[3]) < zoneRadius then
-                    table.insert(massGroup, v.position)
+                    table.insert(massGroup, v)
                     v.claimed = true
                 elseif not v.claimed then
                     complete = false
                 end
             end
-            
-            --zones[zoneID].MassPoints = {}
-            --zones[zoneID].MassPoints = massGroup
-            --[[for k, v in zones do
-                if v.ID == zoneID then
-                    if not v.MassPoints then
-                        v.MassPoints = {}
-                    end
-                    v.MassPoints = massGroup
-                    break
-                end
-            end
-            zoneID = zoneID + 1]]
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, massmarkers=massGroup, zonealert=false})
         end
-        --[[for k, v in zones do
-            for k1, v1 in v.MassPoints do
-                for k2, v2 in AdaptiveResourceMarkerTableRNG do
-                    if v1[1] == v2.position[1] and v1[3] == v2.position[3] then
-                        AdaptiveResourceMarkerTableRNG[k2].zoneid = v.ID
-                    end
-                end
-            end
-        end]]
     end,
 }
 

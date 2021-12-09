@@ -33,6 +33,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Lab Early Game',
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,
         InstanceCount = 4,
         BuilderConditions = {  

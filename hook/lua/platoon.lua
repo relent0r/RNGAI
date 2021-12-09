@@ -3,6 +3,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
@@ -3428,6 +3429,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.MaxPlatoonWeaponRange = false
         self.scoutUnit = false
         self.atkPri = {}
+        self.Zone = false
         local categoryList = {}
         self.CurrentPlatoonThreat = false
         local VDist2Sq = VDist2Sq
@@ -3853,7 +3855,12 @@ Platoon = Class(RNGAIPlatoon) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
-            --LOG('MassRaidAI restarting')
+            LOG('MassRaidAI restarting')
+            if self.Zone then
+                LOG('Platoon Zone is currently '..self.Zone)
+            else
+                LOG('Zone is currently false')
+            end
             self:Stop()
             self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 80, 25)
             self:SetPlatoonFormationOverride('NoFormation')
@@ -7038,6 +7045,11 @@ Platoon = Class(RNGAIPlatoon) {
         platoon.threats = {}
         local pathTimeout = 0
         while PlatoonExists(aiBrain, self) do
+            if self.Zone then
+                LOG('Trueplatoon Platoon Zone is currently '..self.Zone)
+            else
+                LOG('Trueplatoon Zone is currently false')
+            end
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
             if platoonNum < 20 then

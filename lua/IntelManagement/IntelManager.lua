@@ -1,5 +1,7 @@
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -15,96 +17,157 @@ local RNGPI = math.pi
 local RNGCAT = table.cat
 local RNGCOPY = table.copy
 
-function GenerateMapZonesRNG(aiBrain)
+IntelManager = Class {
+    Create = function(self, brain)
+        self.Brain = brain
+        self.Initialized = false
+    end,
 
-    local function CreateZoneRNG(pos,weight,id,radius,start)
-        return { Pos = RNGCOPY(pos), Weight = weight, Edges = {}, ID = id, Radius = radius, Start = start}
-    end
+    Run = function(self)
+        LOG('RNGAI : IntelManager Starting')
+        self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
+        self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
+        self:ForkThread(self.ConfigureResourcePointZoneID)
+        self.Initialized = true
+    end,
 
-    LOG('Start Generate Map Zones')
-    local zones = {}
-    local massPoints = {}
-    local zoneID = 1
-    local zoneRadius = 60 * 60
+    ForkThread = function(self, fn, ...)
+        if fn then
+            local thread = ForkThread(fn, self, unpack(arg))
+            self.Brain.Trash:Add(thread)
+            return thread
+        else
+            return nil
+        end
+    end,
+
+    WaitForZoneInitialization = function(self)
+        while not self.Brain.ZonesInitialized do
+            LOG('Zones table is empty, waiting')
+            coroutine.yield(20)
+            continue
+        end
+    end,
+
+    ZoneEnemyIntelMonitorRNG = function(self)
+        local threatTypes = {
+            'Land',
+            'Commander',
+            'Structures',
+        }
+        local Zones = {
+            'Land',
+        }
+        local rawThreat = 0
+        --[[
+            Each Zone currently looks like this
+            Dont repr the entire zone set
+            {
+            pos={x,y,z},
+            friendlythreat=0,
+            weight=6,
+            id=6,
+            edges = {adjacent zones live in here}
+            enemythreat=0,
+            startpositionclose="false"
+            }
+        ]]
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        while self.Brain.Result ~= "defeat" do
+            if not self.Brain.ZonesInitialized then
+                LOG('Zones table is empty, waiting')
+                WaitTick(10)
+                continue
+            end
+            for k, v in Zones do
+                for k1, v1 in self.Brain.Zones[v].zones do
+                    self.Brain.Zones.Land.zones[k1].enemythreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    coroutine.yield(1)
+                end
+                coroutine.yield(2)
+            end
+            coroutine.yield(2)
+        end
+    end,
+
+    ConfigureResourcePointZoneID = function(self)
+        -- This will set the zoneid on resource markers
+        -- note this logic exist in the calculate mass markers function as well so that things like crazy rush will update.
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        for _, v in AdaptiveResourceMarkerTableRNG do
+            if not v.zoneid and self.ZonesInitialized then
+                if RUtils.PositionOnWater(v.position[1], v.position[3]) then
+                    -- tbd define water based zones
+                    v.zoneid = water
+                else
+                    v.zoneid = Mapping.GetMap():GetZoneID(v.position,self.Zones.Land.index)
+                end
+            end
+        end
+    end,
     
-    local armyStarts = {}
-    for i = 1, 16 do
-        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-        if army and startPos then
-            table.insert(armyStarts, startPos)
-        end
-    end
-    for _, v in AdaptiveResourceMarkerTableRNG do
-        if v.type == "Mass" or v.type == "Hydrocarbon" then
-            table.insert(massPoints, { pos=v.position, claimed = false, weight = 1, aggX = v.position[1], aggZ = v.position[3] })
-        end
-    end
-    complete = (RNGGETN(massPoints) == 0)
-    LOG('Start while loop')
-    while not complete do
-        complete = true
-        -- Update weights
-        local startPos = false
-        for _, v in massPoints do
-            v.weight = 1
-            v.aggX = v.pos[1]
-            v.aggZ = v.pos[3]
-        end
-        for _, v1 in massPoints do
-            if not v1.claimed then
-                for _, v2 in massPoints do
-                    if (not v2.claimed) and VDist2Sq(v1.pos[1], v1.pos[3], v2.pos[1], v2.pos[3]) < zoneRadius then
-                        v1.weight = v1.weight + 1
-                        v1.aggX = v1.aggX + v2.pos[1]
-                        v1.aggZ = v1.aggZ + v2.pos[3]
+    ZoneFriendlyIntelMonitorRNG = function(self)
+        local Zones = {
+            'Land',
+        }
+        --[[
+            Each Zone currently looks like this
+            Dont repr the entire zone set
+            {
+            pos={x,y,z},
+            friendlythreat=0,
+            weight=6,
+            id=6,
+            edges = {adjacent zones live in here}
+            enemythreat=0,
+            startpositionclose="false"
+            }
+        ]]
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        while self.Brain.Result ~= "defeat" do
+            local Zones = {
+                'Land',
+            }
+            local AlliedPlatoons = self.Brain:GetPlatoonsList()
+            for k, v in Zones do
+                local friendlyThreat = {}
+                for k1, v1 in AlliedPlatoons do
+                    if not v1.MovementLayer then
+                        AIAttackUtils.GetMostRestrictiveLayer(v1)
+                    end
+                    if not v1.Dead then
+                        if v1.Zone and v1.CurrentPlatoonThreat then
+                            if not friendlyThreat[v1.Zone] then
+                                friendlyThreat[v1.Zone] = 0
+                            end
+                            friendlyThreat[v1.Zone] = friendlyThreat[v1.Zone] + v1.CurrentPlatoonThreat
+                        end
+                    end
+                end
+                for k2, v2 in self.Brain.Zones[v].zones do
+                    for k3, v3 in friendlyThreat do
+                        if k2 == k3 then
+                            self.Brain.Zones[v].zones[k2].friendlythreat = v3
+                        end
                     end
                 end
             end
+            coroutine.yield(20)
         end
-        -- Find next point to add
-        local best = nil
-        for _, v in massPoints do
-            if (not v.claimed) and ((not best) or best.weight < v.weight) then
-                best = v
-            end
-        end
-        -- Add next point
-        local massGroup = {best.pos}
-        best.claimed = true
-        local x = best.aggX/best.weight
-        local z = best.aggZ/best.weight
-        for _, p in armyStarts do
-            if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
-                --LOG('Position Taken '..repr(v)..' and '..repr(v.position))
-                startPos = true
-                break
-            end
-        end
-        table.insert(zones,CreateZoneRNG({x,GetSurfaceHeight(x,z),z},best.weight,zoneID, 60, startPos))
-        -- Claim nearby points
-        for _, v in massPoints do
-            if (not v.claimed) and VDist2Sq(v.pos[1], v.pos[3], best.pos[1], best.pos[3]) < zoneRadius then
-                table.insert(massGroup, v.pos)
-                v.claimed = true
-            elseif not v.claimed then
-                complete = false
-            end
-        end
-        
-        --zones[zoneID].MassPoints = {}
-        --zones[zoneID].MassPoints = massGroup
-        for k, v in zones do
-            if v.ID == zoneID then
-                if not v.MassPoints then
-                    v.MassPoints = {}
-                end
-                v.MassPoints = massGroup
-                break
-            end
-        end
-        zoneID = zoneID + 1
-    end
+    end,
+}
+
+function CreateIntelManager(brain)
+    local im = IntelManager()
+    im:Create(brain)
+    return im
+end
+
+--[[
+    keep this for a tick so I can decide if I want to set zone id's on the mass markers or just stick to the zones
     for k, v in zones do
         for k1, v1 in v.MassPoints do
             for k2, v2 in AdaptiveResourceMarkerTableRNG do
@@ -116,7 +179,7 @@ function GenerateMapZonesRNG(aiBrain)
     end
     LOG('Zone Table '..repr(zones))
     LOG('AdaptiveResourceMarkerTable '..repr(AdaptiveResourceMarkerTableRNG))
-end
+]]
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
     coroutine.yield(5)
@@ -257,35 +320,7 @@ ExpansionIntelScanRNG = function(aiBrain)
     end
 end
 
-ZoneIntelMonitorRNG = function(aiBrain)
-    local threatTypes = {
-        'Land',
-        'Commander',
-        'Structures',
-    }
-    local rawThreat = 0
-    --[[
-        Each Zone currently looks like this
-        Dont repr the entire zone set
-        {
-        pos={x,y,z},
-        friendlythreat=0,
-        weight=6,
-        id=6,
-        edges = {adjacent zones live in here}
-        enemythreat=0,
-        startpositionclose="false"
-        }
-    ]]
-    WaitTicks(50)
-    while aiBrain.Result ~= "defeat" do
-        for k, v in aiBrain.Zones.Land.zones do
-            aiBrain.Zones.Land.zones[k].enemythreat = GetThreatAtPosition(aiBrain, v.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-            coroutine.yield(1)
-        end
-        coroutine.yield(2)
-    end
-end
+
 
 function InitialNavalAttackCheck(aiBrain)
     -- This function will check if there are mass markers that can be hit by frigates. This can trigger faster naval factory builds initially.

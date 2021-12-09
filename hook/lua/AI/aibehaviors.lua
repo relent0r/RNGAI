@@ -1,6 +1,8 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibehaviors.lua' )
 
 local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local lerpy = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').lerpy
@@ -2191,6 +2193,32 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
     end
     cdr.Upgrading = false
     return true
+end
+
+ZoneUpdate = function(platoon)
+    local aiBrain = platoon:GetBrain()
+    local function SetZone(pos, zoneIndex)
+        --LOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+        local zoneID = Mapping.GetMap():GetZoneID(pos,zoneIndex)
+        --LOG('zoneID being returned from mapping class '..zoneID)
+        -- zoneID <= 0 => not in a zone
+        if zoneID > 0 then
+            platoon.Zone = zoneID
+        else
+            platoon.Zone = false
+        end
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+    end
+    while aiBrain:PlatoonExists(platoon) do
+        if platoon.MovementLayer == 'Land' then
+            SetZone(GetPlatoonPosition(platoon), aiBrain.Zones.Land.index)
+        elseif platoon.MovementLayer == 'Water' then
+            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+        end
+        WaitTicks(30)
+    end
 end
 
 PlatoonRetreat = function (platoon)
