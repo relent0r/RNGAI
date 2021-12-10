@@ -6717,8 +6717,10 @@ Platoon = Class(RNGAIPlatoon) {
             else
                 platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, position, self.MaxWeaponRange+40, 'Enemy')
             end
-            for i,unit in platoon.targetcandidates do
-                if not ViableTargetCheck(unit) then table.remove(platoon.targetcandidates,i) continue end
+            local candidates = platoon.targetcandidates
+            platoon.targetcandidates={}
+            for i,unit in candidates do
+                if ViableTargetCheck(unit) then table.insert(platoon.targetcandidates,unit) continue end
                 if not unit.chppriority then unit.chppriority={} unit.chpdistance={} end
                 if not unit.dangerupdate or GetGameTimeSeconds()-unit.dangerupdate>10 then
                     unit.chpdanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unit:GetPosition(),30).enemy)
