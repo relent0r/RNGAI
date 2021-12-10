@@ -682,10 +682,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     T3=0
                 }
             },
+            --The mex list is indexed by zone so the AI can easily calculate how many mexes it has per zone.
             mex = {
-                T1=0,
-                T2=0,
-                T3=0
+                
             },
             pgen = {
                 T1=0,
@@ -699,6 +698,11 @@ AIBrain = Class(RNGAIBrainClass) {
             fabs= {
                 T2=0,
                 T3=0
+            }
+        }
+        self.emanager = {
+            mex = {
+
             }
         }
 
@@ -2238,6 +2242,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         LOG('Base Monitor Alert is on')
                     end
                     for k, v in self.Zones.Land.zones do
+                        for k1,v2 in v.edges do
+                            LOG(RUtils.DebugArrayRNG(v2))
+                        end
                         if v.friendlythreat > 0 then
                             LOG('Friend Threat at zone '..v.id)
                             LOG('Key for zone is '..k)
@@ -2249,6 +2256,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             LOG('Enemy Threat is '..v.enemythreat)
                         end
                     end
+                    LOG('Friendly Mex Table '..repr(self.smanager.mex))
+                    LOG('Enemy Mex Table '..repr(self.emanager.mex))
                     --LOG('Mass Marker Table '..repr(AdaptiveResourceMarkerTableRNG))
                     --[[if self.GraphZones.HasRun then
                         LOG('We should have graph zones now')
@@ -4184,9 +4193,10 @@ AIBrain = Class(RNGAIBrainClass) {
     HeavyEconomyForkRNG = function(self)
         local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
         local factionIndex = self:GetFactionIndex()
+        local GetPosition = moho.entity_methods.GetPosition
         --LOG('units grabbed')
         local factories = {Land={T1=0,T2=0,T3=0},Air={T1=0,T2=0,T3=0},Naval={T1=0,T2=0,T3=0}}
-        local extractors = {T1=0,T2=0,T3=0}
+        local extractors = { }
         local fabs = {T2=0,T3=0}
         local coms = {acu=0,sacu=0}
         local pgens = {T1=0,T2=0,T3=0}
@@ -4219,261 +4229,273 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         for _,unit in units do
-            if unit.Dead then continue end
-            if not unit then continue end
-            local spendm=GetConsumptionPerSecondMass(unit)
-            local spende=GetConsumptionPerSecondEnergy(unit)
-            local producem=GetProductionPerSecondMass(unit)
-            local producee=GetProductionPerSecondEnergy(unit)
-            tspend.m=tspend.m+spendm
-            tspend.e=tspend.e+spende
-            rincome.m=rincome.m+producem
-            rincome.e=rincome.e+producee
-            if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
-                if EntityCategoryContains(categories.TECH1,unit) then
-                    extractors.T1=extractors.T1+1
-                    mexspend.T1=mexspend.T1+spendm
-                elseif EntityCategoryContains(categories.TECH2,unit) then
-                    extractors.T2=extractors.T2+1
-                    mexspend.T2=mexspend.T2+spendm
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    extractors.T3=extractors.T3+1
-                    mexspend.T3=mexspend.T3+spendm
-                end
-            elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
-                if EntityCategoryContains(categories.COMMAND,unit) then
-                    coms.acu=coms.acu+1
-                    engspend.com=engspend.com+spendm
-                elseif EntityCategoryContains(categories.SUBCOMMANDER,unit) then
-                    coms.sacu=coms.sacu+1
-                    engspend.com=engspend.com+spendm
-                end
-            elseif EntityCategoryContains(categories.MASSFABRICATION,unit) then
-                if EntityCategoryContains(categories.TECH2,unit) then
-                    fabs.T2=fabs.T2+1
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    fabs.T3=fabs.T3+1
-                end
-            elseif EntityCategoryContains(categories.ENGINEER,unit) then
-                if EntityCategoryContains(categories.TECH1,unit) then
-                    engspend.T1=engspend.T1+spendm
-                elseif EntityCategoryContains(categories.TECH2,unit) then
-                    engspend.T2=engspend.T2+spendm
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    engspend.T3=engspend.T3+spendm
-                end
-            elseif EntityCategoryContains(categories.FACTORY,unit) then
-                if EntityCategoryContains(categories.LAND,unit) then
-                    facspend.Land=facspend.Land+spendm
+            if unit and not unit.Dead then 
+                local spendm=GetConsumptionPerSecondMass(unit)
+                local spende=GetConsumptionPerSecondEnergy(unit)
+                local producem=GetProductionPerSecondMass(unit)
+                local producee=GetProductionPerSecondEnergy(unit)
+                tspend.m=tspend.m+spendm
+                tspend.e=tspend.e+spende
+                rincome.m=rincome.m+producem
+                rincome.e=rincome.e+producee
+                if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
+                    if not unit.zoneid and self.ZonesInitialized then
+                        local mexPos = GetPosition(unit)
+                        if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
+                            -- tbd define water based zones
+                            unit.zoneid = water
+                        else
+                            unit.zoneid = Mapping.GetMap():GetZoneID(mexPos,self.Zones.Land.index)
+                        end
+                    end
+                    if not extractors[unit.zoneid] then
+                        extractors[unit.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                    end
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.Land.T1=factories.Land.T1+1
+                        extractors[unit.zoneid].T1=extractors[unit.zoneid].T1+1
+                        mexspend.T1=mexspend.T1+spendm
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.Land.T2=factories.Land.T2+1
+                        extractors[unit.zoneid].T2=extractors[unit.zoneid].T2+1
+                        mexspend.T2=mexspend.T2+spendm
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.Land.T3=factories.Land.T3+1
+                        extractors[unit.zoneid].T3=extractors[unit.zoneid].T3+1
+                        mexspend.T3=mexspend.T3+spendm
+                    end
+                elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
+                    if EntityCategoryContains(categories.COMMAND,unit) then
+                        coms.acu=coms.acu+1
+                        engspend.com=engspend.com+spendm
+                    elseif EntityCategoryContains(categories.SUBCOMMANDER,unit) then
+                        coms.sacu=coms.sacu+1
+                        engspend.com=engspend.com+spendm
+                    end
+                elseif EntityCategoryContains(categories.MASSFABRICATION,unit) then
+                    if EntityCategoryContains(categories.TECH2,unit) then
+                        fabs.T2=fabs.T2+1
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        fabs.T3=fabs.T3+1
+                    end
+                elseif EntityCategoryContains(categories.ENGINEER,unit) then
+                    if EntityCategoryContains(categories.TECH1,unit) then
+                        engspend.T1=engspend.T1+spendm
+                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                        engspend.T2=engspend.T2+spendm
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        engspend.T3=engspend.T3+spendm
+                    end
+                elseif EntityCategoryContains(categories.FACTORY,unit) then
+                    if EntityCategoryContains(categories.LAND,unit) then
+                        facspend.Land=facspend.Land+spendm
+                        if EntityCategoryContains(categories.TECH1,unit) then
+                            factories.Land.T1=factories.Land.T1+1
+                        elseif EntityCategoryContains(categories.TECH2,unit) then
+                            factories.Land.T2=factories.Land.T2+1
+                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                            factories.Land.T3=factories.Land.T3+1
+                        end
+                    elseif EntityCategoryContains(categories.AIR,unit) then
+                        facspend.Air=facspend.Air+spendm
+                        if EntityCategoryContains(categories.TECH1,unit) then
+                            factories.Air.T1=factories.Air.T1+1
+                        elseif EntityCategoryContains(categories.TECH2,unit) then
+                            factories.Air.T2=factories.Air.T2+1
+                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                            factories.Air.T3=factories.Air.T3+1
+                        end
+                    elseif EntityCategoryContains(categories.NAVAL,unit) then
+                        facspend.Naval=facspend.Naval+spendm
+                        if EntityCategoryContains(categories.TECH1,unit) then
+                            factories.Naval.T1=factories.Naval.T1+1
+                        elseif EntityCategoryContains(categories.TECH2,unit) then
+                            factories.Naval.T2=factories.Naval.T2+1
+                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                            factories.Naval.T3=factories.Naval.T3+1
+                        end
+                    end
+                elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
+                    if EntityCategoryContains(categories.TECH1,unit) then
+                        pgens.T1=pgens.T1+1
+                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                        pgens.T2=pgens.T2+1
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        pgens.T3=pgens.T3+1
+                    end
+                elseif EntityCategoryContains(categories.LAND,unit) then
+                    if EntityCategoryContains(categories.TECH1,unit) then
+                        armyLandTiers.T1=armyLandTiers.T1+1
+                        if EntityCategoryContains(categories.SCOUT,unit) then
+                            armyLand.T1.scout=armyLand.T1.scout+1
+                            armyLandType.scout=armyLandType.scout+1
+                        elseif EntityCategoryContains(categories.DIRECTFIRE - categories.ANTIAIR,unit) then
+                            armyLand.T1.tank=armyLand.T1.tank+1
+                            armyLandType.tank=armyLandType.tank+1
+                        elseif EntityCategoryContains(categories.INDIRECTFIRE - categories.ANTIAIR,unit) then
+                            armyLand.T1.arty=armyLand.T1.arty+1
+                            armyLandType.arty=armyLandType.arty+1
+                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                            armyLand.T1.aa=armyLand.T1.aa+1
+                            armyLandType.aa=armyLandType.aa+1
+                        end
+                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                        armyLandTiers.T2=armyLandTiers.T2+1
+                        if EntityCategoryContains(categories.DIRECTFIRE - categories.BOT - categories.ANTIAIR,unit) then
+                            armyLand.T2.tank=armyLand.T2.tank+1
+                            armyLandType.tank=armyLandType.tank+1
+                        elseif EntityCategoryContains(categories.DIRECTFIRE * categories.BOT - categories.ANTIAIR,unit) then
+                            armyLand.T2.bot=armyLand.T2.bot+1
+                            armyLandType.bot=armyLandType.bot+1
+                        elseif EntityCategoryContains(categories.SILO,unit) then
+                            armyLand.T2.mml=armyLand.T2.mml+1
+                            armyLandType.mml=armyLandType.mml+1
+                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                            armyLand.T2.aa=armyLand.T2.aa+1
+                            armyLandType.aa=armyLandType.aa+1
+                        elseif EntityCategoryContains(categories.SHIELD,unit) then
+                            armyLand.T2.shield=armyLand.T2.shield+1
+                            armyLandType.shield=armyLandType.shield+1
+                        end
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                        armyLandTiers.T3=armyLandTiers.T3+1
+                        if EntityCategoryContains(categories.SNIPER,unit) then
+                            armyLand.T3.sniper=armyLand.T3.sniper+1
+                            armyLandType.sniper=armyLandType.sniper+1
+                        elseif EntityCategoryContains(categories.DIRECTFIRE * (categories.xel0305 + categories.xrl0305),unit) then
+                            armyLand.T3.armoured=armyLand.T3.armoured+1
+                            armyLandType.armoured=armyLandType.armoured+1
+                        elseif EntityCategoryContains(categories.DIRECTFIRE - categories.xel0305 - categories.xrl0305 - categories.ANTIAIR,unit) then
+                            armyLand.T3.tank=armyLand.T3.tank+1
+                            armyLandType.tank=armyLandType.tank+1
+                        elseif EntityCategoryContains(categories.SILO,unit) then
+                            armyLand.T3.mml=armyLand.T3.mml+1
+                            armyLandType.mml=armyLandType.mml+1
+                        elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
+                            armyLand.T3.arty=armyLand.T3.arty+1
+                            armyLandType.arty=armyLandType.arty+1
+                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                            armyLand.T3.aa=armyLand.T3.aa+1
+                            armyLandType.aa=armyLandType.aa+1
+                        elseif EntityCategoryContains(categories.SHIELD,unit) then
+                            armyLand.T3.shield=armyLand.T3.shield+1
+                            armyLandType.shield=armyLandType.shield+1
+                        end
                     end
                 elseif EntityCategoryContains(categories.AIR,unit) then
-                    facspend.Air=facspend.Air+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.Air.T1=factories.Air.T1+1
+                        armyAirTiers.T1=armyAirTiers.T1+1
+                        if EntityCategoryContains(categories.SCOUT,unit) then
+                            armyAir.T1.scout=armyAir.T1.scout+1
+                            armyAirType.scout=armyAirType.scout+1
+                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                            armyAir.T1.interceptor=armyAir.T1.interceptor+1
+                            armyAirType.interceptor=armyAirType.interceptor+1
+                        elseif EntityCategoryContains(categories.BOMBER,unit) then
+                            armyAir.T1.bomber=armyAir.T1.bomber+1
+                            armyAirType.bomber=armyAirType.bomber+1
+                        elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                            armyAir.T1.gunship=armyAir.T1.gunship+1
+                            armyAirType.gunship=armyAirType.gunship+1
+                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                            armyAir.T1.transport=armyAir.T1.transport+1
+                            armyAirType.transport=armyAirType.transport+1
+                        end
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.Air.T2=factories.Air.T2+1
+                        armyAirTiers.T2=armyAirTiers.T2+1
+                        if EntityCategoryContains(categories.BOMBER - categories.daa0206,unit) then
+                            armyAir.T2.bomber=armyAir.T2.bomber+1
+                            armyAirType.bomber=armyAirType.bomber+1
+                        elseif EntityCategoryContains(categories.xaa0202 - categories.EXPERIMENTAL,unit) then
+                            armyAir.T2.fighter=armyAir.T2.fighter+1
+                            armyAirType.fighter=armyAirType.fighter+1
+                        elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                            armyAir.T2.gunship=armyAir.T2.gunship+1
+                            armyAirType.gunship=armyAirType.gunship+1
+                        elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
+                            armyAir.T2.torpedo=armyAir.T2.torpedo+1
+                            armyAirType.torpedo=armyAirType.torpedo+1
+                        elseif EntityCategoryContains(categories.daa0206,unit) then
+                            armyAir.T2.mercy=armyAir.T2.mercy+1
+                            armyAirType.mercy=armyAirType.mercy+1
+                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                            armyAir.T2.transport=armyAir.T2.transport+1
+                            armyAirType.transport=armyAirType.transport+1
+                        end
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.Air.T3=factories.Air.T3+1
+                        armyAirTiers.T3=armyAirTiers.T3+1
+                        if EntityCategoryContains(categories.SCOUT,unit) then
+                            armyAir.T3.scout=armyAir.T3.scout+1
+                            armyAirType.scout=armyAirType.scout+1
+                        elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
+                            armyAir.T3.asf=armyAir.T3.asf+1
+                            armyAirType.asf=armyAirType.asf+1
+                        elseif EntityCategoryContains(categories.BOMBER,unit) then
+                            armyAir.T3.bomber=armyAir.T3.bomber+1
+                            armyAirType.bomber=armyAirType.bomber+1
+                        elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                            armyAir.T3.gunship=armyAir.T3.gunship+1
+                            armyAirType.gunship=armyAirType.gunship+1
+                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                            armyAir.T3.transport=armyAir.T3.transport+1
+                            armyAirType.transport=armyAirType.transport+1
+                        elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
+                            armyAir.T3.torpedo=armyAir.T3.torpedo+1
+                            armyAirType.torpedo=armyAirType.torpedo+1
+                        end
                     end
                 elseif EntityCategoryContains(categories.NAVAL,unit) then
-                    facspend.Naval=facspend.Naval+spendm
                     if EntityCategoryContains(categories.TECH1,unit) then
-                        factories.Naval.T1=factories.Naval.T1+1
+                        armyNavalTiers.T1=armyNavalTiers.T1+1
+                        if EntityCategoryContains(categories.FRIGATE,unit) then
+                            armyNaval.T1.frigate=armyNaval.T1.frigate+1
+                            armyNavalType.frigate=armyNavalType.frigate+1
+                        elseif EntityCategoryContains(categories.T1SUBMARINE,unit) then
+                            armyNaval.T1.sub=armyNaval.T1.sub+1
+                            armyNavalType.sub=armyNavalType.sub+1
+                        elseif EntityCategoryContains(categories.uas0102,unit) then
+                            armyNaval.T1.shard=armyNaval.T1.shard+1
+                            armyNavalType.shard=armyNavalType.shard+1
+                        end
                     elseif EntityCategoryContains(categories.TECH2,unit) then
-                        factories.Naval.T2=factories.Naval.T2+1
+                        armyNavalTiers.T2=armyNavalTiers.T2+1
+                        if EntityCategoryContains(categories.DESTROYER,unit) then
+                            armyNaval.T2.destroyer=armyNaval.T2.destroyer+1
+                            armyNavalType.destroyer=armyNavalType.destroyer+1
+                        elseif EntityCategoryContains(categories.CRUISER,unit) then
+                            armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
+                            armyNavalType.cruiser=armyNavalType.cruiser+1
+                        elseif EntityCategoryContains(categories.T2SUBMARINE + categories.xes0102,unit) then
+                            armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
+                            armyNavalType.subhunter=armyNavalType.subhunter+1
+                        end
+                    --[[elseif EntityCategoryContains(categories.TECH3,unit) then
+                        armyNavalTiers.T3=armyNavalTiers.T3+1
+                        if EntityCategoryContains(categories.SCOUT,unit) then
+                            armyNaval.T3.scout=armyNaval.T3.scout+1
+                            armyNavalType.scout=armyNavalType.scout+1
+                        elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
+                            armyNaval.T3.asf=armyNaval.T3.asf+1
+                            armyNavalType.asf=armyNavalType.asf+1
+                        elseif EntityCategoryContains(categories.BOMBER,unit) then
+                            armyNaval.T3.bomber=armyNaval.T3.bomber+1
+                            armyNavalType.bomber=armyNavalType.bomber+1
+                        elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
+                            armyNaval.T3.gunship=armyNaval.T3.gunship+1
+                            armyNavalType.gunship=armyNavalType.gunship+1
+                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                            armyNaval.T3.transport=armyNaval.T3.transport+1
+                            armyNavalType.transport=armyNavalType.transport+1
+                        elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
+                            armyNaval.T3.torpedo=armyNaval.T3.torpedo+1
+                            armyNavalType.torpedo=armyNavalType.torpedo+1
+                        end]]
+                    end
+                elseif EntityCategoryContains(categories.SILO,unit) then
+                    if EntityCategoryContains(categories.TECH2,unit) then
+                        silo.T2=silo.T2+1
+                        launcherspend.T2=launcherspend.T2+spendm
                     elseif EntityCategoryContains(categories.TECH3,unit) then
-                        factories.Naval.T3=factories.Naval.T3+1
+                        silo.T3=silo.T3+1
+                        launcherspend.T3=launcherspend.T3+spendm
                     end
-                end
-            elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
-                if EntityCategoryContains(categories.TECH1,unit) then
-                    pgens.T1=pgens.T1+1
-                elseif EntityCategoryContains(categories.TECH2,unit) then
-                    pgens.T2=pgens.T2+1
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    pgens.T3=pgens.T3+1
-                end
-            elseif EntityCategoryContains(categories.LAND,unit) then
-                if EntityCategoryContains(categories.TECH1,unit) then
-                    armyLandTiers.T1=armyLandTiers.T1+1
-                    if EntityCategoryContains(categories.SCOUT,unit) then
-                        armyLand.T1.scout=armyLand.T1.scout+1
-                        armyLandType.scout=armyLandType.scout+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE - categories.ANTIAIR,unit) then
-                        armyLand.T1.tank=armyLand.T1.tank+1
-                        armyLandType.tank=armyLandType.tank+1
-                    elseif EntityCategoryContains(categories.INDIRECTFIRE - categories.ANTIAIR,unit) then
-                        armyLand.T1.arty=armyLand.T1.arty+1
-                        armyLandType.arty=armyLandType.arty+1
-                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        armyLand.T1.aa=armyLand.T1.aa+1
-                        armyLandType.aa=armyLandType.aa+1
-                    end
-                elseif EntityCategoryContains(categories.TECH2,unit) then
-                    armyLandTiers.T2=armyLandTiers.T2+1
-                    if EntityCategoryContains(categories.DIRECTFIRE - categories.BOT - categories.ANTIAIR,unit) then
-                        armyLand.T2.tank=armyLand.T2.tank+1
-                        armyLandType.tank=armyLandType.tank+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE * categories.BOT - categories.ANTIAIR,unit) then
-                        armyLand.T2.bot=armyLand.T2.bot+1
-                        armyLandType.bot=armyLandType.bot+1
-                    elseif EntityCategoryContains(categories.SILO,unit) then
-                        armyLand.T2.mml=armyLand.T2.mml+1
-                        armyLandType.mml=armyLandType.mml+1
-                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        armyLand.T2.aa=armyLand.T2.aa+1
-                        armyLandType.aa=armyLandType.aa+1
-                    elseif EntityCategoryContains(categories.SHIELD,unit) then
-                        armyLand.T2.shield=armyLand.T2.shield+1
-                        armyLandType.shield=armyLandType.shield+1
-                    end
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    armyLandTiers.T3=armyLandTiers.T3+1
-                    if EntityCategoryContains(categories.SNIPER,unit) then
-                        armyLand.T3.sniper=armyLand.T3.sniper+1
-                        armyLandType.sniper=armyLandType.sniper+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE * (categories.xel0305 + categories.xrl0305),unit) then
-                        armyLand.T3.armoured=armyLand.T3.armoured+1
-                        armyLandType.armoured=armyLandType.armoured+1
-                    elseif EntityCategoryContains(categories.DIRECTFIRE - categories.xel0305 - categories.xrl0305 - categories.ANTIAIR,unit) then
-                        armyLand.T3.tank=armyLand.T3.tank+1
-                        armyLandType.tank=armyLandType.tank+1
-                    elseif EntityCategoryContains(categories.SILO,unit) then
-                        armyLand.T3.mml=armyLand.T3.mml+1
-                        armyLandType.mml=armyLandType.mml+1
-                    elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
-                        armyLand.T3.arty=armyLand.T3.arty+1
-                        armyLandType.arty=armyLandType.arty+1
-                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        armyLand.T3.aa=armyLand.T3.aa+1
-                        armyLandType.aa=armyLandType.aa+1
-                    elseif EntityCategoryContains(categories.SHIELD,unit) then
-                        armyLand.T3.shield=armyLand.T3.shield+1
-                        armyLandType.shield=armyLandType.shield+1
-                    end
-                end
-            elseif EntityCategoryContains(categories.AIR,unit) then
-                if EntityCategoryContains(categories.TECH1,unit) then
-                    armyAirTiers.T1=armyAirTiers.T1+1
-                    if EntityCategoryContains(categories.SCOUT,unit) then
-                        armyAir.T1.scout=armyAir.T1.scout+1
-                        armyAirType.scout=armyAirType.scout+1
-                    elseif EntityCategoryContains(categories.ANTIAIR,unit) then
-                        armyAir.T1.interceptor=armyAir.T1.interceptor+1
-                        armyAirType.interceptor=armyAirType.interceptor+1
-                    elseif EntityCategoryContains(categories.BOMBER,unit) then
-                        armyAir.T1.bomber=armyAir.T1.bomber+1
-                        armyAirType.bomber=armyAirType.bomber+1
-                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
-                        armyAir.T1.gunship=armyAir.T1.gunship+1
-                        armyAirType.gunship=armyAirType.gunship+1
-                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
-                        armyAir.T1.transport=armyAir.T1.transport+1
-                        armyAirType.transport=armyAirType.transport+1
-                    end
-                elseif EntityCategoryContains(categories.TECH2,unit) then
-                    armyAirTiers.T2=armyAirTiers.T2+1
-                    if EntityCategoryContains(categories.BOMBER - categories.daa0206,unit) then
-                        armyAir.T2.bomber=armyAir.T2.bomber+1
-                        armyAirType.bomber=armyAirType.bomber+1
-                    elseif EntityCategoryContains(categories.xaa0202 - categories.EXPERIMENTAL,unit) then
-                        armyAir.T2.fighter=armyAir.T2.fighter+1
-                        armyAirType.fighter=armyAirType.fighter+1
-                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
-                        armyAir.T2.gunship=armyAir.T2.gunship+1
-                        armyAirType.gunship=armyAirType.gunship+1
-                    elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
-                        armyAir.T2.torpedo=armyAir.T2.torpedo+1
-                        armyAirType.torpedo=armyAirType.torpedo+1
-                    elseif EntityCategoryContains(categories.daa0206,unit) then
-                        armyAir.T2.mercy=armyAir.T2.mercy+1
-                        armyAirType.mercy=armyAirType.mercy+1
-                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
-                        armyAir.T2.transport=armyAir.T2.transport+1
-                        armyAirType.transport=armyAirType.transport+1
-                    end
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    armyAirTiers.T3=armyAirTiers.T3+1
-                    if EntityCategoryContains(categories.SCOUT,unit) then
-                        armyAir.T3.scout=armyAir.T3.scout+1
-                        armyAirType.scout=armyAirType.scout+1
-                    elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
-                        armyAir.T3.asf=armyAir.T3.asf+1
-                        armyAirType.asf=armyAirType.asf+1
-                    elseif EntityCategoryContains(categories.BOMBER,unit) then
-                        armyAir.T3.bomber=armyAir.T3.bomber+1
-                        armyAirType.bomber=armyAirType.bomber+1
-                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
-                        armyAir.T3.gunship=armyAir.T3.gunship+1
-                        armyAirType.gunship=armyAirType.gunship+1
-                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
-                        armyAir.T3.transport=armyAir.T3.transport+1
-                        armyAirType.transport=armyAirType.transport+1
-                    elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
-                        armyAir.T3.torpedo=armyAir.T3.torpedo+1
-                        armyAirType.torpedo=armyAirType.torpedo+1
-                    end
-                end
-            elseif EntityCategoryContains(categories.NAVAL,unit) then
-                if EntityCategoryContains(categories.TECH1,unit) then
-                    armyNavalTiers.T1=armyNavalTiers.T1+1
-                    if EntityCategoryContains(categories.FRIGATE,unit) then
-                        armyNaval.T1.frigate=armyNaval.T1.frigate+1
-                        armyNavalType.frigate=armyNavalType.frigate+1
-                    elseif EntityCategoryContains(categories.T1SUBMARINE,unit) then
-                        armyNaval.T1.sub=armyNaval.T1.sub+1
-                        armyNavalType.sub=armyNavalType.sub+1
-                    elseif EntityCategoryContains(categories.uas0102,unit) then
-                        armyNaval.T1.shard=armyNaval.T1.shard+1
-                        armyNavalType.shard=armyNavalType.shard+1
-                    end
-                elseif EntityCategoryContains(categories.TECH2,unit) then
-                    armyNavalTiers.T2=armyNavalTiers.T2+1
-                    if EntityCategoryContains(categories.DESTROYER,unit) then
-                        armyNaval.T2.destroyer=armyNaval.T2.destroyer+1
-                        armyNavalType.destroyer=armyNavalType.destroyer+1
-                    elseif EntityCategoryContains(categories.CRUISER,unit) then
-                        armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
-                        armyNavalType.cruiser=armyNavalType.cruiser+1
-                    elseif EntityCategoryContains(categories.T2SUBMARINE + categories.xes0102,unit) then
-                        armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
-                        armyNavalType.subhunter=armyNavalType.subhunter+1
-                    end
-                --[[elseif EntityCategoryContains(categories.TECH3,unit) then
-                    armyNavalTiers.T3=armyNavalTiers.T3+1
-                    if EntityCategoryContains(categories.SCOUT,unit) then
-                        armyNaval.T3.scout=armyNaval.T3.scout+1
-                        armyNavalType.scout=armyNavalType.scout+1
-                    elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
-                        armyNaval.T3.asf=armyNaval.T3.asf+1
-                        armyNavalType.asf=armyNavalType.asf+1
-                    elseif EntityCategoryContains(categories.BOMBER,unit) then
-                        armyNaval.T3.bomber=armyNaval.T3.bomber+1
-                        armyNavalType.bomber=armyNavalType.bomber+1
-                    elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
-                        armyNaval.T3.gunship=armyNaval.T3.gunship+1
-                        armyNavalType.gunship=armyNavalType.gunship+1
-                    elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
-                        armyNaval.T3.transport=armyNaval.T3.transport+1
-                        armyNavalType.transport=armyNavalType.transport+1
-                    elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
-                        armyNaval.T3.torpedo=armyNaval.T3.torpedo+1
-                        armyNavalType.torpedo=armyNavalType.torpedo+1
-                    end]]
-                end
-            elseif EntityCategoryContains(categories.SILO,unit) then
-                if EntityCategoryContains(categories.TECH2,unit) then
-                    silo.T2=silo.T2+1
-                    launcherspend.T2=launcherspend.T2+spendm
-                elseif EntityCategoryContains(categories.TECH3,unit) then
-                    silo.T3=silo.T3+1
-                    launcherspend.T3=launcherspend.T3+spendm
                 end
             end
         end

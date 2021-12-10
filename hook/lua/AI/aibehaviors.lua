@@ -2200,7 +2200,6 @@ ZoneUpdate = function(platoon)
     local function SetZone(pos, zoneIndex)
         --LOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
         local zoneID = Mapping.GetMap():GetZoneID(pos,zoneIndex)
-        --LOG('zoneID being returned from mapping class '..zoneID)
         -- zoneID <= 0 => not in a zone
         if zoneID > 0 then
             platoon.Zone = zoneID
@@ -2212,7 +2211,7 @@ ZoneUpdate = function(platoon)
         AIAttackUtils.GetMostRestrictiveLayer(platoon)
     end
     while aiBrain:PlatoonExists(platoon) do
-        if platoon.MovementLayer == 'Land' then
+        if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
             SetZone(GetPlatoonPosition(platoon), aiBrain.Zones.Land.index)
         elseif platoon.MovementLayer == 'Water' then
             --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)

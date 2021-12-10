@@ -3429,7 +3429,6 @@ Platoon = Class(RNGAIPlatoon) {
         self.MaxPlatoonWeaponRange = false
         self.scoutUnit = false
         self.atkPri = {}
-        self.Zone = false
         local categoryList = {}
         self.CurrentPlatoonThreat = false
         local VDist2Sq = VDist2Sq
@@ -3505,6 +3504,12 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
+        local targetzone = IntelManagerRNG.GetIntelManager():SelectZoneRNG(aiBrain, self, 'raid')
+        if targetzone then
+            LOG('Zone Query Returned '..targetzone)
+        else
+            LOG('Zone Query Returned false')
+        end
 
         if self.MovementLayer == 'Land' and not self.PlatoonData.EarlyRaid then
             local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10, 'raid')
@@ -6717,18 +6722,38 @@ Platoon = Class(RNGAIPlatoon) {
             else
                 platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, position, self.MaxWeaponRange+40, 'Enemy')
             end
+            local rebuildFlag = false
             for i,unit in platoon.targetcandidates do
-                if not ViableTargetCheck(unit) then table.remove(platoon.targetcandidates,i) continue end
-                if not unit.chppriority then unit.chppriority={} unit.chpdistance={} end
-                if not unit.dangerupdate or GetGameTimeSeconds()-unit.dangerupdate>10 then
-                    unit.chpdanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unit:GetPosition(),30).enemy)
-                    unit.dangerupdate=GetGameTimeSeconds()
+                -- if all the units are removed from the table but it still has an index for them??
+                --[[
+                    warning: Error running lua script: g:\code\fa\lua\platoon.lua(13560): attempt to call a table value
+                    stack traceback:
+                    g:\code\fa\lua\platoon.lua(13560): in function <g:\code\fa\lua\platoon.lua:13560
+                    [C]: in function sort
+                    g:\code\fa\lua\platoon.lua(13560): in function SimpleTarget'
+                    g:\code\fa\lua\platoon.lua(13917): in function <g:\code\fa\lua\platoon.lua:13352
+                    
+                    Its something in here causing the table have be greater than 0 but still empty
+                    I could do a manual sort and try fix it that way.
+                ]]
+                if ViableTargetCheck(unit) then 
+                    if not unit.chppriority then unit.chppriority={} unit.chpdistance={} end
+                    if not unit.dangerupdate or GetGameTimeSeconds()-unit.dangerupdate>10 then
+                        unit.chpdanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unit:GetPosition(),30).enemy)
+                        unit.dangerupdate=GetGameTimeSeconds()
+                    end
+                    if not unit.chpvalue then unit.chpvalue=ALLBPS[unit.UnitId].Economy.BuildCostMass/GetTrueHealth(unit) end
+                    unit.chpworth=unit.chpvalue/GetTrueHealth(unit)
+                    unit.chpdistance[id]=VDist3(position,unit:GetPosition())
+                    unit.chppriority[id]=unit.chpworth/math.max(30,unit.chpdistance[id])/unit.chpdanger
+                    LOG('CheckPriority On Units '..repr(unit.chppriority))
+                else
+                    platoon.targetcandidates[i] = nil
+                    rebuildFlag = true
                 end
-                if not unit.chpvalue then unit.chpvalue=ALLBPS[unit.UnitId].Economy.BuildCostMass/GetTrueHealth(unit) end
-                unit.chpworth=unit.chpvalue/GetTrueHealth(unit)
-                unit.chpdistance[id]=VDist3(position,unit:GetPosition())
-                unit.chppriority[id]=unit.chpworth/math.max(30,unit.chpdistance[id])/unit.chpdanger
-                LOG('CheckPriority On Units '..repr(unit.chppriority))
+            end
+            if rebuildFlag then
+                platoon.targetcandidates = aiBrain:RebuildTable(platoon.targetcandidates)
             end
             if RNGGETN(platoon.targetcandidates) > 0 then
                 table.sort(platoon.targetcandidates, function(a,b) return a.chppriority[id]>b.chppriority[id] end)

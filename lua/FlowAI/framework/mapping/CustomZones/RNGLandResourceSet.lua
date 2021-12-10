@@ -18,6 +18,27 @@ local RNGCOPY = table.copy
 local GetMarkers = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local MAP = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMap()
 
+--[[
+    Resulting Zone Table looks something like
+    {
+    pos=Zone Center Position, 
+    weight=weight based on masspoints, 
+    startpositionclose=do we have a live start position within the radius, 
+    enemythreat=currently populated by imap, 
+    friendlythreat=currently populated by the intel manager according to the platoons threat values, 
+    massmarkers=all the mass markers in the zone,
+    control=information on how the AI thinks it controls a zone
+    zonealert=this will be used for re-enforcements..I think.
+    edges ={
+        {
+            distance = I think this is the distance between the centerpoint and the edge of the zone
+            border = something, check with softles
+            zone = the ID of that adjacent zone
+        }
+    }
+    }
+]]
+
 -- Now create a subclass of 'ZoneSet', non-destructively hooking 'Init' and implementing the 'GenerateZoneList' function.
 -- You can create as many classes as you like here.
 -- Don't bother implementing any other methods or having any other variables since they'll be lost in the copy operation.

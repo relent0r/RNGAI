@@ -5,6 +5,7 @@ local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
 local RNGGETN = table.getn
@@ -21,6 +22,8 @@ IntelManager = Class {
     Create = function(self, brain)
         self.Brain = brain
         self.Initialized = false
+        self.Debug = false
+        self.ZoneIntel = {}
     end,
 
     Run = function(self)
@@ -28,6 +31,9 @@ IntelManager = Class {
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
+        if self.Debug then
+            self:ForkThread(self.IntelDebugThread)
+        end
         self.Initialized = true
     end,
 
@@ -41,6 +47,55 @@ IntelManager = Class {
         end
     end,
 
+    IntelDebugThread = function(self)
+        self:WaitForZoneInitialization()
+        WaitTicks(30)
+        while true do
+            for _, z in self.Brain.Zones.Land.zones do
+                DrawCircle(z.pos,3*z.weight,'b967ff')
+                if z.enemythreat > 0 then
+                    DrawCircle(z.pos,math.max(20,z.enemythreat),'d62d20')
+                end
+                if z.friendlythreat > 0 then
+                    DrawCircle(z.pos,math.max(20,z.friendlythreat),'aa44ff44')
+                else
+                    DrawCircle(z.pos,10,'aaffffff')
+                end
+                --[[if z.intel.control.enemy > 0 then
+                    DrawCircle(z.pos,10*z.intel.control.enemy,'aaff4444')
+                end
+                for _, e in z.edges do
+                    if e.zone.id < z.id then
+                        local ca1 = z.intel.control.allied > z.intel.control.enemy
+                        local ca2 = e.zone.intel.control.allied > e.zone.intel.control.enemy
+                        local ce1 = z.intel.control.allied <= z.intel.control.enemy and z.intel.control.enemy > 0.3
+                        local ce2 = e.zone.intel.control.allied <= e.zone.intel.control.enemy and e.zone.intel.control.enemy > 0.3
+                        if ca1 and ca2 then
+                            -- Allied edge
+                            DrawLine(z.pos,e.zone.pos,'8800ff00')
+                        elseif (ca1 and ce2) or (ca2 and ce1) then
+                            -- Contested edge
+                            DrawLine(z.pos,e.zone.pos,'88ffff00')
+                        elseif ce1 and ce2 then
+                            -- Enemy edge
+                            DrawLine(z.pos,e.zone.pos,'88ff0000')
+                        elseif (ca1 or ca2) and (not (ce1 or ce2)) then
+                            -- Allied expansion edge
+                            DrawLine(z.pos,e.zone.pos,'8800ffff')
+                        elseif (ce1 or ce2) and (not (ca1 or ca2)) then
+                            -- Enemy expansion edge
+                            DrawLine(z.pos,e.zone.pos,'88ff00ff')
+                        else
+                            -- Nobodies edge
+                            DrawLine(z.pos,e.zone.pos,'66666666')
+                        end
+                    end
+                end]]
+            end
+            WaitTicks(2)
+        end
+    end,
+
     WaitForZoneInitialization = function(self)
         while not self.Brain.ZonesInitialized do
             LOG('Zones table is empty, waiting')
@@ -48,6 +103,87 @@ IntelManager = Class {
             continue
         end
     end,
+
+    ZoneControlMonitorRNG = function(self)
+        -- This is doing the maths stuff on understand the zone control level
+        self:WaitForZoneInitialization()
+        local Zones = {
+            'Land',
+        }
+        while self.Brain.Result ~= "defeat" do
+            for k, v in Zones do
+                for k1, v1 in self.Brain.Zones[v].zones do
+                    local control
+                    if v1.enemythreat > 0 then
+                    end
+
+                    if v1.friendlythreat > 0 then
+                    end
+                end
+            end
+            coroutine.yield(50)
+        end
+    end,
+
+    SelectZoneRNG = function(self, aiBrain, platoon, type)
+        -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
+        --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
+        LOG('RNGAI : Zone Selection Query Received')
+        if PlatoonExists(aiBrain, platoon) then
+            local zoneSet = false
+            local zoneSelection = 999
+            local selection = false
+            local enemyMexmodifier = 0.1
+            if not platoon.Zone then
+                WARN('RNGAI : Select Zone platoon has no zone attribute '..platoon.PlanName)
+                coroutine.yield(20)
+                return false
+            end
+            LOG('RNGAI : Zone Selection Query Checking if Zones initialized')
+            if aiBrain.ZonesInitialized then
+                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Land' then
+                    zoneSet = aiBrain.Zones.Land.zones
+                elseif platoon.MovementLayer == 'Air' then
+                    zoneSet = aiBrain.Zones.Air.zones
+                end
+                if type == 'raid' then
+                    LOG('RNGAI : Zone Selection Query Processing')
+                    for k, v in zoneSet[platoon.Zone].edges do
+                        LOG('Edge Zone ID '..(v.zone.id))
+                        LOG('Edge information '..RUtils.DebugArrayRNG(v))
+                        if aiBrain.emanager.mex[v.zone.id].T1 then
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T1 + 1
+                        end
+                        if aiBrain.emanager.mex[v.zone.id].T2 then
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T2 * 2
+                        end
+                        if aiBrain.emanager.mex[v.zone.id].T3 then
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T3 * 4
+                        end
+                        if not selection or v.distance < selection.distance then
+                            LOG('Try to log zoneset')
+                            LOG('Zone information for edge '..RUtils.DebugArrayRNG(zoneSet[v.zone.id]))
+                            selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
+                            zoneSelection = zoneSet[v.zone.id]
+                        end
+                        if selection then
+                            return zoneSelection
+                        else
+                            LOG('RNGAI : Zone Selection Query did not select zone')
+                        end
+                    end
+                end
+            else
+                WARN('RNGAI : Zones are not initialized for Select Zone query')
+            end
+        else
+            WARN('RNGAI : PlatoonExist parameter false in Select Zone query')
+        end
+        LOG('RNGAI : No zone returned from Zone Query')
+        return false
+    end,
+
+
 
     ZoneEnemyIntelMonitorRNG = function(self)
         local threatTypes = {
@@ -59,72 +195,24 @@ IntelManager = Class {
             'Land',
         }
         local rawThreat = 0
-        --[[
-            Each Zone currently looks like this
-            Dont repr the entire zone set
-            {
-            pos={x,y,z},
-            friendlythreat=0,
-            weight=6,
-            id=6,
-            edges = {adjacent zones live in here}
-            enemythreat=0,
-            startpositionclose="false"
-            }
-        ]]
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
         while self.Brain.Result ~= "defeat" do
-            if not self.Brain.ZonesInitialized then
-                LOG('Zones table is empty, waiting')
-                WaitTick(10)
-                continue
-            end
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     self.Brain.Zones.Land.zones[k1].enemythreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                     coroutine.yield(1)
                 end
-                coroutine.yield(2)
+                coroutine.yield(3)
             end
-            coroutine.yield(2)
+            coroutine.yield(5)
         end
     end,
 
-    ConfigureResourcePointZoneID = function(self)
-        -- This will set the zoneid on resource markers
-        -- note this logic exist in the calculate mass markers function as well so that things like crazy rush will update.
-        self:WaitForZoneInitialization()
-        coroutine.yield(Random(5,20))
-        for _, v in AdaptiveResourceMarkerTableRNG do
-            if not v.zoneid and self.ZonesInitialized then
-                if RUtils.PositionOnWater(v.position[1], v.position[3]) then
-                    -- tbd define water based zones
-                    v.zoneid = water
-                else
-                    v.zoneid = Mapping.GetMap():GetZoneID(v.position,self.Zones.Land.index)
-                end
-            end
-        end
-    end,
-    
     ZoneFriendlyIntelMonitorRNG = function(self)
         local Zones = {
             'Land',
         }
-        --[[
-            Each Zone currently looks like this
-            Dont repr the entire zone set
-            {
-            pos={x,y,z},
-            friendlythreat=0,
-            weight=6,
-            id=6,
-            edges = {adjacent zones live in here}
-            enemythreat=0,
-            startpositionclose="false"
-            }
-        ]]
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
         while self.Brain.Result ~= "defeat" do
@@ -158,11 +246,35 @@ IntelManager = Class {
             coroutine.yield(20)
         end
     end,
+
+    ConfigureResourcePointZoneID = function(self)
+        -- This will set the zoneid on resource markers
+        -- note this logic exist in the calculate mass markers function as well so that things like crazy rush will update.
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        for _, v in AdaptiveResourceMarkerTableRNG do
+            if not v.zoneid and self.ZonesInitialized then
+                if RUtils.PositionOnWater(v.position[1], v.position[3]) then
+                    -- tbd define water based zones
+                    v.zoneid = water
+                else
+                    v.zoneid = Mapping.GetMap():GetZoneID(v.position,self.Zones.Land.index)
+                end
+            end
+        end
+    end,
 }
 
+local im 
+
 function CreateIntelManager(brain)
-    local im = IntelManager()
+    im = IntelManager()
     im:Create(brain)
+    return im
+end
+
+
+function GetIntelManager()
     return im
 end
 

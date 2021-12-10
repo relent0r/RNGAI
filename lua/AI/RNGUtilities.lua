@@ -1,6 +1,7 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local Utils = import('/lua/utilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
@@ -2685,10 +2686,42 @@ LastKnownThread = function(aiBrain)
     while aiBrain.Result ~= "defeat" do
         local time=GetGameTimeSeconds()
         for _=0,10 do
+            local enemyMexes = {}
+            local mexcount = 0
             local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
                 local id=v.Sync.id
+                local unitPosition = table.copy(v:GetPosition())
+                if EntityCategoryContains(categories.MASSEXTRACTION,v) then
+                    if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
+                        aiBrain.lastknown[id]={}
+                        aiBrain.lastknown[id].object=v
+                        aiBrain.lastknown[id].Position=unitPosition
+                        aiBrain.lastknown[id].time=time
+                        aiBrain.lastknown[id].recent=true
+                        aiBrain.lastknown[id].type='mex'
+                    end
+                    mexcount = mexcount + 1
+                    if not v.zoneid and aiBrain.ZonesInitialized then
+                        if PositionOnWater(unitPosition[1], unitPosition[3]) then
+                            -- tbd define water based zones
+                            v.zoneid = water
+                        else
+                            v.zoneid = Mapping.GetMap():GetZoneID(unitPosition,aiBrain.Zones.Land.index)
+                        end
+                    end
+                    if not enemyMexes[v.zoneid] then
+                        enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                    end
+                    if EntityCategoryContains(categories.TECH1,v) then
+                        enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
+                    elseif EntityCategoryContains(categories.TECH2,v) then
+                        enemyMexes[v.zoneid].T2 = enemyMexes[v.zoneid].T2 + 1
+                    else
+                        enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
+                    end
+                end
                 if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
                     if not aiBrain.lastknown[id] then
                         aiBrain.lastknown[id]={}
@@ -2704,18 +2737,18 @@ LastKnownThread = function(aiBrain)
                             elseif EntityCategoryContains(categories.INDIRECTFIRE,v) then
                                 aiBrain.lastknown[id].type='arty'
                             end
-                        elseif EntityCategoryContains(categories.MASSEXTRACTION,v) then
-                            aiBrain.lastknown[id].type='mex'
                         elseif EntityCategoryContains(categories.RADAR,v) then
                             aiBrain.lastknown[id].type='radar'
                         end
                     end
                     aiBrain.lastknown[id].object=v
-                    aiBrain.lastknown[id].Position=table.copy(v:GetPosition())
+                    aiBrain.lastknown[id].Position=unitPosition
                     aiBrain.lastknown[id].time=time
                     aiBrain.lastknown[id].recent=true
+                    
                 end
             end
+            aiBrain.emanager.mex = enemyMexes
             WaitSeconds(2)
             time=GetGameTimeSeconds()
         end
