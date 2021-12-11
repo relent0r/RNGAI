@@ -150,7 +150,6 @@ IntelManager = Class {
                     LOG('RNGAI : Zone Selection Query Processing')
                     for k, v in zoneSet[platoon.Zone].edges do
                         LOG('Edge Zone ID '..(v.zone.id))
-                        LOG('Edge information '..RUtils.DebugArrayRNG(v))
                         if aiBrain.emanager.mex[v.zone.id].T1 then
                             enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T1 + 1
                         end
