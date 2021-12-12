@@ -13,6 +13,7 @@ local RNGCEIL = math.ceil
 local RNGPI = math.pi
 local RNGCAT = table.cat
 local RNGCOPY = table.copy
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 -- We'll use these too later
 local GetMarkers = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
@@ -52,7 +53,7 @@ RNGLandResourceSet = Class(ZoneSet){
     end,
     GenerateZoneList = function(self)
         -- Step 1: Get a set of markers that are in the layer we're currently interested in.
-        LOG('GenerateZoneList for custom Zone')
+        RNGLOG('GenerateZoneList for custom Zone')
         local armyStarts = {}
         local zoneRadius = 50 * 50
         for i = 1, 16 do
@@ -69,7 +70,7 @@ RNGLandResourceSet = Class(ZoneSet){
             end
         end
         complete = (RNGGETN(markers) == 0)
-        LOG('Starting GenerateZoneList Loop')
+        RNGLOG('Starting GenerateZoneList Loop')
         while not complete do
             complete = true
             -- Update weights
@@ -104,7 +105,7 @@ RNGLandResourceSet = Class(ZoneSet){
             local z = best.aggZ/best.weight
             for _, p in armyStarts do
                 if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
-                    --LOG('Position Taken '..repr(v)..' and '..repr(v.position))
+                    --RNGLOG('Position Taken '..repr(v)..' and '..repr(v.position))
                     startPos = true
                     break
                 end

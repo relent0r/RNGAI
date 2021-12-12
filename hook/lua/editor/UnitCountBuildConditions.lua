@@ -8,21 +8,22 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 -- Check if less than num in seconds
 function LessThanGameTimeSecondsRNG(aiBrain, num)
     if num > GetGameTimeSeconds() then
-        --LOG('Less than game time is true'..num)
+        --RNGLOG('Less than game time is true'..num)
         return true
     end
-    --LOG('Less than game time is false'..num)
+    --RNGLOG('Less than game time is false'..num)
     return false
 end
 
 function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     local numOne = aiBrain:GetCurrentUnits(categoryOne)
     local numTwo = aiBrain:GetCurrentUnits(categoryTwo)
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOne..' '..compareType..' '..numTwo..' ) -- ['..ratio..'] -- '..categoryOne..' '..compareType..' '..categoryTwo..' ('..(numOne / numTwo)..' '..compareType..' '..ratio..' ?) return '..repr(CompareBody(numOne / numTwo, ratio, compareType)))
+    --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOne..' '..compareType..' '..numTwo..' ) -- ['..ratio..'] -- '..categoryOne..' '..compareType..' '..categoryTwo..' ('..(numOne / numTwo)..' '..compareType..' '..ratio..' ?) return '..repr(CompareBody(numOne / numTwo, ratio, compareType)))
     return CompareBody(numOne / numTwo, ratio, compareType)
 end
 
@@ -31,7 +32,7 @@ function CanBuildCategoryRNG(aiBrain,category)
     -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
     local FactionCat = FactionIndexToCategory[aiBrain:GetFactionIndex()] or categories.ALLUNITS
     local numBuildableUnits = RNGGETN(EntityCategoryGetUnitList(category * FactionCat)) or -1
-    --LOG('* CanBuildCategory: FactionIndex: ('..repr(aiBrain:GetFactionIndex())..') numBuildableUnits:'..numBuildableUnits..' - '..repr( EntityCategoryGetUnitList(category * FactionCat) ))
+    --RNGLOG('* CanBuildCategory: FactionIndex: ('..repr(aiBrain:GetFactionIndex())..') numBuildableUnits:'..numBuildableUnits..' - '..repr( EntityCategoryGetUnitList(category * FactionCat) ))
     return numBuildableUnits > 0
 end
 
@@ -49,13 +50,13 @@ function HaveUnitsWithCategoryAndAllianceRNG(aiBrain, greater, numReq, category,
 
     local numUnits = aiBrain:GetNumUnitsAroundPoint( category, Vector(0,0,0), 100000, alliance )
     if numUnits > numReq and greater then
-        --LOG('HaveUnitsWithCategory greater and true')
+        --RNGLOG('HaveUnitsWithCategory greater and true')
         return true
     elseif numUnits < numReq and not greater then
-        --LOG('HaveUnitsWithCategory not greater and true')
+        --RNGLOG('HaveUnitsWithCategory not greater and true')
         return true
     end
-    --LOG('HaveUnitsWithCategory Cat is false')
+    --RNGLOG('HaveUnitsWithCategory Cat is false')
     return false
 end
 
@@ -90,12 +91,12 @@ function LessThanOneLandExpansion(aiBrain)
             count = count + 1
         end
         if count > 0 then
-            --LOG('We have 1 expansion called '..v.BaseType)
+            --RNGLOG('We have 1 expansion called '..v.BaseType)
             return false
         end
-        --LOG('Expansion Base Type is '..v.BaseType)
+        --RNGLOG('Expansion Base Type is '..v.BaseType)
     end
-    --LOG('We have no expansions')
+    --RNGLOG('We have no expansions')
     return true
 end
 
@@ -108,7 +109,7 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, location
         numUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or 0
     end
     if numUnits > numReq then
-        --LOG('HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG returning true')
+        --RNGLOG('HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG returning true')
         return true
     end
     return false
@@ -117,7 +118,7 @@ end
 function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, locationType, numReq, radiusOverride, category, constructionCat)
     local numUnits
     if radiusOverride then
-        --LOG('Radius OverRide first function'..radiusOverride)
+        --RNGLOG('Radius OverRide first function'..radiusOverride)
     end
     if constructionCat then
         numUnits = GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) + constructionCat) or 0
@@ -145,12 +146,12 @@ end
 function EnemyLandPhaseRNG(aiBrain, phase)
     local selfIndex = aiBrain:GetArmyIndex()
 
-    --LOG('Starting Threat Check at'..GetGameTick())
+    --RNGLOG('Starting Threat Check at'..GetGameTick())
     if phase == 2 and aiBrain.EnemyIntel.LandPhase == 2 then
-        --LOG('EnemyLandPhase Condition for 2 is true')
+        --RNGLOG('EnemyLandPhase Condition for 2 is true')
         return true
     elseif phase == 3 and aiBrain.EnemyIntel.LandPhase == 3 then
-        --LOG('EnemyLandPhase Condition for 3 is true')
+        --RNGLOG('EnemyLandPhase Condition for 3 is true')
         return true
     end
     return false
@@ -179,7 +180,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
     end
     if not baseposition then
-        --LOG('No Base Position for GetUnitsBeingBuildlocation')
+        --RNGLOG('No Base Position for GetUnitsBeingBuildlocation')
         return false
     end
     local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
@@ -192,7 +193,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         -- Engineer doesn't want any more assistance
         --[[
         if v.NumAssistees then
-            --LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
+            --RNGLOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
         end]]
         if v.NumAssistees and RNGGETN(v:GetGuards()) >= v.NumAssistees then
             continue
@@ -207,7 +208,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
         unitCount = unitCount + 1
     end
-    --LOG('Engineer Assist has '..unitCount)
+    --RNGLOG('Engineer Assist has '..unitCount)
     return unitCount
 end
 
@@ -239,7 +240,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
     if radiusOverride then
         radius = radiusOverride
     end
-    --LOG('Radius is '..radius)
+    --RNGLOG('Radius is '..radius)
     local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
     local unitCount = 0
     for k,v in filterUnits do
@@ -250,7 +251,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         -- Engineer doesn't want any more assistance
         --[[
         if v.NumAssistees then
-            --LOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
+            --RNGLOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
         end]]
         if v.NumAssistees and RNGGETN(v:GetGuards()) >= v.NumAssistees then
             continue
@@ -271,40 +272,40 @@ end
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindStartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('StartLocationNeedsEngineer is True at pos '..repr(pos)..' for radius '..locationRadius)
+        --RNGLOG('StartLocationNeedsEngineer is True at pos '..repr(pos)..' for radius '..locationRadius)
         return true
     end
-    --LOG('StartLocationNeedsEngineer is False for radius '..locationRadius)
+    --RNGLOG('StartLocationNeedsEngineer is False for radius '..locationRadius)
     return false
 end
 
 function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('LargeExpansionNeedsEngineer is True')
+        --RNGLOG('LargeExpansionNeedsEngineer is True')
         return true
     end
-    --LOG('LargeExpansionNeedsEngineer is False')
+    --RNGLOG('LargeExpansionNeedsEngineer is False')
     return false
 end
 
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     local pos, name = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('NavalAreaNeedsEngineerRNG is TRUE at range'..locationRadius)
+        --RNGLOG('NavalAreaNeedsEngineerRNG is TRUE at range'..locationRadius)
         return true
     end
-    --LOG('NavalAreaNeedsEngineerRNG is FALSE at range'..locationRadius)
+    --RNGLOG('NavalAreaNeedsEngineerRNG is FALSE at range'..locationRadius)
     return false
 end
 
 function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --LOG('UnmarkedExpansionNeedsEngineer is True')
+        --RNGLOG('UnmarkedExpansionNeedsEngineer is True')
         return true
     end
-    --LOG('UnmarkedExpansionNeedsEngineer is False')
+    --RNGLOG('UnmarkedExpansionNeedsEngineer is False')
     return false
 end
 
@@ -328,10 +329,10 @@ function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
         numUnits = RNGGETN(aiBrain:GetListOfUnits(testCat, true))
     end
     if numUnits > numReq then
-        --LOG('Greater than units with category returned true')
+        --RNGLOG('Greater than units with category returned true')
         return true
     end
-    --LOG('Greater than units with category returned false')
+    --RNGLOG('Greater than units with category returned false')
     return false
 end
 
@@ -366,12 +367,12 @@ function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1,
         if not unit:BeenDestroyed() and not unit:IsUnitState('Building') then
             local buildingUnit = unit.UnitBeingBuilt
             if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category1, buildingUnit) then
-                --LOG('Engi building but not in building state...')
+                --RNGLOG('Engi building but not in building state...')
                 cat1NumBuilding = cat1NumBuilding + 1
             end
             if category2 then
                 if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category2, buildingUnit) then
-                    --LOG('Engi building but not in building state...')
+                    --RNGLOG('Engi building but not in building state...')
                     cat2NumBuilding = cat2NumBuilding + 1
                 end
             end
@@ -409,7 +410,7 @@ function HaveUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category, compar
             numBuilding = numBuilding + 1
         end
     end
-    --LOG(aiBrain:GetArmyIndex()..' HaveUnitsInCategoryBeingUpgrade ( '..numBuilding..' '..compareType..' '..numunits..' ) --  return '..repr(CompareBody(numBuilding, numunits, compareType))..' ')
+    --RNGLOG(aiBrain:GetArmyIndex()..' HaveUnitsInCategoryBeingUpgrade ( '..numBuilding..' '..compareType..' '..numunits..' ) --  return '..repr(CompareBody(numBuilding, numunits, compareType))..' ')
     return CompareBody(numBuilding, numunits, compareType)
 end
 function HaveLessThanUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category)
@@ -425,7 +426,7 @@ function HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, ca
         return false
     end
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, aiBrain.BuilderManagers[locationType].Position, radius , 'Enemy')
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} radius:['..radius..'] '..repr(DEBUG)..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
+    --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} radius:['..radius..'] '..repr(DEBUG)..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)
 end
 --            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BasePanicZone, 'LocationType', 0, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
@@ -437,27 +438,27 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
     if aiBrain.BasePerimeterMonitor[locationType] then
         if type == 'LAND' then
             if aiBrain.BasePerimeterMonitor[locationType].LandUnits > number then
-                --LOG('Land units greater than '..number..' at base location '..locationType)
+                --RNGLOG('Land units greater than '..number..' at base location '..locationType)
                 return true
             end
         elseif type == 'AIR' then
             if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
-                --LOG('Air units greater than '..number..' at base location '..locationType)
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
         elseif type == 'ANTISURFACEAIR' then
             if aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
-                --LOG('AntiSurfaceAir units greater than '..number..' at base location '..locationType)
+                --RNGLOG('AntiSurfaceAir units greater than '..number..' at base location '..locationType)
                 return true
             end
         elseif type == 'NAVAL' then
             if aiBrain.BasePerimeterMonitor[locationType].NavalUnits > number then
-                --LOG('Naval units greater than '..number..' at base location '..locationType)
+                --RNGLOG('Naval units greater than '..number..' at base location '..locationType)
                 return true
             end
         elseif type == 'LANDNAVAL' then
             if aiBrain.BasePerimeterMonitor[locationType].NavalUnits > number or aiBrain.BasePerimeterMonitor[locationType].LandUnits > number then
-                --LOG('LandNaval units greater than '..number..' at base location '..locationType)
+                --RNGLOG('LandNaval units greater than '..number..' at base location '..locationType)
                 return true
             end
         end
@@ -472,7 +473,7 @@ end
 
 function IsAcuBuilder(aiBrain, builderName)
     if builderName then
-        --LOG('ACU Builder name : '..builderName)
+        --RNGLOG('ACU Builder name : '..builderName)
         return true
     else
         return false
@@ -520,12 +521,12 @@ function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compa
     end
     local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryNeed, baseposition, radius , 'Ally')
     local numHaveUnits = aiBrain:GetNumUnitsAroundPoint(categoryHave, baseposition, radius , 'Ally')
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {'..locType..'} ( '..numNeedUnits..' '..compareType..' '..numHaveUnits..' ) -- ['..ratio..'] -- '..categoryNeed..' '..compareType..' '..categoryHave..' return '..repr(CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)))
+    --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {'..locType..'} ( '..numNeedUnits..' '..compareType..' '..numHaveUnits..' ) -- ['..ratio..'] -- '..categoryNeed..' '..compareType..' '..categoryHave..' return '..repr(CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)))
     return CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)
 end
 
 function BuildOnlyOnLocationRNG(aiBrain, LocationType, AllowedLocationType)
-    --LOG('* BuildOnlyOnLocationRNG: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
+    --RNGLOG('* BuildOnlyOnLocationRNG: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
     if string.find(LocationType, AllowedLocationType) then
         return true
     end
@@ -540,21 +541,21 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
     end
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
-    --LOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
+    --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
     local path, reason
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
-            --LOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
+            --RNGLOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
             --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
-            --LOG('reason'..repr(reason))
+            --RNGLOG('reason'..repr(reason))
             if CanGraphToRNG(baseposition, EnemyUnit:GetPosition(), 'Water') then
-                --LOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
+                --RNGLOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
                 return true
             end
         end
     end
-    --LOG('Found no path to any target from naval base ['..locationType..']')
+    --RNGLOG('Found no path to any target from naval base ['..locationType..']')
     return false
 end
 
@@ -583,14 +584,14 @@ function NavalBaseWithLeastUnitsRNG(aiBrain, radius, locationType, unitCategory)
             end
         end
     end
-    --LOG('Checking location: '..repr(locationType)..' - Location with lowest units: '..repr(lowloc))
+    --RNGLOG('Checking location: '..repr(locationType)..' - Location with lowest units: '..repr(lowloc))
     return locationType == lowloc
 end
 
 function HaveUnitRatioVersusCapRNG(aiBrain, ratio, compareType, categoryOwn)
     local numOwnUnits = aiBrain:GetCurrentUnits(categoryOwn)
     local cap = GetArmyUnitCap(aiBrain:GetArmyIndex())
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..cap..' ) -- ['..ratio..'] -- '..repr(DEBUG)..' :: '..(numOwnUnits / cap)..' '..compareType..' '..cap..' return '..repr(CompareBody(numOwnUnits / cap, ratio, compareType)))
+    --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOwnUnits..' '..compareType..' '..cap..' ) -- ['..ratio..'] -- '..repr(DEBUG)..' :: '..(numOwnUnits / cap)..' '..compareType..' '..cap..' return '..repr(CompareBody(numOwnUnits / cap, ratio, compareType)))
     return CompareBody(numOwnUnits / cap, ratio, compareType)
 end
 
@@ -642,7 +643,7 @@ end
 
 function GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, compareType)
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
-    --LOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
+    --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)
 end
 function UnitsLessAtEnemyRNG(aiBrain, unitCount, categoryEnemy)
@@ -823,7 +824,7 @@ function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits
     if activeExpansion then
         if aiBrain.BuilderManagers[activeExpansion].EngineerManager then
             local numEngineers = aiBrain.BuilderManagers[activeExpansion].EngineerManager:GetNumCategoryUnits('Engineers', category)
-            --LOG('* EngineerManagerUnitsAtLocation: '..activeExpansion..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
+            --RNGLOG('* EngineerManagerUnitsAtLocation: '..activeExpansion..' ( engineers: '..numEngineers..' '..compareType..' '..numUnits..' ) -- return '..repr(CompareBody( numEngineers, numUnits, compareType )) )
             return CompareBody( numEngineers, numUnits, compareType )
         end
     end
@@ -835,12 +836,12 @@ function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, c
     for k,v in aiBrain.BuilderManagers do
         if markerType == v.BaseType and v.FactoryManager.FactoryList then
             if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
-                --LOG('ExistingExpansionFactoryGreater = false')
+                --RNGLOG('ExistingExpansionFactoryGreater = false')
 				return false
             end
         end
 	end
-    --LOG('ExistingExpansionFactoryGreater = true')
+    --RNGLOG('ExistingExpansionFactoryGreater = true')
 	return true
 end
 
@@ -848,7 +849,7 @@ end
 function HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, compareType)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(unitCategory)
-    --LOG('* HavePoolUnitInArmy: numUnits= '..numUnits) 
+    --RNGLOG('* HavePoolUnitInArmy: numUnits= '..numUnits) 
     return CompareBody(numUnits, unitCount, compareType)
 end
 function HaveLessThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory)
@@ -861,42 +862,42 @@ end
 function EngineerAssistManagerNeedsEngineers(aiBrain)
 
     if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
-        --LOG('EngineerAssist condition is true')
-        --LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
+        --RNGLOG('EngineerAssist condition is true')
+        --RNGLOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
         return true
     end
-    --LOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
-    --LOG('EngineerAssist condition is false')
+    --RNGLOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
+    --RNGLOG('EngineerAssist condition is false')
     return false
 end
 
 function ArmyManagerBuild(aiBrain, uType, tier, unit)
 
-    --LOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
+    --RNGLOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
     local factionIndex = aiBrain:GetFactionIndex()
     if factionIndex > 4 then factionIndex = 5 end
 
     if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
-        --LOG('Cant find unit '..unit..' in faction index ratio table') 
+        --RNGLOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
     end
     --[[if tier == 'T3' then
-        LOG('T3 query')
-        LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
-        LOG('Ratio for '..unit)
-        LOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
-        LOG('Total '..aiBrain.amanager.Total[uType][tier])
-        LOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+        RNGLOG('T3 query')
+        RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+        RNGLOG('Ratio for '..unit)
+        RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
+        RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
+        RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     end]]
-    --LOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+    --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
-        --LOG('Less than 1 unit of type '..unit)
+        --RNGLOG('Less than 1 unit of type '..unit)
         return true
     elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier]) < (aiBrain.amanager.Ratios[factionIndex][uType][tier][unit]/aiBrain.amanager.Ratios[factionIndex][uType][tier].total) then
-        --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
+        --RNGLOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
         return true
     end
-    --LOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
+    --RNGLOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
     return false
 
 end
@@ -916,11 +917,11 @@ function ValidateLateGameBuild(aiBrain)
         if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
             return false
         end
-        --LOG('Validate late game bulid is returning true even tho an experimental is being built')
-        --LOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-        --LOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
+        --RNGLOG('Validate late game bulid is returning true even tho an experimental is being built')
+        --RNGLOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+        --RNGLOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
     end
-    --LOG('Validate late game bulid is returning true')
+    --RNGLOG('Validate late game bulid is returning true')
   return true
 end
 
@@ -928,7 +929,7 @@ function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
 
 	if aiBrain.BuilderManagers[locationType].EngineerManager then
 		if GetNumUnitsAroundPoint( aiBrain, testCat, aiBrain.BuilderManagers[locationType].Position, aiBrain.BuilderManagers[locationType].EngineerManager.Radius, 'Ally') < unitCount then
-            --LOG('Less than units is true')
+            --RNGLOG('Less than units is true')
             return true
         end
 	end
@@ -943,7 +944,7 @@ function DynamicExpansionAvailableRNG(aiBrain)
             if aiBrain.BuilderManagers[v.Zone] then
                 continue
             end
-            LOG('DynamicExpansionAvailableRNG is true')
+            RNGLOG('DynamicExpansionAvailableRNG is true')
             return true
         end
     end
@@ -959,6 +960,6 @@ end
 
 function NavalBaseCountRNG(aiBrain, compareType, checkNum)
     local expBaseCount = aiBrain:GetManagerCount('Naval Area')
-    --LOG('*AI DEBUG: Naval base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
+    --RNGLOG('*AI DEBUG: Naval base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
     return CompareBody(expBaseCount, checkNum, compareType)
 end]]

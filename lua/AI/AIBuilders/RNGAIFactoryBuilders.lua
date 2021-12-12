@@ -9,7 +9,7 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local ACUClosePriority = function(self, aiBrain)
     if aiBrain.EnemyIntel.ACUEnemyClose then
@@ -29,14 +29,14 @@ local LandThreat = function(self, aiBrain)
 end
 
 local ActiveExpansion = function(self, aiBrain, builderManager)
-    --LOG('LocationType is '..builderManager.LocationType)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
-        --LOG('Active Expansion is set'..builderManager.LocationType)
-        --LOG('Active Expansion builders are set to 900')
+        --RNGLOG('Active Expansion is set'..builderManager.LocationType)
+        --RNGLOG('Active Expansion builders are set to 900')
         return 700
     else
-        --LOG('Disable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end

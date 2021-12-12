@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGBuilderManager = BuilderManager
 BuilderManager = Class(RNGBuilderManager) {
@@ -21,7 +22,7 @@ BuilderManager = Class(RNGBuilderManager) {
             return RNGBuilderManager.ManagerLoopBody(self,builder,bType)
         end
         if builder:CalculatePriority(self) then
-            --LOG('CalculatePriority run on '..builder.BuilderName..'Priority is now '..builder.Priority)
+            --RNGLOG('CalculatePriority run on '..builder.BuilderName..'Priority is now '..builder.Priority)
             self.BuilderData[bType].NeedSort = true
         end
         #builder:CheckBuilderConditions(self.Brain)
@@ -56,7 +57,7 @@ BuilderManager = Class(RNGBuilderManager) {
                     if numTested >= numPerTick then
                         coroutine.yield(1)
                         if self.NumGet > 1 then
-                            #LOG('*AI STAT: NumGet = ' .. self.NumGet)
+                            #RNGLOG('*AI STAT: NumGet = ' .. self.NumGet)
                         end
                         self.NumGet = 0
                         numTicks = numTicks + 1

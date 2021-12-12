@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGEngineerManager = EngineerManager
 EngineerManager = Class(RNGEngineerManager) {
@@ -16,14 +17,14 @@ EngineerManager = Class(RNGEngineerManager) {
             end
             local unitBp = finishedUnit:GetBlueprint()
             local StructurePool = self.Brain.StructurePool
-            --LOG('* AI-RNG: Assigning built extractor to StructurePool')
+            --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
             self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
-            --Debug log
+            --Debug RNGLOG
             local platoonUnits = StructurePool:GetPlatoonUnits()
-            --LOG('* AI-RNG: StructurePool now has :'..table.getn(platoonUnits))
+            --RNGLOG('* AI-RNG: StructurePool now has :'..table.getn(platoonUnits))
             local upgradeID = unitBp.General.UpgradesTo or false
 			if upgradeID and unitBp then
-				--LOG('* AI-RNG: UpgradeID')
+				--RNGLOG('* AI-RNG: UpgradeID')
 				RUtils.StructureUpgradeInitialize(finishedUnit, self.Brain)
             end
         end
@@ -56,17 +57,17 @@ EngineerManager = Class(RNGEngineerManager) {
         end
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             if unit.Upgrading then
-                --LOG('Unit Is upgrading, applying 5 second delay')
+                --RNGLOG('Unit Is upgrading, applying 5 second delay')
             end
-            --LOG('Unit Still in combat or going home, delay')
+            --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
-            --LOG('CDR Combat Delay')
+            --RNGLOG('CDR Combat Delay')
             self:DelayAssign(unit, 50)
             return
         end
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
-            --LOG('UnitBeingAssist Delay')
+            --RNGLOG('UnitBeingAssist Delay')
             self:DelayAssign(unit, 50)
             return
         end
@@ -76,7 +77,7 @@ EngineerManager = Class(RNGEngineerManager) {
         unit.MinNumAssistees = nil
 
         if self.AssigningTask then
-            --LOG('Assigning Task Delay')
+            --RNGLOG('Assigning Task Delay')
             self:DelayAssign(unit, 50)
             return
         else
@@ -93,10 +94,10 @@ EngineerManager = Class(RNGEngineerManager) {
             unit.PlatoonHandle = hndl
 
             --if EntityCategoryContains(categories.COMMAND, unit) then
-            --    LOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
+            --    RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
             --end
 
-            --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
+            --RNGLOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
             hndl.PlanName = template[2]
 
             --If we have specific AI, fork that AI thread
@@ -153,7 +154,7 @@ EngineerManager = Class(RNGEngineerManager) {
             return
         end
         self.AssigningTask = false
-        --LOG('End of AssignEngineerTask Delay')
+        --RNGLOG('End of AssignEngineerTask Delay')
         self:DelayAssign(unit, 50)
     end,
 
@@ -198,7 +199,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.LowMass(self)
         end
-        --LOG('LowMass Condition detected by default eco manager')
+        --RNGLOG('LowMass Condition detected by default eco manager')
     end,
 
     LowEnergy = function(self)
@@ -206,7 +207,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.LowEnergy(self)
         end
-        --LOG('LowEnergy Condition detected by default eco manager')
+        --RNGLOG('LowEnergy Condition detected by default eco manager')
     end,
 
     RestoreEnergy = function(self)

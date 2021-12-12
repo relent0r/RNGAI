@@ -9,6 +9,7 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
@@ -19,8 +20,8 @@ local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if myAirThreat < (enemyAirThreat * 1.2 / enemyCount) then
-        --LOG('Enable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Enable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.TechLevel == 1 then
             return 880
         elseif builderData.TechLevel == 2 then
@@ -30,8 +31,8 @@ local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
         end
         return 890
     else
-        --LOG('Disable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
@@ -44,8 +45,8 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if myAirThreat < (enemyAirThreat / enemyCount) then
-        --LOG('Enable Air ASF Scramble Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Enable Air ASF Scramble Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.TechLevel == 1 then
             return 860
         elseif builderData.TechLevel == 2 then
@@ -55,8 +56,8 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
         end
         return 870
     else
-        --LOG('Disable Air ASF Scramble Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Disable Air ASF Scramble Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
@@ -68,7 +69,7 @@ local AirAttackMode = function(self, aiBrain, builderManager, builderData)
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if myAirThreat / 1.5 > (enemyAirThreat / enemyCount) then
-        --LOG('Enable Air Attack Queue')
+        --RNGLOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
         if builderData.TechLevel == 1 then
             return 870
@@ -79,7 +80,7 @@ local AirAttackMode = function(self, aiBrain, builderManager, builderData)
         end
         return 880
     else
-        --LOG('Disable Air Attack Queue')
+        --RNGLOG('Disable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = false
         return 0
     end
@@ -89,12 +90,12 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
     local myNavalThreat = aiBrain.BrainIntel.SelfThreat.NavalNow
     local enemyNavalThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
     if myNavalThreat < enemyNavalThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Enable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 870
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Disable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 0
     end
 end

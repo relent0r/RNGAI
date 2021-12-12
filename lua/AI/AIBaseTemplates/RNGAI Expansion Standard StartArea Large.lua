@@ -104,12 +104,12 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        --LOG('Expansion Function for Start Location')
+        --RNGLOG('Expansion Function for Start Location')
         if not aiBrain.RNG then
             return -1
         end
         if markerType ~= 'Start Location' then
-            --LOG('* AI-RNG: Expansion MarkerType is', markerType)
+            --RNGLOG('* AI-RNG: Expansion MarkerType is', markerType)
             return -1
         end
         local spamBaseCheck
@@ -121,21 +121,21 @@ BaseBuilderTemplate {
         else
             spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
         end
-        --LOG('* AI-RNG: Distance is ', distance)
+        --RNGLOG('* AI-RNG: Distance is ', distance)
         if not distance or distance > 1000 and not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 100')
+            --RNGLOG('* AI-RNG: Expansion return is 100')
             return 100
         elseif distance > 500 and not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 50')
+            --RNGLOG('* AI-RNG: Expansion return is 50')
             return 50
         elseif distance > 250 and not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 25')
+            --RNGLOG('* AI-RNG: Expansion return is 25')
             return 25
         elseif not spamBaseCheck then
-            --LOG('* AI-RNG: Expansion return is 10')
+            --RNGLOG('* AI-RNG: Expansion return is 10')
             return 10
         end
-        --LOG('* AI-RNG: Expansion return default 0')
+        --RNGLOG('* AI-RNG: Expansion return default 0')
         return -1
     end,
 }

@@ -9,32 +9,33 @@ local ExBaseTmpl = 'ExpansionBaseTemplates'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local AggressiveExpansion = function(self, aiBrain, builderManager)
     if aiBrain.coinFlip == 1 then
-        --LOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
+        --RNGLOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
         return 1000
     else
-        --LOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
+        --RNGLOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
         return 0
     end
 end
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
-        --LOG('NavalExpansionAdjust return 0')
+        --RNGLOG('NavalExpansionAdjust return 0')
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
-        --LOG('NavalExpansionAdjust return 200')
+        --RNGLOG('NavalExpansionAdjust return 200')
         return 200
     elseif aiBrain.MapWaterRatio < 0.40 then
-        --LOG('NavalExpansionAdjust return 400')
+        --RNGLOG('NavalExpansionAdjust return 400')
         return 400
     elseif aiBrain.MapWaterRatio < 0.60 then
-        --LOG('NavalExpansionAdjust return 650')
+        --RNGLOG('NavalExpansionAdjust return 650')
         return 675
     else
-        --LOG('NavalExpansionAdjust return 750')
+        --RNGLOG('NavalExpansionAdjust return 750')
         return 875
     end
 end
@@ -42,10 +43,10 @@ end
 local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
     if aiBrain.EnemyIntel.FrigateRaid then
-        --LOG('Frigate Raid priority function is 995')
+        --RNGLOG('Frigate Raid priority function is 995')
         return 995
     end
-    --LOG('Frigate Raid priority function is 0')
+    --RNGLOG('Frigate Raid priority function is 0')
     return 0
 end
 

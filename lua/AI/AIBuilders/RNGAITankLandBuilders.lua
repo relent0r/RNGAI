@@ -5,7 +5,8 @@
         Land Builders
 ]]
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-LOG('* AI-RNG: BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+RNGLOG('* AI-RNG: BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
@@ -15,7 +16,7 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
-        --LOG('Enable Land Heavy Attack Queue')
+        --RNGLOG('Enable Land Heavy Attack Queue')
         if builderData.TechLevel == 1 then
             return 780
         elseif builderData.TechLevel == 2 then
@@ -25,7 +26,7 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
         end
         return 790
     else
-        --LOG('Disable Land Heavy Attack Queue')
+        --RNGLOG('Disable Land Heavy Attack Queue')
         return 0
     end
 end
@@ -34,7 +35,7 @@ local LandAttackMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
-        --LOG('Enable Land Attack Queue')
+        --RNGLOG('Enable Land Attack Queue')
         if builderData.TechLevel == 1 then
             return 780
         elseif builderData.TechLevel == 2 then
@@ -44,7 +45,7 @@ local LandAttackMode = function(self, aiBrain, builderManager, builderData)
         end
         return 790
     else
-        --LOG('Disable Land Attack Queue')
+        --RNGLOG('Disable Land Attack Queue')
         return 0
     end
 end
@@ -55,7 +56,7 @@ local LandEngMode = function(self, aiBrain, builderManager, builderData)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 4 then
-        --LOG('Setting T1 Queue to Eng')
+        --RNGLOG('Setting T1 Queue to Eng')
         if builderData.TechLevel == 1 then
             return 745
         elseif builderData.TechLevel == 2 then
@@ -75,7 +76,7 @@ local LandNoEngMode = function(self, aiBrain, builderManager, builderData)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits > 4 then
-        --LOG('Setting T1 Queue to NoEng')
+        --RNGLOG('Setting T1 Queue to NoEng')
         if builderData.TechLevel == 1 then
             return 745
         elseif builderData.TechLevel == 2 then
@@ -91,12 +92,12 @@ end
 
 local AmphibSiegeMode = function(self, aiBrain, builderManager)
     local locationType = builderManager.LocationType
-    --LOG('Builder Mananger location type is '..locationType)
+    --RNGLOG('Builder Mananger location type is '..locationType)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.INDIRECTFIRE, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 3 then
-        --LOG('Setting Amphib Siege Mode')
+        --RNGLOG('Setting Amphib Siege Mode')
         return 550
     else
         return 0
@@ -109,7 +110,7 @@ local AmphibNoSiegeMode = function(self, aiBrain, builderManager)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.INDIRECTFIRE, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits >= 3 then
-        --LOG('Setting Amphib Non Siege Mode')
+        --RNGLOG('Setting Amphib Non Siege Mode')
         return 550
     else
         return 0

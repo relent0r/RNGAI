@@ -13,6 +13,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local NavalAdjust = function(self, aiBrain, builderManager)
     local pathCount = 0
@@ -24,10 +25,10 @@ local NavalAdjust = function(self, aiBrain, builderManager)
         end
     end
     if pathCount > 0 then
-        --LOG('We have a path to an enemy')
+        --RNGLOG('We have a path to an enemy')
         return 1005
     else
-        --LOG('No path to an enemy')
+        --RNGLOG('No path to an enemy')
         return 1010
     end
 end

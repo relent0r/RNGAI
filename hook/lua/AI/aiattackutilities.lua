@@ -1,5 +1,5 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aiattackutilities.lua' )
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 --local GetDirectionInDegrees = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetDirectionInDegrees
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
@@ -83,7 +83,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
                 for ThreatWeight, PathNodes in ThreatWeightedPaths do
                     -- check if the path is older then 30 seconds.
                     if GameTime - 30 > PathNodes.settime then
-                        --LOG('* AI-RNG: GeneratePathRNG() Found old path: storetime: '..PathNodes.settime..' store+60sec: '..(PathNodes.settime + 30)..' actual time: '..GameTime..' timediff= '..(PathNodes.settime + 30 - GameTime) )
+                        --RNGLOG('* AI-RNG: GeneratePathRNG() Found old path: storetime: '..PathNodes.settime..' store+60sec: '..(PathNodes.settime + 30)..' actual time: '..GameTime..' timediff= '..(PathNodes.settime + 30 - GameTime) )
                         -- delete the old path from the cache.
                         aiBrain.PathCache[StartNodeName][EndNodeName][ThreatWeight] = nil
                     end
@@ -520,10 +520,10 @@ function CanGraphToRNG(startPos, destPos, layer)
 
     if endNode then
         if startNode.RNGArea == endNode.RNGArea then
-            --LOG('CanGraphToIsTrue for area '..startNode.RNGArea)
+            --RNGLOG('CanGraphToIsTrue for area '..startNode.RNGArea)
             return true, endNode.Position
         else
-            --LOG('CanGraphToIsFalse for start area '..startNode.RNGArea..' and end area of '..endNode.RNGArea)
+            --RNGLOG('CanGraphToIsFalse for start area '..startNode.RNGArea..' and end area of '..endNode.RNGArea)
         end
     end
     return false
@@ -560,7 +560,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             --  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransports(platoon) == false then
                 aiBrain.WantTransports = true
-                --LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
+                --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
@@ -584,7 +584,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     local goodunits, overflow = AIUtils.SplitTransportOverflow(units, overflowSm, overflowMd, overflowLg)
                     local numOverflow = table.getn(overflow)
                     if table.getn(goodunits) > numOverflow and numOverflow > 0 then
-                        --LOG('numOverflow is '..numOverflow)
+                        --RNGLOG('numOverflow is '..numOverflow)
                         local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
                         for _,v in overflow do
                             if not v.Dead then
@@ -599,15 +599,15 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     break
                 end
                 counter = counter + 1
-                --LOG('Counter is now '..counter..'Waiting 10 seconds')
-                --LOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
+                --RNGLOG('Counter is now '..counter..'Waiting 10 seconds')
+                --RNGLOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
                 coroutine.yield(100)
                 if not aiBrain:PlatoonExists(platoon) then
                     aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
                     if aiBrain.NeedTransports < 0 then
                         aiBrain.NeedTransports = 0
                     end
-                    --LOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
+                    --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
                     return false
                 end
 
@@ -619,7 +619,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 end
                 units = survivors
             end
-            --LOG('End while loop for bUsedTransports')
+            --RNGLOG('End while loop for bUsedTransports')
 
             aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
             if aiBrain.NeedTransports < 0 then
@@ -628,7 +628,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
             -- couldn't use transports...
             if bUsedTransports == false then
-                --LOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
+                --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
                 return false
             end
         end
@@ -657,23 +657,23 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         end
 
         if transportLocation then
-            --LOG('initial transport location is '..repr(transportLocation))
+            --RNGLOG('initial transport location is '..repr(transportLocation))
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
-            --LOG('Transport Location minThreat is '..minThreat)
+            --RNGLOG('Transport Location minThreat is '..minThreat)
             if (minThreat > 0) or safeZone then
                 if platoon.MovementLayer == 'Amphibious' then
-                    --LOG('Find Safe Drop Amphib')
+                    --RNGLOG('Find Safe Drop Amphib')
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 else
-                    --LOG('Find Safe Drop Non Amphib')
+                    --RNGLOG('Find Safe Drop Non Amphib')
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 end
             end
-            --LOG('Decided transport location is '..repr(transportLocation))
+            --RNGLOG('Decided transport location is '..repr(transportLocation))
         end
 
         if not transportLocation then
-            --LOG('No transport location or threat at location too high')
+            --RNGLOG('No transport location or threat at location too high')
             return false
         end
 
@@ -693,7 +693,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
 
         -- check to see we're still around
         if not platoon or not aiBrain:PlatoonExists(platoon) then
-            --LOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
+            --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
             return false
         end
 
@@ -722,10 +722,10 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             end
         end
     else
-        --LOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
+        --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
         return false
     end
-    --LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
+    --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
 end
 
@@ -914,14 +914,14 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
     
         markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
     end
-    --LOG('Marker List is '..repr(markerlist))
+    --RNGLOG('Marker List is '..repr(markerlist))
     
     -- sort the markers by closest distance to final destination
     if not safeZone then
         RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) < VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
     else
         RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) > VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
-        --LOG('SafeZone Sorted marker list '..repr(markerlist))
+        --RNGLOG('SafeZone Sorted marker list '..repr(markerlist))
     end
    
     -- loop thru each marker -- see if you can form a safe path on the surface 
@@ -931,19 +931,19 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
         -- test the real values for that position
         local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
         coroutine.yield(1)
-        --LOG('stest is '..stest..'atest is '..atest)
+        --RNGLOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then
-            --LOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
-            --LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
-            --LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
+            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
+            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
+            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
             -- can the platoon path safely from this marker to the final destination 
             if CanGraphToRNG(v.Position, destination, layer) then
                 return v.Position, v.Name
             end
         end
     end
-    --LOG('Safe landing Location returning false')
+    --RNGLOG('Safe landing Location returning false')
     return false, nil
 end
 
@@ -978,14 +978,14 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
     --Engine handles whether or not we can occupy our vector now, so this should always be a valid, occupiable spot.
     local attackPos = GetBestThreatTarget(aiBrain, platoon)
-    --LOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting')
+    --RNGLOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting')
 
     local bNeedTransports = false
     local PlatoonFormation = platoon.PlatoonData.UseFormation
     -- if no pathable attack spot found
     if not attackPos then
         -- try skipping pathability
-        --LOG('* AI-RNG: AttackForceAIRNG No attack position found')
+        --RNGLOG('* AI-RNG: AttackForceAIRNG No attack position found')
         attackPos = GetBestThreatTarget(aiBrain, platoon, true)
         bNeedTransports = true
         if not attackPos then
@@ -1054,7 +1054,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 -- force reevaluation
                 platoon.LastAttackDestination = {attackPos}
             else
-                --LOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
+                --RNGLOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
                 local pathSize = table.getn(path)
                 local prevpoint = platoon:GetPlatoonPosition() or false
                 -- store path
@@ -1062,8 +1062,8 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
                 -- move to new location
                 for wpidx,waypointPath in path do
                     local direction = GetDirectionInDegrees( prevpoint, waypointPath )
-                    --LOG('* AI-RNG: AttackForceAIRNG direction is '..direction)
-                    --LOG('* AI-RNG: AttackForceAIRNG prevpoint is '..repr(prevpoint)..' waypointPath is '..repr(waypointPath))
+                    --RNGLOG('* AI-RNG: AttackForceAIRNG direction is '..direction)
+                    --RNGLOG('* AI-RNG: AttackForceAIRNG prevpoint is '..repr(prevpoint)..' waypointPath is '..repr(waypointPath))
                     if wpidx == pathSize or bAggro then
                         --platoon:AggressiveMoveToLocation(waypointPath)
                         IssueFormAggressiveMove( platoon:GetPlatoonUnits(), waypointPath, PlatoonFormation, direction)
@@ -1157,12 +1157,12 @@ function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, s
     for i = 1, steps do
         local enemyAntiMissile = GetUnitsAroundPoint(aiBrain, unitCat, { start[1] - (xstep * i), 0, start[3] - (ystep * i) }, stepby, alliance)
         local siloCount = table.getn(enemyAntiMissile)
-        --LOG('Total Anti missile Count '..siloCount..' completion is ')
+        --RNGLOG('Total Anti missile Count '..siloCount..' completion is ')
         if siloCount > 0 then
             for _, silo in enemyAntiMissile do
-                --LOG('Silo completed fraction is '..silo:GetFractionComplete())
+                --RNGLOG('Silo completed fraction is '..silo:GetFractionComplete())
                 if silo and not silo.Dead and silo:GetFractionComplete() == 1 then
-                    --LOG('Completed Anti missile Detected')
+                    --RNGLOG('Completed Anti missile Detected')
                     returnNum = returnNum + 1
                 end
             end
@@ -1176,7 +1176,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     
     local PrimaryTargetThreatType = 'Naval'
     local SecondaryTargetThreatType = 'StructuresNotMex'
-    --LOG('GetBestNavalTargetRNG Running')
+    --RNGLOG('GetBestNavalTargetRNG Running')
 
 
     -- These are the values that are used to weight the two types of "threats"
@@ -1252,7 +1252,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     if not platoonPosition then
         #Platoon no longer exists.
-        --LOG('GetBestNavalTarget platoon position is nil returned false ')
+        --RNGLOG('GetBestNavalTarget platoon position is nil returned false ')
         return false
     end
 
@@ -1288,17 +1288,17 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local threatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'OverallNotAssigned', enemyIndex)
 
     if table.empty(threatTable) then
-        --LOG('GetBestNavalTarget threat table is empty returned false ')
+        --RNGLOG('GetBestNavalTarget threat table is empty returned false ')
         return false
     end
 
     local platoonUnits = platoon:GetPlatoonUnits()
     #eval platoon threat
     local myThreat = GetThreatOfUnits(platoon)
-    --LOG('GetBestNavalTarget myThreat is '..myThreat)
+    --RNGLOG('GetBestNavalTarget myThreat is '..myThreat)
     local friendlyThreat = aiBrain:GetThreatAtPosition(platoonPosition, 1, true, ThreatTable[platoon.MovementLayer], aiBrain:GetArmyIndex()) - myThreat
     friendlyThreat = friendlyThreat * -1
-    --LOG('GetBestNavalTarget friendlyThreat is '..friendlyThreat)
+    --RNGLOG('GetBestNavalTarget friendlyThreat is '..friendlyThreat)
 
     local threatDist
     local curMaxThreat = -99999999
@@ -1316,7 +1316,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     if platoon.MovementLayer == 'Water' then
         maxRange, selectedWeaponArc = GetNavalPlatoonMaxRange(aiBrain, platoon)
     end
-    --LOG('GetBestNavalTarget final threat table was '..repr(threatTable))
+    --RNGLOG('GetBestNavalTarget final threat table was '..repr(threatTable))
 
     for tIndex,threat in threatTable do
         --check if we can path to the position or a position nearby
@@ -1347,7 +1347,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         -- We are multipling the structure threat because the default threat allocation is shit. A T1 naval factory is only worth 3 threat which is not enough to make
         -- frigates / subs want to attack them over something else.
         secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, 1, true, SecondaryTargetThreatType, enemyIndex) * 2
-        --LOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
+        --RNGLOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
 
         baseThreat = primaryThreat + secondaryThreat
 
@@ -1365,7 +1365,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         if myThreat <= IgnoreStrongerTargetsIfWeakerThan
                 and (myThreat == 0 or enemyThreat / (myThreat + friendlyThreat) > IgnoreStrongerTargetsRatio)
                 and unitCapRatio < IgnoreStrongerUnitCap then
-            --LOG('*AI DEBUG: Skipping threat')
+            --RNGLOG('*AI DEBUG: Skipping threat')
             continue
         end
 
@@ -1438,7 +1438,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
 
     --if this threat is in the water, see if we can get to it
     if inWater then
-        --LOG('Naval Location is in water')
+        --RNGLOG('Naval Location is in water')
         if CanGraphToRNG(platoonPosition, location, platoon.MovementLayer) then
             bestGoalPos = location
             success = true
@@ -1496,9 +1496,9 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
         end
     end
     if bestGoalPos then
-        --LOG('bestGoalPos returned is '..repr(bestGoalPos))
+        --RNGLOG('bestGoalPos returned is '..repr(bestGoalPos))
     else
-        --LOG('bestGoalPos is nil ')
+        --RNGLOG('bestGoalPos is nil ')
     end
 
     return bestGoalPos

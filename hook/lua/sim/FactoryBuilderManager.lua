@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGFactoryBuilderManager = FactoryBuilderManager
 FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
@@ -46,7 +47,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         -- Use factory location if no other rally or if rally point is far away
         if not rally or VDist2(rally[1], rally[3], position[1], position[3]) > 75 then
             -- DUNCAN - added to try and vary the rally points.
-            --LOG('No Rally Point Found. Setting Point between me and enemy Location')
+            --RNGLOG('No Rally Point Found. Setting Point between me and enemy Location')
             local position = false
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
                 -- Spawn locations were fixed. We know exactly where our opponents are.
@@ -65,22 +66,22 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             local opponentStart = startPos
                             
                             local factoryPos = self.Brain.BuilderManagers[locationType].Position
-                            --LOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
+                            --RNGLOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
                             local startDistance = VDist2(opponentStart[1], opponentStart[3], factoryPos[1], factoryPos[3])
                             if EntityCategoryContains(categories.AIR, factory) then
                                 position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 60})
-                                --LOG('Air Rally Position is :'..repr(position))
+                                --RNGLOG('Air Rally Position is :'..repr(position))
                                 break
                             else
                                 position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 30})
-                                --LOG('Rally Position is :'..repr(position))
+                                --RNGLOG('Rally Position is :'..repr(position))
                                 break
                             end
                         end
                     end
                 end
             else
-                --LOG('No Rally Point Found. Setting Random Location')
+                --RNGLOG('No Rally Point Found. Setting Random Location')
                 position = AIUtils.RandomLocation(position[1],position[3])
             end
             rally = position
@@ -114,7 +115,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
-                --LOG('Factory is offline, wait inside delaybuildorder')
+                --RNGLOG('Factory is offline, wait inside delaybuildorder')
                 coroutine.yield(25)
             end
             self:AssignBuildOrder(factory,bType)
@@ -127,16 +128,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
         end
-        --LOG('RNG FactorFinishedbuilding')
+        --RNGLOG('RNG FactorFinishedbuilding')
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
             self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
-            --LOG('Factory Built by factory, attempting to kill factory.')
+            --RNGLOG('Factory Built by factory, attempting to kill factory.')
 			if finishedUnit:GetFractionComplete() == 1 then
 				self:AddFactory(finishedUnit )			
 				factory.Dead = true
                 factory.Trash:Destroy()
-                --LOG('Destroy Factory')
+                --RNGLOG('Destroy Factory')
 				return self:FactoryDestroyed(factory)
 			end
 		end
@@ -148,8 +149,8 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
         end
-        --LOG('Factory Destroyed '..factory.UnitId)
-        --LOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
+        --RNGLOG('Factory Destroyed '..factory.UnitId)
+        --RNGLOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
         local guards = factory:GetGuards()
         local factoryDestroyed = false
         for k,v in guards do
@@ -163,16 +164,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         for k,v in self.FactoryList do
             if (not v.Sync.id) or v.Dead then
-                --LOG('Removing factory from FactoryList'..v.UnitId)
+                --RNGLOG('Removing factory from FactoryList'..v.UnitId)
                 self.FactoryList[k] = nil
                 factoryDestroyed = true
             end
         end
         if factoryDestroyed then
-            --LOG('Performing table rebuild')
+            --RNGLOG('Performing table rebuild')
             self.FactoryList = self:RebuildTable(self.FactoryList)
         end
-        --LOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')
+        --RNGLOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')
         for k,v in self.FactoryList do
             if not v.Dead then
                 return
