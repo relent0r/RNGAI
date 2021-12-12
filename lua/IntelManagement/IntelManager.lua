@@ -120,7 +120,7 @@ IntelManager = Class {
                     local tempMyControl = 0
                     local tempEnemyControl = 0
                     -- Work out our control
-                    LOG('Detailed Control ')
+                    RNGLOG('Detailed Control ')
                     if self.Brain.smanager.mex[v1.id].T1 then
                         tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T1
                     end
@@ -130,7 +130,7 @@ IntelManager = Class {
                     if self.Brain.smanager.mex[v1.id].T3 then
                         tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T3
                     end
-                    LOG('My Mexes in zone '..tempMyControl)
+                    RNGLOG('My Mexes in zone '..tempMyControl)
                     tempMyControl = tempMyControl / v1.weight
                     if tempMyControl > 0 then
                         control = control - tempMyControl
@@ -144,13 +144,13 @@ IntelManager = Class {
                     if self.Brain.emanager.mex[v1.id].T3 then
                         tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T3
                     end
-                    LOG('Enemy Mexes in zone '..tempMyControl)
-                    LOG('Weight of zone '..v1.weight)
+                    RNGLOG('Enemy Mexes in zone '..tempMyControl)
+                    RNGLOG('Weight of zone '..v1.weight)
                     tempEnemyControl = tempEnemyControl / v1.weight
                     if tempEnemyControl > 0 then
                         control = control + tempEnemyControl
                     end
-                    LOG('Total Control of zone '..v1.id..' is '..control)
+                    RNGLOG('Total Control of zone '..v1.id..' is '..control)
                     
 
                 end
