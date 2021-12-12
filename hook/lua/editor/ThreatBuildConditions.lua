@@ -8,6 +8,7 @@ local MAPBASEPOSTITIONSRNG = {}
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue, threatType, rings, builder)
     local testRings = rings or 10
@@ -36,12 +37,12 @@ function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue
         return false
     end
     currentThreat = aiBrain:GetThreatAtPosition( baseposition, testRings, true, threatType or 'Overall' )
-    --LOG('Threat Value Detected :'..currentThreat..'Threat Value Desired'..threatValue)
+    --RNGLOG('Threat Value Detected :'..currentThreat..'Threat Value Desired'..threatValue)
     if currentThreat > threatValue then
-        --LOG('EnemyThreatGreaterThanValueAtBase returning true for : ', builder)
+        --RNGLOG('EnemyThreatGreaterThanValueAtBase returning true for : ', builder)
         return true
     end
-    --LOG('EnemyThreatGreaterThanValueAtBase returning false for : ', builder)
+    --RNGLOG('EnemyThreatGreaterThanValueAtBase returning false for : ', builder)
     return false
 end
 
@@ -95,9 +96,9 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
 end
 
 function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
-    --LOG('ThreatPresentInGraphRNG')
-    --LOG('LocationType '..locationtype)
-    --LOG('Threat Type '..tType)
+    --RNGLOG('ThreatPresentInGraphRNG')
+    --RNGLOG('LocationType '..locationtype)
+    --RNGLOG('Threat Type '..tType)
     local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
     if not factoryManager then
         return false
@@ -109,20 +110,20 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
         return false
     end
     if expansionMarkers then
-        --LOG('Initial expansionMarker list is '..repr(expansionMarkers))
+        --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
         for k, v in expansionMarkers do
             if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
                 if v.RNGArea then
-                    --LOG('Expansion Graph Area is '..v.RNGArea)
+                    --RNGLOG('Expansion Graph Area is '..v.RNGArea)
                     if v.RNGArea == graphArea then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
                         if threat > 2 then
                             -- I had to do this because neutral civilians show up as structure threat
                             if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy') > 0 then
-                                --LOG('Number of enemy structure '..aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy'))
-                                --LOG('StructuresNotMex threat present for base '..locationtype)
-                                --LOG('Expansion position detected is '..repr(v.position))
-                                --LOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
+                                --RNGLOG('Number of enemy structure '..aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy'))
+                                --RNGLOG('StructuresNotMex threat present for base '..locationtype)
+                                --RNGLOG('Expansion position detected is '..repr(v.position))
+                                --RNGLOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
                                 return true
                             end
                         end
@@ -131,6 +132,6 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
             end
         end
     end
-    --LOG('No threat in graph area')
+    --RNGLOG('No threat in graph area')
     return false
 end

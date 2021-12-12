@@ -1,9 +1,10 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local LandMode = function(self, aiBrain, builderManager, builderData)
-    --LOG('Setting T1 Queue to Eng')
+    --RNGLOG('Setting T1 Queue to Eng')
     if builderData.TechLevel == 1 then
         return 745
     elseif builderData.TechLevel == 2 then

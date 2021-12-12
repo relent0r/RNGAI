@@ -4,7 +4,7 @@
     Summary :
         Economy Build Conditions
 ]]
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
@@ -62,10 +62,10 @@ end
 function GreaterThanEnergyTrendRNG(aiBrain, eTrend)
 
     if GetEconomyTrend(aiBrain, 'ENERGY') > eTrend then
-        --LOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
+        --RNGLOG('Greater than Energy Trend Returning True : '..econ.EnergyTrend)
         return true
     else
-        --LOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
+        --RNGLOG('Greater than Energy Trend Returning False : '..econ.EnergyTrend)
         return false
     end
 end
@@ -100,23 +100,23 @@ end
 -- not used yet
 function GreaterThanEconEfficiencyOverTimeRNG(aiBrain, MassEfficiency, EnergyEfficiency)
     -- Using eco over time values from the EconomyOverTimeRNG thread.
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
     if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
-        --LOG('GreaterThanEconEfficiencyOverTime Returned True')
+        --RNGLOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true
     end
-    --LOG('GreaterThanEconEfficiencyOverTime Returned False')
+    --RNGLOG('GreaterThanEconEfficiencyOverTime Returned False')
     return false
 end
 
 function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEfficiency)
     -- Using eco over time values from the EconomyOverTimeRNG thread.
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
     if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
-        --LOG('GreaterThanEconEfficiencyOverTime passed True')
+        --RNGLOG('GreaterThanEconEfficiencyOverTime passed True')
         local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
         local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-        --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+        --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
         if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
             return true
         end
@@ -134,34 +134,34 @@ end
 
 function GreaterThanEconTrendOverTimeRNG(aiBrain, MassTrend, EnergyTrend)
     -- Using eco over time values from the EconomyOverTimeRNG thread.
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
     if (aiBrain.EconomyOverTimeCurrent.MassTrendOverTime >= MassTrend and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime >= EnergyTrend) then
-        --LOG('GreaterThanEconTrendOverTime Returned True')
+        --RNGLOG('GreaterThanEconTrendOverTime Returned True')
         return true
     end
-    --LOG('GreaterThanEconTrendOverTime Returned False')
+    --RNGLOG('GreaterThanEconTrendOverTime Returned False')
     return false
 end
 
 function GreaterThanEconTrendCombinedRNG(aiBrain, MassTrend, EnergyTrend)
     -- Using combined eco values values from the EconomyOverTimeRNG thread.
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
     if (aiBrain.EconomyOverTimeCurrent.MassTrendOverTime >= MassTrend and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime >= EnergyTrend) then
         if GetEconomyTrend(aiBrain, 'MASS') >= MassTrend and GetEconomyTrend(aiBrain, 'ENERGY') >= EnergyTrend then
             return true
         end
     end
-    --LOG('GreaterThanEconTrendOverTime Returned False')
+    --RNGLOG('GreaterThanEconTrendOverTime Returned False')
     return false
 end
 
 function LessThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then
-        --LOG('GreaterThanEconTrendOverTime Returned True')
+        --RNGLOG('GreaterThanEconTrendOverTime Returned True')
         return true
     end
-    --LOG('GreaterThanEconTrendOverTime Returned False')
+    --RNGLOG('GreaterThanEconTrendOverTime Returned False')
     return false
 end
 
@@ -172,17 +172,17 @@ function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend)
             return true
         end
     end
-    --LOG('GreaterThanEconTrendOverTime Returned False')
+    --RNGLOG('GreaterThanEconTrendOverTime Returned False')
     return false
 end
 
 function GreaterThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > EnergyTrend then
-        --LOG('GreaterThanEconTrendOverTime Returned True')
+        --RNGLOG('GreaterThanEconTrendOverTime Returned True')
         return true
     end
-    --LOG('GreaterThanEconTrendOverTime Returned False')
+    --RNGLOG('GreaterThanEconTrendOverTime Returned False')
     return false
 end
 
@@ -190,12 +190,12 @@ function GreaterThanEconEfficiencyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
 
     local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
     local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
     if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
-        --LOG('GreaterThanEconEfficiencyOverTime Returned True')
+        --RNGLOG('GreaterThanEconEfficiencyOverTime Returned True')
         return true
     end
-    --LOG('GreaterThanEconEfficiencyOverTime Returned False')
+    --RNGLOG('GreaterThanEconEfficiencyOverTime Returned False')
     return false
 end
 
@@ -203,12 +203,12 @@ function LessThanEconEfficiencyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
 
     local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
     local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-    --LOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
     if (MassEfficiencyOverTime <= MassEfficiency and EnergyEfficiencyOverTime <= EnergyEfficiency) then
-        --LOG('LessThanEconEfficiencyOverTime Returned True')
+        --RNGLOG('LessThanEconEfficiencyOverTime Returned True')
         return true
     end
-    --LOG('LessThanEconEfficiencyOverTime Returned False')
+    --RNGLOG('LessThanEconEfficiencyOverTime Returned False')
     return false
 end
 
@@ -241,12 +241,12 @@ function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
             return true
         end
     end
-    --LOG('MassIncome Required '..mIncome)
-    --LOG('EnergyIncome Required '..eIncome)
-    --LOG('Mass Income Over time'..aiBrain.EconomyOverTimeCurrent.MassIncome)
-    --LOG('Mass Income '..GetEconomyIncome(aiBrain,'MASS'))
-    --LOG('Energy Income Over time'..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
-    --LOG('Energy Income '..GetEconomyIncome(aiBrain,'ENERGY'))
+    --RNGLOG('MassIncome Required '..mIncome)
+    --RNGLOG('EnergyIncome Required '..eIncome)
+    --RNGLOG('Mass Income Over time'..aiBrain.EconomyOverTimeCurrent.MassIncome)
+    --RNGLOG('Mass Income '..GetEconomyIncome(aiBrain,'MASS'))
+    --RNGLOG('Energy Income Over time'..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
+    --RNGLOG('Energy Income '..GetEconomyIncome(aiBrain,'ENERGY'))
     return false
 end
 
@@ -273,14 +273,14 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
     massTotal = massTotal + (unitCount * t3Drain)
 
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, '>') then
-        --LOG('MassToFactoryRatio false')
-        --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        --LOG('Factory massTotal : '..massTotal)
+        --RNGLOG('MassToFactoryRatio false')
+        --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        --RNGLOG('Factory massTotal : '..massTotal)
         return false
     end
-    --LOG('MassToFactoryRatio true')
-    --LOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-    --LOG('Factory massTotal : '..massTotal)
+    --RNGLOG('MassToFactoryRatio true')
+    --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+    --RNGLOG('Factory massTotal : '..massTotal)
     return true
 end
 
@@ -322,7 +322,7 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
-    --LOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
+    --RNGLOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
         if aiBrain.ChokeFlag and uType == 'Land' then 

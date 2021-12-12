@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGAddToBuildQueue = AddToBuildQueue
 function AddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
@@ -146,7 +147,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     local location = false
     if IsResource(buildingType) then
         if buildingType != 'T1HydroCarbon' and constructionData.MexThreat then
-            --LOG('MexThreat Builder Type')
+            --RNGLOG('MexThreat Builder Type')
             local threatMin = -9999
             local threatMax = 9999
             local threatRings = 0
@@ -156,16 +157,16 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             for _,v in markerTable do
                 if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance and VDist3( v.Position, relativeTo ) >= constructionData.MinDistance then
                     if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-                        --LOG('MassPoint found for engineer')
+                        --RNGLOG('MassPoint found for engineer')
                         location = table.copy(markerTable[Random(1,table.getn(markerTable))])
                         location = {location.Position[1], location.Position[3], location.Position[2]}
-                        --LOG('Location is '..repr(location))
+                        --RNGLOG('Location is '..repr(location))
                         break
                     end
                 end
             end
             if not location and EntityCategoryContains(categories.COMMAND,builder) then
-                --LOG('Location Returned by marker table is '..repr(location))
+                --RNGLOG('Location Returned by marker table is '..repr(location))
                 return false
             end
         else
@@ -185,24 +186,24 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
     if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
-        --LOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
+        --RNGLOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
         relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
             location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then
-                --LOG('*AIExecuteBuildStructure: Yes! Found a place near base to Build! - buildingType '..repr(buildingType))
+                --RNGLOG('*AIExecuteBuildStructure: Yes! Found a place near base to Build! - buildingType '..repr(buildingType))
                 break
             end
         end
     end
     -- if we still have no place to build, then maybe we have really no place near the base to build. Lets search near engineer position
     if not location and not IsResource(buildingType) then
-        --LOG('*AIExecuteBuildStructure: Find still no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near Engineer...')
+        --RNGLOG('*AIExecuteBuildStructure: Find still no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near Engineer...')
         relativeTo = builder:GetPosition()
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
             location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then
-                --LOG('*AIExecuteBuildStructure: Yes! Found a place near engineer to Build! - buildingType '..repr(buildingType))
+                --RNGLOG('*AIExecuteBuildStructure: Yes! Found a place near engineer to Build! - buildingType '..repr(buildingType))
                 break
             end
         end
@@ -222,7 +223,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
 end
 
 function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
-    --LOG('beginning adjacencypriority')
+    --RNGLOG('beginning adjacencypriority')
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     local VDist3Sq = VDist3Sq
     local Centered=cons.Centered
@@ -257,7 +258,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         local template = {}
         table.insert(template, {})
         table.insert(template[1], { buildingType })
-        --LOG('reference contains '..repr(table.getn(reference))..' items')
+        --RNGLOG('reference contains '..repr(table.getn(reference))..' items')
         for _,x in reference do
             for k,v in x do
                 if not Centered then
@@ -373,7 +374,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
             local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, false, builder, baseLocation[1], baseLocation[3])
             if location then
                 if location[1] > 8 and location[1] < ScenarioInfo.size[1] - 8 and location[2] > 8 and location[2] < ScenarioInfo.size[2] - 8 then
-                    --LOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
+                    --RNGLOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
                     AddToBuildQueue(aiBrain, builder, whatToBuild, location, false)
                     return true
                 end

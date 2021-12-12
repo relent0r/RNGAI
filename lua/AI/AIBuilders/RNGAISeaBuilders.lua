@@ -3,17 +3,18 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local MaxAttackForce = 0.45
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local SeaDefenseMode = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
     if mySubThreat < enemySubThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Enable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 890
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Disable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 0
     end
 end
@@ -22,22 +23,22 @@ local SeaDefenseForm = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
     if mySubThreat < enemySubThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Enable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 350
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Disable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 300
     end
 end
 
 local SeaRangedMode = function(self, aiBrain)
     if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
-        --LOG('Enable Ranged Naval Builder')
+        --RNGLOG('Enable Ranged Naval Builder')
         return 500
     else
-        --LOG('Disable Ranged Naval Builder')
+        --RNGLOG('Disable Ranged Naval Builder')
         return 0
     end
 end

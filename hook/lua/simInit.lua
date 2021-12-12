@@ -1,7 +1,7 @@
 
 local RNGBeginSession = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').BeginSession
 local RNGAIBeginSessionFunction = BeginSession
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 function BeginSession()
     RNGAIBeginSessionFunction()
@@ -27,7 +27,7 @@ end
 
 function DrawIMAPThreatsRNG()
     coroutine.yield(100)
-    --LOG('Starting IMAP Threat Thread')
+    --RNGLOG('Starting IMAP Threat Thread')
     local MCountX = 48
     local MCountY = 48
     local PosX

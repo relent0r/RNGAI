@@ -13,6 +13,7 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local CreatePriorityQueue = import('/mods/RNGAI/lua/FlowAI/framework/utils/PriorityQueue.lua').CreatePriorityQueue
 local DEFAULT_BORDER = 4
 local PLAYABLE_AREA = nil
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 function SetPlayableArea(x0,z0,x1,z1)
     -- Fields of Isis is a bad map, I hate to be the one who has to say it.
     PLAYABLE_AREA = { x0, z0, x1, z1 }
@@ -241,13 +242,13 @@ end]]
 
 GameMap = Class({
     InitMap = function(self)
-        LOG('FlowAI framework for RNGAI: CreateMapMarkers() started!')
+        RNGLOG('FlowAI framework for RNGAI: CreateMapMarkers() started!')
         local START = GetSystemTimeSecondsOnlyForProfileUse()
         self:CreateMapMarkers()
         self.zoneSets = {}
         self.numZoneSets = 0
         local END = GetSystemTimeSecondsOnlyForProfileUse()
-        LOG(string.format('FlowAI framework for RNGAI: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
+        RNGLOG(string.format('FlowAI framework for RNGAI: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
         local drawStuffz = false
         if drawStuffz then
             ForkThread(
@@ -746,7 +747,7 @@ function BeginSession()
         map:AddZoneSet(LayerZoneSet)
     end
     local END = GetSystemTimeSecondsOnlyForProfileUse()
-    LOG(string.format('FlowAI framework: Default zone generation finished, runtime: %.2f seconds.', END - START ))
+    RNGLOG(string.format('FlowAI framework: Default zone generation finished, runtime: %.2f seconds.', END - START ))
     -- Now to attempt to load any custom zone set classes
     START = GetSystemTimeSecondsOnlyForProfileUse()
     local customZoneSets = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Zones.lua').LoadCustomZoneSets()
@@ -754,14 +755,14 @@ function BeginSession()
         -- First randomise the table order.
         -- This forces people to check the ZoneSet data rather than relying on the index being forever the same (which it might not be if more mods get loaded).
         table.sort(customZoneSets,function(a,b) return Random(0,1) == 1 end)
-        LOG(repr(customZoneSets))
+        RNGLOG(repr(customZoneSets))
         for _, ZoneSetClass in customZoneSets do
             map:AddZoneSet(ZoneSetClass)
         end
         END = GetSystemTimeSecondsOnlyForProfileUse()
-        LOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
+        RNGLOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
     else
-        LOG("FlowAI framework: No custom zoning classes found.")
+        RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
 end
 
@@ -780,7 +781,7 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-    LOG('Display Marker Adjacency Running')
+    RNGLOG('Display Marker Adjacency Running')
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local VDist3Sq = VDist3Sq
     aiBrain.RNGAreas={}
@@ -790,7 +791,7 @@ function SetMarkerInformation(aiBrain)
         local node=false
         local expand=false
         local mass=false
-        --LOG(repr(k)..' marker type is '..repr(marker.type))
+        --RNGLOG(repr(k)..' marker type is '..repr(marker.type))
         for i, v in STR_GetTokens(marker.type,' ') do
             if v=='Node' then
                 node=true
@@ -818,12 +819,12 @@ function SetMarkerInformation(aiBrain)
         end
     end
     --WaitSeconds(10)
-    --LOG('colortable is'..repr(tablecolors))
+    --RNGLOG('colortable is'..repr(tablecolors))
     local bases=false
     if bases then
         for _,army in aiBrain.armyspots do
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(army[1].position,25,'Land').name]
-            --LOG('closestpath is '..repr(closestpath))
+            --RNGLOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,army[2])
         end
     else
@@ -833,7 +834,7 @@ function SetMarkerInformation(aiBrain)
             local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
             table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
-            --LOG('closestpath is '..repr(closestpath))
+            --RNGLOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
         end
     end
@@ -843,19 +844,19 @@ function SetMarkerInformation(aiBrain)
     end
     if expands then
         --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
-        LOG('Running Expansion spot checks for rngarea')
+        RNGLOG('Running Expansion spot checks for rngarea')
         for _,expand in aiBrain.expandspots do
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
-            --LOG('closestpath is '..repr(closestpath))
+            --RNGLOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
         end
     end
-    LOG('renderthreadtracker for expansions')
+    RNGLOG('renderthreadtracker for expansions')
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
     local massPointCount = 0
-    LOG('Running mass spot checks for rngarea')
+    RNGLOG('Running mass spot checks for rngarea')
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
             massPointCount = massPointCount + 1
@@ -867,15 +868,15 @@ function SetMarkerInformation(aiBrain)
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
-    --LOG('RNGAreas:')
+    --RNGLOG('RNGAreas:')
     --for k,v in aiBrain.RNGAreas do
-    --    LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
+    --    RNGLOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
     end
-    --LOG('Dump MarkerChain '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
-    --LOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
+    --RNGLOG('Dump MarkerChain '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
+    --RNGLOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
     ScenarioInfo.MarkersInfectedRNG = true
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
@@ -891,7 +892,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
     coroutine.yield(1)
     --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
-    if not marker then LOG('No Marker sent to army distance check') return end
+    if not marker then RNGLOG('No Marker sent to army distance check') return end
     if not marker.armydists then
         marker.armydists={}
     end
@@ -998,7 +999,7 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
             -- Important. Extension to chps logic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
             if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea then
                 Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea = marker.RNGArea
-                --LOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
+                --RNGLOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
             end
         end
     end
@@ -1015,7 +1016,7 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
     if not marker then aiBrain.renderthreadtracker=nil return end
     if not AdaptiveResourceMarkerTableRNG[masspoint].RNGArea then
         AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = marker.RNGArea
-        --LOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
+        --RNGLOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
     coroutine.yield(1)
     if aiBrain.renderthreadtracker==CurrentThread() then

@@ -11,35 +11,36 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local ActiveExpansion = function(self, aiBrain, builderManager)
-    --LOG('LocationType is '..builderManager.LocationType)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
-        --LOG('Active Expansion is set'..builderManager.LocationType)
-        --LOG('Active Expansion builders are set to 900')
+        --RNGLOG('Active Expansion is set'..builderManager.LocationType)
+        --RNGLOG('Active Expansion builders are set to 900')
         return 900
     else
-        --LOG('Disable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio < 0.20 then
-        --LOG('NavalExpansionAdjust return 0')
+        --RNGLOG('NavalExpansionAdjust return 0')
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
-        --LOG('NavalExpansionAdjust return 200')
+        --RNGLOG('NavalExpansionAdjust return 200')
         return 200
     elseif aiBrain.MapWaterRatio < 0.40 then
-        --LOG('NavalExpansionAdjust return 400')
+        --RNGLOG('NavalExpansionAdjust return 400')
         return 400
     elseif aiBrain.MapWaterRatio < 0.60 then
-        --LOG('NavalExpansionAdjust return 650')
+        --RNGLOG('NavalExpansionAdjust return 650')
         return 650
     else
-        --LOG('NavalExpansionAdjust return 750')
+        --RNGLOG('NavalExpansionAdjust return 750')
         return 750
     end
 end

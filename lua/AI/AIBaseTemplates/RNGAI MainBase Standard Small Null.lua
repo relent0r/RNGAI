@@ -106,8 +106,8 @@ BaseBuilderTemplate {
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
         if personality == 'RNGStandardnull' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardnullcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
-            --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
-            --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
+            --RNGLOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
+            --RNGLOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
             return 1000, 'RNGStandardnull'
         end
         return -1

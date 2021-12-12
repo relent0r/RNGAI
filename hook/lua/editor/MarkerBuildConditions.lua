@@ -3,7 +3,7 @@ local LastGetMassMarkerRNG = 0
 local LastCheckMassMarkerRNG = {}
 local MassMarkerRNG = {}
 local LastMassBOOLRNG = false
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 --[[function CanBuildOnMassDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
@@ -26,7 +26,7 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
             end 
             local mexDistance = VDist3( v.position, engPos )
             if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
-                --LOG('mexDistance '..mexDistance)
+                --RNGLOG('mexDistance '..mexDistance)
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})
             end
         end
@@ -65,7 +65,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
             if v.Distance > distance then
                 break
             end
-            --LOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
+            --RNGLOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                 if threatCheck then
                     threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
@@ -115,7 +115,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
             elseif v.Distance > maxDistance then
                 break
             end
-            --LOG(_..'Checking marker with max maxDistance ['..maxDistance..'] minDistance ['..minDistance..'] . Actual marker has distance: ('..(v.Distance)..').')
+            --RNGLOG(_..'Checking marker with max maxDistance ['..maxDistance..'] minDistance ['..minDistance..'] . Actual marker has distance: ('..(v.Distance)..').')
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                 if threatCheck then
                     threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
@@ -123,7 +123,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
                         continue
                     end
                 end
-                --LOG('Returning MassMarkerDistance True')
+                --RNGLOG('Returning MassMarkerDistance True')
                 LastMassBOOLRNG = true
                 break
             end
@@ -138,7 +138,7 @@ function MassMarkerLessThanDistanceRNG(aiBrain, distance)
     for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
         if v.type == 'Mass' then
             if VDist2Sq(startX, startZ, v.position[1], v.position[3]) < distance * distance then
-                --LOG('Mass marker less than '..distance)
+                --RNGLOG('Mass marker less than '..distance)
                 return true
             end
         end

@@ -17,6 +17,7 @@ local RNGCEIL = math.ceil
 local RNGPI = math.pi
 local RNGCAT = table.cat
 local RNGCOPY = table.copy
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 IntelManager = Class {
     Create = function(self, brain)
@@ -27,7 +28,7 @@ IntelManager = Class {
     end,
 
     Run = function(self)
-        LOG('RNGAI : IntelManager Starting')
+        RNGLOG('RNGAI : IntelManager Starting')
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
@@ -99,7 +100,7 @@ IntelManager = Class {
 
     WaitForZoneInitialization = function(self)
         while not self.Brain.ZonesInitialized do
-            LOG('Zones table is empty, waiting')
+            RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
             continue
         end
@@ -155,7 +156,7 @@ IntelManager = Class {
     SelectZoneRNG = function(self, aiBrain, platoon, type)
         -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
-        LOG('RNGAI : Zone Selection Query Received')
+        RNGLOG('RNGAI : Zone Selection Query Received')
         if PlatoonExists(aiBrain, platoon) then
             local zoneSet = false
             local zoneSelection = 999
@@ -166,7 +167,7 @@ IntelManager = Class {
                 coroutine.yield(20)
                 return false
             end
-            LOG('RNGAI : Zone Selection Query Checking if Zones initialized')
+            RNGLOG('RNGAI : Zone Selection Query Checking if Zones initialized')
             if aiBrain.ZonesInitialized then
                 if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Land' then
                     zoneSet = aiBrain.Zones.Land.zones
@@ -174,9 +175,9 @@ IntelManager = Class {
                     zoneSet = aiBrain.Zones.Air.zones
                 end
                 if type == 'raid' then
-                    LOG('RNGAI : Zone Selection Query Processing')
+                    RNGLOG('RNGAI : Zone Selection Query Processing')
                     for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                        LOG('Edge Zone ID '..(v.zone.id))
+                        RNGLOG('Edge Zone ID '..(v.zone.id))
                         if aiBrain.emanager.mex[v.zone.id].T1 then
                             enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T1 + 1
                         end
@@ -189,7 +190,7 @@ IntelManager = Class {
                         LOG('Zone Query enemy modifier '..enemyMexmodifier)
                         selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
                         if not selection or v.distance < selection.distance then
-                            LOG('Try to log zoneset')
+                            RNGLOG('Try to log zoneset')
                             selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
                             LOG('Zone Query Select priority '..selection)
                             zoneSelection = v.zone.id
@@ -197,7 +198,7 @@ IntelManager = Class {
                         if selection then
                             return zoneSelection
                         else
-                            LOG('RNGAI : Zone Selection Query did not select zone')
+                            RNGLOG('RNGAI : Zone Selection Query did not select zone')
                         end
                     end
                 end
@@ -207,7 +208,7 @@ IntelManager = Class {
         else
             WARN('RNGAI : PlatoonExist parameter false in Select Zone query')
         end
-        LOG('RNGAI : No zone returned from Zone Query')
+        RNGLOG('RNGAI : No zone returned from Zone Query')
         return false
     end,
 
@@ -317,8 +318,8 @@ end
             end
         end
     end
-    LOG('Zone Table '..repr(zones))
-    LOG('AdaptiveResourceMarkerTable '..repr(AdaptiveResourceMarkerTableRNG))
+    RNGLOG('Zone Table '..repr(zones))
+    RNGLOG('AdaptiveResourceMarkerTable '..repr(AdaptiveResourceMarkerTableRNG))
 ]]
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
@@ -330,7 +331,7 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local massPointValidated = false
     local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
-    --LOG('Run ExpansionWatchTable Config')
+    --RNGLOG('Run ExpansionWatchTable Config')
 
     for i = 1, 16 do
         local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
@@ -339,16 +340,16 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
             table.insert(armyStarts, startPos)
         end
     end
-    --LOG(' Army Starts'..repr(armyStarts))
+    --RNGLOG(' Army Starts'..repr(armyStarts))
 
     if expansionMarkers then
-        --LOG('Initial expansionMarker list is '..repr(expansionMarkers))
+        --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
         for k, v in expansionMarkers do
             local startPosUsed = false
             if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
                 for _, p in armyStarts do
                     if p == v.position then
-                        --LOG('Position Taken '..repr(v)..' and '..repr(v.position))
+                        --RNGLOG('Position Taken '..repr(v)..' and '..repr(v.position))
                         startPosUsed = true
                         break
                     end
@@ -367,19 +368,19 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     if not massPointValidated then
         markerList = CalculateMassValue(markerList)
     end
-    --LOG('Army Setup '..repr(ScenarioInfo.ArmySetup))
+    --RNGLOG('Army Setup '..repr(ScenarioInfo.ArmySetup))
     local startX, startZ = aiBrain:GetArmyStartPos()
     table.sort(markerList,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX, startZ)>VDist2Sq(b.Position[1],b.Position[3],startX, startZ) end)
     aiBrain.BrainIntel.ExpansionWatchTable = markerList
-    --LOG('ExpansionWatchTable is '..repr(markerList))
+    --RNGLOG('ExpansionWatchTable is '..repr(markerList))
 end
 
 ExpansionIntelScanRNG = function(aiBrain)
-    --LOG('Pre-Start ExpansionIntelScan')
+    --RNGLOG('Pre-Start ExpansionIntelScan')
     AIConfigureExpansionWatchTableRNG(aiBrain)
     coroutine.yield(Random(30,70))
     if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) == 0 then
-        --LOG('ExpansionWatchTable not ready or is empty')
+        --RNGLOG('ExpansionWatchTable not ready or is empty')
         return
     end
     local threatTypes = {
@@ -392,7 +393,7 @@ ExpansionIntelScanRNG = function(aiBrain)
         aiBrain:ForkThread(RUtils.RenderBrainIntelRNG)
     end
     local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
-    --LOG('Starting ExpansionIntelScan')
+    --RNGLOG('Starting ExpansionIntelScan')
     while aiBrain.Result ~= "defeat" do
         for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
             if v.PlatoonAssigned.Dead then
@@ -433,7 +434,7 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info: }
                 ]]
                 local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
-                --LOG('Check for position '..repr(expansionNode))
+                --RNGLOG('Check for position '..repr(expansionNode))
                 if expansionNode then
                     aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.RNGArea
                 else
@@ -444,9 +445,9 @@ ExpansionIntelScanRNG = function(aiBrain)
                 for _, t in threatTypes do
                     rawThreat = GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, t)
                     if rawThreat > 0 then
-                        --LOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
-                        --LOG('Expansion is '..v.Name)
-                        --LOG('Position is '..repr(v.Position))
+                        --RNGLOG('Threats as ExpansionWatchTable for type '..t..' threat is '..rawThreat)
+                        --RNGLOG('Expansion is '..v.Name)
+                        --RNGLOG('Position is '..repr(v.Position))
                     end
                     aiBrain.BrainIntel.ExpansionWatchTable[k][t] = rawThreat
                 end
@@ -456,7 +457,7 @@ ExpansionIntelScanRNG = function(aiBrain)
             end
         end
         coroutine.yield(50)
-        -- don't do this, it might have a platoon inside it LOG('Current Expansion Watch Table '..repr(aiBrain.BrainIntel.ExpansionWatchTable))
+        -- don't do this, it might have a platoon inside it RNGLOG('Current Expansion Watch Table '..repr(aiBrain.BrainIntel.ExpansionWatchTable))
     end
 end
 
@@ -490,13 +491,13 @@ function InitialNavalAttackCheck(aiBrain)
             if checkPoints then
                 for _, m in checkPoints do
                     if RUtils.PositionInWater(m) then
-                        --LOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
-                        --LOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
-                        --LOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
+                        --RNGLOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
+                        --RNGLOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
+                        --RNGLOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
                         local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.35
                         markerCount = markerCount + 1
                         if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.position, 'none') then
-                            --LOG('This marker is not blocked')
+                            --RNGLOG('This marker is not blocked')
                             markerCountNotBlocked = markerCountNotBlocked + 1
                             table.insert( frigateRaidMarkers, v )
                         else
@@ -507,13 +508,13 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
         end
-        --LOG('There are potentially '..markerCount..' markers that are in range for frigates')
-        --LOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
-        --LOG('There are '..markerCountBlocked..' markers that ARE blocked')
-        --LOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+        --RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
+        --RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+        --RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
+        --RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
         if markerCountNotBlocked > 8 then
             aiBrain.EnemyIntel.FrigateRaid = true
-            --LOG('Frigate Raid is true')
+            --RNGLOG('Frigate Raid is true')
             aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
         end
     end
@@ -572,54 +573,54 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == positionNode.RNGArea then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
-                LOG('Distance to expansion '..expansionDistance)
+                RNGLOG('Distance to expansion '..expansionDistance)
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
-                --LOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
                     if expansionDistance < radius * radius then
-                        LOG('Expansion Zone is within radius')
+                        RNGLOG('Expansion Zone is within radius')
                         if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
-                            LOG('Expansion has '..expansion.MassPoints..' mass points')
-                            LOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
+                            RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
                             if expansion.MassPoints > 1 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
-                                    LOG('Threat at location too high for easy building')
+                                    RNGLOG('Threat at location too high for easy building')
                                     continue
                                 end
                                 if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= expansion.MassPoints then
-                                    LOG('ACU Location has enough masspoints to indicate its already taken')
+                                    RNGLOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
                                 RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints * expansion.MassPoints, Key = k, Distance = expansionDistance})
                             end
                         else
-                            LOG('Expansion is beyond the center point')
-                            LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
-                            LOG('Should be less than ')
-                            LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                            RNGLOG('Expansion is beyond the center point')
+                            RNGLOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            RNGLOG('Should be less than ')
+                            RNGLOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
                         end
                     end
                 else
-                    LOG('This expansion has already been checked in the last 45 seconds')
+                    RNGLOG('This expansion has already been checked in the last 45 seconds')
                 end
             end
         end
-        LOG('Number of options from first cycle '..table.getn(options))
+        RNGLOG('Number of options from first cycle '..table.getn(options))
         local optionCount = 0
         
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
-                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                --RNGLOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
                 RNGINSERT(bestExpansions, withinRadius)
             else
-                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+                --RNGLOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
             end
         end
     else
         WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
     end
-    --LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
+    --RNGLOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
     if RNGGETN(bestExpansions) > 0 then
         if type == 'acu' then
             local bestOption = false
@@ -629,13 +630,13 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 local alreadySecure = false
                 for k, b in aiBrain.BuilderManagers do
                     if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
-                        LOG('Already a builder manager with factory present, set')
+                        RNGLOG('Already a builder manager with factory present, set')
                         alreadySecure = true
                         break
                     end
                 end
                 if alreadySecure then
-                    LOG('Position already secured, ignore and move to next expansion')
+                    RNGLOG('Position already secured, ignore and move to next expansion')
                     continue
                 end
                 local expansionValue = v.Distance * v.Distance / v.Value
@@ -647,10 +648,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             end
             if secondBestOption and bestOption then
                 local acuOptions = { bestOption, secondBestOption }
-                LOG('ACU is having a random expansion returned')
+                RNGLOG('ACU is having a random expansion returned')
                 return acuOptions[Random(1,2)]
             end
-            LOG('ACU is having the best expansion returned')
+            RNGLOG('ACU is having the best expansion returned')
             return bestOption
         else
             return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
