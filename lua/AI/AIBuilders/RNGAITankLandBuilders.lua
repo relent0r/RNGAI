@@ -5,12 +5,12 @@
         Land Builders
 ]]
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 RNGLOG('* AI-RNG: BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
-local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
