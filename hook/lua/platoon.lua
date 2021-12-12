@@ -3379,6 +3379,21 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
+    DrawZoneTarget = function(self, aiBrain)
+        while PlatoonExists(aiBrain, self) do
+            if self.TargetZone then
+                local platpos = GetPlatoonPosition(self)
+                DrawCircle(platpos,5,'aaffaa')
+                DrawLine(aiBrain.Zones.Land.zones[self.TargetZone].pos,platpos,'aa000000')
+                DrawCircle(aiBrain.Zones.Land.zones[self.TargetZone].pos,15,'aaffaa')
+            else
+                LOG('No Zone for DrawZoneTarget')
+                return
+            end
+            coroutine.yield( 2 )
+        end
+    end,
+
     MassRaidRNG = function(self)
         local aiBrain = self:GetBrain()
         --LOG('Platoon ID is : '..self:GetPlatoonUniqueName())
@@ -3507,6 +3522,8 @@ Platoon = Class(RNGAIPlatoon) {
         local targetzone = IntelManagerRNG.GetIntelManager():SelectZoneRNG(aiBrain, self, 'raid')
         if targetzone then
             LOG('Zone Query Returned '..targetzone)
+            self.TargetZone = targetzone
+            self:ForkThread(self.DrawZoneTarget, aiBrain)
         else
             LOG('Zone Query Returned false')
         end

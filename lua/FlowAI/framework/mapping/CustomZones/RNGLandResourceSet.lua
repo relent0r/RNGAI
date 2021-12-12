@@ -119,7 +119,7 @@ RNGLandResourceSet = Class(ZoneSet){
                     complete = false
                 end
             end
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, massmarkers=massGroup, zonealert=false})
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, massmarkers=massGroup, zonealert=false, control=1})
         end
     end,
 }

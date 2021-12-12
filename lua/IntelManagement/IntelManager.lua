@@ -31,6 +31,7 @@ IntelManager = Class {
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
+        self:ForkThread(self.ZoneControlMonitorRNG)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
@@ -113,12 +114,38 @@ IntelManager = Class {
         while self.Brain.Result ~= "defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
-                    local control
-                    if v1.enemythreat > 0 then
+                    local resourcePoints = v1.weight
+                    local control = 1
+                    local tempMyControl = 0
+                    local tempEnemyControl = 0
+                    -- Work out our control
+                    if self.Brain.smanager.mex[v1.id].T1 then
+                        tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T1
                     end
-
-                    if v1.friendlythreat > 0 then
+                    if self.Brain.smanager.mex[v1.id].T2 then
+                        tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T2
                     end
+                    if self.Brain.smanager.mex[v1.id].T3 then
+                        tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T3
+                    end
+                    tempMyControl = tempMyControl / v1.weight
+                    if tempMyControl > 0 then
+                        control = control - tempMyControl
+                    end
+                    if self.Brain.emanager.mex[v1.id].T1 then
+                        tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T1
+                    end
+                    if self.Brain.emanager.mex[v1.id].T2 then
+                        tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T2
+                    end
+                    if self.Brain.emanager.mex[v1.id].T3 then
+                        tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T3
+                    end
+                    tempEnemyControl = tempEnemyControl / v1.weight
+                    if tempEnemyControl > 0 then
+                        control = control + tempEnemyControl
+                    end
+                    LOG('Total Control of zone '..v1.id..' is '..control)
                 end
             end
             coroutine.yield(50)
@@ -148,22 +175,24 @@ IntelManager = Class {
                 end
                 if type == 'raid' then
                     LOG('RNGAI : Zone Selection Query Processing')
-                    for k, v in zoneSet[platoon.Zone].edges do
+                    for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
                         LOG('Edge Zone ID '..(v.zone.id))
                         if aiBrain.emanager.mex[v.zone.id].T1 then
-                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T1 + 1
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T1 + 1
                         end
                         if aiBrain.emanager.mex[v.zone.id].T2 then
-                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T2 * 2
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T2 * 2
                         end
                         if aiBrain.emanager.mex[v.zone.id].T3 then
-                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone].T3 * 4
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T3 * 4
                         end
+                        LOG('Zone Query enemy modifier '..enemyMexmodifier)
+                        selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
                         if not selection or v.distance < selection.distance then
                             LOG('Try to log zoneset')
-                            LOG('Zone information for edge '..RUtils.DebugArrayRNG(zoneSet[v.zone.id]))
                             selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
-                            zoneSelection = zoneSet[v.zone.id]
+                            LOG('Zone Query Select priority '..selection)
+                            zoneSelection = v.zone.id
                         end
                         if selection then
                             return zoneSelection

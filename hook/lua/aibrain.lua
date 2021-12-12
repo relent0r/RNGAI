@@ -2243,7 +2243,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     for k, v in self.Zones.Land.zones do
                         for k1,v2 in v.edges do
-                            LOG(RUtils.DebugArrayRNG(v2))
+                            LOG('Zone Edge '..v2.zone.id..' is '..v2.distance..' from '..v.id)
                         end
                         if v.friendlythreat > 0 then
                             LOG('Friend Threat at zone '..v.id)
