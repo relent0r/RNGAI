@@ -177,23 +177,23 @@ IntelManager = Class {
                 if type == 'raid' then
                     RNGLOG('RNGAI : Zone Selection Query Processing')
                     for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                        RNGLOG('Edge Zone ID '..(v.zone.id))
-                        if aiBrain.emanager.mex[v.zone.id].T1 then
-                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T1 + 1
+                        RNGLOG('Edge Zone ID '..(v))
+                        if aiBrain.emanager.mex[v].T1 then
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v].T1 + 1
                         end
-                        if aiBrain.emanager.mex[v.zone.id].T2 then
-                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T2 * 2
+                        if aiBrain.emanager.mex[v].T2 then
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v].T2 * 2
                         end
-                        if aiBrain.emanager.mex[v.zone.id].T3 then
-                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v.zone.id].T3 * 4
+                        if aiBrain.emanager.mex[v].T3 then
+                            enemyMexmodifier = enemyMexmodifier + aiBrain.emanager.mex[v].T3 * 4
                         end
                         LOG('Zone Query enemy modifier '..enemyMexmodifier)
-                        selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
+                        selection = 10 * v.distance / zoneSet[v].weight / enemyMexmodifier
                         if not selection or v.distance < selection.distance then
                             RNGLOG('Try to log zoneset')
-                            selection = 10 * v.distance / zoneSet[v.zone.id].weight / enemyMexmodifier
+                            selection = 10 * v.distance / zoneSet[v].weight / enemyMexmodifier
                             LOG('Zone Query Select priority '..selection)
-                            zoneSelection = v.zone.id
+                            zoneSelection = v
                         end
                         if selection then
                             return zoneSelection

@@ -3388,7 +3388,7 @@ Platoon = Class(RNGAIPlatoon) {
                 DrawLine(aiBrain.Zones.Land.zones[self.TargetZone].pos,platpos,'aa000000')
                 DrawCircle(aiBrain.Zones.Land.zones[self.TargetZone].pos,15,'aaffaa')
             else
-                LOG('No Zone for DrawZoneTarget')
+                RNGLOG('No Zone for DrawZoneTarget')
                 return
             end
             coroutine.yield( 2 )

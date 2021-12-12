@@ -29,8 +29,8 @@ ZoneSet = Class({
     InitEdges = function(self,edges)
         -- Initialise edge references from the edge table provided by the map.
         for _, edge in edges do
-            table.insert(self:GetZone(edge.zones[1]).edges,{zone = self:GetZone(edge.zones[2]), border=edge.border, distance=edge.distance})
-            table.insert(self:GetZone(edge.zones[2]).edges,{zone = self:GetZone(edge.zones[1]), border=edge.border, distance=edge.distance})
+            table.insert(self:GetZone(edge.zones[1]).edges,{zone = edge.zones[2], border=edge.border, distance=edge.distance})
+            table.insert(self:GetZone(edge.zones[2]).edges,{zone = edge.zones[1], border=edge.border, distance=edge.distance})
         end
     end,
 
