@@ -607,7 +607,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         if aiBrain.EconomyOverTimeCurrent.MassIncome < (0.8 * multiplier) or aiBrain.EconomyOverTimeCurrent.EnergyIncome < (12 * multiplier) then
             return
         end
-        if aiBrain:GetCurrentUnits(categories.STRUCTURE * categories.FACTORY) < 2 then
+        if aiBrain:GetCurrentUnits(categories.STRUCTURE * categories.FACTORY) < 2 or (cdr:IsUnitState('Building') and EntityCategoryContains(categories.FACTORY, cdr.UnitBeingBuilt)) then
             return
         end
         cdr.Initialized = true

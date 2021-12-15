@@ -99,7 +99,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             -- Add next point
-            local massGroup = {best}
+            local resourceGroup = {best}
             best.claimed = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
@@ -114,13 +114,14 @@ RNGLandResourceSet = Class(ZoneSet){
             -- Claim nearby points
             for _, v in markers do
                 if (not v.claimed) and VDist2Sq(v.position[1], v.position[3], best.position[1], best.position[3]) < zoneRadius then
-                    table.insert(massGroup, v)
+                    table.insert(resourceGroup, v)
                     v.claimed = true
                 elseif not v.claimed then
                     complete = false
                 end
             end
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, massmarkers=massGroup, zonealert=false, control=1})
+            LOG('Resource Group value '..table.getn(resourceGroup))
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1})
         end
     end,
 }

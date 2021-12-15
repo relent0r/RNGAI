@@ -36,7 +36,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,
-        InstanceCount = 4,
+        InstanceCount = 3,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 320 } },
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },      	

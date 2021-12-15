@@ -78,6 +78,30 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI T1 Zone Raiders Small',
+    Plan = 'ZoneRaidRNG',    
+    GlobalSquads = {
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.SNIPER - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 3, 8, 'Attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'Artillery', 'none' },
+        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAI Zone Raiders Medium',
+    Plan = 'ZoneRaidRNG',    
+    GlobalSquads = {
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.TECH3 , 4, 15, 'attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.TECH3 - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL  , 0, 4, 'attack', 'none' },
+        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 5, 'Artillery', 'none' },
+        { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
+        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI Mass Raiders Medium',
     Plan = 'MassRaidRNG',    
     GlobalSquads = {
@@ -147,7 +171,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam',
-    Plan = 'HuntAIRNG', -- The platoon function to use.
+    Plan = 'ZoneControlRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           4, -- Min number of units.
@@ -166,8 +190,8 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI LandAttack Spam Early',
-    Plan = 'HuntAIRNG', -- The platoon function to use.
+    Name = 'RNGAI Zone Control',
+    Plan = 'ZoneControlRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           3, -- Min number of units.

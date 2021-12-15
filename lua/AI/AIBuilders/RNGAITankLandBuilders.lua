@@ -760,7 +760,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI T1 Zone Raiders Small',                          -- Template Name.
         Priority = 600,                                                          -- Priority. 1000 is normal.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'ZoneUpdate' },
@@ -945,7 +945,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI T1 Zone Raiders Small',                          -- Template Name.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
@@ -1196,19 +1196,40 @@ BuilderGroup {
         }, 
     },
     Builder {
-        BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
+        BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI Zone Control',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
+            --{ UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
+            },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.ALLUNITS,
+            },
             },
     },
 
@@ -1318,6 +1339,7 @@ BuilderGroup {
         Priority = 500,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1328,15 +1350,24 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
+            },
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
             DistressRange = 120,
@@ -1773,7 +1804,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. 
+        PlatoonTemplate = 'RNGAI T1 Zone Raiders Small',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'ZoneUpdate' },
@@ -1821,7 +1852,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI Zone Raiders Medium',                          -- Template Name.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 610,                                                          -- Priority. 1000 is normal.
@@ -1869,7 +1900,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI Zone Raiders Medium',                          -- Template Name.
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
