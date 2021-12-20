@@ -1473,6 +1473,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     end
     local acuPresent = false
     local acuUnit = false
+    local unitThreatTable = {}
     local totalThreat = 0
     local RangeList = {
         [1] = 10,
@@ -1507,7 +1508,10 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
                 end
-                totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
+                    totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                    unitThreatTable[Target.Sync.id] = true
+                end
                 TargetPosition = Target:GetPosition()
                 -- check if we have a special player as enemy
                 if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end

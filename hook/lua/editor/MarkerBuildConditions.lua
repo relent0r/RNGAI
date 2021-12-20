@@ -17,6 +17,7 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 end]]
 
 function CanBuildOnMassEng2(aiBrain, engPos, distance)
+    distance = distance * distance
     local MassMarker = {}
     for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
         if v.type == 'Mass' then
@@ -24,7 +25,7 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
                 -- mass marker is too close to border, skip it.
                 continue
             end 
-            local mexDistance = VDist3( v.position, engPos )
+            local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
             if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
                 --RNGLOG('mexDistance '..mexDistance)
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})

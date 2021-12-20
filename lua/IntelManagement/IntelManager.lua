@@ -24,7 +24,9 @@ IntelManager = Class {
         self.Brain = brain
         self.Initialized = false
         self.Debug = false
-        self.ZoneIntel = {}
+        self.ZoneIntel = {
+            Assignment = {}
+        }
     end,
 
     Run = function(self)
@@ -185,39 +187,64 @@ IntelManager = Class {
                 end
 
                 if type == 'raid' then
-                    RNGLOG('RNGAI : Zone Selection Query Processing')
-                    for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                        local compare
-                        RNGLOG('Edge Zone ID '..(v.zone.id))
-                        local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.zone.id].pos[1],aiBrain.Zones.Land.zones[v.zone.id].pos[3],enemyX, enemyZ)
-                        LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.zone.id].resourcevalue..' Control Value '..zoneSet[v.zone.id].control)
-                        if zoneSet[v.zone.id].control == 0 then
-                            compare = ( 20000 / distanceModifier )
+                    RNGLOG('RNGAI : Zone Raid Selection Query Processing')
+                    local startPosZones = {}
+                    for k, v in aiBrain.Zones.Land.zones do
+                        if not v.startpositionclose then
+                            local compare
+                            local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
+                            if not zoneSet[v.id].control then
+                                RNGLOG('control is nil, here is the table '..repr(zoneSet[v.id]))
+                            end
+                            RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                            if zoneSet[v.zone.id].control == 0 then
+                                compare = ( 20000 / distanceModifier )
+                            else
+                                compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
+                            end
+                            RNGLOG('Compare variable '..compare)
+                            if not selection or compare > selection then
+                                selection = compare
+                                zoneSelection = v.id
+                                RNGLOG('Zone Query Select priority 1st pass'..selection)
+                            end
                         else
-                            compare = ( 20000 / distanceModifier ) * zoneSet[v.zone.id].resourcevalue * zoneSet[v.zone.id].control
-                        end
-                        RNGLOG('Compare variable '..compare)
-                        if not selection or compare > selection then
-                            RNGLOG('Try to log zoneset')
-                            selection = compare
-                            zoneSelection = v.zone.id
-                            LOG('Zone Query Select priority '..selection)
+                            table.insert( startPosZones, v )
                         end
                     end
                     if selection then
                         return zoneSelection
                     else
-                        RNGLOG('RNGAI : Zone Selection Query did not select zone')
+                        for k, v in startPosZones do
+                            local compare
+                            local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
+                            LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                            if zoneSet[v.zone.id].control == 0 then
+                                compare = ( 20000 / distanceModifier )
+                            else
+                                compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
+                            end
+                            RNGLOG('Compare variable '..compare)
+                            if compare > 0 then
+                                if not selection or compare > selection then
+                                    selection = compare
+                                    zoneSelection = v.id
+                                    RNGLOG('Zone Query Select priority 2nd pass start locations'..selection)
+                                end
+                            end
+                        end
+                    end
+                    if selection then
+                        return zoneSelection
                     end
                 elseif type == 'control' then
                     local compare = 0
-                    RNGLOG('RNGAI : Zone Control Selection Query Processing')
+                    RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                        RNGLOG('Edge Zone ID '..(v.zone.id))
                         local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.zone.id].pos[1],aiBrain.Zones.Land.zones[v.zone.id].pos[3],enemyX, enemyZ)
                         local enemyModifier = 1
                         if zoneSet[v.zone.id].enemythreat > 0 then
-                            enemyModifier = enemyModifier + 1
+                            enemyModifier = enemyModifier + 2
                         end
                         if zoneSet[v.zone.id].friendlythreat > 0 then
                             if zoneSet[v.zone.id].enemythreat < zoneSet[v.zone.id].friendlythreat then
@@ -226,25 +253,33 @@ IntelManager = Class {
                                 enemyModifier = enemyModifier + 1
                             end
                         end
-                        LOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.zone.id].resourcevalue..' Control Value '..zoneSet[v.zone.id].control..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
-                        compare = ( 20000 / distanceModifier ) * zoneSet[v.zone.id].resourcevalue * zoneSet[v.zone.id].control * enemyModifier
+                        if enemyModifier < 0 then
+                            enemyModifier = 0
+                        end
+                        local controlValue = zoneSet[v.zone.id].control
+                        if controlValue == 0 then
+                            controlValue = 0.1
+                        end
+                        local resourceValue = zoneSet[v.zone.id].resourcevalue
+                        RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                         RNGLOG('Compare variable '..compare)
                         if compare > 0 then
                             if not selection or compare > selection then
-                                RNGLOG('Try to log zoneset')
                                 selection = compare
                                 zoneSelection = v.zone.id
-                                LOG('Zone Control Query Select priority '..selection)
+                                RNGLOG('Zone Control Query Select priority '..selection)
                             end
                         end
                     end
                     if not selection then
+                        RNGLOG('RNGAI : Zone Control Selection Query Processing Second Pass')
                         for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
                             for k1, v1 in v.zone.edges do
                                 local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v1.zone.id].pos[1],aiBrain.Zones.Land.zones[v1.zone.id].pos[3],enemyX, enemyZ)
                                 local enemyModifier = 1
                                 if zoneSet[v1.zone.id].enemythreat > 0 then
-                                    enemyModifier = enemyModifier + 1
+                                    enemyModifier = enemyModifier + 2
                                 end
                                 if zoneSet[v1.zone.id].friendlythreat > 0 then
                                     if zoneSet[v1.zone.id].enemythreat < zoneSet[v1.zone.id].friendlythreat then
@@ -253,15 +288,22 @@ IntelManager = Class {
                                         enemyModifier = enemyModifier + 1
                                     end
                                 end
-                                RNGLOG('Loop through other edges '..v1.zone.id..' component '..v1.zone.component)
-                                LOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v1.zone.id].resourcevalue..' Control Value '..zoneSet[v1.zone.id].control..' position '..repr(zoneSet[v1.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
-                                compare = ( 20000 / distanceModifier ) * zoneSet[v1.zone.id].resourcevalue * zoneSet[v1.zone.id].control * enemyModifier
+                                if enemyModifier < 0 then
+                                    enemyModifier = 0
+                                end
+                                local controlValue = zoneSet[v1.zone.id].control
+                                if controlValue == 0 then
+                                    controlValue = 0.1
+                                end
+                                local resourceValue = zoneSet[v1.zone.id].resourcevalue
+                                RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v1.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                                compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                 if compare > 0 then
                                     if compare > selection then
                                         RNGLOG('Try to log zoneset')
                                         selection = compare
                                         zoneSelection = v1.zone.id
-                                        LOG('Zone Control Query Select priority '..selection)
+                                        RNGLOG('Zone Control Query Select priority '..selection)
                                     end
                                 end
                             end

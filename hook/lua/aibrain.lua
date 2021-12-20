@@ -172,6 +172,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Air = self.DefaultAirRatio,
             Naval = self.DefaultNavalRatio,
         }
+        self.earlyFlag = true
         self.cmanager = {
             income = {
                 r  = {
@@ -862,6 +863,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Structure Upgrade properties
         self.UpgradeIssued = 0
         self.EarlyQueueCompleted = false
+        self.IntelTriggerList = {}
         
         self.UpgradeIssuedPeriod = 100
 
@@ -949,6 +951,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(Mapping.SetMarkerInformation)
         self:ForkThread(RUtils.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
+        self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
@@ -1888,7 +1891,7 @@ AIBrain = Class(RNGAIBrainClass) {
         
         if EntityCategoryContains(categories.MASSEXTRACTION, unit) then
             if self.UpgradeMode == 'Aggressive' then
-                upgradeSpec.MassLowTrigger = 0.80
+                upgradeSpec.MassLowTrigger = 0.85
                 upgradeSpec.EnergyLowTrigger = 0.95
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -1897,8 +1900,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 10
                 return upgradeSpec
             elseif self.UpgradeMode == 'Normal' then
-                upgradeSpec.MassLowTrigger = 0.90
-                upgradeSpec.EnergyLowTrigger = 1.05
+                upgradeSpec.MassLowTrigger = 0.95
+                upgradeSpec.EnergyLowTrigger = 1.1
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
                 upgradeSpec.UpgradeCheckWait = 18
@@ -1906,7 +1909,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 upgradeSpec.EnemyThreatLimit = 5
                 return upgradeSpec
             elseif self.UpgradeMode == 'Caution' then
-                upgradeSpec.MassLowTrigger = 1.0
+                upgradeSpec.MassLowTrigger = 1.05
                 upgradeSpec.EnergyLowTrigger = 1.2
                 upgradeSpec.MassHighTrigger = 2.0
                 upgradeSpec.EnergyHighTrigger = 99999
@@ -2210,6 +2213,73 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.TacticalMonitorThreadRNG, ALLBPS)
     end,
 
+    SetupIntelTriggersRNG = function(self)
+        coroutine.yield(10)
+        LOG('Try to create intel trigger for enemy')
+        self:SetupArmyIntelTrigger({
+            CallbackFunction = self.ACUDetectionRNG, 
+            Type = 'LOSNow', 
+            Category = categories.COMMAND,
+            Blip = false, 
+            Value = true,
+            OnceOnly = false, 
+        })
+    end,
+
+    ACUDetectionRNG = function(self, blip)
+        LOG('ACUDetection Callback has fired')
+        local currentGameTime = GetGameTimeSeconds()
+        if blip then
+            RNGLOG('* AI-RNG: ACU Detected')
+            local unit = blip:GetSource()
+            if not unit.Dead then
+                --unitDesc = GetBlueprint(v).Description
+                --RNGLOG('* AI-RNG: Units is'..unitDesc)
+                local enemyIndex = unit:GetAIBrain():GetArmyIndex()
+                RNGLOG('* AI-RNG: EnemyIndex :'..enemyIndex)
+                --RNGLOG('* AI-RNG: Curent Game Time : '..currentGameTime)
+                --RNGLOG('* AI-RNG: Iterating ACUTable')
+                for k, c in self.EnemyIntel.ACU do
+                    --RNGLOG('* AI-RNG: Table Index is : '..k)
+                    --RNGLOG('* AI-RNG:'..c.LastSpotted)
+                    --RNGLOG('* AI-RNG:'..repr(c.Position))
+                    if k == enemyIndex then
+                        --RNGLOG('* AI-RNG: CurrentGameTime IF is true updating tables')
+                        c.Position = unit:GetPosition()
+                        c.Hp = unit:GetHealth()
+                        RNGLOG('Enemy ACU of index '..enemyIndex..'has '..c.Hp..' health')
+                        acuThreat = self:GetThreatAtPosition(c.Position, 0, true, 'AntiAir')
+                        --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
+                        c.Threat = acuThreat
+                        c.LastSpotted = currentGameTime
+                        LOG('Enemy ACU Position is set')
+                    end
+                end
+            end
+        end
+    end,
+
+    OnIntelChange = function(self, blip, reconType, val)
+        if not self.RNG then
+            return RNGAIBrainClass.OnIntelChange(self, blip, reconType, val)
+        end
+        if val then
+            if reconType == 'LOSNow' then
+                if self.IntelTriggerList then
+                    for k, v in self.IntelTriggerList do
+                        if EntityCategoryContains(v.Category, blip:GetBlueprint().BlueprintId)
+                            and (not v.Blip or v.Blip == blip:GetSource()) then
+                            v.CallbackFunction(self, blip)
+                            if v.OnceOnly then
+                                self.IntelTriggerList[k] = nil
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end,
+
     TacticalMonitorThreadRNG = function(self, ALLBPS)
         --RNGLOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
         coroutine.yield(Random(2,10))
@@ -2243,7 +2313,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.BaseMonitor.AlertSounded then
                         RNGLOG('Base Monitor Alert is on')
                     end
-                    for k, v in self.Zones.Land.zones do
+                    RNGLOG('ACU Table '..repr(self.EnemyIntel.ACU))
+                    --[[for k, v in self.Zones.Land.zones do
                         for k1,v2 in v.edges do
                             RNGLOG('Zone Edge '..v2.zone.id..' is '..v2.distance..' from '..v.id)
                         end
@@ -2257,7 +2328,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             RNGLOG('Key for zone is '..k)
                             RNGLOG('Enemy Threat is '..v.enemythreat)
                         end
-                    end
+                    end]]
                     RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
                     RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
                     --RNGLOG('Mass Marker Table '..repr(AdaptiveResourceMarkerTableRNG))
@@ -2646,6 +2717,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyBrains = {}
         local multiplier
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
+        local factionIndex = self:GetFactionIndex()
         local startX, startZ = self:GetArmyStartPos()
         --RNGLOG('Upgrade Mode is  '..self.UpgradeMode)
         if self.CheatEnabled then
@@ -2653,9 +2725,17 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             multiplier = 1
         end
-
         local gameTime = GetGameTimeSeconds()
         --RNGLOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
+        if self.earlyFlag and gameTime < (360 / multiplier) then
+            self.Ratios[factionIndex].Land.T1.arty = 0
+            self.Ratios[factionIndex].Land.T1.aa = 0
+        elseif self.earlyFlag then
+            self.Ratios[factionIndex].Land.T1.arty = 15
+            self.Ratios[factionIndex].Land.T1.aa = 12
+            self.earlyFlag = false
+        end
+
         if self.EnemyIntel.EnemyCount < 2 and gameTime < (240 / multiplier) then
             self.UpgradeMode = 'Caution'
         elseif gameTime > (240 / multiplier) and self.UpgradeMode == 'Caution' then
@@ -2666,7 +2746,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeIssuedLimit = self.UpgradeIssuedLimit + 1
         end
         self.EnemyIntel.EnemyThreatLocations = {}
-        
+
 
         --RNGLOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
         --[[if RNGGETN(self.EnemyIntel.EnemyThreatLocations) > 0 then
@@ -4242,15 +4322,18 @@ AIBrain = Class(RNGAIBrainClass) {
                 rincome.e=rincome.e+producee
                 if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
                     if not unit.zoneid and self.ZonesInitialized then
+                        --LOG('unit has no zone')
                         local mexPos = GetPosition(unit)
                         if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
                             -- tbd define water based zones
                             unit.zoneid = water
                         else
                             unit.zoneid = Mapping.GetMap():GetZoneID(mexPos,self.Zones.Land.index)
+                            --LOG('Unit zone is '..unit.zoneid)
                         end
                     end
                     if not extractors[unit.zoneid] then
+                        --LOG('Trying to add unit to zone')
                         extractors[unit.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
                     end
                     if EntityCategoryContains(categories.TECH1,unit) then

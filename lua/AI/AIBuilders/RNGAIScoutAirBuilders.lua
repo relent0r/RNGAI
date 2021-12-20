@@ -55,7 +55,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Air',
         PlatoonTemplate = 'RNGAI AirScoutForm',
-        PlatoonAddBehaviors = {'ACUDetection',},
+        --PlatoonAddBehaviors = {'ACUDetection',},
         InstanceCount = 1,
         Priority = 900,
         BuilderConditions = {
@@ -70,7 +70,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Air Excess',
         PlatoonTemplate = 'RNGAI AirScoutForm',
-        PlatoonAddBehaviors = {'ACUDetection',},
+        --PlatoonAddBehaviors = {'ACUDetection',},
         InstanceCount = 20,
         Priority = 890,
         BuilderConditions = {

@@ -533,7 +533,7 @@ GameMap = Class({
         local work = CreatePriorityQueue()
         for _, zone in zoneList do
             local i = self:GetI(zone.pos[1])
-            local j = self:GetI(zone.pos[3])
+            local j = self:GetJ(zone.pos[3])
             if self.components[i][j][layer] > 0 then
                 work:Queue({priority=0, id=zone.id, i=i, j=j})
             end
@@ -576,21 +576,34 @@ GameMap = Class({
                 -- Add edge
                 local dist = item.priority+self.zones[i][j][index][2]
                 if not edges[self.zones[i][j][index][1]][id] then
-                    edges[self.zones[i][j][index][1]][id] = {0, dist}
-                    edges[id][self.zones[i][j][index][1]] = {0, dist}
+                    edges[self.zones[i][j][index][1]][id] = {0, dist, i, j}
+                    edges[id][self.zones[i][j][index][1]] = {0, dist, i, j}
                 end
                 edges[self.zones[i][j][index][1]][id][1] = edges[self.zones[i][j][index][1]][id][1] + 1
-                edges[self.zones[i][j][index][1]][id][2] = math.min(edges[self.zones[i][j][index][1]][id][2],dist)
                 edges[id][self.zones[i][j][index][1]][1] = edges[id][self.zones[i][j][index][1]][1] + 1
-                edges[id][self.zones[i][j][index][1]][2] = math.min(edges[id][self.zones[i][j][index][1]][2],dist)
-                
+                if dist < edges[self.zones[i][j][index][1]][id][2] then
+                    edges[self.zones[i][j][index][1]][id][2] = dist
+                    edges[self.zones[i][j][index][1]][id][3] = i
+                    edges[self.zones[i][j][index][1]][id][4] = j
+                    edges[id][self.zones[i][j][index][1]][2] = dist
+                    edges[id][self.zones[i][j][index][1]][3] = i
+                    edges[id][self.zones[i][j][index][1]][4] = j
+                end
             end
         end
         local edgeList = {}
         for id0, v0 in edges do
             for id1, v1 in v0 do
                 if id0 < id1 then
-                    table.insert(edgeList,{zones={id0,id1},border=v1[1],distance=v1[2]})
+                    local x = self:GetX(v1[3])
+                    local z = self:GetZ(v1[4])
+                    local y = nil
+                    if layer < 4 then
+                        y = GetSurfaceHeight(x,z)
+                    else
+                        y = GetTerrainHeight(x,z)
+                    end
+                    table.insert(edgeList,{zones={id0,id1},border=v1[1],distance=v1[2],midpoint={x, y, z}})
                 end
             end
         end
@@ -598,7 +611,7 @@ GameMap = Class({
     end,
     GetZoneID = function(self,pos,index)
         local i = self:GetI(pos[1])
-        local j = self:GetI(pos[3])
+        local j = self:GetJ(pos[3])
         return self.zones[i][j][index][1]
     end,
     AddZoneSet = function(self,ZoneSetClass)
@@ -628,11 +641,35 @@ GameMap = Class({
         end
         return nil
     end,
+    --[[GetI = function(self,x)
+        return math.min(math.max(math.floor((x - PLAYABLE_AREA[1])/self.gap + 1.5),1),self.xSize)
+    end,]]
     GetI = function(self,x)
+        if self == nil then
+            WARN("Nil self!")
+        end
+        if x == nil then
+            WARN("Nil x!")
+        end
+        if PLAYABLE_AREA[1] == nil then
+            WARN("Nil PLAYABLE_AREA[1]!")
+        end
+        if self.gap == nil then
+            WARN("Nil self.gap!")
+        end
+        if self.xSize == nil then
+            WARN("Nil self.xSize!")
+        end
         return math.min(math.max(math.floor((x - PLAYABLE_AREA[1])/self.gap + 1.5),1),self.xSize)
     end,
     GetJ = function(self,z)
         return math.min(math.max(math.floor((z - PLAYABLE_AREA[2])/self.gap + 1.5),1),self.zSize)
+    end,
+    GetX = function(self,i)
+        return PLAYABLE_AREA[1] - self.gap + (i*self.gap)
+    end,
+    GetZ = function(self,j)
+        return PLAYABLE_AREA[2] - self.gap + (j*self.gap)
     end,
 
     DrawZones = function(self,index)
@@ -738,6 +775,7 @@ function BeginSession()
     if not PLAYABLE_AREA then
         PLAYABLE_AREA = { DEFAULT_BORDER, DEFAULT_BORDER, ScenarioInfo.size[1], ScenarioInfo.size[2] }
     end
+    _ALERT("Playing area:",repr(PLAYABLE_AREA))
     -- Initialise map: do grid connections, generate components
     map:InitMap()
     -- Now load up standard zones
