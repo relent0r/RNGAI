@@ -3,6 +3,7 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
@@ -965,7 +966,7 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(1)
         RNGLOG('Set land zone for brain')
         --local Mapping = Mapping.GetMap()
-        self.Zones.Land = Mapping.GetMap():GetZoneSet('RNGLandResourceSet',1)
+        self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
         self.ZonesInitialized = true
     end,
 
@@ -1167,7 +1168,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     -- tbd define water based zones
                     v.zoneid = water
                 else
-                    v.zoneid = Mapping.GetMap():GetZoneID(v.position,self.Zones.Land.index)
+                    v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
                 end
             end
         end
@@ -2065,10 +2066,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     end
-                    RNGLOG('Platoon Threat Validation')
-                    RNGLOG('* AI-RNG: Threat of attacker'..threat)
-                    RNGLOG('* AI-RNG: Threat of platoon'..myThreat)
-                    RNGLOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
+                    --RNGLOG('Platoon Threat Validation')
+                    --RNGLOG('* AI-RNG: Threat of attacker'..threat)
+                    --RNGLOG('* AI-RNG: Threat of platoon'..myThreat)
+                    --RNGLOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
                     -- Platoons still threatened
                     if threat and threat > (myThreat * 1.3) then
                         RNGLOG('* AI-RNG: Created Threat Alert')
@@ -2728,11 +2729,11 @@ AIBrain = Class(RNGAIBrainClass) {
         local gameTime = GetGameTimeSeconds()
         --RNGLOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
         if self.earlyFlag and gameTime < (360 / multiplier) then
-            self.Ratios[factionIndex].Land.T1.arty = 0
-            self.Ratios[factionIndex].Land.T1.aa = 0
+            self.amanager.Ratios[factionIndex].Land.T1.arty = 0
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 0
         elseif self.earlyFlag then
-            self.Ratios[factionIndex].Land.T1.arty = 15
-            self.Ratios[factionIndex].Land.T1.aa = 12
+            self.amanager.Ratios[factionIndex].Land.T1.arty = 15
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 12
             self.earlyFlag = false
         end
 
@@ -4328,7 +4329,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             -- tbd define water based zones
                             unit.zoneid = water
                         else
-                            unit.zoneid = Mapping.GetMap():GetZoneID(mexPos,self.Zones.Land.index)
+                            unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
                             --LOG('Unit zone is '..unit.zoneid)
                         end
                     end

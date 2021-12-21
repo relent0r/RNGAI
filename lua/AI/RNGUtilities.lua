@@ -1,7 +1,8 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local Utils = import('/lua/utilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
@@ -616,22 +617,23 @@ function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 end
 
 function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
+    local adaptiveResourceMarkers = GetMarkersRNG()
     local markerList = {}
-        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
-            if v.type == 'Mass' then
-                if waterOnly then
-                    if PositionInWater(v.position) then
-                        table.insert(markerList, {Position = v.position, Name = k})
-                    end
-                elseif includeWater then
+    for k, v in adaptiveResourceMarkers do
+        if v.type == 'Mass' then
+            if waterOnly then
+                if PositionInWater(v.position) then
                     table.insert(markerList, {Position = v.position, Name = k})
-                else
-                    if not PositionInWater(v.position) then
-                        table.insert(markerList, {Position = v.position, Name = k})
-                    end
+                end
+            elseif includeWater then
+                table.insert(markerList, {Position = v.position, Name = k})
+            else
+                if not PositionInWater(v.position) then
+                    table.insert(markerList, {Position = v.position, Name = k})
                 end
             end
         end
+    end
     return markerList
 end
 
@@ -641,8 +643,9 @@ function PositionInWater(pos)
 end
 
 function GetClosestMassMarkerToPos(aiBrain, pos)
+    local adaptiveResourceMarkers = GetMarkersRNG()
     local markerList = {}
-        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        for k, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 table.insert(markerList, {Position = v.position, Name = k})
             end
@@ -668,9 +671,9 @@ function GetClosestMassMarkerToPos(aiBrain, pos)
 end
 
 function GetClosestMassMarker(aiBrain, unit)
+    local adaptiveResourceMarkers = GetMarkersRNG()
     local markerList = {}
-
-    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+    for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
             table.insert(markerList, {Position = v.position, Name = k})
         end
@@ -692,42 +695,6 @@ function GetClosestMassMarker(aiBrain, unit)
     end
 
     return loc, name
-end
-
-
-function GetStartLocationMassMarkers(aiBrain, massLocations)
-    local startLocations
-    local allyStarts = {}
-
-    for i = 1, 16 do
-        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-
-        if army and startPos then
-            if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
-                allyStarts['ARMY_' .. i] = startPos
-            else
-                numOpponents = numOpponents + 1
-            end
-        end
-    end
-
-    aiBrain.NumOpponents = numOpponents
-
-    -- If the start location is not ours or an ally's, it is suspicious
-    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
-    for _, loc in starts do
-        -- If vacant
-        if not allyStarts[loc.Name] then
-            table.insert(aiBrain.InterestList.LowPriority,
-                {
-                    Position = loc.Position,
-                    LastScouted = 0,
-                }
-            )
-            table.insert(startLocations, startPos)
-        end
-    end
 end
 
 function GetLastACUPosition(aiBrain, enemyIndex)
@@ -2483,8 +2450,9 @@ end
 
 DisplayBaseMexAllocationRNG = function(aiBrain)
     local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local adaptiveResourceMarkers = GetMarkersRNG()
     local MassMarker = {}
-    for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+    for _, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
             if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                 -- mass marker is too close to border, skip it.
@@ -2518,6 +2486,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
         table.insert(enemies,aiBrainstart)
     end
     local startX, startZ = aiBrain:GetArmyStartPos()
+    local adaptiveResourceMarkers = GetMarkersRNG()
     table.sort(enemies,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX,startZ)<VDist2Sq(b.Position[1],b.Position[3],startX,startZ) end)
     while not aiBrain.cmanager do coroutine.yield(20) end
     if not aiBrain.expansionMex or not aiBrain.expansionMex[1].priority then
@@ -2555,7 +2524,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
         end
         aiBrain.expansionMex={}
         local expands={}
-        for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        for k, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
                 if VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
@@ -2582,7 +2551,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
     end
     aiBrain.cmanager.unclaimedmexcount=0
     local massmarkers={}
-        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
@@ -2713,7 +2682,7 @@ LastKnownThread = function(aiBrain)
                             -- tbd define water based zones
                             v.zoneid = water
                         else
-                            v.zoneid = Mapping.GetMap():GetZoneID(unitPosition,aiBrain.Zones.Land.index)
+                            v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
                         end
                     end
                     if not enemyMexes[v.zoneid] then
@@ -3314,64 +3283,6 @@ MapReclaimAnalysis = function(aiBrain)
         coroutine.yield(1800)
     end
 end
---[[
-    Bit of a throw away concept..doesnt actually work properly yet, idea was to break a map into chunks of territory of control.
-MapMassGridAnalysis = function(aiBrain)
-    -- Loops through map grid squares that roughly match IMAP 
-    local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-    local gridCount
-    if maxmapdimension < 500 then
-        gridCount = 4
-    else
-        gridCount = 8
-    end
-    local Zones = {}
-    local reclaimScanArea = aiBrain.BrainIntel.IMAPConfig.IMAPSize * 2
-    local mapSizeX, mapSizeZ = GetMapSize()
-    local gridSizeX = mapSizeX / reclaimScanArea
-    local gridSizeZ = mapSizeZ / reclaimScanArea
-    local gridNumber = 1
-    for gridX = 1, gridCount do
-        for gridZ = 1, gridCount do
-            local reclaimTotal = 0
-            local xCenter = ((gridX - 1) * gridSizeX) + (gridX * gridSizeX)
-            local zCenter = ((gridZ - 1) * gridSizeZ) + (gridZ * gridSizeZ)
-            local edge1 = xCenter - (reclaimScanArea / 2)
-            local edge2 = zCenter - (reclaimScanArea / 2)
-            local edge3 = xCenter + (reclaimScanArea / 2)
-            local edge4 = zCenter + (reclaimScanArea / 2)
-            if not Zones[gridNumber] then
-                Zones[gridNumber] = {}
-            end
-            local alreadyChecked = false
-            for k, v in Zones do
-                if v.CenterX == xCenter and v.CenterZ == zCenter then
-                    alreadyChecked = true
-                    break
-                end
-            end
-            if alreadyChecked then
-                continue
-            end
-            RNGLOG('Rectange')
-            RNGLOG(repr(Rect(edge1, edge2, edge3, edge4)))
-            for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
-                if v.type == 'Mass' then
-                    if v.position[1] > edge1 and v.position[1] < edge3 and v.position[3] > edge2 and v.position[3] < edge4 then
-                        RNGLOG('Mass Point of position '..repr(v.position).. ' is within the edges')
-                        RNGLOG('xCenter '..xCenter..' Edge1 '..edge1..' Edge3 '..edge3)
-                        RNGLOG('zCenter '..xCenter..' Edge2 '..edge2..' Edge4 '..edge4)
-                        RNGINSERT(Zones[gridNumber], {CenterX = xCenter, CenterZ = zCenter, Position = v.position, Name = k, Edge1 = edge1, Edge2 = edge2, Edge3 = edge3, Edge4 = edge4})
-                    end
-                end
-            end
-            gridNumber = gridNumber + 1
-            coroutine.yield(1)
-        end
-    end
-    RNGLOG('Total grid count '..gridNumber)
-    RNGLOG('Grid Zone Mass Point Dump '..repr(Zones))
-end]]
 
 AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatMin, threatMax, threatRings, threatType)
     local pos = aiBrain:PBMGetLocationCoords(locationType)
@@ -3519,10 +3430,11 @@ function GetAngleRNG(myX, myZ, myDestX, myDestZ, theirX, theirZ)
     return angle/math.pi
 end
 
-function ClosestMarkersWithinRadius(aiBrain, pos, markerType, radius, canBuild, maxThreat, threatType)
+function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, canBuild, maxThreat, threatType)
+    local adaptiveResourceMarkers = GetMarkersRNG()
     local markerTable = {}
     local radiusLimit = radius * radius
-    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+    for k, v in adaptiveResourceMarkers do
         if v.type == markerType then
             RNGINSERT(markerTable, {Position = v.position, Name = k, Distance = VDist2Sq(pos[1], pos[3], v.position[1], v.position[3])})
         end

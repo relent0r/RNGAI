@@ -67,7 +67,7 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
         return false
     end
     --local markerTable = AIUtils.AIGetSortedHydroLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, engineerManager.Location)
-    local closestBuildableMarker = RUtils.ClosestMarkersWithinRadius(aiBrain, engineerManager.Location, 'Hydrocarbon', distance, true, threatMax, threatType)
+    local closestBuildableMarker = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engineerManager.Location, 'Hydrocarbon', distance, true, threatMax, threatType)
     if closestBuildableMarker then
         return true
     end

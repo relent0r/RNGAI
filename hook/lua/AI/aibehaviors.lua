@@ -1,8 +1,9 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibehaviors.lua' )
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local lerpy = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').lerpy
@@ -188,8 +189,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
         -- Lets build the mass points first so we can pay for the factory should we decide we need it.
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
         RNGLOG('ACU Looping through markers')
+        local adaptiveResourceMarkers = GetMarkersRNG()
         MassMarker = {}
-        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
@@ -352,8 +354,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
     elseif object.type == 'mass' then
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
         RNGLOG('ACU Looping through markers')
+        local adaptiveResourceMarkers = GetMarkersRNG()
         MassMarker = {}
-        for _, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
+        for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
@@ -2199,7 +2202,7 @@ ZoneUpdate = function(platoon)
     local aiBrain = platoon:GetBrain()
     local function SetZone(pos, zoneIndex)
         --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
-        local zoneID = Mapping.GetMap():GetZoneID(pos,zoneIndex)
+        local zoneID = MAP:GetZoneID(pos,zoneIndex)
         -- zoneID <= 0 => not in a zone
         if zoneID > 0 then
             platoon.Zone = zoneID

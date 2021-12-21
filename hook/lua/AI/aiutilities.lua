@@ -193,18 +193,21 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             --RNGLOG('We are issuing move commands for the path')
             for widx, waypointPath in path do
                 if widx>=3 then
-                    local bool,markers=MABC.CanBuildOnMassEng2(aiBrain, waypointPath, 30)
+                    local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, waypointPath, 25)
                     if bool then
                         --RNGLOG('We can build on a mass marker within 30')
                         --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                         --RNGLOG('Mass Marker'..repr(massMarker))
                         --RNGLOG('Attempting second mass marker')
                         for _,massMarker in markers do
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position)
-                        EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
-                        aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false}
-                        table.insert(eng.EngineerBuildQueue, newEntry)
+                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position)
+                            EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
+                            if massMarker.BorderWarning then
+                                RNGLOG('Border Warning on mass point marker')
+                                IssueBuildMobile({eng}, massMarker.Position, whatToBuildM, {})
+                            else
+                                aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                            end
                         end
                     end
                 end

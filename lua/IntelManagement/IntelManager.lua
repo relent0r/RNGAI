@@ -1,7 +1,7 @@
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -400,7 +400,7 @@ IntelManager = Class {
                     -- tbd define water based zones
                     v.zoneid = water
                 else
-                    v.zoneid = Mapping.GetMap():GetZoneID(v.position,self.Zones.Land.index)
+                    v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
                 end
             end
         end
