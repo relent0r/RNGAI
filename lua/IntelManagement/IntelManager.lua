@@ -133,7 +133,6 @@ IntelManager = Class {
                         tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T3
                     end
                     if self.Brain.smanager.hydrocarbon[v1.id].hydrocarbon then
-                        LOG('Adding hydro to intel monitor control')
                         tempMyControl = tempMyControl + self.Brain.smanager.hydrocarbon[v1.id].hydrocarbon
                     end
                     --RNGLOG('My Mexes in zone '..tempMyControl)
