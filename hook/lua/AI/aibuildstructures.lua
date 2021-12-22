@@ -12,8 +12,11 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     if not builder.EngineerBuildQueue then
         builder.EngineerBuildQueue = {}
     end
+    if not buildLocation then
+        LOG('No Build location sent to AddToBuildQueueRNG')
+    end
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
-    RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, BuildToNormalLocation(buildLocation)) 
+    --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
     if borderWarning then
         IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
     else

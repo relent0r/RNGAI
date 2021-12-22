@@ -200,7 +200,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                         --RNGLOG('Mass Marker'..repr(massMarker))
                         --RNGLOG('Attempting second mass marker')
                         for _,massMarker in markers do
-                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position)
+                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                             EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
                             if massMarker.BorderWarning then
                                 RNGLOG('Border Warning on mass point marker')

@@ -470,7 +470,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
         return false
     end
     if not pointRadius then
-        pointRadius = 15
+        pointRadius = 10
     end
     local Reclaiming = false
     --Temporary for troubleshooting

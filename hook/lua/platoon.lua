@@ -3936,6 +3936,7 @@ Platoon = Class(RNGAIPlatoon) {
                 LOG('We are at the zone')
                 LOG('Current control is '..aiBrain.Zones.Land.zones[self.TargetZone].control)
                 LOG('Current enemy presense is '..aiBrain.Zones.Land.zones[self.TargetZone].enemythreat)
+                LOG('Current Zone Position is '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
                 platLoc = GetPlatoonPosition(self)
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                 local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, aiBrain.Zones.Land.zones[self.TargetZone].pos, 'Attack', 60, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
@@ -4101,12 +4102,14 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local selectedPosition = false
         local selectedZone = false
+        local highestThreat = 0
         local currentZoneDistanceToHome = VDist2Sq(aiBrain.Zones.Land.zones[self.TargetZone].pos[1],aiBrain.Zones.Land.zones[self.TargetZone].pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
         RNGLOG('Performing defensive adjacent zone check')
         for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
             if v.zone.enemythreat > 0 then
                 local currentEdgeDistanceToHome = VDist2Sq(v.zone.pos[1],v.zone.pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
-                if currentEdgeDistanceToHome < currentZoneDistanceToHome then
+                if currentEdgeDistanceToHome < currentZoneDistanceToHome and v.zone.enemythreat > highestThreat then
+                    highestThreat = v.zone.enemythreat
                     currentZoneDistanceToHome = currentEdgeDistanceToHome
                     selectedPosition = v.zone.pos
                     selectedZone = v.zone.id
@@ -5022,7 +5025,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 for _, v in massPoints do
                                     if not v.Dead then
                                         massPointPos = v:GetPosition()
-                                        if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.5 then
+                                        if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.6 then
                                             RNGLOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
                                             alternatePos = massPointPos
                                         end
@@ -5040,7 +5043,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 while PlatoonExists(aiBrain, self) do
                                     --RNGLOG('Moving to alternate position')
                                     --RNGLOG('We are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
-                                    coroutine.yield(10)
+                                    coroutine.yield(15)
                                     if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
                                         --RNGLOG('MergeWith Platoon position updated')
                                         alternatePos = GetPlatoonPosition(mergePlatoon)
@@ -5048,7 +5051,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     self:MoveToLocation(alternatePos, false)
                                     PlatoonPosition = GetPlatoonPosition(self)
                                     dist = VDist2Sq(alternatePos[1], alternatePos[3], PlatoonPosition[1], PlatoonPosition[3])
-                                    if dist < 400 then
+                                    if dist < 225 then
                                         self:Stop()
                                         if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
                                             self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 60, 30)

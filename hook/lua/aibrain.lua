@@ -695,6 +695,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 T2=0,
                 T3=0
             },
+            hydro = {
+
+            },
             silo = {
                 T2=0,
                 T3=0
@@ -2331,6 +2334,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end]]
                     RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
+                    RNGLOG('Friendly Hydro Table '..repr(self.smanager.hydrocarbon))
                     RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
                     --RNGLOG('Mass Marker Table '..repr(AdaptiveResourceMarkerTableRNG))
                     --[[if self.GraphZones.HasRun then
@@ -4280,9 +4284,10 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('units grabbed')
         local factories = {Land={T1=0,T2=0,T3=0},Air={T1=0,T2=0,T3=0},Naval={T1=0,T2=0,T3=0}}
         local extractors = { }
+        local hydros = { }
         local fabs = {T2=0,T3=0}
         local coms = {acu=0,sacu=0}
-        local pgens = {T1=0,T2=0,T3=0}
+        local pgens = {T1=0,T2=0,T3=0,hydro=0}
         local silo = {T2=0,T3=0}
         local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
         local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
@@ -4399,7 +4404,20 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
-                    if EntityCategoryContains(categories.TECH1,unit) then
+                    if EntityCategoryContains(categories.HYDROCARBON,unit) then
+                        LOG('HydroCarbon detected, adding zone data')
+                        if not unit.zoneid and self.ZonesInitialized then
+                            --LOG('unit has no zone')
+                            local hydroPos = GetPosition(unit)
+                            unit.zoneid = MAP:GetZoneID(hydroPos,self.Zones.Land.index)
+                            --LOG('Unit zone is '..unit.zoneid)
+                        end
+                        if not hydros[unit.zoneid] then
+                            --LOG('Trying to add unit to zone')
+                            hydros[unit.zoneid] = { hydrocarbon = 0 }
+                        end
+                        hydros[unit.zoneid].hydrocarbon=hydros[unit.zoneid].hydrocarbon+1
+                    elseif EntityCategoryContains(categories.TECH1,unit) then
                         pgens.T1=pgens.T1+1
                     elseif EntityCategoryContains(categories.TECH2,unit) then
                         pgens.T2=pgens.T2+1
@@ -4610,7 +4628,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Current.Naval=armyNaval
         self.amanager.Total.Naval=armyNavalTiers
         self.amanager.Type.Naval=armyNavalType
-        self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,}
+        self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
     end,
 
 --[[
