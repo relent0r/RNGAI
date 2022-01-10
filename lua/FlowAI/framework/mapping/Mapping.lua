@@ -249,7 +249,7 @@ GameMap = Class({
         self.numZoneSets = 0
         local END = GetSystemTimeSecondsOnlyForProfileUse()
         RNGLOG(string.format('FlowAI framework for RNGAI: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
-        local drawStuffz = true
+        local drawStuffz = false
         if drawStuffz then
             ForkThread(
                 function()

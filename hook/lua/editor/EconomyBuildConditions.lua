@@ -212,6 +212,19 @@ function LessThanEconEfficiencyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
     return false
 end
 
+function GreaterThanMassStorageOrEfficiency(aiBrain, mStorage, massEfficiency)
+    -- For building something that you only care about the mass stuff
+    if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= massEfficiency then
+        local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
+        if MassEfficiencyOverTime >= massEfficiency then
+            return true
+        end
+    elseif GetEconomyStored(aiBrain, 'MASS') >= mStorage then
+        return true
+    end
+    return false
+end
+
 function GreaterThanEconStorageCurrentRNG(aiBrain, mStorage, eStorage)
 
     if (GetEconomyStored(aiBrain, 'MASS') >= mStorage and GetEconomyStored(aiBrain, 'ENERGY') >= eStorage) then

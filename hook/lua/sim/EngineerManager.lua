@@ -25,7 +25,8 @@ EngineerManager = Class(RNGEngineerManager) {
             local upgradeID = unitBp.General.UpgradesTo or false
 			if upgradeID and unitBp then
 				--RNGLOG('* AI-RNG: UpgradeID')
-				RUtils.StructureUpgradeInitialize(finishedUnit, self.Brain)
+                --self.Brain:ForkThread(self.Brain.ExtractorInitialDelay, unit)
+				--RUtils.StructureUpgradeInitialize(finishedUnit, self.Brain)
             end
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then

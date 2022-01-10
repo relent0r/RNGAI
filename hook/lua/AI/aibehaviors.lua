@@ -1650,10 +1650,15 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 		coroutine.yield(100)
     end
     unit.InitialDelay = false
-
+    LOG('Returning from extractorUpgradeThread')
+    unit.CentralBrainExtractorUpgrade = true
+    
     -- Main Upgrade Loop
     while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
         --RNGLOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
+        if unit.CentralBrainExtractorUpgrade then
+            return
+        end
         coroutine.yield(upgradeSpec.UpgradeCheckWait * 10)
         upgradeSpec = aiBrain:GetUpgradeSpec(unit)
         --RNGLOG('Upgrade Spec '..repr(upgradeSpec))

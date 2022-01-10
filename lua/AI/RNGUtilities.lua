@@ -1183,24 +1183,48 @@ end
 function ExtractorsBeingUpgraded(aiBrain)
     -- Returns number of extractors upgrading
 
-    local tech1ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH1, true)
-    local tech2ExtractorUpgrading = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * categories.TECH2, true)
+    local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
     local tech1ExtNumBuilding = 0
     local tech2ExtNumBuilding = 0
+    local tech1Total = 0
+    local tech2Total = 0
+    local tech3Total = 0
+    local extractorTable = {
+        TECH1 = {},
+        TECH2 = {}
+    }
     -- own armyIndex
     local armyIndex = aiBrain:GetArmyIndex()
     -- loop over all units and search for upgrading units
-    for t1extKey, t1extrator in tech1ExtractorUpgrading do
-        if not t1extrator.Dead and not t1extrator:BeenDestroyed() and t1extrator:IsUnitState('Upgrading') and t1extrator:GetAIBrain():GetArmyIndex() == armyIndex then
-            tech1ExtNumBuilding = tech1ExtNumBuilding + 1
+    for _, extractor in extractors do
+        if not extractor.Dead and not extractor:BeenDestroyed() and extractor:GetAIBrain():GetArmyIndex() == armyIndex and extractor:GetFractionComplete() == 1 then
+            if not extractor.InitialDelayStarted then
+                aiBrain:ForkThread(aiBrain.ExtractorInitialDelay, extractor)
+            end
+            if EntityCategoryContains( categories.TECH1, extractor) then
+                tech1Total = tech1Total + 1
+                if extractor:IsUnitState('Upgrading') then
+                    extractor.Upgrading = true
+                    tech1ExtNumBuilding = tech1ExtNumBuilding + 1
+                else
+                    extractor.Upgrading = false
+                    RNGINSERT(extractorTable.TECH1, extractor)
+                end
+            elseif EntityCategoryContains( categories.TECH2, extractor) then
+                tech2Total = tech2Total + 1
+                if extractor:IsUnitState('Upgrading') then
+                    extractor.Upgrading = true
+                    tech2ExtNumBuilding = tech2ExtNumBuilding + 1
+                else
+                    extractor.Upgrading = false
+                    RNGINSERT(extractorTable.TECH2, extractor)
+                end
+            elseif EntityCategoryContains( categories.TECH3, extractor) then
+                tech3Total = tech3Total + 1
+            end
         end
     end
-    for t2extKey, t2extrator in tech2ExtractorUpgrading do
-        if not t2extrator.Dead and not t2extrator:BeenDestroyed() and t2extrator:IsUnitState('Upgrading') and t2extrator:GetAIBrain():GetArmyIndex() == armyIndex then
-            tech2ExtNumBuilding = tech2ExtNumBuilding + 1
-        end
-    end
-    return {TECH1 = tech1ExtNumBuilding, TECH2 = tech2ExtNumBuilding}
+    return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)

@@ -914,7 +914,7 @@ function ValidateLateGameBuild(aiBrain)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
     if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.4 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.1 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.1 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.3 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
             return false
         end
         --RNGLOG('Validate late game bulid is returning true even tho an experimental is being built')

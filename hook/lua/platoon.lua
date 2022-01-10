@@ -3807,9 +3807,9 @@ Platoon = Class(RNGAIPlatoon) {
             local pos=unit:GetPosition()
             local tpos=target:GetPosition()
             local dest
-            local mod=3
+            local mod=2
             if CheckRetreat(pos,tpos,target) then
-                mod=8
+                mod=7
             end
             if unit.MaxWeaponRange then
                 dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod)
