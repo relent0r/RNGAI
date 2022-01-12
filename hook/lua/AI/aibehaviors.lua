@@ -1546,7 +1546,10 @@ function SetAcuSnipeMode(unit, bool)
     end
 end
 
--- 80% of the below was Sprouto's work
+
+--[[
+    -- 80% of the below was Sprouto's work
+    This is no longer being used, replaced with a centralized version, but it still holds a bunch of information that alot of time was spent looking at.
 function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
     --RNGLOG('* AI-RNG: Starting structure thread upgrade for'..aiBrain.Nickname)
 
@@ -1745,12 +1748,6 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
                 coroutine.yield(10)
                 continue
             end
-            --[[
-            if (massEfficiency <= upgradeSpec.MassHighTrigger and energyEfficiency <= upgradeSpec.EnergyHighTrigger) then
-                --RNGLOG('* AI-RNG: hi_trigger_good = true')
-            else
-                continue
-            end]]
 
             if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
 				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .7) ) or bypasseco then
@@ -1842,7 +1839,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 		end
         unit.UpgradeThread = nil
 	end
-end
+end]]
 
 function StructureUpgradeDelay( aiBrain, delay )
 

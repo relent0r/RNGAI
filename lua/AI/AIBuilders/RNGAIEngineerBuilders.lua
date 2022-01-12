@@ -1228,7 +1228,7 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * (categories.MASSEXTRACTION * categories.TECH2 + categories.MASSSTORAGE) }},
         },
         BuilderType = 'Any',
@@ -1250,7 +1250,7 @@ BuilderGroup {
         Priority = 840,
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 } },
         },

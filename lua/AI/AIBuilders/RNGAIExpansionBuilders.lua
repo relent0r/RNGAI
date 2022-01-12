@@ -36,7 +36,7 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
         return 675
     else
         --RNGLOG('NavalExpansionAdjust return 750')
-        return 875
+        return 900
     end
 end
 

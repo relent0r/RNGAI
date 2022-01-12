@@ -3870,7 +3870,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         
         if not self.TargetZone then
-            RNGLOG('ZoneRaid AI recieved no target zone')
+            RNGLOG('ZoneControl AI recieved no target zone')
             coroutine.yield(50)
         end
         local usedTransports = false
@@ -3930,10 +3930,12 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             -- we're there... lets look for bad guys
-            
-            while (aiBrain.Zones.Land.zones[self.TargetZone].enemythreat > 0 or aiBrain.Zones.Land.zones[self.TargetZone].control > 0 ) and PlatoonExists(aiBrain, self) do
+            local zoneCounter = 0
+            while (aiBrain.Zones.Land.zones[self.TargetZone].enemythreat > 0 or aiBrain.Zones.Land.zones[self.TargetZone].control > 0) and PlatoonExists(aiBrain, self) do
                 --RNGLOG('At Zone location')
                 LOG('We are at the zone')
+                zoneCounter = zoneCounter + 1
+                LOG('zoneCounter is '..zoneCounter)
                 LOG('Current control is '..aiBrain.Zones.Land.zones[self.TargetZone].control)
                 LOG('Current enemy presense is '..aiBrain.Zones.Land.zones[self.TargetZone].enemythreat)
                 LOG('Current Zone Position is '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
@@ -4092,6 +4094,7 @@ Platoon = Class(RNGAIPlatoon) {
         else
             RNGLOG('No Zone Control Position')
             coroutine.yield( 50 )
+            return self:SetAIPlanRNG('ZoneRaidRNG')
         end
     end,
 
@@ -5826,7 +5829,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         while PlatoonExists(aiBrain, self) do
             if not self.UsingTransport then
-                if aiBrain.BaseMonitor.AlertSounded or aiBrain.CDRUnit.Caution or aiBrain.BaseMonitor.PlatoonAlertSounded then
+                if aiBrain.BaseMonitor.AlertSounded or aiBrain.CDRUnit.Caution or aiBrain.BaseMonitor.ZoneAlertSounded then
                     if aiBrain.BaseMonitor.AlertSounded then
                         RNGLOG('aiBrain.BaseMonitor.AlertSounded is true')
                     end

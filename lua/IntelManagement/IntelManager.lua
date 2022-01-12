@@ -32,6 +32,7 @@ IntelManager = Class {
     Run = function(self)
         RNGLOG('RNGAI : IntelManager Starting')
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
+        self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
         self:ForkThread(self.ZoneControlMonitorRNG)
@@ -202,14 +203,18 @@ IntelManager = Class {
                             RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
                             if zoneSet[v.zone.id].control == 0 then
                                 compare = ( 20000 / distanceModifier )
-                            else
+                            elseif zoneSet[v.id].control > 0.5 then
                                 compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
                             end
-                            RNGLOG('Compare variable '..compare)
-                            if not selection or compare > selection then
-                                selection = compare
-                                zoneSelection = v.id
-                                RNGLOG('Zone Query Select priority 1st pass'..selection)
+                            if compare then
+                                RNGLOG('Compare variable '..compare)
+                            end
+                            if compare > 0 then
+                                if not selection or compare > selection then
+                                    selection = compare
+                                    zoneSelection = v.id
+                                    RNGLOG('Zone Query Select priority 1st pass'..selection)
+                                end
                             end
                         else
                             table.insert( startPosZones, v )
@@ -227,7 +232,9 @@ IntelManager = Class {
                             else
                                 compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
                             end
-                            RNGLOG('Compare variable '..compare)
+                            if compare then
+                                RNGLOG('Compare variable '..compare)
+                            end
                             if compare > 0 then
                                 if not selection or compare > selection then
                                     selection = compare
@@ -312,6 +319,42 @@ IntelManager = Class {
                             end
                         end
                     end
+                    if not selection then
+                        for k, v in aiBrain.Zones.Land.zones do
+                            if not v.startpositionclose then
+                                local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
+                                local enemyModifier = 1
+                                if zoneSet[v.id].enemythreat > 0 then
+                                    enemyModifier = enemyModifier + 2
+                                end
+                                if zoneSet[v.id].friendlythreat > 0 then
+                                    if zoneSet[v.id].enemythreat < zoneSet[v.id].friendlythreat then
+                                        enemyModifier = enemyModifier - 1
+                                    else
+                                        enemyModifier = enemyModifier + 1
+                                    end
+                                end
+                                if enemyModifier < 0 then
+                                    enemyModifier = 0
+                                end
+                                local controlValue = zoneSet[v.id].control
+                                if controlValue == 0 then
+                                    controlValue = 0.1
+                                end
+                                local resourceValue = zoneSet[v.id].resourcevalue
+                                RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                                compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
+                                RNGLOG('Compare variable '..compare)
+                                if compare > 0 then
+                                    if not selection or compare > selection then
+                                        selection = compare
+                                        zoneSelection = v.id
+                                        RNGLOG('Zone Control Query Select priority '..selection)
+                                    end
+                                end
+                            end
+                        end
+                    end
                     if selection then
                         return zoneSelection
                     else
@@ -328,7 +371,31 @@ IntelManager = Class {
         return false
     end,
 
-
+    ZoneAlertThreadRNG = function(self)
+        local threatTypes = {
+            'Land',
+            'Commander',
+            'Structures',
+        }
+        local Zones = {
+            'Land',
+        }
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        while self.Brain.Result ~= "defeat" do
+            for k, v in Zones do
+                for k1, v1 in self.Brain.Zones[v].zones do
+                    if not v1.startpositionclose and v1.control < 1 and v1.enemythreat > 0 then
+                        LOG('Try create zone alert for threat')
+                        self.Brain:BaseMonitorZoneThreatRNG(v1.id, v1.enemythreat)
+                    end
+                    coroutine.yield(5)
+                end
+                coroutine.yield(3)
+            end
+            coroutine.yield(40)
+        end
+    end,
 
     ZoneEnemyIntelMonitorRNG = function(self)
         local threatTypes = {
@@ -743,23 +810,25 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             local secondBestOption = false
             local bestValue = 9999999999
             for _, v in options do
-                local alreadySecure = false
-                for k, b in aiBrain.BuilderManagers do
-                    if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
-                        RNGLOG('Already a builder manager with factory present, set')
-                        alreadySecure = true
-                        break
+                if VDist2Sq(MainPos[1], MainPos[3], v.Expansion.Position[1], v.Expansion.Position[3]) > 10000 then
+                    local alreadySecure = false
+                    for k, b in aiBrain.BuilderManagers do
+                        if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                            RNGLOG('Already a builder manager with factory present, set')
+                            alreadySecure = true
+                            break
+                        end
                     end
-                end
-                if alreadySecure then
-                    RNGLOG('Position already secured, ignore and move to next expansion')
-                    continue
-                end
-                local expansionValue = v.Distance * v.Distance / v.Value
-                if expansionValue < bestValue then
-                    secondBestOption = bestOption
-                    bestOption = v
-                    bestValue = expansionValue
+                    if alreadySecure then
+                        RNGLOG('Position already secured, ignore and move to next expansion')
+                        continue
+                    end
+                    local expansionValue = v.Distance * v.Distance / v.Value
+                    if expansionValue < bestValue then
+                        secondBestOption = bestOption
+                        bestOption = v
+                        bestValue = expansionValue
+                    end
                 end
             end
             if secondBestOption and bestOption then
@@ -768,6 +837,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 return acuOptions[Random(1,2)]
             end
             RNGLOG('ACU is having the best expansion returned')
+
             return bestOption
         else
             return bestExpansions[Random(1,RNGGETN(bestExpansions))] 

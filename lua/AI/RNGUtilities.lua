@@ -1180,7 +1180,7 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     return coords
 end
 
-function ExtractorsBeingUpgraded(aiBrain)
+function ExtractorsBeingUpgraded(aiBrain, blueprints)
     -- Returns number of extractors upgrading
 
     local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
@@ -1189,10 +1189,17 @@ function ExtractorsBeingUpgraded(aiBrain)
     local tech1Total = 0
     local tech2Total = 0
     local tech3Total = 0
+    local totalSpend = 0
     local extractorTable = {
         TECH1 = {},
         TECH2 = {}
     }
+    local multiplier
+    if aiBrain.CheatEnabled then
+        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+    else
+        multiplier = 1
+    end
     -- own armyIndex
     local armyIndex = aiBrain:GetArmyIndex()
     -- loop over all units and search for upgrading units
@@ -1204,6 +1211,8 @@ function ExtractorsBeingUpgraded(aiBrain)
             if EntityCategoryContains( categories.TECH1, extractor) then
                 tech1Total = tech1Total + 1
                 if extractor:IsUnitState('Upgrading') then
+                    local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
+                    totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
                     extractor.Upgrading = true
                     tech1ExtNumBuilding = tech1ExtNumBuilding + 1
                 else
@@ -1213,6 +1222,8 @@ function ExtractorsBeingUpgraded(aiBrain)
             elseif EntityCategoryContains( categories.TECH2, extractor) then
                 tech2Total = tech2Total + 1
                 if extractor:IsUnitState('Upgrading') then
+                    local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
+                    totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
                     extractor.Upgrading = true
                     tech2ExtNumBuilding = tech2ExtNumBuilding + 1
                 else
@@ -1224,7 +1235,7 @@ function ExtractorsBeingUpgraded(aiBrain)
             end
         end
     end
-    return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable
+    return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)
