@@ -157,6 +157,7 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
+        self.EconomyUpgradeSpend = 0.25
         self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
@@ -1979,13 +1980,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.ZoneAlertTable do
                 -- If already calling for help, don't add another distress call
                 if v.Zone == zoneid then
-                    --RNGLOG('Zone ID '..zoneid..'already exist as '..v.Zone..' skipping')
+                    RNGLOG('Zone ID '..zoneid..'already exist as '..v.Zone..' skipping')
                     found = true
                     break
                 end
             end
             if not found then
-                --RNGLOG('Platoon doesnt already exist, adding')
+                RNGLOG('Platoon doesnt already exist, adding')
                 RNGINSERT(self.BaseMonitor.ZoneAlertTable, {Zone = zoneid, Threat = threat})
             end
         end
@@ -1993,7 +1994,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.BaseMonitor.ZoneAlertThread then
             self.BaseMonitor.ZoneAlertThread = self:ForkThread(self.BaseMonitorZoneAlertThreadRNG)
         end
-        --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.ZoneAlertTable))
     end,
 
     BaseMonitorPlatoonDistressRNG = function(self, platoon, threat)
@@ -2147,15 +2148,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     -- Platoon not threatened
                     else
                         self.BaseMonitor.ZoneAlertTable[k] = nil
-                        v.Platoon.DistressCall = false
+                        
                     end
                 end
                 coroutine.yield(1)
             end
             if numAlerts > 0 then
-                self.BaseMonitor.PlatoonAlertSounded = true
+                self.BaseMonitor.ZoneAlertSounded = true
             else
-                self.BaseMonitor.PlatoonAlertSounded = false
+                self.BaseMonitor.ZoneAlertSounded = false
             end
             self.BaseMonitor.ZoneAlertTableTable = self:RebuildTable(self.BaseMonitor.ZoneAlertTableTable)
             --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
@@ -3374,19 +3375,20 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(5,20))
         local ALLBPS = __blueprints
         while true do
-            local upgradingExtractors, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
-            self.EcoManager.ExtractorsUpgrading.TECH1 = upgradingExtractors.TECH1Upgrading
-            self.EcoManager.ExtractorsUpgrading.TECH2 = upgradingExtractors.TECH2Upgrading
-            LOG('Total Spend is '..totalSpend..' income with ratio is '..self.cmanager.income.r.m*0.25)
+            local upgradeSpend = self.cmanager.income.r.m*self.EconomyUpgradeSpend
+            local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
+            self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
+            self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
+            LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( self, 'MASS')
-            if upgradingExtractors.TECH1Upgrading < 2 and upgradingExtractors.TECH2Upgrading < 1 then
+            if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 --if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= upgradeSpec.MassLowTrigger and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= upgradeSpec.EnergyLowTrigger then
-                if self.cmanager.income.r.m*0.25 > 4 then
-                    if totalSpend < self.cmanager.income.r.m*0.25 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                if upgradeSpend > 4 then
+                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                         LOG('We Could upgrade an extractor now with over time')
                             --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                            if upgradingExtractors.TECH1 / upgradingExtractors.TECH2 >= 1.7 then
+                            if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
                                 LOG('Trigger all tiers false')
                                 self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                             else
@@ -3399,7 +3401,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 coroutine.yield(30)
-            elseif massStorage > 400 and GetEconomyStored( self, 'ENERGY') > 3000 and upgradingExtractors.TECH2Upgrading < 2 then
+            elseif massStorage > 400 and GetEconomyStored( self, 'ENERGY') > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                     LOG('We Could upgrade an extractor now with over time')
@@ -3411,7 +3413,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
                         LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        if upgradingExtractors.TECH1 / upgradingExtractors.TECH2 >= 1.7 then
+                        if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
                             LOG('Trigger all tiers false')
                             self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                         else
@@ -3422,9 +3424,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     coroutine.yield(30)
                 end
-            elseif upgradingExtractors.TECH1Upgrading < 2 then
-                if self.cmanager.income.r.m*0.25 > 5 then
-                    if totalSpend < self.cmanager.income.r.m*0.25 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+            elseif extractorsDetail.TECH1Upgrading < 2 then
+                if upgradeSpend > 5 then
+                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                         LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                         coroutine.yield(60)

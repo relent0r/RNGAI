@@ -3558,9 +3558,9 @@ Platoon = Class(RNGAIPlatoon) {
             if path then
                 platLoc = GetPlatoonPosition(self)
                 if not success or VDist2Sq(platLoc[1], platLoc[3], zoneRaidPosition[1], zoneRaidPosition[3]) > 262144 then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneRaidPosition, true)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneRaidPosition, true, true)
                 elseif VDist2Sq(platLoc[1], platLoc[3], zoneRaidPosition[1], zoneRaidPosition[3]) > 65536 and (not self.PlatoonData.EarlyRaid) then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneRaidPosition, false)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneRaidPosition, false, true)
                 end
                 if not usedTransports then
                     self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid)
@@ -3568,14 +3568,36 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --RNGLOG('MassRaid requesting transports')
-                if not self.PlatoonData.EarlyRaid then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneRaidPosition, true)
-                end
+                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneRaidPosition, true, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
-                    coroutine.yield( 50 )
-                    LOG('No Transport available for zoneraid')
-                    return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+                    coroutine.yield( 10 )
+                    if PlatoonExists(aiBrain, self) then
+                        local unwantedUnits = {}
+                        local amphibPresent = false
+                        for k, v in self:GetPlatoonUnits() do
+                            if not v.Dead then
+                                local mType = ALLBPS[v.UnitId].Physics.MotionType
+                                if (mType == 'RULEUMT_AmphibiousFloating' or mType == 'RULEUMT_Hover' or mType == 'RULEUMT_Amphibious') then
+                                    amphibPresent = true
+                                else
+                                    RNGINSERT(unwantedUnits, v)
+                                end
+                            end
+                        end
+                        if amphibPresent then
+                            if AIAttackUtils.CanGraphToRNG(GetPlatoonPosition(self), zoneRaidPosition, 'Amphibious') then
+                                for k, v in unwantedUnits do
+                                    IssueStop({v})
+                                    aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
+                                end
+                                return self:SetAIPlanRNG('ZoneRaidRNG')
+                            end
+                        end
+                        coroutine.yield( 50 )
+                        LOG('No Transport available for zoneraid, switching to huntaipathrng')
+                        return self:SetAIPlanRNG('HuntAIPATHRNG')
+                    end
                 end
                 --RNGLOG('Guardmarker found transports')
             else
@@ -3895,9 +3917,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --RNGLOG('MassRaid requesting transports')
-                if not self.PlatoonData.EarlyRaid then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneControlPosition, true)
-                end
+                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zoneControlPosition, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     coroutine.yield( 50 )

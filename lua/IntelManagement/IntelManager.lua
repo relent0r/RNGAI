@@ -167,7 +167,7 @@ IntelManager = Class {
     SelectZoneRNG = function(self, aiBrain, platoon, type)
         -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
-        RNGLOG('RNGAI : Zone Selection Query Received')
+        RNGLOG('RNGAI : Zone Selection Query Received for '..platoon.BuilderName)
         if PlatoonExists(aiBrain, platoon) then
             local zoneSet = false
             local zoneSelection = 999
@@ -188,6 +188,9 @@ IntelManager = Class {
                 end
                 if aiBrain:GetCurrentEnemy() then
                     enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+                end
+                if not zoneSet then
+                    WARN('No zoneSet returns, validate MovementLayer which is '..platoon.MovementLayer)
                 end
 
                 if type == 'raid' then

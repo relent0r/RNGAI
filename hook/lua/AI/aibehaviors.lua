@@ -973,6 +973,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local counter = 0
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
         local enemyThreat
+        local snipeAttempt = false
         
         repeat
             overCharging = false
@@ -1058,11 +1059,25 @@ function CDROverChargeRNG(aiBrain, cdr)
                             end
                         end
                     end
-                    if EntityCategoryContains(categories.COMMAND, target) and target:GetHealth() < 5000 then
-                        if not cdr.SnipeMode then
-                            --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
+                    if EntityCategoryContains(categories.COMMAND, target) then
+                        local enemyACUHealth = target:GetHealth()
+                        LOG('Enemy ACU Detected , our health is '..cdr.Health..' enemy is '..enemyACUHealth)
+                        if enemyACUHealth < 5000 and cdr.Health - enemyACUHealth < 3000 then
+                            if not cdr.SnipeMode then
+                                --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
+                                SetAcuSnipeMode(cdr, true)
+                                cdr.SnipeMode = true
+                            end
+                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3000 and not RUtils.PositionInWater(targetPos) then
+                            LOG('Enemy ACU could be killed or drawn, should we try?')
                             SetAcuSnipeMode(cdr, true)
+                            cdr:SetAutoOvercharge(true)
                             cdr.SnipeMode = true
+                            snipeAttempt = true
+                        elseif cdr.SnipeMode then
+                            --RNGLOG('Target is not acu, setting default target priorities')
+                            SetAcuSnipeMode(cdr, false)
+                            cdr.SnipeMode = false
                         end
                     elseif cdr.SnipeMode then
                         --RNGLOG('Target is not acu, setting default target priorities')
@@ -1083,8 +1098,14 @@ function CDROverChargeRNG(aiBrain, cdr)
                             targetPos = target:GetPosition()
                             targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         end
-                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 3 )})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                        local movePos
+                        if snipeAttempt then
+                            LOG('Lets try snipe the target')
+                            movePos = targetPos
+                        else 
+                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 3 )})
+                        end
+                        if not snipeAttempt and aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
                             RNGLOG('Blocking terrain for acu')
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
@@ -1126,16 +1147,24 @@ function CDROverChargeRNG(aiBrain, cdr)
                             IssueOverCharge({cdr}, target)
                         end
                         coroutine.yield(10)
-                        cdrNewPos[1] = movePos[1] + Random(-8, 8)
-                        cdrNewPos[2] = movePos[2]
-                        cdrNewPos[3] = movePos[3] + Random(-8, 8)
-                        cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
+                        if not snipeAttempt then
+                            cdrNewPos[1] = movePos[1] + Random(-8, 8)
+                            cdrNewPos[2] = movePos[2]
+                            cdrNewPos[3] = movePos[3] + Random(-8, 8)
+                            cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
+                        end
                     elseif target and not target.Dead and not target:BeenDestroyed() then -- Commander attacks even if not enough energy for overcharge
                         IssueClearCommands({cdr})
                         --RNGLOG('Target is '..target.UnitId)
                         cdr:SetCustomName('CDR standard pew pew logic')
-                        local movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
-                        if aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                        local movePos
+                        if snipeAttempt then
+                            LOG('Lets try snipe the target')
+                            movePos = targetPos
+                        else 
+                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
+                        end
+                        if not snipeAttempt and aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
                             RNGLOG('Blocking terrain for acu')
                             if not PlatoonExists(aiBrain, plat) then
                                 local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
@@ -1172,10 +1201,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         cdr.PlatoonHandle:MoveToLocation(movePos, false)
                         coroutine.yield(30)
-                        cdrNewPos[1] = movePos[1] + Random(-8, 8)
-                        cdrNewPos[2] = movePos[2]
-                        cdrNewPos[3] = movePos[3] + Random(-8, 8)
-                        cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
+                        if not snipeAttempt then
+                            cdrNewPos[1] = movePos[1] + Random(-8, 8)
+                            cdrNewPos[2] = movePos[2]
+                            cdrNewPos[3] = movePos[3] + Random(-8, 8)
+                            cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
+                        end
                     end
                     if not target then
                         --RNGLOG('No longer have target')
@@ -1206,7 +1237,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
 
             if continueFighting == true then
-                if cdr.Caution then
+                if cdr.Caution and not cdr.SnipeMode then
                     RNGLOG('cdr.Caution has gone true, continueFighting is false')
                     continueFighting = false
                     return CDRRetreatRNG(aiBrain, cdr)

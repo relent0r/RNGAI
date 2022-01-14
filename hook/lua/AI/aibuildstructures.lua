@@ -14,6 +14,7 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     end
     if not buildLocation[1] then
         LOG('No Build location x sent to AddToBuildQueueRNG')
+        LOG('Builder was '..builder.PlatoonHandle.BuilderName)
     elseif not buildLocation[3] then
         LOG('No Build location y sent to AddToBuildQueueRNG')
     elseif not buildLocation[2] then

@@ -10,7 +10,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Experimental1 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 800,
+        Priority = 910,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
         InstanceCount = 1,
         BuilderConditions = {

@@ -74,6 +74,7 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
+                BuildClose = true,
                 Type = 'Mass',
                 MaxDistance = 120,
                 ThreatMin = -500,
@@ -207,6 +208,7 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 RepeatBuild = true,
+                BuildClose = true,
                 MexThreat = true,
                 Type = 'Mass',
                 MaxDistance = 2000,

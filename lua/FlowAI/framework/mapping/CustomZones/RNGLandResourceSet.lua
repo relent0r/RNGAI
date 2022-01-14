@@ -55,7 +55,12 @@ RNGLandResourceSet = Class(ZoneSet){
         -- Step 1: Get a set of markers that are in the layer we're currently interested in.
         RNGLOG('GenerateZoneList for custom Zone')
         local armyStarts = {}
+        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
         local zoneRadius = 50 * 50
+        if maxmapdimension < 512 then
+            zoneRadius = 35 * 35
+        end
+        LOG('Zone Radius is '..zoneRadius)
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
             local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
@@ -105,7 +110,7 @@ RNGLandResourceSet = Class(ZoneSet){
             local z = best.aggZ/best.weight
             for _, p in armyStarts do
                 if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
-                    --RNGLOG('Position Taken '..repr(v)..' and '..repr(v.position))
+                    RNGLOG('Start Position Taken '..repr(p))
                     startPos = true
                     break
                 end
