@@ -2,6 +2,7 @@ local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -467,7 +468,8 @@ IntelManager = Class {
         -- note this logic exist in the calculate mass markers function as well so that things like crazy rush will update.
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
-        for _, v in AdaptiveResourceMarkerTableRNG do
+        local markerTable = GetMarkersRNG()
+        for _, v in markerTable do
             if not v.zoneid and self.ZonesInitialized then
                 if RUtils.PositionOnWater(v.position[1], v.position[3]) then
                     -- tbd define water based zones
@@ -492,21 +494,6 @@ end
 function GetIntelManager()
     return im
 end
-
---[[
-    keep this for a tick so I can decide if I want to set zone id's on the mass markers or just stick to the zones
-    for k, v in zones do
-        for k1, v1 in v.MassPoints do
-            for k2, v2 in AdaptiveResourceMarkerTableRNG do
-                if v1[1] == v2.position[1] and v1[3] == v2.position[3] then
-                    AdaptiveResourceMarkerTableRNG[k2].zoneid = v.ID
-                end
-            end
-        end
-    end
-    RNGLOG('Zone Table '..repr(zones))
-    RNGLOG('AdaptiveResourceMarkerTable '..repr(AdaptiveResourceMarkerTableRNG))
-]]
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
     coroutine.yield(5)
@@ -667,7 +654,7 @@ function InitialNavalAttackCheck(aiBrain)
         return extractorPoints
     end
     local frigateRaidMarkers = {}
-    local markers = AdaptiveResourceMarkerTableRNG
+    local markers = GetMarkersRNG()
     if markers then
         local markerCount = 0
         local markerCountNotBlocked = 0
@@ -685,7 +672,7 @@ function InitialNavalAttackCheck(aiBrain)
                         if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.position, 'none') then
                             --RNGLOG('This marker is not blocked')
                             markerCountNotBlocked = markerCountNotBlocked + 1
-                            table.insert( frigateRaidMarkers, v )
+                            table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name } )
                         else
                             markerCountBlocked = markerCountBlocked + 1
                         end
@@ -707,12 +694,13 @@ function InitialNavalAttackCheck(aiBrain)
 end
 
 function CalculateMassValue(expansionMarkers)
+    local markerTable = GetMarkersRNG()
     local MassMarker = {}
     local VDist2Sq = VDist2Sq
     if not expansionMarkers then
         WARN('No Expansion Markers Passed to calcuatemassvalue')
     end
-    for _, v in AdaptiveResourceMarkerTableRNG do
+    for _, v in markerTable do
         if v.type == 'Mass' then
             if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                 continue

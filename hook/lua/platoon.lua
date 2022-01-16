@@ -4289,9 +4289,6 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
-        self:ForkThread(self.SelectZoneTargetDummy, aiBrain)
-        coroutine.yield( 10 )
-        self:ForkThread(self.DrawZoneTarget, aiBrain)
 
         if self.MovementLayer == 'Land' and not self.PlatoonData.EarlyRaid then
             local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10, 'raid')
@@ -4308,9 +4305,15 @@ Platoon = Class(RNGAIPlatoon) {
                 platLoc = GetPlatoonPosition(self)
             end
         end
-
+        if self.PlatoonData.FrigateRaid then
+            LOG('Platoon Frigate Raid is true')
+        end
+        if aiBrain.EnemyIntel.FrigateRaid then
+            LOG('Brain Frigate Raid is true')
+        end
         if self.PlatoonData.FrigateRaid and aiBrain.EnemyIntel.FrigateRaid then
             markerLocations = aiBrain.EnemyIntel.FrigateRaidMarkers
+            LOG('Marker Table for frigate raid is '..repr(markerLocations))
         else
             markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
         end
@@ -4377,8 +4380,8 @@ Platoon = Class(RNGAIPlatoon) {
                 RNGLOG('Water based no best marker')
             end
         end]]
-
-        --RNGLOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
+        LOG('MassRaid function')
+        LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 600 and self.MovementLayer ~= 'Water' then
             --RNGLOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')

@@ -233,7 +233,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
         return true
-    else
+    elseif location then
         local relativeLoc = BuildToNormalLocation(location)
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}

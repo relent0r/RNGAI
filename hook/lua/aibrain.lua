@@ -4,6 +4,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
@@ -959,6 +960,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
+        self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
@@ -1144,7 +1146,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local massMarkerBuildable = 0
         local markerCount = 0
         local graphCheck = false
-        for _, v in AdaptiveResourceMarkerTableRNG do
+        local massMarkers = GetMarkersRNG()
+        for _, v in massMarkers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                     -- mass marker is too close to border, skip it.
@@ -2148,7 +2151,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     -- Platoon not threatened
                     else
                         self.BaseMonitor.ZoneAlertTable[k] = nil
-                        
+
                     end
                 end
                 coroutine.yield(1)
@@ -2505,7 +2508,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
                     RNGLOG('Friendly Hydro Table '..repr(self.smanager.hydrocarbon))
                     RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
-                    --RNGLOG('Mass Marker Table '..repr(AdaptiveResourceMarkerTableRNG))
                     --[[if self.GraphZones.HasRun then
                         RNGLOG('We should have graph zones now')
                         for k, v in self.BuilderManagers do
@@ -3401,7 +3403,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 coroutine.yield(30)
-            elseif massStorage > 400 and GetEconomyStored( self, 'ENERGY') > 3000 and extractorsDetail.TECH2Upgrading < 2 then
+            elseif massStorage > 500 and GetEconomyStored( self, 'ENERGY') > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                     LOG('We Could upgrade an extractor now with over time')

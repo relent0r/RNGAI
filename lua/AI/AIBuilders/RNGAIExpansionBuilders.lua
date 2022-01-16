@@ -347,6 +347,39 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Expansion Builders Large',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid Large',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        Priority = 0,
+        PriorityFunction = FrigateRaid,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
+            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                NearMarkerType = 'Naval Area',
+                ExpansionRadius = 70,
+                LocationRadius = 250, -- radius from LocationType to build
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 1,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {                    
+                    'T1SeaFactory',
+                }
+            },
+            NeedGuard = false,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 650 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         PriorityFunction = NavalExpansionAdjust,
@@ -377,40 +410,6 @@ BuilderGroup {
                 BuildStructures = {                    
                     'T1SeaFactory',
                     'T1NavalDefense',
-                }
-            },
-            NeedGuard = false,
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 0,
-        PriorityFunction = FrigateRaid,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 650, -1000, 100, 1, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                ExpansionBase = true,
-                NearMarkerType = 'Naval Area',
-                ExpansionRadius = 70,
-                LocationRadius = 650, -- radius from LocationType to build
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 1,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {                    
-                    'T1SeaFactory',
                 }
             },
             NeedGuard = false,
