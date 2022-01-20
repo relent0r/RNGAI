@@ -951,6 +951,43 @@ function DynamicExpansionAvailableRNG(aiBrain)
     return false
 end
 
+function HaveHQ(aiBrain, layer, tech)
+    -- Uses the brain HQs table to check if the AI have a certain faction HQ
+    for _, v in aiBrain.HQs do
+        if v[layer][tech] > 0
+            return true
+        end
+    end
+    return false
+end
+
+function HaveFactionHQ(aiBrain, faction, layer, tech)
+    
+    if aiBrain.HQs[faction][layer][tech] > 0 then
+        return true
+    end
+    return false
+end
+
+
+function DontHaveHQ(aiBrain, faction, layer, tech)
+    -- Uses the brain HQs table to check if the AI have a certain faction HQ
+    for _, v in aiBrain.HQs do
+        if v[layer][tech] > 0
+            return false
+        end
+    end
+    return true
+end
+
+function DontHaveFactionHQ(aiBrain, faction, layer, tech)
+    -- Uses the brain HQs table to check if the AI have a certain faction HQ
+    if aiBrain.HQs[faction][layer][tech] < 1 then
+        return true
+    end
+    return false
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.
