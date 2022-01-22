@@ -45,10 +45,10 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR SACU Builder',
+    BuilderGroupName = 'RNGEXP SACU Builder',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAIR SACU Engineer',
+        BuilderName = 'RNGEXP SACU Engineer',
         PlatoonTemplate = 'RNGAI SACU Engineer preset',
         Priority = 500,
         BuilderConditions = {
@@ -60,7 +60,7 @@ BuilderGroup {
         BuilderType = 'Gate',
     },
     Builder {
-        BuilderName = 'RNGAIR SACU Engineer',
+        BuilderName = 'RNGEXP SACU Engineer',
         PlatoonTemplate = 'T3LandSubCommander',
         Priority = 400,
         BuilderConditions = {
@@ -72,7 +72,7 @@ BuilderGroup {
         BuilderType = 'Gate',
     },
     Builder {
-        BuilderName = 'RNGAIR SACU RAS',
+        BuilderName = 'RNGEXP SACU RAS',
         PlatoonTemplate = 'RNGAI SACU RAS preset 123x5',
         Priority = 700,
         BuilderConditions = {

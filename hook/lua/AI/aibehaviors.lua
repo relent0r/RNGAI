@@ -1,4 +1,5 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibehaviors.lua' )
+
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRatioCheckRNG
@@ -156,6 +157,23 @@ function CDRBrainThread(cdr)
         end
         if cdr.Health < 5000 and VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.CDRHome[1], cdr.CDRHome[3]) > 900 then
             cdr.Caution = true
+        end
+        for k, v in aiBrain.EnemyIntel.ACU do
+            if not v.Ally then
+                if v.Position[1] and gameTime - 60 > v.LastSpotted then
+                    local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2])
+                    if enemyAcuDistance < (aiBrain.BrainIntel.MilitaryRange * aiBrain.BrainIntel.MilitaryRange) then
+                        aiBrain.EnemyIntel.ACU[k].OnField = true
+                    else
+                        aiBrain.EnemyIntel.ACU[k].OnField = false
+                    end
+                    if enemyAcuDistance < 19600 then
+                        aiBrain.EnemyIntel.ACUEnemyClose = true
+                    else
+                        aiBrain.EnemyIntel.ACUEnemyClose = false
+                    end
+                end
+            end
         end
         coroutine.yield(5)
     end
@@ -601,6 +619,7 @@ end
 
 function CDRExpansionRNG(aiBrain, cdr)
     local multiplier
+    local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
     if aiBrain.CheatEnabled then
         multiplier = tonumber(ScenarioInfo.Options.BuildMult)
     else
@@ -621,8 +640,19 @@ function CDRExpansionRNG(aiBrain, cdr)
     if cdr.Initialized and aiBrain.BasePerimeterMonitor['MAIN'].LandThreat > 0 then
         return
     end
+    if cdr.Initialized then
+        for _, v in aiBrain.EnemyIntel.ACU do
+            if not v.Ally and v.OnField then
+                LOG('Non Ally and OnField')
+                if (GetGameTimeSeconds() - 30) > v.LastSpotted and VDist2Sq(self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
+                    LOG('Enemy ACU seen within 15 seconds and is within 150 of our start position')
+                    return
+                end
+            end
+        end
+    end
     
-    local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, 512, 'Land', 10, 'acu')
+    local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, BaseDMZArea, 'Land', 10, 'acu')
     if stageExpansion then
         cdr.Active = true
         if cdr.UnitBeingBuilt then
@@ -686,7 +716,7 @@ function CommanderThreadRNG(cdr, platoon)
         end
         coroutine.yield(2)
 
-        if not cdr.Dead then
+        if not cdr.Dead and not aiBrain.RNGEXP then
             cdr:SetCustomName('CDRExpansionRNG')
             CDRExpansionRNG(aiBrain, cdr)
         end
@@ -873,7 +903,11 @@ function CDRThreatAssessmentRNG(cdr)
             friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + friendlyUnitThreat
             enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
             cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
-            cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
+            if aiBrain.RNGEXP then
+                cdr.MaxBaseRange = 60
+            else
+                cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
+            end
             RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
@@ -2001,7 +2035,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
     local distSqAway = 2209
     local loc = cdr.CDRHome
     local upgradeMode = false
-    if gameTime < 1500 then
+    if gameTime < 1500 and not aiBrain.RNGEXP then
         upgradeMode = 'Combat'
     else
         upgradeMode = 'Engineering'
@@ -2122,7 +2156,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
     --RNGLOG('* RNGAI: drain: m'..drainMass..'  e'..drainEnergy..'')
     --RNGLOG('* RNGAI: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
-    if priorityUpgrade and cdr.GunUpgradeRequired then
+    if priorityUpgrade and cdr.GunUpgradeRequired and not aiBrain.RNGEXP then
         if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
          and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
             --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')

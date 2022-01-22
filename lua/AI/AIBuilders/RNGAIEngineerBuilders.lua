@@ -74,7 +74,7 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T1 Excess Mass',
+        BuilderName = 'RNGEXP Factory Engineer T1 Excess Mass',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
         BuilderConditions = {
@@ -139,7 +139,7 @@ BuilderGroup {
         Priority = 800, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
         },
         BuilderType = 'All',
@@ -151,7 +151,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 0.7 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
     },
@@ -174,7 +174,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
@@ -185,7 +185,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
@@ -194,7 +194,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 850, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.70, 0.00}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
@@ -287,7 +287,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH3 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
         },
@@ -1027,10 +1027,10 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR Engineer Builder',
+    BuilderGroupName = 'RNGEXP Engineer Builder',
     BuildersType = 'FactoryBuilder',
     --[[Builder {
-        BuilderName = 'RNGAIR Factory Engineer Initial',
+        BuilderName = 'RNGEXP Factory Engineer Initial',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 1000, -- Top factory priority
         BuilderConditions = {
@@ -1040,7 +1040,7 @@ BuilderGroup {
         BuilderType = 'All',
     },]]
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T1 Mass',
+        BuilderName = 'RNGEXP Factory Engineer T1 Mass',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 750,
         BuilderConditions = {
@@ -1051,7 +1051,7 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T1 Power',
+        BuilderName = 'RNGEXP Factory Engineer T1 Power',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
         BuilderConditions = {
@@ -1062,7 +1062,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T1 Large',
+        BuilderName = 'RNGEXP Factory Engineer T1 Large',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 300, -- low factory priority
         BuilderConditions = {
@@ -1074,7 +1074,7 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T1 Expansion',
+        BuilderName = 'RNGEXP Factory Engineer T1 Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 750, -- low factory priority
         BuilderConditions = {
@@ -1086,27 +1086,27 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T2 Small',
+        BuilderName = 'RNGEXP Factory Engineer T2 Small',
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 900, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 7, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 7 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T2 Medium',
+        BuilderName = 'RNGEXP Factory Engineer T2 Medium',
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 750, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 10 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH2}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T2 Large',
+        BuilderName = 'RNGEXP Factory Engineer T2 Large',
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 400, -- low factory priority
         BuilderConditions = {
@@ -1118,32 +1118,32 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T3 Small',
+        BuilderName = 'RNGEXP Factory Engineer T3 Small',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 990, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T3 Medium',
+        BuilderName = 'RNGEXP Factory Engineer T3 Medium',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.30 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGAIR Factory Engineer T3 Excess',
+        BuilderName = 'RNGEXP Factory Engineer T3 Excess',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 300, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.00}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
@@ -1155,10 +1155,10 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR Hard Assist Builders',
+    BuilderGroupName = 'RNGEXP Hard Assist Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAIR Engineer Assist Quantum Gateway',
+        BuilderName = 'RNGEXP Engineer Assist Quantum Gateway',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 510,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
@@ -1182,7 +1182,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Engineer Assist HQ Upgrade',
+        BuilderName = 'RNGEXP Engineer Assist HQ Upgrade',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
@@ -1205,7 +1205,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Engineer Unfinished Structures',
+        BuilderName = 'RNGEXP Engineer Unfinished Structures',
         PlatoonTemplate = 'T1EngineerFinishRNG',
         Priority = 750,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
@@ -1223,7 +1223,7 @@ BuilderGroup {
         BuilderType = 'Any',
     },
     Builder {
-        BuilderName = 'RNGAIR T123 Engineer Upgrade Mex T2',
+        BuilderName = 'RNGEXP T123 Engineer Upgrade Mex T2',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 850,
         InstanceCount = 8,
@@ -1245,7 +1245,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR T123 Engineer Upgrade Mex T3',
+        BuilderName = 'RNGEXP T123 Engineer Upgrade Mex T3',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 840,
         InstanceCount = 8,
@@ -1268,7 +1268,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR T123 Engineer Unfinished Experimental',
+        BuilderName = 'RNGEXP T123 Engineer Unfinished Experimental',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 640,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},

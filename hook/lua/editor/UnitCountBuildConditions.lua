@@ -951,41 +951,42 @@ function DynamicExpansionAvailableRNG(aiBrain)
     return false
 end
 
-function HaveHQ(aiBrain, layer, tech)
-    -- Uses the brain HQs table to check if the AI have a certain faction HQ
-    for _, v in aiBrain.HQs do
-        if v[layer][tech] > 0
-            return true
+function GreaterThanFactoryCountRNG(aiBrain, count, category, navalOnly)
+    local factoryCount = 0
+    for _, v in aiBrain.BuilderManagers do
+        if navalOnly and v.BaseType ~= 'Naval Area' then
+            continue
+        end
+        if v.FactoryManager then
+            factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
+            --LOG('factoryCount '..factoryCount..' number to compare '..count)
+            if factoryCount > count then
+                --LOG('GreaterThanFactoryCountRNG is true')
+                return true
+            end
         end
     end
+    --LOG('GreaterThanFactoryCountRNG is false')
     return false
 end
 
-function HaveFactionHQ(aiBrain, faction, layer, tech)
-    
-    if aiBrain.HQs[faction][layer][tech] > 0 then
-        return true
-    end
-    return false
-end
-
-
-function DontHaveHQ(aiBrain, faction, layer, tech)
-    -- Uses the brain HQs table to check if the AI have a certain faction HQ
-    for _, v in aiBrain.HQs do
-        if v[layer][tech] > 0
-            return false
+function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
+    local factoryCount = 0
+    for _, v in aiBrain.BuilderManagers do
+        if navalOnly and v.BaseType ~= 'Naval Area' then
+            continue
+        end
+        if v.FactoryManager then
+            factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
+            --LOG('factoryCount '..factoryCount..' number to compare '..count)
+            if factoryCount >= count then
+                --LOG('LessThanFactoryCountRNG is true')
+                return false
+            end
         end
     end
+    --LOG('LessThanFactoryCountRNG is false')
     return true
-end
-
-function DontHaveFactionHQ(aiBrain, faction, layer, tech)
-    -- Uses the brain HQs table to check if the AI have a certain faction HQ
-    if aiBrain.HQs[faction][layer][tech] < 1 then
-        return true
-    end
-    return false
 end
 
 --[[

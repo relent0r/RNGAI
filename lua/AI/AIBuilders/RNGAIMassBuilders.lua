@@ -470,10 +470,10 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuilderGroupName = 'RNGEXP Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAIR T1 Mex Adjacency Engineer',
+        BuilderName = 'RNGEXP T1 Mex Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 900,
         InstanceCount = 12,
@@ -502,7 +502,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR T1 Mex Adjacency Engineer Distant',
+        BuilderName = 'RNGEXP T1 Mex Adjacency Engineer Distant',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 400,
         InstanceCount = 12,

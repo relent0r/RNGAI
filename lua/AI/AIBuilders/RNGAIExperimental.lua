@@ -18,7 +18,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 400.0 }},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 250.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -215,10 +215,10 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR Experimental Builders',
+    BuilderGroupName = 'RNGEXP Experimental Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAIR Experimental1 1st',
+        BuilderName = 'RNGEXP Experimental1 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
@@ -248,7 +248,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Experimental1 MultiBuild',
+        BuilderName = 'RNGEXP Experimental1 MultiBuild',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
@@ -278,7 +278,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Experimental1 Excess',
+        BuilderName = 'RNGEXP Experimental1 Excess',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 300,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
@@ -307,7 +307,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Experimental1 Megabot',
+        BuilderName = 'RNGEXP Experimental1 Megabot',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
@@ -337,7 +337,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Experimental1 Air',
+        BuilderName = 'RNGEXP Experimental1 Air',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
@@ -366,7 +366,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Experimental1 Sea',
+        BuilderName = 'RNGEXP Experimental1 Sea',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MobileExperimental', 10},
@@ -394,7 +394,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAIR Experimental1 Novax',
+        BuilderName = 'RNGEXP Experimental1 Novax',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 1,

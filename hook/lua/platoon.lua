@@ -3625,7 +3625,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             -- we're there... wait here until we're done
-            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), zoneRaidPosition, 50, 'Enemy')
+            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE), zoneRaidPosition, 50, 'Enemy')
             LOG('Number of units around zoneRaidPosition '..numGround)
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 --RNGLOG('At mass marker and checking for enemy units/structures')
@@ -3760,7 +3760,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 coroutine.yield(Random(40,80))
                 --RNGLOG('Still enemy stuff around marker position')
-                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), zoneRaidPosition, 30, 'Enemy')
+                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE), zoneRaidPosition, 50, 'Enemy')
                 LOG('End loop Number of units around zoneRaidPosition '..numGround)
             end
 

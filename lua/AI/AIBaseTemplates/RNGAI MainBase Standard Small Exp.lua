@@ -1,12 +1,12 @@
 --[[
-    File    :   /lua/AI/AIBaseTemplates/RNGAI MainBase Standard Air.lua
+    File    :   /lua/AI/AIBaseTemplates/RNGAI MainBase Standard Exp.lua
     Author  :   relentless
     Summary :
         Main Base template
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Air Close',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Exp Close',
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
@@ -30,22 +30,25 @@ BaseBuilderTemplate {
         'RNGAI Hydro Builder',
         --'RNGAI ExtractorUpgrades',
         'RNGAI Mass Fab',
-        --'RNGAIR Crazyrush Builder',
+        --'RNGEXP Crazyrush Builder',
 
         -- Engineer Builders --
-        'RNGAIR Engineer Builder',
+        'RNGEXP Engineer Builder',
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Builders',
         'RNGAI Assist Builders',
-        'RNGAIR Hard Assist Builders',
+        'RNGEXP Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
 
+        -- Land Factory Builders --
+        'RNGEXP Factory Builder Land',
+
         -- Air Factory Builders --
-        'RNGAIR Factory Builder Air',
+        'RNGEXP Factory Builder Air',
         'RNGAI Air Staging Platform',
         
         -- Air Factory Formers --
-        'RNGAIR Air Upgrade Builders',
+        'RNGEXP Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
@@ -59,7 +62,7 @@ BaseBuilderTemplate {
 
         -- Air Unit Formers --
         'RNGAI ScoutAirFormer',
-        'RNGAIR Air Platoon Builder',
+        'RNGEXP Air Platoon Builder',
         'RNGAI Air Response Formers',
 
         -- Sea Unit Builders
@@ -80,7 +83,7 @@ BaseBuilderTemplate {
 
         -- SACU Builders --
         'RNGAI Gate Builders',
-        'RNGAIR SACU Builder',
+        'RNGEXP SACU Builder',
 
         --Strategic Builders
         'RNGAI SML Builders',
@@ -88,7 +91,7 @@ BaseBuilderTemplate {
         'RNGAI Strategic Formers',
 
         --Experimentals --
-        'RNGAIR Experimental Builders',
+        'RNGEXP Experimental Builders',
         'RNGAI Experimental Formers',
     },
     NonCheatBuilders = {
@@ -101,7 +104,7 @@ BaseBuilderTemplate {
             SCU = 100,
         },
         FactoryCount = {
-            Land = 1,
+            Land = 2,
             Air = 3,
             Sea = 1,
             Gate = 1,
@@ -119,10 +122,10 @@ BaseBuilderTemplate {
     FirstBaseFunction = function(aiBrain)
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if personality == 'RNGStandardAir' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardAircheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
+        if personality == 'RNGStandardExperimental' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardExperimentalcheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
             --RNGLOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
             --RNGLOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
-            return 1000, 'RNGStandardAir'
+            return 1000, 'RNGStandardExperimental'
         end
         return -1
     end,

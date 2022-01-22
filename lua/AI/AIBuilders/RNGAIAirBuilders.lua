@@ -831,10 +831,10 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR Air Platoon Builder',
+    BuilderGroupName = 'RNGEXP Air Platoon Builder',
     BuildersType = 'PlatoonFormBuilder', -- A PlatoonFormBuilder is for builder groups of units.
     Builder {
-        BuilderName = 'RNGAIR Air Intercept',
+        BuilderName = 'RNGEXP Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
@@ -853,12 +853,12 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
     },
     Builder {
-        BuilderName = 'RNGAIR Air Lockdown',
+        BuilderName = 'RNGEXP Air Lockdown',
         PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
@@ -875,11 +875,11 @@ BuilderGroup {
         },
         BuilderConditions = {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
          },
     },
     Builder {
-        BuilderName = 'RNGAIR Bomber Attack MassRaid',
+        BuilderName = 'RNGEXP Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 900,
@@ -909,7 +909,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Gunship Attack T1',
+        BuilderName = 'RNGEXP Gunship Attack T1',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 890,
         InstanceCount = 5,
@@ -917,7 +917,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * categories.TECH1 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -943,14 +943,14 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Gunship Attack T2T3',
+        BuilderName = 'RNGEXP Gunship Attack T2T3',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 890,
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = { 
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -978,7 +978,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Bomber Attack Enemy',
+        BuilderName = 'RNGEXP Bomber Attack Enemy',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 890,
         InstanceCount = 3,
@@ -1004,7 +1004,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Bomber Attack Excess',
+        BuilderName = 'RNGEXP Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
@@ -1036,7 +1036,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Energy Attack',
+        BuilderName = 'RNGEXP Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 890,
         InstanceCount = 3,

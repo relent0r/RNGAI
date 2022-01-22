@@ -43,6 +43,11 @@ AIBrain = Class(RNGAIBrainClass) {
             self.RNG = true
             --self.RNGDEBUG = true
         end
+        if string.find(per, 'RNGStandardExperimental') then
+            --RNGLOG('* AI-RNG: This is RNGEXP')
+            self.RNGEXP = true
+            --self.RNGDEBUG = true
+        end
     end,
 
     OnSpawnPreBuiltUnits = function(self)
@@ -832,6 +837,9 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         self.BrainIntel = {}
+        local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
+        self.BrainIntel.StartPos = { selfStartPosX, selfStartPosY }
+        self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
@@ -1147,6 +1155,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local markerCount = 0
         local graphCheck = false
         local massMarkers = GetMarkersRNG()
+        
         for _, v in massMarkers do
             if v.type == 'Mass' then
                 if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
@@ -1174,7 +1183,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if not v.zoneid and self.ZonesInitialized then
                 if RUtils.PositionOnWater(v.position[1], v.position[3]) then
                     -- tbd define water based zones
-                    v.zoneid = water
+                    v.zoneid = 'water'
                 else
                     v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
                 end
@@ -1844,7 +1853,6 @@ AIBrain = Class(RNGAIBrainClass) {
         local returnEnemy = false
         local myIndex = self:GetArmyIndex()
         local highStrength = strengthTable[myIndex].Strength
-        local startX, startZ = self:GetArmyStartPos()
         local ACUDist = nil
         self.EnemyIntel.ACUEnemyClose = false
         
@@ -1852,26 +1860,18 @@ AIBrain = Class(RNGAIBrainClass) {
         for k, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
-                --RNGLOG('* AI-RNG: ACU Position is :'..repr(v.ACUPosition))
+                -- dont log this until you want to get a dump of the brain.
+                --RNGLOG('EnemyStrength Tables :'..repr(v))
+                LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
-                    ACUDist = VDist2(startX, startZ, v.ACUPosition[1], v.ACUPosition[3])
-                    --RNGLOG('* AI-RNG: Enemy ACU Distance in Alliance Check is'..ACUDist)
-                    if ACUDist < 230 then
-                        --RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
-                        returnEnemy = v.Brain
-                        self.EnemyIntel.ACU[k].OnField = true
-                        if ACUDist < 140 then
-                            self.EnemyIntel.ACUEnemyClose = true
-                            --RNGLOG('Enemy ACU is within 145 of base')
-                        end
-                        return returnEnemy
-                    elseif v.Threat < 200 and ACUDist < 200 then
-                        --RNGLOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
+                    if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 19600 then
+                        RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
-                    end
-                    if ACUDist > 230 then
-                        self.EnemyIntel.ACU[k].OnField = false
+                    elseif self.EnemyIntel.ACU[k].Threat and self.EnemyIntel.ACU[k].Threat < 20 and self.EnemyIntel.ACU[k].OnField then
+                        RNGLOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
+                        returnEnemy = v.Brain
+                        return returnEnemy
                     end
                 end
                 continue
