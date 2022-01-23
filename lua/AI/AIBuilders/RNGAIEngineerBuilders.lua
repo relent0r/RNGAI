@@ -17,7 +17,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
     if myAirThreat < enemyAirThreat then
         --RNGLOG('Enable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 550
+        return 750
     else
         --RNGLOG('Disable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)

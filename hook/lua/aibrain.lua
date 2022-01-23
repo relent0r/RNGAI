@@ -907,6 +907,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.ACUMaxSearchRadius = 0
         self.ACUSupport.Supported = false
         self.ACUSupport.PlatoonCount = 0
+        self.ACUSupport.Platoons = {}
         self.ACUSupport.Position = {}
         self.ACUSupport.TargetPosition = false
         self.ACUSupport.ReturnHome = true

@@ -644,7 +644,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
                 LOG('Non Ally and OnField')
-                if (GetGameTimeSeconds() - 30) > v.LastSpotted and VDist2Sq(self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
+                if (GetGameTimeSeconds() - 30) > v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
                     LOG('Enemy ACU seen within 15 seconds and is within 150 of our start position')
                     return
                 end
