@@ -21,7 +21,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 12.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 21.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 100, 0.8 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -59,7 +59,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 8.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendRNG', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
@@ -451,6 +451,29 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNG T1 Energy Storage Builder OverCharge Power',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 850,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
+            { UCBC, 'UnitCapCheckLess', { .7 } },
+            { EBC, 'LessThanEnergyStorageCurrentRNG', { 20000 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BuildClose = false,
+                AvoidCategory = categories.ENERGYENERGYSTORAGE,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildStructures = {
+                    'EnergyStorage',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG T1 Energy Storage Builder',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 500,
@@ -465,6 +488,9 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
+                AvoidCategory = categories.ENERGYENERGYSTORAGE,
+                maxUnits = 1,
+                maxRadius = 5,
                 BuildStructures = {
                     'EnergyStorage',
                 },

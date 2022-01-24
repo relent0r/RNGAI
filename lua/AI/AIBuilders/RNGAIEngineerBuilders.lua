@@ -391,7 +391,7 @@ BuilderGroup {
                 BeingBuiltCategories = {categories.AIR * categories.MOBILE * categories.ANTIAIR},                   
                 PermanentAssist = true,
                 AssistClosestUnit = false,                                       
-                AssistUntilFinished = true,
+                AssistUntilFinished = false,
                 Time = 60,
             },
         },

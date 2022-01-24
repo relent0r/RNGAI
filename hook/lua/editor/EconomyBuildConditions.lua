@@ -233,6 +233,13 @@ function GreaterThanEconStorageCurrentRNG(aiBrain, mStorage, eStorage)
     return false
 end
 
+function LessThanEnergyStorageCurrentRNG(aiBrain, eStorage)
+    if GetEconomyStored(aiBrain, 'ENERGY') <= eStorage then
+        return true
+    end
+    return false
+end
+
 -- { UCBC, 'EnergyToMassRatioIncomeRNG', { 10.0, '>=',true } },  -- True if we have 10 times more Energy then Mass income ( 100 >= 10 = true )
 function EnergyToMassRatioIncomeRNG(aiBrain, ratio, compareType)
 

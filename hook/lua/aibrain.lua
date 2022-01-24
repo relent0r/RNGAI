@@ -4747,7 +4747,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         local mexPos = GetPosition(unit)
                         if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
                             -- tbd define water based zones
-                            unit.zoneid = water
+                            unit.zoneid = 'water'
                         else
                             unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
                             --LOG('Unit zone is '..unit.zoneid)

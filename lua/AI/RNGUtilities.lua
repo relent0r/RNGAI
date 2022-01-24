@@ -2715,7 +2715,7 @@ LastKnownThread = function(aiBrain)
                     if not v.zoneid and aiBrain.ZonesInitialized then
                         if PositionOnWater(unitPosition[1], unitPosition[3]) then
                             -- tbd define water based zones
-                            v.zoneid = water
+                            v.zoneid = 'water'
                         else
                             v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
                         end
@@ -3476,6 +3476,7 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     end
     table.sort(markerTable, function(a,b) return a.Distance < b.Distance end)
     for k, v in markerTable do
+        RNGLOG('Hydro distance is '..v.Distance)
         if v.Distance <= radiusLimit then
             --RNGLOG('Marker is within distance with '..v.Distance)
             if canBuild then
