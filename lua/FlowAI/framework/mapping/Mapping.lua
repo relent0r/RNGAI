@@ -984,7 +984,7 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     for k,v in marker.expanddists do
         if not marker.bestexpand or marker.expanddists[marker.bestexpand]>v then
             marker.bestexpand=k
-            -- Important. Extension to chps logic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
+            -- Important. Extension to chps--LOGic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
             if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea then
                 Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea = marker.RNGArea
                 --RNGLOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))

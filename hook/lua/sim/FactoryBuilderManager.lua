@@ -134,7 +134,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
             --RNGLOG('Factory Built by factory, attempting to kill factory.')
 			if finishedUnit:GetFractionComplete() == 1 then
-                LOG('RNG FactoryFinishBuilding has fired')
+               --LOG('RNG FactoryFinishBuilding has fired')
 				self:AddFactory(finishedUnit )			
 				factory.Dead = true
                 factory.Trash:Destroy()

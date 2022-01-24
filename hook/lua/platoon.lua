@@ -3595,7 +3595,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                         coroutine.yield( 50 )
-                        LOG('No Transport available for zoneraid, switching to huntaipathrng')
+                       --LOG('No Transport available for zoneraid, switching to huntaipathrng')
                         return self:SetAIPlanRNG('HuntAIPATHRNG')
                     end
                 end
@@ -3626,7 +3626,7 @@ Platoon = Class(RNGAIPlatoon) {
 
             -- we're there... wait here until we're done
             local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE), zoneRaidPosition, 50, 'Enemy')
-            LOG('Number of units around zoneRaidPosition '..numGround)
+           --LOG('Number of units around zoneRaidPosition '..numGround)
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 --RNGLOG('At mass marker and checking for enemy units/structures')
                 platLoc = GetPlatoonPosition(self)
@@ -3761,7 +3761,7 @@ Platoon = Class(RNGAIPlatoon) {
                 coroutine.yield(Random(40,80))
                 --RNGLOG('Still enemy stuff around marker position')
                 numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE), zoneRaidPosition, 50, 'Enemy')
-                LOG('End loop Number of units around zoneRaidPosition '..numGround)
+               --LOG('End loop Number of units around zoneRaidPosition '..numGround)
             end
 
             if not PlatoonExists(aiBrain, self) then
@@ -3886,7 +3886,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.TargetZone = IntelManagerRNG.GetIntelManager():SelectZoneRNG(aiBrain, self, 'control')
         local zoneControlPosition = false
         if self.TargetZone then
-            LOG('Target Zone Selected is '..self.TargetZone..' at '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
+           --LOG('Target Zone Selected is '..self.TargetZone..' at '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
             zoneControlPosition = aiBrain.Zones.Land.zones[self.TargetZone].pos
             self:ForkThread(self.DrawZoneTarget, aiBrain)
         end
@@ -3921,7 +3921,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     coroutine.yield( 50 )
-                    LOG('No Transport available for zoneraid')
+                   --LOG('No Transport available for zoneraid')
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
                 --RNGLOG('Guardmarker found transports')
@@ -3953,12 +3953,12 @@ Platoon = Class(RNGAIPlatoon) {
             local zoneCounter = 0
             while (aiBrain.Zones.Land.zones[self.TargetZone].enemythreat > 0 or aiBrain.Zones.Land.zones[self.TargetZone].control > 0) and PlatoonExists(aiBrain, self) do
                 --RNGLOG('At Zone location')
-                LOG('We are at the zone')
+               --LOG('We are at the zone')
                 zoneCounter = zoneCounter + 1
-                LOG('zoneCounter is '..zoneCounter)
-                LOG('Current control is '..aiBrain.Zones.Land.zones[self.TargetZone].control)
-                LOG('Current enemy presense is '..aiBrain.Zones.Land.zones[self.TargetZone].enemythreat)
-                LOG('Current Zone Position is '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
+               --LOG('zoneCounter is '..zoneCounter)
+               --LOG('Current control is '..aiBrain.Zones.Land.zones[self.TargetZone].control)
+               --LOG('Current enemy presense is '..aiBrain.Zones.Land.zones[self.TargetZone].enemythreat)
+               --LOG('Current Zone Position is '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
                 platLoc = GetPlatoonPosition(self)
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                 local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, aiBrain.Zones.Land.zones[self.TargetZone].pos, 'Attack', 60, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
@@ -4306,14 +4306,14 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         if self.PlatoonData.FrigateRaid then
-            LOG('Platoon Frigate Raid is true')
+           --LOG('Platoon Frigate Raid is true')
         end
         if aiBrain.EnemyIntel.FrigateRaid then
-            LOG('Brain Frigate Raid is true')
+           --LOG('Brain Frigate Raid is true')
         end
         if self.PlatoonData.FrigateRaid and aiBrain.EnemyIntel.FrigateRaid then
             markerLocations = aiBrain.EnemyIntel.FrigateRaidMarkers
-            LOG('Marker Table for frigate raid is '..repr(markerLocations))
+           --LOG('Marker Table for frigate raid is '..repr(markerLocations))
         else
             markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
         end
@@ -4380,8 +4380,8 @@ Platoon = Class(RNGAIPlatoon) {
                 RNGLOG('Water based no best marker')
             end
         end]]
-        LOG('MassRaid function')
-        LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
+       --LOG('MassRaid function')
+       --LOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 600 and self.MovementLayer ~= 'Water' then
             --RNGLOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
@@ -5889,7 +5889,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
 
                             -- Continue to position until the distress call wanes
-                            RNGLOG('Start platoon response logic')
+                            RNGLOG('Start platoon response--LOGic')
                             repeat
                                 moveLocation = distressLocation
                                 self:Stop()
@@ -6587,7 +6587,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
                     local NumAssist = RNGGETN(UnitAssist:GetGuards())
                     local dist = VDist2Sq(platoonPos[1], platoonPos[3], unitPos[1], unitPos[3])
-                    LOG('Assist distance for engineer assist is '..dist)
+                   --LOG('Assist distance for engineer assist is '..dist)
                     -- Find the closest unit to assist
                     if assistData.AssistClosestUnit then
                         if (not low or dist < low) and NumAssist < 20 and dist < assistRange then

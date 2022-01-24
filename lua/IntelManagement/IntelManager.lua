@@ -230,7 +230,7 @@ IntelManager = Class {
                         for k, v in startPosZones do
                             local compare
                             local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
-                            LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                           --LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
                             if zoneSet[v.zone.id].control == 0 then
                                 compare = ( 20000 / distanceModifier )
                             else
@@ -390,7 +390,7 @@ IntelManager = Class {
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     if not v1.startpositionclose and v1.control < 1 and v1.enemythreat > 0 then
-                        LOG('Try create zone alert for threat')
+                       --LOG('Try create zone alert for threat')
                         self.Brain:BaseMonitorZoneThreatRNG(v1.id, v1.enemythreat)
                     end
                     coroutine.yield(5)

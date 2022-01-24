@@ -126,7 +126,7 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, lo
         numUnits = GetUnitsBeingBuiltLocationRadiusRNG(aiBrain,locationType, radiusOverride, category, category + (categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) ) or 0
     end
     if numUnits > numReq then
-        LOG('Hydro close')
+       --LOG('Hydro close')
         return true
     end
     return false

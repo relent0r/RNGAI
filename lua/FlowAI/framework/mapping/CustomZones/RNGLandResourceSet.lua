@@ -60,7 +60,7 @@ RNGLandResourceSet = Class(ZoneSet){
         if maxmapdimension < 512 then
             zoneRadius = 35 * 35
         end
-        LOG('Zone Radius is '..zoneRadius)
+       --LOG('Zone Radius is '..zoneRadius)
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
             local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
@@ -125,7 +125,7 @@ RNGLandResourceSet = Class(ZoneSet){
                     complete = false
                 end
             end
-            LOG('Resource Group value '..table.getn(resourceGroup))
+           --LOG('Resource Group value '..table.getn(resourceGroup))
             self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1})
         end
     end,

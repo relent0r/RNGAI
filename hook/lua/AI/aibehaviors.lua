@@ -643,9 +643,9 @@ function CDRExpansionRNG(aiBrain, cdr)
     if cdr.Initialized then
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
-                LOG('Non Ally and OnField')
+               --LOG('Non Ally and OnField')
                 if (GetGameTimeSeconds() - 30) > v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
-                    LOG('Enemy ACU seen within 15 seconds and is within 150 of our start position')
+                   --LOG('Enemy ACU seen within 15 seconds and is within 150 of our start position')
                     return
                 end
             end
@@ -1095,7 +1095,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if EntityCategoryContains(categories.COMMAND, target) then
                         local enemyACUHealth = target:GetHealth()
-                        LOG('Enemy ACU Detected , our health is '..cdr.Health..' enemy is '..enemyACUHealth)
+                       --LOG('Enemy ACU Detected , our health is '..cdr.Health..' enemy is '..enemyACUHealth)
                         if enemyACUHealth < 5000 and cdr.Health - enemyACUHealth < 3000 then
                             if not cdr.SnipeMode then
                                 --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
@@ -1103,7 +1103,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 cdr.SnipeMode = true
                             end
                         elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3000 and not RUtils.PositionInWater(targetPos) then
-                            LOG('Enemy ACU could be killed or drawn, should we try?')
+                           --LOG('Enemy ACU could be killed or drawn, should we try?')
                             SetAcuSnipeMode(cdr, true)
                             cdr:SetAutoOvercharge(true)
                             cdr.SnipeMode = true
@@ -1134,7 +1134,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         local movePos
                         if snipeAttempt then
-                            LOG('Lets try snipe the target')
+                           --LOG('Lets try snipe the target')
                             movePos = targetPos
                         else 
                             movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 3 )})
@@ -1193,7 +1193,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         cdr:SetCustomName('CDR standard pew pew logic')
                         local movePos
                         if snipeAttempt then
-                            LOG('Lets try snipe the target')
+                           --LOG('Lets try snipe the target')
                             movePos = targetPos
                         else 
                             movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
@@ -1718,7 +1718,7 @@ function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco)
 		coroutine.yield(100)
     end
     unit.InitialDelay = false
-    LOG('Returning from extractorUpgradeThread')
+   --LOG('Returning from extractorUpgradeThread')
     unit.CentralBrainExtractorUpgrade = true
     
     -- Main Upgrade Loop

@@ -1863,7 +1863,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if v.Enemy then
                 -- dont log this until you want to get a dump of the brain.
                 --RNGLOG('EnemyStrength Tables :'..repr(v))
-                LOG('Start pos '..repr(self.BrainIntel.StartPos))
+               --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
                     if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 19600 then
                         RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
@@ -2392,7 +2392,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     SetupIntelTriggersRNG = function(self)
         coroutine.yield(10)
-        LOG('Try to create intel trigger for enemy')
+       --LOG('Try to create intel trigger for enemy')
         self:SetupArmyIntelTrigger({
             CallbackFunction = self.ACUDetectionRNG, 
             Type = 'LOSNow', 
@@ -2404,7 +2404,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ACUDetectionRNG = function(self, blip)
-        LOG('ACUDetection Callback has fired')
+       --LOG('ACUDetection Callback has fired')
         local currentGameTime = GetGameTimeSeconds()
         if blip then
             RNGLOG('* AI-RNG: ACU Detected')
@@ -2429,7 +2429,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                         c.Threat = acuThreat
                         c.LastSpotted = currentGameTime
-                        LOG('Enemy ACU Position is set')
+                       --LOG('Enemy ACU Position is set')
                     end
                 end
             end
@@ -2520,8 +2520,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end]]
                     local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
-                    LOG('Current Mex Upgrade Spend is '..mexSpend)
-                    LOG('Current Amount we could be spending '..self.cmanager.income.r.m*0.35)
+                   --LOG('Current Mex Upgrade Spend is '..mexSpend)
+                   --LOG('Current Amount we could be spending '..self.cmanager.income.r.m*0.35)
                     --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --RNGLOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
                     --RNGLOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
@@ -3382,20 +3382,20 @@ AIBrain = Class(RNGAIBrainClass) {
             local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
             self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
+           --LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( self, 'MASS')
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 --if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= upgradeSpec.MassLowTrigger and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= upgradeSpec.EnergyLowTrigger then
                 if upgradeSpend > 4 then
                     if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        LOG('We Could upgrade an extractor now with over time')
+                       --LOG('We Could upgrade an extractor now with over time')
                             --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                             if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                                LOG('Trigger all tiers false')
+                               --LOG('Trigger all tiers false')
                                 self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                             else
-                                LOG('Trigger all tiers true')
+                               --LOG('Trigger all tiers true')
                                 self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
                             end
                             coroutine.yield(30)
@@ -3407,7 +3407,7 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif massStorage > 500 and GetEconomyStored( self, 'ENERGY') > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                    LOG('We Could upgrade an extractor now with over time')
+                   --LOG('We Could upgrade an extractor now with over time')
                     local massIncome = GetEconomyIncome(self, 'MASS')
                     local massRequested = GetEconomyRequested(self, 'MASS')
                     local energyIncome = GetEconomyIncome(self, 'ENERGY')
@@ -3415,12 +3415,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     local massEfficiency = math.min(massIncome / massRequested, 2)
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                        LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
+                       --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                            LOG('Trigger all tiers false')
+                           --LOG('Trigger all tiers false')
                             self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                         else
-                            LOG('Trigger all tiers true')
+                           --LOG('Trigger all tiers true')
                             self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
                         end
                         coroutine.yield(30)
@@ -3430,7 +3430,7 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif extractorsDetail.TECH1Upgrading < 2 then
                 if upgradeSpend > 5 then
                     if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        LOG('We Could upgrade an extractor now with over time')
+                       --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                         coroutine.yield(60)
                     end
@@ -3438,7 +3438,7 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif massStorage > 3000 and GetEconomyStored( self, 'ENERGY') > 8000 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                    LOG('We Could upgrade an extractor now with over time')
+                   --LOG('We Could upgrade an extractor now with over time')
                     local massIncome = GetEconomyIncome(self, 'MASS')
                     local massRequested = GetEconomyRequested(self, 'MASS')
                     local energyIncome = GetEconomyIncome(self, 'ENERGY')
@@ -3446,8 +3446,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     local massEfficiency = math.min(massIncome / massRequested, 2)
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                        LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        LOG('Trigger all tiers true')
+                       --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
+                       --LOG('Trigger all tiers true')
                         self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
                         coroutine.yield(30)
                     end
@@ -3459,19 +3459,19 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ValidateExtractorUpgradeRNG = function(self, ALLBPS, extractorTable, allTiers)
-       LOG('ValidateExtractorUpgrade Stuff')
+      --LOG('ValidateExtractorUpgrade Stuff')
        local UnitPos
        local DistanceToBase
        local LowestDistanceToBase
        local lowestUnit = false
        local BasePosition = self.BuilderManagers['MAIN'].Position
        if extractorTable then
-            LOG('extractorTable present in upgrade validation')
+           --LOG('extractorTable present in upgrade validation')
             if extractorTable then
-                LOG('extractorTable has '..table.getn(extractorTable.TECH1)..' T1 units in it')
-                LOG('extractorTable has '..table.getn(extractorTable.TECH2)..' T2 units in it')
+               --LOG('extractorTable has '..table.getn(extractorTable.TECH1)..' T1 units in it')
+               --LOG('extractorTable has '..table.getn(extractorTable.TECH2)..' T2 units in it')
             else
-                LOG('extractorTable is nil')
+               --LOG('extractorTable is nil')
             end
             for _, v in extractorTable do
                 if not allTiers then
@@ -3486,7 +3486,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                     LowestDistanceToBase = DistanceToBase
                                     lowestUnit = c
-                                    LOG('T1 lowestUnit added alltiers false')
+                                   --LOG('T1 lowestUnit added alltiers false')
                                 end
                             end
                         end
@@ -3503,7 +3503,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                     LowestDistanceToBase = DistanceToBase
                                     lowestUnit = c
-                                    LOG('T1 lowestUnit added alltiers true')
+                                   --LOG('T1 lowestUnit added alltiers true')
                                 end
                             end
                         end
@@ -3519,7 +3519,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                     LowestDistanceToBase = DistanceToBase
                                     lowestUnit = c
-                                    LOG('T2 lowestUnit added alltiers true')
+                                   --LOG('T2 lowestUnit added alltiers true')
                                 end
                             end
                         end
@@ -3532,16 +3532,16 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not self.CentralBrainExtractorUnitUpgradeClosest then
                     self.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
                 end
-                LOG('Closest Extractor')
+               --LOG('Closest Extractor')
                 self:ForkThread(self.UpgradeExtractorRNG, ALLBPS, lowestUnit, LowestDistanceToBase)
             else
-                LOG('There is no lowestUnit')
+               --LOG('There is no lowestUnit')
             end
         end
     end,
 
     UpgradeExtractorRNG = function(self, ALLBPS, extractorUnit, distanceToBase)
-        LOG('Upgrading Extractor from central brain thread')
+       --LOG('Upgrading Extractor from central brain thread')
         local upgradeBp
         local upgradeID = ALLBPS[extractorUnit.UnitId].General.UpgradesTo or false
         if upgradeID then
@@ -3551,13 +3551,13 @@ AIBrain = Class(RNGAIBrainClass) {
             local upgradedExtractor = extractorUnit.UnitBeingBuilt
             local fractionComplete = upgradedExtractor:GetFractionComplete()
             while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
-                LOG('Upgrading Extractor Loop')
-                LOG('Unit is '..fractionComplete..' fraction complete')
+               --LOG('Upgrading Extractor Loop')
+               --LOG('Unit is '..fractionComplete..' fraction complete')
                 if not self.CentralBrainExtractorUnitUpgradeClosest or self.CentralBrainExtractorUnitUpgradeClosest.Dead then
                     self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
                 elseif self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase > distanceToBase then
                     self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                    LOG('This is a new closest extractor upgrading at '..distanceToBase)
+                   --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
                 if fractionComplete < 0.65 then
                     if (GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000 then
@@ -3608,7 +3608,7 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             multiplier = 1
         end
-        LOG('Initial Delay loop starting')
+       --LOG('Initial Delay loop starting')
         while initial_delay < (70 / multiplier) do
             if not unit.Dead and GetEconomyStored( self, 'MASS') >= 50 and GetEconomyStored( self, 'ENERGY') >= 900 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
@@ -3619,7 +3619,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
             coroutine.yield(100)
         end
-        LOG('Initial Delay loop completing')
+       --LOG('Initial Delay loop completing')
         unit.InitialDelayCompleted = true
     end,
 
