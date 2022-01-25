@@ -124,6 +124,26 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
     end,
 
+    AddFactory = function(self,unit)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.AddFactory(self,unit)
+        end
+        if not self:FactoryAlreadyExists(unit) and unit:GetFractionComplete() == 1 then
+            table.insert(self.FactoryList, unit)
+            unit.DesiresAssist = true
+            if EntityCategoryContains(categories.LAND, unit) then
+                self:SetupNewFactory(unit, 'Land')
+            elseif EntityCategoryContains(categories.AIR, unit) then
+                self:SetupNewFactory(unit, 'Air')
+            elseif EntityCategoryContains(categories.NAVAL, unit) then
+                self:SetupNewFactory(unit, 'Sea')
+            else
+                self:SetupNewFactory(unit, 'Gate')
+            end
+            self.LocationActive = true
+        end
+    end,
+
     FactoryFinishBuilding = function(self,factory,finishedUnit)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
@@ -134,7 +154,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
             --RNGLOG('Factory Built by factory, attempting to kill factory.')
 			if finishedUnit:GetFractionComplete() == 1 then
-                LOG('RNG FactoryFinishBuilding has fired')
 				self:AddFactory(finishedUnit )			
 				factory.Dead = true
                 factory.Trash:Destroy()

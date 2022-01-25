@@ -3476,7 +3476,6 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     end
     table.sort(markerTable, function(a,b) return a.Distance < b.Distance end)
     for k, v in markerTable do
-        RNGLOG('Hydro distance is '..v.Distance)
         if v.Distance <= radiusLimit then
             --RNGLOG('Marker is within distance with '..v.Distance)
             if canBuild then

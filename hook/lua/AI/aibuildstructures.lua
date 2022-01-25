@@ -12,14 +12,6 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     if not builder.EngineerBuildQueue then
         builder.EngineerBuildQueue = {}
     end
-    if not buildLocation[1] then
-        LOG('No Build location x sent to AddToBuildQueueRNG')
-        LOG('Builder was '..builder.PlatoonHandle.BuilderName)
-    elseif not buildLocation[3] then
-        LOG('No Build location y sent to AddToBuildQueueRNG')
-    elseif not buildLocation[2] then
-        LOG('No Build location z sent to AddToBuildQueueRNG')
-    end
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
     --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
     if borderWarning then

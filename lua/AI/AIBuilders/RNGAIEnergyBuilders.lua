@@ -457,7 +457,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
-            { EBC, 'LessThanEnergyStorageCurrentRNG', { 20000 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
         },
         BuilderType = 'Any',
@@ -478,7 +478,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 500,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},

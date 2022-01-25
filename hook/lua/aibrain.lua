@@ -731,6 +731,7 @@ AIBrain = Class(RNGAIBrainClass) {
             },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
             EcoMultiplier = 1,
+            EcoMassUpgradeTimeout = 390,
         }
         self.EcoManager.PowerPriorityTable = {
             ENGINEER = 12,
@@ -3548,6 +3549,8 @@ AIBrain = Class(RNGAIBrainClass) {
             upgradeBp = ALLBPS[upgradeID]
             IssueUpgrade({extractorUnit}, upgradeID)
             coroutine.yield(2)
+            local upgradeTimeStamp = GetGameTimeSeconds()
+            local bypassEcoManager = false
             local upgradedExtractor = extractorUnit.UnitBeingBuilt
             local fractionComplete = upgradedExtractor:GetFractionComplete()
             while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
@@ -3559,7 +3562,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
                     LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
-                if fractionComplete < 0.65 then
+                if fractionComplete < 0.65 and not bypassEcoManager then
                     if (GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000 then
                         if not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
@@ -3585,6 +3588,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 coroutine.yield(30)
                 if extractorUnit and not extractorUnit.Dead then
                     fractionComplete = upgradedExtractor:GetFractionComplete()
+                end
+                if not bypassEcoManager and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase and GetGameTimeSeconds() - upgradeTimeStamp > self.EcoManager.EcoMassUpgradeTimeout then
+                    bypassEcoManager = true
+                    if extractorUnit:IsPaused() then
+                        extractorUnit:SetPaused(false)
+                    end
                 end
             end
             if upgradedExtractor and not upgradedExtractor.Dead then

@@ -5784,22 +5784,28 @@ Platoon = Class(RNGAIPlatoon) {
         end
         
         if bestBase then
+            local movePosition
+            if bestBase.FactoryManager and bestBase.FactoryManager.RallyPoint then
+                movePosition = bestBase.FactoryManager.RallyPoint
+            else
+                movePosition = bestBase.Position
+            end
             if self.MovementLayer == 'Air' then
                 self:Stop()
-                self:MoveToLocation(bestBase.Position, false)
+                self:MoveToLocation(movePosition, false)
                 --RNGLOG('Air Unit Return to base provided position :'..repr(bestBase.Position))
                 while PlatoonExists(aiBrain, self) do
                     local currentPlatPos = self:GetPlatoonPosition()
                     --RNGLOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3]))
                     --RNGLOG('Air Unit Platoon Position is :'..repr(currentPlatPos))
-                    local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3])
+                    local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], movePosition[1], movePosition[3])
                     if distSq < 6400 then
                         break
                     end
                     coroutine.yield(15)
                 end
             else
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestBase.Position, 10)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), movePosition, 10)
                 IssueClearCommands(self)
                 if path then
                     local pathLength = RNGGETN(path)
@@ -5822,7 +5828,7 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 end
-                self:MoveToLocation(bestBase.Position, false)
+                self:MoveToLocation(movePosition, false)
             end
         end
         coroutine.yield(20)
