@@ -53,6 +53,8 @@ end
         Position={ },   <- Position they were last seen
         Threat=0   <- The amount of enemy threat they had around them.
     },
+
+    A word about the ACU. In the current FAF balance the Sera blueprint has a MuzzleChargeDelay value of 0.4. This seems to cause the AI to be very inaccurate with its gun. Unknown why.
 ]]
 
 function SetCDRDefaults(aiBrain, cdr)
@@ -722,7 +724,7 @@ function CommanderThreadRNG(cdr, platoon)
         end
         coroutine.yield(2)
 
-        if not cdr.Dead then 
+        if not cdr.Dead and not cdr.Initializing then 
             cdr:SetCustomName('CDROverChargeRNG')
             CDROverChargeRNG(aiBrain, cdr) 
         end
@@ -753,7 +755,7 @@ function CommanderThreadRNG(cdr, platoon)
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
         and not cdr:IsUnitState("Attacking") and not cdr:IsUnitState("Repairing")
         and not cdr:IsUnitState("Upgrading") and not cdr:IsUnitState("Enhancing") 
-        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior and not cdr.Upgrading and not cdr.Combat and not cdr.Active then
+        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior and not cdr.Upgrading and not cdr.Combat and not cdr.Active and not cdr.Initializing then
             -- if we have nothing to build...
             --cdr:SetCustomName('Look for thing to build')
             if not cdr.EngineerBuildQueue or RNGGETN(cdr.EngineerBuildQueue) == 0 then

@@ -3430,9 +3430,11 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         end
     end
     if buildLocation then
-        --RNGLOG('Build Location returned '..repr(buildLocation))
+        RNGLOG('Build Location returned '..repr(buildLocation))
+        RNGLOG('What to build returned '..repr(whatToBuild))
         return buildLocation, whatToBuild
     end
+    LOG('GetBuildLocationRNG is false')
     return false
 end
 
