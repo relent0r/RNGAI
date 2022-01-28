@@ -491,9 +491,9 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
     RNGLOG('Moving ACU to position')
     if retreat then
-        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512)
+        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
     else
-        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
     end
     if path then
         RNGLOG('We have a path')
@@ -705,6 +705,16 @@ end
 function CommanderThreadRNG(cdr, platoon)
     --RNGLOG('* AI-RNG: Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
+    -- just incase the initialization breaks for some reason we want the acu to start
+    local initializeCounter = 0
+    while cdr.Initializing do
+        initializeCounter = initializeCounter + 1
+        coroutine.yield(20)
+        if initializeCounter > 150 then
+            cdr.Initializing = false
+            cdr.Active = false
+        end
+    end
 
     while not cdr.Dead do
         -- Overcharge
@@ -724,7 +734,7 @@ function CommanderThreadRNG(cdr, platoon)
         end
         coroutine.yield(2)
 
-        if not cdr.Dead and not cdr.Initializing then 
+        if not cdr.Dead then 
             cdr:SetCustomName('CDROverChargeRNG')
             CDROverChargeRNG(aiBrain, cdr) 
         end

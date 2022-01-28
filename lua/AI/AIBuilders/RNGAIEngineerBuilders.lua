@@ -399,18 +399,18 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Structures',
-        PlatoonTemplate = 'T1EngineerFinishRNG',
+        PlatoonTemplate = 'T123EngineerFinishRNG',
         Priority = 990,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 3,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * categories.FACTORY}},
+                { UCBC, 'UnfinishedUnits', { 'LocationType', (categories.STRUCTURE * categories.FACTORY + categories.ENERGYPRODUCTION) + categories.EXPERIMENTAL }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
             Assist = {
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = categories.STRUCTURE * categories.FACTORY,
+                BeingBuiltCategories = categories.STRUCTURE * categories.FACTORY + categories.EXPERIMENTAL,
             },
         },
         BuilderType = 'Any',
@@ -1206,7 +1206,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP Engineer Unfinished Structures',
-        PlatoonTemplate = 'T1EngineerFinishRNG',
+        PlatoonTemplate = 'T123EngineerFinishRNG',
         Priority = 750,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 8,

@@ -463,10 +463,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = false,
-                AvoidCategory = categories.ENERGYENERGYSTORAGE,
-                maxUnits = 1,
-                maxRadius = 5,
+                BuildClose = true,
+                --ForceAvoidCategory = true,
+                --AvoidCategory = categories.ENERGYSTORAGE,
+                --Radius = 5,
                 BuildStructures = {
                     'EnergyStorage',
                 },
@@ -488,9 +488,9 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
-                AvoidCategory = categories.ENERGYENERGYSTORAGE,
-                maxUnits = 1,
-                maxRadius = 5,
+                --ForceAvoidCategory = true,
+                --AvoidCategory = categories.ENERGYSTORAGE,
+                --Radius = 5,
                 BuildStructures = {
                     'EnergyStorage',
                 },

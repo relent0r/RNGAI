@@ -194,7 +194,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     return false
 end
 
-function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist)
+function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist, acuPath)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
     if not GetPathGraphs()[platoonLayer] then
         return false, 'NoGraph'
@@ -223,7 +223,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
 
     --Generate the safest path between the start and destination
     local path
-    path = GeneratePathRNG(aiBrain, startNode, endNode, ThreatTable[platoonLayer], optThreatWeight, destination, location, platoonLayer)
+    path = GeneratePathRNG(aiBrain, startNode, endNode, ThreatTable[platoonLayer], optThreatWeight, destination, location, platoonLayer, acuPath)
 
     if not path then return false, 'NoPath' end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
@@ -282,7 +282,7 @@ function PlatoonGeneratePathToRNG(aiBrain, platoonLayer, start, destination, opt
     return finalPath, false
 end
 
-function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer)
+function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer, acuPath)
     local VDist2 = VDist2
     threatWeight = threatWeight or 1
     -- Check if we have this path already cached.
@@ -384,7 +384,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                     -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
                     dist = 100 * dist / ( mapSizeX + mapSizeZ )
                     -- get threat from current node to adjacent node
-                    if platoonLayer == 'Air' and ScenarioInfo.Options.AIMapMarker == 'all' then
+                    if (platoonLayer == 'Air' or acuPath) and ScenarioInfo.Options.AIMapMarker == 'all' then
                         threat = GetThreatAtPosition(aiBrain, newNode.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType)
                     else
                         threat = GetThreatBetweenPositions(aiBrain, newNode.position, lastNode.position, nil, threatType)
