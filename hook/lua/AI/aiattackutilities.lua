@@ -531,7 +531,7 @@ end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
 
-    GetMostRestrictiveLayer(platoon)
+    GetMostRestrictiveLayerRNG(platoon)
 
     local units = platoon:GetPlatoonUnits()
     local transportplatoon = false
@@ -996,7 +996,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
 
     -- avoid mountains by slowly moving away from higher areas
-    GetMostRestrictiveLayer(platoon)
+    GetMostRestrictiveLayerRNG(platoon)
     if platoon.MovementLayer == 'Land' then
         local bestPos = attackPos
         local attackPosHeight = GetTerrainHeight(attackPos[1], attackPos[3])
@@ -1026,7 +1026,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
     if oldPathSize == 0 or attackPos[1] != platoon.LastAttackDestination[oldPathSize][1] or
     attackPos[3] != platoon.LastAttackDestination[oldPathSize][3] then
 
-        GetMostRestrictiveLayer(platoon)
+        GetMostRestrictiveLayerRNG(platoon)
         -- check if we can path to here safely... give a large threat weight to sort by threat first
         local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), attackPos, platoon.PlatoonData.NodeWeight or 10)
 
@@ -1502,4 +1502,35 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     end
 
     return bestGoalPos
+end
+
+function GetMostRestrictiveLayerRNG(platoon)
+    -- in case the platoon is already destroyed return false.
+    if not platoon then
+        return false
+    end
+    platoon.MovementLayer = 'Air'
+    platoon.MappingMovementLayer = 0
+
+    for k,v in platoon:GetPlatoonUnits() do
+        if not v.Dead then
+            local mType = v:GetBlueprint().Physics.MotionType
+            if (mType == 'RULEUMT_AmphibiousFloating' or mType == 'RULEUMT_Hover' or mType == 'RULEUMT_Amphibious') and (platoon.MovementLayer == 'Air' or platoon.MovementLayer == 'Water') then
+                platoon.MovementLayer = 'Amphibious'
+                platoon.MappingMovementLayer = 3
+            elseif (mType == 'RULEUMT_Water' or mType == 'RULEUMT_SurfacingSub') and (platoon.MovementLayer ~= 'Water') then
+                platoon.MovementLayer = 'Water'
+                platoon.MappingMovementLayer = 2
+                break   --Nothing more restrictive than water, since there should be no mixed land/water platoons
+            elseif mType == 'RULEUMT_Air' and platoon.MovementLayer == 'Air' then
+                platoon.MovementLayer = 'Air'
+                platoon.MappingMovementLayer = 0
+            elseif (mType == 'RULEUMT_Biped' or mType == 'RULEUMT_Land') and platoon.MovementLayer ~= 'Land' then
+                platoon.MovementLayer = 'Land'
+                platoon.MappingMovementLayer = 1
+                break   --Nothing more restrictive than land, since there should be no mixed land/water platoons
+            end
+        end
+    end
+    return true
 end

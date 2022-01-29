@@ -440,7 +440,7 @@ IntelManager = Class {
                 local friendlyThreat = {}
                 for k1, v1 in AlliedPlatoons do
                     if not v1.MovementLayer then
-                        AIAttackUtils.GetMostRestrictiveLayer(v1)
+                        AIAttackUtils.GetMostRestrictiveLayerRNG(v1)
                     end
                     if not v1.Dead then
                         if v1.Zone and v1.CurrentPlatoonThreat then

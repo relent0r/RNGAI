@@ -216,12 +216,13 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     -- if we have a location, build!
     if location and IsResource(buildingType) then
         local borderWarning = false
-        if location[1] <= 8 or location[1] >= ScenarioInfo.size[1] - 8 or location[2] <= 8 or location[2] >= ScenarioInfo.size[2] - 8 then
-            borderWarning = true
-        end 
         local relativeLoc = BuildToNormalLocation(location)
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
+        end
+        if relativeLoc[1] <= 8 or relativeLoc[1] >= ScenarioInfo.size[1] - 8 or relativeLoc[3] <= 8 or relativeLoc[3] >= ScenarioInfo.size[2] - 8 then
+            LOG('BorderWarning is true, location is '..repr(relativeLoc))
+            borderWarning = true
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)

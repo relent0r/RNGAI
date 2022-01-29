@@ -24,7 +24,7 @@ local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
-local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
+local GetMostRestrictiveLayerRNG = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayerRNG
 local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -1396,7 +1396,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 end
 
                 if not aPlat.MovementLayer then 
-                    AIAttackUtils.GetMostRestrictiveLayer(aPlat) 
+                    AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat) 
                 end
 
                 -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
@@ -2290,7 +2290,7 @@ ZoneUpdate = function(platoon)
         end
     end
     if not platoon.MovementLayer then
-        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
     while aiBrain:PlatoonExists(platoon) do
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then

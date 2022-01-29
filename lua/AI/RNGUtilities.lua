@@ -136,15 +136,17 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if platoon.PlatoonData.ReclaimTable then
             RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
             if aiBrain.MapReclaimTable then
+                LOG('aiBrain MapReclaimTable exist')
                 local reclaimOptions = {}
                 local maxReclaimCount = 30
                 local validLocation = false
                 for _, v in aiBrain.MapReclaimTable do
-                    if v.TotalReclaim > 500 then
+                    if v.TotalReclaim > 100 then
                         RNGINSERT(reclaimOptions, {Position = v.Position, TotalReclaim = v.TotalReclaim, Distance=VDist2Sq(engPos[1], engPos[3], v.Position[1], v.Position[3])})
                     end
                 end
                 table.sort(reclaimOptions, function(a,b) return a.Distance < b.Distance end)
+                LOG('reclaimOptions table size is '..RNGGETN(reclaimOptions))
                 for _, v in reclaimOptions do
                     if platoon.PlatoonData.Early and v.Distance > 14400 then
                         RNGLOG('Early reclaim and its too far away lets go for something closer')
@@ -216,64 +218,79 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             return
                         end
                         engPos = self:GetPosition()
-                        local x1 = engPos[1] - 40
-                        local x2 = engPos[1] + 40
-                        local z1 = engPos[3] - 40
-                        local z2 = engPos[3] + 40
-                        local rect = Rect(x1, z1, x2, z2)
-                        local reclaimRect = {}
-                        reclaimRect = GetReclaimablesInRect(rect)
-                        if reclaimRect and RNGGETN( reclaimRect ) > 0 then
-                            local reclaimSort = {}
-                            RNGLOG('Looping through reclaimables')
+                        -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
+                        -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
+                        local reclaimGrid = {
+                            {engPos[1], 0 ,engPos[3]},
+                            {engPos[1], 0 ,engPos[3] + 15},
+                            {engPos[1] + 15, 0 ,engPos[3] + 15},
+                            {engPos[1] + 15, 0, engPos[3]},
+                            {engPos[1] + 15, 0, engPos[3] - 15},
+                            {engPos[1], 0, engPos[3] - 15},
+                            {engPos[1] - 15, 0, engPos[3] - 15},
+                            {engPos[1] - 15, 0, engPos[3]},
+                            {engPos[1] - 15, 0, engPos[3] + 15}
+                        }
+                        LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                        if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
+                            LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
-                            for k,v in reclaimRect do
-                                if not IsProp(v) or self.BadReclaimables[v] then continue end
-                                local rpos = v:GetCachePosition()
-                                -- Start Blacklisted Props
-                                local blacklisted = false
-                                for _, BlackPos in PropBlacklist do
-                                    if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
-                                        blacklisted = true
-                                        break
-                                    end
+                            for k, square in reclaimGrid do
+                                if square[1] - 10 <= 3 or square[1] + 10 >= ScenarioInfo.size[1] - 3 or square[3] - 10 <= 3 or square[3] + 10 >= ScenarioInfo.size[1] - 3 then
+                                    LOG('Grid square position outside of map border')
+                                    continue
                                 end
-                                if blacklisted then continue end
-                                -- End Blacklisted Props
-                                if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
-                                    if not self.BadReclaimables[v] then
-                                        table.insert( reclaimSort, {Reclaim = v, Distance = VDist2Sq(engPos[1], engPos[3], rpos[1], rpos[3])} )
-                                        reclaimCount = reclaimCount + 1
-                                        if reclaimCount > maxReclaimCount then
-                                            break
+                                LOG('reclaimGrid square table is '..repr(square))
+                                local rectDef = Rect(square[1] - 10, square[3] + 10, square[1] + 10, square[3] - 10)
+                                local reclaimRect = GetReclaimablesInRect(rectDef)
+                                local engReclaiming = false
+                                if reclaimRect then
+                                    for c, b in reclaimRect do
+                                        if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                        local rpos = b:GetCachePosition()
+                                        -- Start Blacklisted Props
+                                        local blacklisted = false
+                                        for _, BlackPos in PropBlacklist do
+                                            if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
+                                                blacklisted = true
+                                                break
+                                            end
+                                        end
+                                        if blacklisted then continue end
+                                        if b.MaxMassReclaim and b.MaxMassReclaim > 4 then
+                                            engReclaiming = true
+                                            reclaimCount = reclaimCount + 1
+                                            IssueReclaim({self}, b)
                                         end
                                     end
                                 end
-
-                            end
-                            table.sort(reclaimSort, function(a,b) return a.Distance < b.Distance end)
-                            for k, v in reclaimSort do
-                                IssueReclaim({self}, v.Reclaim)
-                            end
-                            local idleCounter = 0
-                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                engPos = self:GetPosition()
-                                self:SetCustomName('Engineer in reclaim loop')
-                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                    RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                    RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                    idleCounter = idleCounter + 1
-                                    if idleCounter > 15 then
-                                        RNGLOG('idleCounter hit, breaking loop')
-                                        break
+                                if engReclaiming then
+                                    local idleCounter = 0
+                                    while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                        self:SetCustomName('Engineer in reclaim loop')
+                                        if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                            RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                            RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                            idleCounter = idleCounter + 1
+                                            if idleCounter > 15 then
+                                                RNGLOG('idleCounter hit, breaking loop')
+                                                break
+                                            end
+                                        end
+                                        --RNGLOG('We are reclaiming stuff')
+                                        coroutine.yield(30)
                                     end
                                 end
-                                --RNGLOG('We are reclaiming stuff')
-                                coroutine.yield(30)
                             end
+                            LOG('reclaim grid loop has finished')
+                            LOG('Total things that should have be issued reclaim are '..reclaimCount)
                         end
                     end
+                else
+                    LOG('No valid reclaim options')
                 end
+            else
+                LOG('aiBrain MapReclaimTable does not exist')
             end
         end
         local furtherestReclaim = nil
@@ -1256,7 +1273,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
         avoidbases = false
     end
     if not platoon.MovementLayer then
-        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
     
     if maxRange > 512 then
@@ -1386,7 +1403,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
         return false
     end
     if not platoon.MovementLayer then
-        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
     local targetUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, position, maxRange, 'Enemy')
     local retUnit = false
@@ -2478,7 +2495,7 @@ function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
 
     
     if not platoon.MovementLayer then
-        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
 
 end
@@ -3313,7 +3330,7 @@ MapReclaimAnalysis = function(aiBrain)
                 end
             end
             aiBrain.MapReclaimTable = reclaimGrid
-            --RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
+            RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
         end
         coroutine.yield(1800)
     end

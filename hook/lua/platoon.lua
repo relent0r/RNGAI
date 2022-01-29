@@ -285,7 +285,7 @@ Platoon = Class(RNGAIPlatoon) {
         -----------------------------------------------------------------------
         local markerLocations
 
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
         self.EnemyRadius = 40
         self.MaxPlatoonWeaponRange = false
@@ -739,7 +739,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     ScoutingAIRNG = function(self)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         if self.MovementLayer == 'Air' then
             return self:AirScoutingAIRNG()
@@ -972,7 +972,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     LandScoutingAIRNG = function(self)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         local aiBrain = self:GetBrain()
         local scout = GetPlatoonUnits(self)[1]
@@ -1179,7 +1179,7 @@ Platoon = Class(RNGAIPlatoon) {
         local smartPos
         self.scoutUnit = false
         local atkPri = { categories.MOBILE * categories.LAND }
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local function VariableKite(platoon,unit,target)
             local function KiteDist(pos1,pos2,distance)
                 local vec={}
@@ -1323,7 +1323,7 @@ Platoon = Class(RNGAIPlatoon) {
     HuntAIPATHRNG = function(self)
         --RNGLOG('* AI-RNG: * HuntAIPATH: Starting')
         self:Stop()
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local DEBUG = false
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
@@ -1476,7 +1476,7 @@ Platoon = Class(RNGAIPlatoon) {
     NavalRangedAIRNG = function(self)
         --RNGLOG('* AI-RNG: * NavalRangedAIRNG: Starting')
         self:Stop()
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target, acuInRange
@@ -1838,7 +1838,7 @@ Platoon = Class(RNGAIPlatoon) {
         local rangedPosition = false
         local SquadPosition = {}
         local rangedPositionDistance = 99999999
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -2150,7 +2150,7 @@ Platoon = Class(RNGAIPlatoon) {
                 RNGINSERT(categoryList, v)
             end
         end
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         
         -- Removing ALLUNITS so we rely on the builder config. Stops bombers trying to attack fighters.
         --RNGINSERT(atkPri, categories.ALLUNITS)
@@ -2158,7 +2158,7 @@ Platoon = Class(RNGAIPlatoon) {
 
         --RNGLOG('Platoon is '..self.BuilderName..' table'..repr(categoryList))
         self:SetPrioritizedTargetList('Attack', categoryList)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         if data.LocationType then
             basePosition = aiBrain.BuilderManagers[data.LocationType].Position
@@ -3658,7 +3658,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
 
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local stageExpansion = false
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         self:ConfigurePlatoon()
@@ -4005,7 +4005,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.atkPri = {}
         self.CurrentPlatoonThreat = false
         local categoryList = {}
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         self:ConfigurePlatoon()
 
@@ -4411,7 +4411,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
 
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
         local stageExpansion = false
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
@@ -5707,7 +5707,7 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
             if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(aPlat)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
             end
             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
             if self.MovementLayer != aPlat.MovementLayer then
@@ -5757,10 +5757,10 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
             if not self.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(self)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
             if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(aPlat)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
             end
 
             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
@@ -5856,10 +5856,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             if not self.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(self)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
             if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(aPlat)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
             end
 
             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
@@ -5903,7 +5903,7 @@ Platoon = Class(RNGAIPlatoon) {
         local bestBaseName = ""
         local bestDistSq = 999999999
         local platPos = GetPlatoonPosition(self)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         if not mainBase then
             for baseName, base in aiBrain.BuilderManagers do
@@ -5985,7 +5985,7 @@ Platoon = Class(RNGAIPlatoon) {
     DistressResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
         if not self.MovementLayer then
-            AIAttackUtils.GetMostRestrictiveLayer(self)
+            AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         end
         local atkPri = {}
         local threatType
@@ -6283,7 +6283,7 @@ Platoon = Class(RNGAIPlatoon) {
 
     SACUAttackAIRNG = function(self)
         -- SACU Attack Platoon
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local platoonUnits = GetPlatoonUnits(self)
 
         if platoonUnits and PlatoonStrength > 0 then
@@ -8292,7 +8292,7 @@ Platoon = Class(RNGAIPlatoon) {
         local platoonUnits = GetPlatoonUnits(self)
         local friendlyThreat=0
         local enemyThreat=0
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self:ForkThread(self.HighlightTruePlatoon)
         self:ForkThread(self.OptimalTargetingRNG)
         self:ForkThread(self.PathNavigationRNG)
