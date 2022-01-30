@@ -15,7 +15,7 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
     --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
     if borderWarning then
-        LOG('BorderWarning build')
+       -- LOG('BorderWarning build')
         IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
     else
         aiBrain:BuildStructure(builder, whatToBuild, buildLocation, false)
@@ -221,7 +221,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
         if relativeLoc[1] <= 8 or relativeLoc[1] >= ScenarioInfo.size[1] - 8 or relativeLoc[3] <= 8 or relativeLoc[3] >= ScenarioInfo.size[2] - 8 then
-            LOG('BorderWarning is true, location is '..repr(relativeLoc))
+           -- LOG('BorderWarning is true, location is '..repr(relativeLoc))
             borderWarning = true
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
@@ -241,7 +241,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
 end
 
 function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
-    LOG('AIBuildAvoidRNG Started')
+   -- LOG('AIBuildAvoidRNG Started')
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     local VDist3Sq = VDist3Sq
     local relativeTo
@@ -253,7 +253,7 @@ function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relati
     local function heightbuildpos(vec)
         return {vec[1],vec[2],GetSurfaceHeight(vec[1],vec[2])}
     end
-    LOG('AIBuildAvoidRNG Checking if close to builder')
+   -- LOG('AIBuildAvoidRNG Checking if close to builder')
     if closeToBuilder then
         relativeTo = builder:GetPosition()
     elseif builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
@@ -262,9 +262,9 @@ function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relati
         local startPosX, startPosZ = aiBrain:GetArmyStartPos()
         relativeTo = {startPosX, 0, startPosZ}
     end
-    LOG('AIBuildAvoidRNG Checking if cons.AvoidCategory')
+   -- LOG('AIBuildAvoidRNG Checking if cons.AvoidCategory')
     if cons.AvoidCategory then
-        LOG('AIBuildAvoidRNG Attempting to find position')
+       -- LOG('AIBuildAvoidRNG Attempting to find position')
         local radius = cons.Radius or 10
         local unitList = aiBrain:GetUnitsAroundPoint(cons.AvoidCategory,  relativeTo, 60, 'Ally')
         local location = false
@@ -280,22 +280,22 @@ function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relati
                         end
                     end
                     if unitCount < 1 then
-                        LOG('AIBuildAvoidRNG I think we found a position at '..repr(location))
+                       -- LOG('AIBuildAvoidRNG I think we found a position at '..repr(location))
                         break
                     end
                 end
             end
         end
         if location then
-            LOG('AIBuildAvoidRNG Placing into build queue')
-            LOG('Build queue is as follows')
-            LOG('whatToBuild '..whatToBuild)
-            LOG('Builder Location '..repr({location[1], location[3], location[2]})..' that last number should be a zero')
+           -- LOG('AIBuildAvoidRNG Placing into build queue')
+           -- LOG('Build queue is as follows')
+           -- LOG('whatToBuild '..whatToBuild)
+           -- LOG('Builder Location '..repr({location[1], location[3], location[2]})..' that last number should be a zero')
             AddToBuildQueueRNG(aiBrain, builder, whatToBuild, location, false)
             return true
         end
     end
-    LOG('AIBuildAvoidRNG is returning false')
+   -- LOG('AIBuildAvoidRNG is returning false')
     return false
 end
 

@@ -1,5 +1,5 @@
 RNGLOG = function(data)
     --if aiBrain.RNGDEBUG then
-    LOG(data)
+   -- LOG(data)
     --end
 end

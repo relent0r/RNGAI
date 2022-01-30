@@ -53,7 +53,7 @@ RNGLandResourceSet = Class(ZoneSet){
     end,
     GenerateZoneList = function(self)
         -- Step 1: Get a set of markers that are in the layer we're currently interested in.
-        RNGLOG('GenerateZoneList for custom Zone')
+       -- RNGLOG('GenerateZoneList for custom Zone')
         local armyStarts = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
         local zoneRadius = 50 * 50
@@ -75,7 +75,7 @@ RNGLandResourceSet = Class(ZoneSet){
             end
         end
         complete = (RNGGETN(markers) == 0)
-        RNGLOG('Starting GenerateZoneList Loop')
+       -- RNGLOG('Starting GenerateZoneList Loop')
         while not complete do
             complete = true
             -- Update weights
@@ -110,7 +110,7 @@ RNGLandResourceSet = Class(ZoneSet){
             local z = best.aggZ/best.weight
             for _, p in armyStarts do
                 if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
-                    RNGLOG('Start Position Taken '..repr(p))
+                   -- RNGLOG('Start Position Taken '..repr(p))
                     startPos = true
                     break
                 end
