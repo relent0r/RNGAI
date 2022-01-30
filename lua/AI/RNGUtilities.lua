@@ -229,7 +229,23 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             {engPos[1], 0, engPos[3] - 15},
                             {engPos[1] - 15, 0, engPos[3] - 15},
                             {engPos[1] - 15, 0, engPos[3]},
-                            {engPos[1] - 15, 0, engPos[3] + 15}
+                            {engPos[1] - 15, 0, engPos[3] + 15},
+                            {engPos[1], 0 ,engPos[3] + 25},
+                            {engPos[1] + 15, 0 ,engPos[3] + 25},
+                            {engPos[1] + 25, 0 ,engPos[3] + 25},
+                            {engPos[1] + 25, 0 ,engPos[3] + 15},
+                            {engPos[1] + 25, 0, engPos[3]},
+                            {engPos[1] + 25, 0, engPos[3] - 15},
+                            {engPos[1] + 25, 0, engPos[3] - 25},
+                            {engPos[1] + 15, 0, engPos[3] - 25},
+                            {engPos[1], 0, engPos[3] - 25},
+                            {engPos[1] - 15, 0, engPos[3] - 25},
+                            {engPos[1] - 25, 0, engPos[3] - 25},
+                            {engPos[1] - 25, 0, engPos[3] - 15},
+                            {engPos[1] - 25, 0, engPos[3]},
+                            {engPos[1] - 25, 0, engPos[3] + 15},
+                            {engPos[1] - 15, 0, engPos[3] + 25},
+                            {engPos[1] - 25, 0, engPos[3] + 25},
                         }
                         LOG('EngineerReclaimGrid '..repr(reclaimGrid))
                         if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
@@ -257,7 +273,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                             end
                                         end
                                         if blacklisted then continue end
-                                        if b.MaxMassReclaim and b.MaxMassReclaim > 4 then
+                                        if b.MaxMassReclaim and b.MaxMassReclaim > 8 then
                                             engReclaiming = true
                                             reclaimCount = reclaimCount + 1
                                             IssueReclaim({self}, b)

@@ -974,9 +974,51 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
+        self:ForkThread(self.TestThread)
         self.intelmanager = IntelManagerRNG.CreateIntelManager(self)
         self.intelmanager:Run()
         
+    end,
+
+
+    TestThread = function(self)
+        -- just a test for visually seeing grids
+        local startX, startZ = self:GetArmyStartPos()
+        local engPos = {startX, 0, startZ}
+        local reclaimGrid = {
+            {engPos[1], 0 ,engPos[3]},
+            {engPos[1], 0 ,engPos[3] + 15},
+            {engPos[1] + 15, 0 ,engPos[3] + 15},
+            {engPos[1] + 15, 0, engPos[3]},
+            {engPos[1] + 15, 0, engPos[3] - 15},
+            {engPos[1], 0, engPos[3] - 15},
+            {engPos[1] - 15, 0, engPos[3] - 15},
+            {engPos[1] - 15, 0, engPos[3]},
+            {engPos[1] - 15, 0, engPos[3] + 15},
+            {engPos[1], 0 ,engPos[3] + 25},
+            {engPos[1] + 15, 0 ,engPos[3] + 25},
+            {engPos[1] + 25, 0 ,engPos[3] + 25},
+            {engPos[1] + 25, 0 ,engPos[3] + 15},
+            {engPos[1] + 25, 0, engPos[3]},
+            {engPos[1] + 25, 0, engPos[3] - 15},
+            {engPos[1] + 25, 0, engPos[3] - 25},
+            {engPos[1] + 15, 0, engPos[3] - 25},
+            {engPos[1], 0, engPos[3] - 25},
+            {engPos[1] - 15, 0, engPos[3] - 25},
+            {engPos[1] - 25, 0, engPos[3] - 25},
+            {engPos[1] - 25, 0, engPos[3] - 15},
+            {engPos[1] - 25, 0, engPos[3]},
+            {engPos[1] - 25, 0, engPos[3] + 15},
+            {engPos[1] - 15, 0, engPos[3] + 25},
+            {engPos[1] - 25, 0, engPos[3] + 25},
+        }
+        while true do
+            for k, square in reclaimGrid do
+                DrawCircle(square, 10, '0000FF')
+            end
+            WaitTicks(2)
+        end
+
     end,
 
     ZoneSetup = function(self)
