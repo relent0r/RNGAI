@@ -457,16 +457,16 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
-            { EBC, 'LessThanEnergyStorageCurrentRNG', { 20000 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BuildClose = false,
-                AvoidCategory = categories.ENERGYENERGYSTORAGE,
-                maxUnits = 1,
-                maxRadius = 5,
+                BuildClose = true,
+                --ForceAvoidCategory = true,
+                --AvoidCategory = categories.ENERGYSTORAGE,
+                --Radius = 5,
                 BuildStructures = {
                     'EnergyStorage',
                 },
@@ -478,7 +478,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 500,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
@@ -488,9 +488,9 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
-                AvoidCategory = categories.ENERGYENERGYSTORAGE,
-                maxUnits = 1,
-                maxRadius = 5,
+                --ForceAvoidCategory = true,
+                --AvoidCategory = categories.ENERGYSTORAGE,
+                --Radius = 5,
                 BuildStructures = {
                     'EnergyStorage',
                 },

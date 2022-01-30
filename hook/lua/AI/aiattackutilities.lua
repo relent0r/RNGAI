@@ -194,7 +194,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     return false
 end
 
-function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist)
+function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist, acuPath)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
     if not GetPathGraphs()[platoonLayer] then
         return false, 'NoGraph'
@@ -223,7 +223,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
 
     --Generate the safest path between the start and destination
     local path
-    path = GeneratePathRNG(aiBrain, startNode, endNode, ThreatTable[platoonLayer], optThreatWeight, destination, location, platoonLayer)
+    path = GeneratePathRNG(aiBrain, startNode, endNode, ThreatTable[platoonLayer], optThreatWeight, destination, location, platoonLayer, acuPath)
 
     if not path then return false, 'NoPath' end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
@@ -282,7 +282,7 @@ function PlatoonGeneratePathToRNG(aiBrain, platoonLayer, start, destination, opt
     return finalPath, false
 end
 
-function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer)
+function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer, acuPath)
     local VDist2 = VDist2
     threatWeight = threatWeight or 1
     -- Check if we have this path already cached.
@@ -384,7 +384,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                     -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
                     dist = 100 * dist / ( mapSizeX + mapSizeZ )
                     -- get threat from current node to adjacent node
-                    if platoonLayer == 'Air' and ScenarioInfo.Options.AIMapMarker == 'all' then
+                    if (platoonLayer == 'Air' or acuPath) and ScenarioInfo.Options.AIMapMarker == 'all' then
                         threat = GetThreatAtPosition(aiBrain, newNode.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType)
                     else
                         threat = GetThreatBetweenPositions(aiBrain, newNode.position, lastNode.position, nil, threatType)
@@ -531,7 +531,7 @@ end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
 
-    GetMostRestrictiveLayer(platoon)
+    GetMostRestrictiveLayerRNG(platoon)
 
     local units = platoon:GetPlatoonUnits()
     local transportplatoon = false
@@ -996,7 +996,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
 
     -- avoid mountains by slowly moving away from higher areas
-    GetMostRestrictiveLayer(platoon)
+    GetMostRestrictiveLayerRNG(platoon)
     if platoon.MovementLayer == 'Land' then
         local bestPos = attackPos
         local attackPosHeight = GetTerrainHeight(attackPos[1], attackPos[3])
@@ -1026,7 +1026,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
     if oldPathSize == 0 or attackPos[1] != platoon.LastAttackDestination[oldPathSize][1] or
     attackPos[3] != platoon.LastAttackDestination[oldPathSize][3] then
 
-        GetMostRestrictiveLayer(platoon)
+        GetMostRestrictiveLayerRNG(platoon)
         -- check if we can path to here safely... give a large threat weight to sort by threat first
         local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), attackPos, platoon.PlatoonData.NodeWeight or 10)
 
@@ -1502,4 +1502,35 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     end
 
     return bestGoalPos
+end
+
+function GetMostRestrictiveLayerRNG(platoon)
+    -- in case the platoon is already destroyed return false.
+    if not platoon then
+        return false
+    end
+    platoon.MovementLayer = 'Air'
+    platoon.MappingMovementLayer = 0
+
+    for k,v in platoon:GetPlatoonUnits() do
+        if not v.Dead then
+            local mType = v:GetBlueprint().Physics.MotionType
+            if (mType == 'RULEUMT_AmphibiousFloating' or mType == 'RULEUMT_Hover' or mType == 'RULEUMT_Amphibious') and (platoon.MovementLayer == 'Air' or platoon.MovementLayer == 'Water') then
+                platoon.MovementLayer = 'Amphibious'
+                platoon.MappingMovementLayer = 3
+            elseif (mType == 'RULEUMT_Water' or mType == 'RULEUMT_SurfacingSub') and (platoon.MovementLayer ~= 'Water') then
+                platoon.MovementLayer = 'Water'
+                platoon.MappingMovementLayer = 2
+                break   --Nothing more restrictive than water, since there should be no mixed land/water platoons
+            elseif mType == 'RULEUMT_Air' and platoon.MovementLayer == 'Air' then
+                platoon.MovementLayer = 'Air'
+                platoon.MappingMovementLayer = 0
+            elseif (mType == 'RULEUMT_Biped' or mType == 'RULEUMT_Land') and platoon.MovementLayer ~= 'Land' then
+                platoon.MovementLayer = 'Land'
+                platoon.MappingMovementLayer = 1
+                break   --Nothing more restrictive than land, since there should be no mixed land/water platoons
+            end
+        end
+    end
+    return true
 end

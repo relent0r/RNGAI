@@ -207,7 +207,7 @@ IntelManager = Class {
                             RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
                             if zoneSet[v.zone.id].control == 0 then
                                 compare = ( 20000 / distanceModifier )
-                            elseif zoneSet[v.id].control > 0.5 then
+                            elseif zoneSet[v.id].control > 0.5 and zoneSet[v.id].friendlythreat < 20 then
                                 compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
                             end
                             if compare then
@@ -440,7 +440,7 @@ IntelManager = Class {
                 local friendlyThreat = {}
                 for k1, v1 in AlliedPlatoons do
                     if not v1.MovementLayer then
-                        AIAttackUtils.GetMostRestrictiveLayer(v1)
+                        AIAttackUtils.GetMostRestrictiveLayerRNG(v1)
                     end
                     if not v1.Dead then
                         if v1.Zone and v1.CurrentPlatoonThreat then

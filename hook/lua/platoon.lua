@@ -285,7 +285,7 @@ Platoon = Class(RNGAIPlatoon) {
         -----------------------------------------------------------------------
         local markerLocations
 
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
         self.EnemyRadius = 40
         self.MaxPlatoonWeaponRange = false
@@ -731,6 +731,7 @@ Platoon = Class(RNGAIPlatoon) {
             else
                 local location = AIUtils.RandomLocation(aiBrain:GetArmyStartPos())
                 self:MoveToLocation(location, false)
+                coroutine.yield(40)
                 self:PlatoonDisband()
             end
             coroutine.yield(30)
@@ -738,7 +739,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     ScoutingAIRNG = function(self)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         if self.MovementLayer == 'Air' then
             return self:AirScoutingAIRNG()
@@ -824,6 +825,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --RNGLOG('ACU Supported is true, scout moving to patrol :'..repr(acuPos))
                 local patrolTime = self.PlatoonData.PatrolTime or 30
                 self:MoveToLocation(acuPos, false)
+                coroutine.yield(20)
                 local patrolunits = GetPlatoonUnits(self)
                 IssueClearCommands(patrolunits)
                 IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
@@ -970,7 +972,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     LandScoutingAIRNG = function(self)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         local aiBrain = self:GetBrain()
         local scout = GetPlatoonUnits(self)[1]
@@ -1139,6 +1141,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             if not v.Dead then
                                                 self:Stop()
                                                 self:MoveToLocation(RUtils.AvoidLocation(v:GetPosition(), scoutPos, intelRange - 5), false)
+                                                coroutine.yield(20)
                                                 break
                                             end
                                         end
@@ -1176,7 +1179,7 @@ Platoon = Class(RNGAIPlatoon) {
         local smartPos
         self.scoutUnit = false
         local atkPri = { categories.MOBILE * categories.LAND }
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local function VariableKite(platoon,unit,target)
             local function KiteDist(pos1,pos2,distance)
                 local vec={}
@@ -1217,10 +1220,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             else
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             end
         end
@@ -1269,7 +1272,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --RNGLOG('Target is ACU retreating')
                                 --RNGLOG('Threat Around platoon at 50 Radius = '..threatAroundplatoon)
                                 --RNGLOG('Platoon Threat = '..self.CurrentPlatoonThreat)
-                                coroutine.yield(40)
+                                coroutine.yield(50)
                                 continue
                             end
                         end
@@ -1290,7 +1293,7 @@ Platoon = Class(RNGAIPlatoon) {
                             else
                                 break
                             end
-                            coroutine.yield(10)
+                            coroutine.yield(15)
                         end
                     end
                 end
@@ -1298,6 +1301,7 @@ Platoon = Class(RNGAIPlatoon) {
             elseif aiBrain.CDRUnit.Active and aiBrain.CDRUnit.Caution and AIAttackUtils.CanGraphToRNG(platoonPos, aiBrain.CDRUnit.Position, self.MovementLayer) then
                 self:Stop()
                 self:MoveToLocation(RUtils.AvoidLocation(platoonPos, aiBrain.CDRUnit.Position, 15), false)
+                coroutine.yield(60)
             elseif not movingToScout then
                 movingToScout = true
                 self:Stop()
@@ -1319,7 +1323,7 @@ Platoon = Class(RNGAIPlatoon) {
     HuntAIPATHRNG = function(self)
         --RNGLOG('* AI-RNG: * HuntAIPATH: Starting')
         self:Stop()
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local DEBUG = false
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
@@ -1472,7 +1476,7 @@ Platoon = Class(RNGAIPlatoon) {
     NavalRangedAIRNG = function(self)
         --RNGLOG('* AI-RNG: * NavalRangedAIRNG: Starting')
         self:Stop()
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target, acuInRange
@@ -1834,7 +1838,7 @@ Platoon = Class(RNGAIPlatoon) {
         local rangedPosition = false
         local SquadPosition = {}
         local rangedPositionDistance = 99999999
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         
         if platoonUnits > 0 then
             for k, v in platoonUnits do
@@ -2146,7 +2150,7 @@ Platoon = Class(RNGAIPlatoon) {
                 RNGINSERT(categoryList, v)
             end
         end
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         
         -- Removing ALLUNITS so we rely on the builder config. Stops bombers trying to attack fighters.
         --RNGINSERT(atkPri, categories.ALLUNITS)
@@ -2154,7 +2158,7 @@ Platoon = Class(RNGAIPlatoon) {
 
         --RNGLOG('Platoon is '..self.BuilderName..' table'..repr(categoryList))
         self:SetPrioritizedTargetList('Attack', categoryList)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         if data.LocationType then
             basePosition = aiBrain.BuilderManagers[data.LocationType].Position
@@ -2779,6 +2783,18 @@ Platoon = Class(RNGAIPlatoon) {
             end
             buildFunction = AIBuildStructures.AIBuildAdjacencyPriorityRNG
             RNGINSERT(baseTmplList, baseTmpl)
+        elseif cons.ForceAvoidCategory and cons.AvoidCategory then
+            LOG('Dropping into force avoid for engineer builder '..self.BuilderName)
+            relative = false
+            local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
+            local radius = (cons.AdjacencyDistance or 50)
+            if not pos or not pos then
+                coroutine.yield(1)
+                self:PlatoonDisband()
+                return
+            end
+            buildFunction = AIBuildStructures.AIBuildAvoidRNG
+            RNGINSERT(baseTmplList, baseTmpl)
         elseif cons.AvoidCategory then
             relative = false
             local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
@@ -2841,6 +2857,20 @@ Platoon = Class(RNGAIPlatoon) {
 
         --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.Sync.id)
         self.SetupEngineerCallbacksRNG(eng)
+        if self.BuilderName == 'RNG T1 Energy Storage Builder OverCharge Power' then
+            LOG('EnergyStorageBuilder OverCharge Power has fired')
+            if self.PlatoonData.Construction.ForceAvoidCategory then
+                LOG('ForceAvoidCategory is true')
+            else
+                LOG('ForceAvoidCategory is false')
+            end
+                
+            if self.PlatoonData.Construction.AvoidCategory then
+                LOG('AvoidCategory is present')
+            else
+                LOG('AvoidCategory is not present')
+            end
+        end
 
         -------- BUILD BUILDINGS HERE --------
         for baseNum, baseListData in baseTmplList do
@@ -2944,11 +2974,12 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     CommanderInitializeAIRNG = function(self)
-        -- Why did I do this.
-        -- Cause I had multiple builders based on the number of mass points around the acu spawn and this was all good and fine
+        -- Why did I do this. I need the initial BO to be as perfect as possible.
+        -- Because I had multiple builders based on the number of mass points around the acu spawn and this was all good and fine
         -- until I needed to increase efficiency when a hydro is/isnt present and I just got annoyed with trying to figure out a builder based method.
         -- Yea I know its a little ocd. On the bright side I can now make those initial pgens adjacent to the factory.
-        -- This is just a scripted engineer build, nothing special.
+        -- Some of this is overly complex as I'm trying to get the power/mass to never stall during that initial bo.
+        -- This is just a scripted engineer build, nothing special. But it ended up WAY bigger than I thought it'd be.
         local aiBrain = self:GetBrain()
         local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
         local whatToBuild, location, relativeLoc
@@ -2968,6 +2999,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         eng.Active = true
+        eng.Initializing = true
         baseTmplFile = import(self.PlatoonData.Construction.BaseTemplateFile or '/lua/BaseTemplates.lua')
         baseTmplDefault = import('/lua/BaseTemplates.lua')
         buildingTmplFile = import(self.PlatoonData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
@@ -2985,9 +3017,20 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         end
-        eng.EngineerBuildQueue={}
+        local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
+        RNGLOG('HydroTable '..repr(closestHydro))
+        if closestHydro then
+            RNGLOG('Hydro Within 65 units of spawn')
+            hydroPresent = true
+        end
         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
-        RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        if buildLocation and whatToBuild then
+            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+        else
+            WARN('No buildLocation or whatToBuild during ACU initialization')
+        end
+        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        RNGLOG('Attempt structure build')
         RNGLOG('Number of close mass markers '..closeMarkers)
         RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
         RNGLOG('Mex build stage 1')
@@ -2995,74 +3038,77 @@ Platoon = Class(RNGAIPlatoon) {
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
                 RNGLOG('MassPoint '..repr(v))
-                RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                 buildMassPoints[k] = nil
                 break
             end
             buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
         end
-        RNGLOG('Attempt structure build')
-        RNGLOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
-        if RNGGETN(eng.EngineerBuildQueue) > 0 then
-            IssueClearCommands({eng})
-            for k,v in eng.EngineerBuildQueue do
-                RNGLOG('Attempt to build queue item of '..repr(v))
-                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
-                RNGLOG('Build Queue item should be finished '..k)
-                eng.EngineerBuildQueue[k] = nil
-            end
-            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
-                coroutine.yield(5)
-            end
+        coroutine.yield(5)
+        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+            coroutine.yield(5)
         end
         RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
-        eng.EngineerBuildQueue={}
         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
-        RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
-        RNGLOG('Energy Production stage 1')
-        RNGLOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
-        if RNGGETN(eng.EngineerBuildQueue) > 0 then
-            IssueClearCommands({eng})
-            for k,v in eng.EngineerBuildQueue do
-                RNGLOG('Attempt to build queue item of '..repr(v))
-                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
-                RNGLOG('Build Queue item should be finished '..k)
-                eng.EngineerBuildQueue[k] = nil
-            end
-            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
-                coroutine.yield(5)
+        if buildLocation and whatToBuild then
+            LOG('Insert First energy production '..whatToBuild.. ' at '..repr(buildLocation))
+            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+        else
+            WARN('No buildLocation or whatToBuild during ACU initialization')
+        end
+        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        if RNGGETN(buildMassPoints) > 0 then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            if RNGGETN(buildMassPoints) < 3 then
+                LOG('Less than 4 total mass points close')
+                for k, v in buildMassPoints do
+                    RNGLOG('MassPoint '..repr(v))
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                    --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                    buildMassPoints[k] = nil
+                end
+                buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+            else
+                LOG('Greater than 3 total mass points close')
+                for i=1, 2 do
+                    RNGLOG('MassPoint '..repr(buildMassPoints[i]))
+                    aiBrain:BuildStructure(eng, whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false)
+                    --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false})
+                    buildMassPoints[i] = nil
+                end
+                buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
+                LOG('Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
+                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+                if RNGGETN(buildMassPoints) < 2 then
+                    whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+                    for k, v in buildMassPoints do
+                        aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                        buildMassPoints[k] = nil
+                    end
+                    buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+                end
             end
         end
-        eng.EngineerBuildQueue={}
+        coroutine.yield(5)
+        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+            coroutine.yield(5)
+        end
         if RNGGETN(buildMassPoints) > 0 then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
-                RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                 buildMassPoints[k] = nil
             end
-        end
-        RNGLOG('Mex build stage 2')
-        RNGLOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
-        if RNGGETN(eng.EngineerBuildQueue) > 0 then
-            IssueClearCommands({eng})
-            for k,v in eng.EngineerBuildQueue do
-                RNGLOG('Attempt to build queue item of '..repr(v))
-                aiBrain:BuildStructure(eng, v[1],v[2],v[3])
-                RNGLOG('Build Queue item should be finished '..k)
-                eng.EngineerBuildQueue[k] = nil
-            end
+            coroutine.yield(5)
             while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
                 coroutine.yield(5)
             end
         end
-        local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
-        RNGLOG('HydroTable '..repr(closestHydro))
-        if closestHydro then
-            RNGLOG('Hydro Within 65 units of spawn')
-            hydroPresent = true
-        end
-        
-        eng.EngineerBuildQueue={}
         local energyCount = 2
         RNGLOG('Energy Production stage 2')
         if not hydroPresent then
@@ -3077,21 +3123,117 @@ Platoon = Class(RNGAIPlatoon) {
             end
             for i=1, energyCount do
                 buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
-                RNGLOG('Execute Build Structure with the following data')
-                RNGLOG('whatToBuild '..whatToBuild)
-                RNGLOG('Build Location '..repr(buildLocation))
-                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                if buildLocation and whatToBuild then
+                    RNGLOG('Execute Build Structure with the following data')
+                    RNGLOG('whatToBuild '..whatToBuild)
+                    RNGLOG('Build Location '..repr(buildLocation))
+                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
             end
         else
             RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
         end
-        RNGLOG('Current queue size is '..RNGGETN(eng.EngineerBuildQueue))
-        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
-            coroutine.yield(5)
+        if not hydroPresent and closeMarkers > 3 then
+            LOG('Try to build land factory')
+            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
+            if buildLocation and whatToBuild then
+                RNGLOG('Execute Build Structure with the following data')
+                RNGLOG('whatToBuild '..whatToBuild)
+                RNGLOG('Build Location '..repr(buildLocation))
+                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+            else
+                WARN('No buildLocation or whatToBuild during ACU initialization')
+            end
         end
-
-        eng.EngineerBuildQueue={}
+        if not hydroPresent then
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                coroutine.yield(5)
+            end
+        end
+        LOG('CDR Initialize almost done, should have just finished final t1 land')
+        if hydroPresent and closeMarkers > 0 then
+            engPos = eng:GetPosition()
+            if VDist2Sq(engPos[1],engPos[3],closestHydro.Position[1],closestHydro.Position[3]) > 144 then
+                IssueMove({eng}, closestHydro.Position )
+                while VDist2Sq(engPos[1],engPos[3],closestHydro.Position[1],closestHydro.Position[3]) > 100 do
+                    coroutine.yield(5)
+                    engPos = eng:GetPosition()
+                end
+            end
+            local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+            local assistee = false
+            if RNGGETN(assistList) > 0 then
+                -- only have one unit in the list; assist it
+                local low = false
+                local bestUnit = false
+                for k,v in assistList do
+                    --DUNCAN - check unit is inside assist range 
+                    local unitPos = v:GetPosition()
+                    local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                    local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                    local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                    LOG('Assist distance for commander assist is '..dist)
+                    -- Find the closest unit to assist
+                    if (not low or dist < low) and NumAssist < 20 and dist < 100 then
+                        low = dist
+                        bestUnit = v
+                    end
+                end
+                assistee = bestUnit
+            end
+            if assistee  then
+                IssueClearCommands({eng})
+                eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+                RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                IssueGuard({eng}, eng.UnitBeingAssist)
+                while eng and not eng.Dead and not eng:IsIdleState() do
+                    if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                        break
+                    end
+                    -- stop if our target is finished
+                    if eng.UnitBeingAssist:GetFractionComplete() == 1 and not eng.UnitBeingAssist:IsUnitState('Upgrading') then
+                        IssueClearCommands({eng})
+                        break
+                    end
+                    coroutine.yield(30)
+                end
+                if closeMarkers > 2 and eng.UnitBeingAssist:GetFractionComplete() == 1 then
+                    if aiBrain.MapSize >=20 then
+                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if buildLocation and whatToBuild then
+                            RNGLOG('Execute Build Structure for adjacent Air Factory')
+                            RNGLOG('whatToBuild '..whatToBuild)
+                            RNGLOG('Build Location '..repr(buildLocation))
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                    else
+                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if buildLocation and whatToBuild then
+                            RNGLOG('Execute Build Structure adjacent Land Factory')
+                            RNGLOG('whatToBuild '..whatToBuild)
+                            RNGLOG('Build Location '..repr(buildLocation))
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                    end
+                    while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                        coroutine.yield(5)
+                    end
+                else
+                    LOG('closeMarkers 2 or less or UnitBeingAsist is not complete')
+                    LOG('closeMarkers '..closeMarkers)
+                    LOG('Fraction complete is '..eng.UnitBeingAssist:GetFractionComplete())
+                end
+            end
+        end
+        LOG('CDR Initialize done, setting flags')
         eng.Active = false
+        eng.Initializing = false
         self:PlatoonDisband()
     end,
 
@@ -3167,6 +3309,7 @@ Platoon = Class(RNGAIPlatoon) {
                     return
                 end]]
                 if borderWarning then
+                    LOG('BorderWarning build')
                     IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
                 else
                     aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
@@ -3235,6 +3378,7 @@ Platoon = Class(RNGAIPlatoon) {
                         -- otherwise, go ahead and build the next structure there
                 --RNGLOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 if borderWarning then
+                    LOG('BorderWarning build')
                     IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
                 else
                     aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
@@ -3506,15 +3650,15 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             else
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             end
         end
 
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local stageExpansion = false
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         self:ConfigurePlatoon()
@@ -3615,13 +3759,13 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if aiBrain:CheckBlockingTerrain(platLoc, zoneRaidPosition, 'none') then
                 self:MoveToLocation(zoneRaidPosition, false)
-                coroutine.yield(10)
+                coroutine.yield(30)
             else
                 self:AggressiveMoveToLocation(zoneRaidPosition)
                 if self.scoutUnit and (not self.scoutUnit.Dead) then
                     IssueClearCommands({self.scoutUnit})
                 end
-                coroutine.yield(15)
+                coroutine.yield(40)
             end
 
             -- we're there... wait here until we're done
@@ -3631,7 +3775,7 @@ Platoon = Class(RNGAIPlatoon) {
                 --RNGLOG('At mass marker and checking for enemy units/structures')
                 platLoc = GetPlatoonPosition(self)
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platLoc, 'Attack', 50, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
+                local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platLoc, 'Attack', 50, (categories.LAND + categories.STRUCTURE), self.atkPri, false)
                 local attackSquad = self:GetSquadUnits('Attack')
                 --RNGLOG('Mass raid at position platoonThreat is '..self.CurrentPlatoonThreat..' Enemy threat is '..totalThreat)
                 if self.CurrentPlatoonThreat < totalThreat and (target and not target.Dead or acuUnit) then
@@ -3646,7 +3790,7 @@ Platoon = Class(RNGAIPlatoon) {
                     RNGLOG('Attempt to run away from high threat')
                     self:Stop()
                     self:MoveToLocation(RUtils.AvoidLocation(platLoc,targetPos,50), false)
-                    coroutine.yield(40)
+                    coroutine.yield(60)
                     platLoc = GetPlatoonPosition(self)
                     local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, platLoc, 120, 'Enemy')
                     if massPoints then
@@ -3756,9 +3900,9 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         break
                     end
-                    coroutine.yield(10)
+                    coroutine.yield(15)
                 end
-                coroutine.yield(Random(40,80))
+                coroutine.yield(Random(30,60))
                 --RNGLOG('Still enemy stuff around marker position')
                 numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE), zoneRaidPosition, 50, 'Enemy')
                --LOG('End loop Number of units around zoneRaidPosition '..numGround)
@@ -3840,10 +3984,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             else
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             end
         end
@@ -3861,7 +4005,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.atkPri = {}
         self.CurrentPlatoonThreat = false
         local categoryList = {}
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         self:ConfigurePlatoon()
 
@@ -3976,7 +4120,7 @@ Platoon = Class(RNGAIPlatoon) {
                     RNGLOG('Attempt to run away from high threat')
                     self:Stop()
                     self:MoveToLocation(RUtils.AvoidLocation(platLoc,targetPos,50), false)
-                    coroutine.yield(40)
+                    coroutine.yield(60)
                     platLoc = GetPlatoonPosition(self)
                     local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, platLoc, 120, 'Enemy')
                     if massPoints then
@@ -3995,11 +4139,13 @@ Platoon = Class(RNGAIPlatoon) {
                     if alternatePos then
                         --RNGLOG('Moving to masspoint alternative at '..repr(alternatePos))
                         self:MoveToLocation(alternatePos, false)
+                        coroutine.yield(20)
                     else
                         RNGLOG('No close masspoint try to find platoon to merge with')
                         mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('ZoneRaidRNG')
                         if alternatePos then
                             self:MoveToLocation(alternatePos, false)
+                            coroutine.yield(20)
                         end
                     end
                     if alternatePos then
@@ -4058,7 +4204,7 @@ Platoon = Class(RNGAIPlatoon) {
                             IssueClearCommands({unit})
                             VariableKite(self,unit,target)
                         end
-                        coroutine.yield(10)
+                        coroutine.yield(15)
                         if target.Dead then
                             break
                         end
@@ -4257,15 +4403,15 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             else
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             end
         end
 
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self:SetPlatoonFormationOverride(PlatoonFormation)
         local stageExpansion = false
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
@@ -4552,7 +4698,7 @@ Platoon = Class(RNGAIPlatoon) {
                     RNGLOG('Attempt to run away from high threat')
                     self:Stop()
                     self:MoveToLocation(RUtils.AvoidLocation(platLoc,targetPos,50), false)
-                    coroutine.yield(40)
+                    coroutine.yield(60)
                     platLoc = GetPlatoonPosition(self)
                     local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, platLoc, 120, 'Enemy')
                     if massPoints then
@@ -4635,7 +4781,7 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         break
                     end
-                    coroutine.yield(10)
+                    coroutine.yield(15)
                 end
                 coroutine.yield(Random(40,80))
                 --RNGLOG('Still enemy stuff around marker position')
@@ -4914,10 +5060,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             else
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             end
         end
@@ -5121,7 +5267,7 @@ Platoon = Class(RNGAIPlatoon) {
                             self:MoveToLocation(path[i], false)
                             break
                         end
-                        coroutine.yield(10)
+                        coroutine.yield(15)
                     end
                 end
                 coroutine.yield(15)
@@ -5173,10 +5319,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             else
-                coroutine.yield(20)
+                coroutine.yield(2)
                 return
             end
         end
@@ -5387,7 +5533,7 @@ Platoon = Class(RNGAIPlatoon) {
                             self:MoveToLocation(path[i], false)
                             break
                         end
-                        coroutine.yield(10)
+                        coroutine.yield(15)
                     end
                 end
                 coroutine.yield(15)
@@ -5561,7 +5707,7 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
             if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(aPlat)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
             end
             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
             if self.MovementLayer != aPlat.MovementLayer then
@@ -5611,10 +5757,10 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
             if not self.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(self)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
             if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(aPlat)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
             end
 
             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
@@ -5710,10 +5856,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
 
             if not self.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(self)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
             if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayer(aPlat)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
             end
 
             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
@@ -5757,7 +5903,7 @@ Platoon = Class(RNGAIPlatoon) {
         local bestBaseName = ""
         local bestDistSq = 999999999
         local platPos = GetPlatoonPosition(self)
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
 
         if not mainBase then
             for baseName, base in aiBrain.BuilderManagers do
@@ -5784,22 +5930,28 @@ Platoon = Class(RNGAIPlatoon) {
         end
         
         if bestBase then
+            local movePosition
+            if bestBase.FactoryManager and bestBase.FactoryManager.RallyPoint then
+                movePosition = bestBase.FactoryManager.RallyPoint
+            else
+                movePosition = bestBase.Position
+            end
             if self.MovementLayer == 'Air' then
                 self:Stop()
-                self:MoveToLocation(bestBase.Position, false)
+                self:MoveToLocation(movePosition, false)
                 --RNGLOG('Air Unit Return to base provided position :'..repr(bestBase.Position))
                 while PlatoonExists(aiBrain, self) do
                     local currentPlatPos = self:GetPlatoonPosition()
                     --RNGLOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3]))
                     --RNGLOG('Air Unit Platoon Position is :'..repr(currentPlatPos))
-                    local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3])
+                    local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], movePosition[1], movePosition[3])
                     if distSq < 6400 then
                         break
                     end
                     coroutine.yield(15)
                 end
             else
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestBase.Position, 10)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), movePosition, 10)
                 IssueClearCommands(self)
                 if path then
                     local pathLength = RNGGETN(path)
@@ -5822,7 +5974,7 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 end
-                self:MoveToLocation(bestBase.Position, false)
+                self:MoveToLocation(movePosition, false)
             end
         end
         coroutine.yield(20)
@@ -5833,7 +5985,7 @@ Platoon = Class(RNGAIPlatoon) {
     DistressResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
         if not self.MovementLayer then
-            AIAttackUtils.GetMostRestrictiveLayer(self)
+            AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         end
         local atkPri = {}
         local threatType
@@ -6131,7 +6283,7 @@ Platoon = Class(RNGAIPlatoon) {
 
     SACUAttackAIRNG = function(self)
         -- SACU Attack Platoon
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local platoonUnits = GetPlatoonUnits(self)
 
         if platoonUnits and PlatoonStrength > 0 then
@@ -6634,6 +6786,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local assistData = self.PlatoonData.Assist
         local eng = self:GetPlatoonUnits()[1]
+        local unitBeingFinished
         local engineerManager = aiBrain.BuilderManagers[assistData.AssistLocation].EngineerManager
         if not engineerManager then
             WARN('* AI-RNG: FinishStructureAIRNG cant find engineer manager' )
@@ -6642,10 +6795,10 @@ Platoon = Class(RNGAIPlatoon) {
         end
         local unfinishedUnits = aiBrain:GetUnitsAroundPoint(assistData.BeingBuiltCategories, engineerManager.Location, engineerManager.Radius, 'Ally')
         for k,v in unfinishedUnits do
-            local FractionComplete = v:GetFractionComplete()
-            if FractionComplete < 1 and RNGGETN(v:GetGuards()) < 1 then
+            if v:GetFractionComplete() < 1 and RNGGETN(v:GetGuards()) < 1 then
                 self:Stop()
                 if not v.Dead and not v:BeenDestroyed() then
+                    unitBeingFinished = v
                     IssueRepair(self:GetPlatoonUnits(), v)
                 end
                 break
@@ -6657,9 +6810,12 @@ Platoon = Class(RNGAIPlatoon) {
             if not aiBrain:PlatoonExists(self) then
                 return
             end
+            if unitBeingFinished and not unitBeingFinished.Dead and not unitBeingFinished:BeenDestroyed() and unitBeingFinished:GetFractionComplete() == 1 then
+                break
+            end
             count = count + 1
             if eng:IsIdleState() then break end
-        until count >= 30
+        until count >= 90
         self:PlatoonDisband()
     end,
 
@@ -8136,7 +8292,7 @@ Platoon = Class(RNGAIPlatoon) {
         local platoonUnits = GetPlatoonUnits(self)
         local friendlyThreat=0
         local enemyThreat=0
-        AIAttackUtils.GetMostRestrictiveLayer(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self:ForkThread(self.HighlightTruePlatoon)
         self:ForkThread(self.OptimalTargetingRNG)
         self:ForkThread(self.PathNavigationRNG)

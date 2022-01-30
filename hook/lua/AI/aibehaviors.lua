@@ -24,7 +24,7 @@ local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
-local GetMostRestrictiveLayer = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayer
+local GetMostRestrictiveLayerRNG = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayerRNG
 local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -53,6 +53,8 @@ end
         Position={ },   <- Position they were last seen
         Threat=0   <- The amount of enemy threat they had around them.
     },
+
+    A word about the ACU. In the current FAF balance the Sera blueprint has a MuzzleChargeDelay value of 0.4. This seems to cause the AI to be very inaccurate with its gun. Unknown why.
 ]]
 
 function SetCDRDefaults(aiBrain, cdr)
@@ -489,9 +491,9 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
     RNGLOG('Moving ACU to position')
     if retreat then
-        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512)
+        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
     else
-        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
     end
     if path then
         RNGLOG('We have a path')
@@ -703,6 +705,16 @@ end
 function CommanderThreadRNG(cdr, platoon)
     --RNGLOG('* AI-RNG: Starting CommanderThreadRNG')
     local aiBrain = cdr:GetAIBrain()
+    -- just incase the initialization breaks for some reason we want the acu to start
+    local initializeCounter = 0
+    while cdr.Initializing do
+        initializeCounter = initializeCounter + 1
+        coroutine.yield(20)
+        if initializeCounter > 150 then
+            cdr.Initializing = false
+            cdr.Active = false
+        end
+    end
 
     while not cdr.Dead do
         -- Overcharge
@@ -753,7 +765,7 @@ function CommanderThreadRNG(cdr, platoon)
         and not cdr:IsUnitState("Building") and not cdr:IsUnitState("Guarding")
         and not cdr:IsUnitState("Attacking") and not cdr:IsUnitState("Repairing")
         and not cdr:IsUnitState("Upgrading") and not cdr:IsUnitState("Enhancing") 
-        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior and not cdr.Upgrading and not cdr.Combat and not cdr.Active then
+        and not cdr:IsUnitState('BlockCommandQueue') and not cdr.UnitBeingBuiltBehavior and not cdr.Upgrading and not cdr.Combat and not cdr.Active and not cdr.Initializing then
             -- if we have nothing to build...
             --cdr:SetCustomName('Look for thing to build')
             if not cdr.EngineerBuildQueue or RNGGETN(cdr.EngineerBuildQueue) == 0 then
@@ -1384,7 +1396,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 end
 
                 if not aPlat.MovementLayer then 
-                    AIAttackUtils.GetMostRestrictiveLayer(aPlat) 
+                    AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat) 
                 end
 
                 -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
@@ -2278,7 +2290,7 @@ ZoneUpdate = function(platoon)
         end
     end
     if not platoon.MovementLayer then
-        AIAttackUtils.GetMostRestrictiveLayer(platoon)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
     while aiBrain:PlatoonExists(platoon) do
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
