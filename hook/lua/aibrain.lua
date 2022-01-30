@@ -974,7 +974,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
-        self:ForkThread(self.TestThread)
         self.intelmanager = IntelManagerRNG.CreateIntelManager(self)
         self.intelmanager:Run()
         
