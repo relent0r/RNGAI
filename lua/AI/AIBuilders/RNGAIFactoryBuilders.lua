@@ -41,6 +41,16 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+local NavalAdjust = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio > 0.60 then
+        --RNGLOG('NavalExpansionAdjust return 200')
+        return 910
+    else
+        --RNGLOG('NavalExpansionAdjust return 750')
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Land',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
@@ -79,6 +89,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.50 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -188,7 +199,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -319,7 +330,6 @@ BuilderGroup {
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -380,7 +390,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 4, categories.FACTORY * categories.AIR * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -481,6 +491,31 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T1 High Pri Naval',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 0,
+        PriorityFunction = NavalAdjust,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T1SeaFactory',
+                },
+            }
+        }
+    },
+    
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker',
         PlatoonTemplate = 'EngineerBuilderT123RNG',

@@ -74,7 +74,7 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
-        BuilderName = 'RNGEXP Factory Engineer T1 Excess Mass',
+        BuilderName = 'RNGAI Factory Engineer T1 Excess Mass',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
         BuilderConditions = {
