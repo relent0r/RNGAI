@@ -865,6 +865,7 @@ AIBrain = Class(RNGAIBrainClass) {
             ExtractorCount = 0,
             MassMarker = 0,
             MassMarkerBuildable = 0,
+            AllyExtractorTable = {},
             AllyExtractorCount = 0,
             AllyExtractor = 0,
             AllyLandThreat = 0,
@@ -2527,8 +2528,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.CDRUnit.Caution then
                        -- RNGLOG('CDR is in caution mode')
                     end
-                   -- RNGLOG('BasePerimeterMonitor table')
-                   -- RNGLOG(repr(self.BasePerimeterMonitor))
+                    --RNGLOG('BasePerimeterMonitor table')
+                    --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
                        -- RNGLOG('Base Monitor Alert is on')
                     end
@@ -2548,9 +2549,10 @@ AIBrain = Class(RNGAIBrainClass) {
                            -- RNGLOG('Enemy Threat is '..v.enemythreat)
                         end
                     end]]
-                   -- RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
-                   -- RNGLOG('Friendly Hydro Table '..repr(self.smanager.hydrocarbon))
-                   -- RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
+                    RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
+                    RNGLOG('Friendly Hydro Table '..repr(self.smanager.hydrocarbon))
+                    RNGLOG('Ally Extractor Table '..repr(self.BrainIntel.SelfThreat.AllyExtractorTable))
+                    RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
                     --[[if self.GraphZones.HasRun then
                        -- RNGLOG('We should have graph zones now')
                         for k, v in self.BuilderManagers do
@@ -2784,6 +2786,7 @@ AIBrain = Class(RNGAIBrainClass) {
     SelfThreatCheckRNG = function(self, ALLBPS)
         -- Get AI strength
         local selfIndex = self:GetArmyIndex()
+        local GetPosition = moho.entity_methods.GetPosition
 
         local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.EXPERIMENTAL, false, false)
         local airthreat = 0
@@ -2854,6 +2857,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        local allyExtractors = {}
         local allyExtractorCount = 0
         local allyExtractorthreat = 0
         local allyLandThreat = 0
@@ -2861,9 +2865,32 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(1)
         if RNGGETN(allyBrains) > 0 then
             for k, ally in allyBrains do
-                local allyExtractors = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
-                for _,v in allyExtractors do
+                local allyExtractorList = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
+                for _,v in allyExtractorList do
                     bp = ALLBPS[v.UnitId].Defense
+                    if not v.Dead and not v.zoneid and self.ZonesInitialized then
+                        --LOG('unit has no zone')
+                        local mexPos = GetPosition(v)
+                        if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
+                            -- tbd define water based zones
+                            v.zoneid = 'water'
+                        else
+                            v.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
+                            --LOG('Unit zone is '..unit.zoneid)
+                        end
+                    end
+                    if not allyExtractors[v.zoneid] then
+                        --LOG('Trying to add unit to zone')
+                        allyExtractors[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                    end
+                    if EntityCategoryContains(categories.TECH1,v) then
+                        allyExtractors[v.zoneid].T1=allyExtractors[v.zoneid].T1+1
+                    elseif EntityCategoryContains(categories.TECH2,v) then
+                        allyExtractors[v.zoneid].T2=allyExtractors[v.zoneid].T2+1
+                    elseif EntityCategoryContains(categories.TECH3,v) then
+                        allyExtractors[v.zoneid].T3=allyExtractors[v.zoneid].T3+1
+                    end
+
                     allyExtractorthreat = allyExtractorthreat + bp.EconomyThreatLevel
                     allyExtractorCount = allyExtractorCount + 1
                 end
@@ -2875,6 +2902,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        self.BrainIntel.SelfThreat.AllyExtractorTable = allyExtractors
         self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
         self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
         self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
@@ -3583,7 +3611,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     UpgradeExtractorRNG = function(self, ALLBPS, extractorUnit, distanceToBase)
-       --LOG('Upgrading Extractor from central brain thread')
+        --LOG('Upgrading Extractor from central brain thread')
         local upgradeBp
         local upgradeID = ALLBPS[extractorUnit.UnitId].General.UpgradesTo or false
         if upgradeID then
@@ -3595,13 +3623,13 @@ AIBrain = Class(RNGAIBrainClass) {
             local upgradedExtractor = extractorUnit.UnitBeingBuilt
             local fractionComplete = upgradedExtractor:GetFractionComplete()
             while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
-               --LOG('Upgrading Extractor Loop')
-               --LOG('Unit is '..fractionComplete..' fraction complete')
+                --LOG('Upgrading Extractor Loop')
+                --LOG('Unit is '..fractionComplete..' fraction complete')
                 if not self.CentralBrainExtractorUnitUpgradeClosest or self.CentralBrainExtractorUnitUpgradeClosest.Dead then
                     self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
                 elseif self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase > distanceToBase then
                     self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                   --LOG('This is a new closest extractor upgrading at '..distanceToBase)
+                    --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
                 if fractionComplete < 0.65 and not bypassEcoManager then
                     if (GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000 then

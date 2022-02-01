@@ -161,96 +161,13 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Factory Land Attack Small',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
-        Priority = 750, -- After Second Engie Group
-        PriorityFunction = LandEngMode,
-        Restriction = 'TECH1',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND *  (categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Land Attack NoEng Small',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueueNoEng',
-        Priority = 0, -- After Second Engie Group
-        PriorityFunction = LandNoEngMode,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },]]
-    Builder {
-        BuilderName = 'RNGAI Factory Arty Sera Small', -- Sera cause floaty
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 60, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Tank Aeon Small', -- Aeon cause floaty
-        PlatoonTemplate = 'T1LandDFTank',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    --[[Builder {
-        BuilderName = 'RNGAI T2 Attack Small',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 760,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
         Priority = 500, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -277,36 +194,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Large',
     BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI Factory Arty Sera Large', -- Sera cause floaty
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Tank Aeon Large', -- Aeon cause floaty
-        PlatoonTemplate = 'T1LandDFTank',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
     Builder {
         BuilderName = 'RNGAI Factory Initial Queue 20km',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
@@ -357,7 +244,6 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

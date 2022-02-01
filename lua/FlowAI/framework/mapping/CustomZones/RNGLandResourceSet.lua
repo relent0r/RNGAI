@@ -70,8 +70,10 @@ RNGLandResourceSet = Class(ZoneSet){
         end
         local markers = {}
         for _, marker in GetMarkers() do
-            if MAP:GetComponent(marker.position,self.layer) > 0 then
-                table.insert(markers,marker)
+            if marker.type == 'Mass' then
+                if MAP:GetComponent(marker.position,self.layer) > 0 then
+                    table.insert(markers,marker)
+                end
             end
         end
         complete = (RNGGETN(markers) == 0)
