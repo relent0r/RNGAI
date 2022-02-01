@@ -207,7 +207,7 @@ IntelManager = Class {
                 end
 
                 if type == 'raid' then
-                    LOG('RNGAI : Zone Raid Selection Query Processing')
+                   --LOG('RNGAI : Zone Raid Selection Query Processing')
                     local startPosZones = {}
                     for k, v in aiBrain.Zones.Land.zones do
                         if not v.startpositionclose then
@@ -215,13 +215,13 @@ IntelManager = Class {
                             local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
                             local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemythreat
                             if not zoneSet[v.id].control then
-                                LOG('control is nil, here is the table '..repr(zoneSet[v.id]))
+                               --LOG('control is nil, here is the table '..repr(zoneSet[v.id]))
                             end
                             if enemyModifier > 0 then
                                 enemyModifier = enemyModifier * 10
                             end
-                            LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
-                            LOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
+                           --LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                           --LOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
                             if zoneSet[v.id].control > 0.5 and zoneSet[v.id].friendlythreat < 10 then
                                 compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control - enemyModifier
                             end
@@ -232,8 +232,8 @@ IntelManager = Class {
                                 if not selection or compare > selection then
                                     selection = compare
                                     zoneSelection = v.id
-                                    LOG('Zone Query Select priority 1st pass'..selection)
-                                    LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                   --LOG('Zone Query Select priority 1st pass'..selection)
+                                   --LOG('Zone target location is '..repr(zoneSet[v.id].pos))
                                 end
                             end
                         else
@@ -246,7 +246,7 @@ IntelManager = Class {
                         for k, v in startPosZones do
                             local compare
                             local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
-                            LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                           --LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
                             if zoneSet[v.zone.id].control <= 0 then
                                 compare = ( 20000 / distanceModifier )
                             else
@@ -259,8 +259,8 @@ IntelManager = Class {
                                 if not selection or compare > selection then
                                     selection = compare
                                     zoneSelection = v.id
-                                    RNGLOG('Zone Query Select priority 2nd pass start locations'..selection)
-                                    LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                  --LOG('Zone Query Select priority 2nd pass start locations'..selection)
+                                   --LOG('Zone target location is '..repr(zoneSet[v.id].pos))
                                 end
                             end
                         end

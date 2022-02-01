@@ -2549,10 +2549,10 @@ AIBrain = Class(RNGAIBrainClass) {
                            -- RNGLOG('Enemy Threat is '..v.enemythreat)
                         end
                     end]]
-                    RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
-                    RNGLOG('Friendly Hydro Table '..repr(self.smanager.hydrocarbon))
-                    RNGLOG('Ally Extractor Table '..repr(self.BrainIntel.SelfThreat.AllyExtractorTable))
-                    RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
+                  --LOG('Friendly Mex Table '..repr(self.smanager.mex))
+                  --LOG('Friendly Hydro Table '..repr(self.smanager.hydrocarbon))
+                  --LOG('Ally Extractor Table '..repr(self.BrainIntel.SelfThreat.AllyExtractorTable))
+                  --LOG('Enemy Mex Table '..repr(self.emanager.mex))
                     --[[if self.GraphZones.HasRun then
                        -- RNGLOG('We should have graph zones now')
                         for k, v in self.BuilderManagers do
@@ -2590,9 +2590,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     --RNGLOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     --if self.EnemyIntel.ChokeFlag then
-                    --    RNGLOG('Choke Flag is true')
+                    --  --LOG('Choke Flag is true')
                     --else
-                    --    RNGLOG('Choke Flag is false')
+                    --  --LOG('Choke Flag is false')
                     --end
                     --RNGLOG('Graph Zone Table '..repr(self.GraphZones))
                     --RNGLOG('Total Mass Markers according to infect'..self.BrainIntel.MassMarker)

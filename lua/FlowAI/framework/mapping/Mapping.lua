@@ -897,7 +897,7 @@ function SetMarkerInformation(aiBrain)
     end
     --RNGLOG('RNGAreas:')
     --for k,v in aiBrain.RNGAreas do
-    --    RNGLOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
+    --  --LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
