@@ -12,18 +12,6 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutLandBuilder',
     BuildersType = 'FactoryBuilder',
-    -- Opening Scout Build --
-    Builder {
-        BuilderName = 'RNGAI Factory Scout Initial',
-        PlatoonTemplate = 'T1LandScout',
-        Priority = 950, -- Try to get out before second engie group
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MOBILE * categories.ENGINEER}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.LAND * categories.SCOUT } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 180 } }, -- don't build after 3 minutes
-        },
-        BuilderType = 'Land',
-    },
     Builder {
         BuilderName = 'RNGAI Factory Scout',
         PlatoonTemplate = 'T1LandScout',
@@ -32,7 +20,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.LAND * categories.SCOUT } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.LAND * categories.SCOUT } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.3, 0.5 }},
         },
         BuilderType = 'Land',
@@ -60,7 +48,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Excess',
         PlatoonTemplate = 'RNGAI T1LandScoutForm',
         Priority = 100,
-        InstanceCount = 15,
+        InstanceCount = 30,
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT } },

@@ -700,7 +700,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.TECH3 * categories.ENERGYPRODUCTION}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, categories.TECH3 * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },

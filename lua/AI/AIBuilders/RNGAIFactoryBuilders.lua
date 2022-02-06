@@ -301,7 +301,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 900,
+        Priority = 950,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'MapGreaterThan', { 256, 256 }},

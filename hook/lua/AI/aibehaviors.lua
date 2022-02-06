@@ -78,6 +78,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.Active = false
     cdr.Retreating = false
     cdr.SnipeMode = false
+    cdr.SuicideMode = false
     cdr.Scout = false
     cdr.CurrentEnemyThreat = false
     cdr.CurrentFriendlyThreat = false
@@ -654,7 +655,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         end
     end
     
-    local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, BaseDMZArea, 'Land', 10, 'acu')
+    local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
     if stageExpansion then
         cdr.Active = true
         if cdr.UnitBeingBuilt then
@@ -890,7 +891,7 @@ function CDRThreatAssessmentRNG(cdr)
             RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
             RNGLOG('Current CDR Confidence '..cdr.Confidence)
-            if enemyUnitThreat * 1.1 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if enemyUnitThreat * 1.2 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif enemyUnitThreat * 1.2 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
@@ -1094,7 +1095,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             end
                         end
                         RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
-                        if (enemyThreat - (enemyCdrThreat / 1.4)) >= friendlyUnitThreat then
+                        if (enemyThreat - (enemyCdrThreat / 1.4)) >= friendlyUnitThreat and not cdr.SuicideMode then
                             --RNGLOG('Enemy Threat too high')
                             cdr:SetCustomName('target threat too high break logic')
                             if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 1600 then
@@ -1119,16 +1120,19 @@ function CDROverChargeRNG(aiBrain, cdr)
                             SetAcuSnipeMode(cdr, true)
                             cdr:SetAutoOvercharge(true)
                             cdr.SnipeMode = true
+                            cdr.SuicideMode = true
                             snipeAttempt = true
                         elseif cdr.SnipeMode then
                             --RNGLOG('Target is not acu, setting default target priorities')
                             SetAcuSnipeMode(cdr, false)
                             cdr.SnipeMode = false
+                            cdr.SuicideMode = false
                         end
                     elseif cdr.SnipeMode then
                         --RNGLOG('Target is not acu, setting default target priorities')
                         SetAcuSnipeMode(cdr, false)
                         cdr.SnipeMode = false
+                        cdr.SuicideMode = false
                     end
                     if aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and target and not target.Dead then
                         --RNGLOG('* AI-RNG: Stored Energy is :'..aiBrain:GetEconomyStored('ENERGY')..' OverCharge enerygy required is :'..cdr.OverCharge.EnergyRequired)
@@ -1283,14 +1287,14 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
 
             if continueFighting == true then
-                if cdr.Caution and not cdr.SnipeMode then
+                if cdr.Caution and not cdr.SnipeMode and not cdr.SuicideMode then
                     RNGLOG('cdr.Caution has gone true, continueFighting is false')
                     continueFighting = false
                     return CDRRetreatRNG(aiBrain, cdr)
                 end
             end
             -- Temporary fallback if com is down to yellow
-            if cdr.HealthPercent < 0.6 then
+            if cdr.HealthPercent < 0.6 and not cdr.SuicideMode then
                 --cdr:SetCustomName('CDR health < 60%, retreat')
                 RNGLOG('cdr.active is false, continueFighting is false')
                 continueFighting = false
@@ -1300,7 +1304,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 end
                 return CDRRetreatRNG(aiBrain, cdr)
             end
-            if cdr.GunUpgradeRequired and cdr.Active then
+            if cdr.GunUpgradeRequired and cdr.Active and not cdr.SuicideMode then
                 --RNGLOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
                 RNGLOG('Gun Upgrade Required, continueFighting is false')
                 continueFighting = false

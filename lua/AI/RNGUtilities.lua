@@ -1578,9 +1578,8 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 --RNGLOG('Target Found in target aquisition function')
                 return TargetUnit, acuPresent, acuUnit, totalThreat
             end
-           coroutine.yield(2)
         end
-        coroutine.yield(1)
+        coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
     return TargetUnit, acuPresent, acuUnit, totalThreat
@@ -3348,7 +3347,7 @@ MapReclaimAnalysis = function(aiBrain)
             aiBrain.MapReclaimTable = reclaimGrid
             RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
         end
-        coroutine.yield(1800)
+        coroutine.yield(600)
     end
 end
 
