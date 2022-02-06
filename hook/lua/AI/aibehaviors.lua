@@ -214,10 +214,6 @@ function CDRBuildFunction(aiBrain, cdr, object)
         MassMarker = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, acuPos ) })
             end
         end
@@ -379,10 +375,6 @@ function CDRBuildFunction(aiBrain, cdr, object)
         MassMarker = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, acuPos ) })
             end
         end

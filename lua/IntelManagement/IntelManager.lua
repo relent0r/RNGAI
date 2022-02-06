@@ -734,9 +734,6 @@ function CalculateMassValue(expansionMarkers)
     end
     for _, v in markerTable do
         if v.type == 'Mass' then
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                continue
-            end
             table.insert(MassMarker, {Position = v.position})
         end
     end

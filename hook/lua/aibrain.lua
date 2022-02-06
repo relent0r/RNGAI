@@ -1199,10 +1199,6 @@ AIBrain = Class(RNGAIBrainClass) {
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 if v.RNGArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
                     graphCheck = true
                     if not self.GraphZones[v.RNGArea] then

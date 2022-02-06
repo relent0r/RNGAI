@@ -458,7 +458,7 @@ Platoon = Class(RNGAIPlatoon) {
                             pathDistance = VDist2Sq(path[i][1], path[i][3], platoonPosition[1], platoonPosition[3])
                             if pathDistance < 400 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                self:Stop()
+                                IssueClearCommands(GetPlatoonUnits(self))
                                 break
                             end
                             --RNGLOG('Waiting to reach target loop')
@@ -1031,7 +1031,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if path then
                     local pathLength = RNGGETN(path)
                     for i=1, pathLength do
-                        self:Stop()
+                        IssueClearCommands(GetPlatoonUnits(self))
                         self:MoveToLocation(path[i], false)
                         while not scout.Dead and not scout:IsIdleState() do
                             local scoutPos = scout:GetPosition()
@@ -1041,7 +1041,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         aiBrain.CDRUnit.Scout = scout
                                         while not scout.Dead and aiBrain.CDRUnit.Active do
                                             --RNGLOG('Move to support platoon position')
-                                            self:Stop()
+                                            IssueClearCommands(GetPlatoonUnits(self))
                                             self:MoveToLocation(RUtils.AvoidLocation(aiBrain.CDRUnit.Position, scout:GetPosition(), 5), false)
                                             coroutine.yield(20)
                                         end
@@ -1727,7 +1727,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --RNGLOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
                                 if dist < 400 then
                                     -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                    self:Stop()
+                                    IssueClearCommands(GetPlatoonUnits(self))
                                     break
                                 end
                                 if Lastdist ~= dist then
@@ -2082,7 +2082,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 --RNGLOG('* AI-RNG: * HuntAIPATH: Distance to path node'..dist)
                                 if dist < 625 then
                                     -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                    self:Stop()
+                                    IssueClearCommands(GetPlatoonUnits(self))
                                     break
                                 end
                                 if Lastdist ~= dist then
@@ -2314,7 +2314,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                         local path = false
                         if targetDistance < 10000 then
-                            self:Stop()
+                            IssueClearCommands(GetPlatoonUnits(self))
                             self:AttackTarget(target)
                         else
                             local path, reason, totalThreat = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
@@ -2342,14 +2342,14 @@ Platoon = Class(RNGAIPlatoon) {
                                             end
                                             if targetDistance < 10000 then
                                                 --RNGLOG('strikeforce air attack command on target')
-                                                self:Stop()
+                                                IssueClearCommands(GetPlatoonUnits(self))
                                                 self:AttackTarget(target)
                                                 break
                                             end
                                             pathDistance = VDist2Sq(path[i][1], path[i][3], platoonPosition[1], platoonPosition[3])
                                             if pathDistance < 900 then
                                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                                self:Stop()
+                                                IssueClearCommands(GetPlatoonUnits(self))
                                                 break
                                             end
                                             --RNGLOG('Waiting to reach target loop')
@@ -3032,7 +3032,7 @@ Platoon = Class(RNGAIPlatoon) {
         massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
         local closeMarkers = 0
         for k, marker in massMarkers do
-            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 144 then
+            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 then
                 closeMarkers = closeMarkers + 1
                 RNGINSERT(buildMassPoints, marker)
                 if closeMarkers > 3 then
@@ -4249,6 +4249,9 @@ Platoon = Class(RNGAIPlatoon) {
                         IssueFormAggressiveMove(GetPlatoonUnits(self), formPos, 'AttackFormation', direction)
                         RNGLOG('IssueFormAggressiveMove Performed')
                         coroutine.yield(40)
+                        if self:MergeWithNearbyPlatoonsRNG('ZoneControlRNG', 30, 30) then
+                            self:ConfigurePlatoon()
+                        end
                     elseif targetZone and targetPosition then
                         RNGLOG('Zone Control Platoon is moving to retreat position')
                         self.TargetZone = targetZone
@@ -5801,7 +5804,7 @@ Platoon = Class(RNGAIPlatoon) {
         local platRequiresScout = false
         for _,aPlat in AlliedPlatoons do
             if aPlat == self then continue end
-            if aPlat.PlanName ~= 'MassRaidRNG' or aPlat.PlanName ~= 'HuntAIPATHRNG' or aPlat.PlanName ~= 'TruePlatoonRNG' or aPlat.PlanName ~= 'GuardMarkerRNG' then continue end
+            if aPlat.PlanName ~= 'MassRaidRNG' or aPlat.PlanName ~= 'ZoneControlRNG' or aPlat.PlanName ~= 'ZoneRaidRNG' or aPlat.PlanName ~= 'HuntAIPATHRNG' or aPlat.PlanName ~= 'TruePlatoonRNG' or aPlat.PlanName ~= 'GuardMarkerRNG' then continue end
             if aPlat.UsingTransport then continue end
             if aPlat.ScoutPresent then continue end
             allyPlatPos = GetPlatoonPosition(aPlat)
@@ -6065,7 +6068,7 @@ Platoon = Class(RNGAIPlatoon) {
                             platPos = GetPlatoonPosition(self)
                             local distSq = VDist2Sq(platPos[1], platPos[3], path[i][1], path[i][3])
                             if distSq < 400 then
-                                self:Stop()
+                                IssueClearCommands(GetPlatoonUnits(self))
                                 break
                             end
                             -- if we haven't moved in 10 seconds... go back to attacking
@@ -6527,7 +6530,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     --RNGLOG('* AI-RNG: * SACUATTACKAIRNG: Distance to path node'..dist)
                                     if dist < 400 then
                                         -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                        self:Stop()
+                                        IssueClearCommands(GetPlatoonUnits(self))
                                         break
                                     end
                                     if retreatCount < 5 then
@@ -7816,6 +7819,7 @@ Platoon = Class(RNGAIPlatoon) {
             if not AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild) then
                 table.remove(markerTable,curindex) 
                 --RNGLOG('No path to currentmexpos')
+                coroutine.yield(1)
                 continue 
             end
             local firstmex=currentmexpos
@@ -8106,10 +8110,6 @@ Platoon = Class(RNGAIPlatoon) {
             local raidlocs={}
             local platoon=self
             for _,v in mex do
-                if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end
                 if GetSurfaceHeight(v.Position[1],v.Position[3])>GetTerrainHeight(v.Position[1],v.Position[3]) then
                     continue
                 end
