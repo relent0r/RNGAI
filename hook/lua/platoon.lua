@@ -145,6 +145,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                 target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', maxRadius, atkPri, avoidBases)
                                                 if target then
                                                     --RNGLOG('Returnairhuntai')
+                                                    coroutine.yield(2)
                                                     return self:SetAIPlanRNG('AirHuntAIRNG')
                                                 end
                                             else
@@ -512,6 +513,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 if StuckCount > 5 then
                     --RNGLOG('* AI-RNG: GuardmarkerRNG detected stuck. Restarting.')
+                    coroutine.yield(2)
                     return self:SetAIPlanRNG('GuardMarkerRNG')
                 end
                 oldPlatPos = platLoc
@@ -603,6 +605,7 @@ Platoon = Class(RNGAIPlatoon) {
             -- set our MoveFirst to our MoveNext
             --RNGLOG('GuardMarker Restarting')
             self.PlatoonData.MoveFirst = moveNext
+            coroutine.yield(2)
             return self:GuardMarkerRNG()
         else
             -- no marker found, disband!
@@ -1482,19 +1485,23 @@ Platoon = Class(RNGAIPlatoon) {
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not usedTransports then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: not used transports')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     --RNGLOG('Guardmarker found transports')
                 else
                     --RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
+                    coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
 
                 if (not path or not success) and not usedTransports then
                     --RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no transports used')
+                    coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
             elseif self.PlatoonData.GetTargetsFromBase then
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             --RNGLOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
@@ -1757,10 +1764,12 @@ Platoon = Class(RNGAIPlatoon) {
                         --RNGLOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
                     else
                         --RNGLOG('* AI-RNG: * NavalRangedAIRNG:: No Path found, no reason')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     if not path or not success then
                         --RNGLOG('NavalRangedAIRNG: not path')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                 end
@@ -2112,15 +2121,18 @@ Platoon = Class(RNGAIPlatoon) {
                         --RNGLOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
                     else
                         --RNGLOG('* AI-RNG: * NavalAttackAIRNG: No Path found, no reason')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     if not path or not success then
                         --RNGLOG('NavalAttackAIRNG Not path')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                 end
             else
                 --RNGLOG('NavalAttackAIRNG return to base')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             coroutine.yield(50)
@@ -3759,6 +3771,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     IssueStop({v})
                                     aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
                                 end
+                                coroutine.yield(2)
                                 return self:SetAIPlanRNG('ZoneRaidRNG')
                             end
                         end
@@ -3770,11 +3783,13 @@ Platoon = Class(RNGAIPlatoon) {
                 --RNGLOG('Guardmarker found transports')
             else
                 --RNGLOG('Path error in MASSRAID')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
 
             if (not path or not success) and not usedTransports then
                 --RNGLOG('not path or not success or not usedTransports MASSRAID')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             platLoc = GetPlatoonPosition(self)
@@ -3958,6 +3973,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             if self.CurrentPlatoonThreat < 1 then
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             return self:ZoneRaidRNG()
@@ -4098,11 +4114,13 @@ Platoon = Class(RNGAIPlatoon) {
                 --RNGLOG('Guardmarker found transports')
             else
                 --RNGLOG('Path error in MASSRAID')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
 
             if (not path or not success) and not usedTransports then
                 --RNGLOG('not path or not success or not usedTransports MASSRAID')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             platLoc = GetPlatoonPosition(self)
@@ -4292,8 +4310,10 @@ Platoon = Class(RNGAIPlatoon) {
 
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             if self.CurrentPlatoonThreat < 1 then
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
+            coroutine.yield(2)
             return self:ZoneControlRNG()
         else
             RNGLOG('No Zone Control Position')
@@ -4567,6 +4587,7 @@ Platoon = Class(RNGAIPlatoon) {
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 600 and self.MovementLayer ~= 'Water' then
             --RNGLOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
+            coroutine.yield(2)
             return self:SetAIPlanRNG('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
             
@@ -4617,7 +4638,8 @@ Platoon = Class(RNGAIPlatoon) {
                         self.LastMarker[1] = nil
                         self.LastMarker[2] = nil
                         self.MassMarkerTable = false
-                       --('Markertable nil returntobase')
+                        --('Markertable nil returntobase')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
@@ -4675,6 +4697,7 @@ Platoon = Class(RNGAIPlatoon) {
                     if self.MassMarkerTable then
                         if self.LoopCount > 15 then
                             --RNGLOG('Loop count greater than 15, return to base')
+                            coroutine.yield(2)
                             return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                         end
                         local data = {}
@@ -4682,19 +4705,23 @@ Platoon = Class(RNGAIPlatoon) {
                         self.LoopCount = self.LoopCount + 1
                         data.LoopCount = self.LoopCount
                         --RNGLOG('No path and no transports to location, setting table data and restarting')
+                        coroutine.yield(2)
                         return self:SetAIPlanRNG('MassRaidRNG', nil, data)
                     end
                     --RNGLOG('No path and no transports to location, return to base')
+                    coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
                 --RNGLOG('Guardmarker found transports')
             else
                 --RNGLOG('Path error in MASSRAID')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
 
             if (not path or not success) and not usedTransports then
                 --RNGLOG('not path or not success or not usedTransports MASSRAID')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
             platLoc = GetPlatoonPosition(self)
@@ -4844,14 +4871,17 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if self.RestartCount > 50 and self.MovementLayer == 'Land' then
                 --RNGLOG('Restartcount50')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('HuntAIPATHRNG')
             elseif self.RestartCount > 50 and self.MovementLayer == 'Water' then
                 --RNGLOG('restartcount 50')
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('NavalHuntAIRNG')
             end
             -- Note to self, I dont SetAIPlan because we want the masstable to persist.
             -- If you dont then you will likely get a semi deadloop
             --RNGLOG('check for this deadloop massraid')
+            coroutine.yield(2)
             return self:MassRaidRNG()
         else
             -- no marker found, disband!
@@ -5035,12 +5065,14 @@ Platoon = Class(RNGAIPlatoon) {
                     and not (self.PlatoonData.NeverGuardEngineers and self.PlatoonData.NeverGuardBases)
                 then
                     --RNGLOG('* AI-RNG: AttackForceAIRNG has returned guard engineer')
+                    coroutine.yield(2)
                     return self:GuardEngineer(self.AttackForceAIRNG)
                 end
 
                 -- we have nothing to do, so find the nearest base and disband
                 if not self.PlatoonData.NeverMerge then
                     RNGLOG('* AI-RNG: AttackForceAIRNG thinks it has nothing to do, return to base')
+                    coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
                 coroutine.yield(50)
@@ -6462,10 +6494,12 @@ Platoon = Class(RNGAIPlatoon) {
                                 end
                             end
                         else
+                            coroutine.yield(2)
                             return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                         end
                         IssueClearCommands(guardUnits)
                         if not guardedUnit then
+                            coroutine.yield(2)
                             return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                         else
                             IssueGuard(guardUnits, attackUnits[guardedUnit])
@@ -6501,11 +6535,12 @@ Platoon = Class(RNGAIPlatoon) {
                                         end
                                     else
                                         RNGLOG('Return to base')
+                                        coroutine.yield(2)
                                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                                     end
                                     IssueClearCommands(guardUnits)
                                     if not guardedUnit then
-                                        RNGLOG('')
+                                        coroutine.yield(2)
                                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                                     else
                                         IssueGuard(guardUnits, attackUnits[guardedUnit])
@@ -8466,6 +8501,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if pathTimeout > 10 then 
                 RNGLOG('Set huntaipath') 
+                coroutine.yield(2)
                 return self:SetAIPlanRNG('HuntAIPATHRNG') 
             end
             coroutine.yield(15)

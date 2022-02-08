@@ -883,10 +883,10 @@ function CDRThreatAssessmentRNG(cdr)
             RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
             RNGLOG('Current CDR Confidence '..cdr.Confidence)
-            if enemyUnitThreat * 1.2 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if enemyUnitThreat * 1.1 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
-            elseif enemyUnitThreat * 1.2 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
+            elseif enemyUnitThreat * 1.1 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
             end
