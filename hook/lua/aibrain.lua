@@ -37,7 +37,6 @@ AIBrain = Class(RNGAIBrainClass) {
     OnCreateAI = function(self, planName)
         RNGAIBrainClass.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
-        --RNGLOG('Oncreate')
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
@@ -807,7 +806,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
         self.EnemyIntel.ChokeFlag = false
-        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyFireBaseDetected = false
         self.EnemyIntel.EnemyAirFireBaseDetected = false
         self.EnemyIntel.ChokePoints = {}
         self.EnemyIntel.EnemyThreatCurrent = {
@@ -1023,8 +1022,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ZoneSetup = function(self)
         WaitTicks(1)
-       -- RNGLOG('Set land zone for brain')
-        --local Mapping = Mapping.GetMap()
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
         self.ZonesInitialized = true
     end,
@@ -1202,10 +1199,6 @@ AIBrain = Class(RNGAIBrainClass) {
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 if v.RNGArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
                     graphCheck = true
                     if not self.GraphZones[v.RNGArea] then
@@ -3191,8 +3184,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local scanRadius = 0
         local IMAPSize = 0
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyFireBaseDetected = false
         self.EnemyIntel.EnemyAirFireBaseDetected = false
+        self.EnemyIntel.EnemyFireBaseTable = {}
 
         if maxmapdimension == 256 then
             scanRadius = 11.5
@@ -3274,18 +3268,23 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
                             self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
                         end
+                        if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
+                            self.EnemyIntel.EnemyFireBaseDetected = true
+                        end
+                        if self.EnemyIntel.EnemyFireBaseDetected then
+                            if not self.EnemyIntel.EnemyFireBaseTable[q] then
+                                self.EnemyIntel.EnemyFireBaseTable[q] = {}
+                                self.EnemyIntel.EnemyFireBaseTable[q] = { EnemyIndex = unit.EnemyIndex, Location = {unit.IMAP[1], 0, unit.IMAP[2]}, Shielded = unit.Shielded, Air = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'), Land = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') }
+                            end
+                        end
                     end
-                    if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount > 5 then
-                        self.EnemyIntel.EnemyLandFireBaseDetected = true
-                    end
-                    if self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
-                        self.EnemyIntel.EnemyAirFireBaseDetected = true
-                    end
+                    
                 end
                 --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            if self.EnemyIntel.EnemyLandFireBaseDetected then
-                --RNGLOG('EnemyLandFireBaseDetected is true')
+            if self.EnemyIntel.EnemyFireBaseDetected then
+                LOG('Firebase Detected')
+                LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
             end
             self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
@@ -4668,13 +4667,13 @@ AIBrain = Class(RNGAIBrainClass) {
                                 --RNGLOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
                                 --RNGLOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
                                 --RNGLOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                                if self.EnemyIntel.EnemyLandFireBaseDetected then
+                                if self.EnemyIntel.EnemyFireBaseDetected then
                                     --RNGLOG('Firebase flag is true')
                                 end
                                 if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
                                 and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
                                 and totalThreat > self.BrainIntel.SelfThreat.LandNow 
-                                and self.EnemyIntel.EnemyLandFireBaseDetected then
+                                and self.EnemyIntel.EnemyFireBaseDetected then
                                     self.EnemyIntel.ChokeFlag = true
                                     self.ProductionRatios.Land = 0.3
                                     --RNGLOG('ChokeFlag is true')

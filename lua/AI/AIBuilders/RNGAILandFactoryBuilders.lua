@@ -21,6 +21,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Scout',
         PlatoonTemplate = 'T1LandScout',
+        Priority = 755,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -304,7 +305,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }},
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             --{ UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -321,7 +322,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 4 }},
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             --{ UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

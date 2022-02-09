@@ -577,7 +577,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Land Expansion',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -608,7 +608,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Land Expansion Sml',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -1141,7 +1141,6 @@ BuilderGroup {
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.ALLUNITS,
             },
             },
@@ -1321,6 +1320,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            RangedAttack = true,
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
@@ -1529,6 +1529,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            RangedAttack = true,
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             LocationType = 'LocationType',
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)

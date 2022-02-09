@@ -23,10 +23,6 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
     local MassMarker = {}
     for _, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                -- mass marker is too close to border, skip it.
-                continue
-            end 
             local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
             if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
                 --RNGLOG('mexDistance '..mexDistance)
@@ -74,10 +70,6 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, engPos ) })
             end
         end
@@ -123,10 +115,6 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
             end
         end

@@ -1359,7 +1359,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                     if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                         if ignoreCivilian then
                             if ArmyIsCivilian(unit:GetArmy()) then
-                               -- RNGLOG('Unit is civilian')
+                                --RNGLOG('Unit is civilian')
                                 continue
                             end
                         end
@@ -1407,7 +1407,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                 return retUnit
             end
         end
-        coroutine.yield(1)
+        coroutine.yield(2)
     end
     return false
 end
@@ -1578,9 +1578,8 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 --RNGLOG('Target Found in target aquisition function')
                 return TargetUnit, acuPresent, acuUnit, totalThreat
             end
-           coroutine.yield(2)
         end
-        coroutine.yield(1)
+        coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
     return TargetUnit, acuPresent, acuUnit, totalThreat
@@ -1665,7 +1664,7 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
                 --RNGLOG('Target Found in target aquisition function')
                 return TargetUnit, acuPresent, acuUnit, totalThreat
             end
-           coroutine.yield(5)
+           coroutine.yield(2)
         end
         coroutine.yield(1)
     end
@@ -2473,10 +2472,6 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
     local newList = {}
     for _, v in markerList do
         -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
-        if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
-            -- mass marker is too close to border, skip it.
-            continue
-        end
         if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) < minDistance then
             continue
         end
@@ -2522,10 +2517,6 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
     local MassMarker = {}
     for _, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                -- mass marker is too close to border, skip it.
-                continue
-            end 
             table.insert(MassMarker, v)
         end
     end
@@ -2621,10 +2612,6 @@ CountSoonMassSpotsRNG = function(aiBrain)
     local massmarkers={}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 table.insert(massmarkers,v)
             end
         end
@@ -3348,7 +3335,7 @@ MapReclaimAnalysis = function(aiBrain)
             aiBrain.MapReclaimTable = reclaimGrid
            -- RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
         end
-        coroutine.yield(1800)
+        coroutine.yield(600)
     end
 end
 
