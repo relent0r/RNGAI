@@ -3283,8 +3283,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
             if self.EnemyIntel.EnemyFireBaseDetected then
-                LOG('Firebase Detected')
-                LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
+                --LOG('Firebase Detected')
+                --LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
             end
             self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end

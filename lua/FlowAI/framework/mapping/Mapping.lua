@@ -491,9 +491,9 @@ GameMap = Class({
                 end
             end
         end
-        LOG('CanPathTo is false for layer '..layer)
-        LOG(' pos0 '..repr(pos0))
-        LOG(' pos1 '..repr(pos1))
+        --LOG('CanPathTo is false for layer '..layer)
+        --LOG(' pos0 '..repr(pos0))
+        --LOG(' pos1 '..repr(pos1))
         return false
     end,
     UnitCanPathTo = function(self,unit,pos)

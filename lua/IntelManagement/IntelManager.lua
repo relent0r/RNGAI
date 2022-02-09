@@ -652,7 +652,7 @@ ExpansionIntelScanRNG = function(aiBrain)
             end
             if aiBrain.BuilderManagers[v.Name].EngineerManager then
                 if aiBrain.BuilderManagers[v.Name].EngineerManager.ConsumptionUnits.Intel.Count > 0 then
-                    LOG('Radar Present')
+                    --LOG('Radar Present')
                     v.Radar = true
                 else
                     v.Radar = false
@@ -776,8 +776,8 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == positionNode.RNGArea then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
-                RNGLOG('Distance to expansion '..expansionDistance)
-                LOG('Expansion position is '..repr(expansion.Position))
+                --RNGLOG('Distance to expansion '..expansionDistance)
+                --LOG('Expansion position is '..repr(expansion.Position))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
                 --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then

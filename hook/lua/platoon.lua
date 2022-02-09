@@ -6029,187 +6029,6 @@ Platoon = Class(RNGAIPlatoon) {
         return bMergedPlatoons
     end,
 
-    MergeWithNearbyPlatoonsNewRNG = function(self, planName, radius, maxMergeNumber, ignoreBase, threatType, threatRequired)
-        -- check to see we're not near an ally base
-        local aiBrain = self:GetBrain()
-        local threatValue = 0
-        local translatedThreatType
-        if not aiBrain then
-            return
-        end
-        if threatType then
-            if threatType == 'AntiSurface' then
-                translatedThreatType = 'SurfaceThreatLevel'
-            elseif threatType == 'AntiAir' then
-                translatedThreatType = 'AirThreatLevel'
-            elseif threatType == 'AntiNavy' then
-                translatedThreatType = 'SubThreatLevel'
-            end
-        else
-            WARN('No threatType param passed to MergeWithNerbyPlatoonsRNG, no merge will happen')
-            return
-        end
-
-        if self.UsingTransport then
-            return
-        end
-        local platUnits = GetPlatoonUnits(self)
-        local platCount = 0
-
-        for _, u in platUnits do
-            if not u.Dead then
-                threatValue = threatValue + ALLBPS[u.UnitId].Defense[translatedThreatType]
-                platCount = platCount + 1
-            end
-        end
-        LOG('Current platoon threat level '..threatValue)
-
-        if (maxMergeNumber and platCount > maxMergeNumber) or platCount < 1 then
-            return
-        end 
-
-        local platPos = GetPlatoonPosition(self)
-        if not platPos then
-            return
-        end
-
-        local radiusSq = radius*radius
-        -- if we're too close to a base, forget it
-        if not ignoreBase then
-            if aiBrain.BuilderManagers then
-                for baseName, base in aiBrain.BuilderManagers do
-                    if VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3]) <= (2*radiusSq) then
-                        --RNGLOG('Platoon too close to base, not merge happening')
-                        return
-                    end
-                end
-            end
-        end
-
-        AlliedPlatoons = aiBrain:GetPlatoonsList()
-        local bMergedPlatoons = false
-        for _,aPlat in AlliedPlatoons do
-            if aPlat.PlanName != planName then
-                continue
-            end
-            if aPlat == self then
-                continue
-            end
-
-            if self.PlatoonData.UnitType and self.PlatoonData.UnitType ~= aPlat.PlatoonData.UnitType then
-                continue
-            end
-
-            if aPlat.UsingTransport then
-                continue
-            end
-
-            if aPlat.PlatoonFull then
-                --RNGLOG('Remote platoon is full, skip')
-                continue
-            end
-
-            local allyPlatPos = GetPlatoonPosition(aPlat)
-            if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
-                continue
-            end
-
-            if not self.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayerRNG(self)
-            end
-            if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
-            end
-
-            -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
-            if self.MovementLayer != aPlat.MovementLayer then
-                continue
-            end
-
-            if  VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
-                local units = GetPlatoonUnits(aPlat)
-                local validUnits = {}
-                local bValidUnits = false
-                for _,u in units do
-                    if not u.Dead and not u:IsUnitState('Attached') then
-                        threatValue = threatValue + ALLBPS[u.UnitId].Defense[translatedThreatType]
-                        RNGINSERT(validUnits, u)
-                        bValidUnits = true
-                    end
-                end
-                if not bValidUnits then
-                    continue
-                end
-                --RNGLOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
-                aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
-                bMergedPlatoons = true
-            end
-        end
-        if bMergedPlatoons then
-            self:StopAttack()
-        end
-        return bMergedPlatoons, threatValue < threatRequired, platPos
-    end,
-
-    ConsolidatePlatoonPositionRNG = function(self, currentPlatoonPosition, retreat, threatPosition)
-        -- Used to bring a platoon together post merging
-        local platUnits = GetPlatoonUnits(self)
-        local platPos = GetPlatoonPosition(self)
-        if retreat then
-            local alternatePos = false
-            local alternateZone = false
-            self:Stop()
-            self:MoveToLocation(RUtils.AvoidLocation(threatPosition, currentPlatoonPosition, 50), false)
-            coroutine.yield(40)
-            platPos = GetPlatoonPosition(self)
-            RNGLOG('Attempt to retreat to adjacent zone')
-            if not self.Zone then
-                RNGLOG('Zone micro platoon has not zone, why not?')
-            else
-                RNGLOG('Current zone is '..self.Zone)
-            end
-            if aiBrain.Zones.Land.zones[self.Zone].edges then
-                for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
-                    RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(platPos[1], platPos[3], v.zone.pos[1], v.zone.pos[3], threatPosition[1], threatPosition[3]))
-                    if RUtils.GetAngleRNG(platPos[1], platPos[3], v.zone.pos[1], v.zone.pos[3], threatPosition[1], threatPosition[3]) > 0.6 then
-                        alternateZone = v.zone.id
-                        alternatePos = v.zone.pos
-                    end
-                end
-            end
-            if alternatePos then
-                RNGLOG('Moving to adjacent zone and setting target zone')
-                self:Stop()
-                self:MoveToLocation(alternatePos, false)
-                while PlatoonExists(aiBrain, self) do
-                    coroutine.yield(10)
-                    self:MoveToLocation(alternatePos, false)
-                    platPos = GetPlatoonPosition(self)
-                    dist = VDist2Sq(alternatePos[1], alternatePos[3], platPos[1], platPos[3])
-                    if dist < 225 then
-                        self:Stop()
-                        RNGLOG('Attempted merge and returning true for retreated')
-                        return true
-                    end
-                    if Lastdist ~= dist then
-                        Stuck = 0
-                        Lastdist = dist
-                    else
-                        Stuck = Stuck + 1
-                        if Stuck > 15 then
-                            self:Stop()
-                            break
-                        end
-                    end
-                    coroutine.yield(30)
-                end
-            end
-        else
-            IssueClearCommands(platUnits)
-            IssueMove(platUnits, currentPlatoonPosition)
-        end
-    end,
-
     ReturnToBaseAIRNG = function(self, mainBase)
 
         local aiBrain = self:GetBrain()
@@ -6715,7 +6534,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             end
                                         end
                                     else
-                                        RNGLOG('Return to base')
+                                        --RNGLOG('Return to base')
                                         coroutine.yield(2)
                                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                                     end
@@ -8059,7 +7878,7 @@ Platoon = Class(RNGAIPlatoon) {
                         AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
                         --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
                         if massMarker.BorderWarning then
-                            LOG('Border Warning on mass point marker')
+                            --LOG('Border Warning on mass point marker')
                             IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
                         else
                             aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
@@ -8681,7 +8500,7 @@ Platoon = Class(RNGAIPlatoon) {
                 return
             end
             if pathTimeout > 10 then 
-                RNGLOG('Set huntaipath') 
+                --RNGLOG('Set huntaipath') 
                 coroutine.yield(2)
                 return self:SetAIPlanRNG('HuntAIPATHRNG') 
             end

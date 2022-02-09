@@ -887,7 +887,7 @@ function CDRThreatAssessmentRNG(cdr)
                -- RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif enemyUnitThreat * 1.1 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
-                RNGLOG('ACU threat low and health up past 6000')
+                --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
             end
             if aiBrain.BrainIntel.SelfThreat.LandNow > 0 then
@@ -1086,7 +1086,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 end
                             end
                         end
-                        RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
+                        --RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
                         if (enemyThreat - (enemyCdrThreat / 1.4)) >= friendlyUnitThreat and not cdr.SuicideMode then
                             --RNGLOG('Enemy Threat too high')
                             cdr:SetCustomName('target threat too high break logic')
@@ -1280,7 +1280,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if continueFighting == true then
                 if cdr.Caution and not cdr.SnipeMode and not cdr.SuicideMode then
-                    RNGLOG('cdr.Caution has gone true, continueFighting is false')
+                    --RNGLOG('cdr.Caution has gone true, continueFighting is false')
                     continueFighting = false
                     return CDRRetreatRNG(aiBrain, cdr)
                 end
