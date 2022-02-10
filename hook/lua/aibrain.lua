@@ -831,6 +831,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Threat = 0,
                 Hp = 0,
                 OnField = false,
+                CloseCombat = false,
                 Gun = false,
                 Ally = IsAlly(selfIndex, v:GetArmyIndex()),
             }

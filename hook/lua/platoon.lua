@@ -2203,7 +2203,7 @@ Platoon = Class(RNGAIPlatoon) {
         --RNGLOG('StrikeForceAI my movement layer is '..self.MovementLayer)
         if aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 and self.CurrentPlatoonThreat > 0 and self.MovementLayer == 'Air' then
             for k, v in aiBrain.EnemyIntel.ACU do
-                if v.OnField and v.Gun then
+                if (v.OnField and v.Gun) or v.CloseCombat then
                     acuTargeting = true
                     RNGINSERT(acuTargetIndex, k)
                 end

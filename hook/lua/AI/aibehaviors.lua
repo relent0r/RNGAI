@@ -175,6 +175,11 @@ function CDRBrainThread(cdr)
                     else
                         aiBrain.EnemyIntel.ACUEnemyClose = false
                     end
+                    if VDist2Sq(v.Position[1], v.Position[3], cdr.Position[1], cdr.Position[2]) < 6400 then
+                        aiBrain.EnemyIntel.ACU[k].CloseCombat = true
+                    else
+                        aiBrain.EnemyIntel.ACU[k].CloseCombat = false
+                    end
                 end
             end
         end

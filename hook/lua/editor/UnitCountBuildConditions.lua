@@ -820,6 +820,19 @@ function ACUOnField(aiBrain, gun)
     return false
 end
 
+function ACUCloseCombat(aiBrain, bool)
+    for k, v in aiBrain.EnemyIntel.ACU do
+        if not v.Ally then
+            if bool == true and v.CloseCombat then
+                return true
+            elseif bool == false and not v.CloseCombat then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits, category)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
     if activeExpansion then
