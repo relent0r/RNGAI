@@ -1347,6 +1347,177 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
+    ACUSupportRNG = function(self)
+        -- Very unfinished. Basic support.
+        -- remove those unneeded vars
+        -- make em ALOT smarter
+        local function VariableKite(platoon,unit,target)
+            local function KiteDist(pos1,pos2,distance)
+                local vec={}
+                local dist=VDist3(pos1,pos2)
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    vec[i]=k+distance/dist*(pos1[i]-k)
+                end
+                return vec
+            end
+            local function CheckRetreat(pos1,pos2,target)
+                local vel = {}
+                vel[1], vel[2], vel[3]=target:GetVelocity()
+                --RNGLOG('vel is '..repr(vel))
+                --RNGLOG(repr(pos1))
+                --RNGLOG(repr(pos2))
+                local dotp=0
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    dotp=dotp+(pos1[i]-k)*vel[i]
+                end
+                return dotp<0
+            end
+            if target.Dead then return end
+            if unit.Dead then return end
+                
+            local pos=unit:GetPosition()
+            local tpos=target:GetPosition()
+            local dest
+            local mod=3
+            if CheckRetreat(pos,tpos,target) then
+                mod=8
+            end
+            if unit.MaxWeaponRange then
+                dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod)
+            else
+                dest=KiteDist(pos,tpos,self.MaxWeaponRange+5-math.random(1,3)-mod)
+            end
+            if VDist3Sq(pos,dest)>6 then
+                IssueMove({unit},dest)
+                coroutine.yield(2)
+                return
+            else
+                coroutine.yield(2)
+                return
+            end
+        end
+        local aiBrain = self:GetBrain()
+        local armyIndex = aiBrain:GetArmyIndex()
+        local target
+        local blip
+        local platoonUnits = GetPlatoonUnits(self)
+        self.EnemyRadius = 40
+        local movingToScout = false
+        self.MaxPlatoonWeaponRange = false
+        self.CurrentPlatoonThreat = false
+        local unitPos
+        local alpha
+        local x
+        local y
+        local smartPos
+        self.scoutUnit = false
+        local atkPri = { categories.COMMAND, categories.MOBILE * categories.LAND, categories.MASSEXTRACTION }
+        self:ConfigurePlatoon()
+        LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
+
+        while PlatoonExists(aiBrain, self) do
+            if not aiBrain.CDRUnit.Active then
+                LOG('CDR is not active, setting to trueplatoon')
+                coroutine.yield(20)
+                return self:SetAIPlanRNG('TruePlatoonRNG')
+            end
+            if self.MovementLayer == 'Land' and RUtils.PositionOnWater(aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) then
+                LOG('ACU is underwater and we are on land, if he was under water when he called then he should have called an amphib platoon')
+                    coroutine.yield(20)
+                return self:SetAIPlanRNG('TruePlatoonRNG')
+            end
+            local platoonPos = GetPlatoonPosition(self)
+            local path, reason
+            local usedTransports = false
+            local ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
+
+            if AIAttackUtils.CanGraphToRNG(platoonPos, aiBrain.CDRUnit.Position, self.MovementLayer) then
+                if ACUDistance > 14400 then
+                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
+                end
+            else
+                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, aiBrain.CDRUnit.Position, true)
+            end
+            if path then
+                self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid)
+            end
+            platoonPos = GetPlatoonPosition(self)
+            ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
+            if ACUDistance > 32400 then
+                LOG('We are still more than 180 away from the acu, restart')
+                coroutine.yield(20)
+                continue
+            end
+            self:MoveToLocation(RUtils.AvoidLocation(platoonPos, aiBrain.CDRUnit.Position, 15), false)
+            coroutine.yield(30)
+            if aiBrain.CDRUnit.Active then
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 120, atkPri, false, false, false)
+            end
+            if RNGGETN(self:GetSquadUnits('Guard')) > 0 then
+                self:ForkThread(self.GuardACUSquadRNG, aiBrain)
+            end
+
+            if target then
+                local threatAroundplatoon = 0
+                self.CurrentPlatoonThreat = self:GetPlatoonThreat('Surface', categories.ALLUNITS)
+                local targetPosition = target:GetPosition()
+                platoonPos = GetPlatoonPosition(self)
+                if not AIAttackUtils.CanGraphToRNG(platoonPos, targetPosition, self.MovementLayer) then 
+                    --RNGLOG('Start huntaipath from huntai')
+                    coroutine.yield(5)
+                    return self:SetAIPlanRNG('HuntAIPATHRNG') 
+                end
+                self:Stop()
+                self:AggressiveMoveToLocation(RNGCOPY(target:GetPosition()))
+                coroutine.yield(30)
+                platoonPos = GetPlatoonPosition(self)
+                if self.scoutUnit and (not self.scoutUnit.Dead) then
+                    IssueClearCommands({self.scoutUnit})
+                    IssueMove({self.scoutUnit}, platoonPos)
+                end
+                while PlatoonExists(aiBrain, self) do
+                    --RNGLOG('At position and waiting for target death')
+                    local attackSquad = self:GetSquadUnits('Attack')
+                    if target and not target.Dead then
+                        local targetPosition = target:GetPosition()
+                        local microCap = 50
+                        for _, unit in attackSquad do
+                            microCap = microCap - 1
+                            if microCap <= 0 then break end
+                            if unit.Dead then continue end
+                            if not unit.MaxWeaponRange then
+                                continue
+                            end
+                            IssueClearCommands({unit})
+                            VariableKite(self,unit,target)
+                        end
+                    else
+                        break
+                    end
+                    coroutine.yield(15)
+                end
+            end
+            coroutine.yield(30)
+        end
+    end,
+
+    GuardACUSquadRNG = function(self, aiBrain)
+        while aiBrain.CDRUnit and aiBrain.CDRUnit.Active do
+            local guardUnits = self:GetSquadUnits('Guard')
+            local guardSquadPosition = self:GetSquadPosition('Guard') or nil
+            if guardSquadPosition and RNGGETN(guardUnits) > 0 then
+                IssueClearCommands(guardUnits)
+                IssueMove(guardUnits, RUtils.AvoidLocation(platoonPos, aiBrain.CDRUnit.Position, 8))
+                coroutine.yield(20)
+            else
+                return
+            end
+            coroutine.yield(10)
+        end
+    end,
+
     HuntAIPATHRNG = function(self)
         --RNGLOG('* AI-RNG: * HuntAIPATH: Starting')
         self:Stop()
