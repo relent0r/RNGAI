@@ -1412,6 +1412,102 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
     return false
 end
 
+function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, platoonThreat, ignoreCivilian)
+    if not position then
+        position = platoon:GetPlatoonPosition()
+    end
+    local VDist2 = VDist2
+    local enemyThreat, targetUnits, category
+    local RangeList = { [1] = maxRange }
+    if not aiBrain or not position or not maxRange then
+        return false
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+    end
+    
+    if maxRange > 512 then
+        RangeList = {
+            [1] = 30,
+            [1] = 64,
+            [2] = 128,
+            [2] = 192,
+            [3] = 256,
+            [3] = 384,
+            [4] = 512,
+            [5] = maxRange,
+        }
+    elseif maxRange > 256 then
+        RangeList = {
+            [1] = 30,
+            [1] = 64,
+            [2] = 128,
+            [2] = 192,
+            [3] = 256,
+            [4] = maxRange,
+        }
+    elseif maxRange > 64 then
+        RangeList = {
+            [1] = 30,
+            [2] = maxRange,
+        }
+    end
+    local SquadTargetList = {
+        Attack = {
+            Unit = false,
+            Distance = false
+        },
+        Artillery = {
+            Unit = false,
+            Distance = false
+        }
+    }
+
+    for _, range in RangeList do
+        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, range, 'Enemy')
+        for _, category in atkPri do
+            local retUnit = false
+            local distance = false
+            local targetShields = 9999
+            for num, unit in targetUnits do
+                if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                    if ignoreCivilian then
+                        if ArmyIsCivilian(unit:GetArmy()) then
+                            --RNGLOG('Unit is civilian')
+                            continue
+                        end
+                    end
+                    local unitPos = unit:GetPosition()
+                    if platoon.MovementLayer == 'Air' and platoonThreat then
+                        enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                        --RNGLOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                        if enemyThreat > platoonThreat then
+                            continue
+                        end
+                    end
+                    local unitDistance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                    if EntityCategoryContains(categories.MOBILE, unit) then
+                        if not SquadTargetList.Attack.Unit or unitDistance < SquadTargetList.Attack.Distance then
+                            SquadTargetList.Attack.Unit = unit
+                            SquadTargetList.Attack.Distance = unitDistance
+                        end
+                    elseif EntityCategoryContains(categories.STRUCTURE, unit) then
+                        if not SquadTargetList.Artillery.Unit or unitDistance < SquadTargetList.Artillery.Distance then
+                            SquadTargetList.Artillery.Unit = unit
+                            SquadTargetList.Artillery.Distance = unitDistance
+                        end
+                    end
+                end
+            end
+            if SquadTargetList.Attack.Unit or SquadTargetList.Artillery.Unit then
+                return SquadTargetList
+            end
+        end
+        coroutine.yield(2)
+    end
+    return false
+end
+
 function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, platoonThreat, index)
     local VDist2 = VDist2
     local enemyThreat

@@ -22,6 +22,7 @@ local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
+local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GetMostRestrictiveLayerRNG = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayerRNG
@@ -37,6 +38,7 @@ function CommanderBehaviorRNG(platoon)
             v.CDRBrainThread = v:ForkThread(CDRBrainThread)
             v.CDRThreatAssessment = v:ForkThread(CDRThreatAssessmentRNG)
             v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
+            v.DebugACU = v:ForkThread(DrawACUInfo, v)
         end
     end
 end
@@ -62,6 +64,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.CDRHome = table.copy(cdr:GetPosition())
     aiBrain.ACUSupport.ACUMaxSearchRadius = 80
     cdr.Initialized = false
+    cdr.MovementLayer = 'Amphibious'
     cdr.UnitBeingBuiltBehavior = false
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
@@ -69,11 +72,12 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.DefaultRange = 256
     cdr.MaxBaseRange = 0
     cdr.OverCharge = false
-    cdr.ThreatLimit = 22
+    cdr.ThreatLimit = 25
     cdr.Confidence = 0
     cdr.EnemyCDRPresent = false
     cdr.Caution = false
     cdr.HealthPercent = 0
+    cdr.DistanceToHome = 0
     cdr.Health = 0
     cdr.Active = false
     cdr.Retreating = false
@@ -111,6 +115,16 @@ function SetCDRDefaults(aiBrain, cdr)
     end
 end
 
+function DrawACUInfo(cdr)
+    while cdr and not cdr.Dead do
+        if cdr.Position then
+            DrawCircle(cdr.Position,80,'aaffaa')
+            DrawCircle(cdr.Position,70,'aaffaa')
+        end
+        coroutine.yield( 2 )
+    end
+end
+
 function CDRHealthThread(cdr)
   -- A way of maintaining an up to date health check
   local aiBrain = cdr:GetAIBrain()
@@ -131,6 +145,7 @@ function CDRBrainThread(cdr)
     SetCDRDefaults(aiBrain, cdr)
     -- Check starting reclaim
     aiBrain:ForkThread(GetStartingReclaim)
+    local lastPlatoonCall = 0
     while not cdr.Dead do
         local gameTime = GetGameTimeSeconds()
         cdr.Position = cdr:GetPosition()
@@ -158,8 +173,24 @@ function CDRBrainThread(cdr)
             --RNGLOG('Enemy is phase 3')
             cdr.Phase = 3
         end
-        if cdr.Health < 5000 and VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.CDRHome[1], cdr.CDRHome[3]) > 900 then
+        cdr.DistanceToHome = VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.CDRHome[1], cdr.CDRHome[3])
+        if cdr.Health < 5000 and cdr.DistanceToHome > 900 then
             cdr.Caution = true
+        end
+        if cdr.Active then
+            if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
+                if cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or cdr.SupportPlatoon.Dead and (gameTime - 15) > lastPlatoonCall then
+                    LOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
+                    LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2)
+                    lastPlatoonCall = gameTime
+                elseif cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
+                    LOG('CDR Support Platoon exist but we have too much threat, calling platoon')
+                    LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2)
+                    lastPlatoonCall = gameTime
+                end
+            end
         end
         for k, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally then
@@ -185,6 +216,119 @@ function CDRBrainThread(cdr)
         end
         coroutine.yield(5)
     end
+end
+
+function CDRCallPlatoon(cdr, threatRequired)
+    -- A way of maintaining an up to date health check
+    local aiBrain = cdr:GetAIBrain()
+    if not aiBrain then
+        return
+    end
+    LOG('ACU call platoon , threat required '..threatRequired)
+
+    local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
+    local AlliedPlatoons = aiBrain:GetPlatoonsList()
+    local platoonTable = {}
+    for _,aPlat in AlliedPlatoons do
+        if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
+            continue
+        end
+
+        if aPlat.UsingTransport then
+            continue
+        end
+
+        local allyPlatPos = GetPlatoonPosition(aPlat)
+        if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
+            continue
+        end
+
+        if not aPlat.MovementLayer then
+            AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+        end
+
+        -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+        if aPlat.MovementLayer == 'Water' or aPlat.MovementLayer == 'Air' then
+            continue
+        end
+        local platDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], allyPlatPos[1], allyPlatPos[3])
+         
+
+        if platDistance <= 32400 then
+            RNGINSERT(platoonTable, {Platoon = aPlat, Distance = platDistance, Position = allyPlatPos})
+        end
+    end
+    RNGSORT(platoonTable, function(a,b) return a.Distance < b.Distance end)
+    local bValidUnits = false
+    local threatValue = 0
+    local validUnits = {
+        Attack = {},
+        Guard = {},
+        Artillery = {}
+    }
+    if RNGGETN(platoonTable) > 0 then
+        for _, plat in platoonTable do
+            if PlatoonExists(aiBrain, plat.Platoon) then
+                if AIAttackUtils.CanGraphToRNG(cdr.Position, plat.Position, cdr.MovementLayer) then
+                    local units = GetPlatoonUnits(plat.Platoon)
+                    for _,u in units do
+                        if not u.Dead and not u:IsUnitState('Attached') then
+                            threatValue = threatValue + ALLBPS[u.UnitId].Defense.SurfaceThreatLevel
+                            if EntityCategoryContains(categories.DIRECTFIRE, u) then
+                                RNGINSERT(validUnits.Attack, u)
+                            elseif EntityCategoryContains(categories.INDIRECTFIRE, u) then
+                                RNGINSERT(validUnits.Artillery, u)
+                            elseif EntityCategoryContains(categories.ANTIAIR + categories.SHIELD, u) then
+                                RNGINSERT(validUnits.Guard, u)
+                            else
+                                RNGINSERT(validUnits.Attack, u)
+                            end
+                            bValidUnits = true
+                        end
+                    end
+                    if bValidUnits and threatValue >= threatRequired then
+                        break
+                    end
+                    if not threatRequired and bValidUnits then
+                        break
+                    end
+                end
+            end
+        end
+    else
+        return false
+    end
+    LOG('ACU call platoon , threat required '..threatRequired..' threat from surounding units '..threatValue)
+    if bValidUnits and not supportPlatoonAvailable then
+        supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
+        if RNGGETN(validUnits.Attack) > 0 then
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
+        end
+        if RNGGETN(validUnits.Artillery) > 0 then
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'GrowthFormation')
+        end
+        if RNGGETN(validUnits.Guard) > 0 then
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'GrowthFormation')
+        end
+        bMergedPlatoons = true
+    elseif bValidUnits then
+        if RNGGETN(validUnits.Attack) > 0 then
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
+        end
+        if RNGGETN(validUnits.Artillery) > 0 then
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'GrowthFormation')
+        end
+        if RNGGETN(validUnits.Guard) > 0 then
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'GrowthFormation')
+        end
+        bMergedPlatoons = true
+    end
+    if bMergedPlatoons then
+        cdr.SupportPlatoon = supportPlatoonAvailable
+        supportPlatoonAvailable:Stop()
+        return true
+    end
+    return false
 end
 
 function CDRBuildFunction(aiBrain, cdr, object)
@@ -530,7 +674,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             IssueClearCommands({cdr})
                             IssueMove({cdr}, platoonPosition)
                         end
-                        if cdr.CurrentEnemyThreat * 1.3 < cdr.CurrentFriendlyThreat and platoonDistance < 6400 then
+                        if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 6400 then
                             RNGLOG('EnemyThreat low, cancel retreat')
                             IssueClearCommands({cdr})
                             return
@@ -835,7 +979,7 @@ function CDRThreatAssessmentRNG(cdr)
     while not cdr.Dead do
         if cdr.Active then
             local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 80, 'Enemy')
-            local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 60, 'Ally')
+            local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 70, 'Ally')
             local enemyUnitThreat = 0
             local friendlyUnitThreat = 0
             local friendlyThreatConfidenceModifier = 0
@@ -888,10 +1032,10 @@ function CDRThreatAssessmentRNG(cdr)
             RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
             RNGLOG('Current CDR Confidence '..cdr.Confidence)
-            if enemyUnitThreat * 1.1 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if enemyUnitThreat > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
-            elseif enemyUnitThreat * 1.1 < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
+            elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
             end
@@ -1094,7 +1238,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                         RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
                         if (enemyThreat - (enemyCdrThreat / 1.4)) >= friendlyUnitThreat and not cdr.SuicideMode then
                             --RNGLOG('Enemy Threat too high')
-                            cdr:SetCustomName('target threat too high break logic')
                             if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 1600 then
                                 RNGLOG('Threat high and cdr close, retreat')
                                 RNGLOG('Friendly threat was '..friendlyUnitThreat)
@@ -1379,8 +1522,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         RNGLOG('ACU on transport')
         return false
     end
-
-
+    LOG('CDRRetreatRNG has fired')
     local closestPlatoon = false
     local closestDistance = false
     local closestAPlatPos = false
@@ -1389,7 +1531,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
     if cdr.Health > 5000 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and not base then
         local AlliedPlatoons = aiBrain:GetPlatoonsList()
         for _,aPlat in AlliedPlatoons do
-            if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' then 
+            if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'ZoneRaidRNG' then 
                 --RNGLOG('Allied platoon name '..aPlat.PlanName)
 
                 if aPlat.UsingTransport then 
@@ -2080,7 +2222,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
                             Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering', 'ResourceAllocation'},
                             },
                 -- Aeon
-                ['ual0001'] = {Combat = {'HeatSink', 'CrysalisBeam', 'Shield', 'ShieldHeavy'},
+                ['ual0001'] = {Combat = {'CrysalisBeam', 'HeatSink', 'Shield', 'ShieldHeavy'},
                             Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering','ShieldHeavy'}
                             },
                 -- Cybran
