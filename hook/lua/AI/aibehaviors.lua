@@ -301,6 +301,7 @@ function CDRCallPlatoon(cdr, threatRequired)
     LOG('ACU call platoon , threat required '..threatRequired..' threat from surounding units '..threatValue)
     if bValidUnits and not supportPlatoonAvailable then
         supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
+        supportPlatoonAvailable:ForkThread(ZoneUpdate())
         if RNGGETN(validUnits.Attack) > 0 then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
