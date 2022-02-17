@@ -1033,7 +1033,7 @@ function CDRThreatAssessmentRNG(cdr)
             RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
             RNGLOG('Current CDR Confidence '..cdr.Confidence)
-            if enemyUnitThreat > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if not cdr.SuicideMode and enemyUnitThreat > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
@@ -1166,7 +1166,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         
         repeat
             overCharging = false
-            if VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
+            if not cdr.SuicideMode and VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
                 RNGLOG('OverCharge running but ACU is beyond its MaxBaseRange property')
                 cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                 coroutine.yield(40)

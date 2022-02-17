@@ -1452,6 +1452,7 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
             [2] = maxRange,
         }
     end
+    local acuUnit = false
     local SquadTargetList = {
         Attack = {
             Unit = false,
@@ -1485,6 +1486,10 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
                             continue
                         end
                     end
+                    if EntityCategoryContains(categories.COMMAND, unit) then
+                        acuUnit = unit
+
+                    end
                     local unitDistance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     if EntityCategoryContains(categories.MOBILE, unit) then
                         if not SquadTargetList.Attack.Unit or unitDistance < SquadTargetList.Attack.Distance then
@@ -1500,7 +1505,7 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
                 end
             end
             if SquadTargetList.Attack.Unit or SquadTargetList.Artillery.Unit then
-                return SquadTargetList
+                return SquadTargetList, acuUnit
             end
         end
         coroutine.yield(2)

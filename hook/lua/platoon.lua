@@ -298,6 +298,7 @@ Platoon = Class(RNGAIPlatoon) {
         local y
         local smartPos
         local platoonUnits = GetPlatoonUnits(self)
+        local platoonPosition
         local rangeModifier = 0
         local atkPri = {}
         self:ConfigurePlatoon()
@@ -1120,7 +1121,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                     for _, v in enemyUnitCheck do
                                                         if not v.Dead then
                                                             self:Stop()
-                                                            self:MoveToLocation(RUtils.AvoidLocation(v:GetPosition(), scoutPos, intelRange - 5), false)
+                                                            self:MoveToLocation(RUtils.AvoidLocation(v:GetPosition(), scoutPos, intelRange - 2), false)
                                                             coroutine.yield(30)
                                                             break
                                                         end
@@ -1353,6 +1354,7 @@ Platoon = Class(RNGAIPlatoon) {
         -- make em ALOT smarter
         LOG('Starting ACUSupportRNG')
         self.BuilderName = 'ACUSupportRNG'
+        self.PlanName = 'ACUSupportRNG'
         local function VariableKite(platoon,unit,target)
             local function KiteDist(pos1,pos2,distance)
                 local vec={}
@@ -1455,7 +1457,7 @@ Platoon = Class(RNGAIPlatoon) {
             self:MoveToLocation(RUtils.AvoidLocation(aiBrain.CDRUnit.Position, platoonPos, 15), false)
             coroutine.yield(30)
             LOG('Looking for targets around the acu')
-            targetTable = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
+            targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
             if targetTable.Attack.Unit then
                 LOG('Enemy Units in Attack Squad Table')
                 target = targetTable.Attack.Unit
@@ -1465,6 +1467,9 @@ Platoon = Class(RNGAIPlatoon) {
             end
             if self:GetSquadUnits('Guard') then
                 self:ForkThread(self.GuardACUSquadRNG, aiBrain)
+            end
+            if acuUnit then
+                target = acuUnit
             end
 
             if target then
@@ -1479,22 +1484,28 @@ Platoon = Class(RNGAIPlatoon) {
                     return self:SetAIPlanRNG('HuntAIPATHRNG') 
                 end
                 self:Stop()
-                coroutine.yield(30)
+                LOG('Platoon stopped, waiting 3 seconds, why?')
                 platoonPos = GetPlatoonPosition(self)
                 if self.scoutUnit and (not self.scoutUnit.Dead) then
+                    LOG('Scout unit using told to move')
                     IssueClearCommands({self.scoutUnit})
                     IssueMove({self.scoutUnit}, platoonPos)
                 end
                 LOG('Do micro stuff')
                 while PlatoonExists(aiBrain, self) do
-                    --RNGLOG('At position and waiting for target death')
+                    LOG('Start platoonexist loop')
                     local attackSquad = self:GetSquadUnits('Attack')
+                    local snipeAttempt = false
                     if target and not target.Dead then
+                        if aiBrain.CDRUnit.SuicideMode and EntityCategoryContains(categories.COMMAND, target) then
+                            snipeAttempt = true
+                        end
                         targetPosition = target:GetPosition()
                         if VDist2Sq(targetPosition[1], targetPosition[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) > 4900 then
                             break
                         end
                         local microCap = 50
+                        LOG('Performing attack squad micro')
                         for _, unit in attackSquad do
                             microCap = microCap - 1
                             if microCap <= 0 then break end
@@ -1503,15 +1514,23 @@ Platoon = Class(RNGAIPlatoon) {
                                 continue
                             end
                             IssueClearCommands({unit})
-                            VariableKite(self,unit,target)
+                            if snipeAttempt then
+                                IssueMove({unit},targetPosition)
+                                coroutine.yield(2)
+                            else
+                                VariableKite(self,unit,target)
+                            end
                         end
                     else
+                        LOG('No longer target or target.Dead')
                         break
                     end
                     coroutine.yield(20)
                 end
+                LOG('Target kite has completed')
             end
             coroutine.yield(30)
+            LOG('ACUSupportRNG restarting after loop complete')
         end
     end,
 
