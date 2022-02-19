@@ -307,10 +307,10 @@ function CDRCallPlatoon(cdr, threatRequired)
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
         if RNGGETN(validUnits.Artillery) > 0 then
-            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'GrowthFormation')
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
         end
         if RNGGETN(validUnits.Guard) > 0 then
-            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'GrowthFormation')
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
         end
         bMergedPlatoons = true
     elseif bValidUnits then
@@ -318,10 +318,10 @@ function CDRCallPlatoon(cdr, threatRequired)
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
         if RNGGETN(validUnits.Artillery) > 0 then
-            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'GrowthFormation')
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
         end
         if RNGGETN(validUnits.Guard) > 0 then
-            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'GrowthFormation')
+            aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
         end
         bMergedPlatoons = true
     end
@@ -642,7 +642,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     if path then
         RNGLOG('We have a path')
         RNGLOG('Distance to position is '..VDist3(cdr.Position, position))
-        if cdr.Retreat then
+        if retreat or platoonRetreat then
             RNGLOG('We are retreating')
         end
         if cdr.Caution then
@@ -665,21 +665,26 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                 if platoonRetreat then
                     if platoon and aiBrain:PlatoonExists(platoon) then
                         local platoonPosition = GetPlatoonPosition(platoon)
-                        local platoonDistance = VDist2Sq(cdrPosition[1], cdrPosition[3], platoonPosition[1], platoonPosition[3])
-                        if platoonDistance < 225 then
-                            RNGLOG('Close to platoon position clear and return')
-                            IssueClearCommands({cdr})
-                            return
-                        end
-                        if platoonDistance < 22500 then
-                            RNGLOG('Retarget movement to platoon position')
-                            IssueClearCommands({cdr})
-                            IssueMove({cdr}, platoonPosition)
-                        end
-                        if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 6400 then
-                            RNGLOG('EnemyThreat low, cancel retreat')
-                            IssueClearCommands({cdr})
-                            return
+                        if platoonPosition then
+                            local platoonDistance = VDist2Sq(cdrPosition[1], cdrPosition[3], platoonPosition[1], platoonPosition[3])
+                            if platoonDistance < 225 then
+                                RNGLOG('Close to platoon position clear and return')
+                                IssueClearCommands({cdr})
+                                return
+                            end
+                            if platoonDistance < 22500 then
+                                RNGLOG('Retarget movement to platoon position')
+                                IssueClearCommands({cdr})
+                                IssueMove({cdr}, platoonPosition)
+                            end
+                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 6400 then
+                                RNGLOG('EnemyThreat low, cancel retreat')
+                                IssueClearCommands({cdr})
+                                return
+                            end
+                        else
+                            platoonRetreat = false
+                            continue
                         end
                     end
                 end
@@ -748,7 +753,15 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         end
                         cdr:SetCustomName('ACU Ended movement loop')
                     end
-                end
+                elseif cdr.Health > 6000 and retreat or platoonRetreat then
+                    LOG('We are retreating or platoonRetreating')
+                    LOG('EnemyThreat is '..(cdr.CurrentEnemyThreat * 1.2)..' friendly is '..cdr.CurrentFriendlyThreat)
+                    if aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon') and cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat then
+                        RNGLOG('EnemyThreat low and acusupport present, cancel retreat')
+                        IssueClearCommands({cdr})
+                        return
+                    end
+               end
                 coroutine.yield(10)
             end
         end
@@ -1057,6 +1070,12 @@ function CDRThreatAssessmentRNG(cdr)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + 0.1
             end
             friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + friendlyUnitThreat
+            RNGLOG('Total Friendly Threat '..friendlyThreatConfidenceModifier)
+            RNGLOG('Total Enemy Threat '..enemyThreatConfidenceModifier)
+            if cdr.Health > 7000 and aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * 1.2
+                LOG('ACU Health is above 6000, modified friendly threat '..friendlyThreatConfidenceModifier)
+            end
             enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
             cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
             if aiBrain.RNGEXP then
@@ -1530,38 +1549,43 @@ function CDRRetreatRNG(aiBrain, cdr, base)
     local closestAPlatPos = false
     local platoonValue = 0
     --RNGLOG('Getting list of allied platoons close by')
+    local supportPlatoon = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
     if cdr.Health > 5000 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and not base then
-        local AlliedPlatoons = aiBrain:GetPlatoonsList()
-        for _,aPlat in AlliedPlatoons do
-            if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'ZoneRaidRNG' then 
-                --RNGLOG('Allied platoon name '..aPlat.PlanName)
+        if supportPlatoon then
+            closestPlatoon = supportPlatoon
+            closestAPlatPos = GetPlatoonPosition(aiBrain, supportPlatoon)
+        else
+            local AlliedPlatoons = aiBrain:GetPlatoonsList()
+            for _,aPlat in AlliedPlatoons do
+                if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'ZoneRaidRNG' then 
+                    --RNGLOG('Allied platoon name '..aPlat.PlanName)
+                    if aPlat.UsingTransport then 
+                        continue 
+                    end
 
-                if aPlat.UsingTransport then 
-                    continue 
-                end
+                    if not aPlat.MovementLayer then 
+                        AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat) 
+                    end
 
-                if not aPlat.MovementLayer then 
-                    AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat) 
-                end
-
-                -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
-                if aPlat.MovementLayer == 'Land' or aPlat.MovementLayer == 'Amphibious' then
-                    local aPlatPos = GetPlatoonPosition(aPlat)
-                    local aPlatDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],aPlatPos[1],aPlatPos[3])
-                    local homeDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],cdr.CDRHome[1],cdr.CDRHome[3])
-                    local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
-                    if aPlatDistance > 1600 and aPlatToHomeDistance < homeDistance then
-                        local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                        local platoonValue = aPlatDistance * aPlatDistance / threat
-                        if not closestDistance then
-                            closestDistance = platoonValue
-                        end
-                        --RNGLOG('Platoon Distance '..aPlatDistance)
-                        --RNGLOG('Weighting is '..platoonValue)
-                        if platoonValue <= closestDistance then
-                            closestPlatoon = aPlat
-                            closestDistance = platoonValue
-                            closestAPlatPos = aPlatPos
+                    -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+                    if aPlat.MovementLayer == 'Land' or aPlat.MovementLayer == 'Amphibious' then
+                        local aPlatPos = GetPlatoonPosition(aPlat)
+                        local aPlatDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],aPlatPos[1],aPlatPos[3])
+                        local homeDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],cdr.CDRHome[1],cdr.CDRHome[3])
+                        local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
+                        if aPlatDistance > 1600 and aPlatToHomeDistance < homeDistance then
+                            local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                            local platoonValue = aPlatDistance * aPlatDistance / threat
+                            if not closestDistance then
+                                closestDistance = platoonValue
+                            end
+                            --RNGLOG('Platoon Distance '..aPlatDistance)
+                            --RNGLOG('Weighting is '..platoonValue)
+                            if platoonValue <= closestDistance then
+                                closestPlatoon = aPlat
+                                closestDistance = platoonValue
+                                closestAPlatPos = aPlatPos
+                            end
                         end
                     end
                 end
@@ -1572,7 +1596,9 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         RNGLOG('Found platoon checking if can graph')
         if AIAttackUtils.CanGraphToRNG(cdr.Position,closestAPlatPos,'Amphibious') then
             RNGLOG('Can graph to platoon, try retreat to them')
-            RNGLOG('Platoon distance from us is '..closestDistance)
+            if closestDistance then
+                RNGLOG('Platoon distance from us is '..closestDistance)
+            end
             cdr.Retreat = false
             CDRMoveToPosition(aiBrain, cdr, closestAPlatPos, 225, true, true, closestPlatoon)
         end

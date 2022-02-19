@@ -26,7 +26,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
 end
 
 local LandAdvantage = function(self, aiBrain, builderManager)
-    if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) > aiBrain.EnemyIntel.EnemyThreatCurrent.Land * 1.3 then
+    if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) > aiBrain.EnemyIntel.EnemyThreatCurrent.Land * 1.1 then
         return 750
     end
     return 740
@@ -781,12 +781,11 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reclaim Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T1 Early', -- Try to get that early reclaim
+        BuilderName = 'RNGAI Engineer Reclaim T1 Minimum', -- Try to get that early reclaim
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
-                { UCBC, 'LessThanGameTimeSecondsRNG', { 420 } }, -- don't build after 7 minutes
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},

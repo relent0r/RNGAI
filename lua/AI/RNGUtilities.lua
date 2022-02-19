@@ -433,8 +433,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         while reclaiming do
             RNGLOG('* AI-RNG: Engineer is reclaiming')
             --self:SetCustomName('reclaim loop start')
-            coroutine.yield(200)
-            currentTime = currentTime + 20
+            coroutine.yield(100)
+            currentTime = currentTime + 10
             if currentTime > max_time then
                 reclaiming = false
             end

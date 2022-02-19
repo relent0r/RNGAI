@@ -1119,7 +1119,12 @@ Platoon = Class(RNGAIPlatoon) {
                                                 enemyUnitCheck = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.SCOUT, scoutPos, intelRange, 'Enemy')
                                                 if RNGGETN(enemyUnitCheck) > 0 then
                                                     for _, v in enemyUnitCheck do
-                                                        if not v.Dead then
+                                                        if scout.UnitId == 'xsl0101' and EntityCategoryContains(categories.ENGINEER - categories.COMMAND, v) then
+                                                            LOG('Seraphim scout vs engineer')
+                                                            self:Stop()
+                                                            IssueAttack({scout}, v)
+                                                            coroutine.yield(40)
+                                                        elseif not v.Dead then
                                                             self:Stop()
                                                             self:MoveToLocation(RUtils.AvoidLocation(v:GetPosition(), scoutPos, intelRange - 2), false)
                                                             coroutine.yield(30)
