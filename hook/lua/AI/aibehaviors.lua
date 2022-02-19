@@ -72,7 +72,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.DefaultRange = 256
     cdr.MaxBaseRange = 0
     cdr.OverCharge = false
-    cdr.ThreatLimit = 25
+    cdr.ThreatLimit = 65
     cdr.Confidence = 0
     cdr.EnemyCDRPresent = false
     cdr.Caution = false
@@ -233,29 +233,30 @@ function CDRCallPlatoon(cdr, threatRequired)
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
+        if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'ZoneRaidRNG' then
+            if aPlat.UsingTransport then
+                continue
+            end
 
-        if aPlat.UsingTransport then
-            continue
-        end
+            local allyPlatPos = GetPlatoonPosition(aPlat)
+            if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
+                continue
+            end
 
-        local allyPlatPos = GetPlatoonPosition(aPlat)
-        if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
-            continue
-        end
+            if not aPlat.MovementLayer then
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+            end
 
-        if not aPlat.MovementLayer then
-            AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
-        end
+            -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+            if aPlat.MovementLayer == 'Water' or aPlat.MovementLayer == 'Air' then
+                continue
+            end
+            local platDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], allyPlatPos[1], allyPlatPos[3])
+            
 
-        -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
-        if aPlat.MovementLayer == 'Water' or aPlat.MovementLayer == 'Air' then
-            continue
-        end
-        local platDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], allyPlatPos[1], allyPlatPos[3])
-         
-
-        if platDistance <= 32400 then
-            RNGINSERT(platoonTable, {Platoon = aPlat, Distance = platDistance, Position = allyPlatPos})
+            if platDistance <= 32400 then
+                RNGINSERT(platoonTable, {Platoon = aPlat, Distance = platDistance, Position = allyPlatPos})
+            end
         end
     end
     RNGSORT(platoonTable, function(a,b) return a.Distance < b.Distance end)
@@ -286,7 +287,7 @@ function CDRCallPlatoon(cdr, threatRequired)
                             bValidUnits = true
                         end
                     end
-                    if bValidUnits and threatValue >= threatRequired then
+                    if bValidUnits and threatValue >= threatRequired * 1.2 then
                         break
                     end
                     if not threatRequired and bValidUnits then
@@ -2425,6 +2426,10 @@ ZoneUpdate = function(platoon)
     local aiBrain = platoon:GetBrain()
     local function SetZone(pos, zoneIndex)
         --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+        if not pos then
+            LOG('No Pos in Zone Update function')
+            return false
+        end
         local zoneID = MAP:GetZoneID(pos,zoneIndex)
         -- zoneID <= 0 => not in a zone
         if zoneID > 0 then

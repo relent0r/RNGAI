@@ -1405,6 +1405,7 @@ Platoon = Class(RNGAIPlatoon) {
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local targetTable = {}
+        local acuUnit = false
         local target
         local blip
         local platoonUnits = GetPlatoonUnits(self)
@@ -1419,7 +1420,10 @@ Platoon = Class(RNGAIPlatoon) {
         LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
 
         while PlatoonExists(aiBrain, self) do
-            if not aiBrain.CDRUnit.Active and not cdr.Retreating and aiBrain.CDRUnit.EnemyThreatCurrent < 5 then
+            if aiBrain.CDRUnit.Active then
+                LOG('ACUSupportRNG Sees ACU as still active')
+            end
+            if not aiBrain.CDRUnit.Active and not aiBrain.CDRUnit.Retreating and aiBrain.CDRUnit.EnemyThreatCurrent < 5 then
                 LOG('CDR is not active, setting to trueplatoon')
                 coroutine.yield(20)
                 return self:SetAIPlanRNG('TruePlatoonRNG')
@@ -1453,9 +1457,14 @@ Platoon = Class(RNGAIPlatoon) {
                 continue
             end
             LOG('Should be close to acu, current distance is '..ACUDistance)
-            IssueClearCommands(GetPlatoonUnits(self))
-            self:MoveToLocation(RUtils.AvoidLocation(aiBrain.CDRUnit.Position, platoonPos, 15), false)
-            coroutine.yield(30)
+            while PlatoonExists(aiBrain, self) and aiBrain.CDRUnit.Active and ACUDistance > 900 do
+                IssueClearCommands(GetPlatoonUnits(self))
+                self:MoveToLocation(RUtils.AvoidLocation(aiBrain.CDRUnit.Position, platoonPos, 15), false)
+                coroutine.yield(40)
+                platoonPos = GetPlatoonPosition(self)
+                ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
+                LOG('Trying to get close to acu, current distance is '..ACUDistance)
+            end
             LOG('Looking for targets around the acu')
             targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
             if targetTable.Attack.Unit then
@@ -3715,6 +3724,10 @@ Platoon = Class(RNGAIPlatoon) {
     ConfigurePlatoon = function(self)
         local function SetZone(pos, zoneIndex)
             RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+            if not pos then
+                LOG('No pos in configure platoon function')
+                return false
+            end
             local zoneID = MAP:GetZoneID(pos,zoneIndex)
             -- zoneID <= 0 => not in a zone
             if zoneID > 0 then
@@ -3731,6 +3744,9 @@ Platoon = Class(RNGAIPlatoon) {
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
+                    if not v.PlatoonHandle then
+                        v.PlatoonHandle = self
+                    end
                     if self.PlatoonData.SetWeaponPriorities then
                         for i = 1, v:GetWeaponCount() do
                             local wep = v:GetWeapon(i)
@@ -7452,7 +7468,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     -- For Debugging
-    --[[PlatoonDisband = function(self)
+    PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
         if not aiBrain.RNG then
             return RNGAIPlatoon.PlatoonDisband(self)
@@ -7470,7 +7486,7 @@ Platoon = Class(RNGAIPlatoon) {
         if aiBrain:PlatoonExists(self) then
             RNGAIPlatoon.PlatoonDisband(self)
         end
-    end,]]
+    end,
 
 
     PlatoonMergeRNG = function(self)

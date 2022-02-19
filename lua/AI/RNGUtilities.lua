@@ -166,6 +166,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 end
                 if validLocation then
                     RNGLOG('We have a valid reclaim location')
+                    IssueClearCommands({self})
                     if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation) then
                         RNGLOG('We have issued move orders to get to the reclaim location')
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
@@ -3424,7 +3425,7 @@ MapReclaimAnalysis = function(aiBrain)
                     if reclaimRaw and table.getn(reclaimRaw) > 0 then
                         for k,v in reclaimRaw do
                             if not IsProp(v) then continue end
-                            if v.MaxMassReclaim and v.MaxMassReclaim > 30 then
+                            if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
                                 reclaimTotal = reclaimTotal + v.MaxMassReclaim
                             end
                         end
@@ -3436,7 +3437,7 @@ MapReclaimAnalysis = function(aiBrain)
             aiBrain.MapReclaimTable = reclaimGrid
             RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
         end
-        coroutine.yield(600)
+        coroutine.yield(300)
     end
 end
 
