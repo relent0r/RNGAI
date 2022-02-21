@@ -17,7 +17,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager)
     if myAirThreat < enemyAirThreat then
         --RNGLOG('Enable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 750
+        return 850
     else
         --RNGLOG('Disable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
@@ -378,19 +378,18 @@ BuilderGroup {
         InstanceCount = 12,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.BOMBER} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
         },
         BuilderData = {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.FACTORY,
                 AssistRange = 120,
+                AssistFactoryUnit = true,
                 BeingBuiltCategories = {categories.AIR * categories.MOBILE * categories.ANTIAIR},                   
-                PermanentAssist = true,
                 AssistClosestUnit = false,                                       
                 AssistUntilFinished = false,
-                Time = 60,
+                Time = 180,
             },
         },
         BuilderType = 'Any',
@@ -771,7 +770,12 @@ BuilderGroup {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
+                AssistFactoryUnit = true,
                 AssisteeType = categories.FACTORY,
+                PermanentAssist = true,
+                AssistClosestUnit = false,                                       
+                AssistUntilFinished = false,
+                Time = 180,
             },
         }
     },
@@ -787,7 +791,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
+                { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
                 
             },
@@ -904,7 +908,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
         PlatoonTemplate = 'RNGAI T12EngineerReclaimer',
         Priority = 900,
-        InstanceCount = 6,
+        InstanceCount = 8,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * (categories.TECH1 + categories.TECH2) }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},
@@ -1172,7 +1176,7 @@ BuilderGroup {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
                 PermanentAssist = true,
-                AssisteeType = categories.GATE,
+                AssisteeType = categories.FACTORY,
                 AssistRange = 80,
                 BeingBuiltCategories = {categories.SUBCOMMANDER},
             },

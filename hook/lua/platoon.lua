@@ -1421,6 +1421,7 @@ Platoon = Class(RNGAIPlatoon) {
         local unitPos
         self.scoutUnit = false
         self.atkPri = { categories.COMMAND, categories.MOBILE * categories.LAND, categories.MASSEXTRACTION }
+        local threatTimeout = 0
         self:ConfigurePlatoon()
         LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
 
@@ -1428,15 +1429,23 @@ Platoon = Class(RNGAIPlatoon) {
             if aiBrain.CDRUnit.Active then
                 LOG('ACUSupportRNG Sees ACU as still active')
             end
-            if not aiBrain.CDRUnit.Active and not aiBrain.CDRUnit.Retreating and aiBrain.CDRUnit.EnemyThreatCurrent < 5 then
+            if (not aiBrain.CDRUnit.Active and not aiBrain.CDRUnit.Retreating) or (VDist2Sq(aiBrain.CDRUnit.CDRHome[1], aiBrain.CDRUnit.CDRHome[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) < 14400) and aiBrain.CDRUnit.CurrentEnemyThreat < 5 then
                 LOG('CDR is not active, setting to trueplatoon')
                 coroutine.yield(20)
                 return self:SetAIPlanRNG('TruePlatoonRNG')
             end
+            if aiBrain.CDRUnit.CurrentEnemyThreat < 5 and aiBrain.CDRUnit.CurrentFriendlyThreat > 10 then
+                LOG('CDR is not in danger, threatTimeout incredent')
+                threatTimeout = threatTimeout + 1
+                if threatTimeout > 10 then
+                    coroutine.yield(20)
+                    return self:SetAIPlanRNG('TruePlatoonRNG')
+                end
+            end
             if self.MovementLayer == 'Land' and RUtils.PositionOnWater(aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) then
                 LOG('ACU is underwater and we are on land, if he was under water when he called then he should have called an amphib platoon')
                     coroutine.yield(20)
-                return self:SetAIPlanRNG('TruePlatoonRNG')
+                return self:SetAIPlanRNG('HuntAIPATHRNG')
             end
             local platoonPos = GetPlatoonPosition(self)
             local path, reason
@@ -3476,7 +3485,7 @@ Platoon = Class(RNGAIPlatoon) {
                         coroutine.yield(5)
                     end
                 else
-                    LOG('closeMarkers 2 or less or UnitBeingAsist is not complete')
+                    LOG('closeMarkers 2 or less or UnitBeingAssist is not complete')
                     LOG('closeMarkers '..closeMarkers)
                     LOG('Fraction complete is '..eng.UnitBeingAssist:GetFractionComplete())
                 end
@@ -6546,9 +6555,6 @@ Platoon = Class(RNGAIPlatoon) {
         if not mainBase then
             for baseName, base in aiBrain.BuilderManagers do
                 if self.MovementLayer == 'Water' then
-                    RNGLOG('ReturnToBase movement layer is water, skip non water builder managers')
-                    RNGLOG('Found base of name '..baseName)
-                    RNGLOG('Base Layer is '..base.Layer)
                     if base.Layer ~= 'Water' then
                         continue
                     end
@@ -6683,12 +6689,9 @@ Platoon = Class(RNGAIPlatoon) {
                             repeat
                                 moveLocation = distressLocation
                                 self:Stop()
-                                --RNGLOG('Platoon responding to distress at location '..repr(distressLocation))
-                                --if VDist2Sq(platoonPos[1], platoonPos[3], distressLocation[1], distressLocation[3]) > 900 then
                                 self:SetPlatoonFormationOverride('NoFormation')
                                 local cmd = self:MoveToLocation(distressLocation, false)
-                                --end
-
+                                coroutine.yield(20)
                                 RNGLOG('Moving to distressLocation for platoon at '..repr(GetPlatoonPosition(self)))
                                 repeat
                                     coroutine.yield(reactionTime)
@@ -7294,10 +7297,10 @@ Platoon = Class(RNGAIPlatoon) {
         local aiBrain = self:GetBrain()
         local eng = GetPlatoonUnits(self)[1]
         self:EconAssistBodyRNG()
-        coroutine.yield(10)
-        if eng.Upgrading or eng.Combat or eng.Active then
-            --RNGLOG('eng.Upgrading is True at start of assist function')
+        if eng.UnitBeingAssist then
+            LOG('Engineer Exited EconAssistBody and is going to assist '..eng.UnitBeingAssist.UnitId)
         end
+        coroutine.yield(10)
         -- do we assist until the building is finished ?
         if self.PlatoonData.Assist.AssistUntilFinished then
             local guardedUnit
@@ -7323,16 +7326,18 @@ Platoon = Class(RNGAIPlatoon) {
                 coroutine.yield(30)
             end
         else
-            if eng.Upgrading or eng.Combat or eng.Active then
-                --RNGLOG('eng.Upgrading is True inside Assist function for assist time')
-            end
+            LOG('Engineer is performing assist time for unit '..eng.UnitBeingAssist.UnitId)
             WaitSeconds(self.PlatoonData.Assist.Time or 60)
         end
         if not PlatoonExists(aiBrain, self) then
             return
         end
+        LOG('Completing ManagerEngineerAssistAIRNG for unit '..eng.UnitBeingAssist.UnitId)
         self.AssistPlatoon = nil
         eng.UnitBeingAssist = nil
+        if eng.Active then
+            eng.Active = false
+        end
         self:Stop()
         if eng.Upgrading then
             --RNGLOG('eng.Upgrading is True')
@@ -7395,6 +7400,7 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                 end
+                LOG('bestUnit ID is '..bestUnit.UnitId)
                 assistee = bestUnit
                 break
             end
@@ -7403,15 +7409,18 @@ Platoon = Class(RNGAIPlatoon) {
         if assistee  then
             self:Stop()
             eng.AssistSet = true
-            eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
-            --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+            if assistData.AssistFactoryUnit then
+                LOG('Try set Factory Unit as assist thing')
+                eng.UnitBeingAssist = assistee
+                eng.Active = true
+            else
+                eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+            end
+            RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
             IssueGuard({eng}, eng.UnitBeingAssist)
         else
             self.AssistPlatoon = nil
             eng.UnitBeingAssist = nil
-            if eng.Upgrading then
-                --RNGLOG('eng.Upgrading is True')
-            end
             -- stop the platoon from endless assisting
             self:PlatoonDisband()
         end
@@ -8178,6 +8187,7 @@ Platoon = Class(RNGAIPlatoon) {
 
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
         coroutine.yield(math.random(1, 20))
+        LOG('Starting Engineer Assist Thread RNG')
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
             --eng:SetCustomName('I am assisting')
             coroutine.yield(1)

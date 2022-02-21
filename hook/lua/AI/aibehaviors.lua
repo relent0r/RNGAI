@@ -3455,7 +3455,7 @@ GetStartingReclaim = function(aiBrain)
     if startReclaim and RNGGETN(startReclaim) > 0 then
         for k,v in startReclaim do
             if not IsProp(v) then continue end
-            if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
+            if v.MaxMassReclaim and v.MaxMassReclaim > minRec or v.MaxEnergyReclaim and v.MaxEnergyReclaim > minRec then
                 --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
                 local rpos = v:GetCachePosition()
                 RNGINSERT(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
@@ -3465,10 +3465,12 @@ GetStartingReclaim = function(aiBrain)
         end
         --RNGLOG('Sorting Reclaim table by distance ')
         RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
-        --RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
+        RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable
         for k, v in aiBrain.StartReclaimTable do
-            --RNGLOG('Table entry distance is '..v.Distance)
+            RNGLOG('Table entry distance is '..v.Distance)
+            RNGLOG('Table Mass entry reclaim amount is '..v.Reclaim.MaxMassReclaim)
+            RNGLOG('Table Energy entry reclaim amount is '..v.Reclaim.MaxEnergyReclaim)
         end
     end
     --RNGLOG('Complete Get Starting Reclaim')

@@ -216,6 +216,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             coroutine.yield(30)
                         end
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
+                            coroutine.yield(1)
                             return
                         end
                         engPos = self:GetPosition()
@@ -373,6 +374,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
+                coroutine.yield(1)
                 return
             end
             coroutine.yield(2)
@@ -456,6 +458,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
             --RNGLOG('* AI-RNG: reclaimLopp = 5 returning')
+            coroutine.yield(1)
             return
         end
         --self:SetCustomName('end of reclaim function')

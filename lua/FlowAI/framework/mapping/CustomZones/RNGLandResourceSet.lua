@@ -127,7 +127,7 @@ RNGLandResourceSet = Class(ZoneSet){
                     complete = false
                 end
             end
-            LOG('Resource Group value '..table.getn(resourceGroup))
+            --LOG('Resource Group value '..table.getn(resourceGroup))
             self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1})
         end
     end,

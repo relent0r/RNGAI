@@ -162,7 +162,11 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
-        self.EconomyUpgradeSpend = 0.25
+        if self.MapSize <= 10 then
+            self.EconomyUpgradeSpend = 0.25
+        else
+            self.EconomyUpgradeSpend = 0.30
+        end
         self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
@@ -730,7 +734,7 @@ AIBrain = Class(RNGAIBrainClass) {
             },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
             EcoMultiplier = 1,
-            EcoMassUpgradeTimeout = 390,
+            EcoMassUpgradeTimeout = 330,
         }
         self.EcoManager.PowerPriorityTable = {
             ENGINEER = 12,
@@ -3643,9 +3647,10 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.CentralBrainExtractorUnitUpgradeClosest and not self.CentralBrainExtractorUnitUpgradeClosest.Dead 
                                 and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
                                     extractorUnit:SetPaused(false)
+                                    coroutine.yield(30)
                                 elseif self.EcoManager.ExtractorsUpgrading.TECH2 > 0 and EntityCategoryContains(categories.TECH1, extractorUnit) then
                                     extractorUnit:SetPaused(false)
-                                    coroutine.yield(20)
+                                    coroutine.yield(30)
                                 end
                             else
                                 extractorUnit:SetPaused(false)
