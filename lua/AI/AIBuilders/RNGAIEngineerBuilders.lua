@@ -308,7 +308,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH1 * ( categories.LAND + categories.AIR ) }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -331,7 +331,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {

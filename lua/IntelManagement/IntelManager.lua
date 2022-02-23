@@ -674,7 +674,7 @@ function InitialNavalAttackCheck(aiBrain)
     -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
 
-    local function drawCirclePoints(points, radius, center)
+    local function DrawCirclePoints(points, radius, center)
         local extractorPoints = {}
         local slice = 2 * math.pi / points
         for i=1, points do
@@ -692,7 +692,7 @@ function InitialNavalAttackCheck(aiBrain)
         local markerCountNotBlocked = 0
         local markerCountBlocked = 0
         for _, v in markers do 
-            local checkPoints = drawCirclePoints(6, 26, v.position)
+            local checkPoints = DrawCirclePoints(6, 26, v.position)
             if checkPoints then
                 for _, m in checkPoints do
                     if RUtils.PositionInWater(m) then

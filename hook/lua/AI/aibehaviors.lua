@@ -88,6 +88,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.CurrentFriendlyThreat = false
     cdr.Phase = false
     cdr.Position = {}
+    cdr.Target = false
     cdr.TargetPosition = {}
     cdr.atkPri = {
         categories.COMMAND,
@@ -182,12 +183,12 @@ function CDRBrainThread(cdr)
                 if cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or cdr.SupportPlatoon.Dead and (gameTime - 15) > lastPlatoonCall then
                     LOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
                     LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
-                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2)
+                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
                     LOG('CDR Support Platoon exist but we have too much threat, calling platoon')
                     LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
-                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2)
+                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 end
             end
@@ -228,6 +229,7 @@ function CDRCallPlatoon(cdr, threatRequired)
 
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
+    local bMergedPlatoons = false
     local platoonTable = {}
     for _,aPlat in AlliedPlatoons do
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
@@ -1003,11 +1005,7 @@ function CDRThreatAssessmentRNG(cdr)
             for k,v in friendlyUnits do
                 if v and not v.Dead then
                     if EntityCategoryContains(categories.COMMAND, v) then
-                        if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
-                            friendlyUnitThreat = friendlyUnitThreat + 25
-                        else
-                            friendlyUnitThreat = friendlyUnitThreat + 15
-                        end
+                        friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                     else
                         --RNGLOG('Unit ID is '..v.UnitId)
                         bp = ALLBPS[v.UnitId].Defense
@@ -1024,11 +1022,7 @@ function CDRThreatAssessmentRNG(cdr)
                         enemyUnitThreat = enemyUnitThreat + 10
                     end
                     if EntityCategoryContains(categories.COMMAND, v) then
-                        if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
-                            enemyUnitThreat = enemyUnitThreat + 25
-                        else
-                            enemyUnitThreat = enemyUnitThreat + 15
-                        end
+                        enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                     else
                         --RNGLOG('Unit ID is '..v.UnitId)
                         bp = ALLBPS[v.UnitId].Defense
@@ -1040,7 +1034,6 @@ function CDRThreatAssessmentRNG(cdr)
                 end
             end
             --RNGLOG('Continue Fighting is set to true')
-            RNGLOG('Total Enemy Threat '..enemyUnitThreat)
             --RNGLOG('ACU Cutoff Threat '..cdr.ThreatLimit)
             cdr.CurrentEnemyThreat = enemyUnitThreat
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
@@ -1091,7 +1084,7 @@ end
 
 function CDROverChargeRNG(aiBrain, cdr)
 
-    local function drawCirclePoints(points, radius, center)
+    local function DrawCirclePoints(points, radius, center)
         local extractorPoints = {}
         local slice = 2 * math.pi / points
         for i=1, points do
@@ -1221,6 +1214,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
 
                 if target then
+                    cdr.Target = target
                     RNGLOG('ACU OverCharge Target Found')
                     --cdr:SetCustomName('CDR target found')
                     local targetPos = target:GetPosition()
@@ -1236,6 +1230,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                         RNGLOG('ACU OverCharge Enemy Threat is '..enemyThreat)
                         local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
+                        if enemyCdrThreat > 0 then
+                            enemyCdrThreat = 60
+                        end
                         local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 70, 'Ally')
                         local friendlyUnitThreat = 0
                         for k,v in friendlyUnits do
@@ -1323,7 +1320,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 plat.BuilderName = 'CDR Combat'
                                 aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                             end
-                            local checkPoints = drawCirclePoints(6, 10, movePos)
+                            local checkPoints = DrawCirclePoints(6, 10, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
                                 RNGLOG('Check points for alternative fire position '..repr(v))
@@ -1382,7 +1379,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 plat.BuilderName = 'CDR Combat'
                                 aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                             end
-                            local checkPoints = drawCirclePoints(6, 10, movePos)
+                            local checkPoints = DrawCirclePoints(6, 10, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
                                 RNGLOG('Check points for alternative fire position '..repr(v))
@@ -1444,6 +1441,9 @@ function CDROverChargeRNG(aiBrain, cdr)
             if GetNumUnitsAroundPoint(aiBrain, categories.LAND - categories.SCOUT, cdrPos, maxRadius, 'Enemy') <= 0 then
                     --cdr:SetCustomName('CDR no units visible, end combat')
                     RNGLOG('No units to shoot, continueFighting is false')
+                    RNGLOG('maxRadius for acu is'..maxRadius)
+                    RNGLOG('cdrPos is '..repr(cdrPos))
+                    RNGLOG('Actual pos is '..repr(cdr:GetPosition()))
                 continueFighting = false
             end
 

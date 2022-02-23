@@ -64,8 +64,9 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
 end
 
 function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
-    if LastGetMassMarkerRNG < GetGameTimeSeconds() then
-        LastGetMassMarkerRNG = GetGameTimeSeconds()+10
+    local gameTime = GetGameTimeSeconds()
+    if LastGetMassMarkerRNG < gameTime then
+        LastGetMassMarkerRNG = gameTime+10
         local adaptiveResourceMarkers = GetMarkersRNG()
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
@@ -75,8 +76,8 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
         end
         table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
     end
-    if not LastCheckMassMarkerRNG[distance] or LastCheckMassMarkerRNG[distance] < GetGameTimeSeconds() then
-        LastCheckMassMarkerRNG[distance] = GetGameTimeSeconds()
+    if not LastCheckMassMarkerRNG[distance] or LastCheckMassMarkerRNG[distance] < gameTime then
+        LastCheckMassMarkerRNG[distance] = gameTime
         local threatCheck = false
         if threatMin and threatMax and threatRings then
             threatCheck = true
@@ -103,8 +104,9 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
 end
 
 function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistance, threatMin, threatMax, threatRings, threatType, maxNum )
-    if LastGetMassMarkerRNG < GetGameTimeSeconds() then
-        LastGetMassMarkerRNG = GetGameTimeSeconds()+5
+    local gameTime = GetGameTimeSeconds()
+    if LastGetMassMarkerRNG < gameTime then
+        LastGetMassMarkerRNG = gameTime+5
         local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
         if not engineerManager then
             --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)
@@ -120,8 +122,8 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         end
         table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
     end
-    if not LastCheckMassMarkerRNG[maxDistance] or LastCheckMassMarkerRNG[maxDistance] < GetGameTimeSeconds() then
-        LastCheckMassMarkerRNG[maxDistance] = GetGameTimeSeconds()
+    if not LastCheckMassMarkerRNG[maxDistance] or LastCheckMassMarkerRNG[maxDistance] < gameTime then
+        LastCheckMassMarkerRNG[maxDistance] = gameTime
         local threatCheck = false
         if threatMin and threatMax and threatRings then
             threatCheck = true

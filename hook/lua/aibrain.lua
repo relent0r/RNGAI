@@ -1845,6 +1845,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         while true do
             local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
                 local dupe = false
                 local newPos = {struct[1], 0, struct[2]}
@@ -1870,7 +1871,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGINSERT(self.InterestList.HighPriority,
                         {
                             Position = newPos,
-                            LastScouted = GetGameTimeSeconds(),
+                            LastScouted = gameTime,
                         }
                     )
                     -- Sort the list based on low long it has been since it was scouted
@@ -3458,6 +3459,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
             LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( self, 'MASS')
+            local energyStorage = GetEconomyStored( self, 'ENERGY')
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 --if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= upgradeSpec.MassLowTrigger and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= upgradeSpec.EnergyLowTrigger then
@@ -3478,7 +3480,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 coroutine.yield(30)
-            elseif massStorage > 500 and GetEconomyStored( self, 'ENERGY') > 3000 and extractorsDetail.TECH2Upgrading < 2 then
+            elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                     LOG('We Could upgrade an extractor now with over time')
@@ -3509,7 +3511,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         coroutine.yield(60)
                     end
                 end
-            elseif massStorage > 3000 and GetEconomyStored( self, 'ENERGY') > 8000 then
+            elseif massStorage > 3000 and energyStorage > 8000 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                     LOG('We Could upgrade an extractor now with over time')
