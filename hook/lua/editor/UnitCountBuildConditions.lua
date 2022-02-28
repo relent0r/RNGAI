@@ -541,7 +541,7 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
         end
     end
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-    baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
+    local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
     local path, reason

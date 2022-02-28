@@ -601,7 +601,50 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 counter = counter + 1
                 --RNGLOG('Counter is now '..counter..'Waiting 10 seconds')
                 --RNGLOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
-                coroutine.yield(100)
+                coroutine.yield(30)
+                if not units[1].Dead and EntityCategoryContains(categories.ENGINEER - categories.COMMAND, units[1]) then
+                    LOG('Run engineer wait during transport wait')
+                    local eng = units[1]
+                    local engPos = eng:GetPosition()
+                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                        local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
+                        if enemyEngineer then
+                            LOG('Enemy engineer found during transport wait')
+                            local enemyEngPos
+                            for _, unit in enemyEngineer do
+                                if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                    enemyEngPos = unit:GetPosition()
+                                    if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                        IssueStop({eng})
+                                        IssueClearCommands({eng})
+                                        IssueReclaim({eng}, enemyEngineer[1])
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    elseif aiBrain:GetEconomyStoredRatio('MASS') <= 0.80 then
+                        local rect = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
+                        local reclaimRect = {}
+                        reclaimRect = GetReclaimablesInRect(rect)
+                        if reclaimRect and RNGGETN(reclaimRect) > 0 then
+                            IssueClearCommands({eng})
+                            LOG('Reclaim found during transport wait')
+                            local reclaimCount = 0
+                            for c, b in reclaimRect do
+                                if reclaimCount > 15 then break end
+                                if not IsProp(b) then continue end
+                                local rpos = b:GetCachePosition()
+                                -- Start Blacklisted Props
+                                if (b.MaxMassReclaim and b.MaxMassReclaim > 0) or (b.MaxEnergyReclaim and b.MaxEnergyReclaim > 10) then
+                                    reclaimCount = reclaimCount + 1
+                                    IssueReclaim({eng}, b)
+                                end
+                            end
+                        end
+                    end
+                end
+                coroutine.yield(70)
                 if not aiBrain:PlatoonExists(platoon) then
                     aiBrain.NeedTransports = aiBrain.NeedTransports - numTransportsNeeded
                     if aiBrain.NeedTransports < 0 then
@@ -680,6 +723,13 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         -- path from transport drop off to end location
         local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, useGraph, transportLocation, destination, 200)
         -- use the transport!
+        for _, v in platoon:GetSquadUnits('Scout') do
+            if not EntityCategoryContains(categories.TRANSPORTFOCUS, v) then
+                IssueStop({v})
+                aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
+                LOG('Non transport in transport squad, assignined to armypool')
+            end
+        end
         AIUtils.UseTransportsRNG(units, platoon:GetSquadUnits('Scout'), transportLocation, platoon)
 
         -- just in case we're still landing...

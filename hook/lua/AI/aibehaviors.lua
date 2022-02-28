@@ -72,7 +72,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.DefaultRange = 256
     cdr.MaxBaseRange = 0
     cdr.OverCharge = false
-    cdr.ThreatLimit = 65
+    cdr.ThreatLimit = 35
     cdr.Confidence = 0
     cdr.EnemyCDRPresent = false
     cdr.Caution = false
@@ -176,6 +176,7 @@ function CDRBrainThread(cdr)
         end
         cdr.DistanceToHome = VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.CDRHome[1], cdr.CDRHome[3])
         if cdr.Health < 5000 and cdr.DistanceToHome > 900 then
+            LOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
         end
         if cdr.Active then
@@ -195,7 +196,15 @@ function CDRBrainThread(cdr)
         end
         for k, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally then
-                if v.Position[1] and gameTime - 60 > v.LastSpotted then
+                local enemyStartPos = {}
+                if v.Position[1] and gameTime - 60 < v.LastSpotted then
+                    LOG('Enemy Start Position '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
+                    for c, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                        if b.Index == k then
+                            LOG('Enemy ACU distance from start position is '..VDist2Sq(v.Position[1], v.Position[3], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[1], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[3]))
+                            enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[c].Position
+                        end
+                    end
                     local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2])
                     if enemyAcuDistance < (aiBrain.BrainIntel.MilitaryRange * aiBrain.BrainIntel.MilitaryRange) then
                         aiBrain.EnemyIntel.ACU[k].OnField = true
@@ -705,6 +714,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetACURNG(aiBrain, cdr.PlatoonHandle, cdrPosition, 'Attack', 30, (categories.LAND + categories.STRUCTURE), cdr.atkPri, false)
                         cdr.EnemyThreat = totalThreat
                         if totalThreat > cdr.ThreatLimit then
+                            LOG('cdr caution is true due to total threat around acu higher than threat limit total threat is '..totalThreat..' threat limit is '..cdr.ThreatLimit)
                             cdr.Caution = true
                         else
                             cdr.Caution = false
@@ -805,8 +815,8 @@ function CDRExpansionRNG(aiBrain, cdr)
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
                 LOG('Non Ally and OnField')
-                if (GetGameTimeSeconds() - 30) > v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
-                    LOG('Enemy ACU seen within 15 seconds and is within 150 of our start position')
+                if (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
+                    LOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
                     return
                 end
             end
@@ -879,6 +889,7 @@ function CommanderThreadRNG(cdr, platoon)
         -- Overcharge
         --RNGLOG('Current ACU Health is '..cdr.HealthPercent)
         if not cdr.Dead and cdr.Caution and cdr.Health < 5000 then
+            LOG('cdr is lower health and caution retreat')
             CDRRetreatRNG(aiBrain, cdr)
         end
         if not cdr.Dead then
@@ -995,6 +1006,7 @@ function CDRThreatAssessmentRNG(cdr)
     local aiBrain = cdr:GetAIBrain()
     while not cdr.Dead do
         if cdr.Active then
+            local enemyACUPresent = false
             local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 80, 'Enemy')
             local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 70, 'Ally')
             local enemyUnitThreat = 0
@@ -1022,6 +1034,7 @@ function CDRThreatAssessmentRNG(cdr)
                         enemyUnitThreat = enemyUnitThreat + 10
                     end
                     if EntityCategoryContains(categories.COMMAND, v) then
+                        enemyACUPresent = true
                         enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                     else
                         --RNGLOG('Unit ID is '..v.UnitId)
@@ -1032,6 +1045,11 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     end
                 end
+            end
+            if enemyACUPresent then
+                cdr.EnemyCDRPresent = true
+            else
+                cdr.EnemyCDRPresent = false
             end
             --RNGLOG('Continue Fighting is set to true')
             --RNGLOG('ACU Cutoff Threat '..cdr.ThreatLimit)
@@ -1179,13 +1197,14 @@ function CDROverChargeRNG(aiBrain, cdr)
         
         repeat
             overCharging = false
-            if not cdr.SuicideMode and VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
+            if not cdr.SuicideMode and VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange and not cdr:IsUnitState('Building') then
                 RNGLOG('OverCharge running but ACU is beyond its MaxBaseRange property')
                 cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                 coroutine.yield(40)
+                LOG('cdr retreating due to beyond max range and not building')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
-            if counter >= 5 or not target or target.Dead or VDist3Sq(cdrPos, target:GetPosition()) > maxRadius * maxRadius then
+            if counter >= 5 or not target or target.Dead or VDist3Sq(cdr.Position, target:GetPosition()) > maxRadius * maxRadius then
                 counter = 0
                 local searchRadius = 30
                 cdr:SetCustomName('CDR searching for target')
@@ -1231,7 +1250,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
                         if enemyCdrThreat > 0 then
-                            enemyCdrThreat = 60
+                            enemyCdrThreat = 25
                         end
                         local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 70, 'Ally')
                         local friendlyUnitThreat = 0
@@ -1497,6 +1516,7 @@ function CDRDistressMonitorRNG(aiBrain, cdr)
             local enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
             local friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
             if (enemyThreat - (enemyCdrThreat / 1.4)) >= (friendlyThreat + (cdrThreat * 0.3)) then
+                LOG('cdr caution set true from CDRDistressMonitorRNG')
                 cdr.Caution = true
             end
             if distressLoc and (VDist2(distressLoc[1], distressLoc[3], cdrPos[1], cdrPos[3]) < distressRange) then

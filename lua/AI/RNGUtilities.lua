@@ -389,6 +389,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
+                coroutine.yield(1)
                 return
             end
             coroutine.yield(2)
@@ -774,6 +775,12 @@ function LerpyRotate(vec1, vec2, distance)
     -- Courtesy of chp2001
     -- note the distance param is {distance, weapon range}
     -- vec1 is friendly unit, vec2 is enemy unit
+    -- Had to add more documentation cause I suck at maths
+    -- distance[1] is the degrees from vec2 e.g 90 is right, -90 is left
+    -- distance[2] is the distance from vec2
+    -- So for say acu support, vec1 is the enemy position, vec2 is the acu position, distance[1] is degrees right or left.
+    -- then distance[2] is how far from the acu they will stand
+    -- Actually thats still not right, I dont fully understand what distance[1] does, yea I know just learn vectors
     local distanceFrac = distance[2] / distance[1]
     local z = vec2[3] + distanceFrac * (vec2[1] - vec1[1])
     local y = vec2[2] - distanceFrac * (vec2[2] - vec1[2])
@@ -1602,6 +1609,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
 end
 
 function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
+    local ALLBPS = ALLBPS
     if type(TargetSearchCategory) == 'string' then
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
@@ -1613,6 +1621,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     end
     local acuPresent = false
     local acuUnit = false
+    local defenseRange = 0
     local unitThreatTable = {}
     local totalThreat = 0
     local RangeList = {
@@ -1651,6 +1660,9 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
                     totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                     unitThreatTable[Target.Sync.id] = true
+                    if ALLBPS[Target.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' and ALLBPS[Target.UnitId].Weapon[1].MaxRadius > defenseRange then
+                        defenseRange = ALLBPS[Target.UnitId].Weapon[1].MaxRadius
+                    end
                 end
                 TargetPosition = Target:GetPosition()
                 -- check if we have a special player as enemy
@@ -1687,7 +1699,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat
+    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
@@ -1809,7 +1821,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
     
     for key, startloc in enemyStarts do
         
-        local locationDistance = VDist2Sq(startloc[1], startloc[3],location[1], location[3])
+        local locationDistance = VDist2Sq(startloc.Position[1], startloc.Position[3],location[1], location[3])
         --RNGLOG('*AI RNG: location position distance for ExpansionSpamBase is '..locationDistance)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --RNGLOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
@@ -3628,11 +3640,6 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     --RNGLOG('ClosestMarkersWithin radius failing '..radius)
     return false
 end
-
-
-
-
-
 
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
