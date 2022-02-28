@@ -5399,7 +5399,11 @@ Platoon = Class(RNGAIPlatoon) {
 
                 -- we have nothing to do, so find the nearest base and disband
                 if not self.PlatoonData.NeverMerge then
+<<<<<<< HEAD
                     --RNGLOG('* AI-RNG: AttackForceAIRNG thinks it has nothing to do, return to base')
+=======
+                    RNGLOG('* AI-RNG: AttackForceAIRNG thinks it has nothing to do, return to base')
+>>>>>>> 9976040facc93d563cc71b539eb1394148cfd299
                     coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
@@ -6389,6 +6393,7 @@ Platoon = Class(RNGAIPlatoon) {
         return bMergedPlatoons
     end,
 
+<<<<<<< HEAD
     MergeWithNearbyPlatoonsNewRNG = function(self, planName, radius, maxMergeNumber, ignoreBase, threatType, threatRequired)
         -- check to see we're not near an ally base
         local aiBrain = self:GetBrain()
@@ -6600,6 +6605,8 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
+=======
+>>>>>>> 9976040facc93d563cc71b539eb1394148cfd299
     ReturnToBaseAIRNG = function(self, mainBase)
 
         local aiBrain = self:GetBrain()
