@@ -541,7 +541,7 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
         end
     end
     local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-    baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
+    local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
     local path, reason
@@ -815,6 +815,19 @@ function ACUOnField(aiBrain, gun)
             return true
         elseif v.OnField and not gun then
             return true
+        end
+    end
+    return false
+end
+
+function ACUCloseCombat(aiBrain, bool)
+    for k, v in aiBrain.EnemyIntel.ACU do
+        if not v.Ally then
+            if bool == true and v.CloseCombat then
+                return true
+            elseif bool == false and not v.CloseCombat then
+                return true
+            end
         end
     end
     return false

@@ -577,7 +577,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Land Expansion',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -608,7 +608,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Land Expansion Sml',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -662,8 +662,8 @@ BuilderGroup {
             LocationType = 'LocationType',
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MaxThreatThreshold = 650,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
@@ -874,8 +874,8 @@ BuilderGroup {
             LocationType = 'LocationType',
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MaxThreatThreshold = 6000,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
@@ -1141,7 +1141,6 @@ BuilderGroup {
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.ALLUNITS,
             },
             },
@@ -1321,6 +1320,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            RangedAttack = true,
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
@@ -1529,6 +1529,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            RangedAttack = true,
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             LocationType = 'LocationType',
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
@@ -1704,8 +1705,8 @@ BuilderGroup {
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MaxThreatThreshold = 650,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 150,
             AggressiveMove = false,      
@@ -1752,7 +1753,7 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
@@ -1798,7 +1799,7 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 9900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 100,		    -- If threat is lower than this, do not attack
             AvoidBases = false,
             AvoidBasesRadius = 150,
             AggressiveMove = true,      

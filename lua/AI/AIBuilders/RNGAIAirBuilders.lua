@@ -517,7 +517,7 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
-                categories.ENERGYPRODUCTION,
+                categories.ENERGYPRODUCTION - categories.COMMAND,
                 categories.STRUCTURE * categories.DEFENSE,
             },
         },

@@ -23,10 +23,6 @@ function CanBuildOnMassEng2(aiBrain, engPos, distance)
     local MassMarker = {}
     for _, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                -- mass marker is too close to border, skip it.
-                continue
-            end 
             local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
             if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
                 --RNGLOG('mexDistance '..mexDistance)
@@ -68,23 +64,20 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
 end
 
 function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
-    if LastGetMassMarkerRNG < GetGameTimeSeconds() then
-        LastGetMassMarkerRNG = GetGameTimeSeconds()+10
+    local gameTime = GetGameTimeSeconds()
+    if LastGetMassMarkerRNG < gameTime then
+        LastGetMassMarkerRNG = gameTime+10
         local adaptiveResourceMarkers = GetMarkersRNG()
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, engPos ) })
             end
         end
         table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
     end
-    if not LastCheckMassMarkerRNG[distance] or LastCheckMassMarkerRNG[distance] < GetGameTimeSeconds() then
-        LastCheckMassMarkerRNG[distance] = GetGameTimeSeconds()
+    if not LastCheckMassMarkerRNG[distance] or LastCheckMassMarkerRNG[distance] < gameTime then
+        LastCheckMassMarkerRNG[distance] = gameTime
         local threatCheck = false
         if threatMin and threatMax and threatRings then
             threatCheck = true
@@ -111,8 +104,9 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
 end
 
 function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistance, threatMin, threatMax, threatRings, threatType, maxNum )
-    if LastGetMassMarkerRNG < GetGameTimeSeconds() then
-        LastGetMassMarkerRNG = GetGameTimeSeconds()+5
+    local gameTime = GetGameTimeSeconds()
+    if LastGetMassMarkerRNG < gameTime then
+        LastGetMassMarkerRNG = gameTime+5
         local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
         if not engineerManager then
             --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)
@@ -123,17 +117,13 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
             end
         end
         table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
     end
-    if not LastCheckMassMarkerRNG[maxDistance] or LastCheckMassMarkerRNG[maxDistance] < GetGameTimeSeconds() then
-        LastCheckMassMarkerRNG[maxDistance] = GetGameTimeSeconds()
+    if not LastCheckMassMarkerRNG[maxDistance] or LastCheckMassMarkerRNG[maxDistance] < gameTime then
+        LastCheckMassMarkerRNG[maxDistance] = gameTime
         local threatCheck = false
         if threatMin and threatMax and threatRings then
             threatCheck = true

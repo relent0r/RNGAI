@@ -128,29 +128,31 @@ IntelManager = Class {
                     if self.Brain.smanager.mex[v1.id].T1 then
                         tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T1
                     end
-                    if self.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T1 then
-                        tempMyControl = tempMyControl + self.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T1
+                    if self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T1 then
+                        tempMyControl = tempMyControl + self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T1
                     end
                     if self.Brain.smanager.mex[v1.id].T2 then
                         tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T2
                     end
-                    if self.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T2 then
-                        tempMyControl = tempMyControl + self.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T2
+                    if self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T2 then
+                        tempMyControl = tempMyControl + self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T2
                     end
                     if self.Brain.smanager.mex[v1.id].T3 then
                         tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T3
                     end
-                    if self.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T3 then
-                        tempMyControl = tempMyControl + self.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T3
+                    if self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T3 then
+                        tempMyControl = tempMyControl + self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T3
                     end
                     --[[
                     if self.Brain.smanager.hydrocarbon[v1.id].hydrocarbon then
                         tempMyControl = tempMyControl + self.Brain.smanager.hydrocarbon[v1.id].hydrocarbon
                     end
                     ]]
-                    --LOG('My Mexes in zone '..tempMyControl)
+                    --LOG('Total mexes in zone '..v1.id..' are'..tempMyControl)
                     --LOG('Resource Value of Zone is '..v1.resourcevalue)
                     tempMyControl = tempMyControl / v1.resourcevalue
+                    --LOG('Resource Value is '..v1.resourcevalue)
+                    --LOG('Control Value after calculation'..tempMyControl)
                     if tempMyControl > 0 then
                         control = control - tempMyControl
                     end
@@ -163,9 +165,10 @@ IntelManager = Class {
                     if self.Brain.emanager.mex[v1.id].T3 then
                         tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T3
                     end
-                    --RNGLOG('Enemy Mexes in zone '..tempMyControl)
+                    --RNGLOG('Enemy Mexes in zone '..v1.id..' are '..tempMyControl)
                     --RNGLOG('Weight of zone '..v1.resourcevalue)
                     tempEnemyControl = tempEnemyControl / v1.resourcevalue
+                    --LOG('Enemy Temp control value after calculation '..tempEnemyControl)
                     if tempEnemyControl > 0 then
                         control = control + tempEnemyControl
                     end
@@ -204,6 +207,8 @@ IntelManager = Class {
                 end
                 if not zoneSet then
                     WARN('No zoneSet returns, validate MovementLayer which is '..platoon.MovementLayer)
+                    WARN('BuilderName is '..platoon.BuilderName)
+                    WARN('Plan is '..platoon.PlanName)
                 end
 
                 if type == 'raid' then
@@ -547,9 +552,9 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if not startPosUsed then
                     if v.MassSpotsInRange then
                         massPointValidated = true
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     else
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false, Zone = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false, Zone = false, Radar = false})
                     end
                 end
             end
@@ -645,6 +650,16 @@ ExpansionIntelScanRNG = function(aiBrain)
                 rawThreat = GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Structures')
                 aiBrain.BrainIntel.ExpansionWatchTable[k]['Structures'] = rawThreat
             end
+            if aiBrain.BuilderManagers[v.Name].EngineerManager then
+                if aiBrain.BuilderManagers[v.Name].EngineerManager.ConsumptionUnits.Intel.Count > 0 then
+                    --LOG('Radar Present')
+                    v.Radar = true
+                else
+                    v.Radar = false
+                end
+            else
+                v.Radar = false
+            end
         end
         coroutine.yield(50)
         -- don't do this, it might have a platoon inside it-- RNGLOG('Current Expansion Watch Table '..repr(aiBrain.BrainIntel.ExpansionWatchTable))
@@ -659,7 +674,7 @@ function InitialNavalAttackCheck(aiBrain)
     -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
 
-    local function drawCirclePoints(points, radius, center)
+    local function DrawCirclePoints(points, radius, center)
         local extractorPoints = {}
         local slice = 2 * math.pi / points
         for i=1, points do
@@ -677,7 +692,7 @@ function InitialNavalAttackCheck(aiBrain)
         local markerCountNotBlocked = 0
         local markerCountBlocked = 0
         for _, v in markers do 
-            local checkPoints = drawCirclePoints(6, 26, v.position)
+            local checkPoints = DrawCirclePoints(6, 26, v.position)
             if checkPoints then
                 for _, m in checkPoints do
                     if RUtils.PositionInWater(m) then
@@ -719,9 +734,6 @@ function CalculateMassValue(expansionMarkers)
     end
     for _, v in markerTable do
         if v.type == 'Mass' then
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                continue
-            end
             table.insert(MassMarker, {Position = v.position})
         end
     end
@@ -764,7 +776,8 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == positionNode.RNGArea then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
-               -- RNGLOG('Distance to expansion '..expansionDistance)
+                --RNGLOG('Distance to expansion '..expansionDistance)
+                --LOG('Expansion position is '..repr(expansion.Position))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
                 --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then

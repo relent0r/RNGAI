@@ -37,7 +37,6 @@ AIBrain = Class(RNGAIBrainClass) {
     OnCreateAI = function(self, planName)
         RNGAIBrainClass.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
-        --RNGLOG('Oncreate')
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
@@ -163,7 +162,11 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
-        self.EconomyUpgradeSpend = 0.25
+        if self.MapSize <= 10 then
+            self.EconomyUpgradeSpend = 0.25
+        else
+            self.EconomyUpgradeSpend = 0.30
+        end
         self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
@@ -731,7 +734,8 @@ AIBrain = Class(RNGAIBrainClass) {
             },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
             EcoMultiplier = 1,
-            EcoMassUpgradeTimeout = 390,
+            EcoMassUpgradeTimeout = 330,
+            EcoPowerPreemptive = false,
         }
         self.EcoManager.PowerPriorityTable = {
             ENGINEER = 12,
@@ -807,7 +811,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
         self.EnemyIntel.ChokeFlag = false
-        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyFireBaseDetected = false
         self.EnemyIntel.EnemyAirFireBaseDetected = false
         self.EnemyIntel.ChokePoints = {}
         self.EnemyIntel.EnemyThreatCurrent = {
@@ -832,6 +836,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Threat = 0,
                 Hp = 0,
                 OnField = false,
+                CloseCombat = false,
                 Gun = false,
                 Ally = IsAlly(selfIndex, v:GetArmyIndex()),
             }
@@ -865,6 +870,7 @@ AIBrain = Class(RNGAIBrainClass) {
             ExtractorCount = 0,
             MassMarker = 0,
             MassMarkerBuildable = 0,
+            MassMarkerBuildableTable = {},
             AllyExtractorTable = {},
             AllyExtractorCount = 0,
             AllyExtractor = 0,
@@ -957,6 +963,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
         self:ForkThread(self.CivilianPDCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
+        self:ForkThread(self.EcoPowerPreemptiveRNG)
         self:ForkThread(self.EcoMassManagerRNG)
         self:ForkThread(self.BasePerimeterMonitorRNG)
         self:ForkThread(self.EnemyChokePointTestRNG)
@@ -1023,8 +1030,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ZoneSetup = function(self)
         WaitTicks(1)
-       -- RNGLOG('Set land zone for brain')
-        --local Mapping = Mapping.GetMap()
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
         self.ZonesInitialized = true
     end,
@@ -1202,10 +1207,6 @@ AIBrain = Class(RNGAIBrainClass) {
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 if v.RNGArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
                     graphCheck = true
                     if not self.GraphZones[v.RNGArea] then
@@ -1220,9 +1221,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if CanBuildStructureAt(self, 'ueb1103', v.position) then
                     massMarkerBuildable = massMarkerBuildable + 1
+                    RNGINSERT(MassMarker, v)
                 end
                 markerCount = markerCount + 1
-                RNGINSERT(MassMarker, v)
             end
             if not v.zoneid and self.ZonesInitialized then
                 if RUtils.PositionOnWater(v.position[1], v.position[3]) then
@@ -1238,6 +1239,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
+        self.BrainIntel.SelfThreat.MassMarkerBuildableTable = MassMarker
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarkerBuildable '..self.BrainIntel.SelfThreat.MassMarkerBuildable)
     end,
@@ -1286,7 +1288,6 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Monitor platoons for help
             PlatoonDistressTable = {},
             ZoneAlertTable = {},
-            ZoneAlertThread = false,
             PlatoonDistressThread = false,
             PlatoonAlertSounded = false,
             ZoneAlertSounded = false,
@@ -1483,7 +1484,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         -- Add the army start location to the list of interesting spots.
                         opponentStarts['ARMY_' .. i] = startPos
                         numOpponents = numOpponents + 1
-                        RNGINSERT(enemyStarts, startPos)
+                        -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
+                        RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex})
                         RNGINSERT(aiBrain.InterestList.HighPriority,
                             {
                                 Position = startPos,
@@ -1847,6 +1849,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         while true do
             local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
                 local dupe = false
                 local newPos = {struct[1], 0, struct[2]}
@@ -1872,7 +1875,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGINSERT(self.InterestList.HighPriority,
                         {
                             Position = newPos,
-                            LastScouted = GetGameTimeSeconds(),
+                            LastScouted = gameTime,
                         }
                     )
                     -- Sort the list based on low long it has been since it was scouted
@@ -2033,13 +2036,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if not found then
-               -- RNGLOG('Platoon doesnt already exist, adding')
+                --RNGLOG('Alert doesnt already exist, adding')
                 RNGINSERT(self.BaseMonitor.ZoneAlertTable, {Zone = zoneid, Threat = threat})
             end
-        end
-        -- Create the distress call if it doesn't exist
-        if not self.BaseMonitor.ZoneAlertThread then
-            self.BaseMonitor.ZoneAlertThread = self:ForkThread(self.BaseMonitorZoneAlertThreadRNG)
         end
         --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.ZoneAlertTable))
     end,
@@ -3075,7 +3074,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, threat in phaseTwoThreats do
                 for q, pos in enemyStarts do
                     --RNGLOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
-                    if VDist2Sq(threat.Position[1], threat.Position[2], pos[1], pos[3]) < 10000 then
+                    if VDist2Sq(threat.Position[1], threat.Position[2], pos.Position[1], pos.Position[3]) < 10000 then
                         threat.EnemyBaseRadius = true
                     end
                 end
@@ -3191,8 +3190,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local scanRadius = 0
         local IMAPSize = 0
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        self.EnemyIntel.EnemyLandFireBaseDetected = false
+        self.EnemyIntel.EnemyFireBaseDetected = false
         self.EnemyIntel.EnemyAirFireBaseDetected = false
+        self.EnemyIntel.EnemyFireBaseTable = {}
 
         if maxmapdimension == 256 then
             scanRadius = 11.5
@@ -3220,19 +3220,19 @@ AIBrain = Class(RNGAIBrainClass) {
                         if not ArmyIsCivilian(unitIndex) then
                             if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                                 --RNGLOG('Inserting Enemy Energy Structure '..unit.UnitId)
-                                RNGINSERT(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                                RNGINSERT(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
                                 --RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
-                                RNGINSERT(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                                RNGINSERT(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                                 --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
-                                RNGINSERT(strategicUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                                RNGINSERT(strategicUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
                                 --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                                RNGINSERT(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                                RNGINSERT(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             elseif EntityCategoryContains( categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER, unit) then
                                 --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                                RNGINSERT(factoryUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
+                                RNGINSERT(factoryUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
                             end
                         end
                     end
@@ -3274,18 +3274,23 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
                             self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
                         end
+                        if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
+                            self.EnemyIntel.EnemyFireBaseDetected = true
+                        end
+                        if self.EnemyIntel.EnemyFireBaseDetected then
+                            if not self.EnemyIntel.EnemyFireBaseTable[q] then
+                                self.EnemyIntel.EnemyFireBaseTable[q] = {}
+                                self.EnemyIntel.EnemyFireBaseTable[q] = { EnemyIndex = unit.EnemyIndex, Location = {unit.IMAP[1], 0, unit.IMAP[2]}, Shielded = unit.Shielded, Air = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'), Land = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') }
+                            end
+                        end
                     end
-                    if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount > 5 then
-                        self.EnemyIntel.EnemyLandFireBaseDetected = true
-                    end
-                    if self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
-                        self.EnemyIntel.EnemyAirFireBaseDetected = true
-                    end
+                    
                 end
                 --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
-            if self.EnemyIntel.EnemyLandFireBaseDetected then
-                --RNGLOG('EnemyLandFireBaseDetected is true')
+            if self.EnemyIntel.EnemyFireBaseDetected then
+                --LOG('Firebase Detected')
+                --LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
             end
             self.EnemyIntel.DirectorData.Defense = defensiveUnits
         end
@@ -3454,6 +3459,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
            --LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( self, 'MASS')
+            local energyStorage = GetEconomyStored( self, 'ENERGY')
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 --if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= upgradeSpec.MassLowTrigger and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= upgradeSpec.EnergyLowTrigger then
@@ -3474,7 +3480,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 coroutine.yield(30)
-            elseif massStorage > 500 and GetEconomyStored( self, 'ENERGY') > 3000 and extractorsDetail.TECH2Upgrading < 2 then
+            elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                    --LOG('We Could upgrade an extractor now with over time')
@@ -3505,7 +3511,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         coroutine.yield(60)
                     end
                 end
-            elseif massStorage > 3000 and GetEconomyStored( self, 'ENERGY') > 8000 then
+            elseif massStorage > 3000 and energyStorage > 8000 then
                 upgradeSpec = self:GetExtractorUpgradeSpec()
                 if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                    --LOG('We Could upgrade an extractor now with over time')
@@ -3643,9 +3649,10 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.CentralBrainExtractorUnitUpgradeClosest and not self.CentralBrainExtractorUnitUpgradeClosest.Dead 
                                 and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
                                     extractorUnit:SetPaused(false)
+                                    coroutine.yield(30)
                                 elseif self.EcoManager.ExtractorsUpgrading.TECH2 > 0 and EntityCategoryContains(categories.TECH1, extractorUnit) then
                                     extractorUnit:SetPaused(false)
-                                    coroutine.yield(20)
+                                    coroutine.yield(30)
                                 end
                             else
                                 extractorUnit:SetPaused(false)
@@ -4131,6 +4138,77 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    EcoPowerPreemptiveRNG = function(self)
+        local ALLBPS = __blueprints
+        local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        coroutine.yield(Random(1,7))
+        while true do
+            coroutine.yield(50)
+            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * categories.FACTORY, false)
+            local potentialPowerConsumption = 0
+            for k, v in buildingTable do
+                if not v.Dead and not v.BuildCompleted then
+                    if EntityCategoryContains(categories.ENGINEER, v) then
+                        if v.UnitBeingBuilt then
+                            if ALLBPS[v.UnitId].Economy.BuildRate > 100 then
+                                if EntityCategoryContains(categories.NUKE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
+                                    --LOG('Nuke Launcher being built')
+                                    potentialPowerConsumption = potentialPowerConsumption + (4000 * multiplier)
+                                    continue
+                                end
+                                if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
+                                    --LOG('Anti Nuke Launcher being built')
+                                    potentialPowerConsumption = potentialPowerConsumption + (1200 * multiplier)
+                                    continue
+                                end
+                                if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
+                                    --LOG('Mass Fabricator being built')
+                                    potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
+                                    continue
+                                end
+                                if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
+                                    --LOG('Shield being built')
+                                    potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
+                                    continue
+                                end
+                            end
+                        end
+                    else
+                        if EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
+                            if v:GetFractionComplete() < 0.6 then
+                                --LOG('T3 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
+                                continue
+                            else
+                                v.BuildCompleted = true
+                            end
+                        elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
+                            if v:GetFractionComplete() < 0.6 then
+                                --LOG('T2 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
+                                continue
+                            else
+                                v.BuildCompleted = true
+                            end
+                        end
+                    end
+                end
+            end
+            if potentialPowerConsumption > 0 then
+                --LOG('PowerConsumption of things being built '..potentialPowerConsumption)
+                --LOG('Energy Income Over Time '..self.EconomyOverTimeCurrent.EnergyIncome * 10)
+                --LOG('Energy Requested Over Time '..self.EconomyOverTimeCurrent.EnergyRequested * 10)
+                --LOG('Potential Extra Power Consumption '..potentialPowerConsumption)
+                if (self.EconomyOverTimeCurrent.EnergyIncome * 10) - (self.EconomyOverTimeCurrent.EnergyRequested * 10) - potentialPowerConsumption < 0 then
+                    --LOG('Powerconsumption will not support what we are currently building')
+                    self.EcoManager.EcoPowerPreemptive = true
+                    continue
+                end
+            end
+            self.EcoManager.EcoPowerPreemptive = false
+        end
+    end,
+
     FactoryEcoManagerRNG = function(self)
         coroutine.yield(Random(1,7))
         while true do
@@ -4145,7 +4223,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if massStateCaution then
                     if self.cmanager.categoryspend.fact['Land'] > (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
                         local deficit = self.cmanager.categoryspend.fact['Land'] - (self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                       -- RNGLOG('Land Factory Deficit is '..deficit)
+                        --RNGLOG('Land Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
                                 if self.BuilderManagers[k].FactoryManager then
@@ -4162,7 +4240,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T1 Loop Land Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T1 Loop Land Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -4178,7 +4256,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T2 Loop Land Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T2 Loop Land Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -4194,7 +4272,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T3 Loop Land Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T3 Loop Land Factory Deficit is '..deficit)
                                     end
                                 end
                                 if deficit <= 0 then
@@ -4222,7 +4300,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T1 Loop Air Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T1 Loop Air Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -4238,7 +4316,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T2 Loop Air Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T2 Loop Air Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -4254,7 +4332,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T3 Loop Air Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T3 Loop Air Factory Deficit is '..deficit)
                                     end
                                 end
                                 if deficit <= 0 then
@@ -4282,7 +4360,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -4298,7 +4376,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T2 Loop Naval Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T2 Loop Naval Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -4314,7 +4392,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 break
                                             end
                                         end
-                                       -- RNGLOG('Finished T3 Loop Naval Factory Deficit is '..deficit)
+                                        --RNGLOG('Finished T3 Loop Naval Factory Deficit is '..deficit)
                                     end
                                 end
                                 if deficit <= 0 then
@@ -4668,13 +4746,13 @@ AIBrain = Class(RNGAIBrainClass) {
                                 --RNGLOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
                                 --RNGLOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
                                 --RNGLOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                                if self.EnemyIntel.EnemyLandFireBaseDetected then
+                                if self.EnemyIntel.EnemyFireBaseDetected then
                                     --RNGLOG('Firebase flag is true')
                                 end
                                 if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
                                 and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
                                 and totalThreat > self.BrainIntel.SelfThreat.LandNow 
-                                and self.EnemyIntel.EnemyLandFireBaseDetected then
+                                and self.EnemyIntel.EnemyFireBaseDetected then
                                     self.EnemyIntel.ChokeFlag = true
                                     self.ProductionRatios.Land = 0.3
                                     --RNGLOG('ChokeFlag is true')

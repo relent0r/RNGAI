@@ -176,6 +176,20 @@ function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend)
     return false
 end
 
+function NegativeEcoPowerCheck(aiBrain, EnergyTrend)
+    if aiBrain.EcoManager.EcoPowerPreemptive then
+        --LOG('PreEmptive Power Check is true')
+        return true
+    end
+    if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then
+        if GetEconomyTrend(aiBrain, 'ENERGY') < EnergyTrend then
+            return true
+        end
+    end
+    return false
+end
+
+
 function GreaterThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > EnergyTrend then

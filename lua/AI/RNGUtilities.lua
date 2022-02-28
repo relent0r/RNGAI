@@ -165,7 +165,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     end
                 end
                 if validLocation then
-                   -- RNGLOG('We have a valid reclaim location')
+                    --RNGLOG('We have a valid reclaim location')
+                    IssueClearCommands({self})
                     if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation) then
                        -- RNGLOG('We have issued move orders to get to the reclaim location')
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
@@ -215,6 +216,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             coroutine.yield(30)
                         end
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
+                            coroutine.yield(1)
                             return
                         end
                         engPos = self:GetPosition()
@@ -372,6 +374,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
+                coroutine.yield(1)
                 return
             end
             coroutine.yield(2)
@@ -386,6 +389,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 PropBlacklist = {}
                 aiBrain.ReclaimEnabled = false
                 aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
+                coroutine.yield(1)
                 return
             end
             coroutine.yield(2)
@@ -432,8 +436,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         while reclaiming do
            -- RNGLOG('* AI-RNG: Engineer is reclaiming')
             --self:SetCustomName('reclaim loop start')
-            coroutine.yield(200)
-            currentTime = currentTime + 20
+            coroutine.yield(100)
+            currentTime = currentTime + 10
             if currentTime > max_time then
                 reclaiming = false
             end
@@ -455,6 +459,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
             --RNGLOG('* AI-RNG: reclaimLopp = 5 returning')
+            coroutine.yield(1)
             return
         end
         --self:SetCustomName('end of reclaim function')
@@ -770,6 +775,12 @@ function LerpyRotate(vec1, vec2, distance)
     -- Courtesy of chp2001
     -- note the distance param is {distance, weapon range}
     -- vec1 is friendly unit, vec2 is enemy unit
+    -- Had to add more documentation cause I suck at maths
+    -- distance[1] is the degrees from vec2 e.g 90 is right, -90 is left
+    -- distance[2] is the distance from vec2
+    -- So for say acu support, vec1 is the enemy position, vec2 is the acu position, distance[1] is degrees right or left.
+    -- then distance[2] is how far from the acu they will stand
+    -- Actually thats still not right, I dont fully understand what distance[1] does, yea I know just learn vectors
     local distanceFrac = distance[2] / distance[1]
     local z = vec2[3] + distanceFrac * (vec2[1] - vec1[1])
     local y = vec2[2] - distanceFrac * (vec2[2] - vec1[2])
@@ -1359,7 +1370,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                     if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                         if ignoreCivilian then
                             if ArmyIsCivilian(unit:GetArmy()) then
-                               -- RNGLOG('Unit is civilian')
+                                --RNGLOG('Unit is civilian')
                                 continue
                             end
                         end
@@ -1407,7 +1418,108 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                 return retUnit
             end
         end
-        coroutine.yield(1)
+        coroutine.yield(2)
+    end
+    return false
+end
+
+function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, platoonThreat, ignoreCivilian)
+    if not position then
+        position = platoon:GetPlatoonPosition()
+    end
+    local VDist2 = VDist2
+    local enemyThreat, targetUnits, category
+    local RangeList = { [1] = maxRange }
+    if not aiBrain or not position or not maxRange then
+        return false
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+    end
+    
+    if maxRange > 512 then
+        RangeList = {
+            [1] = 30,
+            [1] = 64,
+            [2] = 128,
+            [2] = 192,
+            [3] = 256,
+            [3] = 384,
+            [4] = 512,
+            [5] = maxRange,
+        }
+    elseif maxRange > 256 then
+        RangeList = {
+            [1] = 30,
+            [1] = 64,
+            [2] = 128,
+            [2] = 192,
+            [3] = 256,
+            [4] = maxRange,
+        }
+    elseif maxRange > 64 then
+        RangeList = {
+            [1] = 30,
+            [2] = maxRange,
+        }
+    end
+    local acuUnit = false
+    local SquadTargetList = {
+        Attack = {
+            Unit = false,
+            Distance = false
+        },
+        Artillery = {
+            Unit = false,
+            Distance = false
+        }
+    }
+
+    for _, range in RangeList do
+        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, range, 'Enemy')
+        for _, category in atkPri do
+            local retUnit = false
+            local distance = false
+            local targetShields = 9999
+            for num, unit in targetUnits do
+                if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                    if ignoreCivilian then
+                        if ArmyIsCivilian(unit:GetArmy()) then
+                            --RNGLOG('Unit is civilian')
+                            continue
+                        end
+                    end
+                    local unitPos = unit:GetPosition()
+                    if platoon.MovementLayer == 'Air' and platoonThreat then
+                        enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                        --RNGLOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                        if enemyThreat > platoonThreat then
+                            continue
+                        end
+                    end
+                    if EntityCategoryContains(categories.COMMAND, unit) then
+                        acuUnit = unit
+
+                    end
+                    local unitDistance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                    if EntityCategoryContains(categories.MOBILE, unit) then
+                        if not SquadTargetList.Attack.Unit or unitDistance < SquadTargetList.Attack.Distance then
+                            SquadTargetList.Attack.Unit = unit
+                            SquadTargetList.Attack.Distance = unitDistance
+                        end
+                    elseif EntityCategoryContains(categories.STRUCTURE, unit) then
+                        if not SquadTargetList.Artillery.Unit or unitDistance < SquadTargetList.Artillery.Distance then
+                            SquadTargetList.Artillery.Unit = unit
+                            SquadTargetList.Artillery.Distance = unitDistance
+                        end
+                    end
+                end
+            end
+            if SquadTargetList.Attack.Unit or SquadTargetList.Artillery.Unit then
+                return SquadTargetList, acuUnit
+            end
+        end
+        coroutine.yield(2)
     end
     return false
 end
@@ -1497,6 +1609,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
 end
 
 function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
+    local ALLBPS = ALLBPS
     if type(TargetSearchCategory) == 'string' then
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
@@ -1508,6 +1621,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     end
     local acuPresent = false
     local acuUnit = false
+    local defenseRange = 0
     local unitThreatTable = {}
     local totalThreat = 0
     local RangeList = {
@@ -1546,6 +1660,9 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
                     totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                     unitThreatTable[Target.Sync.id] = true
+                    if ALLBPS[Target.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' and ALLBPS[Target.UnitId].Weapon[1].MaxRadius > defenseRange then
+                        defenseRange = ALLBPS[Target.UnitId].Weapon[1].MaxRadius
+                    end
                 end
                 TargetPosition = Target:GetPosition()
                 -- check if we have a special player as enemy
@@ -1578,12 +1695,11 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 --RNGLOG('Target Found in target aquisition function')
                 return TargetUnit, acuPresent, acuUnit, totalThreat
             end
-           coroutine.yield(2)
         end
-        coroutine.yield(1)
+        coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat
+    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
@@ -1665,7 +1781,7 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
                 --RNGLOG('Target Found in target aquisition function')
                 return TargetUnit, acuPresent, acuUnit, totalThreat
             end
-           coroutine.yield(5)
+           coroutine.yield(2)
         end
         coroutine.yield(1)
     end
@@ -1705,7 +1821,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
     
     for key, startloc in enemyStarts do
         
-        local locationDistance = VDist2Sq(startloc[1], startloc[3],location[1], location[3])
+        local locationDistance = VDist2Sq(startloc.Position[1], startloc.Position[3],location[1], location[3])
         --RNGLOG('*AI RNG: location position distance for ExpansionSpamBase is '..locationDistance)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --RNGLOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
@@ -2473,10 +2589,6 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
     local newList = {}
     for _, v in markerList do
         -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
-        if v.Position[1] <= 8 or v.Position[1] >= ScenarioInfo.size[1] - 8 or v.Position[3] <= 8 or v.Position[3] >= ScenarioInfo.size[2] - 8 then
-            -- mass marker is too close to border, skip it.
-            continue
-        end
         if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) < minDistance then
             continue
         end
@@ -2522,10 +2634,6 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
     local MassMarker = {}
     for _, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                -- mass marker is too close to border, skip it.
-                continue
-            end 
             table.insert(MassMarker, v)
         end
     end
@@ -2621,10 +2729,6 @@ CountSoonMassSpotsRNG = function(aiBrain)
     local massmarkers={}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    -- mass marker is too close to border, skip it.
-                    continue
-                end 
                 table.insert(massmarkers,v)
             end
         end
@@ -3336,7 +3440,7 @@ MapReclaimAnalysis = function(aiBrain)
                     if reclaimRaw and table.getn(reclaimRaw) > 0 then
                         for k,v in reclaimRaw do
                             if not IsProp(v) then continue end
-                            if v.MaxMassReclaim and v.MaxMassReclaim > 30 then
+                            if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
                                 reclaimTotal = reclaimTotal + v.MaxMassReclaim
                             end
                         end
@@ -3348,7 +3452,7 @@ MapReclaimAnalysis = function(aiBrain)
             aiBrain.MapReclaimTable = reclaimGrid
            -- RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
         end
-        coroutine.yield(1800)
+        coroutine.yield(300)
     end
 end
 
@@ -3536,11 +3640,6 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     --RNGLOG('ClosestMarkersWithin radius failing '..radius)
     return false
 end
-
-
-
-
-
 
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))

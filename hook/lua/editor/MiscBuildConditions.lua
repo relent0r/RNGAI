@@ -188,7 +188,7 @@ function TMLEnemyStartRangeCheck(aiBrain)
     if aiBrain.EnemyIntel.EnemyStartLocations then
         if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
-                if VDist2Sq(mainPos[1],  mainPos[3], pos[1], pos[3]) < 65536 then
+                if VDist2Sq(mainPos[1],  mainPos[3], pos.Position[1], pos.Position[3]) < 65536 then
                     --RNGLOG('TMLEnemyStartRangeCheck is true')
                     return true
                 end

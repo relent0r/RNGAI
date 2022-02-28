@@ -2,7 +2,6 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-local MaxAttackForce = 0.45
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local SeaDefenseMode = function(self, aiBrain, manager)
@@ -343,58 +342,6 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Frequent Sea Attack T1',
-        PlatoonTemplate = 'RNGAI Sea Attack T1',
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 300,
-        InstanceCount = 20,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
-            --{ SeaAttackCondition, { 'LocationType', 14 } },
-        },
-        BuilderData = {
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsRatio = 100.0,
-                PrimaryThreatTargetType = 'Naval',
-                SecondaryThreatTargetType = 'Economy',
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 1,
-                VeryNearThreatWeight = 10,
-                NearThreatWeight = 5,
-                MidThreatWeight = 1,
-                FarThreatWeight = 1,
-            },
-        },
-        BuilderType = 'Any',
-    },]]
-    --[[Builder {
-        BuilderName = 'RNGAI Frequent Sea Attack T23',
-        PlatoonTemplate = 'RNGAI Sea Attack T123',
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 300,
-        InstanceCount = 20,
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
-            --{ SeaAttackCondition, { 'LocationType', 14 } },
-        },
-        BuilderData = {
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsRatio = 100.0,
-                PrimaryThreatTargetType = 'Naval',
-                SecondaryThreatTargetType = 'Economy',
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 1,
-                VeryNearThreatWeight = 10,
-                NearThreatWeight = 5,
-                MidThreatWeight = 1,
-                FarThreatWeight = 1,
-            },
-        },
-        BuilderType = 'Any',
-    },]]
     Builder {
         BuilderName = 'RNGAI Intelli Sea Attack T23',
         PlatoonTemplate = 'RNGAI Intelli Sea Attack T123',

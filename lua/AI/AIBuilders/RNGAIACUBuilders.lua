@@ -241,11 +241,11 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI ACU Mass 40',
+        BuilderName = 'RNGAI ACU Mass 60',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 40, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, nil, 0, 'AntiSurface', 1}},
             { EBC, 'LessThanEconEfficiencyRNG', { 0.8, 2.0 }},
         },
         BuilderType = 'Any',
@@ -256,7 +256,7 @@ BuilderGroup {
                 RepeatBuild = false,
                 MexThreat = true,
                 Type = 'Mass',
-                MaxDistance = 40,
+                MaxDistance = 60,
                 MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 20,
@@ -327,7 +327,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
@@ -356,7 +356,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
         },
@@ -414,13 +414,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Air',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 900,
+        Priority = 950,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
             --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.AIR}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
             { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -599,7 +598,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
@@ -628,7 +627,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
         },
@@ -688,12 +687,11 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 950,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
             --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR - categories.SCOUT }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE } },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.AIR}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
+            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',

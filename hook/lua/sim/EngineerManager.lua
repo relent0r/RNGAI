@@ -37,7 +37,8 @@ EngineerManager = Class(RNGEngineerManager) {
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
                 if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
+                    --LOG('Unit Construction finished has fired for platoon '..v.AssistPlatoon.PlanName)
+                    --v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
                 end
