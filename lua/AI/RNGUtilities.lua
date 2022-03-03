@@ -134,9 +134,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --self:SetCustomName('StartReclaim logic end')
         end
         if platoon.PlatoonData.ReclaimTable then
-           -- RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
+           --RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
             if aiBrain.MapReclaimTable then
-               -- LOG('aiBrain MapReclaimTable exist')
+               --LOG('aiBrain MapReclaimTable exist')
                 local reclaimOptions = {}
                 local maxReclaimCount = 30
                 local validLocation = false
@@ -146,19 +146,19 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     end
                 end
                 table.sort(reclaimOptions, function(a,b) return a.Distance < b.Distance end)
-               -- LOG('reclaimOptions table size is '..RNGGETN(reclaimOptions))
+               --LOG('reclaimOptions table size is '..RNGGETN(reclaimOptions))
                 for _, v in reclaimOptions do
                     if platoon.PlatoonData.Early and v.Distance > 14400 then
-                       -- RNGLOG('Early reclaim and its too far away lets go for something closer')
+                       --RNGLOG('Early reclaim and its too far away lets go for something closer')
                         break
                     end
                     if GetThreatAtPosition( aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 2 then
                         if AIAttackUtils.CanGraphToRNG(engPos, v.Position, 'Amphibious') then
-                           -- RNGLOG('Lets go to reclaim at '..repr(v))
+                           --RNGLOG('Lets go to reclaim at '..repr(v))
                             validLocation = v.Position
                             break
                         elseif not platoon.PlatoonData.Early then
-                           -- RNGLOG('We want to go to this reclaim but cant graph to it, transport time? '..repr(v))
+                           --RNGLOG('We want to go to this reclaim but cant graph to it, transport time? '..repr(v))
                             validLocation = v.Position
                             break
                         end
@@ -168,7 +168,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --RNGLOG('We have a valid reclaim location')
                     IssueClearCommands({self})
                     if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation) then
-                       -- RNGLOG('We have issued move orders to get to the reclaim location')
+                       --RNGLOG('We have issued move orders to get to the reclaim location')
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             return
                         end
@@ -179,7 +179,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             engPos = self:GetPosition()
                             dist = VDist2Sq(engPos[1], engPos[3], validLocation[1], validLocation[3])
                             if dist < 144 then
-                               -- RNGLOG('We are at the grid square location, dist is '..dist)
+                               --RNGLOG('We are at the grid square location, dist is '..dist)
                                 IssueClearCommands({self})
                                 break
                             end
@@ -249,16 +249,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             {engPos[1] - 15, 0, engPos[3] + 25},
                             {engPos[1] - 25, 0, engPos[3] + 25},
                         }
-                       -- LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                       --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
                         if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
-                           -- LOG('We are going to try reclaim within the grid')
+                           --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
                                 if square[1] - 10 <= 3 or square[1] + 10 >= ScenarioInfo.size[1] - 3 or square[3] - 10 <= 3 or square[3] + 10 >= ScenarioInfo.size[1] - 3 then
-                                   -- LOG('Grid square position outside of map border')
+                                   --LOG('Grid square position outside of map border')
                                     continue
                                 end
-                               -- LOG('reclaimGrid square table is '..repr(square))
+                               --LOG('reclaimGrid square table is '..repr(square))
                                 local rectDef = Rect(square[1] - 10, square[3] + 10, square[1] + 10, square[3] - 10)
                                 local reclaimRect = GetReclaimablesInRect(rectDef)
                                 local engReclaiming = false
@@ -287,11 +287,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
                                         self:SetCustomName('Engineer in reclaim loop')
                                         if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                           -- RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                           -- RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                           --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                           --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
                                             idleCounter = idleCounter + 1
                                             if idleCounter > 15 then
-                                               -- RNGLOG('idleCounter hit, breaking loop')
+                                               --RNGLOG('idleCounter hit, breaking loop')
                                                 break
                                             end
                                         end
@@ -300,15 +300,15 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     end
                                 end
                             end
-                           -- LOG('reclaim grid loop has finished')
-                           -- LOG('Total things that should have be issued reclaim are '..reclaimCount)
+                           --LOG('reclaim grid loop has finished')
+                           --LOG('Total things that should have be issued reclaim are '..reclaimCount)
                         end
                     end
                 else
-                   -- LOG('No valid reclaim options')
+                   --LOG('No valid reclaim options')
                 end
             else
-               -- LOG('aiBrain MapReclaimTable does not exist')
+               --LOG('aiBrain MapReclaimTable does not exist')
             end
         end
         local furtherestReclaim = nil
@@ -1898,14 +1898,14 @@ function CompareBodyRNG(numOne, numTwo, compareType)
 end
 
 function DebugArrayRNG(Table)
-   -- RNGLOG('DebugArrayRNG Checking Table')
+   --RNGLOG('DebugArrayRNG Checking Table')
     for Index, Array in Table do
         if type(Array) == 'thread' or type(Array) == 'userdata' then
-           -- RNGLOG('Index['..Index..'] is type('..type(Array)..'). I won\'t print that!')
+           --RNGLOG('Index['..Index..'] is type('..type(Array)..'). I won\'t print that!')
         elseif type(Array) == 'table' then
-           -- RNGLOG('Index['..Index..'] is type('..type(Array)..'). I won\'t print that!')
+           --RNGLOG('Index['..Index..'] is type('..type(Array)..'). I won\'t print that!')
         else
-           -- RNGLOG('Index['..Index..'] is type('..type(Array)..'). "', repr(Array),'".')
+           --RNGLOG('Index['..Index..'] is type('..type(Array)..'). "', repr(Array),'".')
         end
     end
 end
@@ -3004,8 +3004,8 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 local healthdanger = minpri + (dangerpri - minpri) * healthcutoff / aiBrain.CDRUnit:GetHealth() * dangerfactor
             ]]
             local healthdanger = 2500000 / aiBrain.CDRUnit.Health 
-           -- RNGLOG('CDR health is '..aiBrain.CDRUnit.Health)
-           -- RNGLOG('Health Danger is '..healthdanger)
+           --RNGLOG('CDR health is '..aiBrain.CDRUnit.Health)
+           --RNGLOG('Health Danger is '..healthdanger)
             local enemyThreat
             local friendlyThreat
             if aiBrain.CDRUnit.CurrentEnemyThreat > 0 then
@@ -3020,10 +3020,10 @@ TruePlatoonPriorityDirector = function(aiBrain)
             else
                 friendlyThreat = 1
             end
-           -- RNGLOG('prioritypoint friendly threat is '..friendlyThreat)
-           -- RNGLOG('prioritypoint enemy threat is '..enemyThreat)
-           -- RNGLOG('Priority Based on threat would be '..(healthdanger * (enemyThreat / friendlyThreat)))
-           -- RNGLOG('Instead is it '..healthdanger)
+           --RNGLOG('prioritypoint friendly threat is '..friendlyThreat)
+           --RNGLOG('prioritypoint enemy threat is '..enemyThreat)
+           --RNGLOG('Priority Based on threat would be '..(healthdanger * (enemyThreat / friendlyThreat)))
+           --RNGLOG('Instead is it '..healthdanger)
             local acuPriority = healthdanger * (enemyThreat / friendlyThreat)
             if aiBrain.CDRUnit.Caution then
                 acuPriority = acuPriority + 100
@@ -3437,15 +3437,15 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     if not pos then
         return false
     else
-       -- RNGLOG('Location Pos is '..repr(pos))
+       --RNGLOG('Location Pos is '..repr(pos))
     end
-   -- RNGLOG('Checking if Dynamic Expansions Table Exist')
+   --RNGLOG('Checking if Dynamic Expansions Table Exist')
     if aiBrain.BrainIntel.DynamicExpansionPositions then
         for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
-           -- RNGLOG('Dynamic Expansion data '..repr(v))
+           --RNGLOG('Dynamic Expansion data '..repr(v))
             if not aiBrain.BuilderManagers[v.Zone] then
-               -- RNGLOG('No existing builder manager for zone')
-               -- RNGLOG('Distance is '..VDist3Sq(pos, v.Position)..' needs to be under '..radius)
+               --RNGLOG('No existing builder manager for zone')
+               --RNGLOG('Distance is '..VDist3Sq(pos, v.Position)..' needs to be under '..radius)
                 if VDist3Sq(pos, v.Position) < radius and GetThreatAtPosition( aiBrain, v.Position, threatRings, true, threatType) < threatMax then
                     retPos = v.Position
                     retName = v.Zone
@@ -3454,7 +3454,7 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
             end
         end
     else
-       -- RNGLOG('Dynamic Expansions table doesnt exist')
+       --RNGLOG('Dynamic Expansions table doesnt exist')
     end
     if retPos then
         return retPos, retName
@@ -3540,11 +3540,11 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         end
     end
     if buildLocation then
-       -- RNGLOG('Build Location returned '..repr(buildLocation))
-       -- RNGLOG('What to build returned '..repr(whatToBuild))
+       --RNGLOG('Build Location returned '..repr(buildLocation))
+       --RNGLOG('What to build returned '..repr(whatToBuild))
         return buildLocation, whatToBuild
     end
-   -- LOG('GetBuildLocationRNG is false')
+   --LOG('GetBuildLocationRNG is false')
     return false
 end
 
@@ -3620,14 +3620,14 @@ RNGLOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId
 RNGLOG('upgradeID is '..upgradeID)
 if not unit.Dead and (unit.UnitBeingBuilt:GetBlueprint().BlueprintId ~= upgradeID) then
     if upgradePauseLimit < 5 and (GetEconomyStored(aiBrain, 'MASS') <= 20 or GetEconomyStored(aiBrain, 'ENERGY') <= 200) then
-       -- RNGLOG('Extractor upgrade economy low')
+       --RNGLOG('Extractor upgrade economy low')
         upgradePauseLimit = upgradePauseLimit + 1
         if not unit:IsPaused() then
-           -- RNGLOG('Extractor Paused')
+           --RNGLOG('Extractor Paused')
             unit:SetPaused( true )
         end
     elseif unit:IsPaused() then
-       -- RNGLOG('Extractor UnPaused')
+       --RNGLOG('Extractor UnPaused')
         unit:SetPaused( false )
     end
 end]]

@@ -8,7 +8,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
-        LOG('Engineer has just finished building '..finishedUnit.UnitId..' engineer sync id '..unit.Sync.id)
+       --LOG('Engineer has just finished building '..finishedUnit.UnitId..' engineer sync id '..unit.Sync.id)
         if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
            --LOG('RNG UnitConstructionFinished has fired')
             self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
@@ -29,7 +29,7 @@ EngineerManager = Class(RNGEngineerManager) {
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
                 if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
-                    LOG('Unit Construction finished has fired for platoon '..v.AssistPlatoon.PlanName)
+                   --LOG('Unit Construction finished has fired for platoon '..v.AssistPlatoon.PlanName)
                     v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
@@ -88,7 +88,7 @@ EngineerManager = Class(RNGEngineerManager) {
             unit.PlatoonHandle = hndl
 
             --if EntityCategoryContains(categories.COMMAND, unit) then
-            --   -- RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
+            --   --RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
             --end
 
             --RNGLOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())

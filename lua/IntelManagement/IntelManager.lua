@@ -31,7 +31,7 @@ IntelManager = Class {
     end,
 
     Run = function(self)
-       -- RNGLOG('RNGAI : IntelManager Starting')
+       --RNGLOG('RNGAI : IntelManager Starting')
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
@@ -104,7 +104,7 @@ IntelManager = Class {
 
     WaitForZoneInitialization = function(self)
         while not self.Brain.ZonesInitialized do
-           -- RNGLOG('Zones table is empty, waiting')
+           --RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
             continue
         end
@@ -183,7 +183,7 @@ IntelManager = Class {
     SelectZoneRNG = function(self, aiBrain, platoon, type)
         -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
-       -- RNGLOG('RNGAI : Zone Selection Query Received for '..platoon.BuilderName)
+       --RNGLOG('RNGAI : Zone Selection Query Received for '..platoon.BuilderName)
         if PlatoonExists(aiBrain, platoon) then
             local zoneSet = false
             local zoneSelection = 999
@@ -195,7 +195,7 @@ IntelManager = Class {
                 coroutine.yield(20)
                 return false
             end
-           -- RNGLOG('RNGAI : Zone Selection Query Checking if Zones initialized')
+           --RNGLOG('RNGAI : Zone Selection Query Checking if Zones initialized')
             if aiBrain.ZonesInitialized then
                 if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
                     zoneSet = self.Brain.Zones.Land.zones
@@ -231,7 +231,7 @@ IntelManager = Class {
                                 compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control - enemyModifier
                             end
                             if compare then
-                               -- RNGLOG('Compare variable '..compare)
+                               --RNGLOG('Compare variable '..compare)
                             end
                             if compare > 0 then
                                 if not selection or compare > selection then
@@ -258,7 +258,7 @@ IntelManager = Class {
                                 compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
                             end
                             if compare then
-                               -- RNGLOG('Compare variable '..compare)
+                               --RNGLOG('Compare variable '..compare)
                             end
                             if compare > 0 then
                                 if not selection or compare > selection then
@@ -275,7 +275,7 @@ IntelManager = Class {
                     end
                 elseif type == 'control' then
                     local compare = 0
-                   -- RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
+                   --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
                         local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.zone.id].pos[1],aiBrain.Zones.Land.zones[v.zone.id].pos[3],enemyX, enemyZ)
                         local enemyModifier = 1
@@ -297,19 +297,19 @@ IntelManager = Class {
                             controlValue = 0.1
                         end
                         local resourceValue = zoneSet[v.zone.id].resourcevalue
-                       -- RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                       --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                         compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
-                       -- RNGLOG('Compare variable '..compare)
+                       --RNGLOG('Compare variable '..compare)
                         if compare > 0 then
                             if not selection or compare > selection then
                                 selection = compare
                                 zoneSelection = v.zone.id
-                               -- RNGLOG('Zone Control Query Select priority '..selection)
+                               --RNGLOG('Zone Control Query Select priority '..selection)
                             end
                         end
                     end
                     if not selection then
-                       -- RNGLOG('RNGAI : Zone Control Selection Query Processing Second Pass')
+                       --RNGLOG('RNGAI : Zone Control Selection Query Processing Second Pass')
                         for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
                             for k1, v1 in v.zone.edges do
                                 local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v1.zone.id].pos[1],aiBrain.Zones.Land.zones[v1.zone.id].pos[3],enemyX, enemyZ)
@@ -332,14 +332,14 @@ IntelManager = Class {
                                     controlValue = 0.1
                                 end
                                 local resourceValue = zoneSet[v1.zone.id].resourcevalue
-                               -- RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v1.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                               --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v1.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                 if compare > 0 then
                                     if compare > selection then
-                                       -- RNGLOG('Try to log zoneset')
+                                       --RNGLOG('Try to log zoneset')
                                         selection = compare
                                         zoneSelection = v1.zone.id
-                                       -- RNGLOG('Zone Control Query Select priority '..selection)
+                                       --RNGLOG('Zone Control Query Select priority '..selection)
                                     end
                                 end
                             end
@@ -368,14 +368,14 @@ IntelManager = Class {
                                     controlValue = 0.1
                                 end
                                 local resourceValue = zoneSet[v.id].resourcevalue
-                               -- RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                               --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
-                               -- RNGLOG('Compare variable '..compare)
+                               --RNGLOG('Compare variable '..compare)
                                 if compare > 0 then
                                     if not selection or compare > selection then
                                         selection = compare
                                         zoneSelection = v.id
-                                       -- RNGLOG('Zone Control Query Select priority '..selection)
+                                       --RNGLOG('Zone Control Query Select priority '..selection)
                                     end
                                 end
                             end
@@ -384,7 +384,7 @@ IntelManager = Class {
                     if selection then
                         return zoneSelection
                     else
-                       -- RNGLOG('RNGAI : Zone Control Selection Query did not select zone')
+                       --RNGLOG('RNGAI : Zone Control Selection Query did not select zone')
                     end
                 end
             else
@@ -393,7 +393,7 @@ IntelManager = Class {
         else
             WARN('RNGAI : PlatoonExist parameter false in Select Zone query')
         end
-       -- RNGLOG('RNGAI : No zone returned from Zone Query')
+       --RNGLOG('RNGAI : No zone returned from Zone Query')
         return false
     end,
 
@@ -662,7 +662,7 @@ ExpansionIntelScanRNG = function(aiBrain)
             end
         end
         coroutine.yield(50)
-        -- don't do this, it might have a platoon inside it-- RNGLOG('Current Expansion Watch Table '..repr(aiBrain.BrainIntel.ExpansionWatchTable))
+        -- don't do this, it might have a platoon inside it--RNGLOG('Current Expansion Watch Table '..repr(aiBrain.BrainIntel.ExpansionWatchTable))
     end
 end
 
@@ -782,35 +782,35 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
                     if expansionDistance < radius * radius then
-                       -- RNGLOG('Expansion Zone is within radius')
+                       --RNGLOG('Expansion Zone is within radius')
                         if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
-                           -- RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
-                           -- RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                           --RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
+                           --RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
                             if expansion.MassPoints > 1 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
-                                   -- RNGLOG('Threat at location too high for easy building')
+                                   --RNGLOG('Threat at location too high for easy building')
                                     continue
                                 end
                                 if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= expansion.MassPoints then
-                                   -- RNGLOG('ACU Location has enough masspoints to indicate its already taken')
+                                   --RNGLOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
                                 RNGINSERT(options, {Expansion = expansion, Value = expansion.MassPoints * expansion.MassPoints, Key = k, Distance = expansionDistance})
                             end
                         else
-                           -- RNGLOG('Expansion is beyond the center point')
-                           -- RNGLOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
-                           -- RNGLOG('Should be less than ')
-                           -- RNGLOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                           --RNGLOG('Expansion is beyond the center point')
+                           --RNGLOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                           --RNGLOG('Should be less than ')
+                           --RNGLOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
                         end
                     end
                 else
-                   -- RNGLOG('This expansion has already been checked in the last 45 seconds')
+                   --RNGLOG('This expansion has already been checked in the last 45 seconds')
                 end
             end
         end
-       -- RNGLOG('Number of options from first cycle '..table.getn(options))
+       --RNGLOG('Number of options from first cycle '..table.getn(options))
         local optionCount = 0
         
         for k, withinRadius in options do
@@ -835,13 +835,13 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                     local alreadySecure = false
                     for k, b in aiBrain.BuilderManagers do
                         if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
-                           -- RNGLOG('Already a builder manager with factory present, set')
+                           --RNGLOG('Already a builder manager with factory present, set')
                             alreadySecure = true
                             break
                         end
                     end
                     if alreadySecure then
-                       -- RNGLOG('Position already secured, ignore and move to next expansion')
+                       --RNGLOG('Position already secured, ignore and move to next expansion')
                         continue
                     end
                     local expansionValue = v.Distance * v.Distance / v.Value
@@ -854,10 +854,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             end
             if secondBestOption and bestOption then
                 local acuOptions = { bestOption, secondBestOption }
-               -- RNGLOG('ACU is having a random expansion returned')
+               --RNGLOG('ACU is having a random expansion returned')
                 return acuOptions[Random(1,2)]
             end
-           -- RNGLOG('ACU is having the best expansion returned')
+           --RNGLOG('ACU is having the best expansion returned')
 
             return bestOption
         else

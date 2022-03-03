@@ -440,7 +440,7 @@ Platoon = Class(RNGAIPlatoon) {
                 if not usedTransports then
                     local pathLength = RNGGETN(path)
                     local prevpoint = position or false
-                    --RNGLOG('* AI-RNG: GuardMarkerRNG movement logic')
+                    --RNGLOG('* AI-RNG: GuardMarkerRNG movement--LOGic')
                     for i=1, pathLength-1 do
                         local direction = RUtils.GetDirectionInDegrees( prevpoint, path[i] )
                         if bAggroMove then
@@ -1739,7 +1739,7 @@ Platoon = Class(RNGAIPlatoon) {
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false)
                     end
                     if not usedTransports then
-                       -- RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
+                       --RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
                         self:PlatoonMoveWithAttackMicro(aiBrain, path, false, bAggroMove)
                     end
                 elseif (not path and reason == 'NoPath') then
@@ -2484,17 +2484,17 @@ Platoon = Class(RNGAIPlatoon) {
                     aiBrain:PickEnemyLogicRNG()
                 end
                 if aiBrain.CDRUnit.EnemyCDRPresent then
-                   -- RNGLOG('ACU Fighting CDR, lets help')
+                   --RNGLOG('ACU Fighting CDR, lets help')
                     target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, aiBrain.CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
                 elseif acuTargeting and not data.ACUOnField then
-                   -- RNGLOG('GUN ACU OnField LOOKING FOR TARGET')
+                   --RNGLOG('GUN ACU OnField LOOKING FOR TARGET')
                     target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, platoonPosition , 'Attack', maxRadius, self.CurrentPlatoonThreat)
                 else
                     for k, v in aiBrain.EnemyIntel.ACU do
                         if k ~= aiBrain:GetArmyIndex() then
                             if v.Ally then
                                 if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
-                                   -- RNGLOG('Ally RNG ACU fighting CDR and we are not, lets help')
+                                   --RNGLOG('Ally RNG ACU fighting CDR and we are not, lets help')
                                     target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
                                 end
                             end
@@ -2522,13 +2522,13 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     if not target and self.CurrentPlatoonThreat > 8 and data.UnitType != 'GUNSHIP' then
-                        RNGLOG('Checking for director target')
-                        LOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' strike damage is '..self.PlatoonStrikeDamage)
+                       --RNGLOG('Checking for director target')
+                       --LOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' strike damage is '..self.PlatoonStrikeDamage)
                         target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, self.PlatoonStrikeDamage)
                         if target then
-                            RNGLOG('CheckDirectorTargetAvailable : Target ID is '..target.UnitId)
+                           --RNGLOG('CheckDirectorTargetAvailable : Target ID is '..target.UnitId)
                         else
-                            RNGLOG('CheckDirectorTargetAvailable : No director target found')
+                           --RNGLOG('CheckDirectorTargetAvailable : No director target found')
                         end
                     end
                 end
@@ -2611,8 +2611,8 @@ Platoon = Class(RNGAIPlatoon) {
                                 --RNGLOG('Total Threat for air is '..totalThreat)
                                 local averageThreat = totalThreat / pathLength
                                 local pathDistance
-                               -- RNGLOG('StrikeForceAI average path threat is '..averageThreat)
-                               -- RNGLOG('StrikeForceAI platoon threat is '..self.CurrentPlatoonThreat)
+                               --RNGLOG('StrikeForceAI average path threat is '..averageThreat)
+                               --RNGLOG('StrikeForceAI platoon threat is '..self.CurrentPlatoonThreat)
                                 if averageThreat < self.CurrentPlatoonThreat or platoonCount >= platoonLimit then
                                     --RNGLOG('StrikeForce air assigning path')
                                     for i=1, pathLength do
@@ -2933,14 +2933,14 @@ Platoon = Class(RNGAIPlatoon) {
             elseif cons.DynamicExpansion then
                 reference, refName = RUtils.AIFindDynamicExpansionPointRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-               -- RNGLOG('Dynamic Expansion Engineer Platoon call')
+               --RNGLOG('Dynamic Expansion Engineer Platoon call')
                 --RNGLOG('refName is : '..refName)
                 if not reference or not refName then
-                   -- RNGLOG('Dynamic Expansion no reference for refName')
+                   --RNGLOG('Dynamic Expansion no reference for refName')
                     self:PlatoonDisband()
                     return
                 end
-               -- RNGLOG('Dynamic Expansion Position is '..repr(reference))
+               --RNGLOG('Dynamic Expansion Position is '..repr(reference))
             elseif cons.NearMarkerType == 'Expansion Area' then
                 reference, refName = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
@@ -3107,7 +3107,7 @@ Platoon = Class(RNGAIPlatoon) {
             buildFunction = AIBuildStructures.AIBuildAdjacencyPriorityRNG
             RNGINSERT(baseTmplList, baseTmpl)
         elseif cons.ForceAvoidCategory and cons.AvoidCategory then
-           -- LOG('Dropping into force avoid for engineer builder '..self.BuilderName)
+           --LOG('Dropping into force avoid for engineer builder '..self.BuilderName)
             relative = false
             local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
             local radius = (cons.AdjacencyDistance or 50)
@@ -3181,17 +3181,17 @@ Platoon = Class(RNGAIPlatoon) {
         --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.Sync.id)
         self.SetupEngineerCallbacksRNG(eng)
         if self.BuilderName == 'RNG T1 Energy Storage Builder OverCharge Power' then
-           -- LOG('EnergyStorageBuilder OverCharge Power has fired')
+           --LOG('EnergyStorageBuilder OverCharge Power has fired')
             if self.PlatoonData.Construction.ForceAvoidCategory then
-               -- LOG('ForceAvoidCategory is true')
+               --LOG('ForceAvoidCategory is true')
             else
-               -- LOG('ForceAvoidCategory is false')
+               --LOG('ForceAvoidCategory is false')
             end
                 
             if self.PlatoonData.Construction.AvoidCategory then
-               -- LOG('AvoidCategory is present')
+               --LOG('AvoidCategory is present')
             else
-               -- LOG('AvoidCategory is not present')
+               --LOG('AvoidCategory is not present')
             end
         end
 
@@ -3341,9 +3341,9 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
-       -- RNGLOG('HydroTable '..repr(closestHydro))
+       --RNGLOG('HydroTable '..repr(closestHydro))
         if closestHydro then
-           -- RNGLOG('Hydro Within 65 units of spawn')
+           --RNGLOG('Hydro Within 65 units of spawn')
             hydroPresent = true
         end
         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
@@ -3353,14 +3353,14 @@ Platoon = Class(RNGAIPlatoon) {
             WARN('No buildLocation or whatToBuild during ACU initialization')
         end
         --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
-       -- RNGLOG('Attempt structure build')
-       -- RNGLOG('Number of close mass markers '..closeMarkers)
-       -- RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
-       -- RNGLOG('Mex build stage 1')
+       --RNGLOG('Attempt structure build')
+       --RNGLOG('Number of close mass markers '..closeMarkers)
+       --RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
+       --RNGLOG('Mex build stage 1')
         if RNGGETN(buildMassPoints) > 0 then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
-               -- RNGLOG('MassPoint '..repr(v))
+               --RNGLOG('MassPoint '..repr(v))
                 aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
                 --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                 buildMassPoints[k] = nil
@@ -3372,10 +3372,10 @@ Platoon = Class(RNGAIPlatoon) {
         while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
             coroutine.yield(5)
         end
-       -- RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
+       --RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
         if buildLocation and whatToBuild then
-           -- LOG('Insert First energy production '..whatToBuild.. ' at '..repr(buildLocation))
+           --LOG('Insert First energy production '..whatToBuild.. ' at '..repr(buildLocation))
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
         else
             WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -3384,25 +3384,25 @@ Platoon = Class(RNGAIPlatoon) {
         if RNGGETN(buildMassPoints) > 0 then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             if RNGGETN(buildMassPoints) < 3 then
-               -- LOG('Less than 4 total mass points close')
+               --LOG('Less than 4 total mass points close')
                 for k, v in buildMassPoints do
-                   -- RNGLOG('MassPoint '..repr(v))
+                   --RNGLOG('MassPoint '..repr(v))
                     aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
                     --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                     buildMassPoints[k] = nil
                 end
                 buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
             else
-               -- LOG('Greater than 3 total mass points close')
+               --LOG('Greater than 3 total mass points close')
                 for i=1, 2 do
-                   -- RNGLOG('MassPoint '..repr(buildMassPoints[i]))
+                   --RNGLOG('MassPoint '..repr(buildMassPoints[i]))
                     aiBrain:BuildStructure(eng, whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false)
                     --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false})
                     buildMassPoints[i] = nil
                 end
                 buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
                 buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
-               -- LOG('Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
+               --LOG('Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                 --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
                 if RNGGETN(buildMassPoints) < 2 then
@@ -3433,10 +3433,10 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         local energyCount = 2
-       -- RNGLOG('Energy Production stage 2')
+       --RNGLOG('Energy Production stage 2')
         if not hydroPresent then
             IssueClearCommands({eng})
-           -- RNGLOG('No hydro present, we should be building a little more power')
+           --RNGLOG('No hydro present, we should be building a little more power')
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
                     energyCount = 3
@@ -3447,24 +3447,24 @@ Platoon = Class(RNGAIPlatoon) {
             for i=1, energyCount do
                 buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
                 if buildLocation and whatToBuild then
-                   -- RNGLOG('Execute Build Structure with the following data')
-                   -- RNGLOG('whatToBuild '..whatToBuild)
-                   -- RNGLOG('Build Location '..repr(buildLocation))
+                   --RNGLOG('Execute Build Structure with the following data')
+                   --RNGLOG('whatToBuild '..whatToBuild)
+                   --RNGLOG('Build Location '..repr(buildLocation))
                     aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                 else
                     WARN('No buildLocation or whatToBuild during ACU initialization')
                 end
             end
         else
-           -- RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
+           --RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
         end
         if not hydroPresent and closeMarkers > 3 then
-           -- LOG('Try to build land factory')
+           --LOG('Try to build land factory')
             buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
             if buildLocation and whatToBuild then
-               -- RNGLOG('Execute Build Structure with the following data')
-               -- RNGLOG('whatToBuild '..whatToBuild)
-               -- RNGLOG('Build Location '..repr(buildLocation))
+               --RNGLOG('Execute Build Structure with the following data')
+               --RNGLOG('whatToBuild '..whatToBuild)
+               --RNGLOG('Build Location '..repr(buildLocation))
                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
             else
                 WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -3475,7 +3475,7 @@ Platoon = Class(RNGAIPlatoon) {
                 coroutine.yield(5)
             end
         end
-       -- LOG('CDR Initialize almost done, should have just finished final t1 land')
+       --LOG('CDR Initialize almost done, should have just finished final t1 land')
         if hydroPresent and closeMarkers > 0 then
             engPos = eng:GetPosition()
             if VDist2Sq(engPos[1],engPos[3],closestHydro.Position[1],closestHydro.Position[3]) > 144 then
@@ -3497,7 +3497,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
                     local NumAssist = RNGGETN(UnitAssist:GetGuards())
                     local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
-                   -- LOG('Assist distance for commander assist is '..dist)
+                   --LOG('Assist distance for commander assist is '..dist)
                     -- Find the closest unit to assist
                     if (not low or dist < low) and NumAssist < 20 and dist < 100 then
                         low = dist
@@ -3509,7 +3509,7 @@ Platoon = Class(RNGAIPlatoon) {
             if assistee  then
                 IssueClearCommands({eng})
                 eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
-               -- RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+               --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
                 IssueGuard({eng}, eng.UnitBeingAssist)
                 while eng and not eng.Dead and not eng:IsIdleState() do
                     if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
@@ -3526,9 +3526,9 @@ Platoon = Class(RNGAIPlatoon) {
                     if aiBrain.MapSize >=20 then
                         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if buildLocation and whatToBuild then
-                           -- RNGLOG('Execute Build Structure for adjacent Air Factory')
-                           -- RNGLOG('whatToBuild '..whatToBuild)
-                           -- RNGLOG('Build Location '..repr(buildLocation))
+                           --RNGLOG('Execute Build Structure for adjacent Air Factory')
+                           --RNGLOG('whatToBuild '..whatToBuild)
+                           --RNGLOG('Build Location '..repr(buildLocation))
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -3536,9 +3536,9 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if buildLocation and whatToBuild then
-                           -- RNGLOG('Execute Build Structure adjacent Land Factory')
-                           -- RNGLOG('whatToBuild '..whatToBuild)
-                           -- RNGLOG('Build Location '..repr(buildLocation))
+                           --RNGLOG('Execute Build Structure adjacent Land Factory')
+                           --RNGLOG('whatToBuild '..whatToBuild)
+                           --RNGLOG('Build Location '..repr(buildLocation))
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -3554,7 +3554,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         end
-       -- LOG('CDR Initialize done, setting flags')
+       --LOG('CDR Initialize done, setting flags')
         eng.Active = false
         eng.Initializing = false
         self:PlatoonDisband()
@@ -3626,13 +3626,13 @@ Platoon = Class(RNGAIPlatoon) {
                     return
                 end
                 --[[if AIUtils.IsMex(whatToBuild) and (not aiBrain:CanBuildStructureAt(whatToBuild, buildLocation)) then
-                   -- RNGLOG('Cant build at mass location')
-                   -- RNGLOG('*AI DEBUG: EngineerBuild AI ' ..eng.Sync.id)
-                   -- RNGLOG('Build location is '..repr(buildLocation))
+                   --RNGLOG('Cant build at mass location')
+                   --RNGLOG('*AI DEBUG: EngineerBuild AI ' ..eng.Sync.id)
+                   --RNGLOG('Build location is '..repr(buildLocation))
                     return
                 end]]
                 if borderWarning then
-                   -- LOG('BorderWarning build')
+                   --LOG('BorderWarning build')
                     IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
                 else
                     aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
@@ -3701,7 +3701,7 @@ Platoon = Class(RNGAIPlatoon) {
                         -- otherwise, go ahead and build the next structure there
                 --RNGLOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 if borderWarning then
-                   -- LOG('BorderWarning build')
+                   --LOG('BorderWarning build')
                     IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
                 else
                     aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
@@ -3834,7 +3834,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 continue
                             end
                             if self.MovementLayer == 'Air' then
-                                LOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
+                               --LOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
                             end
                             if weaponBlueprint.WeaponCategory == 'Bomb' and weaponBlueprint.DamageRadius > 2 then
                                 v.DamageRadius = weaponBlueprint.DamageRadius
@@ -3895,8 +3895,8 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if not self.Zone then
             if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
-               -- RNGLOG('Set Zone on platoon during initial config')
-               -- RNGLOG('Zone Index is '..aiBrain.Zones.Land.index)
+               --RNGLOG('Set Zone on platoon during initial config')
+               --RNGLOG('Zone Index is '..aiBrain.Zones.Land.index)
                 SetZone(table.copy(GetPlatoonPosition(self)), aiBrain.Zones.Land.index)
             elseif self.MovementLayer == 'Water' then
                 --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
@@ -4025,7 +4025,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         
         if not self.TargetZone then
-           -- RNGLOG('ZoneRaid AI recieved no target zone')
+           --RNGLOG('ZoneRaid AI recieved no target zone')
             coroutine.yield(50)
         end
         local usedTransports = false
@@ -4128,20 +4128,20 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif acuUnit then
                         targetPos = acuUnit:GetPosition()
                     end
-                   -- RNGLOG('Attempt to run away from high threat')
+                   --RNGLOG('Attempt to run away from high threat')
                     self:Stop()
                     self:MoveToLocation(RUtils.AvoidLocation(platLoc,targetPos,50), false)
                     coroutine.yield(60)
                     platLoc = GetPlatoonPosition(self)
                     local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, platLoc, 120, 'Enemy')
                     if massPoints then
-                       -- RNGLOG('Try to run to masspoint')
+                       --RNGLOG('Try to run to masspoint')
                         local massPointPos
                         for _, v in massPoints do
                             if not v.Dead then
                                 massPointPos = v:GetPosition()
                                 if RUtils.GetAngleRNG(platLoc[1], platLoc[3], massPointPos[1], massPointPos[3], targetPos[1], targetPos[3]) > 0.6 then
-                                   -- RNGLOG('Found a masspoint to run to')
+                                   --RNGLOG('Found a masspoint to run to')
                                     alternatePos = massPointPos
                                 end
                             end
@@ -4151,7 +4151,7 @@ Platoon = Class(RNGAIPlatoon) {
                         --RNGLOG('Moving to masspoint alternative at '..repr(alternatePos))
                         self:MoveToLocation(alternatePos, false)
                     else
-                       -- RNGLOG('No close masspoint try to find platoon to merge with')
+                       --RNGLOG('No close masspoint try to find platoon to merge with')
                         mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('ZoneRaidRNG')
                         if alternatePos then
                             self:MoveToLocation(alternatePos, false)
@@ -4162,7 +4162,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local dist
                         local Stuck = 0
                         while PlatoonExists(aiBrain, self) do
-                           -- RNGLOG('Moving to alternate position')
+                           --RNGLOG('Moving to alternate position')
                             --RNGLOG('We are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                             coroutine.yield(10)
                             if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
@@ -4179,7 +4179,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         self:ConfigurePlatoon()
                                     end
                                 end
-                               -- RNGLOG('Arrived at either masspoint or friendly massraid')
+                               --RNGLOG('Arrived at either masspoint or friendly massraid')
                                 break
                             end
                             if Lastdist ~= dist then
@@ -4198,15 +4198,15 @@ Platoon = Class(RNGAIPlatoon) {
                     else
                         local hold, targetZone, targetPosition = self:AdjacentZoneControlCheck(aiBrain)
                         if hold and targetZone and targetPosition then
-                           -- RNGLOG('Zone Raid Platoon is holding position')
+                           --RNGLOG('Zone Raid Platoon is holding position')
                             local direction = RUtils.GetDirectionInDegrees( platLoc, targetPosition )
-                           -- RNGLOG('Direction is '..direction)
+                           --RNGLOG('Direction is '..direction)
                             local formPos = RUtils.AvoidLocation(targetPosition, aiBrain.Zones.Land.zones[self.TargetZone].pos, 10)
                             IssueFormAggressiveMove(GetPlatoonUnits(self), formPos, 'AttackFormation', direction)
-                           -- RNGLOG('IssueFormAggressiveMove Performed')
+                           --RNGLOG('IssueFormAggressiveMove Performed')
                             coroutine.yield(40)
                         elseif targetZone and targetPosition then
-                           -- RNGLOG('Zone Raid Platoon is moving to retreat position')
+                           --RNGLOG('Zone Raid Platoon is moving to retreat position')
                             self.TargetZone = targetZone
                             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , 200)
                             if path then
@@ -4216,7 +4216,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     return self:SetAIPlanRNG('ZoneRaidRNG')
                                 end
                             else
-                               -- RNGLOG('No path for zone raid retreat, this shouldnt happen')
+                               --RNGLOG('No path for zone raid retreat, this shouldnt happen')
                                 break
                             end
                         end
@@ -4252,11 +4252,11 @@ Platoon = Class(RNGAIPlatoon) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
-           -- RNGLOG('MassRaidAI restarting')
+           --RNGLOG('MassRaidAI restarting')
             if self.Zone then
-               -- RNGLOG('Platoon Zone is currently '..self.Zone)
+               --RNGLOG('Platoon Zone is currently '..self.Zone)
             else
-               -- RNGLOG('Zone is currently false')
+               --RNGLOG('Zone is currently false')
             end
             self:Stop()
             if self:MergeWithNearbyPlatoonsRNG('ZoneRaidRNG', 80, 25) then
@@ -4270,7 +4270,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self.RestartCount = self.RestartCount + 1
             end
             if self.RestartCount > 50 and self.MovementLayer == 'Land' then
-               -- RNGLOG('ZoneRaid Restart Count 50')
+               --RNGLOG('ZoneRaid Restart Count 50')
                 coroutine.yield( 50 )
             end
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
@@ -4280,7 +4280,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
             return self:ZoneRaidRNG()
         else
-           -- RNGLOG('No Zone Raid Position')
+           --RNGLOG('No Zone Raid Position')
             coroutine.yield( 50 )
         end
     end,
@@ -4381,7 +4381,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
         
         if not self.TargetZone then
-           -- RNGLOG('ZoneControl AI recieved no target zone')
+           --RNGLOG('ZoneControl AI recieved no target zone')
             coroutine.yield(50)
         end
         local usedTransports = false
@@ -4464,14 +4464,14 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif acuUnit then
                         targetPos = acuUnit:GetPosition()
                     end
-                   -- RNGLOG('Attempt to run away from high threat')
+                   --RNGLOG('Attempt to run away from high threat')
                     self:Stop()
                     self:MoveToLocation(RUtils.AvoidLocation(platLoc,targetPos,50), false)
                     coroutine.yield(60)
                     platLoc = GetPlatoonPosition(self)
                     local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, platLoc, 120, 'Enemy')
                     if massPoints then
-                       -- RNGLOG('Try to run to masspoint')
+                       --RNGLOG('Try to run to masspoint')
                         local massPointPos
                         for _, v in massPoints do
                             if not v.Dead then
@@ -4502,7 +4502,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local dist
                         local Stuck = 0
                         while PlatoonExists(aiBrain, self) do
-                           -- RNGLOG('Moving to alternate position')
+                           --RNGLOG('Moving to alternate position')
                             --RNGLOG('We are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                             coroutine.yield(10)
                             if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
@@ -4520,7 +4520,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         self:ConfigurePlatoon()
                                     end
                                 end
-                               -- RNGLOG('Arrived at either masspoint or friendly massraid')
+                               --RNGLOG('Arrived at either masspoint or friendly massraid')
                                 break
                             end
                             if Lastdist ~= dist then
@@ -4583,7 +4583,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 return self:SetAIPlanRNG('ZoneControlRNG')
                             end
                         else
-                           -- RNGLOG('No path for zone control retreat, this shouldnt happen')
+                           --RNGLOG('No path for zone control retreat, this shouldnt happen')
                             break
                         end
                     end
@@ -4606,7 +4606,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self.RestartCount = self.RestartCount + 1
             end
             if self.RestartCount > 50 and self.MovementLayer == 'Land' then
-               -- RNGLOG('ZoneRaid Restart Count 50')
+               --RNGLOG('ZoneRaid Restart Count 50')
                 coroutine.yield( 50 )
             end
 
@@ -4618,7 +4618,7 @@ Platoon = Class(RNGAIPlatoon) {
             coroutine.yield(2)
             return self:ZoneControlRNG()
         else
-           -- RNGLOG('No Zone Control Position')
+           --RNGLOG('No Zone Control Position')
             coroutine.yield( 50 )
             return self:SetAIPlanRNG('ZoneRaidRNG')
         end
@@ -4633,7 +4633,7 @@ Platoon = Class(RNGAIPlatoon) {
         local selectedZone = false
         local highestThreat = 0
         local currentZoneDistanceToHome = VDist2Sq(aiBrain.Zones.Land.zones[self.TargetZone].pos[1],aiBrain.Zones.Land.zones[self.TargetZone].pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
-       -- RNGLOG('Performing defensive adjacent zone check')
+       --RNGLOG('Performing defensive adjacent zone check')
         for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
             if v.zone.enemythreat > 0 then
                 local currentEdgeDistanceToHome = VDist2Sq(v.zone.pos[1],v.zone.pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
@@ -4646,11 +4646,11 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         if selectedPosition then
-           -- RNGLOG('Moving to protect zone closer to base')
+           --RNGLOG('Moving to protect zone closer to base')
             return false, selectedZone, selectedPosition
         end
-       -- RNGLOG('No defensive adjacent zone required')
-       -- RNGLOG('Looking to see if we can defend the existing zone')
+       --RNGLOG('No defensive adjacent zone required')
+       --RNGLOG('Looking to see if we can defend the existing zone')
         if enemyX and enemyZ then
             local enemySide = 0
             for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
@@ -4878,10 +4878,10 @@ Platoon = Class(RNGAIPlatoon) {
         --[[
         if waterOnly then
             if bestMarker then
-               -- RNGLOG('Water based best marker is  '..repr(bestMarker))
-               -- RNGLOG('Best marker threat is '..bestMarkerThreat)
+               --RNGLOG('Water based best marker is  '..repr(bestMarker))
+               --RNGLOG('Best marker threat is '..bestMarkerThreat)
             else
-               -- RNGLOG('Water based no best marker')
+               --RNGLOG('Water based no best marker')
             end
         end]]
        --LOG('MassRaid function')
@@ -5061,20 +5061,20 @@ Platoon = Class(RNGAIPlatoon) {
                     elseif acuUnit then
                         targetPos = acuUnit:GetPosition()
                     end
-                   -- RNGLOG('Attempt to run away from high threat')
+                   --RNGLOG('Attempt to run away from high threat')
                     self:Stop()
                     self:MoveToLocation(RUtils.AvoidLocation(platLoc,targetPos,50), false)
                     coroutine.yield(60)
                     platLoc = GetPlatoonPosition(self)
                     local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, platLoc, 120, 'Enemy')
                     if massPoints then
-                       -- RNGLOG('Try to run to masspoint')
+                       --RNGLOG('Try to run to masspoint')
                         local massPointPos
                         for _, v in massPoints do
                             if not v.Dead then
                                 massPointPos = v:GetPosition()
                                 if VDist2Sq(massPointPos[1], massPointPos[2],platLoc[1], platLoc[3]) < VDist2Sq(massPointPos[1], massPointPos[2],targetPos[1], targetPos[3]) then
-                                   -- RNGLOG('Found a masspoint to run to')
+                                   --RNGLOG('Found a masspoint to run to')
                                     alternatePos = massPointPos
                                 end
                             end
@@ -5084,7 +5084,7 @@ Platoon = Class(RNGAIPlatoon) {
                         --RNGLOG('Moving to masspoint alternative at '..repr(alternatePos))
                         self:MoveToLocation(alternatePos, false)
                     else
-                       -- RNGLOG('No close masspoint try to find platoon to merge with')
+                       --RNGLOG('No close masspoint try to find platoon to merge with')
                         mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('MassRaidRNG')
                         if alternatePos then
                             self:MoveToLocation(alternatePos, false)
@@ -5095,7 +5095,7 @@ Platoon = Class(RNGAIPlatoon) {
                         local dist
                         local Stuck = 0
                         while PlatoonExists(aiBrain, self) do
-                           -- RNGLOG('Moving to alternate position')
+                           --RNGLOG('Moving to alternate position')
                             --RNGLOG('We are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                             coroutine.yield(10)
                             if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
@@ -5110,7 +5110,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
                                     self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 60, 30)
                                 end
-                               -- RNGLOG('Arrived at either masspoint or friendly massraid')
+                               --RNGLOG('Arrived at either masspoint or friendly massraid')
                                 break
                             end
                             if Lastdist ~= dist then
@@ -5191,11 +5191,11 @@ Platoon = Class(RNGAIPlatoon) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
-           -- RNGLOG('MassRaidAI restarting')
+           --RNGLOG('MassRaidAI restarting')
             if self.Zone then
-               -- RNGLOG('Platoon Zone is currently '..self.Zone)
+               --RNGLOG('Platoon Zone is currently '..self.Zone)
             else
-               -- RNGLOG('Zone is currently false')
+               --RNGLOG('Zone is currently false')
             end
             self:Stop()
             self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 80, 25)
@@ -5532,7 +5532,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     if not v.Dead then
                                         massPointPos = v:GetPosition()
                                         if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]) > 0.5 then
-                                           -- RNGLOG('Mex point valid angle '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]))
+                                           --RNGLOG('Mex point valid angle '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]))
                                             alternatePos = massPointPos
                                         end
                                     end
@@ -5576,11 +5576,11 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     if avoid then
-                       -- RNGLOG('We should be avoiding this unit if its threat is higher than ours')
+                       --RNGLOG('We should be avoiding this unit if its threat is higher than ours')
                     end
-                   -- RNGLOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
+                   --RNGLOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
                     if avoid and totalThreat > self.CurrentPlatoonThreat then
-                       -- RNGLOG('MoveWithMicro - Threat too high are we are in avoid mode')
+                       --RNGLOG('MoveWithMicro - Threat too high are we are in avoid mode')
                         local alternatePos = false
                         local mergePlatoon = false
                         if target and not target.Dead then
@@ -5592,28 +5592,28 @@ Platoon = Class(RNGAIPlatoon) {
                             self:MoveToLocation(RUtils.AvoidLocation(unitPos, PlatoonPosition, 50), false)
                             coroutine.yield(40)
                             PlatoonPosition = GetPlatoonPosition(self)
-                           -- RNGLOG('MoveWithMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
+                           --RNGLOG('MoveWithMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
                             local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, PlatoonPosition, 120, 'Enemy')
                             if massPoints then
-                               -- RNGLOG('MoveWithMicro - Try to find mass extractor')
+                               --RNGLOG('MoveWithMicro - Try to find mass extractor')
                                 local massPointPos
                                 for _, v in massPoints do
                                     if not v.Dead then
                                         massPointPos = v:GetPosition()
                                         if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.6 then
-                                           -- RNGLOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
+                                           --RNGLOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
                                             alternatePos = massPointPos
                                         end
                                     end
                                 end
                             end
                             if not alternatePos then
-                               -- RNGLOG('MoveWithMicro - No masspoint, look for closest platoon of massraidrng to run to')
+                               --RNGLOG('MoveWithMicro - No masspoint, look for closest platoon of massraidrng to run to')
                                 mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('MassRaidRNG')
                             end
                             if alternatePos then
                                 self:Stop()
-                               -- RNGLOG('MoveWithMicro - We found either an extractor or platoon')
+                               --RNGLOG('MoveWithMicro - We found either an extractor or platoon')
                                 self:MoveToLocation(alternatePos, false)
                                 while PlatoonExists(aiBrain, self) do
                                     --RNGLOG('Moving to alternate position')
@@ -5645,7 +5645,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         end
                                     end
                                     coroutine.yield(20)
-                                   -- RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
+                                   --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                                 end
                             end
                         end
@@ -5817,15 +5817,15 @@ Platoon = Class(RNGAIPlatoon) {
                             self:MoveToLocation(RUtils.AvoidLocation(acuPos, PlatoonPosition, 50), false)
                             coroutine.yield(40)
                             PlatoonPosition = GetPlatoonPosition(self)
-                           -- RNGLOG('Attempt to run from acu to adjacent zone')
+                           --RNGLOG('Attempt to run from acu to adjacent zone')
                             if not self.Zone then
-                               -- RNGLOG('Zone micro platoon has not zone, why not?')
+                               --RNGLOG('Zone micro platoon has not zone, why not?')
                             else
-                               -- RNGLOG('Current zone is '..self.Zone)
+                               --RNGLOG('Current zone is '..self.Zone)
                             end
                             if aiBrain.Zones.Land.zones[self.Zone].edges then
                                 for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
-                                   -- RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], acuPos[1], acuPos[3]))
+                                   --RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], acuPos[1], acuPos[3]))
                                     if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], acuPos[1], acuPos[3]) > 0.6 then
                                         alternateZone = v.zone.id
                                         alternatePos = v.zone.pos
@@ -5836,7 +5836,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('ZoneControlRNG')
                             end
                             if alternatePos then
-                               -- RNGLOG('Moving to adjacent zone and setting target zone')
+                               --RNGLOG('Moving to adjacent zone and setting target zone')
                                 self.TargetZone = alternateZone
                                 self:Stop()
                                 self:MoveToLocation(alternatePos, false)
@@ -5853,7 +5853,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
                                             self:MergeWithNearbyPlatoonsRNG('ZoneControlRNG', 60, 30)
                                         end
-                                       -- RNGLOG('Attempted merge and returning true for retreated')
+                                       --RNGLOG('Attempted merge and returning true for retreated')
                                         return true
                                     end
                                     if Lastdist ~= dist then
@@ -5871,50 +5871,50 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     end
-                   -- RNGLOG('MoveWithZoneMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
+                   --RNGLOG('MoveWithZoneMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
                     if totalThreat > self.CurrentPlatoonThreat then
-                       -- RNGLOG('MoveWithZoneMicro - Threat too high are we are in avoid mode')
+                       --RNGLOG('MoveWithZoneMicro - Threat too high are we are in avoid mode')
                         local alternatePos = false
                         local alternateZone = false
                         local mergePlatoon = false
                         if target and not target.Dead then
                             local unitPos = target:GetPosition() 
-                           -- RNGLOG('MoveWithZoneMicro - Attempt to run away from unit')
-                           -- RNGLOG('MoveWithZoneMicro - before run away we are  '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
-                           -- RNGLOG('The enemy unit is a '..target.UnitId)
+                           --RNGLOG('MoveWithZoneMicro - Attempt to run away from unit')
+                           --RNGLOG('MoveWithZoneMicro - before run away we are  '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
+                           --RNGLOG('The enemy unit is a '..target.UnitId)
                             local retreatPosition = RUtils.AvoidLocation(unitPos, PlatoonPosition, 50)
-                           -- RNGLOG('MoveWithZoneMicro - We are going to try move to this position '..repr(retreatPosition)..' Which is a distance of '..VDist3(PlatoonPosition, retreatPosition)..' from us')
+                           --RNGLOG('MoveWithZoneMicro - We are going to try move to this position '..repr(retreatPosition)..' Which is a distance of '..VDist3(PlatoonPosition, retreatPosition)..' from us')
                             self:Stop()
                             self:MoveToLocation(RUtils.AvoidLocation(unitPos, PlatoonPosition, 50), false)
                             coroutine.yield(40)
                             PlatoonPosition = GetPlatoonPosition(self)
-                           -- RNGLOG('MoveWithZoneMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
+                           --RNGLOG('MoveWithZoneMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
                             if not self.Zone then
-                               -- RNGLOG('Why do we have no zone on the platoon?')
+                               --RNGLOG('Why do we have no zone on the platoon?')
                                     self:ConfigurePlatoon()
                             else
-                               -- RNGLOG('Current zone is '..self.Zone)
+                               --RNGLOG('Current zone is '..self.Zone)
                             end
                             if aiBrain.Zones.Land.zones[self.Zone].edges then
                                 for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
-                                   -- RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
+                                   --RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
                                     if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]) > 0.6 then
                                         alternateZone = v.zone.id
                                         alternatePos = v.zone.pos
                                     end
                                 end
                             else
-                               -- RNGLOG('aiBrain.Zones.Land.zones[self.Zone].edges is nil ')
-                               -- RNGLOG('We are in zone '..self.Zone)
+                               --RNGLOG('aiBrain.Zones.Land.zones[self.Zone].edges is nil ')
+                               --RNGLOG('We are in zone '..self.Zone)
                             end
                             if not alternatePos then
-                               -- RNGLOG('MoveWithZoneMicro - No masspoint, look for closest platoon of massraidrng to run to')
+                               --RNGLOG('MoveWithZoneMicro - No masspoint, look for closest platoon of massraidrng to run to')
                                 mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('ZoneControlRNG')
                             end
                             if alternatePos then
                                 self.TargetZone = alternateZone
                                 self:Stop()
-                               -- RNGLOG('MoveWithZoneMicro - We found either a zone or platoon')
+                               --RNGLOG('MoveWithZoneMicro - We found either a zone or platoon')
                                 self:MoveToLocation(alternatePos, false)
                                 while PlatoonExists(aiBrain, self) do
                                     --RNGLOG('Moving to alternate position')
@@ -5945,7 +5945,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         end
                                     end
                                     coroutine.yield(20)
-                                   -- RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
+                                   --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                                 end
                             end
                         end
@@ -6721,13 +6721,13 @@ Platoon = Class(RNGAIPlatoon) {
             if not self.UsingTransport then
                 if aiBrain.BaseMonitor.AlertSounded or aiBrain.CDRUnit.Caution or aiBrain.BaseMonitor.ZoneAlertSounded then
                     if aiBrain.BaseMonitor.AlertSounded then
-                       -- RNGLOG('aiBrain.BaseMonitor.AlertSounded is true')
+                       --RNGLOG('aiBrain.BaseMonitor.AlertSounded is true')
                     end
                     if aiBrain.CDRUnit.Caution then
-                       -- RNGLOG('aiBrain.CDRUnit.Caution is true')
+                       --RNGLOG('aiBrain.CDRUnit.Caution is true')
                     end
                     if aiBrain.BaseMonitor.PlatoonAlertSounded then
-                       -- RNGLOG('aiBrain.BaseMonitor.PlatoonAlertSounded is true')
+                       --RNGLOG('aiBrain.BaseMonitor.PlatoonAlertSounded is true')
                     end
                     -- In the loop so they may be changed by other platoon things
                     local distressRange = self.PlatoonData.DistressRange or aiBrain.BaseMonitor.DefaultDistressRange
@@ -6737,15 +6737,15 @@ Platoon = Class(RNGAIPlatoon) {
                     reactionTime = reactionTime * 10
                     if platoonPos and not self.DistressCall then
                         -- Find a distress location within the platoons range
-                       -- RNGLOG('Movement Layer on platoon is '..self.MovementLayer)
+                       --RNGLOG('Movement Layer on platoon is '..self.MovementLayer)
                         local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange, threatThreshold, self.MovementLayer)
                         local moveLocation
 
                         -- We found a location within our range! Activate!
                         if distressLocation and AIAttackUtils.CanGraphToRNG(platoonPos, distressLocation, self.MovementLayer) then
                             --RNGLOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
-                           -- RNGLOG('Distress response activated for platoon at '..repr(GetPlatoonPosition(self)))
-                           -- RNGLOG('Distress location is '..repr(distressLocation))
+                           --RNGLOG('Distress response activated for platoon at '..repr(GetPlatoonPosition(self)))
+                           --RNGLOG('Distress location is '..repr(distressLocation))
                             --RNGLOG('PlatoonDistressTable'..repr(aiBrain.BaseMonitor.PlatoonDistressTable))
                             --RNGLOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
                             -- Backups old ai plan
@@ -6756,7 +6756,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
 
                             -- Continue to position until the distress call wanes
-                           -- RNGLOG('Start platoon response--LOGic')
+                           --RNGLOG('Start platoon response--LOGic')
                             repeat
                                 moveLocation = distressLocation
                                 self:Stop()
@@ -6771,15 +6771,15 @@ Platoon = Class(RNGAIPlatoon) {
                                         return
                                     end
                                     if VDist2Sq(platoonPos[1], platoonPos[3], distressLocation[1], distressLocation[3]) < 900 then
-                                       -- RNGLOG('Closer than 30 to distress location for platoon at '..repr(GetPlatoonPosition(self)))
+                                       --RNGLOG('Closer than 30 to distress location for platoon at '..repr(GetPlatoonPosition(self)))
                                         break
                                     end
                                 until not self:IsCommandsActive(cmd) or GetThreatAtPosition(aiBrain, moveLocation, 0, true, threatType) <= threatThreshold
-                               -- RNGLOG('Initial Distress Response Loop finished')
+                               --RNGLOG('Initial Distress Response Loop finished')
                                 local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, distressLocation, 'Attack', 80, categories.ALLUNITS, atkPri, false)
                                 local targetPos
                                 if target or acuInRange then
-                                   -- RNGLOG('Target or acu found in distress location 60 range, moving to attack')
+                                   --RNGLOG('Target or acu found in distress location 60 range, moving to attack')
                                     -- Should we just suicide into whatever it is or threat check and decide?
                                     if not target and acuInRange then
                                         targetPos = acuUnit:GetPosition()
@@ -6788,18 +6788,18 @@ Platoon = Class(RNGAIPlatoon) {
                                         targetPos = target:GetPosition()
                                     end
                                 else
-                                   -- RNGLOG('No target found in distressLocation radius of 80 for platoon at '..repr(GetPlatoonPosition(self)))
-                                   -- RNGLOG('Total threat detected was '..totalThreat)
+                                   --RNGLOG('No target found in distressLocation radius of 80 for platoon at '..repr(GetPlatoonPosition(self)))
+                                   --RNGLOG('Total threat detected was '..totalThreat)
                                 end
                                 if target then
-                                   -- RNGLOG('Target or acu found, moving to attack for platoon at '..repr(GetPlatoonPosition(self)))
+                                   --RNGLOG('Target or acu found, moving to attack for platoon at '..repr(GetPlatoonPosition(self)))
                                     while PlatoonExists(aiBrain, self) do
                                         self:Stop()
                                         self:SetPlatoonFormationOverride('NoFormation')
                                         self:AggressiveMoveToLocation(targetPos)
                                         coroutine.yield(reactionTime)
                                         if not target or target.Dead then
-                                           -- RNGLOG('Lost target for platoon at '..repr(GetPlatoonPosition(self)))
+                                           --RNGLOG('Lost target for platoon at '..repr(GetPlatoonPosition(self)))
                                             break
                                         end
                                     end
@@ -6807,11 +6807,11 @@ Platoon = Class(RNGAIPlatoon) {
 
                                 platoonPos = GetPlatoonPosition(self)
                                 if platoonPos then
-                                   -- RNGLOG('Looking for another distress location for platoon at '..repr(GetPlatoonPosition(self)))
+                                   --RNGLOG('Looking for another distress location for platoon at '..repr(GetPlatoonPosition(self)))
                                     -- Now that we have helped the first location, see if any other location needs the help
                                     distressLocation = aiBrain:BaseMonitorDistressLocationRNG(platoonPos, distressRange,threatThreshold, self.MovementLayer)
                                     if distressLocation then
-                                       -- RNGLOG('Location Found moving to position for platoon at '..repr(GetPlatoonPosition(self)))
+                                       --RNGLOG('Location Found moving to position for platoon at '..repr(GetPlatoonPosition(self)))
                                         if VDist2Sq(platoonPos[1], platoonPos[3], distressLocation[1], distressLocation[3]) > 900 then
                                             self:SetPlatoonFormationOverride('NoFormation')
                                             self:MoveToLocation(distressLocation, false)
@@ -6856,7 +6856,7 @@ Platoon = Class(RNGAIPlatoon) {
                 self.imapRangeConfig = self.imapRangeConfig - 1
             end
         end
-       -- RNGLOG('Ring value for extractor '..self.imapRangeConfig)
+       --RNGLOG('Ring value for extractor '..self.imapRangeConfig)
 
         while PlatoonExists(aiBrain, self) and pos do
             if not coreExtractorLocation then
@@ -8167,7 +8167,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                         if bestUnit then
-                           -- RNGLOG('Upgrading Best unit is true looking through platoon units')
+                           --RNGLOG('Upgrading Best unit is true looking through platoon units')
                             --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
                             for _, eng in platoonUnits do
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
@@ -8177,14 +8177,14 @@ Platoon = Class(RNGAIPlatoon) {
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
-                                        LOG('Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
+                                       --LOG('Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
                                         self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
                                     end
                                 end
                             end
                             break
                         else
-                           -- RNGLOG('No best unit found, looping to next in priority list')
+                           --RNGLOG('No best unit found, looping to next in priority list')
                         end
                     end
                 elseif assistData.type == 'AssistFactory' then
@@ -8208,7 +8208,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                         if bestUnit then
-                           -- RNGLOG('Factory Assist Best unit is true looking through platoon units')
+                           --RNGLOG('Factory Assist Best unit is true looking through platoon units')
                             --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
                             for _, eng in platoonUnits do
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
@@ -8218,14 +8218,14 @@ Platoon = Class(RNGAIPlatoon) {
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
-                                        LOG('Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
+                                       --LOG('Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
                                         self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
                                     end
                                 end
                             end
                             break
                         else
-                           -- RNGLOG('No best unit found, looping to next in priority list')
+                           --RNGLOG('No best unit found, looping to next in priority list')
                         end
                     end
                 end
@@ -8410,7 +8410,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     MexBuildAIRNG = function(self)
-       -- RNGLOG('MexBuildRun')
+       --RNGLOG('MexBuildRun')
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
         local cons = self.PlatoonData.Construction
@@ -8945,7 +8945,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
             if point then
-               -- RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
+               --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
             else
                 --RNGLOG('No priority found')
                 return false
@@ -9064,9 +9064,9 @@ Platoon = Class(RNGAIPlatoon) {
         local pathTimeout = 0
         while PlatoonExists(aiBrain, self) do
             if self.Zone then
-               -- RNGLOG('Trueplatoon Platoon Zone is currently '..self.Zone)
+               --RNGLOG('Trueplatoon Platoon Zone is currently '..self.Zone)
             else
-               -- RNGLOG('Trueplatoon Zone is currently false')
+               --RNGLOG('Trueplatoon Zone is currently false')
             end
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
