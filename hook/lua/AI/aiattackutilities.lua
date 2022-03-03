@@ -606,6 +606,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                     LOG('Run engineer wait during transport wait')
                     local eng = units[1]
                     local engPos = eng:GetPosition()
+                    local reclaiming = false
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                         local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
                         if enemyEngineer then
@@ -639,9 +640,16 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                                 if (b.MaxMassReclaim and b.MaxMassReclaim > 0) or (b.MaxEnergyReclaim and b.MaxEnergyReclaim > 10) then
                                     reclaimCount = reclaimCount + 1
                                     IssueReclaim({eng}, b)
+                                    eng.Active = true
+                                    reclaiming = true
                                 end
                             end
                         end
+                    end
+                    if reclaiming then
+                        coroutine.yield(50)
+                        reclaiming = false
+                        eng.Active = false
                     end
                 end
                 coroutine.yield(70)

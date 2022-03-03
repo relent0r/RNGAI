@@ -434,7 +434,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local currentTime = 0
         local idleCount = 0
         while reclaiming do
-            RNGLOG('* AI-RNG: Engineer is reclaiming')
+            --RNGLOG('* AI-RNG: Engineer is reclaiming')
             --self:SetCustomName('reclaim loop start')
             coroutine.yield(100)
             currentTime = currentTime + 10
@@ -876,33 +876,6 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
     end
 
     return false
-end
-
--- 99% of the below was Sprouto's work
-function StructureUpgradeInitialize(finishedUnit, aiBrain)
-    local StructureUpgradeThread = import('/lua/ai/aibehaviors.lua').StructureUpgradeThread
-    local structurePool = aiBrain.StructurePool
-    local AssignUnitsToPlatoon = moho.aibrain_methods.AssignUnitsToPlatoon
-    --RNGLOG('* AI-RNG: Structure Upgrade Initializing')
-    if EntityCategoryContains(categories.MASSEXTRACTION, finishedUnit) then
-        local extractorPlatoon = aiBrain:MakePlatoon('ExtractorPlatoon'..tostring(finishedUnit.Sync.id), 'none')
-        extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(finishedUnit.Sync.id)
-        extractorPlatoon.MovementLayer = 'Land'
-        --RNGLOG('* AI-RNG: Assigning Extractor to new platoon')
-        AssignUnitsToPlatoon(aiBrain, extractorPlatoon, {finishedUnit}, 'Support', 'none')
-        finishedUnit.PlatoonHandle = extractorPlatoon
-        extractorPlatoon:ForkThread( extractorPlatoon.ExtractorCallForHelpAIRNG, aiBrain )
-
-        if not finishedUnit.UpgradeThread then
-            --RNGLOG('* AI-RNG: Forking Upgrade Thread')
-            upgradeSpec = aiBrain:GetUpgradeSpec(finishedUnit)
-            --RNGLOG('* AI-RNG: UpgradeSpec'..repr(upgradeSpec))
-            finishedUnit.UpgradeThread = finishedUnit:ForkThread(StructureUpgradeThread, aiBrain, upgradeSpec, false)
-        end
-    end
-    if finishedUnit.UpgradeThread then
-        finishedUnit.Trash:Add(finishedUnit.UpgradeThread)
-    end
 end
 
 function InitialMassMarkersInWater(aiBrain)
@@ -3450,7 +3423,7 @@ MapReclaimAnalysis = function(aiBrain)
                 end
             end
             aiBrain.MapReclaimTable = reclaimGrid
-            RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
+            --RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
         end
         coroutine.yield(300)
     end

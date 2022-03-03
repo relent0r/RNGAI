@@ -8,6 +8,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
+        LOG('Engineer has just finished building '..finishedUnit.UnitId..' engineer sync id '..unit.Sync.id)
         if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
             LOG('RNG UnitConstructionFinished has fired')
             self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
@@ -20,15 +21,6 @@ EngineerManager = Class(RNGEngineerManager) {
             local StructurePool = self.Brain.StructurePool
             --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
             self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
-            --Debug RNGLOG
-            local platoonUnits = StructurePool:GetPlatoonUnits()
-            --RNGLOG('* AI-RNG: StructurePool now has :'..table.getn(platoonUnits))
-            local upgradeID = unitBp.General.UpgradesTo or false
-			if upgradeID and unitBp then
-				--RNGLOG('* AI-RNG: UpgradeID')
-                --self.Brain:ForkThread(self.Brain.ExtractorInitialDelay, unit)
-				--RUtils.StructureUpgradeInitialize(finishedUnit, self.Brain)
-            end
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
             self:AddUnit(finishedUnit)
@@ -36,9 +28,9 @@ EngineerManager = Class(RNGEngineerManager) {
         local guards = unit:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
+                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
                     LOG('Unit Construction finished has fired for platoon '..v.AssistPlatoon.PlanName)
-                    --v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
+                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
                 end
@@ -58,16 +50,15 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
+        --LOG('Engineer trying to have task assigned '..unit.Sync.id)
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
-            if unit.Upgrading then
-                --RNGLOG('Unit Is upgrading, applying 5 second delay')
-            end
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
             --RNGLOG('CDR Combat Delay')
             self:DelayAssign(unit, 50)
             return
         end
+        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.Sync.id)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
             --RNGLOG('UnitBeingAssist Delay')

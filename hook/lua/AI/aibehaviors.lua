@@ -80,6 +80,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.DistanceToHome = 0
     cdr.Health = 0
     cdr.Active = false
+    cdr.movetopos = false
     cdr.Retreating = false
     cdr.SnipeMode = false
     cdr.SuicideMode = false
@@ -121,6 +122,14 @@ function DrawACUInfo(cdr)
         if cdr.Position then
             DrawCircle(cdr.Position,80,'aaffaa')
             DrawCircle(cdr.Position,70,'aaffaa')
+        end
+        if cdr.TargetPosition[1] then
+            DrawLine(cdr.Position, cdr.TargetPosition, 'aaffaa')
+            DrawCircle(cdr.TargetPosition,20,'f44336')
+        end
+        if cdr.movetopos[1] then
+            DrawLine(cdr.Position, cdr.movetopos, 'aaffaa')
+            DrawCircle(cdr.movetopos,30,'aaffaa')
         end
         coroutine.yield( 2 )
     end
@@ -198,10 +207,10 @@ function CDRBrainThread(cdr)
             if not v.Ally then
                 local enemyStartPos = {}
                 if v.Position[1] and gameTime - 60 < v.LastSpotted then
-                    LOG('Enemy Start Position '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
+                    --LOG('Enemy Start Position '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
                     for c, b in aiBrain.EnemyIntel.EnemyStartLocations do
                         if b.Index == k then
-                            LOG('Enemy ACU distance from start position is '..VDist2Sq(v.Position[1], v.Position[3], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[1], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[3]))
+                            --LOG('Enemy ACU distance from start position is '..VDist2Sq(v.Position[1], v.Position[3], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[1], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[3]))
                             enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[c].Position
                         end
                     end
@@ -645,6 +654,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     plat.BuilderName = 'CDR Active Movement'
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
     RNGLOG('Moving ACU to position')
+    cdr.movetopos = position
     if retreat then
         path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
     else
@@ -681,6 +691,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             if platoonDistance < 225 then
                                 RNGLOG('Close to platoon position clear and return')
                                 IssueClearCommands({cdr})
+                                cdr.movetopos = false
                                 return
                             end
                             if platoonDistance < 22500 then
@@ -688,9 +699,10 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                                 IssueClearCommands({cdr})
                                 IssueMove({cdr}, platoonPosition)
                             end
-                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 6400 then
+                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 2500 then
                                 RNGLOG('EnemyThreat low, cancel retreat')
                                 IssueClearCommands({cdr})
+                                cdr.movetopos = false
                                 return
                             end
                         else
@@ -771,6 +783,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     if aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon') and cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat then
                         RNGLOG('EnemyThreat low and acusupport present, cancel retreat')
                         IssueClearCommands({cdr})
+                        cdr.movetopos = false
                         return
                     end
                end
@@ -786,6 +799,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     else
         RNGLOG('No path to retreat position')
     end
+    cdr.movetopos = false
 end
 
 function CDRExpansionRNG(aiBrain, cdr)
@@ -1148,7 +1162,6 @@ function CDROverChargeRNG(aiBrain, cdr)
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
-    RNGLOG('CDR max range is '..maxRadius)
     
     -- Take away engineers too
     local cdrPos = cdr.CDRHome
@@ -1194,6 +1207,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
         local enemyThreat
         local snipeAttempt = false
+        RNGLOG('CDR max range is '..maxRadius)
         
         repeat
             overCharging = false
@@ -1222,14 +1236,13 @@ function CDROverChargeRNG(aiBrain, cdr)
                             local targetLayer = target:GetCurrentLayer()
                             if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                                not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                                RNGLOG('Layer not correct')
                                 break
                             end
                         end
                         target = false
                     end
                     coroutine.yield(1)
-                    --RNGLOG('No target found in sweep increasing search radius')
+                    RNGLOG('No target found in sweep increasing search radius of '..searchRadius)
                 until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
 
                 if target then
@@ -1248,20 +1261,19 @@ function CDROverChargeRNG(aiBrain, cdr)
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
                         RNGLOG('ACU OverCharge Enemy Threat is '..enemyThreat)
                         local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
-                        RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
                         if enemyCdrThreat > 0 then
-                            enemyCdrThreat = 25
+                            realEnemyThreat = enemyThreat - (enemyCdrThreat - 5)
+                        else
+                            realEnemyThreat = enemyThreat
                         end
+                        RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
                         local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 70, 'Ally')
                         local friendlyUnitThreat = 0
                         for k,v in friendlyUnits do
                             if v and not v.Dead then
                                 if EntityCategoryContains(categories.COMMAND, v) then
-                                    if v:HasEnhancement('HeavyAntiMatterCannon') or v:HasEnhancement('CrysalisBeam') or v:HasEnhancement('CoolingUpgrade') or v:HasEnhancement('RateOfFire') then
-                                        friendlyUnitThreat = friendlyUnitThreat + 25
-                                    else
-                                        friendlyUnitThreat = friendlyUnitThreat + 15
-                                    end
+                                    friendlyUnitThreat = v:EnhancementThreatReturn()
+                                    LOG('Friendly ACU enhancement threat '..friendlyUnitThreat)
                                 else
                                     --RNGLOG('Unit ID is '..v.UnitId)
                                     bp = ALLBPS[v.UnitId].Defense
@@ -1273,10 +1285,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                             end
                         end
                         RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
-                        if (enemyThreat - (enemyCdrThreat / 1.4)) >= friendlyUnitThreat and not cdr.SuicideMode then
+                        if realEnemyThreat >= friendlyUnitThreat and not cdr.SuicideMode then
                             --RNGLOG('Enemy Threat too high')
                             if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 1600 then
                                 RNGLOG('Threat high and cdr close, retreat')
+                                RNGLOG('Enemy Threat number '..realEnemyThreat)
                                 RNGLOG('Friendly threat was '..friendlyUnitThreat)
                                 cdr.Caution = true
                                 return CDRRetreatRNG(aiBrain, cdr)
@@ -1339,7 +1352,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 plat.BuilderName = 'CDR Combat'
                                 aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                             end
-                            local checkPoints = DrawCirclePoints(6, 10, movePos)
+                            local checkPoints = DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
                                 RNGLOG('Check points for alternative fire position '..repr(v))
@@ -1813,301 +1826,6 @@ function SetAcuSnipeMode(unit, bool)
         wep:SetWeaponPriorities(targetPriorities)
     end
 end
-
-
---[[
-    -- 80% of the below was Sprouto's work
-    This is no longer being used, replaced with a centralized version, but it still holds a bunch of information that alot of time was spent looking at.
-function StructureUpgradeThread(unit, aiBrain, upgradeSpec, bypasseco) 
-    --RNGLOG('* AI-RNG: Starting structure thread upgrade for'..aiBrain.Nickname)
-
-    local unitBp = unit:GetBlueprint()
-    local upgradeID = unitBp.General.UpgradesTo or false
-    local upgradebp = false
-    local unitType, unitTech = StructureTypeCheck(aiBrain, unitBp)
-
-    if upgradeID then
-        upgradebp = aiBrain:GetUnitBlueprint(upgradeID) or false
-    end
-
-    if not (upgradeID and upgradebp) then
-        unit.UpgradeThread = nil
-        unit.UpgradesComplete = true
-        --RNGLOG('* AI-RNG: upgradeID or upgradebp is false, returning')
-        return
-    end
-
-    local upgradeable = true
-    local upgradeIssued = false
-
-    if not bypasseco then
-        local bypasseco = false
-    end
-    -- Eco requirements
-    local massNeeded = upgradebp.Economy.BuildCostMass
-	local energyNeeded = upgradebp.Economy.BuildCostEnergy
-    local buildtime = upgradebp.Economy.BuildTime
-    --RNGLOG('Mass Needed '..massNeeded)
-    --RNGLOG('Energy Needed '..energyNeeded)
-    -- build rate
-    local buildrate = unitBp.Economy.BuildRate
-
-    -- production while upgrading
-    local massProduction = unitBp.Economy.ProductionPerSecondMass or 0
-    local energyProduction = unitBp.Economy.ProductionPerSecondEnergy or 0
-    
-    local massTrendNeeded = ( math.min( 0,(massNeeded / buildtime) * buildrate) - massProduction) * .1
-    --RNGLOG('Mass Trend Needed for '..unitTech..' Extractor :'..massTrendNeeded)
-    local energyTrendNeeded = ( math.min( 0,(energyNeeded / buildtime) * buildrate) - energyProduction) * .1
-    --RNGLOG('Energy Trend Needed for '..unitTech..' Extractor :'..energyTrendNeeded)
-    local energyMaintenance = (upgradebp.Economy.MaintenanceConsumptionPerSecondEnergy or 10) * .1
-
-    -- Define Economic Data
-    local eco = aiBrain.EcoData.OverTime -- mother of god I'm stupid this is another bit of Sprouto genius.
-    local massStorage
-    local energyStorage
-    local massStorageRatio
-    local energyStorageRatio
-    local massIncome
-    local massRequested
-    local energyIncome
-    local energyRequested
-    local massTrend
-    local energyTrend
-    local massEfficiency
-    local energyEfficiency
-    local ecoTimeOut
-    local upgradeNumLimit
-    local extractorUpgradeLimit = 0
-    local extractorClosest = false
-    local multiplier
-    local initial_delay = 0
-    local ecoStartTime = GetGameTimeSeconds()
-
-    if aiBrain.CheatEnabled then
-        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
-    else
-        multiplier = 1
-    end
-
-    if unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Aggressive' then
-        ecoTimeOut = (320 / multiplier)
-    elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Aggressive' then
-        ecoTimeOut = (650 / multiplier)
-    elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (420 / multiplier)
-    elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Normal' then
-        ecoTimeOut = (860 / multiplier)
-    elseif unitTech == 'TECH1' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (420 / multiplier)
-    elseif unitTech == 'TECH2' and aiBrain.UpgradeMode == 'Caution' then
-        ecoTimeOut = (880 / multiplier)
-    end
-
-    --RNGLOG('Multiplier is '..multiplier)
-    --RNGLOG('Initial Delay is before any multiplier is '..upgradeSpec.InitialDelay)
-    --RNGLOG('Initial Delay is '..(upgradeSpec.InitialDelay / multiplier))
-    --RNGLOG('Eco timeout for Tech '..unitTech..' Extractor is '..ecoTimeOut)
-    --RNGLOG('* AI-RNG: Initial Variables set')
-    while initial_delay < (upgradeSpec.InitialDelay / multiplier) do
-		if GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 900 and unit:GetFractionComplete() == 1 then
-            initial_delay = initial_delay + 10
-            unit.InitialDelay = true
-            if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-                initial_delay = upgradeSpec.InitialDelay
-            end
-        end
-        --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
-		coroutine.yield(100)
-    end
-    unit.InitialDelay = false
-    LOG('Returning from extractorUpgradeThread')
-    unit.CentralBrainExtractorUpgrade = true
-    
-    -- Main Upgrade Loop
-    while ((not unit.Dead) or unit.Sync.id) and upgradeable and not upgradeIssued do
-        --RNGLOG('* AI-RNG: Upgrade main loop starting for'..aiBrain.Nickname)
-        if unit.CentralBrainExtractorUpgrade then
-            return
-        end
-        coroutine.yield(upgradeSpec.UpgradeCheckWait * 10)
-        upgradeSpec = aiBrain:GetUpgradeSpec(unit)
-        --RNGLOG('Upgrade Spec '..repr(upgradeSpec))
-        --RNGLOG('Current low mass trigger '..upgradeSpec.MassLowTrigger)
-        if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-            --RNGLOG('Eco Bypass is True')
-            bypasseco = true
-        end
-        if bypasseco and not (GetEconomyStored( aiBrain, 'MASS') > ( massNeeded * 1.6 ) and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.0 ) then
-            upgradeNumLimit = StructureUpgradeNumDelay(aiBrain, unitType, unitTech)
-            if unitTech == 'TECH1' then
-                extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH1
-            elseif unitTech == 'TECH2' then
-                extractorUpgradeLimit = aiBrain.EcoManager.ExtractorUpgradeLimit.TECH2
-            end
-            --RNGLOG('UpgradeNumLimit is '..upgradeNumLimit)
-            --RNGLOG('extractorUpgradeLimit is '..extractorUpgradeLimit)
-            if upgradeNumLimit >= extractorUpgradeLimit then
-                coroutine.yield(10)
-                continue
-            end
-        end
-
-
-
-        extractorClosest = ExtractorClosest(aiBrain, unit, unitBp)
-        if not extractorClosest then
-            --RNGLOG('ExtractorClosest is false')
-            coroutine.yield(10)
-            continue
-        end
-        if (not unit.MAINBASE) or (unit.MAINBASE and not bypasseco and GetEconomyStored( aiBrain, 'MASS') < (massNeeded * 0.5)) then
-            if UnitRatioCheckRNG( aiBrain, 1.7, categories.MASSEXTRACTION * categories.TECH1, '>=', categories.MASSEXTRACTION * categories.TECH2 ) and unitTech == 'TECH2' then
-                --RNGLOG('Too few tech2 extractors to go tech3')
-                ecoStartTime = ecoStartTime + upgradeSpec.UpgradeCheckWait
-                coroutine.yield(10)
-                continue
-            end
-        end
-        if unit.MAINBASE then
-            --RNGLOG('MAINBASE Extractor')
-        end
-        --RNGLOG('Current Upgrade Limit is :'..upgradeNumLimit)
-        
-        --RNGLOG('Upgrade Issued '..aiBrain.UpgradeIssued..' Upgrade Issued Limit '..aiBrain.UpgradeIssuedLimit)
-        if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
-            --RNGLOG('* AI-RNG:'..aiBrain.Nickname)
-            --RNGLOG('* AI-RNG: UpgradeIssues and UpgradeIssuedLimit are set')
-            massStorage = GetEconomyStored( aiBrain, 'MASS')
-            --RNGLOG('* AI-RNG: massStorage'..massStorage)
-            energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
-            --RNGLOG('* AI-RNG: energyStorage'..energyStorage)
-            massStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS')
-            --RNGLOG('* AI-RNG: massStorageRatio'..massStorageRatio)
-            energyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY')
-            --RNGLOG('* AI-RNG: energyStorageRatio'..energyStorageRatio)
-            massIncome = GetEconomyIncome(aiBrain, 'MASS')
-            --RNGLOG('* AI-RNG: massIncome'..massIncome)
-            massRequested = GetEconomyRequested(aiBrain, 'MASS')
-            --RNGLOG('* AI-RNG: massRequested'..massRequested)
-            energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
-            --RNGLOG('* AI-RNG: energyIncome'..energyIncome)
-            energyRequested = GetEconomyRequested(aiBrain, 'ENERGY')
-            --RNGLOG('* AI-RNG: energyRequested'..energyRequested)
-            massTrend = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime
-            --RNGLOG('* AI-RNG: massTrend'..massTrend)
-            energyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
-            --RNGLOG('* AI-RNG: energyTrend'..energyTrend)
-            massEfficiency = math.min(massIncome / massRequested, 2)
-            --RNGLOG('* AI-RNG: massEfficiency'..massEfficiency)
-            energyEfficiency = math.min(energyIncome / energyRequested, 2)
-            --RNGLOG('* AI-RNG: energyEfficiency'..energyEfficiency)
-            
-            if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= upgradeSpec.MassLowTrigger and massEfficiency >= upgradeSpec.MassLowTrigger and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= upgradeSpec.EnergyLowTrigger and energyEfficiency >= upgradeSpec.EnergyLowTrigger)
-                or ((massStorageRatio > .60 and energyStorageRatio > .40))
-                or (massStorage > (massNeeded * .7) and energyStorage > (energyNeeded * .7 ) ) or bypasseco then
-                    if bypasseco then
-                        --RNGLOG('Low Triggered bypasseco')
-                    else
-                        --RNGLOG('* AI-RNG: low_trigger_good = true')
-                    end
-                --RNGLOG('* AI-RNG: low_trigger_good = true')
-            else
-                coroutine.yield(10)
-                continue
-            end
-
-            if ( massTrend >= massTrendNeeded and energyTrend >= energyTrendNeeded and energyTrend >= energyMaintenance )
-				or ( massStorage >= (massNeeded * .7) and energyStorage > (energyNeeded * .7) ) or bypasseco then
-				-- we need to have 15% of the resources stored -- some things like MEX can bypass this last check
-				if (massStorage > ( massNeeded * .15 * upgradeSpec.MassLowTrigger) and energyStorage > ( energyNeeded * .15 * upgradeSpec.EnergyLowTrigger)) or bypasseco then
-                    if aiBrain.UpgradeIssued < aiBrain.UpgradeIssuedLimit then
-						if not unit.Dead then
-
-                            upgradeIssued = true
-                            IssueUpgrade({unit}, upgradeID)
-
-                            -- if upgrade issued and not completely full --
-                            if massStorageRatio < 1 or energyStorageRatio < 1 then
-                                ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod)  -- delay the next upgrade by the full amount
-                            else
-                                ForkThread(StructureUpgradeDelay, aiBrain, aiBrain.UpgradeIssuedPeriod * .5)     -- otherwise halve the delay period
-                            end
-
-                            if ScenarioInfo.StructureUpgradeDialog then
-                                --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." upgrading to "..repr(upgradeID).." "..repr(ALLBPS[upgradeID].Description).." at "..GetGameTimeSeconds() )
-                            end
-
-                            repeat
-                                coroutine.yield(50)
-                            until unit.Dead or (unit.UnitBeingBuilt:GetBlueprint().BlueprintId == upgradeID) -- Fix this!
-                        end
-
-                        if unit.Dead then
-                            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." to "..upgradeID.." failed.  Dead is "..repr(unit.Dead))
-                            upgradeIssued = false
-                        end
-
-                        if upgradeIssued then
-                            coroutine.yield(10)
-                            continue
-                        end
-                    end
-                end
-            else
-                if ScenarioInfo.StructureUpgradeDialog then
-                    if not ( massTrend >= massTrendNeeded ) then
-                        --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS Trend trigger "..massTrend.." needed "..massTrendNeeded)
-                    end
-                    if not ( energyTrend >= energyTrendNeeded ) then
-                        --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER Trend trigger "..energyTrend.." needed "..energyTrendNeeded)
-                    end
-                    if not (energyTrend >= energyMaintenance) then
-                        --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS Maintenance trigger "..energyTrend.." "..energyMaintenance)  
-                    end
-                    if not ( massStorage >= (massNeeded * .8)) then
-                        --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS MASS storage trigger "..massStorage.." needed "..(massNeeded*.8) )
-                    end
-                    if not (energyStorage > (energyNeeded * .4)) then
-                        --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." STRUCTUREUpgrade "..unit.Sync.id.." "..unit:GetBlueprint().Description.." FAILS ENER storage trigger "..energyStorage.." needed "..(energyNeeded*.4) )
-                    end
-                end
-            end
-        end
-    end
-
-    if upgradeIssued then
-		--RNGLOG('* AI-RNG: upgradeIssued is true')
-		unit.Upgrading = true
-        unit.DesiresAssist = true
-        local unitbeingbuiltbp = false
-		
-		local unitbeingbuilt = unit.UnitBeingBuilt
-        unitbeingbuiltbp = unitbeingbuilt:GetBlueprint()
-        upgradeID = unitbeingbuiltbp.General.UpgradesTo or false
-        --RNGLOG('* AI-RNG: T1 extractor upgrading to T2 then upgrades to :'..upgradeID)
-		
-		-- if the upgrade has a follow on upgrade - start an upgrade thread for it --
-        if upgradeID and not unitbeingbuilt.Dead then
-			upgradeSpec.InitialDelay = upgradeSpec.InitialDelay + 60			-- increase delay before first check for next upgrade
-            unitbeingbuilt.DesiresAssist = true			-- let engineers know they can assist this upgrade
-            --RNGLOG('* AI-RNG: Forking another instance of StructureUpgradeThread')
-			unitbeingbuilt.UpgradeThread = unitbeingbuilt:ForkThread( StructureUpgradeThread, aiBrain, upgradeSpec, bypasseco )
-        end
-		-- assign mass extractors to their own platoon 
-		if (not unitbeingbuilt.Dead) and EntityCategoryContains( categories.MASSEXTRACTION, unitbeingbuilt) then
-			local extractorPlatoon = MakePlatoon( aiBrain,'ExtractorPlatoon'..tostring(unitbeingbuilt.Sync.id), 'none')
-			extractorPlatoon.BuilderName = 'ExtractorPlatoon'..tostring(unitbeingbuilt.Sync.id)
-            extractorPlatoon.MovementLayer = 'Land'
-            --RNGLOG('* AI-RNG: Extractor Platoon name is '..extractorPlatoon.BuilderName)
-			AssignUnitsToPlatoon( aiBrain, extractorPlatoon, {unitbeingbuilt}, 'Support', 'none' )
-			extractorPlatoon:ForkThread( extractorPlatoon.ExtractorCallForHelpAIRNG, aiBrain )
-		elseif (not unitbeingbuilt.Dead) then
-            AssignUnitsToPlatoon( aiBrain, aiBrain.StructurePool, {unitbeingbuilt}, 'Support', 'none' )
-		end
-        unit.UpgradeThread = nil
-	end
-end]]
 
 function StructureUpgradeDelay( aiBrain, delay )
 

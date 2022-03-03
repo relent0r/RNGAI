@@ -100,8 +100,8 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         local guards = factory:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    --v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
+                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
+                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
                 end
