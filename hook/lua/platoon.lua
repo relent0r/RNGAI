@@ -120,7 +120,10 @@ Platoon = Class(RNGAIPlatoon) {
                 else
                     return
                 end
+                local oldPlatPos = GetPlatoonPosition(self)
+                local stuckCount = 0
                 while PlatoonExists(aiBrain, self) do
+                    coroutine.yield(20)
                     currentPlatPos = GetPlatoonPosition(self)
                     if aiBrain.EnemyIntel.EnemyStartLocations then
                         if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
@@ -157,13 +160,18 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     end
-                    coroutine.yield(20)
                     if (target.Dead or not target or target:BeenDestroyed()) then
                         --RNGLOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
                         break
                     end
+                    if VDist3Sq(oldPlatPos, currentPlatPos) < 4 then
+                        stuckCount = stuckCount + 1
+                        if stuckCount > 5 then
+                            break
+                        end
+                    end
                 end
-                coroutine.yield(20)
+                coroutine.yield(10)
             end
             if not PlatoonExists(aiBrain, self) then
                 return
@@ -7471,6 +7479,7 @@ Platoon = Class(RNGAIPlatoon) {
                 -- only have one unit in the list; assist it
                 local low = false
                 local bestUnit = false
+                local highestTier = 0
                 for k,v in assistList do
                     --DUNCAN - check unit is inside assist range 
                     local unitPos = v:GetPosition()
@@ -7485,6 +7494,14 @@ Platoon = Class(RNGAIPlatoon) {
                             bestUnit = v
                         end
                     -- Find the unit with the least number of assisters; assist it
+                    elseif assistData.AssistHighestTier then
+                        if (not low or dist < low) and NumAssist < 20 and dist < assistRange then
+                            if EntityCategoryContains( categories.TECH3, v) then
+                                highestTier = 3
+                                low = dist
+                                bestUnit = v
+                            end
+                        end
                     else
                         if (not low or NumAssist < low) and NumAssist < 20 and dist < assistRange then
                             low = NumAssist

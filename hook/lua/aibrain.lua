@@ -2467,6 +2467,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGLOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
                     local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
                     LOG('ArmyPool Engineer count is '..poolPlatoon:PlatoonCategoryCount(categories.ENGINEER))
+                    for k, v in poolPlatoon:GetPlatoonUnits() do
+                        if not v.CDRHome and v.Active then
+                            LOG('There is an engineer in the army pool with Active set '..v.UnitId)
+                        end
+                    end
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
