@@ -1631,7 +1631,11 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                     continue
                 end
                 if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
-                    totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                    if platoon.MovementLayer == 'Water' then
+                        totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel + ALLBPS[Target.UnitId].Defense.SubThreatLevel
+                    else
+                        totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                    end
                     unitThreatTable[Target.Sync.id] = true
                     if ALLBPS[Target.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' and ALLBPS[Target.UnitId].Weapon[1].MaxRadius > defenseRange then
                         defenseRange = ALLBPS[Target.UnitId].Weapon[1].MaxRadius
