@@ -310,7 +310,7 @@ Platoon = Class(RNGAIPlatoon) {
         local rangeModifier = 0
         local atkPri = {}
         self:ConfigurePlatoon()
-        LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
+        --LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
         if self.PlatoonData.PrioritizedCategories then
             for k,v in self.PlatoonData.PrioritizedCategories do
                 RNGINSERT(atkPri, v)
@@ -1128,7 +1128,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                 if RNGGETN(enemyUnitCheck) > 0 then
                                                     for _, v in enemyUnitCheck do
                                                         if scout.UnitId == 'xsl0101' and EntityCategoryContains(categories.ENGINEER - categories.COMMAND, v) then
-                                                            LOG('Seraphim scout vs engineer')
+                                                            --LOG('Seraphim scout vs engineer')
                                                             self:Stop()
                                                             IssueAttack({scout}, v)
                                                             coroutine.yield(40)
@@ -1267,7 +1267,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.scoutUnit = false
         local atkPri = { categories.MOBILE * categories.LAND }
         self:ConfigurePlatoon()
-        LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
+        --LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
 
         while PlatoonExists(aiBrain, self) do
             local platoonPos = GetPlatoonPosition(self)
@@ -5545,7 +5545,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     if not v.Dead then
                                         massPointPos = v:GetPosition()
                                         if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]) > 0.5 then
-                                            RNGLOG('Mex point valid angle '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]))
+                                            --LOG('Mex point valid angle '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]))
                                             alternatePos = massPointPos
                                         end
                                     end
@@ -5588,45 +5588,42 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                         end
                     end
-                    if avoid then
-                        RNGLOG('We should be avoiding this unit if its threat is higher than ours')
-                    end
-                    RNGLOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
+                    --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
                     if avoid and totalThreat > self.CurrentPlatoonThreat then
-                        RNGLOG('MoveWithMicro - Threat too high are we are in avoid mode')
+                        --LOG('MoveWithMicro - Threat too high are we are in avoid mode')
                         local alternatePos = false
                         local mergePlatoon = false
                         if target and not target.Dead then
                             local unitPos = target:GetPosition() 
-                            RNGLOG('MoveWithMicro - Attempt to run away from unit')
-                            RNGLOG('MoveWithMicro - before run away we are  '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
-                            RNGLOG('The enemy unit is a '..target.UnitId)
+                            --LOG('MoveWithMicro - Attempt to run away from unit')
+                            --LOG('MoveWithMicro - before run away we are  '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
+                            --LOG('The enemy unit is a '..target.UnitId)
                             self:Stop()
                             self:MoveToLocation(RUtils.AvoidLocation(unitPos, PlatoonPosition, 50), false)
                             coroutine.yield(40)
                             PlatoonPosition = GetPlatoonPosition(self)
-                            RNGLOG('MoveWithMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
+                            --LOG('MoveWithMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
                             local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, PlatoonPosition, 120, 'Enemy')
                             if massPoints then
-                                RNGLOG('MoveWithMicro - Try to find mass extractor')
+                                --LOG('MoveWithMicro - Try to find mass extractor')
                                 local massPointPos
                                 for _, v in massPoints do
                                     if not v.Dead then
                                         massPointPos = v:GetPosition()
                                         if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.6 then
-                                            RNGLOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
+                                            --LOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
                                             alternatePos = massPointPos
                                         end
                                     end
                                 end
                             end
                             if not alternatePos then
-                                RNGLOG('MoveWithMicro - No masspoint, look for closest platoon of massraidrng to run to')
+                                --LOG('MoveWithMicro - No masspoint, look for closest platoon of massraidrng to run to')
                                 mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('MassRaidRNG')
                             end
                             if alternatePos then
                                 self:Stop()
-                                RNGLOG('MoveWithMicro - We found either an extractor or platoon')
+                                --LOG('MoveWithMicro - We found either an extractor or platoon')
                                 self:MoveToLocation(alternatePos, false)
                                 while PlatoonExists(aiBrain, self) do
                                     --RNGLOG('Moving to alternate position')
@@ -5658,7 +5655,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         end
                                     end
                                     coroutine.yield(20)
-                                    RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
+                                    --LOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                                 end
                             end
                         end
@@ -5685,7 +5682,7 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                         coroutine.yield(20)
                         if self.PlatoonData.Avoid then
-                            LOG('MassRaidRNG Avoid while in combat true')
+                            --LOG('MassRaidRNG Avoid while in combat true')
                             PlatoonPosition = GetPlatoonPosition(self)
                             local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), PlatoonPosition, 40, 'Enemy')
                             totalThreat = 0
@@ -5712,7 +5709,7 @@ Platoon = Class(RNGAIPlatoon) {
                             end
                             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                             if totalThreat > self.CurrentPlatoonThreat then
-                                LOG('MassRaidRNG trying to avoid combat then breaking target loop')
+                                --LOG('MassRaidRNG trying to avoid combat then breaking target loop')
                                 self:MoveToLocation(RUtils.AvoidLocation(enemyUnitPos, PlatoonPosition, 60), false)
                                 coroutine.yield(40)
                                 break
