@@ -152,6 +152,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                     return self:SetAIPlanRNG('AirHuntAIRNG')
                                                 end
                                             else
+                                                coroutine.yield(1)
                                                 return
                                             end
                                         end
@@ -199,6 +200,9 @@ Platoon = Class(RNGAIPlatoon) {
                             if target then
                                 self:SetAIPlanRNG('AirHuntAIRNG')
                             end
+                        else
+                            coroutine.yield(1)
+                            return
                         end
                     end
                 end
@@ -6842,6 +6846,7 @@ Platoon = Class(RNGAIPlatoon) {
                             -- Continue to position until the distress call wanes
                             RNGLOG('Start platoon response logic')
                             repeat
+                                RNGLOG('Start platoon response loop')
                                 moveLocation = distressLocation
                                 self:Stop()
                                 self:SetPlatoonFormationOverride('NoFormation')
@@ -6849,6 +6854,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 coroutine.yield(20)
                                 RNGLOG('Moving to distressLocation for platoon at '..repr(GetPlatoonPosition(self)))
                                 repeat
+                                    RNGLOG('Start distressLocation movement loop')
                                     coroutine.yield(reactionTime)
                                     platoonPos = GetPlatoonPosition(self)
                                     if not PlatoonExists(aiBrain, self) then
@@ -6858,6 +6864,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         RNGLOG('Closer than 30 to distress location for platoon at '..repr(GetPlatoonPosition(self)))
                                         break
                                     end
+                                    RNGLOG('End distressLocation movement loop')
                                 until not self:IsCommandsActive(cmd) or GetThreatAtPosition(aiBrain, moveLocation, 0, true, threatType) <= threatThreshold
                                 RNGLOG('Initial Distress Response Loop finished')
                                 local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, distressLocation, 'Attack', 80, categories.ALLUNITS, atkPri, false)
@@ -6903,6 +6910,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     end
                                 end
                                 coroutine.yield(10)
+                                RNGLOG('End platoon response loop')
                             -- If no more calls or we are at the location; break out of the function
                             until not distressLocation or (distressLocation[1] == moveLocation[1] and distressLocation[3] == moveLocation[3])
 

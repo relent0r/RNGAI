@@ -2515,15 +2515,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
                     --RNGLOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     --RNGLOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
-                    --RNGLOG('Current Land Ratio is '..self.ProductionRatios['Land'])
-                    --RNGLOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
-                    --RNGLOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                    --RNGLOG('Current Air Ratio is '..self.ProductionRatios['Air'])
-                    --RNGLOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
-                    --RNGLOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
-                    --RNGLOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
-                    --RNGLOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
-                    --RNGLOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
+                    RNGLOG('Current Land Ratio is '..self.ProductionRatios['Land'])
+                    RNGLOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
+                    RNGLOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
+                    RNGLOG('Current Air Ratio is '..self.ProductionRatios['Air'])
+                    RNGLOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
+                    RNGLOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
+                    RNGLOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
+                    RNGLOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
+                    RNGLOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
                     --RNGLOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
                     --RNGLOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
                     --RNGLOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
@@ -2533,11 +2533,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Air Current Production Ratio Desired T1 Fighter : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['interceptor']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     --RNGLOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     --RNGLOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
-                    --if self.EnemyIntel.ChokeFlag then
-                    --    RNGLOG('Choke Flag is true')
-                    --else
-                    --    RNGLOG('Choke Flag is false')
-                    --end
+                    if self.EnemyIntel.ChokeFlag then
+                        RNGLOG('Choke Flag is true')
+                    else
+                        RNGLOG('Choke Flag is false')
+                    end
                     --RNGLOG('Graph Zone Table '..repr(self.GraphZones))
                     --RNGLOG('Total Mass Markers according to infect'..self.BrainIntel.MassMarker)
                     --RNGLOG('Total Mass Markers according to count '..self.BrainIntel.SelfThreat.MassMarker)
@@ -3223,11 +3223,81 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     end
-                    LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
-                    LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)
+                    --LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
+                    --LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)
                 end
                 --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
             end
+            local firebaseTable = {}
+            for q, threat in self.EnemyIntel.EnemyThreatLocations do
+                local tableEntry = { Position = threat.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, validated = false}
+                if threat.LandDefStructureCount > 0 then
+                    --LOG('Enemy Threat Location with ID '..q..' has '..threat.LandDefStructureCount..' at imap position '..repr(threat.Position))
+                    tableEntry.Land = { Count = threat.LandDefStructureCount }
+                end
+                if threat.AirDefStructureCount > 0 then
+                    --LOG('Enemy Threat Location with ID '..q..' has '..threat.AirDefStructureCount..' at imap position '..repr(threat.Position))
+                    tableEntry.Air = { Count = threat.AirDefStructureCount }
+                end
+                RNGINSERT(firebaseTable, tableEntry)
+            end
+            local firebaseaggregation = 0
+            firebaseaggregationTable = {}
+            local complete = RNGGETN(firebaseTable) == 0
+            LOG('Firebase table '..repr(firebaseTable))
+            while not complete do
+                complete = true
+                LOG('firebase aggregation loop number '..firebaseaggregation)
+                for _, v1 in firebaseTable do
+                    v1.weight = 1
+                    v1.aggX = v1.Position[1]
+                    v1.aggZ = v1.Position[2]
+
+                end
+                for _, v1 in firebaseTable do
+                    if not v1.validated then
+                        for _, v2 in firebaseTable do
+                            if not v2.validated and VDist2Sq(v1.Position[1], v1.Position[2], v2.Position[1], v2.Position[2]) < 3600 then
+                                v1.weight = v1.weight + 1
+                                v1.aggX = v1.aggX + v2.Position[1]
+                                v1.aggZ = v1.aggZ + v2.Position[2]
+                            end
+                        end
+                    end
+                end
+                local best = nil
+                for _, v in firebaseTable do
+                    if (not v.validated) and ((not best) or best.weight < v.weight) then
+                        best = v
+                    end
+                end
+                local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count}
+                best.validated = true
+                local x = best.aggX/best.weight
+                local z = best.aggZ/best.weight
+                for _, v in firebaseTable do
+                    if (not v.validated) and VDist2Sq(v.Position[1], v.Position[2], best.Position[1], best.Position[2]) < 3600 then
+                        defenseGroup.Land = defenseGroup.Land + v.Land.Count
+                        defenseGroup.Air = defenseGroup.Air + v.Air.Count
+                        v.validated = true
+                    elseif not v.validated then
+                        complete = false
+                    end
+                end
+                coroutine.yield(1)
+                firebaseaggregation = firebaseaggregation + 1
+                RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air})
+            end
+            LOG('firebaseTable '..repr(firebaseTable))
+            for k, v in firebaseaggregationTable do
+                if v.DefensiveCount > 5 then
+                    self.EnemyIntel.EnemyFireBaseDetected = true
+                    break
+                else
+                    self.EnemyIntel.EnemyFireBaseDetected = false
+                end
+            end
+            LOG('firebaseaggregationTable '..repr(firebaseaggregationTable))
             if self.EnemyIntel.EnemyFireBaseDetected then
                 LOG('Firebase Detected')
                 LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
@@ -4151,7 +4221,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 LOG('Energy Income Over Time '..self.EconomyOverTimeCurrent.EnergyIncome * 10)
                 LOG('Energy Requested Over Time '..self.EconomyOverTimeCurrent.EnergyRequested * 10)
                 LOG('Potential Extra Power Consumption '..potentialPowerConsumption)
-                if (self.EconomyOverTimeCurrent.EnergyIncome * 10) - (self.EconomyOverTimeCurrent.EnergyRequested * 10) - potentialPowerConsumption < 0 then
+                if (GetEconomyIncome(self,'ENERGY') * 10) - (GetEconomyRequested(self,'ENERGY') * 10) - potentialPowerConsumption < 0 then
                     LOG('Powerconsumption will not support what we are currently building')
                     self.EcoManager.EcoPowerPreemptive = true
                     continue
@@ -4710,7 +4780,9 @@ AIBrain = Class(RNGAIBrainClass) {
                                 and totalThreat > self.BrainIntel.SelfThreat.LandNow 
                                 and self.EnemyIntel.EnemyFireBaseDetected then
                                     self.EnemyIntel.ChokeFlag = true
-                                    self.ProductionRatios.Land = 0.3
+                                    self.ProductionRatios.Land = 0.2
+                                    self.ProductionRatios.Air = 0.2
+                                    self.ProductionRatios.Naval = 0.2
                                     RNGLOG('ChokeFlag is true')
                                 elseif self.EnemyIntel.ChokeFlag then
                                     RNGLOG('ChokeFlag is false')

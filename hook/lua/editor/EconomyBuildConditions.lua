@@ -11,6 +11,18 @@ local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 
+function MexUpgradeEco(aiBrain)
+    if aiBrain.EnemyIntel.ChokeFlag then
+        if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+            return true
+        end
+    elseif GetEconomyTrend(aiBrain, 'MASS') >= 0.0 and GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.70 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.90 then
+        return true
+    end
+    return false
+end
+
+
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, mult)
 
     if aiBrain.EnemyIntel.ChokeFlag then
@@ -359,7 +371,7 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
     --RNGLOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
-        if aiBrain.ChokeFlag and uType == 'Land' then 
+        if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true
             end

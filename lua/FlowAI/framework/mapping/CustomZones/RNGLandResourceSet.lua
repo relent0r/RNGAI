@@ -76,7 +76,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
         end
-        complete = (RNGGETN(markers) == 0)
+        local complete = (RNGGETN(markers) == 0)
         RNGLOG('Starting GenerateZoneList Loop')
         while not complete do
             complete = true

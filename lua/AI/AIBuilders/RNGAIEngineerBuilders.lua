@@ -32,6 +32,13 @@ local LandAdvantage = function(self, aiBrain, builderManager)
     return 740
 end
 
+local MexChokeFlag = function(self, aiBrain, builderManager)
+    if aiBrain.ChokeFlag then
+        return 900
+    end
+    return 200
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
@@ -583,11 +590,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T123 Engineer Upgrade Mex',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 200,
+        PriorityFunction = MexChokeFlag,
         InstanceCount = 2,
         BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'MexUpgradeEco', { } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.90}},
         },
         BuilderType = 'Any',
         BuilderData = {
