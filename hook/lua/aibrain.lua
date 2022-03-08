@@ -1910,7 +1910,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if v.Enemy then
                 -- dont log this until you want to get a dump of the brain.
                 --RNGLOG('EnemyStrength Tables :'..repr(v))
-                LOG('Start pos '..repr(self.BrainIntel.StartPos))
+                --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
                     if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 19600 then
                         RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
@@ -3483,19 +3483,19 @@ AIBrain = Class(RNGAIBrainClass) {
             local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
             self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
+            --LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 if upgradeSpend > 4 then
                     if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        LOG('We Could upgrade an extractor now with over time')
+                        --LOG('We Could upgrade an extractor now with over time')
                             --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                             if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                                LOG('Trigger all tiers false')
+                                --LOG('Trigger all tiers false')
                                 self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                             else
-                                LOG('Trigger all tiers true')
+                                --LOG('Trigger all tiers true')
                                 self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
                             end
                             coroutine.yield(30)
@@ -3516,10 +3516,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
                         LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                            LOG('Trigger all tiers false')
+                            --LOG('Trigger all tiers false')
                             self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
                         else
-                            LOG('Trigger all tiers true')
+                            --LOG('Trigger all tiers true')
                             self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
                         end
                         coroutine.yield(30)
