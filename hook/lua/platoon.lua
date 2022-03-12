@@ -1473,6 +1473,9 @@ Platoon = Class(RNGAIPlatoon) {
             local platoonPos = GetPlatoonPosition(self)
             local path, reason
             local usedTransports = false
+            if not platoonPos then
+                return
+            end
             local ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
             LOG('Looking to move to ACU, current distance is '..ACUDistance)
 
@@ -2304,7 +2307,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 platoonPos = GetPlatoonPosition(self)
                                 if not platoonPos then break end
                                 local targetPosition
-                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.NAVAL - categories.SCOUT - categories.ENGINEER - categories.AIR, platoonPos, self.EnemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, (categories.ANTINAVY + categories.NAVAL) - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                                     target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
@@ -2701,6 +2704,9 @@ Platoon = Class(RNGAIPlatoon) {
                                         while PlatoonExists(aiBrain, self) do
                                             platoonPosition = GetPlatoonPosition(self)
                                             targetPosition = target:GetPosition()
+                                            if not platoonPosition then
+                                                return
+                                            end
                                             targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                                             if target.Dead then
                                                 break
@@ -8256,7 +8262,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end]]
             local assistDesc = false
-            local priorityUnits = {{cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}}
+            local priorityUnits = {{cat = categories.MASSEXTRACTION, type = 'Upgrade'}, {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'AssistFactory'}}
 
             for k, assistData in priorityUnits do
                 if assistData.type == 'Upgrade' then
@@ -8491,10 +8497,35 @@ Platoon = Class(RNGAIPlatoon) {
                 if reclaimunit then break end
             end
             if reclaimunit and not reclaimunit.Dead then
+                local unitDestroyed = false
+                local reclaimUnitPos = reclaimunit:GetPosition()
                 counter = 0
                 -- Set ReclaimInProgress to prevent repairing (see RepairAI)
                 reclaimunit.ReclaimInProgress = true
                 reclaimCount = reclaimCount + 1
+                --[[
+                -- This doesn't work yet, I'm not sure why.
+                -- Should be simple enough to kill a unit and then reclaim it. Turns out no.
+                if not EntityCategoryContains(categories.ENERGYPRODUCTION + categories.MASSFABRICATION + categories.ENERGYSTORAGE, reclaimunit) then
+                    LOG('Getting Position')
+                    reclaimUnitPos = reclaimunit:GetPosition()
+                    LOG('Killing Unit')
+                    reclaimunit:Kill()
+                    unitDestroyed = true
+                    LOG('Wait One Second')
+                    coroutine.yield(30)
+                end
+                if unitDestroyed then
+                    local wreckReclaim = GetReclaimablesInRect(Rect(reclaimUnitPos[1], reclaimUnitPos[3], reclaimUnitPos[1], reclaimUnitPos[3]))
+                    LOG('Wrecks at reclaim unit position table is '..table.getn(wreckReclaim))
+                    for _, v in wreckReclaim do
+                        if not IsProp(v) then continue end
+                        LOG('Issuing Reclaim for unit wrecked')
+                        IssueReclaim(self:GetPlatoonUnits(), wreckReclaim)
+                    end
+                else
+                    IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
+                end]]
                 IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
                 repeat
                     coroutine.yield(30)
@@ -8578,13 +8609,13 @@ Platoon = Class(RNGAIPlatoon) {
             end
             --RNGLOG('currentmexpos has data')
             LOG('Threat at mass point position'..GetThreatAtPosition(aiBrain, currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'))
-            if not AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild) then
-                    table.remove(markerTable,curindex) 
-                    --RNGLOG('No path to currentmexpos')
-                    coroutine.yield(1)
-                    continue 
-            elseif GetThreatAtPosition(aiBrain, currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
+            if GetThreatAtPosition(aiBrain, currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
                 LOG('Threat too high, removing from markerTable')
+                table.remove(markerTable,curindex) 
+                --RNGLOG('No path to currentmexpos')
+                coroutine.yield(1)
+                continue
+            elseif not AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild) then
                 table.remove(markerTable,curindex) 
                 --RNGLOG('No path to currentmexpos')
                 coroutine.yield(1)

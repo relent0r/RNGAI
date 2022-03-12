@@ -24,31 +24,11 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI Sea Attack T1',
-    Plan = 'NavalForceAI',
-    GlobalSquads = {
-        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1, 1, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1, 1, 20, 'Attack', 'GrowthFormation' },
-    },
-}
-
-PlatoonTemplate {
     Name = 'RNGAI Intelli Sea Attack T1',
     Plan = 'NavalAttackAIRNG',
     GlobalSquads = {
-        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1, 1, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1, 1, 20, 'Attack', 'GrowthFormation' },
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI Sea Attack T123',
-    Plan = 'NavalForceAI',
-    GlobalSquads = {
-        { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },
     },
 }
 

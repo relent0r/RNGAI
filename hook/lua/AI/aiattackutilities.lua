@@ -732,7 +732,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, useGraph, transportLocation, destination, 200)
         -- use the transport!
         for _, v in platoon:GetSquadUnits('Scout') do
-            if not EntityCategoryContains(categories.TRANSPORTFOCUS, v) then
+            if not v.Dead and not EntityCategoryContains(categories.TRANSPORTFOCUS, v) then
                 IssueStop({v})
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
                 LOG('Non transport in transport squad, assignined to armypool')

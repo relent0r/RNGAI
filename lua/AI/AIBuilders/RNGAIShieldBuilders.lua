@@ -26,7 +26,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
@@ -77,6 +77,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH3,
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
+                    categories.MASSFABRICATION * categories.TECH3,
                 },
                 --maxUnits = 1,
                 --maxRadius = 35,
@@ -119,6 +120,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH3,
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
+                    categories.MASSFABRICATION * categories.TECH3,
                 },
                 LocationType = 'LocationType',
                 BuildStructures = {

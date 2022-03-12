@@ -218,7 +218,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Land Attack Large',
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
@@ -265,7 +265,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -488,7 +488,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Large',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Attack T3 Large',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 770,
@@ -517,7 +517,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Large',
         PlatoonTemplate = 'T3LandArtillery',

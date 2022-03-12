@@ -203,7 +203,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -228,7 +228,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -252,7 +252,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -388,7 +388,6 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
-            { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -418,6 +417,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
          },
         BuilderType = 'Any',
@@ -476,7 +476,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL - categories.SUPPORTFACTORY }, true },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
@@ -650,13 +650,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Enemy',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 800,
+        Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'EnemyLandPhaseRNG', { 2 }},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.60}},
             },
         BuilderType = 'Any',
@@ -664,12 +664,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Excess',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 800,
+        Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1600, 2000 } },
+                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1400, 1000 } },
             },
         BuilderType = 'Any',
     },
@@ -686,14 +686,14 @@ BuilderGroup {
                 { UCBC, 'LessThanFactoryCountRNG', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
                 --{ EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
+                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.015, 1.015 }},
             },
         BuilderType = 'Any',
     },
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support Excess',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 750,
+        Priority = 775,
         InstanceCount = 2,
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -724,7 +724,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Enemy',
         PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 850,
+        Priority = 875,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
@@ -739,14 +739,14 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Excess',
         PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 800,
+        Priority = 925,
         InstanceCount = 1,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 2400, 9000 } },
+                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1800, 9000 } },
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
                 { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
             },
         BuilderType = 'Any',
@@ -762,7 +762,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
         },
@@ -779,7 +779,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
         },
@@ -796,7 +796,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
         },
@@ -812,7 +812,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
         },
@@ -831,7 +831,6 @@ BuilderGroup {
                 { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY}},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR}},
                 { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
             },
         BuilderType = 'Any',
@@ -873,11 +872,11 @@ BuilderGroup {
         Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
+                { MIBC, 'GreaterThanGameTimeRNG', { 990 } },
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
                 { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.015, 1.015 }},
             },
         BuilderType = 'Any',
     },

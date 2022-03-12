@@ -144,6 +144,16 @@ function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
     return retUnits
 end
 
+function GreaterThanT3CoreExtractorPercentage(aiBrain, percentage)
+    -- Checks if you have a certain percentage of core t3 extractors.
+    -- Requires eco thread to be capturing MAINBASE property on extractors
+    -- by default they are any extractors within 2500 of start pos
+    if aiBrain.EcoManager.CoreExtractorT3Percentage >= percentage then
+        return true
+    end
+    return false
+end
+
 function EnemyLandPhaseRNG(aiBrain, phase)
     local selfIndex = aiBrain:GetArmyIndex()
 

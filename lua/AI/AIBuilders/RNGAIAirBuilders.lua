@@ -16,6 +16,7 @@ local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import(
 local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+    local enemyCount = 1
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
@@ -65,10 +66,11 @@ end
 local AirAttackMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    local enemyCount = 1
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
-    if myAirThreat / 1.5 > (enemyAirThreat / enemyCount) then
+    if myAirThreat / 1.3 > (enemyAirThreat / enemyCount) then
         --RNGLOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
         if builderData.TechLevel == 1 then
@@ -206,14 +208,14 @@ BuilderGroup {
             TechLevel = 2
         },
     },
-    --[[Builder {
+    Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
-        PlatoonTemplate = 'RNGAIFighterGroupT2',
+        PlatoonTemplate = 'RNGAIT2FighterAeon',
         Priority = 0,
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -221,7 +223,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
         PlatoonTemplate = 'RNGAIT2FighterAeon',

@@ -122,6 +122,9 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 144 then
         return true
     end
+    if not AIAttackUtils.CanGraphToRNG(pos, destination, 'Amphibious') then
+        return false
+    end
 
     -- first try to find a path with markers. 
     local result, bestPos
