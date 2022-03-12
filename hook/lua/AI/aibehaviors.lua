@@ -3029,12 +3029,12 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
                     if v:GetFractionComplete() == 1 then
                         for _, weapon in ALLBPS[v.UnitId].Weapon do
                             if weapon.MaxRadius then
-                                RNGINSERT(SMDPositions, { Position = v.GetPosition(), Radius = weapon.MaxRadius})
+                                RNGINSERT(SMDPositions, { Position = v:GetPosition(), Radius = weapon.MaxRadius})
                             end
                         end
                         LOG('AntiNuke present at location')
                     end
-                    if 3 > Platoon.ReadySMLCount then
+                    if 3 > platoon.ReadySMLCount then
                         break
                     end
                 end

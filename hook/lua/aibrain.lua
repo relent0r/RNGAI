@@ -5329,6 +5329,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then
+            LOG('Mainbase T1 Extractors '..mainBaseExtractors.T1)
+            LOG('Mainbase T2 Extractors '..mainBaseExtractors.T2)
+            LOG('Mainbase T3 Extractors '..mainBaseExtractors.T3)
             self.EcoManager.CoreExtractorT3Percentage = mainBaseExtractors.T3 / totalCoreExtractors
         end
     end,

@@ -8262,7 +8262,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end]]
             local assistDesc = false
-            local priorityUnits = {{cat = categories.MASSEXTRACTION, type = 'Upgrade'}, {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'AssistFactory'}}
+            local priorityUnits = {{cat = categories.MASSEXTRACTION, type = 'Upgrade'}, {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'} }
 
             for k, assistData in priorityUnits do
                 if assistData.type == 'Upgrade' then
@@ -8297,7 +8297,7 @@ Platoon = Class(RNGAIPlatoon) {
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
                                         LOG('Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
-                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
+                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
                                     end
                                 end
                             end
@@ -8338,7 +8338,49 @@ Platoon = Class(RNGAIPlatoon) {
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
                                         LOG('Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
-                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit)
+                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
+                                    end
+                                end
+                            end
+                            break
+                        else
+                            RNGLOG('No best unit found, looping to next in priority list')
+                        end
+                    end
+                elseif assistData.type == 'Completion' then
+                    LOG('PGEN Engineer Assist happening')
+                    assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
+                    if assistDesc then
+                        local low = false
+                        local bestUnit = false
+                        local numBuilding = 0
+                        for _, unit in assistDesc do
+                            if not unit.Dead and not unit:BeenDestroyed() and unit:GetFractionComplete() < 1 and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                --RNGLOG('Factory Needing Assist')
+                                numBuilding = numBuilding + 1
+                                local unitPos = unit:GetPosition()
+                                local NumAssist = RNGGETN(unit:GetGuards())
+                                local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
+                                    low = dist
+                                    bestUnit = unit
+                                    --RNGLOG('EngineerAssistManager has best unit')
+                                end
+                            end
+                        end
+                        if bestUnit then
+                            RNGLOG('Factory Assist Best unit is true looking through platoon units')
+                            --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
+                            for _, eng in platoonUnits do
+                                if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
+                                    if not eng.UnitBeingAssist then
+                                        eng.UnitBeingAssist = bestUnit
+                                        --RNGLOG('Engineer Assist issuing guard')
+                                        IssueGuard({eng}, eng.UnitBeingAssist)
+                                        --eng:SetCustomName('Ive been ordered to guard')
+                                        coroutine.yield(1)
+                                        LOG('PGEN Assist thread for engineer, bestUnit is '..bestUnit.UnitId)
+                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
                                     end
                                 end
                             end
@@ -8403,7 +8445,7 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
-    EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist)
+    EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         coroutine.yield(math.random(1, 20))
         LOG('Starting Engineer Assist Thread RNG')
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
@@ -8421,6 +8463,12 @@ Platoon = Class(RNGAIPlatoon) {
             if not aiBrain.EngineerAssistManagerActive then
                 --eng:SetCustomName('Got asked to remove myself due to assist manager being false')
                 self:EngineerAssistRemoveRNG(aiBrain, eng)
+            end
+            if jobType == 'Completion' then
+                if not unitToAssist.Dead and unitToAssist:GetFractionComplete() == 1 then
+                    eng.UnitBeingAssist = nil
+                    break
+                end
             end
             --RNGLOG('I am assisting with aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired being true :'..aiBrain.EngineerAssistManagerBuildPower..' > ' ..aiBrain.EngineerAssistManagerBuildPowerRequired)
             coroutine.yield(50)
