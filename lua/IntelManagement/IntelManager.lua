@@ -673,7 +673,6 @@ function InitialNavalAttackCheck(aiBrain)
     -- points = number of points around the extractor, doesn't need to have too many.
     -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
-
     local function DrawCirclePoints(points, radius, center)
         local extractorPoints = {}
         local slice = 2 * math.pi / points
@@ -696,16 +695,18 @@ function InitialNavalAttackCheck(aiBrain)
             if checkPoints then
                 for _, m in checkPoints do
                     if RUtils.PositionInWater(m) then
-                        --RNGLOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.Position[1], v.Position[3]}))
-                        --RNGLOG('Surface Height at extractor '..GetSurfaceHeight(v.Position[1], v.Position[3]))
-                        --RNGLOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
-                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.35
+                       --RNGLOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.position[1], v.position[3]}))
+                       --RNGLOG('Surface Height at extractor '..GetSurfaceHeight(v.position[1], v.position[3]))
+                       --RNGLOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
+                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.36
+                       --RNGLOG('Adjusted checkpoint surface height '..pointSurfaceHeight)
                         markerCount = markerCount + 1
-                        if aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.position, 'none') then
-                            --RNGLOG('This marker is not blocked')
+                        if not aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.position, 'low') then
+                           --RNGLOG('This marker is not blocked '..repr(v.position))
                             markerCountNotBlocked = markerCountNotBlocked + 1
                             table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name } )
                         else
+                           --RNGLOG('This marker is blocked '..repr(v.position))
                             markerCountBlocked = markerCountBlocked + 1
                         end
                         break
@@ -713,9 +714,9 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
         end
-        --RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
-        --RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
-        --RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
+       --RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
+       --RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+       --RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
         --RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
         if markerCountNotBlocked > 8 then
             aiBrain.EnemyIntel.FrigateRaid = true

@@ -784,6 +784,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         --RNGLOG('EnemyThreat low and acusupport present, cancel retreat')
                         IssueClearCommands({cdr})
                         cdr.movetopos = false
+                        coroutine.yield(2)
                         return
                     end
                end
@@ -1448,6 +1449,15 @@ function CDROverChargeRNG(aiBrain, cdr)
                             cdr.PlatoonHandle:MoveToLocation(cdrNewPos, false)
                         end
                     end
+                    if target and not target.Dead and cdr.TargetPosition then
+                        if RUtils.PositionInWater(cdr.Position) and VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.TargetPosition[1], cdr.TargetPosition[3]) < 100 then
+                           --LOG('ACU is in water, going to try reclaim')
+                            IssueClearCommands({cdr})
+                            IssueReclaim({cdr}, target)
+                            coroutine.yield(30)
+                        end
+                    end
+
                     if not target then
                         --RNGLOG('No longer have target')
                         cdr:SetCustomName('CDR lost target')
@@ -3008,8 +3018,27 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
     local bestThreat = 1
     for idx, threat in bestBaseThreat do
         if threat[3] > 0 then
-            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(ParseEntityCategory('STRUCTURE'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
-            local numunits = RNGGETN(unitsAtLocation)
+            local numunits = 0
+            local SMDPositions = { Position = {}, Radius = 0}
+            local Value
+            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+            for k, v in unitsAtLocation do
+                numunits = numunits + 1
+                if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
+                   --LOG('Found SMD')
+                    if v:GetFractionComplete() == 1 then
+                        for _, weapon in ALLBPS[v.UnitId].Weapon do
+                            if weapon.MaxRadius then
+                                RNGINSERT(SMDPositions, { Position = v:GetPosition(), Radius = weapon.MaxRadius})
+                            end
+                        end
+                       --LOG('AntiNuke present at location')
+                    end
+                    if 3 > platoon.ReadySMLCount then
+                        break
+                    end
+                end
+            end
 
             if numunits > maxUnits then
                 maxUnits = numunits
@@ -3025,7 +3054,7 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
         local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
         for ix, offsetX in lookAroundTable do
             for iz, offsetZ in lookAroundTable do
-                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(ParseEntityCategory('STRUCTURE'), {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}, squareRadius, 'Enemy')
+                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}, squareRadius, 'Enemy')
                 local numUnits = RNGGETN(unitsAtLocation)
                 if numUnits > maxUnits then
                     maxUnits = numUnits

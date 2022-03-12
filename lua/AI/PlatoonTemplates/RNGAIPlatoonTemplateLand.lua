@@ -569,7 +569,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'uel0201', 1, 1, 'Attack', 'none' },		-- Striker Medium Tank
-            { 'uel0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
             { 'uel0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'uel0101', 1, 3, 'Scout', 'none' },		-- Land Scout
@@ -588,7 +588,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'ual0201', 1, 1, 'Attack', 'none' },		-- Light Hover tank
-            { 'ual0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'ual0201', 1, 3, 'Attack', 'none' },		-- Light Hover tank
             { 'ual0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'ual0101', 1, 3, 'Scout', 'none' },		-- Land Scout
@@ -607,7 +607,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
             { 'url0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'url0107', 1, 1, 'Attack', 'none' },		-- Mantis
-            { 'url0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'url0107', 1, 3, 'Attack', 'none' },		-- Mantis
             { 'url0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'url0101', 1, 3, 'Scout', 'none' },		-- Land Scout
@@ -625,7 +625,7 @@ PlatoonTemplate { Name = 'RNGAIT1InitialAttackBuild5k',
             { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0101', 1, 2, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 1, 'Attack', 'none' },		-- Medium Tank
-            { 'xsl0105', 1, 1, 'support', 'None' },     -- Engineer
+            { 'xsl0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
             { 'xsl0105', 1, 2, 'support', 'None' },     -- Engineer
             { 'xsl0101', 1, 3, 'Scout', 'none' },		-- Land Scout

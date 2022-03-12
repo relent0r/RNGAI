@@ -32,6 +32,13 @@ local LandAdvantage = function(self, aiBrain, builderManager)
     return 740
 end
 
+local MexChokeFlag = function(self, aiBrain, builderManager)
+    if aiBrain.ChokeFlag then
+        return 900
+    end
+    return 200
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
@@ -39,7 +46,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Engineer T1 MassRatioAvailable',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 755,
-        --PriorityFunction = LandAdvantage,
         BuilderConditions = {
             { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
@@ -52,7 +58,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Engineer T1 ReclaimPlatoon',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 740,
-        PriorityFunction = LandAdvantage,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
             { MIBC, 'ReclaimPlatoonsActive', {5}},
@@ -69,8 +74,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 5.0 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 18, categories.ENGINEER - categories.COMMAND } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
     },
@@ -91,7 +96,7 @@ BuilderGroup {
         Priority = 776,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
         },
@@ -103,7 +108,7 @@ BuilderGroup {
         Priority = 777,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
         },
@@ -215,7 +220,6 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 870,
         BuilderConditions = {
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 2, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
         },
         BuilderType = 'All',
@@ -583,11 +587,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T123 Engineer Upgrade Mex',
         PlatoonTemplate = 'T123EngineerAssistRNG',
         Priority = 200,
+        PriorityFunction = MexChokeFlag,
         InstanceCount = 2,
         BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'MexUpgradeEco', { } },
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.90}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -762,9 +766,8 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.025, 1.025 }},
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -858,7 +861,7 @@ BuilderGroup {
         BuilderData = {
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 15
+            MinimumReclaim = 15,
         },
         BuilderType = 'Any',
     },

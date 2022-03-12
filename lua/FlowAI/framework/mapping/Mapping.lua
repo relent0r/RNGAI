@@ -451,11 +451,11 @@ GameMap = Class({
         local i1 = self:GetI(pos1[1])
         local j1 = self:GetJ(pos1[3])
         --[[if (self.components[i0][j0][layer] > 0) and (self.components[i0][j0][layer] == self.components[i1][j1][layer]) then
-            LOG('CanPathTo is true for layer '..layer)
+           --LOG('CanPathTo is true for layer '..layer)
         else
-            LOG('CanPathTo is false for layer '..layer)
-            LOG(' pos0 '..repr(pos0))
-            LOG(' pos1 '..repr(pos1))
+           --LOG('CanPathTo is false for layer '..layer)
+           --LOG(' pos0 '..repr(pos0))
+           --LOG(' pos1 '..repr(pos1))
         end]]
         return (self.components[i0][j0][layer] > 0) and (self.components[i0][j0][layer] == self.components[i1][j1][layer])
     end,
