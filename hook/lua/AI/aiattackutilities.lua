@@ -1299,7 +1299,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local IgnoreWeakerTargetsRatio = 5
 
     -- When evaluating threat, how many rings in the threat grid do we look at
-    local EnemyThreatRings = 1
+    local EnemyThreatRings = aiBrain.BrainIntel.IMAPConfig.Rings
     -- if we've already chosen an enemy, should this platoon focus on that enemy
     local TargetCurrentEnemy = true
 
@@ -1354,7 +1354,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     #eval platoon threat
     local myThreat = GetThreatOfUnits(platoon)
     --RNGLOG('GetBestNavalTarget myThreat is '..myThreat)
-    local friendlyThreat = aiBrain:GetThreatAtPosition(platoonPosition, 1, true, ThreatTable[platoon.MovementLayer], aiBrain:GetArmyIndex()) - myThreat
+    local friendlyThreat = aiBrain:GetThreatAtPosition(platoonPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, ThreatTable[platoon.MovementLayer], aiBrain:GetArmyIndex()) - myThreat
     friendlyThreat = friendlyThreat * -1
     --RNGLOG('GetBestNavalTarget friendlyThreat is '..friendlyThreat)
 
@@ -1401,10 +1401,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
 
         -- Determine the value of the target
-        primaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, 1, true, PrimaryTargetThreatType, enemyIndex)
+        primaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, PrimaryTargetThreatType, enemyIndex)
+        -- update : we are testing no longer multiplying since they are updating to threat numbers on everything.
         -- We are multipling the structure threat because the default threat allocation is shit. A T1 naval factory is only worth 3 threat which is not enough to make
         -- frigates / subs want to attack them over something else.
-        secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, 1, true, SecondaryTargetThreatType, enemyIndex) * 2
+        secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, SecondaryTargetThreatType, enemyIndex)
         --RNGLOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
 
         baseThreat = primaryThreat + secondaryThreat

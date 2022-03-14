@@ -18,6 +18,7 @@ local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGCOPY = table.copy
@@ -1513,27 +1514,36 @@ Platoon = Class(RNGAIPlatoon) {
                 platoonPos = GetPlatoonPosition(self)
                 ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
                 LOG('Trying to get close to acu, current distance is '..ACUDistance)
+                if aiBrain.CDRUnit.SuicideMode then
+                    LOG('CDR is on suicide mode we need to engage NOW')
+                    break
+                end
             end
             LOG('Looking for targets around the acu')
-            targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
-            if targetTable.Attack.Unit then
-                LOG('Enemy Units in Attack Squad Table')
-                target = targetTable.Attack.Unit
-            elseif targetTable.Artillery.Unit then
-                LOG('Enemy Units in Artillery Squad Table')
-                target = targetTable.Artillery.Unit
-            end
-            if self:GetSquadUnits('Guard') then
-                self:ForkThread(self.GuardACUSquadRNG, aiBrain)
-            end
-            if acuUnit then
-                target = acuUnit
-            end
+            
             if aiBrain.CDRUnit.SuicideMode then
+                LOG('My ACU is in suicide mode, target enemy ACU')
                 if aiBrain.CDRUnit.Target and not aiBrain.CDRUnit.Target.Dead then
                     target = aiBrain.CDRUnit.Target
                 end
             end
+            if not target then
+                targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
+                if targetTable.Attack.Unit then
+                    LOG('Enemy Units in Attack Squad Table')
+                    target = targetTable.Attack.Unit
+                elseif targetTable.Artillery.Unit then
+                    LOG('Enemy Units in Artillery Squad Table')
+                    target = targetTable.Artillery.Unit
+                end
+                if self:GetSquadUnits('Guard') then
+                    self:ForkThread(self.GuardACUSquadRNG, aiBrain)
+                end
+                if acuUnit then
+                    target = acuUnit
+                end
+            end
+
             if target then
                 LOG('Have a target from the ACU')
                 local threatAroundplatoon = 0
@@ -2307,7 +2317,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 platoonPos = GetPlatoonPosition(self)
                                 if not platoonPos then break end
                                 local targetPosition
-                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, (categories.ANTINAVY + categories.NAVAL) - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
+                                local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, (categories.ANTINAVY + categories.NAVAL + categories.AMPHIBIOUS) - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
                                     self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                                     target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
@@ -2486,7 +2496,28 @@ Platoon = Class(RNGAIPlatoon) {
         end
     end,
 
+    DrawTargetRadius = function(self, position, strikeRadius)
+        LOG('Draw Target Radius points')
+        local counter = 0
+        while counter < 60 do
+            DrawCircle(position, strikeRadius, 'aaffaa')
+            counter = counter + 1
+            coroutine.yield( 2 )
+        end
+    end,
+
     StrikeForceAIRNG = function(self)
+        local function DrawCirclePoints(points, radius, center)
+            local circlePoints = {}
+            local slice = 2 * math.pi / points
+            for i=1, points do
+                local angle = slice * i
+                local newX = center[1] + radius * math.cos(angle)
+                local newY = center[3] + radius * math.sin(angle)
+                table.insert(circlePoints, { newX, 0 , newY})
+            end
+            return circlePoints
+        end
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local data = self.PlatoonData
@@ -2679,9 +2710,67 @@ Platoon = Class(RNGAIPlatoon) {
                         platoonCount = RNGGETN(platoonUnits)
                         local targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                         local path = false
-                        if targetDistance < 10000 then
+                        if targetDistance < 14400 then
                             IssueClearCommands(platoonUnits)
-                            IssueAttack(platoonUnits, target)
+                            LOG('Approaching Target')
+                            if self.PlatoonStrikeRadius then
+                                LOG('self.PlatoonStrikeRadius '..self.PlatoonStrikeRadius)
+                            else
+                                LOG('strike force ai has no PlatoonStrikeRadius'..self.PlatoonStrikeRadius)
+                            end
+    
+                            if self.PlatoonStrikeDamage then
+                                LOG('self.PlatoonStrikeDamage '..self.PlatoonStrikeDamage)
+                            else
+                                LOG('strike force ai has no PlatoonStrikeDamage'..self.PlatoonStrikeDamage)
+                            end
+                            if self.PlatoonStrikeRadius > 0 and self.PlatoonStrikeDamage > 0 and EntityCategoryContains(categories.STRUCTURE, target) then
+                                local pointTable = DrawCirclePoints(8, self.PlatoonStrikeRadius, targetPosition)
+                                local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
+                                local setPointPos = false
+                                LOG('StrikeForce Looking for better strike target position')
+                                for _, pointPos in pointTable do
+                                    LOG('pointPos is '..repr(pointPos))
+                                    LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
+                                    self:ForkThread(self.DrawTargetRadius, pointPos, self.PlatoonStrikeRadius + 2)
+                                    local damage = 0
+                                    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, self.PlatoonStrikeRadius + 4, 'Enemy')
+                                    LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
+                                    for _, unit in enemiesAroundTarget do
+                                        if not unit.Dead then
+                                            local unitPos = unit:GetPosition()
+                                            local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+                                            LOG('Unit is '..unit.UnitId)
+                                            LOG('unitPos is '..repr(unitPos))
+                                            LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+                                            LOG('strike radius + damage radius '..(self.PlatoonStrikeRadius + damageRadius))
+                                            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (self.PlatoonStrikeRadius * 2 + damageRadius) then
+                                                if self.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or self.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                                                    damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                                                else
+                                                    LOG('Strike will not kill target or 3 passes')
+                                                end
+                                            end
+                                        end
+                                        LOG('Current potential strike damage '..damage)
+                                    end
+                                    LOG('Current maxDamage is '..maxDamage)
+                                    if damage > maxDamage then
+                                        LOG('StrikeForce found better strike damage of '..damage)
+                                        maxDamage = damage
+                                        setPointPos = pointPos
+                                    end
+                                end
+                                if setPointPos then
+                                    LOG('StrikeForce AI attacking position '..repr(setPointPos))
+                                    IssueAttack(platoonUnits, setPointPos)
+                                else
+                                    LOG('No alternative strike position found ')
+                                    IssueAttack(platoonUnits, target)
+                                end
+                            else
+                                IssueAttack(platoonUnits, target)
+                            end
                             --self:AttackTarget(target)
                         else
                             local path, reason, totalThreat = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
@@ -2711,10 +2800,64 @@ Platoon = Class(RNGAIPlatoon) {
                                             if target.Dead then
                                                 break
                                             end
-                                            if targetDistance < 10000 then
+                                            if targetDistance < 14400 then
                                                 --RNGLOG('strikeforce air attack command on target')
                                                 IssueClearCommands(GetPlatoonUnits(self))
-                                                IssueAttack(platoonUnits, target)
+                                                if self.PlatoonStrikeRadius > 0 and self.PlatoonStrikeDamage > 0 and EntityCategoryContains(categories.STRUCTURE, target) then
+                                                    local pointTable = DrawCirclePoints(8, self.PlatoonStrikeRadius, targetPosition)
+                                                    local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
+                                                    local setPointPos = false
+                                                    LOG('StrikeForce Looking for better strike target position')
+                                                    for _, pointPos in pointTable do
+                                                        LOG('pointPos is '..repr(pointPos))
+                                                        LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
+                                                        self:ForkThread(self.DrawTargetRadius, pointPos, self.PlatoonStrikeRadius + 1)
+                                                        local damage = 0
+                                                        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, self.PlatoonStrikeRadius + 4, 'Enemy')
+                                                        local aggPos = {aggX = targetPosition[1], aggZ = targetPosition[3]}
+                                                        local aggCount = 1
+                                                        LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
+                                                        for _, unit in enemiesAroundTarget do
+                                                            if not unit.Dead then
+                                                                local unitPos = unit:GetPosition()
+                                                                local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 2
+                                                                LOG('Unit is '..unit.UnitId)
+                                                                LOG('unitPos is '..repr(unitPos))
+                                                                LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+                                                                LOG('strike radius + damage radius '..(self.PlatoonStrikeRadius + damageRadius))
+                                                                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (self.PlatoonStrikeRadius * 2 + damageRadius) then
+                                                                    if self.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or self.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                                                                        damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                                                                        aggCount = aggCount + 1
+                                                                        aggPos.aggX = aggPos.aggX + unitPos[1]
+                                                                        aggPos.aggZ = aggPos.aggZ + unitPos[3]
+                                                                    else
+                                                                        LOG('Strike will not kill target or 3 passes')
+                                                                    end
+                                                                else
+                                                                    LOG('Unit is not within StrikeRadius')
+                                                                end
+                                                            end
+                                                            LOG('Current potential strike damage '..damage)
+                                                        end
+                                                        LOG('Current maxDamage is '..maxDamage)
+                                                        if damage > maxDamage then
+                                                            LOG('StrikeForce found better strike damage of '..damage)
+                                                            maxDamage = damage
+                                                            setPointPos = {aggPos.aggX / aggCount, 0, aggPos.aggZ / aggCount}
+
+                                                        end
+                                                    end
+                                                    if setPointPos then
+                                                        LOG('StrikeForce AI attacking position '..repr(setPointPos))
+                                                        IssueAttack(platoonUnits, setPointPos)
+                                                    else
+                                                        LOG('No alternative strike position found ')
+                                                        IssueAttack(platoonUnits, target)
+                                                    end
+                                                else
+                                                    IssueAttack(platoonUnits, target)
+                                                end
                                                 break
                                             end
                                             pathDistance = VDist2Sq(path[i][1], path[i][3], platoonPosition[1], platoonPosition[3])
@@ -3395,6 +3538,7 @@ Platoon = Class(RNGAIPlatoon) {
         local hydroPresent = false
         local buildLocation = false
         local buildMassPoints = {}
+        local buildMassDistantPoints = {}
         
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
@@ -3417,6 +3561,8 @@ Platoon = Class(RNGAIPlatoon) {
         local engPos = eng:GetPosition()
         massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
         local closeMarkers = 0
+        local distantMarkers = 0
+        local closestMarker = false
         for k, marker in massMarkers do
             if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 then
                 closeMarkers = closeMarkers + 1
@@ -3424,8 +3570,19 @@ Platoon = Class(RNGAIPlatoon) {
                 if closeMarkers > 3 then
                     break
                 end
+            elseif VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 484 then
+                distantMarkers = distantMarkers + 1
+                LOG('Inserting Distance Mass Point into table')
+                RNGINSERT(buildMassDistantPoints, marker)
+                if distantMarkers > 3 then
+                    break
+                end
+            end
+            if not closestMarker or closestMarker > VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) then
+                closestMarker = VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3])
             end
         end
+        LOG('Closest Marker Distance is '..closestMarker)
         local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
         RNGLOG('HydroTable '..repr(closestHydro))
         if closestHydro then
@@ -3441,7 +3598,9 @@ Platoon = Class(RNGAIPlatoon) {
         --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
         RNGLOG('Attempt structure build')
         RNGLOG('Number of close mass markers '..closeMarkers)
-        RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
+        RNGLOG('Number of distant mass markers '..distantMarkers)
+        RNGLOG('Close Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
+        RNGLOG('Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' items in it')
         RNGLOG('Mex build stage 1')
         if RNGGETN(buildMassPoints) > 0 then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
@@ -3453,12 +3612,30 @@ Platoon = Class(RNGAIPlatoon) {
                 break
             end
             buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+        elseif RNGGETN(buildMassDistantPoints) > 0 then
+            LOG('Try build distant mass point marker')
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            for k, v in buildMassDistantPoints do
+                RNGLOG('MassPoint '..repr(v))
+                IssueMove({eng}, v.Position )
+                while VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 do
+                    coroutine.yield(5)
+                    engPos = eng:GetPosition()
+                end
+                IssueClearCommands({eng})
+                aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                buildMassDistantPoints[k] = nil
+                break
+            end
+            buildMassDistantPoints = aiBrain:RebuildTable(buildMassDistantPoints)
         end
         coroutine.yield(5)
         while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
             coroutine.yield(5)
         end
-        RNGLOG('Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
+        RNGLOG('Close Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
+        RNGLOG('Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' after initial build')
         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 10, true)
         if buildLocation and whatToBuild then
             LOG('Insert First energy production '..whatToBuild.. ' at '..repr(buildLocation))
@@ -3500,6 +3677,29 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
                 end
+            end
+        elseif RNGGETN(buildMassDistantPoints) > 0 then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            if RNGGETN(buildMassDistantPoints) < 3 then
+                for k, v in buildMassDistantPoints do
+                    RNGLOG('MassPoint '..repr(v))
+                    if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
+                        IssueMove({eng}, v.Position )
+                        while VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 do
+                            coroutine.yield(5)
+                            engPos = eng:GetPosition()
+                        end
+                        IssueClearCommands({eng})
+                        aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                        coroutine.yield(5)
+                        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                            coroutine.yield(5)
+                        end
+                    end
+                    buildMassDistantPoints[k] = nil
+                end
+                buildMassDistantPoints = aiBrain:RebuildTable(buildMassDistantPoints)
             end
         end
         coroutine.yield(5)
@@ -3562,7 +3762,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         LOG('CDR Initialize almost done, should have just finished final t1 land')
-        if hydroPresent and closeMarkers > 0 then
+        if hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
             engPos = eng:GetPosition()
             if VDist2Sq(engPos[1],engPos[3],closestHydro.Position[1],closestHydro.Position[3]) > 144 then
                 IssueMove({eng}, closestHydro.Position )
@@ -3608,7 +3808,7 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     coroutine.yield(30)
                 end
-                if closeMarkers > 2 and eng.UnitBeingAssist:GetFractionComplete() == 1 then
+                if (closeMarkers > 2 or distantMarkers > 2) and eng.UnitBeingAssist:GetFractionComplete() == 1 then
                     if aiBrain.MapSize >=20 then
                         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if buildLocation and whatToBuild then
@@ -3906,6 +4106,7 @@ Platoon = Class(RNGAIPlatoon) {
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
         local maxPlatoonStrikeDamage = 0
+        local maxPlatoonStrikeRadius = 20
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
@@ -3926,6 +4127,9 @@ Platoon = Class(RNGAIPlatoon) {
                                 v.DamageRadius = weaponBlueprint.DamageRadius
                                 v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
                                 maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v.StrikeDamage
+                                if weaponBlueprint.DamageRadius > 0 or  weaponBlueprint.DamageRadius < maxPlatoonStrikeRadius then
+                                    maxPlatoonStrikeRadius = weaponBlueprint.DamageRadius
+                                end
                                 LOG('Have set units DamageRadius to '..v.DamageRadius)
                             end
                             if self.PlatoonData.SetWeaponPriorities then
@@ -3978,6 +4182,9 @@ Platoon = Class(RNGAIPlatoon) {
         end
         if maxPlatoonStrikeDamage > 0 then
             self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+        end
+        if maxPlatoonStrikeRadius > 0 then
+            self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
         end
         if not self.Zone then
             if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
@@ -8643,7 +8850,7 @@ Platoon = Class(RNGAIPlatoon) {
             local currentmexpos=nil
             local curindex=nil
             for i,v in markerTable do
-                if aiBrain:CanBuildStructureAt('ueb1103', v.Position) then
+                if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                     currentmexpos=v.Position
                     curindex=i
                     --RNGLOG('We can build at mex, breaking loop '..repr(currentmexpos))

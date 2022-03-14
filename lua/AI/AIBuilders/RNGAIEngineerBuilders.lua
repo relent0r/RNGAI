@@ -73,8 +73,8 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'LessThanEnergyTrendRNG', { 5.0 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+            { EBC, 'NegativeEcoPowerCheck', { 5.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',

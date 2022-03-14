@@ -3039,6 +3039,32 @@ TruePlatoonPriorityDirector = function(aiBrain)
     end
 end
 
+ACUPriorityDirector = function(aiBrain, platoon, platoonPosition)
+    -- See if anything in the ACU table looks good to attack
+    local enemyUnitThreat = 0
+    if aiBrain.EnemyIntel.ACU then
+        for k, v in aiBrain.EnemyIntel.ACU do
+            if not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
+                if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
+                    local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE,v.Position, 60 ,'Enemy')
+                    for c, b in enemyUnits do
+                        if b and not b.Dead then
+                            if EntityCategoryContains(categories.COMMAND, b) then
+                                enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
+                            else
+                                --RNGLOG('Unit ID is '..v.UnitId)
+                                if bp.SurfaceThreatLevel ~= nil then
+                                    enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 ToColorRNG = function(min,max,ratio)
     local ToBase16 = function(num)
         if num<10 then

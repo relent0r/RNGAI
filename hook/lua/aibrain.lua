@@ -4255,7 +4255,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(1,7))
         while true do
             coroutine.yield(50)
-            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * categories.FACTORY, false)
+            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION), false)
             local potentialPowerConsumption = 0
             for k, v in buildingTable do
                 if not v.Dead and not v.BuildCompleted then
@@ -4284,8 +4284,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                             end
                         end
-                    else
-                        if EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
+                    elseif EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
                             if v:GetFractionComplete() < 0.6 then
                                 LOG('T3 Air Being Built')
                                 potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
@@ -4293,14 +4292,29 @@ AIBrain = Class(RNGAIBrainClass) {
                             else
                                 v.BuildCompleted = true
                             end
-                        elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
-                            if v:GetFractionComplete() < 0.6 then
-                                LOG('T2 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
-                                continue
-                            else
-                                v.BuildCompleted = true
-                            end
+                    elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
+                        if v:GetFractionComplete() < 0.6 then
+                            LOG('T2 Air Being Built')
+                            potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
+                            continue
+                        else
+                            v.BuildCompleted = true
+                        end
+                    elseif EntityCategoryContains(categories.MASSEXTRACTION, v) then
+                        if v:GetFractionComplete() < 0.6 then
+                            LOG('Extractors being upgraded')
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                            continue
+                        else
+                            v.BuildCompleted = true
+                        end
+                    elseif EntityCategoryContains(categories.RADAR, v) then
+                        if v:GetFractionComplete() < 0.6 then
+                            LOG('Radar being upgraded')
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                            continue
+                        else
+                            v.BuildCompleted = true
                         end
                     end
                 end

@@ -147,6 +147,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     --[[Builder {
         BuilderName = 'RNGAI Factory Gunship T1',
@@ -167,7 +170,6 @@ BuilderGroup {
         PriorityFunction = InitialBomberResponse,
         BuilderConditions = {	
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},	
             { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
         },	
@@ -719,6 +721,7 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 11.0 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.80, 0.80 }},
         },
         BuilderType = 'Air',
