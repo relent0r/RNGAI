@@ -3644,6 +3644,61 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     return false
 end
 
+function GetBomberGroundAttackPosition(platoon, targetPosition)
+    local function DrawCirclePoints(points, radius, center)
+        local circlePoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(circlePoints, { newX, 0 , newY})
+        end
+        return circlePoints
+    end
+
+    local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
+    local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
+    local setPointPos = false
+    LOG('StrikeForce Looking for better strike target position')
+    for _, pointPos in pointTable do
+        LOG('pointPos is '..repr(pointPos))
+        LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
+        platoon:ForkThread(platoon.DrawTargetRadius, pointPos, platoon.PlatoonStrikeRadius + 2)
+        local damage = 0
+        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+        LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
+        for _, unit in enemiesAroundTarget do
+            if not unit.Dead then
+                local unitPos = unit:GetPosition()
+                local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+                LOG('Unit is '..unit.UnitId)
+                LOG('unitPos is '..repr(unitPos))
+                LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+                LOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
+                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
+                    if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                        damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                    else
+                        LOG('Strike will not kill target or 3 passes')
+                    end
+                end
+            end
+            LOG('Current potential strike damage '..damage)
+        end
+        LOG('Current maxDamage is '..maxDamage)
+        if damage > maxDamage then
+            LOG('StrikeForce found better strike damage of '..damage)
+            maxDamage = damage
+            setPointPos = pointPos
+        end
+    end
+    if setPointPos then
+        return setPointPos
+    end
+    return false
+end
+
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
 RNGLOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)

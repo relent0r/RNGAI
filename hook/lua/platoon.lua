@@ -2507,17 +2507,7 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     StrikeForceAIRNG = function(self)
-        local function DrawCirclePoints(points, radius, center)
-            local circlePoints = {}
-            local slice = 2 * math.pi / points
-            for i=1, points do
-                local angle = slice * i
-                local newX = center[1] + radius * math.cos(angle)
-                local newY = center[3] + radius * math.sin(angle)
-                table.insert(circlePoints, { newX, 0 , newY})
-            end
-            return circlePoints
-        end
+        
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local data = self.PlatoonData
@@ -2725,42 +2715,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 LOG('strike force ai has no PlatoonStrikeDamage'..self.PlatoonStrikeDamage)
                             end
                             if self.PlatoonStrikeRadius > 0 and self.PlatoonStrikeDamage > 0 and EntityCategoryContains(categories.STRUCTURE, target) then
-                                local pointTable = DrawCirclePoints(8, self.PlatoonStrikeRadius, targetPosition)
-                                local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
-                                local setPointPos = false
-                                LOG('StrikeForce Looking for better strike target position')
-                                for _, pointPos in pointTable do
-                                    LOG('pointPos is '..repr(pointPos))
-                                    LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
-                                    self:ForkThread(self.DrawTargetRadius, pointPos, self.PlatoonStrikeRadius + 2)
-                                    local damage = 0
-                                    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, self.PlatoonStrikeRadius + 4, 'Enemy')
-                                    LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
-                                    for _, unit in enemiesAroundTarget do
-                                        if not unit.Dead then
-                                            local unitPos = unit:GetPosition()
-                                            local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
-                                            LOG('Unit is '..unit.UnitId)
-                                            LOG('unitPos is '..repr(unitPos))
-                                            LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
-                                            LOG('strike radius + damage radius '..(self.PlatoonStrikeRadius + damageRadius))
-                                            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (self.PlatoonStrikeRadius * 2 + damageRadius) then
-                                                if self.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or self.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
-                                                    damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
-                                                else
-                                                    LOG('Strike will not kill target or 3 passes')
-                                                end
-                                            end
-                                        end
-                                        LOG('Current potential strike damage '..damage)
-                                    end
-                                    LOG('Current maxDamage is '..maxDamage)
-                                    if damage > maxDamage then
-                                        LOG('StrikeForce found better strike damage of '..damage)
-                                        maxDamage = damage
-                                        setPointPos = pointPos
-                                    end
-                                end
+                                local setPointPos = RUtils.GetBomberGroundAttackPosition(self, targetPosition)
                                 if setPointPos then
                                     LOG('StrikeForce AI attacking position '..repr(setPointPos))
                                     IssueAttack(platoonUnits, setPointPos)
@@ -2804,50 +2759,7 @@ Platoon = Class(RNGAIPlatoon) {
                                                 --RNGLOG('strikeforce air attack command on target')
                                                 IssueClearCommands(GetPlatoonUnits(self))
                                                 if self.PlatoonStrikeRadius > 0 and self.PlatoonStrikeDamage > 0 and EntityCategoryContains(categories.STRUCTURE, target) then
-                                                    local pointTable = DrawCirclePoints(8, self.PlatoonStrikeRadius, targetPosition)
-                                                    local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
-                                                    local setPointPos = false
-                                                    LOG('StrikeForce Looking for better strike target position')
-                                                    for _, pointPos in pointTable do
-                                                        LOG('pointPos is '..repr(pointPos))
-                                                        LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
-                                                        self:ForkThread(self.DrawTargetRadius, pointPos, self.PlatoonStrikeRadius + 1)
-                                                        local damage = 0
-                                                        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, self.PlatoonStrikeRadius + 4, 'Enemy')
-                                                        local aggPos = {aggX = targetPosition[1], aggZ = targetPosition[3]}
-                                                        local aggCount = 1
-                                                        LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
-                                                        for _, unit in enemiesAroundTarget do
-                                                            if not unit.Dead then
-                                                                local unitPos = unit:GetPosition()
-                                                                local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 2
-                                                                LOG('Unit is '..unit.UnitId)
-                                                                LOG('unitPos is '..repr(unitPos))
-                                                                LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
-                                                                LOG('strike radius + damage radius '..(self.PlatoonStrikeRadius + damageRadius))
-                                                                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (self.PlatoonStrikeRadius * 2 + damageRadius) then
-                                                                    if self.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or self.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
-                                                                        damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
-                                                                        aggCount = aggCount + 1
-                                                                        aggPos.aggX = aggPos.aggX + unitPos[1]
-                                                                        aggPos.aggZ = aggPos.aggZ + unitPos[3]
-                                                                    else
-                                                                        LOG('Strike will not kill target or 3 passes')
-                                                                    end
-                                                                else
-                                                                    LOG('Unit is not within StrikeRadius')
-                                                                end
-                                                            end
-                                                            LOG('Current potential strike damage '..damage)
-                                                        end
-                                                        LOG('Current maxDamage is '..maxDamage)
-                                                        if damage > maxDamage then
-                                                            LOG('StrikeForce found better strike damage of '..damage)
-                                                            maxDamage = damage
-                                                            setPointPos = {aggPos.aggX / aggCount, 0, aggPos.aggZ / aggCount}
-
-                                                        end
-                                                    end
+                                                    local setPointPos = RUtils.GetBomberGroundAttackPosition(self, targetPosition)
                                                     if setPointPos then
                                                         LOG('StrikeForce AI attacking position '..repr(setPointPos))
                                                         IssueAttack(platoonUnits, setPointPos)
@@ -2968,7 +2880,7 @@ Platoon = Class(RNGAIPlatoon) {
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG', true)
                 end
             end
-            coroutine.yield(30)
+            coroutine.yield(31)
             --[[if target and not target.Dead then
                 while PlatoonExists(aiBrain, self) do
                     local targetThreat = GetThreatAtPosition(aiBrain, target:GetPosition(), aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
