@@ -1297,9 +1297,6 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- by the given ratio
     local IgnoreWeakerTargetsIfStrongerThan = 20
     local IgnoreWeakerTargetsRatio = 5
-
-    -- When evaluating threat, how many rings in the threat grid do we look at
-    local EnemyThreatRings = aiBrain.BrainIntel.IMAPConfig.Rings
     -- if we've already chosen an enemy, should this platoon focus on that enemy
     local TargetCurrentEnemy = true
 
@@ -1332,7 +1329,6 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         IgnoreThreatLessThan = ThreatWeights.IgnoreThreatLessThan or IgnoreThreatLessThan
         PrimaryTargetThreatType = ThreatWeights.PrimaryTargetThreatType or PrimaryTargetThreatType
         SecondaryTargetThreatType = ThreatWeights.SecondaryTargetThreatType or SecondaryTargetThreatType
-        EnemyThreatRings = ThreatWeights.EnemyThreatRings or EnemyThreatRings
         TargetCurrentEnemy = ThreatWeights.TargetCurrentyEnemy or TargetCurrentEnemy
     end
 
@@ -1414,7 +1410,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         threat[3] = targetThreat
 
         -- Determine relative strength of platoon compared to enemy threat
-        local enemyThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, EnemyThreatRings, true, ThreatTable[platoon.MovementLayer] or 'AntiSurface')
+        local enemyThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, ThreatTable[platoon.MovementLayer] or 'AntiSurface')
 
         --defaults to no threat (threat difference is opposite of platoon threat)
         local threatDiff =  myThreat - enemyThreat

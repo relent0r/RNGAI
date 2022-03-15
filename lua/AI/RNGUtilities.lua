@@ -3039,25 +3039,63 @@ TruePlatoonPriorityDirector = function(aiBrain)
     end
 end
 
-ACUPriorityDirector = function(aiBrain, platoon, platoonPosition)
+ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
     -- See if anything in the ACU table looks good to attack
     local enemyUnitThreat = 0
+    local armyIndex = aiBrain:GetArmyIndex()
+    local target = false
+    local enemyACUTable = {}
+    if not platoon.MovementLayer then
+        platoon:ConfigurePlatoon()
+    end
     if aiBrain.EnemyIntel.ACU then
         for k, v in aiBrain.EnemyIntel.ACU do
-            if not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
-                if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
-                    local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE,v.Position, 60 ,'Enemy')
-                    for c, b in enemyUnits do
-                        if b and not b.Dead then
-                            if EntityCategoryContains(categories.COMMAND, b) then
-                                enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
-                            else
-                                --RNGLOG('Unit ID is '..v.UnitId)
-                                if bp.SurfaceThreatLevel ~= nil then
-                                    enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+            if aiBrain.CDRUnit.EnemyCDRPresent then
+                target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
+                return target
+            elseif k ~= armyIndex and v.Ally then
+                if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
+                    target = AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
+                    LOG('Return ACU enemy acu from ally cdr')
+                    return target
+                end
+            elseif not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
+                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious'
+                    if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
+                        local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
+                        for c, b in enemyUnits do
+                            if b and not b.Dead then
+                                if EntityCategoryContains(categories.COMMAND, b) then
+                                    enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
+                                    RNGINSERT(enemyACUTable, b)
+                                else
+                                    --RNGLOG('Unit ID is '..v.UnitId)
+                                    if bp.SurfaceThreatLevel ~= nil then
+                                        enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+                                    end
                                 end
                             end
                         end
+                        if RNGGETN(enemyACUTable) > 0 do
+                            --Do funky stuff to see if we should try rush this acu
+                        end
+                    end
+                elseif platoon.MovementLayer == 'Air' then
+                    local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, v.Position, 60 ,'Enemy')
+                    for c, b in enemyUnits do
+                        if b and not b.Dead then
+                            if EntityCategoryContains(categories.COMMAND, b) then
+                                RNGINSERT(enemyACUTable, b)
+                            else
+                                --RNGLOG('Unit ID is '..v.UnitId)
+                                if bp.AirThreatLevel ~= nil then
+                                    enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.AirThreatLevel
+                                end
+                            end
+                        end
+                    end
+                    if RNGGETN(enemyACUTable) > 0 do
+                        --Do funky stuff to see if we should try snipe this acu
                     end
                 end
             end
