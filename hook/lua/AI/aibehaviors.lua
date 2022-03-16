@@ -656,6 +656,9 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     RNGLOG('Moving ACU to position')
     cdr.movetopos = position
     if retreat then
+        IssueClearCommands({cdr})
+        IssueMove({cdr}, position)
+        coroutine.yield(60)
         path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
     else
         path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
@@ -1212,7 +1215,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         
         repeat
             overCharging = false
-            if not cdr.SuicideMode and VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange and not cdr:IsUnitState('Building') then
+            if not cdr.SuicideMode and VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building')) then
                 RNGLOG('OverCharge running but ACU is beyond its MaxBaseRange property')
                 cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                 coroutine.yield(40)
@@ -2939,30 +2942,22 @@ function BehemothBehaviorRNG(self, id)
         coroutine.yield(10)
     end
 end
--------------------------------------------------------
--- Function: GetHighestThreatClusterLocationRNG
--- Modified specifically for nukes
--- Args:
--- aiBrain - aiBrain for experimental
--- experimental - platoon of nukes
--- Description:
--- Finds the commander first, or a high economic threat that has a lot of units
--- Good for AoE type attacks
--- Returns:
--- position of best place to attack, nil if nothing found
--------------------------------------------------------
-GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
+
+GetNukeStrikePositionRNG = function(aiBrain, platoon)
     if not aiBrain or not platoon then
         return nil
     end
+    local ALLBPS = __blueprints
 
     -- Look for commander first
     local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
     local platoonPosition = GetPlatoonPosition(platoon)
+    -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
+    local minimumValue = 0
     local targetPositions = {}
-    local threatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'Commander')
+    local acuThreatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'Commander')
     local validPosition = false
-    for _, threat in threatTable do
+    for _, threat in acuThreatTable do
         if threat[3] > 0 then
             local unitsAtLocation = GetUnitsAroundPoint(aiBrain, ParseEntityCategory('COMMAND'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
             
@@ -3014,22 +3009,23 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
     end
 
     -- Look for a cluster of structures
-    local maxUnits = -1
+    local highestValue = -1
     local bestThreat = 1
     for idx, threat in bestBaseThreat do
         if threat[3] > 0 then
             local numunits = 0
             local SMDPositions = { Position = {}, Radius = 0}
-            local Value
+            local massValue = 0
             local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
             for k, v in unitsAtLocation do
                 numunits = numunits + 1
+                local unitPos = v:GetPosition()
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
                     LOG('Found SMD')
                     if v:GetFractionComplete() == 1 then
                         for _, weapon in ALLBPS[v.UnitId].Weapon do
                             if weapon.MaxRadius then
-                                RNGINSERT(SMDPositions, { Position = v:GetPosition(), Radius = weapon.MaxRadius})
+                                RNGINSERT(SMDPositions, { Position = unitPos, Radius = weapon.MaxRadius})
                             end
                         end
                         LOG('AntiNuke present at location')
@@ -3038,10 +3034,13 @@ GetHighestThreatClusterLocationRNG = function(aiBrain, platoon)
                         break
                     end
                 end
+                if ALLBPS[v.UnitId].Economy.BuildCostMass then
+                    massValue = massValue + ALLBPS[v.UnitId].Economy.BuildCostMass
+                end
             end
 
-            if numunits > maxUnits then
-                maxUnits = numunits
+            if massValue > highestValue then
+                highestValue = massValue
                 bestThreat = idx
             end
         end

@@ -3060,7 +3060,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                     return target
                 end
             elseif not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
-                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious'
+                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
                     if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
                         local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
                         for c, b in enemyUnits do
@@ -3076,7 +3076,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                                 end
                             end
                         end
-                        if RNGGETN(enemyACUTable) > 0 do
+                        if RNGGETN(enemyACUTable) > 0 then
                             --Do funky stuff to see if we should try rush this acu
                         end
                     end
@@ -3094,7 +3094,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                             end
                         end
                     end
-                    if RNGGETN(enemyACUTable) > 0 do
+                    if RNGGETN(enemyACUTable) > 0 then
                         --Do funky stuff to see if we should try snipe this acu
                     end
                 end
@@ -3682,7 +3682,7 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     return false
 end
 
-function GetBomberGroundAttackPosition(platoon, targetPosition)
+function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition, targetPosition, targetDistance)
     local function DrawCirclePoints(points, radius, center)
         local circlePoints = {}
         local slice = 2 * math.pi / points
@@ -3702,7 +3702,7 @@ function GetBomberGroundAttackPosition(platoon, targetPosition)
     for _, pointPos in pointTable do
         LOG('pointPos is '..repr(pointPos))
         LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
-        platoon:ForkThread(platoon.DrawTargetRadius, pointPos, platoon.PlatoonStrikeRadius + 2)
+        
         local damage = 0
         local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, platoon.PlatoonStrikeRadius + 4, 'Enemy')
         LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
@@ -3732,9 +3732,45 @@ function GetBomberGroundAttackPosition(platoon, targetPosition)
         end
     end
     if setPointPos then
-        return setPointPos
+        setPointPos = {setPointPos[1], GetSurfaceHeight(setPointPos[1], setPointPos[3]), setPointPos[3]} 
+        local movePoint = lerpy(platoonPosition, targetPosition, {targetDistance, targetDistance - (platoon.PlatoonStrikeRadiusDistance + 25)})
+        platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon.PlatoonStrikeRadius)
+        platoon:ForkThread(platoon.DrawTargetRadius, setPointPos, platoon.PlatoonStrikeRadius)
+        return setPointPos, movePoint
     end
     return false
+end
+
+-- need to ask maudlin about these unless I want to reinvent the rather cleverly done wheel here
+
+function GetBomberRange(oUnit)
+    -- Gets  + 25 added to the return value. Assume to give the strat a better runup?
+    local oBP = oUnit:GetBlueprint()
+    local iRange = 0
+    for sWeaponRef, tWeapon in oBP.Weapon do
+        if tWeapon.WeaponCategory == 'Bomb' or tWeapon.WeaponCategory == 'Direct Fire' then
+            if (tWeapon.MaxRadius or 0) > iRange then
+                iRange = tWeapon.MaxRadius
+            end
+        end
+    end
+    return iRange
+end
+
+function GetAngleFromAToB(tLocA, tLocB)
+    --Returns an angle 0 = north, 90 = east, etc. based on direction of tLocB from tLocA
+    local iTheta = math.atan(math.abs(tLocA[3] - tLocB[3]) / math.abs(tLocA[1] - tLocB[1])) * 180 / math.pi
+    if tLocB[1] > tLocA[1] then
+        if tLocB[3] > tLocA[3] then
+            return 90 + iTheta
+        else return 90 - iTheta
+        end
+    else
+        if tLocB[3] > tLocA[3] then
+            return 270 - iTheta
+        else return 270 + iTheta
+        end
+    end
 end
 
 --[[
