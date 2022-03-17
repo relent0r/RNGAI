@@ -25,8 +25,9 @@ IntelManager = Class {
         self.Brain = brain
         self.Initialized = false
         self.Debug = false
+        -- Used for scout assignments to zones
         self.ZoneIntel = {
-            Assignment = {}
+            Assignment = { }
         }
     end,
 
@@ -501,6 +502,24 @@ IntelManager = Class {
                 end
             end
         end
+    end,
+
+    ZoneIntelAssignment = function(self)
+        -- Will setup table for scout assignment to zones
+        -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
+        -- replaces the previous expansion scout assignment so that all mass points can be monitored
+        -- Will also set data for intel based scout production.
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        local Zones = {
+            'Land',
+        }
+        for k, v in Zones do
+            for k1, v1 in self.Brain.Zones[v].zones do
+                RNGINSERT(self.ZoneIntel.Assignment, { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnit = false, ScoutUnit = false})
+            end
+        end
+        LOG('Zone Intel Assignment Complete')
     end,
 }
 

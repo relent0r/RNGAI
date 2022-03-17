@@ -1000,6 +1000,7 @@ Platoon = Class(RNGAIPlatoon) {
         local supportPlatoon = false
         local platoonNeedScout = false
         local scoutPos = false
+        local im = IntelManagerRNG:GetIntelManager()
         
 
         -- build scoutlocations if not already done.
@@ -1091,24 +1092,26 @@ Platoon = Class(RNGAIPlatoon) {
                                 --RNGLOG('Excess scout looking for expansion')
                                 scoutPos = scout:GetPosition()
                                 local scoutMarker
-                                if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  then
-                                    for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
-                                        if not v.Radar then
-                                            local distSq = VDist3Sq(v.Position, scoutPos)
+                                if RNGGETN(im.ZoneIntel.Assignment) > 0  then
+                                    LOG('Scout ZoneIntel Assignment table is present')
+                                    for k, v in im.ZoneIntel.Assignment do
+                                        if (not v.RadarCoverage or RadarUnit.Dead) and (not v.ScoutUnit or v.ScoutUnit.Dead) then
+                                            LOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
                                             if AIAttackUtils.CanGraphToRNG(scoutPos, v.Position, self.MovementLayer) then
-                                                if not v.ScoutAssigned then
-                                                    scoutMarker = v
-                                                    self.ExpansionSet = k
-                                                    aiBrain.BrainIntel.ExpansionWatchTable[k].ScoutAssigned = self
-                                                    --RNGLOG('Expansion Best marker selected is index '..k..' at '..repr(scoutMarker.Position))
-                                                    break
-                                                end
+                                                LOG('Scout ZoneIntel Assignment scout is assigning itself to the zone')
+                                                scoutMarker = v
+                                                self.ExpansionSet = k
+                                                im.ZoneIntel.Assignment[k].ScoutUnit = scout
+                                                break
                                             else
-                                                coroutine.yield(2)
+                                                coroutine.yield(5)
                                             end
                                         end
                                     end
+                                else
+                                    WARN('ZoneIntel Assignment table is empty, it shouldnt be')
                                 end
+
                                 if scoutMarker then
                                     --RNGLOG('Scout Marker Found, moving to position')
                                     if PlatoonExists(aiBrain, self) then
