@@ -3234,6 +3234,7 @@ GetStartingReclaim = function(aiBrain)
             end
         end
         --RNGLOG('Sorting Reclaim table by distance ')
+        --It feels pointless to sort this table, its the engineer itself that wants the closest not the base.
         RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
         RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable

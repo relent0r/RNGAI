@@ -95,13 +95,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         IssueReclaim({self}, r.Reclaim)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
+                        local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
-                                self:SetPaused( true )
-                                coroutine.yield(50)
-                                self:SetPaused( false )
+                                -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
+                                -- watch out for thrashing as I don't have a minimum storage check on this builder
+                                LOG('We are overflowing mass return from early reclaim thread')
+                                IssueClearCommands({self})
+                                return
                             end
                             coroutine.yield(20)
                         end
@@ -526,7 +529,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
             if not IsEnemy( aiBrain:GetArmyIndex(), unit:GetAIBrain():GetArmyIndex() ) then
                 continue
             end
-            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * (categories.MOBILE + categories.WALL), unit) then 
+            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * (categories.MOBILE + categories.WALL), unit) and unit:GetFractionComplete() == 1 then 
                 --RNGLOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true

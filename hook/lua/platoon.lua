@@ -9160,19 +9160,26 @@ Platoon = Class(RNGAIPlatoon) {
             while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
                 local platPos = GetPlatoonPosition(self)
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), platPos, 10, 'Enemy') > 0 then
-                        local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), platPos, 10, 'Enemy')
-                        if enemyEngineer then
-                            local enemyEngPos
-                            for _, unit in enemyEngineer do
-                                if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                    enemyEngPos = unit:GetPosition()
-                                    if VDist2Sq(platPos[1], platPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
-                                        IssueStop({eng})
-                                        IssueClearCommands({eng})
-                                        IssueReclaim({eng}, enemyEngineer[1])
-                                        break
+                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy')
+                        if enemyUnits then
+                            local enemyUnitPos
+                            for _, unit in enemyUnits do
+                                enemyUnitPos = unit:GetPosition()
+                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) and VDist3Sq(enemyUnitPos, platPos) < 144 then
+                                    LOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        if VDist2Sq(platPos[1], platPos[3], enemyUnitPos[1], enemyUnitPos[3]) < 100 then
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, unit)
+                                            break
+                                        end
                                     end
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT), unit) then
+                                    LOG('MexBuild found enemy unit, try avoid it')
+                                    IssueClearCommands({eng})
+                                    IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
+                                    coroutine.yield(60)
                                 end
                             end
                         end
