@@ -127,7 +127,7 @@ BuilderGroup {
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
-                AdjacencyCategory = categories.ENERGYPRODUCTION,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
                     'T2SupportLandFactory',
                 },
@@ -290,7 +290,7 @@ BuilderGroup {
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
-                AdjacencyCategory = categories.ENERGYPRODUCTION,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -316,7 +316,7 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 Location = 'LocationType',
-                AdjacencyCategory = categories.ENERGYPRODUCTION,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -340,7 +340,7 @@ BuilderGroup {
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
-                AdjacencyCategory = categories.ENERGYPRODUCTION,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
                     'T2SupportAirFactory',
                 },
@@ -669,7 +669,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
                 { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1400, 1000 } },
+                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1200, 1000 } },
             },
         BuilderType = 'Any',
     },
@@ -1547,7 +1547,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = false,
                 Location = 'LocationType',
-                AdjacencyCategory = categories.ENERGYPRODUCTION,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
                     'T3QuantumGate',
                 },

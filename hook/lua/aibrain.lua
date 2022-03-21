@@ -897,6 +897,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
+        self.StartReclaimTotal = 0
         self.StartReclaimTaken = false
         self.MapReclaimTable = {}
         self.Zones = { }
@@ -2787,11 +2788,12 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Get AI strength
         local selfIndex = self:GetArmyIndex()
         local GetPosition = moho.entity_methods.GetPosition
-
+        local bp
+        --[[
         local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.EXPERIMENTAL, false, false)
         local airthreat = 0
         local antiAirThreat = 0
-        local bp
+        
 
 		-- calculate my present airvalue			
 		for _,v in brainAirUnits do
@@ -2806,7 +2808,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('My Air Threat is'..airthreat)
         self.BrainIntel.SelfThreat.AirNow = airthreat
         self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
-
+        ]]
         --[[if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             RNGINSERT(self.BrainIntel.SelfThreat.Air, airSelfThreat)
@@ -2820,6 +2822,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end]]
         coroutine.yield(1)
+        --[[
         local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, true)
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
@@ -2842,6 +2845,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
         self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
+        ]]
         local allyBrains = {}
         for index, brain in ArmyBrains do
             if index ~= self:GetArmyIndex() then
@@ -2894,14 +2898,15 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         self.BrainIntel.SelfThreat.AllyExtractorTable = allyExtractors
-        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
-        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
+        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + self.BrainIntel.SelfThreat.ExtractorCount
+        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + self.BrainIntel.SelfThreat.Extractor
         self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
         --RNGLOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
         --RNGLOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --RNGLOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
         --RNGLOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
         coroutine.yield(1)
+        --[[
         local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
         local navalThreat = 0
         local navalSubThreat = 0
@@ -2922,6 +2927,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.LandNow = landThreat
         --RNGLOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
+        ]]
     end,
 
     IMAPConfigurationRNG = function(self, ALLBPS)
@@ -3139,24 +3145,26 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
         
-        --RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
-        --RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
-        --RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
-        --RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
-        --RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
-        --RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
+        RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+        RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
+        RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+        RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
+        RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
+        RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+        RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
         RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
-        --RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
         RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-        --RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        --RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        --RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        --RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        --RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
-        --RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        --RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
+        RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
         RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
-        --RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
+        RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         coroutine.yield(2)
     end,
 
@@ -5008,6 +5016,13 @@ AIBrain = Class(RNGAIBrainClass) {
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
         local mainBaseExtractors = {T1=0,T2=0,T3=0}
+        local totalLandThreat = 0
+        local totalAirThreat = 0
+        local totalAntiAirThreat = 0
+        local totalEconomyThreat = 0
+        local totalNavalThreat = 0
+        local totalNavalSubThreat = 0
+        local totalExtractorCount = 0
         for _,z in self.amanager.Ratios[factionIndex] do
             for _,c in z do
                 c.total=0
@@ -5029,6 +5044,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 rincome.m=rincome.m+producem
                 rincome.e=rincome.e+producee
                 if ALLBPS[unit.UnitId].CategoriesHash.MASSEXTRACTION then
+                    totalEconomyThreat = totalEconomyThreat + ALLBPS[unit.UnitId].Defense.EconomyThreatLevel
+                    totalExtractorCount = totalExtractorCount + 1
                     if not unit.zoneid and self.ZonesInitialized then
                         --LOG('unit has no zone')
                         local mexPos = GetPosition(unit)
@@ -5136,6 +5153,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         pgens.T3=pgens.T3+1
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.LAND then
+                    totalLandThreat = totalLandThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyLandTiers.T1=armyLandTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
@@ -5195,12 +5213,15 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
+                    totalAirThreat = totalAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyAirTiers.T1=armyAirTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
                             armyAir.T1.scout=armyAir.T1.scout+1
                             armyAirType.scout=armyAirType.scout+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.ANTIAIR then
+                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                             armyAir.T1.interceptor=armyAir.T1.interceptor+1
                             armyAirType.interceptor=armyAirType.interceptor+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.BOMBER then
@@ -5219,6 +5240,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyAir.T2.bomber=armyAir.T2.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
                         elseif EntityCategoryContains(categories.xaa0202 - categories.EXPERIMENTAL,unit) then
+                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                             armyAir.T2.fighter=armyAir.T2.fighter+1
                             armyAirType.fighter=armyAirType.fighter+1
                         elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
@@ -5240,6 +5262,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyAir.T3.scout=armyAir.T3.scout+1
                             armyAirType.scout=armyAirType.scout+1
                         elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
+                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                             armyAir.T3.asf=armyAir.T3.asf+1
                             armyAirType.asf=armyAirType.asf+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.BOMBER then
@@ -5257,6 +5280,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
+                    totalNavalThreat = totalNavalThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    totalNavalSubThreat = totalNavalSubThreat + ALLBPS[unit.UnitId].Defense.SubThreatLevel
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyNavalTiers.T1=armyNavalTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.FRIGATE then
@@ -5339,6 +5364,13 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Current.Naval=armyNaval
         self.amanager.Total.Naval=armyNavalTiers
         self.amanager.Type.Naval=armyNavalType
+        self.BrainIntel.SelfThreat.LandNow = totalLandThreat
+        self.BrainIntel.SelfThreat.AirNow = totalAirThreat
+        self.BrainIntel.SelfThreat.AntiAirNow = totalAntiAirThreat
+        self.BrainIntel.SelfThreat.NavalNow = totalNavalThreat
+        self.BrainIntel.SelfThreat.NavalSubNow = totalNavalSubThreat
+        self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
+        self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
         self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then

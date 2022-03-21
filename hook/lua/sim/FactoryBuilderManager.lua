@@ -150,7 +150,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         --RNGLOG('RNG FactorFinishedbuilding')
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
-            self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
+            self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnitRNG(finishedUnit)
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
             --RNGLOG('Factory Built by factory, attempting to kill factory.')
 			if finishedUnit:GetFractionComplete() == 1 then

@@ -39,7 +39,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
                 AdjacencyDistance = 70,
                 BuildClose = false,
                 BuildStructures = {
@@ -92,7 +92,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.STRUCTURE * categories.NAVAL,
+                AdjacencyPriority = {categories.STRUCTURE * categories.NAVAL},
                 AdjacencyDistance = 50,
                 BuildClose = false,
                 BuildStructures = {

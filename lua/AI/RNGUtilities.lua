@@ -2814,6 +2814,7 @@ LastKnownThread = function(aiBrain)
             local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
+                if ArmyIsCivilian(v:GetArmy()) then continue end
                 local id=v.Sync.id
                 local unitPosition = table.copy(v:GetPosition())
                 if EntityCategoryContains(categories.MASSEXTRACTION,v) then
@@ -3529,7 +3530,7 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     end
     return false
 end
-
+--[[
 function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
@@ -3613,6 +3614,107 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         return buildLocation, whatToBuild
     end
     LOG('GetBuildLocationRNG is false')
+    return false
+end]]
+
+function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
+    -- A small note that caught me out.
+    -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
+    -- and you wont understand why. I think the 3rd param is actually rotation not height.
+    --RNGLOG('GetBuildLocationRNG Function')
+    local buildLocation = false
+    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    local engPos = eng:GetPosition()
+    local function normalposition(vec)
+        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+    end
+    local function heightbuildpos(vec)
+        return {vec[1],vec[2],0}
+    end
+    
+    if adjacent then
+        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
+        local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, radius, 'Ally')
+        local index = aiBrain:GetArmyIndex()
+        local closeUnits = {}
+        for _, v in testUnits do
+            if not v.Dead and not v:IsBeingBuilt() and v:GetAIBrain():GetArmyIndex() == index then
+                table.insert(closeUnits, v)
+            end
+        end
+        local template = {}
+        table.insert(template, {})
+        table.insert(template[1], { buildUnit })
+        for _,unit in closeUnits do
+            local targetSize = unit:GetBlueprint().Physics
+            local targetPos = unit:GetPosition()
+            local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
+            local offsetX=math.floor(differenceX/2)
+            local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
+            local offsetZ=math.floor(differenceZ/2)
+            local offsetfactory=0
+            if EntityCategoryContains(categories.FACTORY, unit) and (buildUnit=='T1LandFactory' or buildUnit=='T2SupportLandFactory' or buildUnit=='T3SupportLandFactory') then
+                offsetfactory=2
+            end
+            -- Top/bottom of unit
+            for i=-offsetX,offsetX do
+                local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
+                local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
+                -- check if the buildplace is to close to the border or inside buildable area
+                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                        return heightbuildpos(testPos), whatToBuild
+                    end
+                end
+                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos2)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                            return heightbuildpos(testPos), whatToBuild
+                        end
+                    end
+                end
+            end
+            -- Sides of unit
+            for i=-offsetZ,offsetZ do
+                local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
+                local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
+                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                            return heightbuildpos(testPos), whatToBuild
+                        end
+                    end
+                end
+                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos2)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                            return heightbuildpos(testPos), whatToBuild
+                        end
+                    end
+                end
+            end
+        end
+    else
+        -- build near the base the engineer is part of, rather than the engineer location
+        --RNGLOG('Request for Non Adjacency')
+        --RNGLOG('buildUnit '..buildUnit)
+        --RNGLOG('whatToBuild '..whatToBuild)
+        local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
+        if location and relative then
+            local relativeLoc = {location[1], 0, location[2]}
+            return {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}, whatToBuild
+        else
+            return location, whatToBuild
+        end
+    end
     return false
 end
 

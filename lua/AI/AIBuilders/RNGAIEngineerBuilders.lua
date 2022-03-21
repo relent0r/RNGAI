@@ -39,6 +39,13 @@ local MexChokeFlag = function(self, aiBrain, builderManager)
     return 200
 end
 
+local StartingReclaimPresent = function(self, aiBrain, builderManager)
+    if aiBrain.StartReclaimTotal > 500 then
+        return 995
+    end
+    return 950
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
@@ -50,7 +57,7 @@ BuilderGroup {
             { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
-            { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.INSIGNIFICANTUNIT, '<',categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) } },
+            { UCBC, 'UnitToThreatRatio', { 0.3, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.INSIGNIFICANTUNIT, 'Land', '<'}},
         },
         BuilderType = 'All',
     },
@@ -422,7 +429,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
@@ -791,6 +798,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Minimum', -- Try to get that early reclaim
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PriorityFunction = StartingReclaimPresent,
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {

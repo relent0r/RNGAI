@@ -1,4 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGEngineerManager = EngineerManager
@@ -23,7 +24,7 @@ EngineerManager = Class(RNGEngineerManager) {
             self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
-            self:AddUnit(finishedUnit)
+            self:AddUnitRNG(finishedUnit)
         end
         local guards = unit:GetGuards()
         for k,v in guards do
@@ -37,6 +38,67 @@ EngineerManager = Class(RNGEngineerManager) {
             end
         end
         --self.Brain:RemoveConsumption(self.LocationType, unit)
+    end,
+
+    AddUnitRNG = function(self, unit, dontAssign)
+        --LOG('+ AddUnit')
+        for k,v in self.ConsumptionUnits do
+            if EntityCategoryContains(v.Category, unit) then
+                table.insert(v.Units, { Unit = unit, Status = true })
+                table.insert(v.UnitsList, unit)
+                v.Count = v.Count + 1
+
+                if not unit.BuilderManagerData then
+                    unit.BuilderManagerData = {}
+                end
+                unit.BuilderManagerData.EngineerManager = self
+                unit.BuilderManagerData.LocationType = self.LocationType
+
+                if not unit.BuilderManagerData.CallbacksSetup then
+                    unit.BuilderManagerData.CallbacksSetup = true
+                    -- Callbacks here
+                    local deathFunction = function(unit)
+                        unit.BuilderManagerData.EngineerManager:RemoveUnitRNG(unit)
+                    end
+
+                    import('/lua/scenariotriggers.lua').CreateUnitDestroyedTrigger(deathFunction, unit)
+
+                    local newlyCapturedFunction = function(unit, captor)
+                        local aiBrain = captor:GetAIBrain()
+                        --LOG('*AI DEBUG: ENGINEER: I was Captured by '..aiBrain.Nickname..'!')
+                        if aiBrain.BuilderManagers then
+                            local engManager = aiBrain.BuilderManagers[captor.BuilderManagerData.LocationType].EngineerManager
+                            if engManager then
+                                engManager:AddUnitRNG(unit)
+                            end
+                        end
+                    end
+
+                    import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, newlyCapturedFunction, unit)
+
+                    if EntityCategoryContains(categories.ENGINEER - categories.STATIONASSISTPOD, unit) then
+                        local unitConstructionFinished = function(unit, finishedUnit)
+                                                    -- Call function on builder manager; let it handle the finish of work
+                                                    local aiBrain = unit:GetAIBrain()
+                                                    local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
+                                                    if engManager then
+                                                        engManager:UnitConstructionFinished(unit, finishedUnit)
+                                                    end
+                        end
+                        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(unitConstructionFinished, unit, categories.ALLUNITS)
+
+                    end
+                end
+
+                if not dontAssign then
+                    self:ForkEngineerTask(unit)
+                end
+                if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
+                    IntelManagerRNG.GetIntelManager():AssignIntelUnit(unit)
+                end
+                return
+            end
+        end
     end,
 
     ManagerLoopBody = function(self,builder,bType)
@@ -152,10 +214,7 @@ EngineerManager = Class(RNGEngineerManager) {
         self:DelayAssign(unit, 50)
     end,
 
-    RemoveUnit = function(self, unit)
-        if not self.Brain.RNG then
-            return RNGEngineerManager.RemoveUnit(self, unit)
-        end
+    RemoveUnitRNG = function(self, unit)
         local guards = unit:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
@@ -180,12 +239,13 @@ EngineerManager = Class(RNGEngineerManager) {
                     end
                 end
             end
+            if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
+                IntelManagerRNG.GetIntelManager():UnassignIntelUnit(unit)
+            end
             if found then
                 break
             end
         end
-
-        --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
     LowMass = function(self)

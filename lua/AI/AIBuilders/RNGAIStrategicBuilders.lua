@@ -27,7 +27,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 NumAssistees = 15,
                 BuildClose = false,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.NUKE,
                 maxUnits = 1,
                 maxRadius = 20,
@@ -58,7 +58,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.NUKE,
                 maxUnits = 1,
                 maxRadius = 20,
@@ -94,7 +94,7 @@ BuilderGroup {
                 BuildClose = true,
                 DesiresAssist = true,
                 NumAssistees = 15,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
                 maxRadius = 20,
@@ -126,7 +126,7 @@ BuilderGroup {
                 BuildClose = true,
                 DesiresAssist = true,
                 NumAssistees = 15,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
                 maxRadius = 20,
@@ -160,7 +160,7 @@ BuilderGroup {
             MinNumAssistees = 3,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
                     'T4Artillery',
                 },
@@ -191,7 +191,7 @@ BuilderGroup {
             MinNumAssistees = 3,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
                     'T3RapidArtillery',
                 },
@@ -257,7 +257,7 @@ BuilderGroup {
                 BuildClose = true,
                 DesiresAssist = true,
                 NumAssistees = 15,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
                 maxRadius = 20,
@@ -289,7 +289,7 @@ BuilderGroup {
                 BuildClose = true,
                 DesiresAssist = true,
                 NumAssistees = 15,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
                 maxRadius = 20,
@@ -324,7 +324,7 @@ BuilderGroup {
             MinNumAssistees = 3,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
                     'T4Artillery',
                 },
@@ -356,7 +356,7 @@ BuilderGroup {
             MinNumAssistees = 3,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
                     'T3RapidArtillery',
                 },

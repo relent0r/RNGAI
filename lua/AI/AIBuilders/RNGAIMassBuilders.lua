@@ -248,7 +248,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
-                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3},
                 AdjacencyDistance = 80,
                 AvoidCategory = categories.MASSFABRICATION,
                 maxUnits = 1,
@@ -358,7 +358,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -387,7 +387,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -416,7 +416,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 500,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -478,7 +478,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION,
+                AdjacencyPriority = categories.MASSEXTRACTION,
                 AdjacencyDistance = 500,
                 BuildClose = false,
                 ThreatMin = -3,

@@ -485,9 +485,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     -- due to a factoryfinished callback that looks at the engineers buildermanager
                     RNGLOG('We are going to setup a base for '..pick)
                     RNGLOG('Removing CDR from Current manager')
-                    cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                    cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
                     RNGLOG('Adding CDR to expansion manager')
-                    aiBrain.BuilderManagers[object.dataobject.Name].EngineerManager:AddUnit(cdr, true)
+                    aiBrain.BuilderManagers[object.dataobject.Name].EngineerManager:AddUnitRNG(cdr, true)
                     --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
                     import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, object.dataobject.Name, pick)
 
@@ -530,9 +530,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         end
                     end
                     -- We now put the engineer back into the main base engineer manager so he'll pick up jobs when he returns to base at some point
-                    cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                    cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
                     RNGLOG('Adding CDR back to MAIN manager')
-                    aiBrain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
+                    aiBrain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
                     cdr.EngineerBuildQueue={}
                 elseif aiBrain.BuilderManagers[object.dataobject.Name].FactoryManager:GetNumFactories() == 0 then
                     RNGLOG('There is a manager here but no factories')
@@ -1346,6 +1346,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                         if snipeAttempt then
                             LOG('Lets try snipe the target')
                             movePos = targetPos
+                        elseif cdr.CurrentEnemyThreat < 20 then
+                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - 14})
                         else 
                             movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 3 )})
                         end
@@ -1405,7 +1407,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                         if snipeAttempt then
                             LOG('Lets try snipe the target')
                             movePos = targetPos
-                        else 
+                        elseif cdr.CurrentEnemyThreat < 20 then
+                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - 14})
+                        else
                             movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
                         end
                         if not snipeAttempt and aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
@@ -3238,7 +3242,9 @@ GetStartingReclaim = function(aiBrain)
             RNGLOG('Table Mass entry reclaim amount is '..v.Reclaim.MaxMassReclaim)
             RNGLOG('Table Energy entry reclaim amount is '..v.Reclaim.MaxEnergyReclaim)
         end
+        aiBrain.StartReclaimTotal = reclaimTotal
     end
+    LOG('Total Starting Reclaim is '..aiBrain.StartReclaimTotal)
     --RNGLOG('Complete Get Starting Reclaim')
 end
 
