@@ -80,14 +80,59 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local minRec = platoon.PlatoonData.MinimumReclaim
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
-            --RNGLOG('Reclaim Function - Starting reclaim is false')
+            RNGLOG('Reclaim Function - Starting reclaim is false')
             local sortedReclaimTable = {}
             if RNGGETN(aiBrain.StartReclaimTable) > 0 then
-                
-                --coroutine.yield(10)
                 local reclaimCount = 0
-                aiBrain.StartReclaimTaken = true
-                for k, r in aiBrain.StartReclaimTable do
+                while RNGGETN(aiBrain.StartReclaimTable) > 0 do
+                    --coroutine.yield(10)
+                    aiBrain.StartReclaimTaken = true
+                    local closestReclaimDistance = false
+                    local closestReclaim
+                    local closestReclaimKey
+                    for k, r in aiBrain.StartReclaimTable do
+                        local reclaimDistance
+                        if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                            reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
+                            if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
+                                closestReclaim = r.Reclaim
+                                closestReclaimDistance = reclaimDistance
+                                closestReclaimKey = k
+                            end
+                        end
+                    end
+                    if closestReclaim then
+                        RNGLOG('Closest Reclaim is true we are going to try reclaim it')
+                        reclaimCount = reclaimCount + 1
+                        RNGLOG('Reclaim Function - Issuing reclaim')
+                        RNGLOG('Reclaim distance is '..closestReclaimDistance)
+                        IssueReclaim({self}, closestReclaim)
+                        coroutine.yield(20)
+                        local reclaimTimeout = 0
+                        local massOverflow = false
+                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 20) do
+                            reclaimTimeout = reclaimTimeout + 1
+                            RNGLOG('Waiting for reclaim to no longer exist')
+                            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
+                                -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
+                                -- watch out for thrashing as I don't have a minimum storage check on this builder
+                                LOG('We are overflowing mass return from early reclaim thread')
+                                IssueClearCommands({self})
+                                return
+                            end
+                            coroutine.yield(20)
+                        end
+                        --RNGLOG('Reclaim Count is '..reclaimCount)
+                        if reclaimCount > 10 then
+                            break
+                        end
+                        RNGLOG('Set key to nil '..closestReclaimKey)
+                        aiBrain.StartReclaimTable[closestReclaimKey] = nil
+                    end
+                    aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
+                end
+
+                --[[for k, r in aiBrain.StartReclaimTable do
                     if r.Reclaim and not IsDestroyed(r.Reclaim) then
                         reclaimCount = reclaimCount + 1
                         --RNGLOG('Reclaim Function - Issuing reclaim')
@@ -118,8 +163,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --RNGLOG('Set key to nil')
                     aiBrain.StartReclaimTable[k] = nil
                 end
+                ]]
                 --RNGLOG('Pre Rebuild Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
-                aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
+                --aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
                 --RNGLOG('Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 
                 if RNGGETN(aiBrain.StartReclaimTable) == 0 then

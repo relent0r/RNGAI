@@ -3228,14 +3228,15 @@ GetStartingReclaim = function(aiBrain)
             if v.MaxMassReclaim and v.MaxMassReclaim > minRec or v.MaxEnergyReclaim and v.MaxEnergyReclaim > minRec then
                 --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
                 local rpos = v:GetCachePosition()
-                RNGINSERT(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
+                --RNGINSERT(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
+                RNGINSERT(reclaimTable, { Reclaim = v })
                 --RNGLOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
                 reclaimTotal = reclaimTotal + v.MaxMassReclaim
             end
         end
         --RNGLOG('Sorting Reclaim table by distance ')
         --It feels pointless to sort this table, its the engineer itself that wants the closest not the base.
-        RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
+        --RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
         RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable
         for k, v in aiBrain.StartReclaimTable do
