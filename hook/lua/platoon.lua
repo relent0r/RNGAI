@@ -9088,7 +9088,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local wreckReclaim = GetReclaimablesInRect(Rect(reclaimUnitPos[1], reclaimUnitPos[3], reclaimUnitPos[1], reclaimUnitPos[3]))
                     LOG('Wrecks at reclaim unit position table is '..table.getn(wreckReclaim))
                     for _, v in wreckReclaim do
-                        if not IsProp(v) then continue end
+                        if not v.IsWreckage then continue end
                         LOG('Issuing Reclaim for unit wrecked')
                         IssueReclaim(self:GetPlatoonUnits(), wreckReclaim)
                     end

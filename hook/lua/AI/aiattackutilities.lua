@@ -634,7 +634,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                             local reclaimCount = 0
                             for c, b in reclaimRect do
                                 if reclaimCount > 15 then break end
-                                if not IsProp(b) then continue end
+                                if not b.IsWreckage then continue end
                                 local rpos = b:GetCachePosition()
                                 -- Start Blacklisted Props
                                 if (b.MaxMassReclaim and b.MaxMassReclaim > 0) or (b.MaxEnergyReclaim and b.MaxEnergyReclaim > 10) then

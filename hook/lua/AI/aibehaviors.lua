@@ -3220,7 +3220,7 @@ GetStartingReclaim = function(aiBrain)
     --RNGLOG('Initial Reclaim Table size is '..table.getn(startReclaim))
     if startReclaim and RNGGETN(startReclaim) > 0 then
         for k,v in startReclaim do
-            if not IsProp(v) then continue end
+            if not v.IsWreckage then continue end
             if v.MaxMassReclaim and v.MaxMassReclaim > minRec or v.MaxEnergyReclaim and v.MaxEnergyReclaim > minRec then
                 --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
                 local rpos = v:GetCachePosition()

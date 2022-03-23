@@ -338,7 +338,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 local engReclaiming = false
                                 if reclaimRect then
                                     for c, b in reclaimRect do
-                                        if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                        if not b.IsWreckage or self.BadReclaimables[b] then continue end
                                         local rpos = b:GetCachePosition()
                                         -- Start Blacklisted Props
                                         local blacklisted = false
@@ -408,7 +408,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --self:SetCustomName('Loop through reclaim table')
         if reclaimRect and RNGGETN( reclaimRect ) > 0 then
             for k,v in reclaimRect do
-                if not IsProp(v) or self.BadReclaimables[v] then continue end
+                if not v.IsWreckage or self.BadReclaimables[v] then continue end
                 local rpos = v:GetCachePosition()
                 -- Start Blacklisted Props
                 local blacklisted = false
@@ -3360,7 +3360,7 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
             end
             if reclaimRect and RNGGETN( reclaimRect ) > 0 then
                 for k,v in reclaimRect do
-                    if not IsProp(v) or self.BadReclaimables[v] then continue end
+                    if not v.IsWreckage or self.BadReclaimables[v] then continue end
                     currentValue = currentValue + v.MaxMassReclaim
                     if currentValue > valueTrigger then
                         --insert into table stuff
@@ -3557,7 +3557,7 @@ MapReclaimAnalysis = function(aiBrain)
                     local reclaimRaw = GetReclaimablesInRect(xCenter - (reclaimScanArea / 2), zCenter - (reclaimScanArea / 2), xCenter + (reclaimScanArea / 2), zCenter + (reclaimScanArea / 2))
                     if reclaimRaw and table.getn(reclaimRaw) > 0 then
                         for k,v in reclaimRaw do
-                            if not IsProp(v) then continue end
+                            if not v.IsWreckage then continue end
                             if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
                                 reclaimTotal = reclaimTotal + v.MaxMassReclaim
                             end
