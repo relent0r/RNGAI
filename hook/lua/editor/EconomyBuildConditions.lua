@@ -190,7 +190,7 @@ end
 
 function NegativeEcoPowerCheck(aiBrain, EnergyTrend)
     if aiBrain.EcoManager.EcoPowerPreemptive then
-        LOG('PreEmptive Power Check is true')
+        --LOG('PreEmptive Power Check is true')
         return true
     end
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then

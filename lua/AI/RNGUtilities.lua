@@ -736,13 +736,13 @@ function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
     for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
             if waterOnly then
-                if PositionInWater(v.position) then
+                if v.Water then
                     table.insert(markerList, {Position = v.position, Name = k})
                 end
             elseif includeWater then
                 table.insert(markerList, {Position = v.position, Name = k})
             else
-                if not PositionInWater(v.position) then
+                if not v.Water then
                     table.insert(markerList, {Position = v.position, Name = k})
                 end
             end

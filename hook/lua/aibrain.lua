@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
 local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
@@ -929,10 +930,10 @@ AIBrain = Class(RNGAIBrainClass) {
         --IntelManagerRNG.GenerateMapZonesRNG(self)
 
         if RUtils.InitialMassMarkersInWater(self) then
-            --RNGLOG('* AI-RNG: Map has mass markers in water')
+            RNGLOG('* AI-RNG: Map has mass markers in water')
             self.MassMarkersInWater = true
         else
-            --RNGLOG('* AI-RNG: Map does not have mass markers in water')
+            RNGLOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
 
@@ -977,8 +978,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
-        self.intelmanager = IntelManagerRNG.CreateIntelManager(self)
-        self.intelmanager:Run()
+        self.IntelManager = IntelManagerRNG.CreateIntelManager(self)
+        self.IntelManager:Run()
+        self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
+        self.StructureManager:Run()
         
     end,
 
