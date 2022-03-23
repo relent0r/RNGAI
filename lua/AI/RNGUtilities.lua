@@ -4,6 +4,7 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local Utils = import('/lua/utilities.lua')
+local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
@@ -60,6 +61,28 @@ Valid Threat Options:
 local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
+    local function MexBuild(platoon, eng, aiBrain)
+        local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, platoon:GetPlatoonPosition(), 25)
+        if bool then
+            IssueClearCommands({eng})
+            local factionIndex = aiBrain:GetFactionIndex()
+            local buildingTmplFile = import('/lua/BuildingTemplates.lua')
+            local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+            local whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            RNGLOG('Reclaim AI We can build on a mass marker within 30')
+            for _,massMarker in markers do
+                EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 2)
+                EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
+                if massMarker.BorderWarning then
+                    RNGLOG('Border Warning on mass point marker')
+                    IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
+                else
+                    RNGLOG('Reclaim AI building mex')
+                    aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                end
+            end
+        end
+    end
 
     --RNGLOG('* AI-RNG: Start Reclaim Function')
     if aiBrain.StartReclaimTaken then
@@ -81,10 +104,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
             RNGLOG('Reclaim Function - Starting reclaim is false')
-            local sortedReclaimTable = {}
-            if RNGGETN(aiBrain.StartReclaimTable) > 0 then
+            local tableSize = RNGGETN(aiBrain.StartReclaimTable)
+            if tableSize > 0 then
                 local reclaimCount = 0
-                while RNGGETN(aiBrain.StartReclaimTable) > 0 do
+                while tableSize > 0 do
                     --coroutine.yield(10)
                     aiBrain.StartReclaimTaken = true
                     local closestReclaimDistance = false
@@ -129,7 +152,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         RNGLOG('Set key to nil '..closestReclaimKey)
                         aiBrain.StartReclaimTable[closestReclaimKey] = nil
                     end
+                    reclaimCount = reclaimCount + 1
+                    if reclaimCount > 10 then
+                        break
+                    end
+                    coroutine.yield(2)
                     aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
+                    tableSize = RNGGETN(aiBrain.StartReclaimTable)
                 end
 
                 --[[for k, r in aiBrain.StartReclaimTable do
@@ -174,10 +203,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 else
                     --RNGLOG('Start Reclaim table not empty, set StartReclaimTaken to false')
                     aiBrain.StartReclaimTaken = false
-                end
-                for i=1, 10 do
-                    --RNGLOG('Waiting Ticks '..i)
-                    coroutine.yield(20)
                 end
             end
             --self:SetCustomName('StartReclaim logic end')
@@ -348,6 +373,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                         coroutine.yield(30)
                                     end
                                 end
+                                MexBuild(platoon, self, aiBrain)
                             end
                             LOG('reclaim grid loop has finished')
                             LOG('Total things that should have be issued reclaim are '..reclaimCount)
@@ -496,6 +522,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     reclaiming = false
                 end
             end
+            MexBuild(platoon, self, aiBrain)
             --self:SetCustomName('reclaim loop end')
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position

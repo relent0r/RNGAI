@@ -635,6 +635,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            IgnoreCivilian = true,
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -993,6 +994,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            IgnoreCivilian = true,
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {

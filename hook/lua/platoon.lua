@@ -637,6 +637,7 @@ Platoon = Class(RNGAIPlatoon) {
         --RNGLOG('* AI-RNG: ReclaimAIRNG has been started')
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local eng
         for k, v in platoonUnits do
             if not v.Dead and EntityCategoryContains(categories.MOBILE * categories.ENGINEER, v) then
@@ -1096,7 +1097,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 if RNGGETN(im.ZoneIntel.Assignment) > 0  then
                                     LOG('Scout ZoneIntel Assignment table is present')
                                     for k, v in im.ZoneIntel.Assignment do
-                                        if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) then
+                                        if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
                                             LOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
                                             if AIAttackUtils.CanGraphToRNG(scoutPos, v.Position, self.MovementLayer) then
                                                 LOG('Scout ZoneIntel Assignment scout is assigning itself to the zone')
@@ -1272,10 +1273,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
         local aiBrain = self:GetBrain()
@@ -1345,6 +1346,8 @@ Platoon = Class(RNGAIPlatoon) {
                                 continue
                             end
                         end
+                        local retreatTrigger = 0
+                        local retreatTimeout = 0
                         while PlatoonExists(aiBrain, self) do
                             if not target.Dead then
                                 --targetPosition = target:GetPosition()
@@ -1356,13 +1359,20 @@ Platoon = Class(RNGAIPlatoon) {
                                     if not unit.MaxWeaponRange then
                                         continue
                                     end
-                                    VariableKite(self,unit,target)
+                                    retreatTrigger = VariableKite(self,unit,target)
                                     if target.Dead then break end
                                 end
                             else
                                 break
                             end
+                            if retreatTrigger > 5 then
+                                retreatTimeout = retreatTimeout + 1
+                            end
                             coroutine.yield(15)
+                            if retreatTimeout > 3 then
+                                LOG('platoon stopped chasing unit')
+                                break
+                            end
                         end
                     end
                 end
@@ -1437,10 +1447,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
         local function DrawCirclePoints(points, radius, center)
@@ -1592,6 +1602,8 @@ Platoon = Class(RNGAIPlatoon) {
                     local attackSquad = self:GetSquadUnits('Attack')
                     local artillerySquad = self:GetSquadUnits('Artillery')
                     local snipeAttempt = false
+                    local retreatTrigger = 0
+                    local retreatTimeout = 0
                     if target and not target.Dead then
                         if aiBrain.CDRUnit.SuicideMode and EntityCategoryContains(categories.COMMAND, target) then
                             snipeAttempt = true
@@ -1615,7 +1627,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     IssueMove({unit},targetPosition)
                                     coroutine.yield(1)
                                 else
-                                    VariableKite(self,unit,target)
+                                    retreatTrigger = VariableKite(self,unit,target)
                                 end
                             end
                         end
@@ -1632,7 +1644,7 @@ Platoon = Class(RNGAIPlatoon) {
                                     IssueAttack({unit},targetPosition)
                                     coroutine.yield(1)
                                 else
-                                    VariableKite(self,unit,target)
+                                    retreatTrigger = VariableKite(self,unit,target)
                                 end
                             end
                         end
@@ -1640,7 +1652,14 @@ Platoon = Class(RNGAIPlatoon) {
                         LOG('No longer target or target.Dead')
                         break
                     end
-                    coroutine.yield(20)
+                    if retreatTrigger > 5 then
+                        retreatTimeout = retreatTimeout + 1
+                    end
+                    coroutine.yield(15)
+                    if retreatTimeout > 3 then
+                        LOG('platoon stopped chasing unit')
+                        break
+                    end
                 end
                 LOG('Target kite has completed')
             end
@@ -4032,6 +4051,7 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         elseif RNGGETN(buildMassDistantPoints) > 0 then
+            LOG('Distancemasspoints has '..RNGGETN(buildMassDistantPoints))
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             if RNGGETN(buildMassDistantPoints) < 3 then
                 for k, v in buildMassDistantPoints do
@@ -4642,10 +4662,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
         self:ConfigurePlatoon()
@@ -4878,6 +4898,8 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 IssueClearCommands(attackSquad)
+                local retreatTrigger = 0
+                local retreatTimeout = 0
                 while PlatoonExists(aiBrain, self) do
                     --RNGLOG('At position and waiting for target death')
                     if target and not target.Dead then
@@ -4891,9 +4913,17 @@ Platoon = Class(RNGAIPlatoon) {
                                 continue
                             end
                             IssueClearCommands({unit})
-                            VariableKite(self,unit,target)
+                            retreatTrigger = VariableKite(self,unit,target)
                         end
                     else
+                        break
+                    end
+                    if retreatTrigger > 5 then
+                        retreatTimeout = retreatTimeout + 1
+                    end
+                    coroutine.yield(15)
+                    if retreatTimeout > 3 then
+                        LOG('platoon stopped chasing unit')
                         break
                     end
                     coroutine.yield(15)
@@ -4986,10 +5016,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
 
@@ -5196,6 +5226,8 @@ Platoon = Class(RNGAIPlatoon) {
                 end
                 IssueClearCommands(attackSquad)
                 if target and not target.Dead then
+                    local retreatTrigger = 0
+                    local retreatTimeout = 0
                     while PlatoonExists(aiBrain, self) do
                         --RNGLOG('At position and waiting for target death')
                         local targetPosition = target:GetPosition()
@@ -5208,10 +5240,17 @@ Platoon = Class(RNGAIPlatoon) {
                                 continue
                             end
                             IssueClearCommands({unit})
-                            VariableKite(self,unit,target)
+                            retreatTrigger = VariableKite(self,unit,target)
+                        end
+                        if target.Dead then
+                            break
+                        end
+                        if retreatTrigger > 5 then
+                            retreatTimeout = retreatTimeout + 1
                         end
                         coroutine.yield(15)
-                        if target.Dead then
+                        if retreatTimeout > 3 then
+                            LOG('platoon stopped chasing unit')
                             break
                         end
                     end
@@ -5225,8 +5264,10 @@ Platoon = Class(RNGAIPlatoon) {
                         IssueFormAggressiveMove(GetPlatoonUnits(self), formPos, 'AttackFormation', direction)
                         --RNGLOG('IssueFormAggressiveMove Performed')
                         coroutine.yield(40)
-                        if self:MergeWithNearbyPlatoonsRNG('ZoneControlRNG', 30, 30) then
-                            self:ConfigurePlatoon()
+                        if aiBrain.Zones.Land.zones[self.TargetZone].enemythreat > self.CurrentPlatoonThreat then
+                            if self:MergeWithNearbyPlatoonsRNG('ZoneControlRNG', 30, 30) then
+                                self:ConfigurePlatoon()
+                            end
                         end
                     elseif targetZone and targetPosition then
                         --RNGLOG('Zone Control Platoon is moving to retreat position')
@@ -5420,10 +5461,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
         self:ConfigurePlatoon()
@@ -5786,6 +5827,8 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                 end
                 IssueClearCommands(attackSquad)
+                local retreatTrigger = 0
+                local retreatTimeout = 0
                 while PlatoonExists(aiBrain, self) do
                     --RNGLOG('At position and waiting for target death')
                     if target and not target.Dead then
@@ -5799,12 +5842,19 @@ Platoon = Class(RNGAIPlatoon) {
                                 continue
                             end
                             IssueClearCommands({unit})
-                            VariableKite(self,unit,target)
+                            retreatTrigger = VariableKite(self,unit,target)
                         end
                     else
                         break
                     end
+                    if retreatTrigger > 5 then
+                        retreatTimeout = retreatTimeout + 1
+                    end
                     coroutine.yield(15)
+                    if retreatTimeout > 3 then
+                        LOG('platoon stopped chasing unit')
+                        break
+                    end
                     if self.PlatoonData.Avoid then
                         LOG('MassRaidRNG Avoid while in combat true')
                         platLoc = GetPlatoonPosition(self)
@@ -6123,10 +6173,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
 
@@ -6307,6 +6357,8 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     self:Stop()
+                    local retreatTrigger = 0
+                    local retreatTimeout = 0
                     while PlatoonExists(aiBrain, self) do
                         if target and not target.Dead then
                             local targetPosition = target:GetPosition()
@@ -6320,13 +6372,20 @@ Platoon = Class(RNGAIPlatoon) {
                                     continue
                                 end
                                 IssueClearCommands({unit})
-                                VariableKite(self,unit,target)
+                                retreatTrigger = VariableKite(self,unit,target)
                             end
                         else
                             self:MoveToLocation(path[i], false)
                             break
                         end
-                        coroutine.yield(20)
+                        if retreatTrigger > 5 then
+                            retreatTimeout = retreatTimeout + 1
+                        end
+                        coroutine.yield(15)
+                        if retreatTimeout > 3 then
+                            LOG('platoon stopped chasing unit')
+                            break
+                        end
                         if self.PlatoonData.Avoid then
                             --LOG('MassRaidRNG Avoid while in combat true')
                             PlatoonPosition = GetPlatoonPosition(self)
@@ -6413,10 +6472,10 @@ Platoon = Class(RNGAIPlatoon) {
             if VDist3Sq(pos,dest)>6 then
                 IssueMove({unit},dest)
                 coroutine.yield(2)
-                return
+                return mod
             else
                 coroutine.yield(2)
-                return
+                return mod
             end
         end
 
@@ -6609,6 +6668,8 @@ Platoon = Class(RNGAIPlatoon) {
                         end
                     end
                     self:Stop()
+                    local retreatTrigger = 0
+                    local retreatTimeout = 0
                     while PlatoonExists(aiBrain, self) do
                         if target and not target.Dead then
                             local targetPosition = target:GetPosition()
@@ -6622,13 +6683,20 @@ Platoon = Class(RNGAIPlatoon) {
                                     continue
                                 end
                                 IssueClearCommands({unit})
-                                VariableKite(self,unit,target)
+                                retreatTrigger = VariableKite(self,unit,target)
                             end
                         else
                             self:MoveToLocation(path[i], false)
                             break
                         end
+                        if retreatTrigger > 5 then
+                            retreatTimeout = retreatTimeout + 1
+                        end
                         coroutine.yield(15)
+                        if retreatTimeout > 3 then
+                            LOG('platoon stopped chasing unit')
+                            break
+                        end
                     end
                 end
                 coroutine.yield(15)
@@ -8132,8 +8200,8 @@ Platoon = Class(RNGAIPlatoon) {
     end,
 
     -- For Debugging
-    --[[
-    PlatoonDisband = function(self)
+
+    --[[PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
         if not aiBrain.RNG then
             return RNGAIPlatoon.PlatoonDisband(self)
@@ -9175,7 +9243,7 @@ Platoon = Class(RNGAIPlatoon) {
                                             break
                                         end
                                     end
-                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT), unit) then
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
                                     LOG('MexBuild found enemy unit, try avoid it')
                                     IssueClearCommands({eng})
                                     IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
@@ -9686,10 +9754,33 @@ Platoon = Class(RNGAIPlatoon) {
                 end
             end
         end
+        local function SetZone(pos, zoneIndex)
+            RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+            if not pos then
+                LOG('No pos in configure platoon function')
+                return false
+            end
+            local zoneID = MAP:GetZoneID(pos,zoneIndex)
+            -- zoneID <= 0 => not in a zone
+            if zoneID > 0 then
+                self.Zone = zoneID
+            else
+                self.Zone = false
+            end
+        end
+
+        local aiBrain = self:GetBrain()
+        if not self.Zone then
+            if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
+                RNGLOG('Set Zone on platoon during initial config')
+                RNGLOG('Zone Index is '..aiBrain.Zones.Land.index)
+                SetZone(table.copy(GetPlatoonPosition(self)), aiBrain.Zones.Land.index)
+            elseif self.MovementLayer == 'Water' then
+                --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+            end
+        end
         UnitInitialize(self)
         self:Stop()
-        
-        local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local targetmex

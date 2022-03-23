@@ -676,7 +676,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 750,
+        Priority = 850,
         InstanceCount = 1,
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -693,7 +693,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support Excess',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 775,
+        Priority = 875,
         InstanceCount = 2,
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -709,7 +709,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Land Factory Upgrade HQ',
         PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 850,
+        Priority = 875,
         InstanceCount = 1,
         BuilderConditions = {
                 { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
@@ -724,7 +724,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Enemy',
         PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 875,
+        Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
@@ -754,7 +754,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI T2 Land Factory Upgrade Support UEF',
         PlatoonTemplate = 'T2LandSupFactoryUpgrade1',
-        Priority = 760,
+        Priority = 875,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -771,7 +771,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI T2 Land Factory Upgrade Support AEON',
         PlatoonTemplate = 'T2LandSupFactoryUpgrade2',
-        Priority = 760,
+        Priority = 875,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -788,7 +788,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI T2 Land Factory Upgrade Support Cybran',
         PlatoonTemplate = 'T2LandSupFactoryUpgrade3',
-        Priority = 760,
+        Priority = 875,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -804,7 +804,7 @@ BuilderGroup {
     },
     Builder { BuilderName = 'RNGAI T2 Land Factory Upgrade Support Sera',
         PlatoonTemplate = 'T2LandSupFactoryUpgrade4',
-        Priority = 760,
+        Priority = 875,
         DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
@@ -852,7 +852,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Air Factory Upgrade Support',
         PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 750,
+        Priority = 850,
         InstanceCount = 1,
         BuilderData = {
             OverideUpgradeBlueprint = { 'zeb9502', 'zab9502', 'zrb9502', 'zsb9502', 'znb9502' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories

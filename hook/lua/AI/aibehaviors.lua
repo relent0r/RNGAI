@@ -73,7 +73,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.MaxBaseRange = 0
     cdr.OverCharge = false
     cdr.ThreatLimit = 35
-    cdr.Confidence = 0
+    cdr.Confidence = 1
     cdr.EnemyCDRPresent = false
     cdr.Caution = false
     cdr.HealthPercent = 0
@@ -659,7 +659,8 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
         IssueClearCommands({cdr})
         IssueMove({cdr}, position)
         coroutine.yield(60)
-        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
+        --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
     else
         path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
     end
@@ -1031,17 +1032,13 @@ function CDRThreatAssessmentRNG(cdr)
             local friendlyUnitThreat = 0
             local friendlyThreatConfidenceModifier = 0
             local enemyThreatConfidenceModifier = 0
-            local bp
             for k,v in friendlyUnits do
                 if v and not v.Dead then
                     if EntityCategoryContains(categories.COMMAND, v) then
                         friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                     else
-                        --RNGLOG('Unit ID is '..v.UnitId)
-                        bp = ALLBPS[v.UnitId].Defense
-                        --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                        if bp.SurfaceThreatLevel ~= nil then
-                            friendlyUnitThreat = friendlyUnitThreat + bp.SurfaceThreatLevel
+                        if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                            friendlyUnitThreat = friendlyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     end
                 end
@@ -1055,11 +1052,8 @@ function CDRThreatAssessmentRNG(cdr)
                         enemyACUPresent = true
                         enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                     else
-                        --RNGLOG('Unit ID is '..v.UnitId)
-                        bp = ALLBPS[v.UnitId].Defense
-                        --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                        if bp.SurfaceThreatLevel ~= nil then
-                            enemyUnitThreat = enemyUnitThreat + bp.SurfaceThreatLevel
+                        if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                            enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     end
                 end
@@ -1076,7 +1070,10 @@ function CDRThreatAssessmentRNG(cdr)
             RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
             RNGLOG('Current CDR Confidence '..cdr.Confidence)
-            if not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+                cdr.Caution = true
+            elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
@@ -1153,7 +1150,6 @@ function CDROverChargeRNG(aiBrain, cdr)
     maxRadius = cdr.HealthPercent * 100
     
     if cdr.Health > 5000 and cdr.Phase < 3
-        and GetGameTimeSeconds() > 210
         and aiBrain.MapSize <= 10
         and cdr.Initialized
         then
@@ -1179,7 +1175,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         return
     end
     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxRadius * maxRadius then
-        RNGLOG('ACU is beyond maxRadius')
+        RNGLOG('ACU is beyond maxRadius of '..maxRadius)
         return CDRRetreatRNG(aiBrain, cdr, true)
     end
 
@@ -1204,7 +1200,6 @@ function CDROverChargeRNG(aiBrain, cdr)
         plat.BuilderName = 'CDR Combat'
         --RNGLOG('Assign ACU to attack platoon')
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-        plat:Stop()
         local target
         local continueFighting = true
         local counter = 0
@@ -1212,6 +1207,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local enemyThreat
         local snipeAttempt = false
         RNGLOG('CDR max range is '..maxRadius)
+
         
         repeat
             overCharging = false
@@ -1752,12 +1748,12 @@ end
 
 function CDRGetUnitClump(aiBrain, cdrPos, radius)
     -- Will attempt to get a unit clump rather than single unit targets for OC
-    local unitList = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
+    local unitList = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE + categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
     --RNGLOG('Check for unit clump')
     for k, v in unitList do
         if v and not v.Dead then
             local unitPos = v:GetPosition()
-            local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+            local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE + categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
             if unitCount > 1 then
                 --RNGLOG('Multiple Units found')
                 return true, v
@@ -3240,7 +3236,6 @@ GetStartingReclaim = function(aiBrain)
         RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable
         for k, v in aiBrain.StartReclaimTable do
-            RNGLOG('Table entry distance is '..v.Distance)
             RNGLOG('Table Mass entry reclaim amount is '..v.Reclaim.MaxMassReclaim)
             RNGLOG('Table Energy entry reclaim amount is '..v.Reclaim.MaxEnergyReclaim)
         end

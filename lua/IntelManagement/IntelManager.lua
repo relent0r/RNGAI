@@ -566,7 +566,7 @@ IntelManager = Class {
         }
         for k, v in Zones do
             for k1, v1 in self.Brain.Zones[v].zones do
-                RNGINSERT(self.ZoneIntel.Assignment, { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false})
+                RNGINSERT(self.ZoneIntel.Assignment, { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = v1.startpositionclose})
             end
         end
         LOG('Zone Intel Assignment Complete')
