@@ -30,7 +30,7 @@ BaseBuilderTemplate {
         'RNGAI Factory Builder Land',
         'RNGAI Factory Builder Air',
         --'RNGAI Factory Builder Sea',
-        'RNGAI Land Upgrade Builders',
+        --'RNGAI Land Upgrade Builders',
         'RNGAI Land AA 2',
         'RNGAI Assist Builders',
         --Strategic Builders
@@ -56,7 +56,7 @@ BaseBuilderTemplate {
         --'RNGAI Mass Hunter Sea Formers',
  
         -- Air Factory Formers --
-        'RNGAI Air Upgrade Builders',
+        --'RNGAI Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',

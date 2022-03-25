@@ -118,7 +118,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI Antiair Small',
-    Plan = 'StrikeForceAIRNG',    
+    Plan = 'GunshipStrikeAIRNG',    
     GlobalSquads = {
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 10, 'attack', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },

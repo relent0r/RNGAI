@@ -4,6 +4,7 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local Utils = import('/lua/utilities.lua')
+local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
@@ -60,6 +61,31 @@ Valid Threat Options:
 local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
+    local function MexBuild(platoon, eng, aiBrain)
+        local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, platoon:GetPlatoonPosition(), 25)
+        if bool then
+            IssueClearCommands({eng})
+            local factionIndex = aiBrain:GetFactionIndex()
+            local buildingTmplFile = import('/lua/BuildingTemplates.lua')
+            local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+            local whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            --RNGLOG('Reclaim AI We can build on a mass marker within 30')
+            for _,massMarker in markers do
+                EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 2)
+                EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
+                if massMarker.BorderWarning then
+                    --RNGLOG('Border Warning on mass point marker')
+                    IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
+                else
+                    --RNGLOG('Reclaim AI building mex')
+                    aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                end
+            end
+            while eng and not eng.Dead and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
+                coroutine.yield(20)
+            end
+        end
+    end
 
     --RNGLOG('* AI-RNG: Start Reclaim Function')
     if aiBrain.StartReclaimTaken then
@@ -81,13 +107,65 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
             --RNGLOG('Reclaim Function - Starting reclaim is false')
-            local sortedReclaimTable = {}
-            if RNGGETN(aiBrain.StartReclaimTable) > 0 then
-                
-                --coroutine.yield(10)
+            local tableSize = RNGGETN(aiBrain.StartReclaimTable)
+            --LOG('Start reclaim table size '..tableSize)
+            if tableSize > 0 then
                 local reclaimCount = 0
-                aiBrain.StartReclaimTaken = true
-                for k, r in aiBrain.StartReclaimTable do
+                while tableSize > 0 do
+                    --coroutine.yield(10)
+                    aiBrain.StartReclaimTaken = true
+                    local closestReclaimDistance = false
+                    local closestReclaim
+                    local closestReclaimKey
+                    for k, r in aiBrain.StartReclaimTable do
+                        local reclaimDistance
+                        if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                            reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
+                            if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
+                                closestReclaim = r.Reclaim
+                                closestReclaimDistance = reclaimDistance
+                                closestReclaimKey = k
+                            end
+                        end
+                    end
+                    if closestReclaim then
+                        --RNGLOG('Closest Reclaim is true we are going to try reclaim it')
+                        reclaimCount = reclaimCount + 1
+                        --RNGLOG('Reclaim Function - Issuing reclaim')
+                        --RNGLOG('Reclaim distance is '..closestReclaimDistance)
+                        IssueReclaim({self}, closestReclaim)
+                        coroutine.yield(20)
+                        local reclaimTimeout = 0
+                        local massOverflow = false
+                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 20) do
+                            reclaimTimeout = reclaimTimeout + 1
+                            --RNGLOG('Waiting for reclaim to no longer exist')
+                            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
+                                -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
+                                -- watch out for thrashing as I don't have a minimum storage check on this builder
+                                --LOG('We are overflowing mass return from early reclaim thread')
+                                IssueClearCommands({self})
+                                return
+                            end
+                            coroutine.yield(20)
+                        end
+                        --RNGLOG('Reclaim Count is '..reclaimCount)
+                        if reclaimCount > 10 then
+                            break
+                        end
+                        --RNGLOG('Set key to nil '..closestReclaimKey)
+                        aiBrain.StartReclaimTable[closestReclaimKey] = nil
+                    end
+                    reclaimCount = reclaimCount + 1
+                    if reclaimCount > 10 then
+                        break
+                    end
+                    coroutine.yield(2)
+                    aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
+                    tableSize = RNGGETN(aiBrain.StartReclaimTable)
+                end
+
+                --[[for k, r in aiBrain.StartReclaimTable do
                     if r.Reclaim and not IsDestroyed(r.Reclaim) then
                         reclaimCount = reclaimCount + 1
                         --RNGLOG('Reclaim Function - Issuing reclaim')
@@ -95,13 +173,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         IssueReclaim({self}, r.Reclaim)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
+                        local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
-                                self:SetPaused( true )
-                                coroutine.yield(50)
-                                self:SetPaused( false )
+                                -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
+                                -- watch out for thrashing as I don't have a minimum storage check on this builder
+                               --LOG('We are overflowing mass return from early reclaim thread')
+                                IssueClearCommands({self})
+                                return
                             end
                             coroutine.yield(20)
                         end
@@ -115,8 +196,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     --RNGLOG('Set key to nil')
                     aiBrain.StartReclaimTable[k] = nil
                 end
+                ]]
                 --RNGLOG('Pre Rebuild Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
-                aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
+                --aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
                 --RNGLOG('Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 
                 if RNGGETN(aiBrain.StartReclaimTable) == 0 then
@@ -125,10 +207,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 else
                     --RNGLOG('Start Reclaim table not empty, set StartReclaimTaken to false')
                     aiBrain.StartReclaimTaken = false
-                end
-                for i=1, 10 do
-                    --RNGLOG('Waiting Ticks '..i)
-                    coroutine.yield(20)
                 end
             end
             --self:SetCustomName('StartReclaim logic end')
@@ -299,6 +377,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                         coroutine.yield(30)
                                     end
                                 end
+                                MexBuild(platoon, self, aiBrain)
                             end
                            --LOG('reclaim grid loop has finished')
                            --LOG('Total things that should have be issued reclaim are '..reclaimCount)
@@ -447,6 +526,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     reclaiming = false
                 end
             end
+            MexBuild(platoon, self, aiBrain)
             --self:SetCustomName('reclaim loop end')
         end
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
@@ -526,7 +606,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
             if not IsEnemy( aiBrain:GetArmyIndex(), unit:GetAIBrain():GetArmyIndex() ) then
                 continue
             end
-            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * (categories.MOBILE + categories.WALL), unit) then 
+            if unit:IsCapturable() and not EntityCategoryContains(categories.TECH1 * (categories.MOBILE + categories.WALL), unit) and unit:GetFractionComplete() == 1 then 
                 --RNGLOG('* AI-RNG: Unit is capturable and not category t1 mobile'..unitdesc)
                 -- if we can capture the unit/building then do so
                 unit.CaptureInProgress = true
@@ -660,13 +740,13 @@ function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
     for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
             if waterOnly then
-                if PositionInWater(v.position) then
+                if v.Water then
                     table.insert(markerList, {Position = v.position, Name = k})
                 end
             elseif includeWater then
                 table.insert(markerList, {Position = v.position, Name = k})
             else
-                if not PositionInWater(v.position) then
+                if not v.Water then
                     table.insert(markerList, {Position = v.position, Name = k})
                 end
             end
@@ -2814,6 +2894,7 @@ LastKnownThread = function(aiBrain)
             local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
+                if ArmyIsCivilian(v:GetArmy()) then continue end
                 local id=v.Sync.id
                 local unitPosition = table.copy(v:GetPosition())
                 if EntityCategoryContains(categories.MASSEXTRACTION,v) then
@@ -3036,6 +3117,70 @@ TruePlatoonPriorityDirector = function(aiBrain)
         end
         coroutine.yield(50)
         --RNGLOG('Priority Points'..repr(aiBrain.prioritypoints))
+    end
+end
+
+ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
+    -- See if anything in the ACU table looks good to attack
+    local enemyUnitThreat = 0
+    local armyIndex = aiBrain:GetArmyIndex()
+    local target = false
+    local enemyACUTable = {}
+    if not platoon.MovementLayer then
+        platoon:ConfigurePlatoon()
+    end
+    if aiBrain.EnemyIntel.ACU then
+        for k, v in aiBrain.EnemyIntel.ACU do
+            if aiBrain.CDRUnit.EnemyCDRPresent then
+                target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
+                return target
+            elseif k ~= armyIndex and v.Ally then
+                if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
+                    target = AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
+                   --LOG('Return ACU enemy acu from ally cdr')
+                    return target
+                end
+            elseif not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
+                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+                    if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
+                        local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
+                        for c, b in enemyUnits do
+                            if b and not b.Dead then
+                                if EntityCategoryContains(categories.COMMAND, b) then
+                                    enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
+                                    RNGINSERT(enemyACUTable, b)
+                                else
+                                    --RNGLOG('Unit ID is '..v.UnitId)
+                                    if bp.SurfaceThreatLevel ~= nil then
+                                        enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+                                    end
+                                end
+                            end
+                        end
+                        if RNGGETN(enemyACUTable) > 0 then
+                            --Do funky stuff to see if we should try rush this acu
+                        end
+                    end
+                elseif platoon.MovementLayer == 'Air' then
+                    local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, v.Position, 60 ,'Enemy')
+                    for c, b in enemyUnits do
+                        if b and not b.Dead then
+                            if EntityCategoryContains(categories.COMMAND, b) then
+                                RNGINSERT(enemyACUTable, b)
+                            else
+                                --RNGLOG('Unit ID is '..v.UnitId)
+                                if bp.AirThreatLevel ~= nil then
+                                    enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.AirThreatLevel
+                                end
+                            end
+                        end
+                    end
+                    if RNGGETN(enemyACUTable) > 0 then
+                        --Do funky stuff to see if we should try snipe this acu
+                    end
+                end
+            end
+        end
     end
 end
 
@@ -3465,7 +3610,7 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     end
     return false
 end
-
+--[[
 function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
@@ -3550,6 +3695,107 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     end
    --LOG('GetBuildLocationRNG is false')
     return false
+end]]
+
+function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
+    -- A small note that caught me out.
+    -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
+    -- and you wont understand why. I think the 3rd param is actually rotation not height.
+    --RNGLOG('GetBuildLocationRNG Function')
+    local buildLocation = false
+    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    local engPos = eng:GetPosition()
+    local function normalposition(vec)
+        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+    end
+    local function heightbuildpos(vec)
+        return {vec[1],vec[2],0}
+    end
+    
+    if adjacent then
+        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
+        local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, radius, 'Ally')
+        local index = aiBrain:GetArmyIndex()
+        local closeUnits = {}
+        for _, v in testUnits do
+            if not v.Dead and not v:IsBeingBuilt() and v:GetAIBrain():GetArmyIndex() == index then
+                table.insert(closeUnits, v)
+            end
+        end
+        local template = {}
+        table.insert(template, {})
+        table.insert(template[1], { buildUnit })
+        for _,unit in closeUnits do
+            local targetSize = unit:GetBlueprint().Physics
+            local targetPos = unit:GetPosition()
+            local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
+            local offsetX=math.floor(differenceX/2)
+            local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
+            local offsetZ=math.floor(differenceZ/2)
+            local offsetfactory=0
+            if EntityCategoryContains(categories.FACTORY, unit) and (buildUnit=='T1LandFactory' or buildUnit=='T2SupportLandFactory' or buildUnit=='T3SupportLandFactory') then
+                offsetfactory=2
+            end
+            -- Top/bottom of unit
+            for i=-offsetX,offsetX do
+                local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
+                local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
+                -- check if the buildplace is to close to the border or inside buildable area
+                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                        return heightbuildpos(testPos), whatToBuild
+                    end
+                end
+                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos2)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                            return heightbuildpos(testPos), whatToBuild
+                        end
+                    end
+                end
+            end
+            -- Sides of unit
+            for i=-offsetZ,offsetZ do
+                local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
+                local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
+                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                            return heightbuildpos(testPos), whatToBuild
+                        end
+                    end
+                end
+                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                    --table.insert(template[1], testPos2)
+                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                            return heightbuildpos(testPos), whatToBuild
+                        end
+                    end
+                end
+            end
+        end
+    else
+        -- build near the base the engineer is part of, rather than the engineer location
+        --RNGLOG('Request for Non Adjacency')
+        --RNGLOG('buildUnit '..buildUnit)
+        --RNGLOG('whatToBuild '..whatToBuild)
+        local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
+        if location and relative then
+            local relativeLoc = {location[1], 0, location[2]}
+            return {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}, whatToBuild
+        else
+            return location, whatToBuild
+        end
+    end
+    return false
 end
 
 
@@ -3616,6 +3862,97 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     end
     --RNGLOG('ClosestMarkersWithin radius failing '..radius)
     return false
+end
+
+function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition, targetPosition, targetDistance)
+    local function DrawCirclePoints(points, radius, center)
+        local circlePoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(circlePoints, { newX, 0 , newY})
+        end
+        return circlePoints
+    end
+
+    local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
+    local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
+    local setPointPos = false
+   --LOG('StrikeForce Looking for better strike target position')
+    for _, pointPos in pointTable do
+       --LOG('pointPos is '..repr(pointPos))
+       --LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
+        
+        local damage = 0
+        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+       --LOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
+        for _, unit in enemiesAroundTarget do
+            if not unit.Dead then
+                local unitPos = unit:GetPosition()
+                local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+               --LOG('Unit is '..unit.UnitId)
+               --LOG('unitPos is '..repr(unitPos))
+               --LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+               --LOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
+                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
+                    if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                        damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                    else
+                       --LOG('Strike will not kill target or 3 passes')
+                    end
+                end
+            end
+           --LOG('Current potential strike damage '..damage)
+        end
+       --LOG('Current maxDamage is '..maxDamage)
+        if damage > maxDamage then
+           --LOG('StrikeForce found better strike damage of '..damage)
+            maxDamage = damage
+            setPointPos = pointPos
+        end
+    end
+    if setPointPos then
+        setPointPos = {setPointPos[1], GetSurfaceHeight(setPointPos[1], setPointPos[3]), setPointPos[3]} 
+        local movePoint = lerpy(platoonPosition, targetPosition, {targetDistance, targetDistance - (platoon.PlatoonStrikeRadiusDistance + 25)})
+        platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon.PlatoonStrikeRadius)
+        platoon:ForkThread(platoon.DrawTargetRadius, setPointPos, platoon.PlatoonStrikeRadius)
+        return setPointPos, movePoint
+    end
+    return false
+end
+
+-- need to ask maudlin about these unless I want to reinvent the rather cleverly done wheel here
+
+function GetBomberRange(oUnit)
+    -- Gets  + 25 added to the return value. Assume to give the strat a better runup?
+    local oBP = oUnit:GetBlueprint()
+    local iRange = 0
+    for sWeaponRef, tWeapon in oBP.Weapon do
+        if tWeapon.WeaponCategory == 'Bomb' or tWeapon.WeaponCategory == 'Direct Fire' then
+            if (tWeapon.MaxRadius or 0) > iRange then
+                iRange = tWeapon.MaxRadius
+            end
+        end
+    end
+    return iRange
+end
+
+function GetAngleFromAToB(tLocA, tLocB)
+    --Returns an angle 0 = north, 90 = east, etc. based on direction of tLocB from tLocA
+    local iTheta = math.atan(math.abs(tLocA[3] - tLocB[3]) / math.abs(tLocA[1] - tLocB[1])) * 180 / math.pi
+    if tLocB[1] > tLocA[1] then
+        if tLocB[3] > tLocA[3] then
+            return 90 + iTheta
+        else return 90 - iTheta
+        end
+    else
+        if tLocB[3] > tLocA[3] then
+            return 270 - iTheta
+        else return 270 + iTheta
+        end
+    end
 end
 
 --[[

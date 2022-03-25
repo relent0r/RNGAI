@@ -20,6 +20,20 @@ function LessThanGameTimeSecondsRNG(aiBrain, num)
     return false
 end
 
+function UnitToThreatRatio(aiBrain, ratio, category, threatType, compareType)
+    local numUnits = aiBrain:GetCurrentUnits(category)
+    local threat
+    if threatType == 'Land' then
+        threat = aiBrain.BrainIntel.SelfThreat.LandNow
+    end
+   --LOG('UnitToThreatRatio numUnits '..numUnits)
+   --LOG('Threat '..threat)
+   --LOG('Ratio is '..(numUnits/threat))
+
+    return CompareBody(numUnits / threat, ratio, compareType)
+
+end
+
 function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     local numOne = aiBrain:GetCurrentUnits(categoryOne)
     local numTwo = aiBrain:GetCurrentUnits(categoryTwo)

@@ -248,7 +248,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
-                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3},
                 AdjacencyDistance = 80,
                 AvoidCategory = categories.MASSFABRICATION,
                 maxUnits = 1,
@@ -351,14 +351,14 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 0.90 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -387,7 +387,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -409,14 +409,14 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 500,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -478,7 +478,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION,
+                AdjacencyPriority = categories.MASSEXTRACTION,
                 AdjacencyDistance = 500,
                 BuildClose = false,
                 ThreatMin = -3,

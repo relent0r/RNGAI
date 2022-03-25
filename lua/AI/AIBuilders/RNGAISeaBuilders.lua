@@ -398,7 +398,7 @@ BuilderGroup {
             ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.STRUCTURE * categories.NAVAL * categories.FACTORY,
-                categories.ENERGYPRODUCTION * categories.TECH3,
+                categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2),
                 categories.MASSEXTRACTION,
                 categories.ENERGYSTORAGE,
                 categories.ENERGYPRODUCTION,

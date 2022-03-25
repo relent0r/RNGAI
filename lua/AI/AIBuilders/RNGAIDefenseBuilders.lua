@@ -130,7 +130,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -160,7 +160,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -188,7 +188,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 35,
@@ -217,7 +217,6 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -225,7 +224,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3AADefense',
                 },
-                AdjacencyCategory = categories.STRUCTURE * (categories.SHIELD + categories.FACTORY),
+                AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY)},
                 Location = 'LocationType',
             }
         }
@@ -247,7 +246,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2) + (categories.STRUCTURE * categories.FACTORY),
+                AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -275,7 +274,7 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2),
+                AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -304,7 +303,7 @@ BuilderGroup {
         BuilderData = {
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3 + categories.TECH2),
+                AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -333,7 +332,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 maxUnits = 1,
-                AdjacencyCategory = categories.STRUCTURE * (categories.SHIELD + categories.FACTORY),
+                AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY)},
                 BuildStructures = {
                     'T3AADefense',
                 },
@@ -442,7 +441,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -470,7 +469,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -499,7 +498,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -555,7 +554,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -788,7 +787,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD),
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 35,
@@ -958,7 +957,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 3,
@@ -988,7 +987,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 3,
@@ -1017,7 +1016,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * categories.NAVAL,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -1085,7 +1084,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 NumAssistees = 5,
                 BuildClose = false,
-                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3},
                 AdjacencyDistance = 80,
                 AvoidCategory = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3,
                 maxUnits = 1,
@@ -1114,7 +1113,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 NumAssistees = 10,
                 BuildClose = false,
-                AdjacencyCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3},
                 AdjacencyDistance = 80,
                 AvoidCategory = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3,
                 maxUnits = 1,

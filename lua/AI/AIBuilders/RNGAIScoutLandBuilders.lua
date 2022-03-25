@@ -34,6 +34,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'RNGAI T1LandScoutForm',
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,
         InstanceCount = 1,
         BuilderType = 'Any',
@@ -47,6 +48,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Excess',
         PlatoonTemplate = 'RNGAI T1LandScoutForm',
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 100,
         InstanceCount = 30,
         BuilderType = 'Any',

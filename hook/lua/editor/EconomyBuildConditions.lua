@@ -22,7 +22,6 @@ function MexUpgradeEco(aiBrain)
     return false
 end
 
-
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, mult)
 
     if aiBrain.EnemyIntel.ChokeFlag then
@@ -377,8 +376,14 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
             end
         elseif noStorageCheck then
             return true
-        elseif (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
-            return true
+        elseif uType == 'Air' then
+            if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
+                return true
+            end
+        else
+            if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 100) then
+                return true
+            end
         end
     end
     return false

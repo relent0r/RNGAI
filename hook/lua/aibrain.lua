@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
 local Mapping = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
@@ -897,6 +898,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
+        self.StartReclaimTotal = 0
         self.StartReclaimTaken = false
         self.MapReclaimTable = {}
         self.Zones = { }
@@ -976,8 +978,10 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
-        self.intelmanager = IntelManagerRNG.CreateIntelManager(self)
-        self.intelmanager:Run()
+        self.IntelManager = IntelManagerRNG.CreateIntelManager(self)
+        self.IntelManager:Run()
+        self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
+        self.StructureManager:Run()
         
     end,
 
@@ -2089,25 +2093,27 @@ AIBrain = Class(RNGAIBrainClass) {
                     local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, BaseRestrictedArea , 'Enemy')
                     for _, unit in enemyUnits do
                         if unit and not unit.Dead then
-                            if EntityCategoryContains( categories.MOBILE * categories.LAND, unit) then
-                                landUnits = landUnits + 1
-                                landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
-                                continue
-                            end
-                            if EntityCategoryContains( categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER), unit) then
-                                antiSurfaceAir = antiSurfaceAir + 1
-                                airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
-                                continue
-                            end
-                            if EntityCategoryContains( categories.MOBILE * categories.AIR, unit) then
-                                airUnits = airUnits + 1
-                                airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
-                                continue
-                            end
-                            if EntityCategoryContains( categories.MOBILE * categories.NAVAL, unit) then
-                                navalUnits = navalUnits + 1
-                                navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
-                                continue
+                            if ALLBPS[unit.UnitId].CategoriesHash.MOBILE then
+                                if ALLBPS[unit.UnitId].CategoriesHash.LAND then
+                                    landUnits = landUnits + 1
+                                    landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                                    continue
+                                end
+                                if EntityCategoryContains( categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER), unit) then
+                                    antiSurfaceAir = antiSurfaceAir + 1
+                                    airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    continue
+                                end
+                                if ALLBPS[unit.UnitId].CategoriesHash.AIR then
+                                    airUnits = airUnits + 1
+                                    airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    continue
+                                end
+                                if ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
+                                    navalUnits = navalUnits + 1
+                                    navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                                    continue
+                                end
                             end
                         end
                     end
@@ -2785,11 +2791,12 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Get AI strength
         local selfIndex = self:GetArmyIndex()
         local GetPosition = moho.entity_methods.GetPosition
-
+        local bp
+        --[[
         local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.EXPERIMENTAL, false, false)
         local airthreat = 0
         local antiAirThreat = 0
-        local bp
+        
 
 		-- calculate my present airvalue			
 		for _,v in brainAirUnits do
@@ -2804,7 +2811,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('My Air Threat is'..airthreat)
         self.BrainIntel.SelfThreat.AirNow = airthreat
         self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
-
+        ]]
         --[[if airthreat > 0 then
             local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
             RNGINSERT(self.BrainIntel.SelfThreat.Air, airSelfThreat)
@@ -2818,12 +2825,12 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
         end]]
         coroutine.yield(1)
+        --[[
         local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, true)
         local selfExtractorCount = 0
         local selfExtractorThreat = 0
 
         for _,v in brainExtractors do
-            exBp = ALLBPS[v.UnitId].Defense
             selfExtractorThreat = selfExtractorThreat + ALLBPS[v.UnitId].Defense.EconomyThreatLevel
             selfExtractorCount = selfExtractorCount + 1
             -- This bit is important. This is so that if the AI is given or captures any extractors it will start an upgrade thread and distress thread on them.
@@ -2841,6 +2848,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
         self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
+        ]]
         local allyBrains = {}
         for index, brain in ArmyBrains do
             if index ~= self:GetArmyIndex() then
@@ -2859,7 +2867,6 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, ally in allyBrains do
                 local allyExtractorList = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in allyExtractorList do
-                    bp = ALLBPS[v.UnitId].Defense
                     if not v.Dead and not v.zoneid and self.ZonesInitialized then
                         --LOG('unit has no zone')
                         local mexPos = GetPosition(v)
@@ -2875,34 +2882,34 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('Trying to add unit to zone')
                         allyExtractors[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
                     end
-                    if EntityCategoryContains(categories.TECH1,v) then
+                    if ALLBPS[v.UnitId].CategoriesHash.TECH1 then
                         allyExtractors[v.zoneid].T1=allyExtractors[v.zoneid].T1+1
-                    elseif EntityCategoryContains(categories.TECH2,v) then
+                    elseif ALLBPS[v.UnitId].CategoriesHash.TECH2 then
                         allyExtractors[v.zoneid].T2=allyExtractors[v.zoneid].T2+1
-                    elseif EntityCategoryContains(categories.TECH3,v) then
+                    elseif ALLBPS[v.UnitId].CategoriesHash.TECH3 then
                         allyExtractors[v.zoneid].T3=allyExtractors[v.zoneid].T3+1
                     end
 
-                    allyExtractorthreat = allyExtractorthreat + bp.EconomyThreatLevel
+                    allyExtractorthreat = allyExtractorthreat + ALLBPS[v.UnitId].Defense.EconomyThreatLevel
                     allyExtractorCount = allyExtractorCount + 1
                 end
                 local allylandThreat = GetListOfUnits( ally, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
                 
                 for _,v in allylandThreat do
-                    bp = ALLBPS[v.UnitId].Defense
-                    allyLandThreat = allyLandThreat + bp.SurfaceThreatLevel
+                    allyLandThreat = allyLandThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                 end
             end
         end
         self.BrainIntel.SelfThreat.AllyExtractorTable = allyExtractors
-        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + selfExtractorCount
-        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + selfExtractorThreat
+        self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + self.BrainIntel.SelfThreat.ExtractorCount
+        self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + self.BrainIntel.SelfThreat.Extractor
         self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
         --RNGLOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
         --RNGLOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --RNGLOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
         --RNGLOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
         coroutine.yield(1)
+        --[[
         local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
         local navalThreat = 0
         local navalSubThreat = 0
@@ -2923,6 +2930,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.BrainIntel.SelfThreat.LandNow = landThreat
         --RNGLOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
+        ]]
     end,
 
     IMAPConfigurationRNG = function(self, ALLBPS)
@@ -3144,11 +3152,13 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
         --RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
         --RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+        --RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
+        --RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
         --RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
         --RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-       --RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+        --RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
         --RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-       --RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+        --RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
         --RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
         --RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
         --RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
@@ -3156,7 +3166,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
         --RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
         --RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-       --RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
+        --RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         --RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         coroutine.yield(2)
     end,
@@ -3306,7 +3316,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     v1.weight = 1
                     v1.aggX = v1.Position[1]
                     v1.aggZ = v1.Position[2]
-
                 end
                 for _, v1 in firebaseTable do
                     if not v1.validated then
@@ -4255,14 +4264,14 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(1,7))
         while true do
             coroutine.yield(50)
-            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * categories.FACTORY, false)
+            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION), false)
             local potentialPowerConsumption = 0
             for k, v in buildingTable do
                 if not v.Dead and not v.BuildCompleted then
                     if EntityCategoryContains(categories.ENGINEER, v) then
                         if v.UnitBeingBuilt then
                             if ALLBPS[v.UnitId].Economy.BuildRate > 100 then
-                                if EntityCategoryContains(categories.NUKE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
+                                if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.6 then
                                     --LOG('Nuke Launcher being built')
                                     potentialPowerConsumption = potentialPowerConsumption + (4000 * multiplier)
                                     continue
@@ -4284,8 +4293,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                             end
                         end
-                    else
-                        if EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
+                    elseif EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
                             if v:GetFractionComplete() < 0.6 then
                                 --LOG('T3 Air Being Built')
                                 potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
@@ -4293,14 +4301,29 @@ AIBrain = Class(RNGAIBrainClass) {
                             else
                                 v.BuildCompleted = true
                             end
-                        elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
-                            if v:GetFractionComplete() < 0.6 then
-                                --LOG('T2 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
-                                continue
-                            else
-                                v.BuildCompleted = true
-                            end
+                    elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
+                        if v:GetFractionComplete() < 0.6 then
+                            --LOG('T2 Air Being Built')
+                            potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
+                            continue
+                        else
+                            v.BuildCompleted = true
+                        end
+                    elseif ALLBPS[v.UnitId].CategoriesHash.MASSEXTRACTION then
+                        if v:GetFractionComplete() < 0.6 then
+                            --LOG('Extractors being upgraded')
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                            continue
+                        else
+                            v.BuildCompleted = true
+                        end
+                    elseif ALLBPS[v.UnitId].CategoriesHash.RADAR then
+                        if v:GetFractionComplete() < 0.6 then
+                            --LOG('Radar being upgraded')
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                            continue
+                        else
+                            v.BuildCompleted = true
                         end
                     end
                 end
@@ -4969,6 +4992,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local units = GetListOfUnits(self, categories.SELECTABLE, false, true)
         local factionIndex = self:GetFactionIndex()
         local GetPosition = moho.entity_methods.GetPosition
+        local ALLBPS = __blueprints
         --RNGLOG('units grabbed')
         local factories = {Land={T1=0,T2=0,T3=0},Air={T1=0,T2=0,T3=0},Naval={T1=0,T2=0,T3=0}}
         local extractors = { }
@@ -4995,6 +5019,13 @@ AIBrain = Class(RNGAIBrainClass) {
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
         local mainBaseExtractors = {T1=0,T2=0,T3=0}
+        local totalLandThreat = 0
+        local totalAirThreat = 0
+        local totalAntiAirThreat = 0
+        local totalEconomyThreat = 0
+        local totalNavalThreat = 0
+        local totalNavalSubThreat = 0
+        local totalExtractorCount = 0
         for _,z in self.amanager.Ratios[factionIndex] do
             for _,c in z do
                 c.total=0
@@ -5015,7 +5046,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 tspend.e=tspend.e+spende
                 rincome.m=rincome.m+producem
                 rincome.e=rincome.e+producee
-                if EntityCategoryContains(categories.MASSEXTRACTION,unit) then
+                if ALLBPS[unit.UnitId].CategoriesHash.MASSEXTRACTION then
+                    totalEconomyThreat = totalEconomyThreat + ALLBPS[unit.UnitId].Defense.EconomyThreatLevel
+                    totalExtractorCount = totalExtractorCount + 1
                     if not unit.zoneid and self.ZonesInitialized then
                         --LOG('unit has no zone')
                         local mexPos = GetPosition(unit)
@@ -5031,19 +5064,19 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('Trying to add unit to zone')
                         extractors[unit.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
                     end
-                    if EntityCategoryContains(categories.TECH1,unit) then
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         extractors[unit.zoneid].T1=extractors[unit.zoneid].T1+1
                         mexspend.T1=mexspend.T1+spendm
                         if unit.MAINBASE then
                             mainBaseExtractors.T1 = mainBaseExtractors.T1 + 1
                         end
-                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         extractors[unit.zoneid].T2=extractors[unit.zoneid].T2+1
                         mexspend.T2=mexspend.T2+spendm
                         if unit.MAINBASE then
                             mainBaseExtractors.T2 = mainBaseExtractors.T2 + 1
                         end
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         extractors[unit.zoneid].T3=extractors[unit.zoneid].T3+1
                         mexspend.T3=mexspend.T3+spendm
                         if unit.MAINBASE then
@@ -5051,58 +5084,58 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
-                    if EntityCategoryContains(categories.COMMAND,unit) then
+                    if ALLBPS[unit.UnitId].CategoriesHash.COMMAND then
                         coms.acu=coms.acu+1
                         engspend.com=engspend.com+spendm
-                    elseif EntityCategoryContains(categories.SUBCOMMANDER,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.SUBCOMMANDER then
                         coms.sacu=coms.sacu+1
                         engspend.com=engspend.com+spendm
                     end
-                elseif EntityCategoryContains(categories.MASSFABRICATION,unit) then
-                    if EntityCategoryContains(categories.TECH2,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.MASSFABRICATION then
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         fabs.T2=fabs.T2+1
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         fabs.T3=fabs.T3+1
                     end
-                elseif EntityCategoryContains(categories.ENGINEER,unit) then
-                    if EntityCategoryContains(categories.TECH1,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.ENGINEER then
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         engspend.T1=engspend.T1+spendm
-                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         engspend.T2=engspend.T2+spendm
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         engspend.T3=engspend.T3+spendm
                     end
-                elseif EntityCategoryContains(categories.FACTORY,unit) then
-                    if EntityCategoryContains(categories.LAND,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.FACTORY then
+                    if ALLBPS[unit.UnitId].CategoriesHash.Land then
                         facspend.Land=facspend.Land+spendm
-                        if EntityCategoryContains(categories.TECH1,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                             factories.Land.T1=factories.Land.T1+1
-                        elseif EntityCategoryContains(categories.TECH2,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Land.T2=factories.Land.T2+1
-                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                             factories.Land.T3=factories.Land.T3+1
                         end
-                    elseif EntityCategoryContains(categories.AIR,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
                         facspend.Air=facspend.Air+spendm
-                        if EntityCategoryContains(categories.TECH1,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                             factories.Air.T1=factories.Air.T1+1
-                        elseif EntityCategoryContains(categories.TECH2,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Air.T2=factories.Air.T2+1
-                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                             factories.Air.T3=factories.Air.T3+1
                         end
-                    elseif EntityCategoryContains(categories.NAVAL,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
                         facspend.Naval=facspend.Naval+spendm
-                        if EntityCategoryContains(categories.TECH1,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                             factories.Naval.T1=factories.Naval.T1+1
-                        elseif EntityCategoryContains(categories.TECH2,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Naval.T2=factories.Naval.T2+1
-                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                             factories.Naval.T3=factories.Naval.T3+1
                         end
                     end
-                elseif EntityCategoryContains(categories.ENERGYPRODUCTION,unit) then
-                    if EntityCategoryContains(categories.HYDROCARBON,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.ENERGYPRODUCTION then
+                    if ALLBPS[unit.UnitId].CategoriesHash.HYDROCARBON then
                         --LOG('HydroCarbon detected, adding zone data')
                         if not unit.zoneid and self.ZonesInitialized then
                             --LOG('unit has no zone')
@@ -5115,30 +5148,31 @@ AIBrain = Class(RNGAIBrainClass) {
                             hydros[unit.zoneid] = { hydrocarbon = 0 }
                         end
                         hydros[unit.zoneid].hydrocarbon=hydros[unit.zoneid].hydrocarbon+1
-                    elseif EntityCategoryContains(categories.TECH1,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         pgens.T1=pgens.T1+1
-                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         pgens.T2=pgens.T2+1
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         pgens.T3=pgens.T3+1
                     end
-                elseif EntityCategoryContains(categories.LAND,unit) then
-                    if EntityCategoryContains(categories.TECH1,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.LAND then
+                    totalLandThreat = totalLandThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyLandTiers.T1=armyLandTiers.T1+1
-                        if EntityCategoryContains(categories.SCOUT,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
                             armyLand.T1.scout=armyLand.T1.scout+1
                             armyLandType.scout=armyLandType.scout+1
-                        elseif EntityCategoryContains(categories.DIRECTFIRE - categories.ANTIAIR,unit) then
+                        elseif EntityCategoryContains(categories.DIRECTFIRE - categories.ANTIAIR, unit) then
                             armyLand.T1.tank=armyLand.T1.tank+1
                             armyLandType.tank=armyLandType.tank+1
-                        elseif EntityCategoryContains(categories.INDIRECTFIRE - categories.ANTIAIR,unit) then
+                        elseif EntityCategoryContains(categories.INDIRECTFIRE - categories.ANTIAIR, unit) then
                             armyLand.T1.arty=armyLand.T1.arty+1
                             armyLandType.arty=armyLandType.arty+1
-                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.ANTIAIR then
                             armyLand.T1.aa=armyLand.T1.aa+1
                             armyLandType.aa=armyLandType.aa+1
                         end
-                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         armyLandTiers.T2=armyLandTiers.T2+1
                         if EntityCategoryContains(categories.DIRECTFIRE - categories.BOT - categories.ANTIAIR,unit) then
                             armyLand.T2.tank=armyLand.T2.tank+1
@@ -5146,19 +5180,19 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif EntityCategoryContains(categories.DIRECTFIRE * categories.BOT - categories.ANTIAIR,unit) then
                             armyLand.T2.bot=armyLand.T2.bot+1
                             armyLandType.bot=armyLandType.bot+1
-                        elseif EntityCategoryContains(categories.SILO,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.SILO then
                             armyLand.T2.mml=armyLand.T2.mml+1
                             armyLandType.mml=armyLandType.mml+1
-                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.ANTIAIR then
                             armyLand.T2.aa=armyLand.T2.aa+1
                             armyLandType.aa=armyLandType.aa+1
-                        elseif EntityCategoryContains(categories.SHIELD,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.SHIELD then
                             armyLand.T2.shield=armyLand.T2.shield+1
                             armyLandType.shield=armyLandType.shield+1
                         end
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         armyLandTiers.T3=armyLandTiers.T3+1
-                        if EntityCategoryContains(categories.SNIPER,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.SNIPER then
                             armyLand.T3.sniper=armyLand.T3.sniper+1
                             armyLandType.sniper=armyLandType.sniper+1
                         elseif EntityCategoryContains(categories.DIRECTFIRE * (categories.xel0305 + categories.xrl0305),unit) then
@@ -5167,45 +5201,49 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif EntityCategoryContains(categories.DIRECTFIRE - categories.xel0305 - categories.xrl0305 - categories.ANTIAIR,unit) then
                             armyLand.T3.tank=armyLand.T3.tank+1
                             armyLandType.tank=armyLandType.tank+1
-                        elseif EntityCategoryContains(categories.SILO,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.SILO then
                             armyLand.T3.mml=armyLand.T3.mml+1
                             armyLandType.mml=armyLandType.mml+1
-                        elseif EntityCategoryContains(categories.INDIRECTFIRE,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.INDIRECTFIRE then
                             armyLand.T3.arty=armyLand.T3.arty+1
                             armyLandType.arty=armyLandType.arty+1
-                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.ANTIAIR then
                             armyLand.T3.aa=armyLand.T3.aa+1
                             armyLandType.aa=armyLandType.aa+1
-                        elseif EntityCategoryContains(categories.SHIELD,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.SHIELD then
                             armyLand.T3.shield=armyLand.T3.shield+1
                             armyLandType.shield=armyLandType.shield+1
                         end
                     end
-                elseif EntityCategoryContains(categories.AIR,unit) then
-                    if EntityCategoryContains(categories.TECH1,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
+                    totalAirThreat = totalAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyAirTiers.T1=armyAirTiers.T1+1
-                        if EntityCategoryContains(categories.SCOUT,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
                             armyAir.T1.scout=armyAir.T1.scout+1
                             armyAirType.scout=armyAirType.scout+1
-                        elseif EntityCategoryContains(categories.ANTIAIR,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.ANTIAIR then
+                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                             armyAir.T1.interceptor=armyAir.T1.interceptor+1
                             armyAirType.interceptor=armyAirType.interceptor+1
-                        elseif EntityCategoryContains(categories.BOMBER,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.BOMBER then
                             armyAir.T1.bomber=armyAir.T1.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
                         elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
                             armyAir.T1.gunship=armyAir.T1.gunship+1
                             armyAirType.gunship=armyAirType.gunship+1
-                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TRANSPORTFOCUS then
                             armyAir.T1.transport=armyAir.T1.transport+1
                             armyAirType.transport=armyAirType.transport+1
                         end
-                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         armyAirTiers.T2=armyAirTiers.T2+1
                         if EntityCategoryContains(categories.BOMBER - categories.daa0206,unit) then
                             armyAir.T2.bomber=armyAir.T2.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
                         elseif EntityCategoryContains(categories.xaa0202 - categories.EXPERIMENTAL,unit) then
+                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                             armyAir.T2.fighter=armyAir.T2.fighter+1
                             armyAirType.fighter=armyAirType.fighter+1
                         elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
@@ -5217,25 +5255,26 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif EntityCategoryContains(categories.daa0206,unit) then
                             armyAir.T2.mercy=armyAir.T2.mercy+1
                             armyAirType.mercy=armyAirType.mercy+1
-                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TRANSPORTFOCUS then
                             armyAir.T2.transport=armyAir.T2.transport+1
                             armyAirType.transport=armyAirType.transport+1
                         end
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         armyAirTiers.T3=armyAirTiers.T3+1
-                        if EntityCategoryContains(categories.SCOUT,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
                             armyAir.T3.scout=armyAir.T3.scout+1
                             armyAirType.scout=armyAirType.scout+1
                         elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
+                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                             armyAir.T3.asf=armyAir.T3.asf+1
                             armyAirType.asf=armyAirType.asf+1
-                        elseif EntityCategoryContains(categories.BOMBER,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.BOMBER then
                             armyAir.T3.bomber=armyAir.T3.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
                         elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
                             armyAir.T3.gunship=armyAir.T3.gunship+1
                             armyAirType.gunship=armyAirType.gunship+1
-                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.TRANSPORTFOCUS then
                             armyAir.T3.transport=armyAir.T3.transport+1
                             armyAirType.transport=armyAirType.transport+1
                         elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
@@ -5243,25 +5282,27 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyAirType.torpedo=armyAirType.torpedo+1
                         end
                     end
-                elseif EntityCategoryContains(categories.NAVAL,unit) then
-                    if EntityCategoryContains(categories.TECH1,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
+                    totalNavalThreat = totalNavalThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    totalNavalSubThreat = totalNavalSubThreat + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyNavalTiers.T1=armyNavalTiers.T1+1
-                        if EntityCategoryContains(categories.FRIGATE,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.FRIGATE then
                             armyNaval.T1.frigate=armyNaval.T1.frigate+1
                             armyNavalType.frigate=armyNavalType.frigate+1
-                        elseif EntityCategoryContains(categories.T1SUBMARINE,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.T1SUBMARINE then
                             armyNaval.T1.sub=armyNaval.T1.sub+1
                             armyNavalType.sub=armyNavalType.sub+1
                         elseif EntityCategoryContains(categories.uas0102,unit) then
                             armyNaval.T1.shard=armyNaval.T1.shard+1
                             armyNavalType.shard=armyNavalType.shard+1
                         end
-                    elseif EntityCategoryContains(categories.TECH2,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         armyNavalTiers.T2=armyNavalTiers.T2+1
-                        if EntityCategoryContains(categories.DESTROYER,unit) then
+                        if ALLBPS[unit.UnitId].CategoriesHash.DESTROYER then
                             armyNaval.T2.destroyer=armyNaval.T2.destroyer+1
                             armyNavalType.destroyer=armyNavalType.destroyer+1
-                        elseif EntityCategoryContains(categories.CRUISER,unit) then
+                        elseif ALLBPS[unit.UnitId].CategoriesHash.CRUISER then
                             armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
                             armyNavalType.cruiser=armyNavalType.cruiser+1
                         elseif EntityCategoryContains(categories.T2SUBMARINE + categories.xes0102,unit) then
@@ -5290,11 +5331,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyNavalType.torpedo=armyNavalType.torpedo+1
                         end]]
                     end
-                elseif EntityCategoryContains(categories.SILO,unit) then
-                    if EntityCategoryContains(categories.TECH2,unit) then
+                elseif ALLBPS[unit.UnitId].CategoriesHash.SILO then
+                    if ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         silo.T2=silo.T2+1
                         launcherspend.T2=launcherspend.T2+spendm
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         silo.T3=silo.T3+1
                         launcherspend.T3=launcherspend.T3+spendm
                     end
@@ -5326,6 +5367,13 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Current.Naval=armyNaval
         self.amanager.Total.Naval=armyNavalTiers
         self.amanager.Type.Naval=armyNavalType
+        self.BrainIntel.SelfThreat.LandNow = totalLandThreat
+        self.BrainIntel.SelfThreat.AirNow = totalAirThreat
+        self.BrainIntel.SelfThreat.AntiAirNow = totalAntiAirThreat
+        self.BrainIntel.SelfThreat.NavalNow = totalNavalThreat
+        self.BrainIntel.SelfThreat.NavalSubNow = totalNavalSubThreat
+        self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
+        self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
         self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then

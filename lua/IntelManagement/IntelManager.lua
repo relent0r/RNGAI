@@ -25,8 +25,9 @@ IntelManager = Class {
         self.Brain = brain
         self.Initialized = false
         self.Debug = false
+        -- Used for scout assignments to zones
         self.ZoneIntel = {
-            Assignment = {}
+            Assignment = { }
         }
     end,
 
@@ -37,6 +38,7 @@ IntelManager = Class {
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
         self:ForkThread(self.ZoneControlMonitorRNG)
+        self:ForkThread(self.ZoneIntelAssignment)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
@@ -214,31 +216,35 @@ IntelManager = Class {
                 if type == 'raid' then
                    --LOG('RNGAI : Zone Raid Selection Query Processing')
                     local startPosZones = {}
+                    local platoonPosition = platoon:GetPlatoonPosition()
                     for k, v in aiBrain.Zones.Land.zones do
                         if not v.startpositionclose then
-                            local compare
-                            local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
-                            local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemythreat
-                            if not zoneSet[v.id].control then
-                               --LOG('control is nil, here is the table '..repr(zoneSet[v.id]))
-                            end
-                            if enemyModifier > 0 then
-                                enemyModifier = enemyModifier * 10
-                            end
-                           --LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
-                           --LOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
-                            if zoneSet[v.id].control > 0.5 and zoneSet[v.id].friendlythreat < 10 then
-                                compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control - enemyModifier
-                            end
-                            if compare then
-                               --RNGLOG('Compare variable '..compare)
-                            end
-                            if compare > 0 then
-                                if not selection or compare > selection then
-                                    selection = compare
-                                    zoneSelection = v.id
-                                   --LOG('Zone Query Select priority 1st pass'..selection)
-                                   --LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                            if platoonPosition then
+                                local compare
+                                local enemyDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
+                                local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
+                                local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemythreat
+                                if not zoneSet[v.id].control then
+                                   --LOG('control is nil, here is the table '..repr(zoneSet[v.id]))
+                                end
+                                if enemyModifier > 0 then
+                                    enemyModifier = enemyModifier * 10
+                                end
+                               --LOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                               --LOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
+                                if zoneSet[v.id].control > 0.5 and zoneSet[v.id].friendlythreat < 10 then
+                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control - enemyModifier
+                                end
+                                if compare then
+                                    --RNGLOG('Compare variable '..compare)
+                                end
+                                if compare > 0 then
+                                    if not selection or compare > selection then
+                                        selection = compare
+                                        zoneSelection = v.id
+                                        --LOG('Zone Query Select priority 1st pass'..selection)
+                                        --LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                    end
                                 end
                             end
                         else
@@ -249,23 +255,26 @@ IntelManager = Class {
                         return zoneSelection
                     else
                         for k, v in startPosZones do
-                            local compare
-                            local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
-                           --LOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
-                            if zoneSet[v.zone.id].control <= 0 then
-                                compare = ( 20000 / distanceModifier )
-                            else
-                                compare = ( 20000 / distanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
-                            end
-                            if compare then
-                               --RNGLOG('Compare variable '..compare)
-                            end
-                            if compare > 0 then
-                                if not selection or compare > selection then
-                                    selection = compare
-                                    zoneSelection = v.id
-                                  --LOG('Zone Query Select priority 2nd pass start locations'..selection)
-                                   --LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                            if platoonPosition then
+                                local compare
+                                local enemyDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
+                                local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
+                               --LOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                                if zoneSet[v.zone.id].control <= 0 then
+                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier )
+                                else
+                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
+                                end
+                                if compare then
+                                    --RNGLOG('Compare variable '..compare)
+                                end
+                                if compare > 0 then
+                                    if not selection or compare > selection then
+                                        selection = compare
+                                        zoneSelection = v.id
+                                        --RNGLOG('Zone Query Select priority 2nd pass start locations'..selection)
+                                        --LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                    end
                                 end
                             end
                         end
@@ -501,6 +510,67 @@ IntelManager = Class {
                 end
             end
         end
+    end,
+
+    AssignIntelUnit = function(self, unit)
+        local ALLBPS = __blueprints
+        local intelRadius = ALLBPS[unit.UnitId].Intel.RadarRadius * ALLBPS[unit.UnitId].Intel.RadarRadius
+        local radarPosition = unit:GetPosition()
+        if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
+           --LOG('Zone set for radar that has been built '..unit.UnitId)
+            unit.zoneid = MAP:GetZoneID(radarPosition,self.Brain.Zones.Land.index)
+            if unit.zoneid then
+                for k, v in self.ZoneIntel.Assignment do
+                    if VDist2Sq(radarPosition[1], radarPosition[3], v.Position[1], v.Position[3]) < intelRadius then
+                       --LOG('Radar coverage has been set true for zone '..unit.zoneid)
+                        RNGINSERT(v.RadarUnits, unit)
+                        v.RadarCoverage = true
+                    end
+                end
+            else
+                WARN('No ZoneID for Radar, unable to set coverage area')
+            end
+        end
+    end,
+
+    UnassignIntelUnit = function(self, unit)
+        local ALLBPS = __blueprints
+        if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
+           --LOG('Unassigning Radar Unit')
+            for k, v in self.ZoneIntel.Assignment do
+                for c, b in v.RadarUnits do
+                    if b == unit then
+                       --LOG('Found Radar that was covering zone '..k..' removing')
+                        RNGREMOVE(v.RadarUnits, c)
+                    end
+                end
+                if v.RadarCoverage and RNGGETN(v.RadarUnits) == 0 then
+                   --LOG('No Radars in range for zone '..k..' setting radar coverage to false')
+                    v.RadarCoverage = false
+                end
+            end
+        end
+    end,
+
+    ZoneIntelAssignment = function(self)
+        -- Will setup table for scout assignment to zones
+        -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
+        -- replaces the previous expansion scout assignment so that all mass points can be monitored
+        -- Will also set data for intel based scout production.
+        local ALLBPS = __blueprints
+        
+        self:WaitForZoneInitialization()
+        coroutine.yield(Random(5,20))
+        local Zones = {
+            'Land',
+        }
+        for k, v in Zones do
+            for k1, v1 in self.Brain.Zones[v].zones do
+                RNGINSERT(self.ZoneIntel.Assignment, { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = v1.startpositionclose})
+            end
+        end
+       --LOG('Zone Intel Assignment Complete')
+       --LOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
 }
 

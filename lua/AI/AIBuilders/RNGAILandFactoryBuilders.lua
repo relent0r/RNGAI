@@ -35,7 +35,8 @@ BuilderGroup {
         Priority = 748,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', true}},
+            --{ EBC, 'FactorySpendRatioRNG', {'Land', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -50,7 +51,8 @@ BuilderGroup {
         Priority = 747,
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', true}},
+            --{ EBC, 'FactorySpendRatioRNG', {'Land', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
