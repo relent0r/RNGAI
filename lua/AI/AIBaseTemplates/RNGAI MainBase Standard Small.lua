@@ -63,7 +63,7 @@ BaseBuilderTemplate {
         'RNGAI LandBuilder T1 Islands',
 
         -- Land Factory Formers --
-        'RNGAI Land Upgrade Builders',
+        --'RNGAI Land Upgrade Builders',
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
@@ -73,7 +73,7 @@ BaseBuilderTemplate {
         --'RNGAI Factory Builder Sea',
 
         -- Air Factory Formers --
-        'RNGAI Air Upgrade Builders',
+        --'RNGAI Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',

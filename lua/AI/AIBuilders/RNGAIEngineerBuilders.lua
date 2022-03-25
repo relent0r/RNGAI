@@ -110,6 +110,18 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Power AirOnly',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 884,
+        BuilderConditions = {
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Power',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 777,
@@ -120,6 +132,18 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
         },
         BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Power AirOnly',
+        PlatoonTemplate = 'T3BuildEngineer',
+        Priority = 885,
+        BuilderConditions = {
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
+        },
+        BuilderType = 'Air',
     },
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',

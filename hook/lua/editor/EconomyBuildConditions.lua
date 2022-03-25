@@ -22,7 +22,6 @@ function MexUpgradeEco(aiBrain)
     return false
 end
 
-
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, mult)
 
     if aiBrain.EnemyIntel.ChokeFlag then

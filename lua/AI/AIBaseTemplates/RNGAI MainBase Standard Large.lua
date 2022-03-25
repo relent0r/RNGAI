@@ -95,10 +95,10 @@ BaseBuilderTemplate {
         'RNGAI Factory Builder Air Large',
 
         -- Land Upgrade Builders --
-        'RNGAI Land Upgrade Builders',
+        --'RNGAI Land Upgrade Builders',
 
         -- Air Upgrade Builders --
-        'RNGAI Air Upgrade Builders',
+        --'RNGAI Air Upgrade Builders',
 
         -- RNGAI Air Support Builders --
         'RNGAI Air Staging Platform',
