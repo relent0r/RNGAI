@@ -632,7 +632,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land Upgrade Builders',
     BuildersType = 'PlatoonFormBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade HQ',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
         Priority = 800,
@@ -646,8 +646,8 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
             },
         BuilderType = 'Any',
-    },
-    Builder {
+    },]]
+    --[[Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Enemy',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
         Priority = 825,
@@ -660,8 +660,8 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.60}},
             },
         BuilderType = 'Any',
-    },
-    Builder {
+    },]]
+    --[[Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Excess',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
         Priority = 900,
@@ -672,8 +672,8 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconStorageCurrentRNG', { 1200, 1000 } },
             },
         BuilderType = 'Any',
-    },
-    Builder {
+    },]]
+   --[[Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
         Priority = 850,
@@ -689,8 +689,8 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.015, 1.015 }},
             },
         BuilderType = 'Any',
-    },
-    Builder {
+    },]]
+    --[[Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support Excess',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
         Priority = 875,
@@ -705,7 +705,8 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconStorageCurrentRNG', { 1300, 3990 } },
             },
         BuilderType = 'Any',
-    },
+    },]]
+    --[[
     Builder {
         BuilderName = 'RNGAI T2 Land Factory Upgrade HQ',
         PlatoonTemplate = 'T2LandFactoryUpgrade',
@@ -817,7 +818,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
         },
         BuilderType = 'Any',
-    },
+    },]]
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Upgrade Builders',

@@ -8133,6 +8133,8 @@ Platoon = Class(RNGAIPlatoon) {
                 LOG('Engineer Assisting Factory Unit about to perform IssueGuard')
             end
             IssueGuard({eng}, eng.UnitBeingAssist)
+            -- Tested aeon sacrifice to check if it works (it does)
+            --IssueSacrifice({eng}, eng.UnitBeingAssist)
         else
             self.AssistPlatoon = nil
             eng.UnitBeingAssist = nil
