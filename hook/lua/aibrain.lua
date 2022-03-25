@@ -3181,7 +3181,6 @@ AIBrain = Class(RNGAIBrainClass) {
             Defense = {},
             Factory = {},
             Mass = {},
-            Factory = {},
             Combat = {},
         }
         local energyUnits = {}
