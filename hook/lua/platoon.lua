@@ -9260,6 +9260,7 @@ Platoon = Class(RNGAIPlatoon) {
 
     TruePlatoonRNG = function(self)
         local VDist2Sq = VDist2Sq
+        local ALLBPS = __blueprints
         local function GetWeightedHealthRatio(unit)--health % including shields
             if unit.MyShield then
                 return (unit.MyShield:GetHealth()+unit:GetHealth())/(unit.MyShield:GetMaxHealth()+unit:GetMaxHealth())
@@ -9346,10 +9347,8 @@ Platoon = Class(RNGAIPlatoon) {
                     if EntityCategoryContains(categories.INDIRECTFIRE,v) then
                         mult=0.3
                     end
-                    local bp = __blueprints[v.UnitId].Defense
-                    --RNGLOG(repr(__blueprints[v.UnitId].Defense))
-                    if bp.SurfaceThreatLevel ~= nil then
-                        platoonthreat = platoonthreat + bp.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
+                    if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
+                        platoonthreat = platoonthreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
                     end
                     if (v.Sync.Regen>0) or not v.chpinitialized then
                         v.chpinitialized=true
