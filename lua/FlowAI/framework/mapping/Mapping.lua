@@ -852,6 +852,10 @@ function GetMap()
     return map
 end
 
+function GetPlayableAreaRNG()
+    return PLAYABLE_AREA
+end
+
 local ResourceMarkerCount = 1
 function CreateMarkerRNG(t,x,y,z,size)
     AdaptiveResourceMarkerTableRNG['Resource'..ResourceMarkerCount] = {type=t, name='Resource'..ResourceMarkerCount, position={x,y,z}, zoneid=false, Water=GetTerrainHeight(x, z) < GetSurfaceHeight(x, z)}

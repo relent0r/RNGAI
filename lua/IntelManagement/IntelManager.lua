@@ -937,3 +937,77 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     end
     return false
 end
+
+CreateReclaimGrid = function(aiBrain)
+    coroutine.yield(Random(30,70))
+    -- by default, 16x16 iMAP
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    --LOG('playableArea is '..repr(playableArea))
+    local n = 16 
+    local mx = ScenarioInfo.size[1]
+    local mz = ScenarioInfo.size[2]
+    local GetTerrainHeight = GetTerrainHeight
+
+    -- smaller maps have a 8x8 iMAP
+    if mx == mz and mx == 5 then 
+        n = 8
+    end
+    
+    local reclaimGrid = {}
+    
+    -- distance per cell
+    local fx = 1 / n * mx 
+    local fz = 1 / n * mz 
+
+    -- draw iMAP information
+    for z = 1, n do 
+        for x = 1, n do 
+            local cx = fx * (x - 0.5)
+            local cz = fz * (z - 0.5)
+            if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
+                continue
+            end
+            table.insert(reclaimGrid, { Position = {cx, GetTerrainHeight(cx, cz), cz}, Size = { sx = fx, sz = fz}, TotalReclaim = 0, AirThreat = 0, SurfaceThreat = 0, NavalThreat = 0, LastUpdate = 0 })
+        end
+    end
+    aiBrain.MapReclaimTable = reclaimGrid
+end
+
+--[[
+    info:   { table: 26D1E5A0 
+    info:     AirThreat=0,
+    info:     LastUpdate=1556.7000732422,
+    info:     NavalThreat=0,
+    info:     Position={ table: 26D1EE88  304, 22.96875, 112 },
+    info:     Size={ table: 26D1EAA0  sx=32, sz=32 },
+    info:     SurfaceThreat=0,
+    info:     TotalReclaim=105.40800476074
+    info:   },
+]]
+
+MapReclaimAnalysis = function(aiBrain)
+    -- Loops through map grid squares that roughly match IMAP 
+    CreateReclaimGrid(aiBrain)
+    coroutine.yield(50)
+    while not aiBrain.defeat do
+        if aiBrain.ReclaimEnabled then
+            local currentGameTime = GetGameTimeSeconds()
+            for k, square in aiBrain.MapReclaimTable do
+                local reclaimTotal = 0
+                local reclaimRaw = GetReclaimablesInRect(square.Position[1] - (square.Size.sx / 2), square.Position[3] - (square.Size.sz / 2), square.Position[1] + (square.Size.sx / 2), square.Position[3] + (square.Size.sz / 2))
+                if reclaimRaw and table.getn(reclaimRaw) > 0 then
+                    for k,v in reclaimRaw do
+                        if not IsProp(v) then continue end
+                        if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
+                            reclaimTotal = reclaimTotal + v.MaxMassReclaim
+                        end
+                    end
+                end
+                square.TotalReclaim = reclaimTotal
+                square.LastUpdate = currentGameTime
+                coroutine.yield(1)
+            end
+        end
+        coroutine.yield(300)
+    end
+end

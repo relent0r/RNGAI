@@ -108,7 +108,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --self:SetCustomName('StartReclaim Logic Start')
             RNGLOG('Reclaim Function - Starting reclaim is false')
             local tableSize = RNGGETN(aiBrain.StartReclaimTable)
-            LOG('Start reclaim table size '..tableSize)
+            --LOG('Start reclaim table size '..tableSize)
             if tableSize > 0 then
                 local reclaimCount = 0
                 while tableSize > 0 do
@@ -329,14 +329,14 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         }
                         LOG('EngineerReclaimGrid '..repr(reclaimGrid))
                         if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
-                            LOG('We are going to try reclaim within the grid')
+                            --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
                                 if square[1] - 10 <= 3 or square[1] + 10 >= ScenarioInfo.size[1] - 3 or square[3] - 10 <= 3 or square[3] + 10 >= ScenarioInfo.size[1] - 3 then
                                     LOG('Grid square position outside of map border')
                                     continue
                                 end
-                                LOG('reclaimGrid square table is '..repr(square))
+                                --LOG('reclaimGrid square table is '..repr(square))
                                 local rectDef = Rect(square[1] - 10, square[3] + 10, square[1] + 10, square[3] - 10)
                                 local reclaimRect = GetReclaimablesInRect(rectDef)
                                 local engReclaiming = false
@@ -1280,7 +1280,7 @@ end
 function ExtractorsBeingUpgraded(aiBrain, blueprints)
     -- Returns number of extractors upgrading
 
-    local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
+    local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION, true)
     local tech1ExtNumBuilding = 0
     local tech2ExtNumBuilding = 0
     local tech1Total = 0
@@ -1293,7 +1293,7 @@ function ExtractorsBeingUpgraded(aiBrain, blueprints)
     }
     local multiplier
     if aiBrain.CheatEnabled then
-        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        multiplier = aiBrain.EcoManager.EcoMultiplier
     else
         multiplier = 1
     end
@@ -3527,54 +3527,6 @@ function MexUpgradeManagerRNG(aiBrain)
             end
         end
         WaitSeconds(4)
-    end
-end
-
-MapReclaimAnalysis = function(aiBrain)
-    -- Loops through map grid squares that roughly match IMAP 
-    local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-    local gridCount
-    if maxmapdimension < 500 then
-        gridCount = 8
-    else
-        gridCount = 16
-    end
-
-    coroutine.yield(100)
-    while not aiBrain.defeat do
-        if aiBrain.ReclaimEnabled then
-            local reclaimGrid = {}
-            local reclaimScanArea = aiBrain.BrainIntel.IMAPConfig.IMAPSize
-            local mapSizeX, mapSizeZ = GetMapSize()
-            local gridSizeX = mapSizeX / reclaimScanArea
-            local gridSizeZ = mapSizeZ / reclaimScanArea
-            for gridX = 1, gridCount do
-                for gridZ = 1, gridCount do
-                    local reclaimTotal = 0
-                    local xCenter = ((gridX - 1) * gridSizeX) + (gridX * gridSizeX)
-                    local zCenter = ((gridZ - 1) * gridSizeZ) + (gridZ * gridSizeZ)
-                    for k, v in reclaimGrid do
-                        if v.Position[1] == xCenter and v.Position[3] == zCenter then
-                            continue
-                        end
-                    end
-                    local reclaimRaw = GetReclaimablesInRect(xCenter - (reclaimScanArea / 2), zCenter - (reclaimScanArea / 2), xCenter + (reclaimScanArea / 2), zCenter + (reclaimScanArea / 2))
-                    if reclaimRaw and table.getn(reclaimRaw) > 0 then
-                        for k,v in reclaimRaw do
-                            if not IsProp(v) then continue end
-                            if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
-                                reclaimTotal = reclaimTotal + v.MaxMassReclaim
-                            end
-                        end
-                    end
-                    table.insert( reclaimGrid, {Position = {xCenter, GetSurfaceHeight(xCenter, zCenter), zCenter}, TotalReclaim=reclaimTotal} )
-                    coroutine.yield(1)
-                end
-            end
-            aiBrain.MapReclaimTable = reclaimGrid
-            --RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
-        end
-        coroutine.yield(300)
     end
 end
 

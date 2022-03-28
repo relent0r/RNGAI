@@ -792,7 +792,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         return
                     end
                end
-                coroutine.yield(10)
+                coroutine.yield(15)
             end
         end
         if retreat and not cdr.Dead then
@@ -811,7 +811,7 @@ function CDRExpansionRNG(aiBrain, cdr)
     local multiplier
     local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
     if aiBrain.CheatEnabled then
-        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        multiplier = aiBrain.EcoManager.EcoMultiplier
     else
         multiplier = 1
     end
@@ -3220,6 +3220,13 @@ GetStartingReclaim = function(aiBrain)
     --RNGLOG('Initial Reclaim Table size is '..table.getn(startReclaim))
     if startReclaim and RNGGETN(startReclaim) > 0 then
         for k,v in startReclaim do
+            if v.IsWreckage then
+                LOG('IsWreckage is true ')
+            else
+                if v.MaxMassReclaim and v.MaxMassReclaim > 10 then
+                    LOG('IsWreckage is false but we have a maxmassreclaim value of '..v.MaxMassReclaim)
+                end
+            end
             if not IsProp(v) then continue end
             if v.MaxMassReclaim and v.MaxMassReclaim > minRec or v.MaxEnergyReclaim and v.MaxEnergyReclaim > minRec then
                 --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
@@ -3235,10 +3242,6 @@ GetStartingReclaim = function(aiBrain)
         --RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
         RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable
-        for k, v in aiBrain.StartReclaimTable do
-            RNGLOG('Table Mass entry reclaim amount is '..v.Reclaim.MaxMassReclaim)
-            RNGLOG('Table Energy entry reclaim amount is '..v.Reclaim.MaxEnergyReclaim)
-        end
         aiBrain.StartReclaimTotal = reclaimTotal
     end
     LOG('Total Starting Reclaim is '..aiBrain.StartReclaimTotal)

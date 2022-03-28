@@ -171,6 +171,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerDesired = 5
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
+        self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerPriorityTable = {}
         self.ProductionRatios = {
             Land = self.DefaultLandRatio,
@@ -727,7 +728,9 @@ AIBrain = Class(RNGAIBrainClass) {
             },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
             CoreMassMarkerCount = 0,
+            TotalCoreExtractors = 0,
             CoreExtractorT3Percentage = 0,
+            CoreExtractorT3Count = 0,
             EcoMultiplier = 1,
             EcoMassUpgradeTimeout = 330,
             EcoPowerPreemptive = false,
@@ -892,6 +895,10 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeIssuedLimit = 2
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
+        if self.CheatEnabled then
+            self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        end
+        LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
         RNGLOG('Water Ratio is '..self.MapWaterRatio)
@@ -970,7 +977,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.LastKnownThread)
         self:ForkThread(Mapping.SetMarkerInformation)
-        self:ForkThread(RUtils.MapReclaimAnalysis)
+        self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
@@ -1030,6 +1037,7 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(1)
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
         self.ZonesInitialized = true
+        --self:ForkThread(import('/mods/RNGAI/lua/AI/RNGDebug.lua').DrawReclaimGrid)
     end,
 
     WaitForZoneInitialization = function(self)
@@ -2530,6 +2538,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             LOG('There is an engineer in the army pool with Active set '..v.UnitId)
                         end
                     end
+                    LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
+                    LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
@@ -2538,6 +2548,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGLOG('ACU Table '..repr(self.EnemyIntel.ACU))
                     LOG('Core Mass Marker Count '..self.EcoManager.CoreMassMarkerCount)
                     LOG('Core Extractor T3 percentage '..self.EcoManager.CoreExtractorT3Percentage)
+                    LOG('SManager Dump '..repr(self.smanager))
                     --[[for k, v in self.Zones.Land.zones do
                         for k1,v2 in v.edges do
                             RNGLOG('Zone Edge '..v2.zone.id..' is '..v2.distance..' from '..v.id)
@@ -2971,7 +2982,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local startX, startZ = self:GetArmyStartPos()
         --RNGLOG('Upgrade Mode is  '..self.UpgradeMode)
         if self.CheatEnabled then
-            multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+            multiplier = self.EcoManager.EcoMultiplier
         else
             multiplier = 1
         end
@@ -3181,7 +3192,6 @@ AIBrain = Class(RNGAIBrainClass) {
             Defense = {},
             Factory = {},
             Mass = {},
-            Factory = {},
             Combat = {},
         }
         local energyUnits = {}
@@ -3412,126 +3422,160 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(1)
     end,
 
-    CheckDirectorTargetAvailable = function(self, threatType, platoonThreat, strikeDamage, platoonPosition)
+    CheckDirectorTargetAvailable = function(self, threatType, platoonThreat, platoonType, strikeDamage, platoonDPS, platoonPosition)
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
+
         if strikeDamage then
             LOG('Strike damage for attack is '..strikeDamage)
         else
             LOG('No StrikeDamage passed for a threat type of '..threatType)
         end
 
-        if self.EnemyIntel.DirectorData.Intel and RNGGETN(self.EnemyIntel.DirectorData.Intel) > 0 then
-            for k, v in self.EnemyIntel.DirectorData.Intel do
-                --RNGLOG('Intel Target Data ')
-                --RNGLOG('Air Threat Around unit is '..v.Air)
-                --RNGLOG('Land Threat Around unit is '..v.Land)
-                --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
-                --RNGLOG('Unit ID is '..v.Object.UnitId)
-                if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
-                    if threatType and platoonThreat then
-                        if threatType == 'AntiAir' then
-                            if v.Air > platoonThreat then
-                                continue
-                            end
-                            if strikeDamage > 0 and v.HP / 3 > strikeDamage then
-                                LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
-                                continue
-                            end
-                        elseif threatType == 'Land' then
-                            if v.Land > platoonThreat then
-                                continue
-                            end
-                        end
+        local enemyACUIndexes = {}
+
+        for k, v in self.EnemyIntel.ACU do
+            if not v.Ally and v.Hp != 0 and v.LastSpotted != 0 then
+                --RNGLOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..self.CurrentPlatoonThreat)
+                if platoonType == 'GUNSHIP' and platoonDPS then
+                    if ((platoonDPS / v.Hp) < 10 or v.Hp < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
+                        --RNGLOG('ACU Target valid, adding to index list')
+                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position} )
                     end
-                    potentialTargetValue = v.Value
-                    potentialTarget = v.Object
+                elseif platoonType == 'BOMBER' and strikeDamage then
+                    if strikeDamage > v.Hp * 0.80 then
+                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
+                    end
                 end
             end
         end
-        if self.EnemyIntel.DirectorData.Energy and RNGGETN(self.EnemyIntel.DirectorData.Energy) > 0 then
-            for k, v in self.EnemyIntel.DirectorData.Energy do
-                --RNGLOG('Energy Target Data ')
-                --RNGLOG('Air Threat Around unit is '..v.Air)
-                --RNGLOG('Land Threat Around unit is '..v.Land)
-                --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
-                --RNGLOG('Unit ID is '..v.Object.UnitId)
-                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
-                    if threatType and platoonThreat then
-                        if threatType == 'AntiAir' then
-                            if v.Air > platoonThreat then
-                                continue
-                            end
-                            if strikeDamage > 0 and v.HP / 3 > strikeDamage then
-                                LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
-                                continue
-                            end
-                        elseif threatType == 'Land' then
-                            if v.Land > platoonThreat then
-                                continue
-                            end
-                        end
+        if RNGGETN(enemyACUIndexes) > 0 then
+            for k, v in enemyACUIndexes do
+                local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
+                for c, b in acuUnits do
+                    if not b.Dead and b:GetAIBrain():GetArmyIndex() == b.Index then
+                        potentialTarget = b
+                        potentialTargetValue = 10000
+                        LOG('Enemy ACU returned as potential target for Director')
                     end
-                    potentialTargetValue = v.Value
-                    potentialTarget = v.Object
                 end
             end
         end
-        if self.EnemyIntel.DirectorData.Factory and RNGGETN(self.EnemyIntel.DirectorData.Factory) > 0 then
-            for k, v in self.EnemyIntel.DirectorData.Factory do
-                --RNGLOG('Energy Target Data ')
-                --RNGLOG('Air Threat Around unit is '..v.Air)
-                --RNGLOG('Land Threat Around unit is '..v.Land)
-                --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
-                --RNGLOG('Unit ID is '..v.Object.UnitId)
-                
-                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
-                    if threatType and platoonThreat then
-                        if threatType == 'AntiAir' then
-                            if v.Air > platoonThreat then
-                                continue
-                            end
-                            if strikeDamage > 0 and v.HP / 2 > strikeDamage then
-                                LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
-                                continue
-                            end
-                        elseif threatType == 'Land' then
-                            if v.Land > platoonThreat then
-                                continue
+        
+
+        if not potentialTarget then
+            if self.EnemyIntel.DirectorData.Intel and RNGGETN(self.EnemyIntel.DirectorData.Intel) > 0 then
+                for k, v in self.EnemyIntel.DirectorData.Intel do
+                    --RNGLOG('Intel Target Data ')
+                    --RNGLOG('Air Threat Around unit is '..v.Air)
+                    --RNGLOG('Land Threat Around unit is '..v.Land)
+                    --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
+                    --RNGLOG('Unit ID is '..v.Object.UnitId)
+                    if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
+                        if threatType and platoonThreat then
+                            if threatType == 'AntiAir' then
+                                if v.Air > platoonThreat then
+                                    continue
+                                end
+                                if strikeDamage > 0 and v.HP / 3 > strikeDamage then
+                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                    continue
+                                end
+                            elseif threatType == 'Land' then
+                                if v.Land > platoonThreat then
+                                    continue
+                                end
                             end
                         end
+                        potentialTargetValue = v.Value
+                        potentialTarget = v.Object
                     end
-                    potentialTargetValue = v.Value
-                    potentialTarget = v.Object
                 end
             end
-        end
-        if self.EnemyIntel.DirectorData.Strategic and RNGGETN(self.EnemyIntel.DirectorData.Strategic) > 0 then
-            for k, v in self.EnemyIntel.DirectorData.Strategic do
-                --RNGLOG('Energy Target Data ')
-                --RNGLOG('Air Threat Around unit is '..v.Air)
-                --RNGLOG('Land Threat Around unit is '..v.Land)
-                --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
-                --RNGLOG('Unit ID is '..v.Object.UnitId)
-                if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
-                    if threatType and platoonThreat then
-                        if threatType == 'AntiAir' then
-                            if v.Air > platoonThreat then
-                                continue
-                            end
-                            if strikeDamage > 0 and v.HP / 3 > strikeDamage then
-                                LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
-                                continue
-                            end
-                        elseif threatType == 'Land' then
-                            if v.Land > platoonThreat then
-                                continue
+            if self.EnemyIntel.DirectorData.Energy and RNGGETN(self.EnemyIntel.DirectorData.Energy) > 0 then
+                for k, v in self.EnemyIntel.DirectorData.Energy do
+                    --RNGLOG('Energy Target Data ')
+                    --RNGLOG('Air Threat Around unit is '..v.Air)
+                    --RNGLOG('Land Threat Around unit is '..v.Land)
+                    --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
+                    --RNGLOG('Unit ID is '..v.Object.UnitId)
+                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                        if threatType and platoonThreat then
+                            if threatType == 'AntiAir' then
+                                if v.Air > platoonThreat then
+                                    continue
+                                end
+                                if strikeDamage > 0 and v.HP / 3 > strikeDamage then
+                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                    continue
+                                end
+                            elseif threatType == 'Land' then
+                                if v.Land > platoonThreat then
+                                    continue
+                                end
                             end
                         end
+                        potentialTargetValue = v.Value
+                        potentialTarget = v.Object
                     end
-                    potentialTargetValue = v.Value
-                    potentialTarget = v.Object
+                end
+            end
+            if self.EnemyIntel.DirectorData.Factory and RNGGETN(self.EnemyIntel.DirectorData.Factory) > 0 then
+                for k, v in self.EnemyIntel.DirectorData.Factory do
+                    --RNGLOG('Energy Target Data ')
+                    --RNGLOG('Air Threat Around unit is '..v.Air)
+                    --RNGLOG('Land Threat Around unit is '..v.Land)
+                    --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
+                    --RNGLOG('Unit ID is '..v.Object.UnitId)
+                    
+                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                        if threatType and platoonThreat then
+                            if threatType == 'AntiAir' then
+                                if v.Air > platoonThreat then
+                                    continue
+                                end
+                                if strikeDamage > 0 and v.HP / 2 > strikeDamage then
+                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                    continue
+                                end
+                            elseif threatType == 'Land' then
+                                if v.Land > platoonThreat then
+                                    continue
+                                end
+                            end
+                        end
+                        potentialTargetValue = v.Value
+                        potentialTarget = v.Object
+                    end
+                end
+            end
+            if self.EnemyIntel.DirectorData.Strategic and RNGGETN(self.EnemyIntel.DirectorData.Strategic) > 0 then
+                for k, v in self.EnemyIntel.DirectorData.Strategic do
+                    --RNGLOG('Energy Target Data ')
+                    --RNGLOG('Air Threat Around unit is '..v.Air)
+                    --RNGLOG('Land Threat Around unit is '..v.Land)
+                    --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
+                    --RNGLOG('Unit ID is '..v.Object.UnitId)
+                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                        if threatType and platoonThreat then
+                            if threatType == 'AntiAir' then
+                                if v.Air > platoonThreat then
+                                    continue
+                                end
+                                if strikeDamage > 0 and v.HP / 3 > strikeDamage then
+                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                    continue
+                                end
+                            elseif threatType == 'Land' then
+                                if v.Land > platoonThreat then
+                                    continue
+                                end
+                            end
+                        end
+                        potentialTargetValue = v.Value
+                        potentialTarget = v.Object
+                    end
                 end
             end
         end
@@ -3581,9 +3625,31 @@ AIBrain = Class(RNGAIBrainClass) {
             local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
             self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
+            LOG('Core Extractor T3 Count needs to be less than 3 '..self.EcoManager.CoreExtractorT3Count)
+            LOG('Total Core Extractors needs to be greater than 2 '..self.EcoManager.TotalCoreExtractors)
+            LOG('Mex Income '..self.cmanager.income.r.m..' needs to be greater than '..(140 * self.EcoManager.EcoMultiplier))
+            LOG('T3 Land Factory Count needs to be greater than 1 '..self.smanager.fact.Land.T3)
+            LOG('or T3 Air Factory Count needs to be greater than 1 '..self.smanager.fact.Air.T3)
+            LOG('Efficiency over time needs to be greater than 1.0 '..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+
+            if self.EcoManager.CoreExtractorT3Count < 3 and self.EcoManager.TotalCoreExtractors > 2 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) and (self.smanager.fact.Land.T3 > 0 or self.smanager.fact.Air.T3 > 0) and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                self.EcoManager.CoreMassPush = true
+                self.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
+            else
+                self.EcoManager.CoreMassPush = false
+                self.EngineerAssistManagerFocusCategory = false
+            end
             --LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
+            if self.EcoManager.CoreExtractorT3Count then
+                LOG('CoreExtractorT3Count '..self.EcoManager.CoreExtractorT3Count)
+            end
+            if extractorsDetail.TECH2Upgrading < 1 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) then
+                --LOG('Trigger all tiers true')
+                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
+            end
+            coroutine.yield(30)
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 if upgradeSpend > 4 then
                     if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
@@ -3793,6 +3859,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if upgradedExtractor and not upgradedExtractor.Dead then
+                if EntityCategoryContains(categories.TECH3, upgradedExtractor) then
+                    if VDist3Sq(upgradedExtractor:GetPosition(), self.BuilderManagers['MAIN'].Position) < 2500 then
+                        upgradedExtractor.MAINBASE = true
+                    end
+                end
                 --self:ForkThread(self:ExtractorInitialDelay(upgradedExtractor))
             end
         else
@@ -3809,7 +3880,7 @@ AIBrain = Class(RNGAIBrainClass) {
         unit.InitialDelayCompleted = false
         unit.InitialDelayStarted = true
         if self.CheatEnabled then
-            multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+            multiplier = self.EcoManager.EcoMultiplier
         else
             multiplier = 1
         end
@@ -4260,7 +4331,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoPowerPreemptiveRNG = function(self)
         local ALLBPS = __blueprints
-        local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        local multiplier = self.EcoManager.EcoMultiplier
         coroutine.yield(Random(1,7))
         while true do
             coroutine.yield(50)
@@ -4363,15 +4434,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Land T1 Factory Taken offline')
-                                                    deficit = deficit - 5
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Land T1 Factory Taken offline')
+                                                        deficit = deficit - 5
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T1 Loop Land Factory Deficit is '..deficit)
@@ -4379,15 +4452,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Land T2 Factory Taken offline')
-                                                    deficit = deficit - 8
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Land T2 Factory Taken offline')
+                                                        deficit = deficit - 8
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T2 Loop Land Factory Deficit is '..deficit)
@@ -4395,15 +4470,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Land T3 Factory Taken offline')
-                                                    deficit = deficit - 17
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Land T3 Factory Taken offline')
+                                                        deficit = deficit - 17
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T3 Loop Land Factory Deficit is '..deficit)
@@ -4423,15 +4500,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Air T1 Factory Taken offline')
-                                                    deficit = deficit - 4
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Air T1 Factory Taken offline')
+                                                        deficit = deficit - 4
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T1 Loop Air Factory Deficit is '..deficit)
@@ -4439,15 +4518,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Air T2 Factory Taken offline')
-                                                    deficit = deficit - 7
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Air T2 Factory Taken offline')
+                                                        deficit = deficit - 7
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T2 Loop Air Factory Deficit is '..deficit)
@@ -4455,15 +4536,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Air T3 Factory Taken offline')
-                                                    deficit = deficit - 17
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Air T3 Factory Taken offline')
+                                                        deficit = deficit - 17
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T3 Loop Air Factory Deficit is '..deficit)
@@ -4483,15 +4566,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Naval T1 Factory Taken offline')
-                                                    deficit = deficit - 4
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Naval T1 Factory Taken offline')
+                                                        deficit = deficit - 4
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
@@ -4499,15 +4584,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Naval T2 Factory Taken offline')
-                                                    deficit = deficit - 10
+                                            if not f.Upgrading then
+                                                if EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Naval T2 Factory Taken offline')
+                                                        deficit = deficit - 10
+                                                    end
                                                 end
-                                            end
-                                            if deficit <= 0 then
-                                                break
+                                                if deficit <= 0 then
+                                                    break
+                                                end
                                             end
                                         end
                                         --RNGLOG('Finished T2 Loop Naval Factory Deficit is '..deficit)
@@ -4516,10 +4603,12 @@ AIBrain = Class(RNGAIBrainClass) {
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
                                             if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
-                                                if not f.Offline then
-                                                    f.Offline = true
-                                                    --RNGLOG('Naval T3 Factory Taken offline')
-                                                    deficit = deficit - 20
+                                                if not f.Upgrading then
+                                                    if not f.Offline then
+                                                        f.Offline = true
+                                                        --RNGLOG('Naval T3 Factory Taken offline')
+                                                        deficit = deficit - 20
+                                                    end
                                                 end
                                             end
                                             if deficit <= 0 then
@@ -4544,23 +4633,25 @@ AIBrain = Class(RNGAIBrainClass) {
                             if self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Land T1 Factory put online')
-                                                surplus = surplus - 5
-                                            end
-                                        elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Land T2 Factory put online')
-                                                surplus = surplus - 8
-                                            end
-                                        elseif EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Land T3 Factory put online')
-                                                surplus = surplus - 17
+                                        if not f.Upgrading then
+                                            if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Land T1 Factory put online')
+                                                    surplus = surplus - 5
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Land T2 Factory put online')
+                                                    surplus = surplus - 8
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Land T3 Factory put online')
+                                                    surplus = surplus - 17
+                                                end
                                             end
                                         end
                                         if surplus <= 0 then
@@ -4583,27 +4674,29 @@ AIBrain = Class(RNGAIBrainClass) {
                             if self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Air T1 Factory put online')
-                                                surplus = surplus - 4
+                                        if not f.Upgrading then
+                                            if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Air T1 Factory put online')
+                                                    surplus = surplus - 4
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Air T2 Factory put online')
+                                                    surplus = surplus - 7
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Air T3 Factory put online')
+                                                    surplus = surplus - 17
+                                                end
                                             end
-                                        elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Air T2 Factory put online')
-                                                surplus = surplus - 7
+                                            if surplus <= 0 then
+                                                break
                                             end
-                                        elseif EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Air T3 Factory put online')
-                                                surplus = surplus - 17
-                                            end
-                                        end
-                                        if surplus <= 0 then
-                                            break
                                         end
                                     end
                                 end
@@ -4622,27 +4715,29 @@ AIBrain = Class(RNGAIBrainClass) {
                             if self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Naval T1 Factory put online')
-                                                surplus = surplus - 4
+                                        if not f.Upgrading then
+                                            if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Naval T1 Factory put online')
+                                                    surplus = surplus - 4
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Naval T2 Factory put online')
+                                                    surplus = surplus - 10
+                                                end
+                                            elseif EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
+                                                if f.Offline then
+                                                    f.Offline = false
+                                                    --RNGLOG('Naval T3 Factory put online')
+                                                    surplus = surplus - 20
+                                                end
                                             end
-                                        elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Naval T2 Factory put online')
-                                                surplus = surplus - 10
+                                            if surplus <= 0 then
+                                                break
                                             end
-                                        elseif EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
-                                            if f.Offline then
-                                                f.Offline = false
-                                                --RNGLOG('Naval T3 Factory put online')
-                                                surplus = surplus - 20
-                                            end
-                                        end
-                                        if surplus <= 0 then
-                                            break
                                         end
                                     end
                                 end
@@ -4928,6 +5023,7 @@ AIBrain = Class(RNGAIBrainClass) {
             }
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
+            local CoreMassNumberAchieved = false
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if massStorage > 150 and energyStorage > 1000 then
@@ -4936,6 +5032,15 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 --RNGLOG('EngineerAssistManager is Active')
                 self.EngineerAssistManagerActive = true
+            elseif self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 60 then
+                LOG('CoreMassPush is true')
+                self.EngineerAssistManagerBuildPowerRequired = 60
+            elseif not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
+                CoreMassNumberAchieved = true
+                self.EngineerAssistManagerBuildPowerRequired = 16
+            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 1.0 then
+                LOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
+                coroutine.yield(30)
             else
                 if self.EngineerAssistManagerBuildPowerRequired > 0 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 3
@@ -5106,14 +5211,16 @@ AIBrain = Class(RNGAIBrainClass) {
                         engspend.T3=engspend.T3+spendm
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.FACTORY then
-                    if ALLBPS[unit.UnitId].CategoriesHash.Land then
+                    if ALLBPS[unit.UnitId].CategoriesHash.LAND then
                         facspend.Land=facspend.Land+spendm
                         if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                             factories.Land.T1=factories.Land.T1+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Land.T2=factories.Land.T2+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
+                            LOG('T3 Land Factory Detecting incrementing land by 1')
                             factories.Land.T3=factories.Land.T3+1
+                            LOG('factories.Land.T3 '..factories.Land.T3)
                         end
                     elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
                         facspend.Air=facspend.Air+spendm
@@ -5381,6 +5488,8 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Mainbase T2 Extractors '..mainBaseExtractors.T2)
             LOG('Mainbase T3 Extractors '..mainBaseExtractors.T3)
             self.EcoManager.CoreExtractorT3Percentage = mainBaseExtractors.T3 / totalCoreExtractors
+            self.EcoManager.CoreExtractorT3Count = mainBaseExtractors.T3 or 0
+            self.EcoManager.TotalCoreExtractors = totalCoreExtractors or 0
         end
     end,
 
