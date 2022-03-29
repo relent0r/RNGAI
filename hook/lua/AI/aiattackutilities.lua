@@ -744,7 +744,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         for _,v in units do
             if not v.Dead then
                 if v:IsUnitState('Attached') then
-                   WaitSeconds(2)
+                    coroutine.yield(20)
                 end
             end
         end
@@ -1180,7 +1180,7 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
                 local unitPos = unit:GetPosition()
                 local useUnit = true
                 if checkThreat then
-                    WaitSeconds(0.1)
+                    coroutine.yield(1)
                     local threat = aiBrain:GetThreatAtPosition(unitPos, tRing, true)
                     if not (threat >= tMin and threat <= tMax) then
                         useUnit = false

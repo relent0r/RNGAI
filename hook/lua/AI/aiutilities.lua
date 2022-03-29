@@ -401,7 +401,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
     IssueTransportUnload(transports, location)
     local attached = true
     while attached do
-        WaitSeconds(2)
+        coroutine.yield(20)
         local allDead = true
         for _, v in transports do
             if not v.Dead then

@@ -2571,7 +2571,7 @@ function FatBoyBehaviorRNG(self)
             --RNGLOG('End of fatboy unit loop')
             IssueClearCommands({unit})
         end
-        WaitSeconds(1)
+        coroutine.yield(10)
     end
 end
 
@@ -2721,12 +2721,12 @@ CzarBehaviorRNG = function(self)
                 cmd = self:AttackTarget(nearCommander)
                 targetUnit = nearCommander
             end
-            WaitSeconds(1)
+            coroutine.yield(10)
 
             oldCommander = nearCommander
             nearCommander = CommanderOverrideCheck(self)
         end
-        WaitSeconds(1)
+        coroutine.yield(10)
 
         oldTargetUnit = targetUnit
         targetUnit, targetBase = FindExperimentalTargetRNG(self)
@@ -3129,7 +3129,7 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                 end
             end
         end
-        WaitSeconds(1)
+        coroutine.yield(10)
     end
 end
 
@@ -3152,9 +3152,9 @@ AhwassaBehaviorRNG = function(self)
         if targetLocation and targetLocation ~= oldTargetLocation then
             IssueClearCommands({experimental})
             IssueAttack({experimental}, targetLocation)
-            WaitSeconds(25)
+            coroutine.yield(250)
         end
-        WaitSeconds(1)
+        coroutine.yield(10)
 
         oldTargetLocation = targetLocation
         targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
@@ -3177,7 +3177,7 @@ function AirStagingThreadRNG(unit)
             local pos = unit:GetPosition()
             IssueClearCommands({unit})
             IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
-            WaitSeconds(2)
+            coroutine.yield(20)
             for _, v in unit.Refueling do
                 if not v.Dead then
                     v.Loading = false
@@ -3197,7 +3197,7 @@ function AirStagingThreadRNG(unit)
                 end
             end
         end
-        WaitSeconds(10)
+        coroutine.yield(100)
     end
 end
 

@@ -2885,7 +2885,7 @@ LastKnownThread = function(aiBrain)
     aiBrain.lastknown={}
     --aiBrain:ForkThread(ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
-    while not aiBrain.emanager.enemies do WaitSeconds(2) end
+    while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Result ~= "defeat" do
         local time=GetGameTimeSeconds()
         for _=0,10 do
@@ -2953,7 +2953,7 @@ LastKnownThread = function(aiBrain)
                 end
             end
             aiBrain.emanager.mex = enemyMexes
-            WaitSeconds(2)
+            coroutine.yield(20)
             time=GetGameTimeSeconds()
         end
         for i,v in aiBrain.lastknown do
@@ -3020,7 +3020,7 @@ end]]
 
 TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
-    while not aiBrain.lastknown do WaitSeconds(2) end
+    while not aiBrain.lastknown do coroutine.yield(20) end
     while aiBrain.Result ~= "defeat" do
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
@@ -3526,7 +3526,7 @@ function MexUpgradeManagerRNG(aiBrain)
                 end
             end
         end
-        WaitSeconds(4)
+        coroutine.yield(40)
     end
 end
 

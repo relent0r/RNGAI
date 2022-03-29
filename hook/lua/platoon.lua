@@ -9082,7 +9082,7 @@ Platoon = Class(RNGAIPlatoon) {
                 return
             else
                 counter = counter + 1
-                WaitSeconds(5)
+                coroutine.yield(50)
             end
         end
     end,
@@ -10089,7 +10089,7 @@ Platoon = Class(RNGAIPlatoon) {
             end
         end
         if RNGGETN(ps)<1 then 
-            WaitSeconds(3)
+            coroutine.yield(30)
             self.chpdata.merging=false
             return 
         elseif RNGGETN(ps)==1 then
