@@ -674,7 +674,7 @@ StructureManager = Class {
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                         if MassEfficiency >= 1.05 and EnergyEfficiency >= 1.2 then
                             LOG('Factory Upgrade efficiency check passed, get closest factory')
-                            local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH2')
+                            local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 LOG('Structure Manager Triggering T3 Air Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
@@ -688,7 +688,7 @@ StructureManager = Class {
             if self.Factories.AIR[2].UpgradingCount < 2 then
                 if GetGameTimeSeconds() > (600 / self.Brain.EcoManager.EcoMultiplier) then
                     LOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
-                    if GetEconomyStored(self.Brain, 'MASS') >= 1800 and GetEconomyStoredRatio(self.Brain, 'MASS') > 0.95 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.3 then
+                    if GetEconomyStored(self.Brain, 'MASS') >= 1800 and GetEconomyStoredRatio(self.Brain, 'ENERGY') > 0.95 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.3 then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
                             LOG('Structure Manager Triggering T3 Air Support Upgrade')

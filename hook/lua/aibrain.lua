@@ -5091,7 +5091,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if massStorage > 150 and energyStorage > 1000 then
+            if massStorage > 150 and energyStorage > 150 then
                 if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 16 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end

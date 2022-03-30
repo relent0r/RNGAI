@@ -157,6 +157,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 10,
                 BuildStructures = {
