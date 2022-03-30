@@ -647,7 +647,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                         end
                     end
                     if reclaiming then
-                        coroutine.yield(50)
+                        coroutine.yield(60)
                         reclaiming = false
                         eng.Active = false
                     end

@@ -937,10 +937,10 @@ AIBrain = Class(RNGAIBrainClass) {
         --IntelManagerRNG.GenerateMapZonesRNG(self)
 
         if RUtils.InitialMassMarkersInWater(self) then
-            RNGLOG('* AI-RNG: Map has mass markers in water')
+            --RNGLOG('* AI-RNG: Map has mass markers in water')
             self.MassMarkersInWater = true
         else
-            RNGLOG('* AI-RNG: Map does not have mass markers in water')
+            --RNGLOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
 
@@ -1400,7 +1400,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local threshold = self.BaseMonitor.AlertLevel
         local myThreat
         local alertBreak = false
-        RNGLOG('Base monitor raised for '..location..' of type '..type)
+        --RNGLOG('Base monitor raised for '..location..' of type '..type)
         repeat
             WaitSeconds(timeout)
             RNGLOG('BaseMonitorAlert Timeout Reached')
@@ -1445,8 +1445,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         until alertBreak
-        RNGLOG('Base monitor finished for '..location..' of type '..type)
-        RNGLOG('Alert Table for location '..repr(self.BaseMonitor.AlertsTable[location]))
+        --RNGLOG('Base monitor finished for '..location..' of type '..type)
+        --RNGLOG('Alert Table for location '..repr(self.BaseMonitor.AlertsTable[location]))
         if self.BaseMonitor.AlertsTable[location][type] then
             WARNING('BaseMonitor Alert Table exist when it possibly shouldnt'..repr(self.BaseMonitor.AlertsTable[location][type]))
         end
@@ -1454,7 +1454,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.BaseMonitor.ActiveAlerts == 0 then
             self.BaseMonitor.AlertSounded = false
         end
-        RNGLOG('Number of active alerts = '..self.BaseMonitor.ActiveAlerts)
+        --RNGLOG('Number of active alerts = '..self.BaseMonitor.ActiveAlerts)
     end,
 
     BuildScoutLocationsRNG = function(self)
@@ -1957,6 +1957,24 @@ AIBrain = Class(RNGAIBrainClass) {
                     end)
                 end
             end
+            for k, v in self.EnemyIntel.ACU do
+                local dupe = false
+                if not v.Ally and v.Hp != 0 and v.LastSpotted != 0 then
+                    LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
+                    if (GetGameTimeSeconds() - 30) > v.LastSpotted then
+                        for _, loc in self.InterestList.HighPriority do
+                            if VDist2Sq(v.Position[1], v.Position[3], loc.Position[1], loc.Position[3]) < 10000 then
+                                dupe = true
+                                break
+                            end
+                        end
+                        if not dupe then
+                            LOG('Insert scout position of last known acu location')
+                            RNGINSERT(self.InterestList.HighPriority, { Position = v.Position, LastScouted = gameTime })
+                        end
+                    end
+                end
+            end
             coroutine.yield(70)
         end
     end,
@@ -2203,16 +2221,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 coroutine.yield(1)
             end
             if numAlerts > 0 then
-                LOG('BaseMonitorZoneThreatThreadRNG numAlerts'..numAlerts)
-            end
-            if numAlerts > 0 then
+                --LOG('BaseMonitorZoneThreatThreadRNG numAlerts'..numAlerts)
                 self.BaseMonitor.ZoneAlertSounded = true
             else
                 self.BaseMonitor.ZoneAlertSounded = false
             end
             --self.BaseMonitor.ZoneAlertTable = self:RebuildTable(self.BaseMonitor.ZoneAlertTable)
             --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
-            RNGLOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
+            --RNGLOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
@@ -2282,8 +2298,8 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
             --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
-            RNGLOG('Number of platoon alerts currently '..table.getn(self.BaseMonitor.PlatoonDistressTable))
-            RNGLOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
+            --RNGLOG('Number of platoon alerts currently '..table.getn(self.BaseMonitor.PlatoonDistressTable))
+            --RNGLOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end
     end,
@@ -2301,10 +2317,10 @@ AIBrain = Class(RNGAIBrainClass) {
             return self.CDRUnit.Position
         end
         if self.BaseMonitor.AlertSounded then
-            RNGLOG('Base Alert Sounded')
-            RNGLOG('There are '..table.getn(self.BaseMonitor.AlertsTable)..' alerts currently')
-            RNGLOG('There are '..self.BaseMonitor.ActiveAlerts.. ' Active alerts')
-            RNGLOG('Movement layer is '..movementLayer)
+            --RNGLOG('Base Alert Sounded')
+            --RNGLOG('There are '..table.getn(self.BaseMonitor.AlertsTable)..' alerts currently')
+            --RNGLOG('There are '..self.BaseMonitor.ActiveAlerts.. ' Active alerts')
+            --RNGLOG('Movement layer is '..movementLayer)
             local priorityValue = 0
             local threatLayer = false
             if movementLayer == 'Land' or movementLayer == 'Amphibious' or movementLayer == 'Air' then
@@ -2317,7 +2333,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.AlertsTable do
                 for c, n in v do
                     if c == threatLayer then
-                        RNGLOG('Found Alert of type '..threatLayer)
+                        --RNGLOG('Found Alert of type '..threatLayer)
                         local tempDist = VDist2(position[1], position[3], n.Position[1], n.Position[3])
                         -- stops strange things if the distance is zero
                         if tempDist < 1 then
@@ -2333,9 +2349,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         priorityValue = 2500 / tempDist * n.Threat
                         if priorityValue > threatPriority then
                             --RNGLOG('We are replacing the following in base monitor')
-                            RNGLOG('threatPriority was '..priorityValue)
-                            RNGLOG('Threat at position was '..n.Threat)
-                            RNGLOG('With position '..repr(n.Position))
+                            --RNGLOG('threatPriority was '..priorityValue)
+                            --RNGLOG('Threat at position was '..n.Threat)
+                            --RNGLOG('With position '..repr(n.Position))
                             threatPriority = priorityValue
                             returnPos = n.Position
                             returnThreat = n.Threat
@@ -2345,7 +2361,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if self.BaseMonitor.PlatoonAlertSounded then
-            RNGLOG('Platoon Alert Sounded')
+            --RNGLOG('Platoon Alert Sounded')
             local priorityValue = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
@@ -2382,7 +2398,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if self.BaseMonitor.ZoneAlertSounded then
-            RNGLOG('Zone Alert Sounded')
+            --RNGLOG('Zone Alert Sounded')
             local priorityValue = 0
             for k, v in self.BaseMonitor.ZoneAlertTable do
                 local zonePos = self.Zones.Land.zones[k].pos
@@ -2425,9 +2441,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 height = surfHeight
             end
             returnPos = {returnPos[1], height, returnPos[3]}
-            RNGLOG('BaseMonitorDistressLocation returning the following')
-            RNGLOG('Return Position '..repr(returnPos))
-            RNGLOG('Return Threat '..returnThreat)
+            --RNGLOG('BaseMonitorDistressLocation returning the following')
+            --RNGLOG('Return Position '..repr(returnPos))
+            --RNGLOG('Return Threat '..returnThreat)
             return returnPos, returnThreat
         end
         coroutine.yield(2)
@@ -3426,35 +3442,70 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
+        LOG('CheckDirectorTargetAvailable type is '..platoonType)
 
         if strikeDamage then
             LOG('Strike damage for attack is '..strikeDamage)
         else
             LOG('No StrikeDamage passed for a threat type of '..threatType)
         end
+        if platoonDPS then
+            LOG('PlatoonDPS damage for attack is '..platoonDPS)
+        else
+            LOG('No PlatoonDPS passed for a threat type of '..threatType)
+        end
 
         local enemyACUIndexes = {}
 
         for k, v in self.EnemyIntel.ACU do
+            LOG('EnemyIntel.ACU loop')
             if not v.Ally and v.Hp != 0 and v.LastSpotted != 0 then
-                --RNGLOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..self.CurrentPlatoonThreat)
+                LOG('EnemyIntel.ACU loop non ally found')
+                RNGLOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..platoonThreat)
+                LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                 if platoonType == 'GUNSHIP' and platoonDPS then
+                    LOG('EnemyIntel.ACU loop gunship platoon with a dps of '..platoonDPS)
                     if ((platoonDPS / v.Hp) < 10 or v.Hp < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
-                        --RNGLOG('ACU Target valid, adding to index list')
-                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position} )
+                        RNGLOG('ACU Target valid, adding to index list')
+                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
+                        local scoutRequired = true
+                        for c, b in self.InterestList.MustScout do
+                            if b.ACUIndex == k then
+                                LOG('ACU Already due to be scouted')
+                                scoutRequired = false
+                                break
+                            end
+                        end
+                        if scoutRequired then
+                            LOG('Adding ACU to must scout list')
+                            RNGINSERT(self.InterestList.MustScout, { Position = v.Position, LastScouted = 0, ACUIndex = k })
+                        end
                     end
                 elseif platoonType == 'BOMBER' and strikeDamage then
                     if strikeDamage > v.Hp * 0.80 then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
+                        local scoutRequired = true
+                        for c, b in self.InterestList.MustScout do
+                            if b.ACUIndex == k then
+                                LOG('ACU Already due to be scouted')
+                                scoutRequired = false
+                                break
+                            end
+                        end
+                        if scoutRequired then
+                            LOG('Adding ACU to must scout list')
+                            RNGINSERT(self.InterestList.MustScout, { Position = v.Position, LastScouted = 0, ACUIndex = k })
+                        end
                     end
                 end
             end
         end
+
         if RNGGETN(enemyACUIndexes) > 0 then
             for k, v in enemyACUIndexes do
                 local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
                 for c, b in acuUnits do
-                    if not b.Dead and b:GetAIBrain():GetArmyIndex() == b.Index then
+                    if not b.Dead and b:GetAIBrain():GetArmyIndex() == v.Index then
                         potentialTarget = b
                         potentialTargetValue = 10000
                         LOG('Enemy ACU returned as potential target for Director')
@@ -5017,13 +5068,27 @@ AIBrain = Class(RNGAIBrainClass) {
     EngineerAssistManagerBrainRNG = function(self, type)
         coroutine.yield(1800)
         while true do
-            self.EngineerAssistManagerPriorityTable = {
-                MASSEXTRACTION = 1,
-                POWER = 2
-            }
+            
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local CoreMassNumberAchieved = false
+            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 0.0 then
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
+                    {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                }
+            else
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
+                    {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                }
+            end
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if massStorage > 150 and energyStorage > 1000 then

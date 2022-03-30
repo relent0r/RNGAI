@@ -212,11 +212,11 @@ GameMap = Class({
         if drawStuffz then
             ForkThread(
                 function()
-                    local zoneSetCopy = self:GetZoneSet('ExampleZoneSet',1)
+                    local zoneSetCopy = self:GetZoneSet('RNGNavalResourceSet',2)
                     coroutine.yield(100)
                     while true do
-                        self:DrawLayer(1)
-                        --self:DrawZones(zoneSetCopy.index)
+                        --self:DrawLayer(2)
+                        self:DrawZones(zoneSetCopy.index)
                         --zoneSetCopy:DrawZones()
                         WaitTicks(2)
                     end

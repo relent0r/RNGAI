@@ -56,17 +56,22 @@ RNGNavalResourceSet = Class(ZoneSet){
         RNGLOG('GenerateZoneList for custom Zone')
         local navalStartPositions = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        local zoneRadius = 120 * 120
+        local zoneRadius = 250 * 250
         if maxmapdimension < 512 then
             zoneRadius = 70 * 70
+        elseif maxmapdimension < 1024 then
+            zoneRadius = 180 * 180
         end
+
         LOG('Zone Radius is '..zoneRadius)
 
         local markers = {}
-        for _, marker in GetMarkers() do
+        for _, marker in ScenarioUtils.GetMarkers() do
             if marker.type == 'Mass' then
                 if MAP:GetComponent(marker.position,self.layer) > 0 then
-                    RNGINSERT(markers,marker)
+                    if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
+                        RNGINSERT(markers,marker)
+                    end
                 end
             end
             if marker.type == 'Naval Area' then
@@ -75,6 +80,7 @@ RNGNavalResourceSet = Class(ZoneSet){
                 end
             end
         end
+        LOG('Marker table size is '..RNGGETN(markers))
 
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
@@ -99,6 +105,7 @@ RNGNavalResourceSet = Class(ZoneSet){
       
         local complete = (RNGGETN(markers) == 0)
         RNGLOG('Starting GenerateZoneList Loop')
+        local count = 0
         while not complete do
             complete = true
             -- Update weights
@@ -136,7 +143,7 @@ RNGNavalResourceSet = Class(ZoneSet){
             -- Claim nearby points
             for _, v in markers do
                 if (not v.claimed) and VDist2Sq(v.position[1], v.position[3], best.position[1], best.position[3]) < zoneRadius then
-                    if v.Type == 'Mass' then
+                    if v.type == 'Mass' then
                         table.insert(resourceGroup, v)
                     end
                     v.claimed = true

@@ -111,20 +111,35 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --LOG('Start reclaim table size '..tableSize)
             if tableSize > 0 then
                 local reclaimCount = 0
+                local firstReclaim = false
                 while tableSize > 0 do
                     --coroutine.yield(10)
                     aiBrain.StartReclaimTaken = true
                     local closestReclaimDistance = false
                     local closestReclaim
                     local closestReclaimKey
-                    for k, r in aiBrain.StartReclaimTable do
-                        local reclaimDistance
-                        if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                            reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
-                            if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
-                                closestReclaim = r.Reclaim
-                                closestReclaimDistance = reclaimDistance
-                                closestReclaimKey = k
+                    local highestValue = 0
+                    if not firstReclaim then
+                        for k, r in aiBrain.StartReclaimTable do
+                            if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                                if r.Reclaim.MaxMassReclaim > highestValue then
+                                    closestReclaim = r.Reclaim
+                                    closestReclaimKey = k
+                                    highestValue  = r.Reclaim.MaxMassReclaim
+                                end
+                            end
+                        end
+                        firstReclaim = true
+                    else
+                        for k, r in aiBrain.StartReclaimTable do
+                            local reclaimDistance
+                            if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                                reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
+                                if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
+                                    closestReclaim = r.Reclaim
+                                    closestReclaimDistance = reclaimDistance
+                                    closestReclaimKey = k
+                                end
                             end
                         end
                     end
@@ -132,12 +147,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         RNGLOG('Closest Reclaim is true we are going to try reclaim it')
                         reclaimCount = reclaimCount + 1
                         RNGLOG('Reclaim Function - Issuing reclaim')
-                        RNGLOG('Reclaim distance is '..closestReclaimDistance)
                         IssueReclaim({self}, closestReclaim)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
                         local massOverflow = false
-                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 20) do
+                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 30) do
                             reclaimTimeout = reclaimTimeout + 1
                             RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
@@ -146,6 +160,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 LOG('We are overflowing mass return from early reclaim thread')
                                 IssueClearCommands({self})
                                 return
+                            end
+                            if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
+                                reclaimTimeout = reclaimTimeout - 1
                             end
                             coroutine.yield(20)
                         end
@@ -327,13 +344,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             {engPos[1] - 15, 0, engPos[3] + 25},
                             {engPos[1] - 25, 0, engPos[3] + 25},
                         }
-                        LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                        --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
                         if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
                             --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
                                 if square[1] - 10 <= 3 or square[1] + 10 >= ScenarioInfo.size[1] - 3 or square[3] - 10 <= 3 or square[3] + 10 >= ScenarioInfo.size[1] - 3 then
-                                    LOG('Grid square position outside of map border')
+                                    --LOG('Grid square position outside of map border')
                                     continue
                                 end
                                 --LOG('reclaimGrid square table is '..repr(square))

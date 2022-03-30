@@ -1242,7 +1242,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         target = false
                     end
                     coroutine.yield(1)
-                    RNGLOG('No target found in sweep increasing search radius of '..searchRadius)
+                    --RNGLOG('No target found in sweep increasing search radius of '..searchRadius)
                 until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
 
                 if target then
@@ -3129,7 +3129,7 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                 end
             end
         end
-        coroutine.yield(10)
+        coroutine.yield(15)
     end
 end
 
@@ -3186,13 +3186,15 @@ function AirStagingThreadRNG(unit)
                         --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
                         plat = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
                     else
-                        --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
+                        RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
                         plat = aiBrain:MakePlatoon('', v.PlanName)
                     end
                     if v.PlatoonData then
+                        RNGLOG('Air Refuel unit has platoon data, reassigning ')
                         plat.PlatoonData = {}
                         plat.PlatoonData = v.PlatoonData
                     end
+                    RNGLOG('Air Refuel assigning unit to new platoon '..plat.PlanName)
                     aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                 end
             end
