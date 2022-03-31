@@ -2202,7 +2202,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 			local z = v[3]
 
 			if Orient == 'N' or Orient == 'S' then
-				if orientation == 'FRONT' and z != OrientvalueREAR then
+				if orientation == 'FRONT' and z ~= OrientvalueREAR then
 					filterList[counter+1] = v
 					counter = counter + 1
 				elseif orientation == 'REAR' and z == OrientvalueREAR then
@@ -2210,7 +2210,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 					counter = counter + 1
 				end
 			elseif Orient == 'W' or Orient == 'E' then
-				if orientation == 'FRONT' and x != OrientvalueREAR then
+				if orientation == 'FRONT' and x ~= OrientvalueREAR then
 					filterList[counter+1] = v
 					counter = counter + 1
 				elseif orientation == 'REAR' and x == OrientvalueREAR then

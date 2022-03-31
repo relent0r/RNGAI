@@ -1081,8 +1081,8 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
     local oldPathSize = table.getn(platoon.LastAttackDestination)
 
     -- if we don't have an old path or our old destination and new destination are different
-    if oldPathSize == 0 or attackPos[1] != platoon.LastAttackDestination[oldPathSize][1] or
-    attackPos[3] != platoon.LastAttackDestination[oldPathSize][3] then
+    if oldPathSize == 0 or attackPos[1] ~= platoon.LastAttackDestination[oldPathSize][1] or
+    attackPos[3] ~= platoon.LastAttackDestination[oldPathSize][3] then
 
         GetMostRestrictiveLayerRNG(platoon)
         -- check if we can path to here safely... give a large threat weight to sort by threat first

@@ -1959,7 +1959,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, v in self.EnemyIntel.ACU do
                 local dupe = false
-                if not v.Ally and v.Hp != 0 and v.LastSpotted != 0 then
+                if not v.Ally and v.Hp ~= 0 and v.LastSpotted ~= 0 then
                     LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if (GetGameTimeSeconds() - 30) > v.LastSpotted then
                         for _, loc in self.InterestList.HighPriority do
@@ -3459,7 +3459,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         for k, v in self.EnemyIntel.ACU do
             LOG('EnemyIntel.ACU loop')
-            if not v.Ally and v.Hp != 0 and v.LastSpotted != 0 then
+            if not v.Ally and v.Hp ~= 0 and v.LastSpotted ~= 0 then
                 LOG('EnemyIntel.ACU loop non ally found')
                 RNGLOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..platoonThreat)
                 LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')

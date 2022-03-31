@@ -643,7 +643,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
             return retreat
         end
     end
-    if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
+    if cdr.PlatoonHandle and cdr.PlatoonHandle ~= aiBrain.ArmyPool then
         if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
             --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
             cdr.PlatoonHandle:PlatoonDisband(aiBrain)
@@ -849,7 +849,7 @@ function CDRExpansionRNG(aiBrain, cdr)
             --RNGLOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
             cdr.UnitBeingBuiltBehavior = cdr.UnitBeingBuilt
         end
-        if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
+        if cdr.PlatoonHandle and cdr.PlatoonHandle ~= aiBrain.ArmyPool then
             if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
                 --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
@@ -1186,7 +1186,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             --RNGLOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
             cdr.UnitBeingBuiltBehavior = cdr.UnitBeingBuilt
         end
-        if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
+        if cdr.PlatoonHandle and cdr.PlatoonHandle ~= aiBrain.ArmyPool then
             if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
                 --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
@@ -2114,7 +2114,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         'RateOfFire'
     }
     cdr.Upgrading = true
-    if cdr.PlatoonHandle and cdr.PlatoonHandle != aiBrain.ArmyPool then
+    if cdr.PlatoonHandle and cdr.PlatoonHandle ~= aiBrain.ArmyPool then
         if PlatoonExists(aiBrain, cdr.PlatoonHandle) then
             --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." CDR disbands ")
             cdr.PlatoonHandle:PlatoonDisband(aiBrain)

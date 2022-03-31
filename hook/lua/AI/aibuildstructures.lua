@@ -151,7 +151,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     local location = false
     if IsResource(buildingType) then
-        if buildingType != 'T1HydroCarbon' and constructionData.MexThreat then
+        if buildingType ~= 'T1HydroCarbon' and constructionData.MexThreat then
             --RNGLOG('MexThreat Builder Type')
             local threatMin = -9999
             local threatMax = 9999

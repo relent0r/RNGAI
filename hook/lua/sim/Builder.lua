@@ -12,7 +12,7 @@ PlatoonBuilder = Class(RNGPlatoonBuilder) {
         if Builders[self.BuilderName].PriorityFunction then
             --RNGLOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
             local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager)
-            if newPri != self.Priority then
+            if newPri ~= self.Priority then
                 --RNGLOG('* AI-RNG: PlatoonBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
                 self.Priority = newPri
                 self.PriorityAltered = true
@@ -38,7 +38,7 @@ FactoryBuilder = Class(RNGFactoryBuilder) {
         if Builders[self.BuilderName].PriorityFunction then
             --RNGLOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
             local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager, Builders[self.BuilderName].BuilderData)
-            if newPri != self.Priority then
+            if newPri ~= self.Priority then
                 --RNGLOG('* AI-RNG: FactoryBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
                 self.Priority = newPri
                 self.PriorityAltered = true
@@ -63,7 +63,7 @@ EngineerBuilder = Class(RNGEngineerBuilder) {
         if Builders[self.BuilderName].PriorityFunction then
             --RNGLOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
             local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager)
-            if newPri != self.Priority then
+            if newPri ~= self.Priority then
                 --RNGLOG('* AI-RNG: EngineerBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
                 self.Priority = newPri
                 self.PriorityAltered = true
