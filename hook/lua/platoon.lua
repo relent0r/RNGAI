@@ -1476,7 +1476,7 @@ Platoon = Class(RNGAIPlatoon) {
         self.CurrentPlatoonThreat = false
         local unitPos
         self.scoutUnit = false
-        self.atkPri = { categories.COMMAND, categories.MOBILE * categories.LAND, categories.MASSEXTRACTION }
+        self.atkPri = { categories.COMMAND, categories.MOBILE * categories.LAND * categories.DIRECTFIRE, categories.MOBILE * categories.LAND, categories.MASSEXTRACTION }
         local threatTimeout = 0
         self:ConfigurePlatoon()
         LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
@@ -1620,6 +1620,7 @@ Platoon = Class(RNGAIPlatoon) {
                     local retreatTrigger = 0
                     local retreatTimeout = 0
                     if target and not target.Dead then
+                        LOG('ACU Support has target and will attack')
                         if aiBrain.CDRUnit.SuicideMode and EntityCategoryContains(categories.COMMAND, target) then
                             snipeAttempt = true
                         end
