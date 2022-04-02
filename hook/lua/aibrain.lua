@@ -901,7 +901,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
         end
-        LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
+       --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
        --RNGLOG('Water Ratio is '..self.MapWaterRatio)
@@ -1967,7 +1967,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.EnemyIntel.ACU do
                 local dupe = false
                 if not v.Ally and v.Hp ~= 0 and v.LastSpotted ~= 0 then
-                    LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
+                   --LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if (GetGameTimeSeconds() - 30) > v.LastSpotted then
                         for _, loc in self.InterestList.HighPriority do
                             if VDist2Sq(v.Position[1], v.Position[3], loc.Position[1], loc.Position[3]) < 10000 then
@@ -1976,7 +1976,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                         if not dupe then
-                            LOG('Insert scout position of last known acu location')
+                           --LOG('Insert scout position of last known acu location')
                             RNGINSERT(self.InterestList.HighPriority, { Position = v.Position, LastScouted = gameTime })
                         end
                     end
@@ -2496,7 +2496,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         --RNGLOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                         c.Position = unit:GetPosition()
                         c.Hp = unit:GetHealth()
-                        RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.Hp..' health')
+                       --RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.Hp..' health')
                         acuThreat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                        --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                         c.Threat = acuThreat
@@ -2561,17 +2561,17 @@ AIBrain = Class(RNGAIBrainClass) {
                            --LOG('There is an engineer in the army pool with Active set '..v.UnitId)
                         end
                     end
-                    LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
-                    LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
+                   --LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
+                   --LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
                        --RNGLOG('Base Monitor Alert is on')
                     end
-                    RNGLOG('ACU Table '..repr(self.EnemyIntel.ACU))
-                    LOG('Core Mass Marker Count '..self.EcoManager.CoreMassMarkerCount)
-                    LOG('Core Extractor T3 percentage '..self.EcoManager.CoreExtractorT3Percentage)
-                    LOG('SManager Dump '..repr(self.smanager))
+                   --RNGLOG('ACU Table '..repr(self.EnemyIntel.ACU))
+                   --LOG('Core Mass Marker Count '..self.EcoManager.CoreMassMarkerCount)
+                   --LOG('Core Extractor T3 percentage '..self.EcoManager.CoreExtractorT3Percentage)
+                   --LOG('SManager Dump '..repr(self.smanager))
                     --[[for k, v in self.Zones.Land.zones do
                         for k1,v2 in v.edges do
                            --RNGLOG('Zone Edge '..v2.zone.id..' is '..v2.distance..' from '..v.id)
@@ -3450,9 +3450,9 @@ AIBrain = Class(RNGAIBrainClass) {
         local targetType = false
         local potentialTargetValue = 0
         if platoonType then
-            LOG('CheckDirectorTargetAvailable type is '..platoonType)
+           --LOG('CheckDirectorTargetAvailable type is '..platoonType)
         else
-            LOG('No platoonType sent to director, what sort of platoon is this?')
+           --LOG('No platoonType sent to director, what sort of platoon is this?')
         end
 
         if strikeDamage then
@@ -3461,34 +3461,34 @@ AIBrain = Class(RNGAIBrainClass) {
            --LOG('No StrikeDamage passed for a threat type of '..threatType)
         end
         if platoonDPS then
-            LOG('PlatoonDPS damage for attack is '..platoonDPS)
+           --LOG('PlatoonDPS damage for attack is '..platoonDPS)
         else
-            LOG('No PlatoonDPS passed for a threat type of '..threatType)
+           --LOG('No PlatoonDPS passed for a threat type of '..threatType)
         end
 
         local enemyACUIndexes = {}
 
         for k, v in self.EnemyIntel.ACU do
-            LOG('EnemyIntel.ACU loop')
+           --LOG('EnemyIntel.ACU loop')
             if not v.Ally and v.Hp ~= 0 and v.LastSpotted ~= 0 then
-                LOG('EnemyIntel.ACU loop non ally found')
-                RNGLOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..platoonThreat)
-                LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
+               --LOG('EnemyIntel.ACU loop non ally found')
+               --RNGLOG('ACU has '..v.Hp..' last spotted at '..v.LastSpotted..' our threat is '..platoonThreat)
+               --LOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                 if platoonType == 'GUNSHIP' and platoonDPS then
-                    LOG('EnemyIntel.ACU loop gunship platoon with a dps of '..platoonDPS)
+                   --LOG('EnemyIntel.ACU loop gunship platoon with a dps of '..platoonDPS)
                     if ((platoonDPS / v.Hp) < 10 or v.Hp < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
-                        RNGLOG('ACU Target valid, adding to index list')
+                       --RNGLOG('ACU Target valid, adding to index list')
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                         local scoutRequired = true
                         for c, b in self.InterestList.MustScout do
                             if b.ACUIndex == k then
-                                LOG('ACU Already due to be scouted')
+                               --LOG('ACU Already due to be scouted')
                                 scoutRequired = false
                                 break
                             end
                         end
                         if scoutRequired then
-                            LOG('Adding ACU to must scout list')
+                           --LOG('Adding ACU to must scout list')
                             RNGINSERT(self.InterestList.MustScout, { Position = v.Position, LastScouted = 0, ACUIndex = k })
                         end
                     end
@@ -3498,13 +3498,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         local scoutRequired = true
                         for c, b in self.InterestList.MustScout do
                             if b.ACUIndex == k then
-                                LOG('ACU Already due to be scouted')
+                               --LOG('ACU Already due to be scouted')
                                 scoutRequired = false
                                 break
                             end
                         end
                         if scoutRequired then
-                            LOG('Adding ACU to must scout list')
+                           --LOG('Adding ACU to must scout list')
                             RNGINSERT(self.InterestList.MustScout, { Position = v.Position, LastScouted = 0, ACUIndex = k })
                         end
                     end
@@ -3519,7 +3519,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not b.Dead and b:GetAIBrain():GetArmyIndex() == v.Index then
                         potentialTarget = b
                         potentialTargetValue = 10000
-                        LOG('Enemy ACU returned as potential target for Director')
+                       --LOG('Enemy ACU returned as potential target for Director')
                     end
                 end
             end
@@ -3541,7 +3541,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     continue
                                 end
                                 if strikeDamage > 0 and v.HP / 3 > strikeDamage then
-                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                   --LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
                                     continue
                                 end
                             elseif threatType == 'Land' then
@@ -3569,7 +3569,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     continue
                                 end
                                 if strikeDamage > 0 and v.HP / 3 > strikeDamage then
-                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                   --LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
                                     continue
                                 end
                             elseif threatType == 'Land' then
@@ -3598,7 +3598,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     continue
                                 end
                                 if strikeDamage > 0 and v.HP / 2 > strikeDamage then
-                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                   --LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
                                     continue
                                 end
                             elseif threatType == 'Land' then
@@ -3626,7 +3626,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     continue
                                 end
                                 if strikeDamage > 0 and v.HP / 3 > strikeDamage then
-                                    LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
+                                   --LOG('Not enough strike damage HP vs strikeDamage '..v.HP..' '..strikeDamage)
                                     continue
                                 end
                             elseif threatType == 'Land' then
@@ -3687,12 +3687,12 @@ AIBrain = Class(RNGAIBrainClass) {
             local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
             self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            LOG('Core Extractor T3 Count needs to be less than 3 '..self.EcoManager.CoreExtractorT3Count)
-            LOG('Total Core Extractors needs to be greater than 2 '..self.EcoManager.TotalCoreExtractors)
-            LOG('Mex Income '..self.cmanager.income.r.m..' needs to be greater than '..(140 * self.EcoManager.EcoMultiplier))
-            LOG('T3 Land Factory Count needs to be greater than 1 '..self.smanager.fact.Land.T3)
-            LOG('or T3 Air Factory Count needs to be greater than 1 '..self.smanager.fact.Air.T3)
-            LOG('Efficiency over time needs to be greater than 1.0 '..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+           --LOG('Core Extractor T3 Count needs to be less than 3 '..self.EcoManager.CoreExtractorT3Count)
+           --LOG('Total Core Extractors needs to be greater than 2 '..self.EcoManager.TotalCoreExtractors)
+           --LOG('Mex Income '..self.cmanager.income.r.m..' needs to be greater than '..(140 * self.EcoManager.EcoMultiplier))
+           --LOG('T3 Land Factory Count needs to be greater than 1 '..self.smanager.fact.Land.T3)
+           --LOG('or T3 Air Factory Count needs to be greater than 1 '..self.smanager.fact.Air.T3)
+           --LOG('Efficiency over time needs to be greater than 1.0 '..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
 
             if self.EcoManager.CoreExtractorT3Count < 3 and self.EcoManager.TotalCoreExtractors > 2 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) and (self.smanager.fact.Land.T3 > 0 or self.smanager.fact.Air.T3 > 0) and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                 self.EcoManager.CoreMassPush = true
@@ -3705,7 +3705,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             if self.EcoManager.CoreExtractorT3Count then
-                LOG('CoreExtractorT3Count '..self.EcoManager.CoreExtractorT3Count)
+               --LOG('CoreExtractorT3Count '..self.EcoManager.CoreExtractorT3Count)
             end
             if extractorsDetail.TECH2Upgrading < 1 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) then
                 --LOG('Trigger all tiers true')
@@ -5118,7 +5118,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
                 }
             end
-            LOG('EngineerAssistManager State is '..state)
+           --LOG('EngineerAssistManager State is '..state)
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if massStorage > 150 and energyStorage > 150 then
@@ -5128,13 +5128,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('EngineerAssistManager is Active')
                 self.EngineerAssistManagerActive = true
             elseif self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 60 then
-                LOG('CoreMassPush is true')
+               --LOG('CoreMassPush is true')
                 self.EngineerAssistManagerBuildPowerRequired = 60
             elseif not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
                 CoreMassNumberAchieved = true
                 self.EngineerAssistManagerBuildPowerRequired = 16
             elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 1.0 then
-                LOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
+               --LOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                 coroutine.yield(30)
             else
                 if self.EngineerAssistManagerBuildPowerRequired > 0 then
@@ -5313,9 +5313,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Land.T2=factories.Land.T2+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
-                            LOG('T3 Land Factory Detecting incrementing land by 1')
+                           --LOG('T3 Land Factory Detecting incrementing land by 1')
                             factories.Land.T3=factories.Land.T3+1
-                            LOG('factories.Land.T3 '..factories.Land.T3)
+                           --LOG('factories.Land.T3 '..factories.Land.T3)
                         end
                     elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
                         facspend.Air=facspend.Air+spendm

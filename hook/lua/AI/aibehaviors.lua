@@ -193,13 +193,13 @@ function CDRBrainThread(cdr)
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
                 if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or cdr.SupportPlatoon.Dead and (gameTime - 15) > lastPlatoonCall then
-                    LOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
-                    LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                   --LOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
+                   --LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
-                    LOG('CDR Support Platoon exist but we have too much threat, calling platoon')
-                    LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                   --LOG('CDR Support Platoon exist but we have too much threat, calling platoon')
+                   --LOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 end
@@ -819,13 +819,13 @@ function PerformACUReclaim(aiBrain, cdr)
     local reclaiming = false
     local maxReclaimCount = 0
     if reclaimRect then
-        LOG('ACU found reclaim within 10 units')
+       --LOG('ACU found reclaim within 10 units')
         local closeReclaim = {}
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
             if b.MaxMassReclaim and b.MaxMassReclaim > 25 then
                 RNGINSERT(closeReclaim, b)
-                LOG('ACU Issuing Reclaim')
+               --LOG('ACU Issuing Reclaim')
                 maxReclaimCount = maxReclaimCount + 1
             end
             if maxReclaimCount > 10 then
@@ -1124,22 +1124,22 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
-            RNGLOG('Current Enemy Inner Threat '..enemyUnitThreatInner)
-            RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-            RNGLOG('Current Friendly Inner Threat '..friendlyUnitThreatInner)
-            RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
-            RNGLOG('Current CDR Confidence '..cdr.Confidence)
+           --RNGLOG('Current Enemy Inner Threat '..enemyUnitThreatInner)
+           --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+           --RNGLOG('Current Friendly Inner Threat '..friendlyUnitThreatInner)
+           --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
+           --RNGLOG('Current CDR Confidence '..cdr.Confidence)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 --RNGLOG('ACU threat low and health up past 6000')
@@ -3253,11 +3253,11 @@ function AirStagingThreadRNG(unit)
                         --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
                         plat = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
                     else
-                        RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
+                       --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
                         plat = aiBrain:MakePlatoon('', v.PlanName)
                     end
                     if v.PlatoonData then
-                        RNGLOG('Air Refuel unit has platoon data, reassigning ')
+                       --RNGLOG('Air Refuel unit has platoon data, reassigning ')
                         plat.PlatoonData = {}
                         plat.PlatoonData = v.PlatoonData
                     end
@@ -3289,10 +3289,10 @@ GetStartingReclaim = function(aiBrain)
     if startReclaim and RNGGETN(startReclaim) > 0 then
         for k,v in startReclaim do
             if v.IsWreckage then
-                LOG('IsWreckage is true ')
+               --LOG('IsWreckage is true ')
             else
                 if v.MaxMassReclaim and v.MaxMassReclaim > 10 then
-                    LOG('IsWreckage is false but we have a maxmassreclaim value of '..v.MaxMassReclaim)
+                   --LOG('IsWreckage is false but we have a maxmassreclaim value of '..v.MaxMassReclaim)
                 end
             end
             if not IsProp(v) then continue end

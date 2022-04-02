@@ -111,11 +111,11 @@ EngineerManager = Class(RNGEngineerManager) {
         end
         --LOG('Engineer trying to have task assigned '..unit.Sync.id)
         if unit.RemovingFromEngineerAssist then
-            LOG('Engineer removed from assist')
+           --LOG('Engineer removed from assist')
         end
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             if unit.RemovingFromEngineerAssist then
-                LOG('RemovedFromEngineerAssist is still true and Active is or UnitBeingBuiltBehavior so is delayed')
+               --LOG('RemovedFromEngineerAssist is still true and Active is or UnitBeingBuiltBehavior so is delayed')
             end
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
@@ -127,7 +127,7 @@ EngineerManager = Class(RNGEngineerManager) {
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
             if unit.RemovingFromEngineerAssist then
-                LOG('RemovedFromEngineerAssist is still true and unit.UnitBeingAssist or unit.UnitBeingBuilt so is delayed')
+               --LOG('RemovedFromEngineerAssist is still true and unit.UnitBeingAssist or unit.UnitBeingBuilt so is delayed')
             end
             --RNGLOG('UnitBeingAssist Delay')
             self:DelayAssign(unit, 50)

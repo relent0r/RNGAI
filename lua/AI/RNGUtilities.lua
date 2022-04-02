@@ -146,7 +146,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     if closestReclaim then
                         --RNGLOG('Closest Reclaim is true we are going to try reclaim it')
                         reclaimCount = reclaimCount + 1
-                        RNGLOG('Reclaim Function - Issuing reclaim')
+                       --RNGLOG('Reclaim Function - Issuing reclaim')
                         IssueReclaim({self}, closestReclaim)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
@@ -3860,23 +3860,23 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         if not unit.Dead then
             local unitPos = unit:GetPosition()
             local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
-            LOG('Unit is '..unit.UnitId)
-            LOG('unitPos is '..repr(unitPos))
-            LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
-            LOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
+           --LOG('Unit is '..unit.UnitId)
+           --LOG('unitPos is '..repr(unitPos))
+           --LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+           --LOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
             if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
                 if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
                     damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
                 else
-                    LOG('Strike will not kill target or 3 passes')
+                   --LOG('Strike will not kill target or 3 passes')
                 end
             end
         end
-        LOG('Current potential strike damage '..damage)
+       --LOG('Current potential strike damage '..damage)
     end
     maxDamage = damage
     -- Now look at points for a better strike target
-    LOG('StrikeForce Looking for better strike target position')
+   --LOG('StrikeForce Looking for better strike target position')
     for _, pointPos in pointTable do
        --LOG('pointPos is '..repr(pointPos))
        --LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
@@ -3900,7 +3900,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
                     end
                 end
             end
-            LOG('Initial strike damage '..damage)
+           --LOG('Initial strike damage '..damage)
         end
        --LOG('Current maxDamage is '..maxDamage)
         if damage > maxDamage then
