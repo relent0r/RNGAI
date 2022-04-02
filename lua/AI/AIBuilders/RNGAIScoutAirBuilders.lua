@@ -27,11 +27,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory AirScout T1 Excess',
         PlatoonTemplate = 'T1AirScout',
-        Priority = 300,
+        Priority = 760,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.SCOUT * categories.AIR}},
         },
         BuilderType = 'Air',
     },

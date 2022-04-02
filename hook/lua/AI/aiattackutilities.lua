@@ -647,7 +647,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                         end
                     end
                     if reclaiming then
-                        coroutine.yield(50)
+                        coroutine.yield(60)
                         reclaiming = false
                         eng.Active = false
                     end
@@ -744,7 +744,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         for _,v in units do
             if not v.Dead then
                 if v:IsUnitState('Attached') then
-                   WaitSeconds(2)
+                    coroutine.yield(20)
                 end
             end
         end
@@ -1081,8 +1081,8 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
     local oldPathSize = table.getn(platoon.LastAttackDestination)
 
     -- if we don't have an old path or our old destination and new destination are different
-    if oldPathSize == 0 or attackPos[1] != platoon.LastAttackDestination[oldPathSize][1] or
-    attackPos[3] != platoon.LastAttackDestination[oldPathSize][3] then
+    if oldPathSize == 0 or attackPos[1] ~= platoon.LastAttackDestination[oldPathSize][1] or
+    attackPos[3] ~= platoon.LastAttackDestination[oldPathSize][3] then
 
         GetMostRestrictiveLayerRNG(platoon)
         -- check if we can path to here safely... give a large threat weight to sort by threat first
@@ -1180,7 +1180,7 @@ function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius
                 local unitPos = unit:GetPosition()
                 local useUnit = true
                 if checkThreat then
-                    WaitSeconds(0.1)
+                    coroutine.yield(1)
                     local threat = aiBrain:GetThreatAtPosition(unitPos, tRing, true)
                     if not (threat >= tMin and threat <= tMax) then
                         useUnit = false

@@ -111,33 +111,47 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             --LOG('Start reclaim table size '..tableSize)
             if tableSize > 0 then
                 local reclaimCount = 0
+                local firstReclaim = false
                 while tableSize > 0 do
                     --coroutine.yield(10)
                     aiBrain.StartReclaimTaken = true
                     local closestReclaimDistance = false
                     local closestReclaim
                     local closestReclaimKey
-                    for k, r in aiBrain.StartReclaimTable do
-                        local reclaimDistance
-                        if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                            reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
-                            if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
-                                closestReclaim = r.Reclaim
-                                closestReclaimDistance = reclaimDistance
-                                closestReclaimKey = k
+                    local highestValue = 0
+                    if not firstReclaim then
+                        for k, r in aiBrain.StartReclaimTable do
+                            if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                                if r.Reclaim.MaxMassReclaim > highestValue then
+                                    closestReclaim = r.Reclaim
+                                    closestReclaimKey = k
+                                    highestValue  = r.Reclaim.MaxMassReclaim
+                                end
+                            end
+                        end
+                        firstReclaim = true
+                    else
+                        for k, r in aiBrain.StartReclaimTable do
+                            local reclaimDistance
+                            if r.Reclaim and not IsDestroyed(r.Reclaim) then
+                                reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
+                                if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
+                                    closestReclaim = r.Reclaim
+                                    closestReclaimDistance = reclaimDistance
+                                    closestReclaimKey = k
+                                end
                             end
                         end
                     end
                     if closestReclaim then
                         --RNGLOG('Closest Reclaim is true we are going to try reclaim it')
                         reclaimCount = reclaimCount + 1
-                        --RNGLOG('Reclaim Function - Issuing reclaim')
-                        --RNGLOG('Reclaim distance is '..closestReclaimDistance)
+                        RNGLOG('Reclaim Function - Issuing reclaim')
                         IssueReclaim({self}, closestReclaim)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
                         local massOverflow = false
-                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 20) do
+                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 30) do
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
@@ -146,6 +160,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 --LOG('We are overflowing mass return from early reclaim thread')
                                 IssueClearCommands({self})
                                 return
+                            end
+                            if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
+                                reclaimTimeout = reclaimTimeout - 1
                             end
                             coroutine.yield(20)
                         end
@@ -327,16 +344,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             {engPos[1] - 15, 0, engPos[3] + 25},
                             {engPos[1] - 25, 0, engPos[3] + 25},
                         }
-                       --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                        --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
                         if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
-                           --LOG('We are going to try reclaim within the grid')
+                            --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
                                 if square[1] - 10 <= 3 or square[1] + 10 >= ScenarioInfo.size[1] - 3 or square[3] - 10 <= 3 or square[3] + 10 >= ScenarioInfo.size[1] - 3 then
-                                   --LOG('Grid square position outside of map border')
+                                    --LOG('Grid square position outside of map border')
                                     continue
                                 end
-                               --LOG('reclaimGrid square table is '..repr(square))
+                                --LOG('reclaimGrid square table is '..repr(square))
                                 local rectDef = Rect(square[1] - 10, square[3] + 10, square[1] + 10, square[3] - 10)
                                 local reclaimRect = GetReclaimablesInRect(rectDef)
                                 local engReclaiming = false
@@ -1280,7 +1297,7 @@ end
 function ExtractorsBeingUpgraded(aiBrain, blueprints)
     -- Returns number of extractors upgrading
 
-    local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
+    local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION, true)
     local tech1ExtNumBuilding = 0
     local tech2ExtNumBuilding = 0
     local tech1Total = 0
@@ -1293,7 +1310,7 @@ function ExtractorsBeingUpgraded(aiBrain, blueprints)
     }
     local multiplier
     if aiBrain.CheatEnabled then
-        multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        multiplier = aiBrain.EcoManager.EcoMultiplier
     else
         multiplier = 1
     end
@@ -1332,6 +1349,7 @@ function ExtractorsBeingUpgraded(aiBrain, blueprints)
             end
         end
     end
+    aiBrain.EcoManager.TotalMexSpend = totalSpend
     return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
 end
 
@@ -1462,9 +1480,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                         break
                     end
                 end
-                local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+                local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
                 if closestBlockingShield then
-                    return closestBlockingShield
+                    return closestBlockingShield, shieldHealth
                 end
             end
             if retUnit then
@@ -1649,9 +1667,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                 break
             end
         end
-        local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+        local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
         if closestBlockingShield then
-            return closestBlockingShield
+            return closestBlockingShield, shieldHealth
         end
     end
     if retUnit then
@@ -1867,6 +1885,9 @@ end
 function ExpansionSpamBaseLocationCheck(aiBrain, location)
     local validLocation = false
     local enemyStarts = {}
+    if not location then
+        return false
+    end
 
     if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
         --RNGLOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
@@ -1883,7 +1904,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --RNGLOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             --RNGLOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            if AIAttackUtils.CanGraphToRNG(startloc, location, 'Land') then
+            if AIAttackUtils.CanGraphToRNG(startloc.Position, location, 'Land') then
                 --RNGLOG('Can graph to enemy location for spam base')
                 --RNGLOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
                 validLocation = true
@@ -2185,7 +2206,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 			local z = v[3]
 
 			if Orient == 'N' or Orient == 'S' then
-				if orientation == 'FRONT' and z != OrientvalueREAR then
+				if orientation == 'FRONT' and z ~= OrientvalueREAR then
 					filterList[counter+1] = v
 					counter = counter + 1
 				elseif orientation == 'REAR' and z == OrientvalueREAR then
@@ -2193,7 +2214,7 @@ function GetBasePerimeterPoints( aiBrain, location, radius, orientation, positio
 					counter = counter + 1
 				end
 			elseif Orient == 'W' or Orient == 'E' then
-				if orientation == 'FRONT' and x != OrientvalueREAR then
+				if orientation == 'FRONT' and x ~= OrientvalueREAR then
 					filterList[counter+1] = v
 					counter = counter + 1
 				elseif orientation == 'REAR' and x == OrientvalueREAR then
@@ -2885,7 +2906,7 @@ LastKnownThread = function(aiBrain)
     aiBrain.lastknown={}
     --aiBrain:ForkThread(ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
-    while not aiBrain.emanager.enemies do WaitSeconds(2) end
+    while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Result ~= "defeat" do
         local time=GetGameTimeSeconds()
         for _=0,10 do
@@ -2953,7 +2974,7 @@ LastKnownThread = function(aiBrain)
                 end
             end
             aiBrain.emanager.mex = enemyMexes
-            WaitSeconds(2)
+            coroutine.yield(20)
             time=GetGameTimeSeconds()
         end
         for i,v in aiBrain.lastknown do
@@ -3020,7 +3041,7 @@ end]]
 
 TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
-    while not aiBrain.lastknown do WaitSeconds(2) end
+    while not aiBrain.lastknown do coroutine.yield(20) end
     while aiBrain.Result ~= "defeat" do
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
@@ -3526,55 +3547,7 @@ function MexUpgradeManagerRNG(aiBrain)
                 end
             end
         end
-        WaitSeconds(4)
-    end
-end
-
-MapReclaimAnalysis = function(aiBrain)
-    -- Loops through map grid squares that roughly match IMAP 
-    local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-    local gridCount
-    if maxmapdimension < 500 then
-        gridCount = 8
-    else
-        gridCount = 16
-    end
-
-    coroutine.yield(100)
-    while not aiBrain.defeat do
-        if aiBrain.ReclaimEnabled then
-            local reclaimGrid = {}
-            local reclaimScanArea = aiBrain.BrainIntel.IMAPConfig.IMAPSize
-            local mapSizeX, mapSizeZ = GetMapSize()
-            local gridSizeX = mapSizeX / reclaimScanArea
-            local gridSizeZ = mapSizeZ / reclaimScanArea
-            for gridX = 1, gridCount do
-                for gridZ = 1, gridCount do
-                    local reclaimTotal = 0
-                    local xCenter = ((gridX - 1) * gridSizeX) + (gridX * gridSizeX)
-                    local zCenter = ((gridZ - 1) * gridSizeZ) + (gridZ * gridSizeZ)
-                    for k, v in reclaimGrid do
-                        if v.Position[1] == xCenter and v.Position[3] == zCenter then
-                            continue
-                        end
-                    end
-                    local reclaimRaw = GetReclaimablesInRect(xCenter - (reclaimScanArea / 2), zCenter - (reclaimScanArea / 2), xCenter + (reclaimScanArea / 2), zCenter + (reclaimScanArea / 2))
-                    if reclaimRaw and table.getn(reclaimRaw) > 0 then
-                        for k,v in reclaimRaw do
-                            if not IsProp(v) then continue end
-                            if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
-                                reclaimTotal = reclaimTotal + v.MaxMassReclaim
-                            end
-                        end
-                    end
-                    table.insert( reclaimGrid, {Position = {xCenter, GetSurfaceHeight(xCenter, zCenter), zCenter}, TotalReclaim=reclaimTotal} )
-                    coroutine.yield(1)
-                end
-            end
-            aiBrain.MapReclaimTable = reclaimGrid
-            --RNGLOG('ReclaimGrid is '..repr(reclaimGrid))
-        end
-        coroutine.yield(300)
+        coroutine.yield(40)
     end
 end
 
@@ -3880,7 +3853,30 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
     local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
     local setPointPos = false
-   --LOG('StrikeForce Looking for better strike target position')
+    -- Check radius of target position to set the minimum damage
+    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, targetPosition, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+    local damage = 0
+    for _, unit in enemiesAroundTarget do
+        if not unit.Dead then
+            local unitPos = unit:GetPosition()
+            local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+            LOG('Unit is '..unit.UnitId)
+            LOG('unitPos is '..repr(unitPos))
+            LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+            LOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
+            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
+                if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                    damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                else
+                    LOG('Strike will not kill target or 3 passes')
+                end
+            end
+        end
+        LOG('Current potential strike damage '..damage)
+    end
+    maxDamage = damage
+    -- Now look at points for a better strike target
+    LOG('StrikeForce Looking for better strike target position')
     for _, pointPos in pointTable do
        --LOG('pointPos is '..repr(pointPos))
        --LOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
@@ -3904,7 +3900,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
                     end
                 end
             end
-           --LOG('Current potential strike damage '..damage)
+            LOG('Initial strike damage '..damage)
         end
        --LOG('Current maxDamage is '..maxDamage)
         if damage > maxDamage then

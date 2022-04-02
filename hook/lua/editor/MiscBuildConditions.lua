@@ -201,7 +201,7 @@ end
 
 function GreaterThanGameTimeRNG(aiBrain, num, caution)
     local time = GetGameTimeSeconds()
-    local multiplier = tonumber(ScenarioInfo.Options.BuildMult)
+    local multiplier = aiBrain.EcoManager.EcoMultiplier
     if caution and aiBrain.UpgradeMode == 'Caution' then
         if aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
             return true

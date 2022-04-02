@@ -55,7 +55,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend Instant',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 1000,
+        Priority = 1010,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
@@ -157,6 +157,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 10,
                 BuildStructures = {
@@ -318,7 +319,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyPriorityy = {categories.STRUCTURE * categories.SHIELD, categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)},
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD, categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)},
                 AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 10,
@@ -407,7 +408,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {

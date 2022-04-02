@@ -9,9 +9,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
-       --LOG('Engineer has just finished building '..finishedUnit.UnitId..' engineer sync id '..unit.Sync.id)
         if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
-           --LOG('RNG UnitConstructionFinished has fired')
             self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
         end
         if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
@@ -30,7 +28,6 @@ EngineerManager = Class(RNGEngineerManager) {
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
                 if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
-                   --LOG('Unit Construction finished has fired for platoon '..v.AssistPlatoon.PlanName)
                     v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
@@ -113,7 +110,13 @@ EngineerManager = Class(RNGEngineerManager) {
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
         --LOG('Engineer trying to have task assigned '..unit.Sync.id)
+        if unit.RemovingFromEngineerAssist then
+            LOG('Engineer removed from assist')
+        end
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
+            if unit.RemovingFromEngineerAssist then
+                LOG('RemovedFromEngineerAssist is still true and Active is or UnitBeingBuiltBehavior so is delayed')
+            end
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
             --RNGLOG('CDR Combat Delay')
@@ -123,6 +126,9 @@ EngineerManager = Class(RNGEngineerManager) {
         --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.Sync.id)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
+            if unit.RemovingFromEngineerAssist then
+                LOG('RemovedFromEngineerAssist is still true and unit.UnitBeingAssist or unit.UnitBeingBuilt so is delayed')
+            end
             --RNGLOG('UnitBeingAssist Delay')
             self:DelayAssign(unit, 50)
             return
