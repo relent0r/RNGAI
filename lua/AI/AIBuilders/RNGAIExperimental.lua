@@ -18,14 +18,14 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 250.0 }},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.5, 250.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
-                NumAssistees = 10,
+                NumAssistees = 20,
                 BuildClose = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {

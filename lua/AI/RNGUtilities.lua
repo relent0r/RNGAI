@@ -1349,6 +1349,7 @@ function ExtractorsBeingUpgraded(aiBrain, blueprints)
             end
         end
     end
+    aiBrain.EcoManager.TotalMexSpend = totalSpend
     return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
 end
 
@@ -1479,9 +1480,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                         break
                     end
                 end
-                local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+                local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
                 if closestBlockingShield then
-                    return closestBlockingShield
+                    return closestBlockingShield, shieldHealth
                 end
             end
             if retUnit then
@@ -1666,9 +1667,9 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                 break
             end
         end
-        local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+        local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
         if closestBlockingShield then
-            return closestBlockingShield
+            return closestBlockingShield, shieldHealth
         end
     end
     if retUnit then
@@ -1884,6 +1885,9 @@ end
 function ExpansionSpamBaseLocationCheck(aiBrain, location)
     local validLocation = false
     local enemyStarts = {}
+    if not location then
+        return false
+    end
 
     if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
         --RNGLOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
@@ -1900,7 +1904,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --RNGLOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             --RNGLOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            if AIAttackUtils.CanGraphToRNG(startloc, location, 'Land') then
+            if AIAttackUtils.CanGraphToRNG(startloc.Position, location, 'Land') then
                 --RNGLOG('Can graph to enemy location for spam base')
                 --RNGLOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
                 validLocation = true
@@ -3849,6 +3853,29 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
     local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
     local setPointPos = false
+    -- Check radius of target position to set the minimum damage
+    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, targetPosition, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+    local damage = 0
+    for _, unit in enemiesAroundTarget do
+        if not unit.Dead then
+            local unitPos = unit:GetPosition()
+            local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+            LOG('Unit is '..unit.UnitId)
+            LOG('unitPos is '..repr(unitPos))
+            LOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
+            LOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
+            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
+                if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                    damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                else
+                    LOG('Strike will not kill target or 3 passes')
+                end
+            end
+        end
+        LOG('Current potential strike damage '..damage)
+    end
+    maxDamage = damage
+    -- Now look at points for a better strike target
     LOG('StrikeForce Looking for better strike target position')
     for _, pointPos in pointTable do
         LOG('pointPos is '..repr(pointPos))
@@ -3873,7 +3900,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
                     end
                 end
             end
-            LOG('Current potential strike damage '..damage)
+            LOG('Initial strike damage '..damage)
         end
         LOG('Current maxDamage is '..maxDamage)
         if damage > maxDamage then

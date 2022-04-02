@@ -172,6 +172,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerFocusCategory = false
+        self.EngineerAssistManagerFocusAirUpgrade = false
+        self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
         self.ProductionRatios = {
             Land = self.DefaultLandRatio,
@@ -732,7 +734,7 @@ AIBrain = Class(RNGAIBrainClass) {
             CoreExtractorT3Percentage = 0,
             CoreExtractorT3Count = 0,
             EcoMultiplier = 1,
-            EcoMassUpgradeTimeout = 330,
+            EcoMassUpgradeTimeout = 300,
             EcoPowerPreemptive = false,
         }
         self.EcoManager.PowerPriorityTable = {
@@ -855,6 +857,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.MassMarker = 0
+        self.BrainIntel.MassSharePerPlayer = 0
         self.BrainIntel.AirAttackMode = false
         self.BrainIntel.SelfThreat = {}
         self.BrainIntel.Average = {
@@ -1255,6 +1258,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if graphCheck then
             self.GraphZones.HasRun = true
             self.EcoManager.CoreMassMarkerCount = coreMassMarkers
+            self.BrainIntel.MassSharePerPlayer = markerCount / self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
@@ -1719,6 +1723,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 ACUPosition = {},
                 ACULastSpotted = 0,
                 Brain = v,
+                Team = false,
             }
             -- Share resources with friends but don't regard their strength
             if ArmyIsCivilian(v:GetArmyIndex()) then
@@ -1729,11 +1734,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:SetResourceSharing(true)
                 allyCount = allyCount + 1
                 insertTable.Enemy = false
+                insertTable.Team = v.Team
             elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
                 insertTable.Enemy = false
             end
             if insertTable.Enemy == true then
                 enemyCount = enemyCount + 1
+                insertTable.Team = v.Team
                 RNGINSERT(enemyBrains, v)
             end
             local acuPos = {}
@@ -2469,16 +2476,16 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ACUDetectionRNG = function(self, blip)
-        LOG('ACUDetection Callback has fired')
+        --LOG('ACUDetection Callback has fired')
         local currentGameTime = GetGameTimeSeconds()
         if blip then
-            RNGLOG('* AI-RNG: ACU Detected')
+            --RNGLOG('* AI-RNG: ACU Detected')
             local unit = blip:GetSource()
             if not unit.Dead then
                 --unitDesc = GetBlueprint(v).Description
                 --RNGLOG('* AI-RNG: Units is'..unitDesc)
                 local enemyIndex = unit:GetAIBrain():GetArmyIndex()
-                RNGLOG('* AI-RNG: EnemyIndex :'..enemyIndex)
+                --RNGLOG('* AI-RNG: EnemyIndex :'..enemyIndex)
                 --RNGLOG('* AI-RNG: Curent Game Time : '..currentGameTime)
                 --RNGLOG('* AI-RNG: Iterating ACUTable')
                 for k, c in self.EnemyIntel.ACU do
@@ -2489,12 +2496,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         --RNGLOG('* AI-RNG: CurrentGameTime IF is true updating tables')
                         c.Position = unit:GetPosition()
                         c.Hp = unit:GetHealth()
-                        RNGLOG('Enemy ACU of index '..enemyIndex..'has '..c.Hp..' health')
+                        RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.Hp..' health')
                         acuThreat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                         RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                         c.Threat = acuThreat
                         c.LastSpotted = currentGameTime
-                        LOG('Enemy ACU Position is set')
+                        --LOG('Enemy ACU Position is set')
                     end
                 end
             end
@@ -3442,7 +3449,11 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
-        LOG('CheckDirectorTargetAvailable type is '..platoonType)
+        if platoonType then
+            LOG('CheckDirectorTargetAvailable type is '..platoonType)
+        else
+            LOG('No platoonType sent to director, what sort of platoon is this?')
+        end
 
         if strikeDamage then
             LOG('Strike damage for attack is '..strikeDamage)
@@ -3703,7 +3714,7 @@ AIBrain = Class(RNGAIBrainClass) {
             coroutine.yield(30)
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
                 if upgradeSpend > 4 then
-                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                         --LOG('We Could upgrade an extractor now with over time')
                             --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                             if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
@@ -3875,7 +3886,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
                 if fractionComplete < 0.65 and not bypassEcoManager then
-                    if (GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000 then
+                    if (GetEconomyTrend(self, 'MASS') <= 0.0 and (GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000) then
                         if not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
                             coroutine.yield(10)
@@ -5067,12 +5078,13 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EngineerAssistManagerBrainRNG = function(self, type)
         coroutine.yield(1800)
+        local state
         while true do
-            
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local CoreMassNumberAchieved = false
             if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 0.0 then
+                state = 'Energy'
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
@@ -5080,7 +5092,24 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
                 }
+            elseif self.EngineerAssistManagerFocusAirUpgrade then
+                state = 'Air'
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                }
+            elseif self.EngineerAssistManagerFocusLandUpgrade then
+                state = 'Land'
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                }
             else
+                state = 'Mass'
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -5089,10 +5118,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
                 }
             end
+            LOG('EngineerAssistManager State is '..state)
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if massStorage > 150 and energyStorage > 150 then
-                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 16 then
+                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
                 --RNGLOG('EngineerAssistManager is Active')
@@ -5127,7 +5157,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
                                 --RNGLOG('Transfer Energy to team mate')
                                 local amount
-                                amount = GetEconomyStored( self, 'ENERGY') / 100 * 10
+                                amount = GetEconomyStored( self, 'ENERGY') / 8
                                 GiveResource(self, 'ENERGY', amount)
                             end
                         end
