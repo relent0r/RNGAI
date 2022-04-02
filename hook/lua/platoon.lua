@@ -1480,7 +1480,7 @@ Platoon = Class(RNGAIPlatoon) {
         local threatTimeout = 0
         self:ConfigurePlatoon()
        --LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
-        self:ForkThread(self.DrawACUSupport, aiBrain)
+        --self:ForkThread(self.DrawACUSupport, aiBrain)
 
         while PlatoonExists(aiBrain, self) do
             if aiBrain.CDRUnit.Active then
