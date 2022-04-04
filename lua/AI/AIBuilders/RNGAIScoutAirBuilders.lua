@@ -18,7 +18,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 900,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.3}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.60}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },

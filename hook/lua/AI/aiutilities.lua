@@ -720,7 +720,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                     break
                 end
             end
-            local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
+            local closestBlockingShield, shieldHealth = RUtils.GetClosestShieldProtectingTargetRNG(unit, retUnit)
             if closestBlockingShield then
                 return closestBlockingShield, shieldHealth
             end

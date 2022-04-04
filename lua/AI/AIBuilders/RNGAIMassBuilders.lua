@@ -28,6 +28,7 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 30,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 5,
                 ThreatType = 'AntiSurface',
@@ -51,6 +52,7 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 60,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
@@ -77,6 +79,7 @@ BuilderGroup {
                 BuildClose = true,
                 Type = 'Mass',
                 MaxDistance = 120,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
@@ -125,7 +128,7 @@ BuilderGroup {
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 120,
-                MinDistance = 1,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
@@ -142,6 +145,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 240, nil, nil, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {

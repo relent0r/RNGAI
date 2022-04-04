@@ -1003,7 +1003,7 @@ MapReclaimAnalysis = function(aiBrain)
                 if reclaimRaw and table.getn(reclaimRaw) > 0 then
                     for k,v in reclaimRaw do
                         if not IsProp(v) then continue end
-                        if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
+                        if v.MaxMassReclaim and v.MaxMassReclaim > 0 then
                             reclaimTotal = reclaimTotal + v.MaxMassReclaim
                         end
                     end
@@ -1012,6 +1012,14 @@ MapReclaimAnalysis = function(aiBrain)
                 square.LastUpdate = currentGameTime
                 coroutine.yield(1)
             end
+            local startReclaim = 0
+            for k, square in aiBrain.MapReclaimTable do
+                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], square.Position[1], square.Position[3]) < 14400 then
+                    startReclaim = startReclaim + square.TotalReclaim
+                end
+            end
+            aiBrain.StartReclaimCurrent = startReclaim
+            LOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
         end
         coroutine.yield(300)
     end

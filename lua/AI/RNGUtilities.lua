@@ -134,7 +134,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         for k, r in aiBrain.StartReclaimTable do
                             local reclaimDistance
                             if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                                reclaimDistance = VDist3Sq(engPos, r.Reclaim:GetCachePosition())
+                                reclaimDistance = VDist3Sq(engPos, r.Reclaim.CachePosition)
                                 if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
                                     closestReclaim = r.Reclaim
                                     closestReclaimDistance = reclaimDistance
@@ -354,13 +354,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     continue
                                 end
                                 --LOG('reclaimGrid square table is '..repr(square))
-                                local rectDef = Rect(square[1] - 10, square[3] + 10, square[1] + 10, square[3] - 10)
+                                local rectDef = Rect(square[1] - 10, square[3] - 10, square[1] + 10, square[3] + 10)
                                 local reclaimRect = GetReclaimablesInRect(rectDef)
                                 local engReclaiming = false
                                 if reclaimRect then
                                     for c, b in reclaimRect do
                                         if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                        local rpos = b:GetCachePosition()
+                                        local rpos = b.CachePosition
                                         -- Start Blacklisted Props
                                         local blacklisted = false
                                         for _, BlackPos in PropBlacklist do
@@ -430,7 +430,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if reclaimRect and RNGGETN( reclaimRect ) > 0 then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
-                local rpos = v:GetCachePosition()
+                local rpos = v.CachePosition
                 -- Start Blacklisted Props
                 local blacklisted = false
                 for _, BlackPos in PropBlacklist do
@@ -444,7 +444,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if not needEnergy or v.MaxEnergyReclaim then
                     if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                         if not self.BadReclaimables[v] then
-                            local recPos = v:GetCachePosition()
+                            local recPos = v.CachePosition
                             local distance = VDist2(engPos[1], engPos[3], recPos[1], recPos[3])
                             if distance < closestDistance then
                                 closestReclaim = recPos
@@ -1294,65 +1294,6 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     return coords
 end
 
-function ExtractorsBeingUpgraded(aiBrain, blueprints)
-    -- Returns number of extractors upgrading
-
-    local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION, true)
-    local tech1ExtNumBuilding = 0
-    local tech2ExtNumBuilding = 0
-    local tech1Total = 0
-    local tech2Total = 0
-    local tech3Total = 0
-    local totalSpend = 0
-    local extractorTable = {
-        TECH1 = {},
-        TECH2 = {}
-    }
-    local multiplier
-    if aiBrain.CheatEnabled then
-        multiplier = aiBrain.EcoManager.EcoMultiplier
-    else
-        multiplier = 1
-    end
-    -- own armyIndex
-    local armyIndex = aiBrain:GetArmyIndex()
-    -- loop over all units and search for upgrading units
-    for _, extractor in extractors do
-        if not extractor.Dead and not extractor:BeenDestroyed() and extractor:GetAIBrain():GetArmyIndex() == armyIndex and extractor:GetFractionComplete() == 1 then
-            if not extractor.InitialDelayStarted then
-                aiBrain:ForkThread(aiBrain.ExtractorInitialDelay, extractor)
-            end
-            if EntityCategoryContains( categories.TECH1, extractor) then
-                tech1Total = tech1Total + 1
-                if extractor:IsUnitState('Upgrading') then
-                    local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                    totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
-                    extractor.Upgrading = true
-                    tech1ExtNumBuilding = tech1ExtNumBuilding + 1
-                else
-                    extractor.Upgrading = false
-                    RNGINSERT(extractorTable.TECH1, extractor)
-                end
-            elseif EntityCategoryContains( categories.TECH2, extractor) then
-                tech2Total = tech2Total + 1
-                if extractor:IsUnitState('Upgrading') then
-                    local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                    totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
-                    extractor.Upgrading = true
-                    tech2ExtNumBuilding = tech2ExtNumBuilding + 1
-                else
-                    extractor.Upgrading = false
-                    RNGINSERT(extractorTable.TECH2, extractor)
-                end
-            elseif EntityCategoryContains( categories.TECH3, extractor) then
-                tech3Total = tech3Total + 1
-            end
-        end
-    end
-    aiBrain.EcoManager.TotalMexSpend = totalSpend
-    return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
-end
-
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)
     if not position then
         position = platoon:GetPlatoonPosition()
@@ -1480,7 +1421,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                         break
                     end
                 end
-                local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
+                local closestBlockingShield, shieldHealth = GetClosestShieldProtectingTargetRNG(unit, retUnit)
                 if closestBlockingShield then
                     return closestBlockingShield, shieldHealth
                 end
@@ -1667,7 +1608,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                 break
             end
         end
-        local closestBlockingShield, shieldHealth = AIBehaviors.GetClosestShieldProtectingTargetRNG(unit, retUnit)
+        local closestBlockingShield, shieldHealth = GetClosestShieldProtectingTargetRNG(unit, retUnit)
         if closestBlockingShield then
             return closestBlockingShield, shieldHealth
         end
@@ -3949,6 +3890,44 @@ function GetAngleFromAToB(tLocA, tLocB)
         else return 270 + iTheta
         end
     end
+end
+
+function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit)
+    if not targetUnit or not attackingUnit then
+        return false
+    end
+    local blockingList = {}
+
+    -- If targetUnit is within the radius of any shields, the shields need to be destroyed.
+    local aiBrain = attackingUnit:GetAIBrain()
+    local tPos = targetUnit:GetPosition()
+    local aPos = attackingUnit:GetPosition()
+    local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
+    for _, shield in shields do
+        if not shield.Dead then
+            local shieldPos = shield:GetPosition()
+            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
+
+            if VDist2Sq(tPos[1], tPos[3], shieldPos[1], shieldPos[3]) < shieldSizeSq then
+                table.insert(blockingList, shield)
+            end
+        end
+    end
+
+    -- Return the closest blocking shield
+    local closest = false
+    local closestDistSq = 999999
+    for _, shield in blockingList do
+        local shieldPos = shield:GetPosition()
+        local distSq = VDist2Sq(aPos[1], aPos[3], shieldPos[1], shieldPos[3])
+
+        if distSq < closestDistSq then
+            closest = shield
+            closestDistSq = distSq
+        end
+    end
+
+    return closest, closest.MyShield:GetHealth()
 end
 
 --[[

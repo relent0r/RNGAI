@@ -57,7 +57,13 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             EarlyRaid = true,
             TargetSearchPriorities = { 
-                categories.MOBILE * categories.LAND
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.STRUCTURE,
             },
             PrioritizedCategories = {   
                 categories.ENGINEER,

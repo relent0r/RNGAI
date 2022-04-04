@@ -170,7 +170,8 @@ BuilderGroup {
         PriorityFunction = InitialBomberResponse,
         BuilderConditions = {	
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},	
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
             { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
         },	
         BuilderType = 'Air',	

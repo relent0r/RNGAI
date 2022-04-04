@@ -127,20 +127,38 @@ AIBrain = Class(RNGAIBrainClass) {
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
         if  mapSizeX > 1000 and mapSizeZ > 1000 then
-            self.DefaultLandRatio = 0.5
-            self.DefaultAirRatio = 0.4
-            self.DefaultNavalRatio = 0.4
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.5
+                self.DefaultAirRatio = 0.4
+                self.DefaultNavalRatio = 0.4
+            end
             self.MapSize = 20
         elseif mapSizeX > 500 and mapSizeZ > 500 then
-            self.DefaultLandRatio = 0.6
-            self.DefaultAirRatio = 0.4
-            self.DefaultNavalRatio = 0.4
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.6
+                self.DefaultAirRatio = 0.4
+                self.DefaultNavalRatio = 0.4
+            end
             --RNGLOG('10 KM Map Check true')
             self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
-            self.DefaultLandRatio = 0.7
-            self.DefaultAirRatio = 0.3
-            self.DefaultNavalRatio = 0.3
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.7
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.3
+            end
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
@@ -155,8 +173,12 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
-        if self.MapSize <= 10 then
+        if self.MapSize <= 10 and self.RNGEXP then
+            self.EconomyUpgradeSpend = 0.35
+        elseif self.MapSize <= 10 then
             self.EconomyUpgradeSpend = 0.25
+        elseif self.RNGEXP then
+            self.EconomyUpgradeSpend = 0.35
         else
             self.EconomyUpgradeSpend = 0.30
         end
@@ -909,6 +931,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
         self.StartReclaimTotal = 0
+        self.StartReclaimCurrent = 0
         self.StartReclaimTaken = false
         self.MapReclaimTable = {}
         self.Zones = { }
@@ -966,7 +989,6 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
-        self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
         self:ForkThread(self.CivilianPDCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)
@@ -2655,20 +2677,26 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) then
                 --RNGLOG('Land Threat Higher, shift ratio to 0.5')
-                self.ProductionRatios.Land = 0.5
+                if not self.RNGEXP then
+                    self.ProductionRatios.Land = 0.5
+                end
             elseif not self.EnemyIntel.ChokeFlag then
                 --RNGLOG('Land Threat Lower, shift ratio to 0.6')
                 self.ProductionRatios.Land = self.DefaultLandRatio
             end
             if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --RNGLOG('Air Threat Higher, shift ratio to 0.4')
-                self.ProductionRatios.Air = 0.4
+                if not self.RNGEXP then
+                    self.ProductionRatios.Air = 0.4
+                end
             elseif not self.EnemyIntel.ChokeFlag then
                 --RNGLOG('Air Threat lower, shift ratio to 0.5')
                 self.ProductionRatios.Air = self.DefaultAirRatio
             end
             if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
-                self.ProductionRatios.Naval = 0.4
+                if not self.RNGEXP then
+                    self.ProductionRatios.Naval = 0.4
+                end
             elseif not self.EnemyIntel.ChokeFlag then
                 self.ProductionRatios.Naval = self.DefaultNavalRatio
             end
@@ -3675,290 +3703,6 @@ AIBrain = Class(RNGAIBrainClass) {
             return potentialTarget
         end
         return false
-    end,
-    
-    EcoExtractorUpgradeCheckRNG = function(self)
-    -- Keep track of how many extractors are currently upgrading
-    -- Right now this is less about making the best decision to upgrade and more about managing the economy while that upgrade is happening.
-        coroutine.yield(Random(5,20))
-        local ALLBPS = __blueprints
-        while true do
-            local upgradeSpend = self.cmanager.income.r.m*self.EconomyUpgradeSpend
-            local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
-            self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
-            self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            LOG('Core Extractor T3 Count needs to be less than 3 '..self.EcoManager.CoreExtractorT3Count)
-            LOG('Total Core Extractors needs to be greater than 2 '..self.EcoManager.TotalCoreExtractors)
-            LOG('Mex Income '..self.cmanager.income.r.m..' needs to be greater than '..(140 * self.EcoManager.EcoMultiplier))
-            LOG('T3 Land Factory Count needs to be greater than 1 '..self.smanager.fact.Land.T3)
-            LOG('or T3 Air Factory Count needs to be greater than 1 '..self.smanager.fact.Air.T3)
-            LOG('Efficiency over time needs to be greater than 1.0 '..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-
-            if self.EcoManager.CoreExtractorT3Count < 3 and self.EcoManager.TotalCoreExtractors > 2 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) and (self.smanager.fact.Land.T3 > 0 or self.smanager.fact.Air.T3 > 0) and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                self.EcoManager.CoreMassPush = true
-                self.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
-            else
-                self.EcoManager.CoreMassPush = false
-                self.EngineerAssistManagerFocusCategory = false
-            end
-            --LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
-            local massStorage = GetEconomyStored( self, 'MASS')
-            local energyStorage = GetEconomyStored( self, 'ENERGY')
-            if self.EcoManager.CoreExtractorT3Count then
-                LOG('CoreExtractorT3Count '..self.EcoManager.CoreExtractorT3Count)
-            end
-            if extractorsDetail.TECH2Upgrading < 1 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) then
-                --LOG('Trigger all tiers true')
-                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-            end
-            coroutine.yield(30)
-            if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
-                if upgradeSpend > 4 then
-                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                        --LOG('We Could upgrade an extractor now with over time')
-                            --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                            if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                                --LOG('Trigger all tiers false')
-                                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
-                            else
-                                --LOG('Trigger all tiers true')
-                                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-                            end
-                            coroutine.yield(30)
-                        --end
-                        coroutine.yield(30)
-                    end
-                end
-                coroutine.yield(30)
-            elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
-                if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                    LOG('We Could upgrade an extractor now with over time')
-                    local massIncome = GetEconomyIncome(self, 'MASS')
-                    local massRequested = GetEconomyRequested(self, 'MASS')
-                    local energyIncome = GetEconomyIncome(self, 'ENERGY')
-                    local energyRequested = GetEconomyRequested(self, 'ENERGY')
-                    local massEfficiency = math.min(massIncome / massRequested, 2)
-                    local energyEfficiency = math.min(energyIncome / energyRequested, 2)
-                    if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                        LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                            --LOG('Trigger all tiers false')
-                            self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
-                        else
-                            --LOG('Trigger all tiers true')
-                            self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-                        end
-                        coroutine.yield(30)
-                    end
-                    coroutine.yield(30)
-                end
-            elseif extractorsDetail.TECH1Upgrading < 2 then
-                if upgradeSpend > 5 then
-                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        LOG('We Could upgrade an extractor now with over time')
-                        self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
-                        coroutine.yield(60)
-                    end
-                end
-            elseif massStorage > 3000 and energyStorage > 8000 then
-                if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                    LOG('We Could upgrade an extractor now with over time')
-                    local massIncome = GetEconomyIncome(self, 'MASS')
-                    local massRequested = GetEconomyRequested(self, 'MASS')
-                    local energyIncome = GetEconomyIncome(self, 'ENERGY')
-                    local energyRequested = GetEconomyRequested(self, 'ENERGY')
-                    local massEfficiency = math.min(massIncome / massRequested, 2)
-                    local energyEfficiency = math.min(energyIncome / energyRequested, 2)
-                    if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                        LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        LOG('Trigger all tiers true')
-                        self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-                        coroutine.yield(30)
-                    end
-                    coroutine.yield(30)
-                end
-            end
-            coroutine.yield(30)
-        end
-    end,
-
-    ValidateExtractorUpgradeRNG = function(self, ALLBPS, extractorTable, allTiers)
-       LOG('ValidateExtractorUpgrade Stuff')
-       local UnitPos
-       local DistanceToBase
-       local LowestDistanceToBase
-       local lowestUnit = false
-       local BasePosition = self.BuilderManagers['MAIN'].Position
-       if extractorTable then
-            LOG('extractorTable present in upgrade validation')
-            if extractorTable then
-                LOG('extractorTable has '..table.getn(extractorTable.TECH1)..' T1 units in it')
-                LOG('extractorTable has '..table.getn(extractorTable.TECH2)..' T2 units in it')
-            else
-                LOG('extractorTable is nil')
-            end
-            for _, v in extractorTable do
-                if not allTiers and RNGGETN(extractorTable.TECH1) > 0 then
-                    for _, c in extractorTable.TECH1 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                    LOG('T1 lowestUnit added alltiers false')
-                                end
-                            end
-                        end
-                    end
-                else
-                    for _, c in extractorTable.TECH1 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                    LOG('T1 lowestUnit added alltiers true')
-                                end
-                            end
-                        end
-                    end
-                    for _, c in extractorTable.TECH2 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                    LOG('T2 lowestUnit added alltiers true')
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            if lowestUnit then
-                lowestUnit.CentralBrainExtractorUpgrade = true
-                lowestUnit.DistanceToBase = LowestDistanceToBase
-                if not self.CentralBrainExtractorUnitUpgradeClosest then
-                    self.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
-                end
-                LOG('Closest Extractor')
-                self:ForkThread(self.UpgradeExtractorRNG, ALLBPS, lowestUnit, LowestDistanceToBase)
-            else
-                LOG('There is no lowestUnit')
-            end
-        end
-    end,
-
-    UpgradeExtractorRNG = function(self, ALLBPS, extractorUnit, distanceToBase)
-        --LOG('Upgrading Extractor from central brain thread')
-        local upgradeBp
-        local upgradeID = ALLBPS[extractorUnit.UnitId].General.UpgradesTo or false
-        if upgradeID then
-            upgradeBp = ALLBPS[upgradeID]
-            IssueUpgrade({extractorUnit}, upgradeID)
-            coroutine.yield(2)
-            local upgradeTimeStamp = GetGameTimeSeconds()
-            local bypassEcoManager = false
-            local upgradedExtractor = extractorUnit.UnitBeingBuilt
-            local fractionComplete = upgradedExtractor:GetFractionComplete()
-            while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
-                --LOG('Upgrading Extractor Loop')
-                --LOG('Unit is '..fractionComplete..' fraction complete')
-                if not self.CentralBrainExtractorUnitUpgradeClosest or self.CentralBrainExtractorUnitUpgradeClosest.Dead then
-                    self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                elseif self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase > distanceToBase then
-                    self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                    --LOG('This is a new closest extractor upgrading at '..distanceToBase)
-                end
-                if fractionComplete < 0.65 and not bypassEcoManager then
-                    if (GetEconomyTrend(self, 'MASS') <= 0.0 and (GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000) then
-                        if not extractorUnit:IsPaused() then
-                            extractorUnit:SetPaused(true)
-                            coroutine.yield(10)
-                        end
-                    else
-                        if extractorUnit:IsPaused() then
-                            if self.EcoManager.ExtractorsUpgrading.TECH1 > 1 or self.EcoManager.ExtractorsUpgrading.TECH2 > 0 then
-                                if self.CentralBrainExtractorUnitUpgradeClosest and not self.CentralBrainExtractorUnitUpgradeClosest.Dead 
-                                and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
-                                    extractorUnit:SetPaused(false)
-                                    coroutine.yield(30)
-                                elseif self.EcoManager.ExtractorsUpgrading.TECH2 > 0 and EntityCategoryContains(categories.TECH1, extractorUnit) then
-                                    extractorUnit:SetPaused(false)
-                                    coroutine.yield(30)
-                                end
-                            else
-                                extractorUnit:SetPaused(false)
-                                coroutine.yield(20)
-                            end
-                        end
-                    end
-                end
-                coroutine.yield(30)
-                if extractorUnit and not extractorUnit.Dead then
-                    fractionComplete = upgradedExtractor:GetFractionComplete()
-                end
-                if not bypassEcoManager and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase and GetGameTimeSeconds() - upgradeTimeStamp > self.EcoManager.EcoMassUpgradeTimeout then
-                    bypassEcoManager = true
-                    if extractorUnit:IsPaused() then
-                        extractorUnit:SetPaused(false)
-                    end
-                end
-            end
-            if upgradedExtractor and not upgradedExtractor.Dead then
-                if EntityCategoryContains(categories.TECH3, upgradedExtractor) then
-                    if VDist3Sq(upgradedExtractor:GetPosition(), self.BuilderManagers['MAIN'].Position) < 2500 then
-                        upgradedExtractor.MAINBASE = true
-                    end
-                end
-                --self:ForkThread(self:ExtractorInitialDelay(upgradedExtractor))
-            end
-        else
-            WARN('No upgrade id provided to upgradeextractorrng')
-        end
-        coroutine.yield(80)
-    end,
-
-    ExtractorInitialDelay = function(self, unit)
-        local initial_delay = 0
-        local multiplier = 1
-        local ecoStartTime = GetGameTimeSeconds()
-        local ecoTimeOut = 420
-        unit.InitialDelayCompleted = false
-        unit.InitialDelayStarted = true
-        if self.CheatEnabled then
-            multiplier = self.EcoManager.EcoMultiplier
-        else
-            multiplier = 1
-        end
-        LOG('Initial Delay loop starting')
-        while initial_delay < (70 / multiplier) do
-            if not unit.Dead and GetEconomyStored( self, 'MASS') >= 50 and GetEconomyStored( self, 'ENERGY') >= 900 and unit:GetFractionComplete() == 1 then
-                initial_delay = initial_delay + 10
-                if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-                    initial_delay = 70
-                end
-            end
-            --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
-            coroutine.yield(100)
-        end
-        LOG('Initial Delay loop completing')
-        unit.InitialDelayCompleted = true
     end,
 
     EcoMassManagerRNG = function(self)
@@ -5121,7 +4865,13 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('EngineerAssistManager State is '..state)
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if massStorage > 150 and energyStorage > 150 then
+            if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 then
+                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                end
+                --RNGLOG('EngineerAssistManager is Active')
+                self.EngineerAssistManagerActive = true
+            elseif massStorage > 150 and energyStorage > 150 then
                 if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end

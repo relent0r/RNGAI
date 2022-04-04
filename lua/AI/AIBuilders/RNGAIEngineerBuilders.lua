@@ -75,6 +75,18 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 ReclaimStart',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 740,
+        BuilderConditions = {
+            { MIBC, 'StartReclaimGreaterThan', { 1000 } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Power',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 775,
@@ -82,7 +94,6 @@ BuilderGroup {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'NegativeEcoPowerCheck', { 5.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'All',
     },
@@ -888,7 +899,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
-        Priority = 500,
+        Priority = 700,
         InstanceCount = 15,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
