@@ -103,7 +103,7 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
 end
 
 local InitialBomberResponse = function(self, aiBrain, builderManager, builderData)
-    if aiBrain.EnemyIntel.LandPhase > 1 or aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir > aiBrain.BrainIntel.SelfThreat.AntiAirNow then
+    if aiBrain.EnemyIntel.LandPhase > 1 or aiBrain.EnemyIntel.EnemyThreatCurrent.Air > aiBrain.BrainIntel.SelfThreat.AirNow then
         return 0
     end
     return 890

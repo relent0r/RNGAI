@@ -1489,6 +1489,22 @@ Platoon = Class(RNGAIPlatoon) {
             end
             return false
         end
+
+        local function VentToPlatoon(self, aiBrain, plan)
+            LOG('Venting to new trueplatoon platoon')
+            local platoonUnits = GetPlatoonUnits(self)
+            local ventPlatoon = aiBrain:MakePlatoon('', plan)
+            ventPlatoon.PlanName = 'Vented Platoon'
+            for _, unit in platoonUnits do
+                if unit and not unit.Dead and not unit:BeenDestroyed() then
+                    LOG('Added unit to new platoon')
+                    aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
+                else
+                    LOG('Unit was dead or destroyed')
+                end
+            end
+            LOG('Platoon has been vented')
+        end
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
         local targetTable = {}
@@ -1515,20 +1531,26 @@ Platoon = Class(RNGAIPlatoon) {
             if (not aiBrain.CDRUnit.Active and not aiBrain.CDRUnit.Retreating) or (VDist2Sq(aiBrain.CDRUnit.CDRHome[1], aiBrain.CDRUnit.CDRHome[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) < 14400) and aiBrain.CDRUnit.CurrentEnemyThreat < 5 then
                 LOG('CDR is not active, setting to trueplatoon')
                 coroutine.yield(20)
-                return self:SetAIPlanRNG('TruePlatoonRNG')
+                --return self:SetAIPlanRNG('TruePlatoonRNG')
+                VentToPlatoon(self, aiBrain, 'TruePlatoonRNG')
+                self:PlatoonDisband()
             end
             if aiBrain.CDRUnit.CurrentEnemyThreat < 5 and aiBrain.CDRUnit.CurrentFriendlyThreat > 15 then
                 LOG('CDR is not in danger, threatTimeout incredent')
                 threatTimeout = threatTimeout + 1
                 if threatTimeout > 10 then
                     coroutine.yield(20)
-                    return self:SetAIPlanRNG('TruePlatoonRNG')
+                    --return self:SetAIPlanRNG('TruePlatoonRNG')
+                    VentToPlatoon(self, aiBrain, 'TruePlatoonRNG')
+                    self:PlatoonDisband()
                 end
             end
             if self.MovementLayer == 'Land' and RUtils.PositionOnWater(aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) then
                 LOG('ACU is underwater and we are on land, if he was under water when he called then he should have called an amphib platoon')
-                    coroutine.yield(20)
-                return self:SetAIPlanRNG('HuntAIPATHRNG')
+                coroutine.yield(20)
+                --return self:SetAIPlanRNG('HuntAIPATHRNG')
+                VentToPlatoon(self, aiBrain, 'HuntAIPATHRNG')
+                self:PlatoonDisband()
             end
             local platoonPos = GetPlatoonPosition(self)
             local path, reason
@@ -1609,8 +1631,14 @@ Platoon = Class(RNGAIPlatoon) {
                 platoonPos = GetPlatoonPosition(self)
                 if not AIAttackUtils.CanGraphToRNG(platoonPos, targetPosition, self.MovementLayer) then 
                     LOG('We cant path to the target, returning huntaipath')
+                    LOG('Movement layer is '..self.MovementLayer)
+                    LOG('Target position is '..repr(targetPosition))
+                    LOG('Platoon position is '..repr(platoonPos))
+                    LOG('Unit is '..target.UnitId)
                     coroutine.yield(5)
-                    return self:SetAIPlanRNG('HuntAIPATHRNG') 
+                    --return self:SetAIPlanRNG('HuntAIPATHRNG') 
+                    VentToPlatoon(self, aiBrain, 'HuntAIPATHRNG')
+                    self:PlatoonDisband()
                 end
                 IssueClearCommands(GetPlatoonUnits(self))
                 platoonPos = GetPlatoonPosition(self)

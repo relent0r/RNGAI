@@ -249,8 +249,8 @@ function CDRCallPlatoon(cdr, threatRequired)
     threatRequired = threatRequired + 10
 
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
-    local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
-    LOG('Support Platoon exist, where is it?'..repr(platoonPos))
+    --local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
+    --LOG('Support Platoon exist, where is it?'..repr(platoonPos))
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
     local platoonTable = {}
