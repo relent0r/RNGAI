@@ -1104,6 +1104,24 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
         AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = marker.RNGArea
         --RNGLOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
+    if not AdaptiveResourceMarkerTableRNG[masspoint].Zone then
+        if RUtils.PositionInWater(marker.position) then
+            local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
+            if zone then
+                AdaptiveResourceMarkerTableRNG[masspoint].Zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
+            else
+                WARN('No zone returned for mass point marker during initial infection, this should have been a naval zone')
+            end
+        else
+            local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
+            if zone then
+                AdaptiveResourceMarkerTableRNG[masspoint].Zone = map:GetZoneID(marker.position,aiBrain.Zones.Land)
+            else
+                WARN('No zone returned for mass point marker during initial infection, this should have been a land zone')
+            end
+        end
+    end
+
     coroutine.yield(1)
     if aiBrain.renderthreadtracker==CurrentThread() then
         aiBrain.renderthreadtracker=nil
