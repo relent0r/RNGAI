@@ -100,7 +100,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Power AirOnly',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 883,
+        Priority = 893,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { EBC, 'NegativeEcoPowerCheck', { 5.0 } },
@@ -146,7 +146,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T2 Power AirOnly',
         PlatoonTemplate = 'T2BuildEngineer',
-        Priority = 884,
+        Priority = 894,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH2 } },
             { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
@@ -170,7 +170,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Power AirOnly',
         PlatoonTemplate = 'T3BuildEngineer',
-        Priority = 885,
+        Priority = 895,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH3 } },
             { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
@@ -382,6 +382,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -405,6 +406,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -429,6 +431,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -447,10 +450,10 @@ BuilderGroup {
         PriorityFunction = AirDefenseScramble,
         InstanceCount = 10,
         BuilderConditions = {
-            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.BOMBER} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
         },
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.FACTORY,
@@ -476,6 +479,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION),
@@ -491,11 +495,12 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
-            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
+            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.5 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.1 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION}},
             },
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -520,6 +525,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -542,6 +548,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -567,6 +574,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -591,6 +599,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -615,6 +624,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -639,35 +649,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
                 AssistClosestUnit = false,
                 AssisteeType = categories.STRUCTURE,
                 BeingBuiltCategories = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
-                Time = 60,
-            },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T123 Engineer Upgrade Mex',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
-        Priority = 200,
-        PriorityFunction = MexChokeFlag,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { EBC, 'MexUpgradeEco', { } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.MASSEXTRACTION }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 100,
-                AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.STRUCTURE * categories.MASSEXTRACTION},
                 Time = 60,
             },
         }
@@ -690,6 +678,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
@@ -713,6 +702,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
@@ -733,6 +723,7 @@ BuilderGroup {
             { MIBC, 'DamagedStructuresInAreaRNG', { 'LocationType', }},
             },
         BuilderData = {
+            JobType = 'Repair',
             LocationType = 'LocationType',
         },
         BuilderType = 'Any',
@@ -754,6 +745,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {
+            JobType = 'ReclaimStructure',
             Location = 'LocationType',
             ReclaimMax = 5,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
@@ -773,6 +765,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {
+            JobType = 'ReclaimStructure',
             Location = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
@@ -794,6 +787,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconEfficiencyRNG', { 0.9, 2.0 }},
             },
         BuilderData = {
+            JobType = 'ReclaimStructure',
             Location = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
@@ -815,6 +809,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconEfficiencyRNG', { 0.9, 2.0 }},
             },
         BuilderData = {
+            JobType = 'ReclaimStructure',
             Location = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
@@ -837,6 +832,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -859,7 +855,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PriorityFunction = StartingReclaimPresent,
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'GreaterThanEnergyTrendRNG', { 0.0 } },
@@ -867,6 +863,7 @@ BuilderGroup {
                 
             },
         BuilderData = {
+            JobType = 'Reclaim',
             Early = true,
             ReclaimTable = true,
             LocationType = 'LocationType',
@@ -880,7 +877,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 900,
-        InstanceCount = 4,
+        InstanceCount = 5,
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSecondsRNG', { 380 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
@@ -888,6 +885,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            JobType = 'Reclaim',
             LocationType = 'LocationType',
             ReclaimTable = true,
             ReclaimTime = 80,
@@ -908,6 +906,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            JobType = 'Reclaim',
             LocationType = 'LocationType',
             ReclaimTime = 80,
             MinimumReclaim = 40
@@ -926,26 +925,10 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            JobType = 'Reclaim',
             LocationType = 'LocationType',
             ReclaimTime = 80,
             MinimumReclaim = 15,
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI Engineer Reclaim T3 Excess',
-        PlatoonTemplate = 'RNGAI T3EngineerReclaimer',
-        Priority = 100,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 4, categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
-                { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
-            },
-        BuilderData = {
-            LocationType = 'LocationType',
-            ReclaimTime = 80,
-            MinimumReclaim = 30
         },
         BuilderType = 'Any',
     },
@@ -965,6 +948,7 @@ BuilderGroup {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
         },
         BuilderData = {
+            JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
             Location = 'LocationType'
         },
@@ -986,6 +970,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            JobType = 'Expansion',
             ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
@@ -1006,10 +991,11 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 4, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 7, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
+            JobType = 'Expansion',
             MoveToLocationType = 'ActiveExpansion',
         },
         BuilderType = 'Any',
@@ -1022,10 +1008,11 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 3, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 5, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 1,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
+            JobType = 'Expansion',
             MoveToLocationType = 'ActiveExpansion',
         },
         BuilderType = 'Any',
@@ -1038,10 +1025,11 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
             { MIBC, 'ExpansionIsActive', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 4, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'MAIN', 5, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 1,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
         BuilderData = {
+            JobType = 'Expansion',
             MoveToLocationType = 'ActiveExpansion',
         },
         BuilderType = 'Any',
@@ -1062,6 +1050,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
         },
         BuilderData = {
+            JobType = 'Expansion',
             MoveToLocationType = 'MAIN',
         },
         BuilderType = 'Any',
@@ -1077,6 +1066,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
         },
         BuilderData = {
+            JobType = 'Expansion',
             MoveToLocationType = 'MAIN',
         },
         BuilderType = 'Any',
@@ -1092,6 +1082,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
         },
         BuilderData = {
+            JobType = 'Expansion',
             MoveToLocationType = 'MAIN',
         },
         BuilderType = 'Any',
@@ -1243,6 +1234,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -1266,6 +1258,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -1287,6 +1280,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             },
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION),
@@ -1305,6 +1299,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -1328,6 +1323,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -1352,6 +1348,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Assist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',

@@ -24,8 +24,8 @@ local RNGINSERT = table.insert
 local RNGCOPY = table.copy
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
-RNGAIPlatoon = Platoon
-Platoon = Class(RNGAIPlatoon) {
+RNGAIPlatoonClass = Platoon
+Platoon = Class(RNGAIPlatoonClass) {
 
     AirHuntAIRNG = function(self)
         self:Stop()
@@ -1392,7 +1392,7 @@ Platoon = Class(RNGAIPlatoon) {
             else
                 coroutine.yield(20)
             end
-            if not target.dead then
+            if not target.Dead then
                 coroutine.yield(40)
             end
         end
@@ -3484,7 +3484,7 @@ Platoon = Class(RNGAIPlatoon) {
             self:PlatoonDisband()
             return
         end
-        
+       
         --DUNCAN - added
         if eng:IsUnitState('Building') or eng:IsUnitState('Upgrading') or eng:IsUnitState("Enhancing") then
            return
@@ -4171,7 +4171,7 @@ Platoon = Class(RNGAIPlatoon) {
             RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
         end
         if not hydroPresent and closeMarkers > 3 then
-            LOG('Try to build land factory')
+            LOG('not hydro and close markers greater than 3, Try to build land factory')
             buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
             if buildLocation and whatToBuild then
                 RNGLOG('Execute Build Structure with the following data')
@@ -4379,19 +4379,23 @@ Platoon = Class(RNGAIPlatoon) {
                     end
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy') > 0 then
-                            local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
-                            if enemyEngineer then
-                                local enemyEngPos
-                                for _, unit in enemyEngineer do
+                            local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 10, 'Enemy')
+                            for _, unit in enemyUnits do
+                                enemyUnitPos = unit:GetPosition()
+                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) and VDist3Sq(enemyUnitPos, PlatoonPos) < 144 then
+                                    LOG('MexBuild found enemy engineer or scout, try reclaiming')
                                     if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                        enemyEngPos = unit:GetPosition()
-                                        if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
-                                            IssueStop({eng})
+                                        if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyUnitPos[1], enemyUnitPos[3]) < 100 then
                                             IssueClearCommands({eng})
-                                            IssueReclaim({eng}, enemyEngineer[1])
+                                            IssueReclaim({eng}, unit)
                                             break
                                         end
                                     end
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
+                                    LOG('MexBuild found enemy unit, try avoid it')
+                                    IssueClearCommands({eng})
+                                    IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, PlatoonPos, 50))
+                                    coroutine.yield(60)
                                 end
                             end
                         end
@@ -4566,7 +4570,7 @@ Platoon = Class(RNGAIPlatoon) {
                                 LOG('Have set units DamageRadius to '..v.DamageRadius)
                             end
                             if weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                                v.ApproxDPS = weaponBlueprint.RateOfFire * weaponBlueprint.MuzzleSalvoSize *  weaponBlueprint.Damage
+                                v.ApproxDPS = weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                                 maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                             end
                             if self.PlatoonData.SetWeaponPriorities then
@@ -8279,25 +8283,57 @@ Platoon = Class(RNGAIPlatoon) {
 
     -- For Debugging
 
-    --[[PlatoonDisband = function(self)
+    PlatoonDisband = function(self)
         local aiBrain = self:GetBrain()
         if not aiBrain.RNG then
-            return RNGAIPlatoon.PlatoonDisband(self)
+            return RNGAIPlatoonClass.PlatoonDisband(self)
         end
-        WARN('* AI-RNG: PlatoonDisband: PlanName '..repr(self.PlanName)..'  -  BuilderName: '..repr(self.BuilderName)..'.' )
-        if not self.PlanName or not self.BuilderName then
-            WARN('* AI-RNG: PlatoonDisband: PlatoonData = '..repr(self.PlatoonData))
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
         end
-        local FuncData = debug.getinfo(2)
-        if FuncData.name and FuncData.name ~= "" then
-            WARN('* AI-RNG: PlatoonDisband: Called from '..FuncData.name..'.')
-        else
-            WARN('* AI-RNG: PlatoonDisband: Called from '..FuncData.source..' - line: '..FuncData.currentline.. '  -  (Offset AI-RNG: ['..(FuncData.currentline - 6543)..'])')
+        for k,v in self:GetPlatoonUnits() do
+            v.PlatoonHandle = nil
+            v.AssistSet = nil
+            v.AssistPlatoon = nil
+            v.UnitBeingAssist = nil
+            v.ReclaimInProgress = nil
+            v.CaptureInProgress = nil
+            v.JobType = nil
+            if v:IsPaused() then
+                v:SetPaused( false )
+            end
+            if not v.Dead and v.BuilderManagerData then
+                if self.CreationTime == GetGameTimeSeconds() and v.BuilderManagerData.EngineerManager then
+                    if self.BuilderName then
+                        --LOG('*PlatoonDisband: ERROR - Platoon disbanded same tick as created - ' .. self.BuilderName .. ' - Army: ' .. aiBrain:GetArmyIndex() .. ' - Location: ' .. repr(v.BuilderManagerData.LocationType))
+                        v.BuilderManagerData.EngineerManager:AssignTimeout(v, self.BuilderName)
+                    else
+                        --LOG('*PlatoonDisband: ERROR - Platoon disbanded same tick as created - Army: ' .. aiBrain:GetArmyIndex() .. ' - Location: ' .. repr(v.BuilderManagerData.LocationType))
+                    end
+                    v.BuilderManagerData.EngineerManager:DelayAssign(v)
+                elseif v.BuilderManagerData.EngineerManager then
+                    v.BuilderManagerData.EngineerManager:TaskFinished(v)
+                end
+            end
+            if not v.Dead then
+                if not EntityCategoryContains(categories.FACTORY, v) then
+                    IssueStop({v})
+                    IssueClearCommands({v})
+                 else
+                    LOG('unit is '..v.UnitId)
+                    if self.BuilderName then
+                        LOG('Platoon name with factory in it is '..self.BuilderName)
+                    else
+                        LOG('If this is a factory it should have a buildername')
+                    end
+                 end
+            end
         end
-        if aiBrain:PlatoonExists(self) then
-            RNGAIPlatoon.PlatoonDisband(self)
+        if self.AIThread then
+            self.AIThread:Destroy()
         end
-    end,]]
+        aiBrain:DisbandPlatoon(self)
+    end,
 
 
     PlatoonMergeRNG = function(self)
@@ -10018,7 +10054,7 @@ Platoon = Class(RNGAIPlatoon) {
         local lastfinalpoint=nil
         local lastfinaldist=0
         local ALLBPS = __blueprints
-        while not platoon.dead and PlatoonExists(aiBrain, self) do
+        while not platoon.Dead and PlatoonExists(aiBrain, self) do
             platoon.Pos=GetPlatoonPosition(platoon)
             if ExitConditions(self,aiBrain) then
                 platoon.navigating=false

@@ -197,6 +197,17 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerFocusAirUpgrade = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
+        self.EngineerDistributionTable = {
+            BuildPower = 0,
+            BuildStructure = 0,
+            Assist = 0,
+            Reclaim = 0,
+            ReclaimStructure = 0,
+            Expansion = 0,
+            Repair = 0,
+            Mass = 0,
+            Total = 0
+        }
         self.ProductionRatios = {
             Land = self.DefaultLandRatio,
             Air = self.DefaultAirRatio,
@@ -2583,6 +2594,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             LOG('There is an engineer in the army pool with Active set '..v.UnitId)
                         end
                     end
+                    LOG('DistributionTable '..repr(self.EngineerDistributionTable))
+                    local reclaimRatio = self.EngineerDistributionTable.Reclaim / self.EngineerDistributionTable.Total
+                    LOG('Engineer Reclaim Ratio '..reclaimRatio)
+                    local assistRatio = self.EngineerDistributionTable.Assist / self.EngineerDistributionTable.Total
+                    LOG('Engineer Assist Ratio '..reclaimRatio)
                     LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
                     LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
                     --RNGLOG('BasePerimeterMonitor table')
@@ -4969,6 +4985,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
         local mainBaseExtractors = {T1=0,T2=0,T3=0}
+        local engineerDistribution = { BuildPower = 0, BuildStructure = 0, Assist = 0, Reclaim = 0, Expansion = 0, Mass = 0, Repair = 0, ReclaimStructure = 0, Total = 0 }
         local totalLandThreat = 0
         local totalAirThreat = 0
         local totalAntiAirThreat = 0
@@ -5048,6 +5065,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         fabs.T3=fabs.T3+1
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.ENGINEER then
+                    if unit.JobType then
+                        LOG('Engineer Job Type '..unit.JobType)
+                        engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
+                        engineerDistribution.Total = engineerDistribution.Total + 1
+                    end
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         engspend.T1=engspend.T1+spendm
                     elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
@@ -5063,9 +5085,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Land.T2=factories.Land.T2+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
-                            LOG('T3 Land Factory Detecting incrementing land by 1')
                             factories.Land.T3=factories.Land.T3+1
-                            LOG('factories.Land.T3 '..factories.Land.T3)
                         end
                     elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
                         facspend.Air=facspend.Air+spendm
@@ -5326,6 +5346,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.NavalSubNow = totalNavalSubThreat
         self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
         self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
+        self.EngineerDistributionTable = engineerDistribution
         self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then

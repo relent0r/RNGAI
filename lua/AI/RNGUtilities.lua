@@ -151,7 +151,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
                         local massOverflow = false
-                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 30) do
+                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
                             reclaimTimeout = reclaimTimeout + 1
                             RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
@@ -165,6 +165,46 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 reclaimTimeout = reclaimTimeout - 1
                             end
                             coroutine.yield(20)
+                        end
+                        engPos = self:GetPosition()
+                        local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
+                        local reclaimRect = GetReclaimablesInRect(rectDef)
+                        local engReclaiming = false
+                        if reclaimRect then
+                            for c, b in reclaimRect do
+                                if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                -- Start Blacklisted Props
+                                local blacklisted = false
+                                for _, BlackPos in PropBlacklist do
+                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                        blacklisted = true
+                                        break
+                                    end
+                                end
+                                if blacklisted then continue end
+                                if b.MaxMassReclaim then
+                                    engReclaiming = true
+                                    reclaimCount = reclaimCount + 1
+                                    IssueReclaim({self}, b)
+                                end
+                            end
+                        end
+                        if engReclaiming then
+                            local idleCounter = 0
+                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                self:SetCustomName('Engineer in reclaim loop')
+                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                    RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                    RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                    idleCounter = idleCounter + 1
+                                    if idleCounter > 15 then
+                                        RNGLOG('idleCounter hit, breaking loop')
+                                        break
+                                    end
+                                end
+                                --RNGLOG('We are reclaiming stuff')
+                                coroutine.yield(30)
+                            end
                         end
                         --RNGLOG('Reclaim Count is '..reclaimCount)
                         if reclaimCount > 10 then
@@ -360,11 +400,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 if reclaimRect then
                                     for c, b in reclaimRect do
                                         if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                        local rpos = b.CachePosition
                                         -- Start Blacklisted Props
                                         local blacklisted = false
                                         for _, BlackPos in PropBlacklist do
-                                            if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
+                                            if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
                                                 blacklisted = true
                                                 break
                                             end
@@ -444,14 +483,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if not needEnergy or v.MaxEnergyReclaim then
                     if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                         if not self.BadReclaimables[v] then
-                            local recPos = v.CachePosition
-                            local distance = VDist2(engPos[1], engPos[3], recPos[1], recPos[3])
+                            local distance = VDist2(engPos[1], engPos[3], v.CachePosition[1], v.CachePosition[3])
                             if distance < closestDistance then
-                                closestReclaim = recPos
+                                closestReclaim = v.CachePosition
                                 closestDistance = distance
                             end
                             if distance > furtherestDistance then -- and distance < closestDistance + 20
-                                furtherestReclaim = recPos
+                                furtherestReclaim = v.CachePosition
                                 furtherestDistance = distance
                             end
                             if furtherestDistance - closestDistance > 20 then
@@ -3918,12 +3956,14 @@ function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit)
     local closest = false
     local closestDistSq = 999999
     for _, shield in blockingList do
-        local shieldPos = shield:GetPosition()
-        local distSq = VDist2Sq(aPos[1], aPos[3], shieldPos[1], shieldPos[3])
+        if shield and not shield.Dead then
+            local shieldPos = shield:GetPosition()
+            local distSq = VDist2Sq(aPos[1], aPos[3], shieldPos[1], shieldPos[3])
 
-        if distSq < closestDistSq then
-            closest = shield
-            closestDistSq = distSq
+            if distSq < closestDistSq then
+                closest = shield
+                closestDistSq = distSq
+            end
         end
     end
 

@@ -548,11 +548,11 @@ StructureManager = Class {
             LOG('Factory Air T2 Upgrade Support Check passed')
             if self.Factories.AIR[2].UpgradingCount < 1 then
                 LOG('Factory Air T2 Upgrade Less than 1 Factory Upgrading')
-                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
                     LOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                    if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
+                    if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.2 then
                         LOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -856,7 +856,7 @@ StructureManager = Class {
                     if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                         --LOG('We Could upgrade an extractor now with over time')
                             --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                            if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
+                            if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5 or upgradeSpend < 15 then
                                 --LOG('Trigger all tiers false')
                                 self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                             else
@@ -1026,7 +1026,7 @@ StructureManager = Class {
                     --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
                 if fractionComplete < 0.65 and not bypassEcoManager then
-                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and (GetEconomyStored(aiBrain, 'MASS') <= 200) or GetEconomyStored( aiBrain, 'ENERGY') < 1000) then
+                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and (GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 500) then
                         if not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
                             coroutine.yield(10)
@@ -1086,11 +1086,11 @@ StructureManager = Class {
             multiplier = 1
         end
         LOG('Initial Delay loop starting')
-        while initial_delay < (70 / multiplier) do
-            if not unit.Dead and GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 900 and unit:GetFractionComplete() == 1 then
+        while initial_delay < (60 / multiplier) do
+            if not unit.Dead and GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 500 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
                 if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-                    initial_delay = 70
+                    initial_delay = 60
                 end
             end
             --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
