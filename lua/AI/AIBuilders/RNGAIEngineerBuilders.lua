@@ -103,7 +103,7 @@ BuilderGroup {
         Priority = 893,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'NegativeEcoPowerCheck', { 5.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
@@ -643,7 +643,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
         InstanceCount = 12,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 100.0 }},
         },

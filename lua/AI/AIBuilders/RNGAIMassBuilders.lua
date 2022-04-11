@@ -71,6 +71,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {

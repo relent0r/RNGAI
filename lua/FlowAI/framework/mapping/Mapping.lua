@@ -890,6 +890,7 @@ function SetMarkerInformation(aiBrain)
         end
         if node and not marker.RNGArea then
             aiBrain.RNGAreas[k]={}
+            LOG('Marker type is '..marker.type)
             InfectMarkersRNG(aiBrain,marker,k)
         end
         if expand then
@@ -966,12 +967,17 @@ function SetMarkerInformation(aiBrain)
     ScenarioInfo.MarkersInfectedRNG = true
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
-    marker.RNGArea=graphname
-    table.insert(aiBrain.RNGAreas[graphname],marker)
-    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
-            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+    LOG('Marker '..repr(marker))
+    if marker then
+        marker.RNGArea=graphname
+        table.insert(aiBrain.RNGAreas[graphname],marker)
+        for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
+            if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
+                InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+            end
         end
+    else
+        WARN('Marker provided for infection is nil')
     end
 end
 function DoArmySpotDistanceInfect(aiBrain,marker,army)

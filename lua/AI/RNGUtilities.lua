@@ -1747,13 +1747,13 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --RNGLOG('Target Found in target aquisition function')
-                return TargetUnit, acuPresent, acuUnit, totalThreat
+                return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange, TargetsInRange
             end
         end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange
+    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange, TargetsInRange
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
@@ -3955,6 +3955,7 @@ function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit)
     -- Return the closest blocking shield
     local closest = false
     local closestDistSq = 999999
+    local closestHealth = 0
     for _, shield in blockingList do
         if shield and not shield.Dead then
             local shieldPos = shield:GetPosition()
@@ -3966,8 +3967,77 @@ function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit)
             end
         end
     end
+    local shieldHealth = 0
+    if closest.MyShield then
+        shieldHealth = closest.MyShield:GetHealth()
+    end
+    return closest, shieldHealth
+end
 
-    return closest, closest.MyShield:GetHealth()
+
+function ValidateMainBase(platoon, squad, aiBrain)
+    local target = false
+    local TargetSearchPriorities = {
+        categories.EXPERIMENTAL * categories.LAND,
+        categories.MASSEXTRACTION,
+        categories.ENERGYPRODUCTION,
+        categories.ENERGYSTORAGE,
+        categories.MASSFABRICATION,
+        categories.STRUCTURE,
+        categories.ALLUNITS,
+    }
+    if platoon.Zone and platoon.PlatoonData.LocationType then
+        if platoon.Zone == aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Zone then
+            if aiBrain.Brain.Zones.Land.zones[platoon.Zone].enemythreat > 0 then
+                target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
+            end
+            if not target then
+                for _, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
+                    if v.zone.enemythreat > 0 then
+                        target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
+                    end
+                    if target then
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- Borrowed this from Balth I think.
+function CalculatedDPSRNG(weapon)
+    -- Base values
+    local MathMax = math.max
+    local MathFloor = math.floor
+    local ProjectileCount
+    LOG('Running Calculated DPS')
+    LOG('Weapon '..repr(weapon))
+    if weapon.MuzzleSalvoDelay == 0 then
+        ProjectileCount = MathMax(1, RNGGETN(weapon.RackBones[1].MuzzleBones or {'nehh'} ) )
+    else
+        ProjectileCount = (weapon.MuzzleSalvoSize or 1)
+    end
+    if weapon.RackFireTogether then
+        ProjectileCount = ProjectileCount * MathMax(1, TableGetn(weapon.RackBones or {'nehh'} ) )
+    end
+    -- Game logic rounds the timings to the nearest tick --  MathMax(0.1, 1 / (weapon.RateOfFire or 1)) for unrounded values
+    local DamageInterval = MathFloor((MathMax(0.1, 1 / (weapon.RateOfFire or 1)) * 10) + 0.5) / 10 + ProjectileCount * (MathMax(weapon.MuzzleSalvoDelay or 0, weapon.MuzzleChargeDelay or 0) * (weapon.MuzzleSalvoSize or 1) )
+    local Damage = ((weapon.Damage or 0) + (weapon.NukeInnerRingDamage or 0)) * ProjectileCount * (weapon.DoTPulses or 1)
+
+    -- Beam calculations.
+    if weapon.BeamLifetime and weapon.BeamLifetime == 0 then
+        -- Unending beam. Interval is based on collision delay only.
+        DamageInterval = 0.1 + (weapon.BeamCollisionDelay or 0)
+    elseif weapon.BeamLifetime and weapon.BeamLifetime > 0 then
+        -- Uncontinuous beam. Interval from start to next start.
+        DamageInterval = DamageInterval + weapon.BeamLifetime
+        -- Damage is calculated as a single glob, beam weapons are typically underappreciated
+        Damage = Damage * (weapon.BeamLifetime / (0.1 + (weapon.BeamCollisionDelay or 0)))
+    end
+
+    return Damage * (1 / DamageInterval) or 0
 end
 
 --[[

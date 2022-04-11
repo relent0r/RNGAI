@@ -174,12 +174,16 @@ AIBrain = Class(RNGAIBrainClass) {
             HasRun = false
         }
         if self.MapSize <= 10 and self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.35
             self.EconomyUpgradeSpend = 0.35
         elseif self.MapSize <= 10 then
+            self.EconomyUpgradeSpendDefault = 0.25
             self.EconomyUpgradeSpend = 0.25
         elseif self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.35
             self.EconomyUpgradeSpend = 0.35
         else
+            self.EconomyUpgradeSpendDefault = 0.30
             self.EconomyUpgradeSpend = 0.30
         end
         self.EconomyTicksMonitor = 80
@@ -1205,6 +1209,7 @@ AIBrain = Class(RNGAIBrainClass) {
 			baseLayer = 'Water'
         end
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
+        self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
 
         self.BuilderManagers[baseName] = {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
@@ -1245,6 +1250,34 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Graph Area not set yet')
                 coroutine.yield(30)
             end
+        end
+    end,
+
+    GetBaseZone = function(self, position, baseName, baseLayer)
+        -- This will set the zone of the factory manager so we don't need to look it up every time
+        -- Needs to wait a while for the RNGArea properties to be populated
+        local zone
+        local zoneSet = false
+        while not zoneSet do
+            if baseLayer then
+                if baseLayer == 'Water' then
+                    zone = MAP:GetZoneID(position,self.Zones.Naval.index)
+                else
+                    zone = MAP:GetZoneID(position,self.Zones.Land.index)
+                end
+            end
+            if not zone then
+                WARN('Missing zone for builder manager land node or no path markers')
+            end
+            if zone then
+                LOG('Zone set for builder manager')
+                self.BuilderManagers[baseName].Zone = zone
+                LOG('Zone is '..self.BuilderManagers[baseName].Zone)
+                zoneSet = true
+            else
+                LOG('No zone for builder manager')
+            end
+            coroutine.yield(30)
         end
     end,
 
@@ -1291,7 +1324,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if graphCheck then
             self.GraphZones.HasRun = true
             self.EcoManager.CoreMassMarkerCount = coreMassMarkers
-            self.BrainIntel.MassSharePerPlayer = markerCount / self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount
+            self.BrainIntel.MassSharePerPlayer = markerCount / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount)
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
@@ -2716,6 +2749,19 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not self.EnemyIntel.ChokeFlag then
                 self.ProductionRatios.Naval = self.DefaultNavalRatio
             end
+            LOG('aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount'..self.EnemyIntel.EnemyCount..' '..self.BrainIntel.AllyCount)
+            LOG('Mass Marker Count '..self.BrainIntel.SelfThreat.MassMarker)
+            LOG('self.BrainIntel.SelfThreat.ExtractorCount '..self.BrainIntel.SelfThreat.ExtractorCount)
+            LOG('self.BrainIntel.MassSharePerPlayer '..self.BrainIntel.MassSharePerPlayer)
+            if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.MassSharePerPlayer then
+                if self.EconomyUpgradeSpend < 0.35 then
+                    LOG('Increasing EconomyUpgradeSpend to 0.36')
+                    self.EconomyUpgradeSpend = 0.36
+                end
+            elseif self.EconomyUpgradeSpend > 0.35 then
+                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
+            end
+
             --RNGLOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
             --RNGLOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
             --RNGLOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)
@@ -3011,7 +3057,7 @@ AIBrain = Class(RNGAIBrainClass) {
         ]]
     end,
 
-    IMAPConfigurationRNG = function(self, ALLBPS)
+    IMAPConfigurationRNG = function(self)
         -- Used to configure imap values, used for setting threat ring sizes depending on map size to try and get a somewhat decent radius
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
 
@@ -5066,7 +5112,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.ENGINEER then
                     if unit.JobType then
-                        LOG('Engineer Job Type '..unit.JobType)
+                        --LOG('Engineer Job Type '..unit.JobType)
                         engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
                         engineerDistribution.Total = engineerDistribution.Total + 1
                     end
