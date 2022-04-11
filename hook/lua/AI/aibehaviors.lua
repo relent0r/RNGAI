@@ -101,7 +101,7 @@ function SetCDRDefaults(aiBrain, cdr)
         categories.TECH2 * categories.INDIRECTFIRE * categories.LAND,
         categories.MOBILE * categories.TECH2 * (categories.LAND + categories.AMPHIBIOUS),
         categories.TECH1 * categories.INDIRECTFIRE * categories.LAND,
-        categories.TECH1 * categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS),
+        categories.TECH1 * categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS) - categories.SCOUT,
         categories.ALLUNITS - categories.WALL - categories.SCOUT - categories.AIR
     }
     aiBrain.CDRUnit = cdr
@@ -249,8 +249,8 @@ function CDRCallPlatoon(cdr, threatRequired)
     threatRequired = threatRequired + 10
 
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
-    local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
-    LOG('Support Platoon exist, where is it?'..repr(platoonPos))
+    --local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
+    --LOG('Support Platoon exist, where is it?'..repr(platoonPos))
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
     local platoonTable = {}
@@ -356,6 +356,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         dontStopPlatoon = true
     end
     if bMergedPlatoons and dontStopPlatoon then
+        supportPlatoonAvailable:SetAIPlan('ACUSupportRNG')
         return true
     elseif bMergedPlatoons then
         cdr.SupportPlatoon = supportPlatoonAvailable
@@ -758,6 +759,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         if acuInRange then
                             RNGLOG('Enemy ACU in range of ACU')
                             cdr.EnemyCDRPresent = true
+                            return CDROverChargeRNG(aiBrain, cdr)
                         else
                             cdr.EnemyCDRPresent = false
                         end
@@ -1329,10 +1331,9 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
             if counter >= 5 or not target or target.Dead or VDist3Sq(cdr.Position, target:GetPosition()) > maxRadius * maxRadius then
                 counter = 0
-                local searchRadius = 30
+                local searchRadius = 35
                 cdr:SetCustomName('CDR searching for target')
                 repeat
-                    searchRadius = searchRadius + 30
                     for k, v in cdr.atkPri do
                         target = plat:FindClosestUnit('Attack', 'Enemy', true, v)
                         if target and VDist3Sq(cdr.Position, target:GetPosition()) <= searchRadius * searchRadius then
@@ -1350,6 +1351,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         target = false
                     end
+                    searchRadius = searchRadius + 35
                     coroutine.yield(1)
                     --RNGLOG('No target found in sweep increasing search radius of '..searchRadius)
                 until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
@@ -1401,6 +1403,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 RNGLOG('Enemy Threat number '..realEnemyThreat)
                                 RNGLOG('Friendly threat was '..friendlyUnitThreat)
                                 cdr.Caution = true
+                                if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.6 then
+                                    RNGLOG('retreat towards home')
+                                    cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                                    coroutine.yield(40)
+                                end
                                 return CDRRetreatRNG(aiBrain, cdr)
                             end
                         end
@@ -1436,6 +1443,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     if target and not target.Dead and not target:BeenDestroyed() then
                         IssueClearCommands({cdr})
                         --RNGLOG('Target is '..target.UnitId)
+                        targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         cdr:SetCustomName('CDR standard pew pew logic')
                         local movePos
                         if snipeAttempt then
@@ -1491,13 +1499,19 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     end
                     if aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                        local overChargeFired = false
                         local innerCircleEnemies = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
                         if innerCircleEnemies > 0 then
                             local result, newTarget = CDRGetUnitClump(aiBrain, cdr.Position, cdr.WeaponRange - 3)
                             if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < cdr.WeaponRange - 3 then
                                 IssueClearCommands({cdr})
                                 IssueOverCharge({cdr}, newTarget)
+                                overChargeFired = true
                             end
+                        end
+                        if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
+                            IssueClearCommands({cdr})
+                            IssueOverCharge({cdr}, target)
                         end
                     end
                     if target and not target.Dead and cdr.TargetPosition then
@@ -1515,7 +1529,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 end
             end
 
-            coroutine.yield(40)
+            coroutine.yield(30)
             counter = counter + 5
 
             if cdr.Dead then
@@ -1536,6 +1550,15 @@ function CDROverChargeRNG(aiBrain, cdr)
                 if cdr.Caution and not cdr.SnipeMode and not cdr.SuicideMode then
                     RNGLOG('cdr.Caution has gone true, continueFighting is false')
                     continueFighting = false
+                    if target and not target.Dead then
+                        local targetPos = target:GetPosition()
+                        if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.6 then
+                            RNGLOG('retreat towards home')
+                            IssueClearCommands({cdr})
+                            cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
+                            coroutine.yield(40)
+                        end
+                    end
                     return CDRRetreatRNG(aiBrain, cdr)
                 end
             end

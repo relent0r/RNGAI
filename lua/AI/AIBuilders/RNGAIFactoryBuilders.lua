@@ -63,7 +63,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.50 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.60 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -72,6 +72,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -92,7 +93,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.50 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.60 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -101,6 +102,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -126,6 +128,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -152,6 +155,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -180,6 +184,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -209,6 +214,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -234,6 +240,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -258,6 +265,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -289,6 +297,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -308,7 +317,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -316,6 +325,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
@@ -339,6 +349,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -367,6 +378,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -397,6 +409,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -424,6 +437,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -454,6 +468,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -484,6 +499,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildStructures = {
@@ -508,6 +524,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildStructures = {
@@ -533,6 +550,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
@@ -562,6 +580,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildStructures = {
@@ -586,6 +605,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
@@ -619,6 +639,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 1,
             Construction = {
                 BuildClose = true,
@@ -1379,7 +1400,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Land Large Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNG Factory Builder Land T1 MainBase Large',
+        BuilderName = 'RNG Factory Builder Land T1 MainBase Large Expansion',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1389,11 +1410,11 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -1405,7 +1426,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Land T1 Large',
+        BuilderName = 'RNG Factory Builder Land T1 Large Expansion',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1416,10 +1437,11 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,
@@ -1493,6 +1515,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -1548,6 +1571,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 Location = 'LocationType',
@@ -1578,6 +1602,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -1610,6 +1635,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 Location = 'LocationType',
@@ -1636,6 +1662,7 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
                 BuildClose = false,

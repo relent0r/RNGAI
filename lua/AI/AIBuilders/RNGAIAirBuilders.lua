@@ -103,7 +103,7 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
 end
 
 local InitialBomberResponse = function(self, aiBrain, builderManager, builderData)
-    if aiBrain.EnemyIntel.LandPhase > 1 or aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir > aiBrain.BrainIntel.SelfThreat.AntiAirNow then
+    if aiBrain.EnemyIntel.LandPhase > 1 or aiBrain.EnemyIntel.EnemyThreatCurrent.Air > aiBrain.BrainIntel.SelfThreat.AirNow then
         return 0
     end
     return 890
@@ -478,8 +478,8 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            --{ UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
     },
     Builder {

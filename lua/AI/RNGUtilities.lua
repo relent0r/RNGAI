@@ -151,7 +151,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
                         local massOverflow = false
-                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 30) do
+                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
                             reclaimTimeout = reclaimTimeout + 1
                             RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
@@ -165,6 +165,46 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 reclaimTimeout = reclaimTimeout - 1
                             end
                             coroutine.yield(20)
+                        end
+                        engPos = self:GetPosition()
+                        local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
+                        local reclaimRect = GetReclaimablesInRect(rectDef)
+                        local engReclaiming = false
+                        if reclaimRect then
+                            for c, b in reclaimRect do
+                                if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                -- Start Blacklisted Props
+                                local blacklisted = false
+                                for _, BlackPos in PropBlacklist do
+                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                        blacklisted = true
+                                        break
+                                    end
+                                end
+                                if blacklisted then continue end
+                                if b.MaxMassReclaim then
+                                    engReclaiming = true
+                                    reclaimCount = reclaimCount + 1
+                                    IssueReclaim({self}, b)
+                                end
+                            end
+                        end
+                        if engReclaiming then
+                            local idleCounter = 0
+                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                self:SetCustomName('Engineer in reclaim loop')
+                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                    RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                    RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                    idleCounter = idleCounter + 1
+                                    if idleCounter > 15 then
+                                        RNGLOG('idleCounter hit, breaking loop')
+                                        break
+                                    end
+                                end
+                                --RNGLOG('We are reclaiming stuff')
+                                coroutine.yield(30)
+                            end
                         end
                         --RNGLOG('Reclaim Count is '..reclaimCount)
                         if reclaimCount > 10 then
@@ -360,11 +400,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 if reclaimRect then
                                     for c, b in reclaimRect do
                                         if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                        local rpos = b.CachePosition
                                         -- Start Blacklisted Props
                                         local blacklisted = false
                                         for _, BlackPos in PropBlacklist do
-                                            if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
+                                            if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
                                                 blacklisted = true
                                                 break
                                             end
@@ -444,14 +483,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if not needEnergy or v.MaxEnergyReclaim then
                     if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                         if not self.BadReclaimables[v] then
-                            local recPos = v.CachePosition
-                            local distance = VDist2(engPos[1], engPos[3], recPos[1], recPos[3])
+                            local distance = VDist2(engPos[1], engPos[3], v.CachePosition[1], v.CachePosition[3])
                             if distance < closestDistance then
-                                closestReclaim = recPos
+                                closestReclaim = v.CachePosition
                                 closestDistance = distance
                             end
                             if distance > furtherestDistance then -- and distance < closestDistance + 20
-                                furtherestReclaim = recPos
+                                furtherestReclaim = v.CachePosition
                                 furtherestDistance = distance
                             end
                             if furtherestDistance - closestDistance > 20 then
@@ -1709,13 +1747,13 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --RNGLOG('Target Found in target aquisition function')
-                return TargetUnit, acuPresent, acuUnit, totalThreat
+                return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange, TargetsInRange
             end
         end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange
+    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange, TargetsInRange
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
@@ -3917,17 +3955,89 @@ function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit)
     -- Return the closest blocking shield
     local closest = false
     local closestDistSq = 999999
+    local closestHealth = 0
     for _, shield in blockingList do
-        local shieldPos = shield:GetPosition()
-        local distSq = VDist2Sq(aPos[1], aPos[3], shieldPos[1], shieldPos[3])
+        if shield and not shield.Dead then
+            local shieldPos = shield:GetPosition()
+            local distSq = VDist2Sq(aPos[1], aPos[3], shieldPos[1], shieldPos[3])
 
-        if distSq < closestDistSq then
-            closest = shield
-            closestDistSq = distSq
+            if distSq < closestDistSq then
+                closest = shield
+                closestDistSq = distSq
+            end
         end
     end
+    local shieldHealth = 0
+    if closest.MyShield then
+        shieldHealth = closest.MyShield:GetHealth()
+    end
+    return closest, shieldHealth
+end
 
-    return closest, closest.MyShield:GetHealth()
+
+function ValidateMainBase(platoon, squad, aiBrain)
+    local target = false
+    local TargetSearchPriorities = {
+        categories.EXPERIMENTAL * categories.LAND,
+        categories.MASSEXTRACTION,
+        categories.ENERGYPRODUCTION,
+        categories.ENERGYSTORAGE,
+        categories.MASSFABRICATION,
+        categories.STRUCTURE,
+        categories.ALLUNITS,
+    }
+    if platoon.Zone and platoon.PlatoonData.LocationType then
+        if platoon.Zone == aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Zone then
+            if aiBrain.Brain.Zones.Land.zones[platoon.Zone].enemythreat > 0 then
+                target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
+            end
+            if not target then
+                for _, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
+                    if v.zone.enemythreat > 0 then
+                        target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
+                    end
+                    if target then
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- Borrowed this from Balth I think.
+function CalculatedDPSRNG(weapon)
+    -- Base values
+    local MathMax = math.max
+    local MathFloor = math.floor
+    local ProjectileCount
+    LOG('Running Calculated DPS')
+    LOG('Weapon '..repr(weapon))
+    if weapon.MuzzleSalvoDelay == 0 then
+        ProjectileCount = MathMax(1, RNGGETN(weapon.RackBones[1].MuzzleBones or {'nehh'} ) )
+    else
+        ProjectileCount = (weapon.MuzzleSalvoSize or 1)
+    end
+    if weapon.RackFireTogether then
+        ProjectileCount = ProjectileCount * MathMax(1, TableGetn(weapon.RackBones or {'nehh'} ) )
+    end
+    -- Game logic rounds the timings to the nearest tick --  MathMax(0.1, 1 / (weapon.RateOfFire or 1)) for unrounded values
+    local DamageInterval = MathFloor((MathMax(0.1, 1 / (weapon.RateOfFire or 1)) * 10) + 0.5) / 10 + ProjectileCount * (MathMax(weapon.MuzzleSalvoDelay or 0, weapon.MuzzleChargeDelay or 0) * (weapon.MuzzleSalvoSize or 1) )
+    local Damage = ((weapon.Damage or 0) + (weapon.NukeInnerRingDamage or 0)) * ProjectileCount * (weapon.DoTPulses or 1)
+
+    -- Beam calculations.
+    if weapon.BeamLifetime and weapon.BeamLifetime == 0 then
+        -- Unending beam. Interval is based on collision delay only.
+        DamageInterval = 0.1 + (weapon.BeamCollisionDelay or 0)
+    elseif weapon.BeamLifetime and weapon.BeamLifetime > 0 then
+        -- Uncontinuous beam. Interval from start to next start.
+        DamageInterval = DamageInterval + weapon.BeamLifetime
+        -- Damage is calculated as a single glob, beam weapons are typically underappreciated
+        Damage = Damage * (weapon.BeamLifetime / (0.1 + (weapon.BeamCollisionDelay or 0)))
+    end
+
+    return Damage * (1 / DamageInterval) or 0
 end
 
 --[[

@@ -63,6 +63,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -101,6 +102,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -127,6 +129,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -157,6 +160,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -185,7 +189,8 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
@@ -214,6 +219,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -243,7 +249,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
@@ -272,6 +279,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
@@ -301,6 +309,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
@@ -328,6 +337,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 1,
             Construction = {
                 BuildClose = true,
@@ -350,6 +360,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Reclaim',
             Radius = 1000,
             Categories = {categories.WALL},
             ThreatMin = -10,
@@ -375,8 +386,9 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
-            NumAssistees = 2,
+            NumAssistees = 5,
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
                 BaseTemplate = 'T1PDTemplate',
@@ -412,6 +424,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -437,6 +450,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -466,6 +480,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -495,6 +510,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -528,6 +544,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 BuildStructures = {
@@ -551,6 +568,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 2,
             Construction = {
                 BuildClose = true,
@@ -587,6 +605,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
@@ -618,6 +637,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
@@ -652,6 +672,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
@@ -687,6 +708,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 2,
             Construction = {
                 NearPerimeterPoints = true,
@@ -718,7 +740,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 NearPerimeterPoints = true,
                 Radius = 45,
@@ -754,7 +777,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 NearPerimeterPoints = true,
                 Radius = 18,
@@ -784,7 +808,8 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
@@ -813,7 +838,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 BuildClose = false,
                 NearMarkerType = 'Naval Area',
@@ -848,7 +874,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 NearPerimeterPoints = true,
                 Radius = 14,
@@ -884,7 +911,8 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            NumAssistees = 2,
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
             Construction = {
                 BuildClose = false,
                 NearMarkerType = 'Naval Area',
@@ -918,6 +946,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 2,
             Construction = {
                 BuildClose = false,
@@ -953,6 +982,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -983,6 +1013,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -1012,6 +1043,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {

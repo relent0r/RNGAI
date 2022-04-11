@@ -22,6 +22,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -51,6 +52,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -81,6 +83,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -111,6 +114,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -142,6 +146,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -171,6 +176,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -200,6 +206,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -234,6 +241,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 20,
             Construction = {
                 DesiresAssist = true,
@@ -264,6 +272,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -293,6 +302,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -323,6 +333,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -353,6 +364,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -381,6 +393,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
@@ -409,6 +422,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,

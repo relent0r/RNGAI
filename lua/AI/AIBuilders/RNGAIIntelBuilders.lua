@@ -38,6 +38,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
                 AdjacencyDistance = 70,
@@ -65,6 +66,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 BuildStructures = {
@@ -91,6 +93,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.NAVAL},
                 AdjacencyDistance = 50,

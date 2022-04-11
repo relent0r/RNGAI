@@ -695,7 +695,6 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
     end
 
     local numUnits = table.getn(platoon:GetPlatoonUnits())
-    local maxShields = math.ceil(numUnits / 7)
     local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, v in atkPri do
         local retUnit = false
@@ -705,9 +704,24 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if numShields < maxShields and (not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance)) then
+                if numShields > 0 and (not retUnit) and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                    local shieldUnits = aiBrain:GetUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                    local totalShieldHealth = 0
+                    for _, sUnit in shieldUnits do
+                        if not sUnit.Dead and sUnit.MyShield then
+                            totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
+                        end
+                    end
+                    if totalShieldHealth > 0 then
+                        if (platoon.MaxPlatoonDPS / totalShieldHealth) < 15 then
+                            retUnit = unit
+                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                            targetShields = numShields
+                        end
+                    end
+                elseif (not retUnit) or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                     retUnit = unit
-                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end
@@ -726,7 +740,10 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             end
         end
         if retUnit then
+            LOG('Satellite has target')
             return retUnit
+        else
+            LOG('Satellite did not get target')
         end
     end
 

@@ -24,6 +24,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -42,12 +43,13 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 60',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
-        InstanceCount = 4,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, nil, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -69,9 +71,11 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -99,6 +103,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -124,6 +129,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -149,6 +155,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -179,6 +186,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -210,6 +218,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -251,6 +260,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
@@ -281,6 +291,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -305,6 +316,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -329,6 +341,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -363,6 +376,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
@@ -392,6 +406,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
@@ -421,6 +436,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 500,
@@ -455,6 +471,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             Construction = {
                 AdjacencyCategory = categories.MASSEXTRACTION,
                 AdjacencyDistance = 100,
@@ -483,6 +500,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             Construction = {
                 AdjacencyPriority = categories.MASSEXTRACTION,
                 AdjacencyDistance = 500,

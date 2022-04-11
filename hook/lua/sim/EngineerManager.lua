@@ -110,13 +110,7 @@ EngineerManager = Class(RNGEngineerManager) {
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
         --LOG('Engineer trying to have task assigned '..unit.Sync.id)
-        if unit.RemovingFromEngineerAssist then
-            LOG('Engineer removed from assist')
-        end
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
-            if unit.RemovingFromEngineerAssist then
-                LOG('RemovedFromEngineerAssist is still true and Active is or UnitBeingBuiltBehavior so is delayed')
-            end
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
             --RNGLOG('CDR Combat Delay')
@@ -126,9 +120,6 @@ EngineerManager = Class(RNGEngineerManager) {
         --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.Sync.id)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
-            if unit.RemovingFromEngineerAssist then
-                LOG('RemovedFromEngineerAssist is still true and unit.UnitBeingAssist or unit.UnitBeingBuilt so is delayed')
-            end
             --RNGLOG('UnitBeingAssist Delay')
             self:DelayAssign(unit, 50)
             return
@@ -209,6 +200,9 @@ EngineerManager = Class(RNGEngineerManager) {
 
             if hndl.PlatoonData.MinNumAssistees then
                 unit.MinNumAssistees = hndl.PlatoonData.MinNumAssistees
+            end
+            if hndl.PlatoonData.JobType then
+                unit.JobType = hndl.PlatoonData.JobType
             end
 
             builder:StoreHandle(hndl)
