@@ -1307,7 +1307,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local x
         local y
         local smartPos
-        self.scoutUnit = false
+        self.ScoutUnit = false
         local atkPri = { categories.MOBILE * categories.LAND }
         self:ConfigurePlatoon()
         --LOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
@@ -1338,9 +1338,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:MoveToLocation(position, false)
                 coroutine.yield(30)
                 platoonPos = GetPlatoonPosition(self)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
-                    IssueMove({self.scoutUnit}, platoonPos)
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
+                    IssueMove({self.ScoutUnit}, platoonPos)
                 end
                 if not platoonPos then break end
                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
@@ -1594,7 +1594,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self.MaxPlatoonWeaponRange = false
         self.CurrentPlatoonThreat = false
         local unitPos
-        self.scoutUnit = false
+        self.ScoutUnit = false
         self.atkPri = { categories.COMMAND, categories.MOBILE * categories.LAND * categories.DIRECTFIRE, categories.MOBILE * categories.LAND, categories.MASSEXTRACTION }
         local threatTimeout = 0
         self:ConfigurePlatoon()
@@ -1723,10 +1723,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end 
                 IssueClearCommands(GetPlatoonUnits(self))
                 platoonPos = GetPlatoonPosition(self)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
                     LOG('Scout unit using told to move')
-                    IssueClearCommands({self.scoutUnit})
-                    IssueMove({self.scoutUnit}, platoonPos)
+                    IssueClearCommands({self.ScoutUnit})
+                    IssueMove({self.ScoutUnit}, platoonPos)
                 end
                 LOG('Do micro stuff')
                 while PlatoonExists(aiBrain, self) do
@@ -1857,7 +1857,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local LocationType = self.PlatoonData.LocationType or 'MAIN'
         local maxRadius = data.SearchRadius or 250
         local mainBasePos
-        self.scoutUnit = false
+        self.ScoutUnit = false
         if LocationType then
             mainBasePos = aiBrain.BuilderManagers[LocationType].Position
         else
@@ -4663,7 +4663,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 LOG('Have set units DamageRadius to '..v.DamageRadius)
                             end
                             if weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                                v.ApproxDPS = weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                                v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                                 maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                             end
                             if self.PlatoonData.SetWeaponPriorities then
@@ -4678,7 +4678,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if EntityCategoryContains(categories.SCOUT, v) then
                         self.ScoutPresent = true
-                        self.scoutUnit = v
+                        self.ScoutUnit = v
                     end
                     for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
@@ -4789,7 +4789,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         -----------------------------------------------------------------------
         self.EnemyRadius = 40
         self.MaxPlatoonWeaponRange = false
-        self.scoutUnit = false
+        self.ScoutUnit = false
         self.atkPri = {}
         local categoryList = {}
         self.CurrentPlatoonThreat = false
@@ -4947,8 +4947,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(30)
             else
                 self:AggressiveMoveToLocation(zoneRaidPosition)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
                 end
                 coroutine.yield(40)
             end
@@ -5205,7 +5205,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
         self.EnemyRadius = 40
         self.MaxPlatoonWeaponRange = false
-        self.scoutUnit = false
+        self.ScoutUnit = false
         self.atkPri = {}
         self.CurrentPlatoonThreat = false
         local categoryList = {}
@@ -5292,8 +5292,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(10)
             else
                 self:AggressiveMoveToLocation(zoneControlPosition)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
                 end
                 coroutine.yield(15)
             end
@@ -5588,7 +5588,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local markerLocations
         self.EnemyRadius = 40
         self.MaxPlatoonWeaponRange = false
-        self.scoutUnit = false
+        self.ScoutUnit = false
         self.atkPri = {}
         local categoryList = {}
         self.CurrentPlatoonThreat = false
@@ -5906,9 +5906,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(10)
             else
                 self:AggressiveMoveToLocation(bestMarker.Position)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
-                    --IssueMove({self.scoutUnit}, bestMarker.Position)
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
+                    --IssueMove({self.ScoutUnit}, bestMarker.Position)
                 end
                 coroutine.yield(15)
             end
@@ -6367,9 +6367,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 PlatoonPosition = GetPlatoonPosition(self)
                 if not PlatoonPosition then return end
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
-                    IssueMove({self.scoutUnit}, PlatoonPosition)
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
+                    IssueMove({self.ScoutUnit}, PlatoonPosition)
                     if self.CurrentPlatoonThreat < 0.5 then
                         coroutine.yield(20)
                         break
@@ -6669,9 +6669,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 PlatoonPosition = GetPlatoonPosition(self) or nil
                 if not PlatoonPosition then break end
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
-                    IssueMove({self.scoutUnit}, PlatoonPosition)
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
+                    IssueMove({self.ScoutUnit}, PlatoonPosition)
                     if self.CurrentPlatoonThreat < 0.5 then
                         coroutine.yield(20)
                         break
@@ -6950,9 +6950,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             while PlatoonExists(aiBrain, self) do
                 local SquadPosition = self:GetSquadPosition('Attack') or nil
                 if not SquadPosition then break end
-                if self.scoutUnit and (not self.scoutUnit.Dead) then
-                    IssueClearCommands({self.scoutUnit})
-                    IssueMove({self.scoutUnit}, SquadPosition)
+                if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                    IssueClearCommands({self.ScoutUnit})
+                    IssueMove({self.ScoutUnit}, SquadPosition)
                 end
                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, SquadPosition, self.EnemyRadius, 'Enemy')
                 if enemyUnitCount > 0 and (not currentLayerSeaBed) then
