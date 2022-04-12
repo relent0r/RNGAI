@@ -2566,6 +2566,8 @@ function GetShieldRadiusAboveGroundSquaredRNG(shield)
     return width * width - height * height
 end
 
+local CategoriesShield = categories.SHIELD * categories.STRUCTURE
+
 function ShieldProtectingTargetRNG(aiBrain, targetUnit)
     if not targetUnit then
         return false
@@ -2573,7 +2575,7 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit)
 
     -- If targetUnit is within the radius of any shields return true
     local tPos = targetUnit:GetPosition()
-    local shields = GetUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
+    local shields = GetUnitsAroundPoint(aiBrain, CategoriesShield, targetUnit:GetPosition(), 50, 'Enemy')
     for _, shield in shields do
         if not shield.Dead then
             local shieldPos = shield:GetPosition()
