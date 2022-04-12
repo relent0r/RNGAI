@@ -220,6 +220,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
+        -- Need to update this to playable_area as it turns out that its 8 from that not the scenarioinfo size. See regor_highlands.
         if relativeLoc[1] <= 8 or relativeLoc[1] >= ScenarioInfo.size[1] - 8 or relativeLoc[3] <= 8 or relativeLoc[3] >= ScenarioInfo.size[2] - 8 then
             --LOG('BorderWarning is true, location is '..repr(relativeLoc))
             borderWarning = true
