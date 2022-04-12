@@ -8,6 +8,7 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutAirBuilder',
@@ -26,11 +27,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory AirScout T1 Excess',
         PlatoonTemplate = 'T1AirScout',
-        Priority = 300,
+        Priority = 760,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.SCOUT * categories.AIR}},
         },
         BuilderType = 'Air',
     },
@@ -54,7 +55,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Air',
         PlatoonTemplate = 'RNGAI AirScoutForm',
-        PlatoonAddBehaviors = {'ACUDetection',},
+        --PlatoonAddBehaviors = {'ACUDetection',},
         InstanceCount = 1,
         Priority = 900,
         BuilderConditions = {
@@ -69,7 +70,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Air Excess',
         PlatoonTemplate = 'RNGAI AirScoutForm',
-        PlatoonAddBehaviors = {'ACUDetection',},
+        --PlatoonAddBehaviors = {'ACUDetection',},
         InstanceCount = 20,
         Priority = 890,
         BuilderConditions = {

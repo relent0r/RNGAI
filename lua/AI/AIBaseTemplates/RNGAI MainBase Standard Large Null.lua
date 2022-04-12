@@ -68,10 +68,10 @@ BaseBuilderTemplate {
         'RNGAI Factory Builder Land Large',
 
         -- Land Upgrade Builders --
-        'RNGAI Land Upgrade Builders',
+        --'RNGAI Land Upgrade Builders',
 
         -- Air Upgrade Builders --
-        'RNGAI Air Upgrade Builders',
+        --'RNGAI Air Upgrade Builders',
 
         -- RNGAI Air Support Builders --
         'RNGAI Air Staging Platform',
@@ -124,8 +124,8 @@ BaseBuilderTemplate {
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
         if personality == 'RNGStandardnull' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardcheatnull' and mapSizeX > 1000 and mapSizeZ > 1000 then
-            --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
-            --LOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
+            --RNGLOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
+            --RNGLOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
             return 1000, 'RNGStandardnull'
         end
         return -1

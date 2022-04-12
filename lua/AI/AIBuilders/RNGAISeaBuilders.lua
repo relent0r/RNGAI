@@ -2,18 +2,18 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-local MaxAttackForce = 0.45
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local SeaDefenseMode = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
     if mySubThreat < enemySubThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Enable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 890
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Disable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 0
     end
 end
@@ -22,22 +22,22 @@ local SeaDefenseForm = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
     if mySubThreat < enemySubThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Enable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 350
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Disable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 300
     end
 end
 
 local SeaRangedMode = function(self, aiBrain)
     if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
-        --LOG('Enable Ranged Naval Builder')
+        --RNGLOG('Enable Ranged Naval Builder')
         return 500
     else
-        --LOG('Disable Ranged Naval Builder')
+        --RNGLOG('Disable Ranged Naval Builder')
         return 0
     end
 end
@@ -53,8 +53,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaSub',
         Priority = 840,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
         },
@@ -65,8 +66,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaAntiAir',
         Priority = 840,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
+            { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
         },
@@ -111,7 +113,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.50 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.30 } },
         },
         BuilderType = 'Sea',
     },
@@ -122,7 +124,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.30 } },             -- Ratio from 0 to 1. (1=100%)
         },
         BuilderType = 'Sea',
     },
@@ -134,7 +136,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.NAVAL * categories.TECH2 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.6}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -173,19 +175,6 @@ BuilderGroup {
         },
     },
     Builder { 
-        BuilderName = 'RNGAI Destroyer Response',
-        PlatoonTemplate = 'T2SeaDestroyer',
-        Priority = 850,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseMilitaryArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.DESTROYER }}, -- radius, LocationType, unitCount, categoryEnemy
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
-        },
-        BuilderType = 'Sea',
-    },
-
-    Builder { 
         BuilderName = 'RNGAI Cruiser Initial',
         PlatoonTemplate = 'T2SeaCruiser',
         Priority = 500,
@@ -198,19 +187,6 @@ BuilderGroup {
         BuilderType = 'Sea',
     },
     Builder { 
-        BuilderName = 'RNGAI Cruiser Response',
-        PlatoonTemplate = 'T2SeaCruiser',
-        Priority = 850,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.AIR * (categories.ANTINAVY + categories.GROUNDATTACK) }}, -- radius, LocationType, unitCount, categoryEnemy
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
-        },
-        BuilderType = 'Sea',
-    },
-
-    Builder { 
         BuilderName = 'RNGAI SubKiller Initial',
         PlatoonTemplate = 'T2SubKiller',
         Priority = 500,
@@ -218,18 +194,6 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.T2SUBMARINE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
-        },
-        BuilderType = 'Sea',
-    },
-    Builder { 
-        BuilderName = 'RNGAI SubKiller Response',
-        PlatoonTemplate = 'T2SubKiller',
-        Priority = 850,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 2, categories.MOBILE * categories.NAVAL }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
@@ -378,58 +342,6 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Frequent Sea Attack T1',
-        PlatoonTemplate = 'RNGAI Sea Attack T1',
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 300,
-        InstanceCount = 20,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
-            --{ SeaAttackCondition, { 'LocationType', 14 } },
-        },
-        BuilderData = {
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsRatio = 100.0,
-                PrimaryThreatTargetType = 'Naval',
-                SecondaryThreatTargetType = 'Economy',
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 1,
-                VeryNearThreatWeight = 10,
-                NearThreatWeight = 5,
-                MidThreatWeight = 1,
-                FarThreatWeight = 1,
-            },
-        },
-        BuilderType = 'Any',
-    },]]
-    --[[Builder {
-        BuilderName = 'RNGAI Frequent Sea Attack T23',
-        PlatoonTemplate = 'RNGAI Sea Attack T123',
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 300,
-        InstanceCount = 20,
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
-            --{ SeaAttackCondition, { 'LocationType', 14 } },
-        },
-        BuilderData = {
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsRatio = 100.0,
-                PrimaryThreatTargetType = 'Naval',
-                SecondaryThreatTargetType = 'Economy',
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 1,
-                VeryNearThreatWeight = 10,
-                NearThreatWeight = 5,
-                MidThreatWeight = 1,
-                FarThreatWeight = 1,
-            },
-        },
-        BuilderType = 'Any',
-    },]]
     Builder {
         BuilderName = 'RNGAI Intelli Sea Attack T23',
         PlatoonTemplate = 'RNGAI Intelli Sea Attack T123',
@@ -486,7 +398,7 @@ BuilderGroup {
             ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.STRUCTURE * categories.NAVAL * categories.FACTORY,
-                categories.ENERGYPRODUCTION * categories.TECH3,
+                categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2),
                 categories.MASSEXTRACTION,
                 categories.ENERGYSTORAGE,
                 categories.ENERGYPRODUCTION,
@@ -510,7 +422,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Sea Hunters',
         PlatoonTemplate = 'RNGAI Sea Hunt',
-        --PlatoonAddPlans = {'DistressResponseAI'},
+        PlatoonAddPlans = {'DistressResponseAIRNG'},
         Priority = 310,
         PriorityFunction = SeaDefenseForm,
         InstanceCount = 20,

@@ -15,10 +15,10 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'T1EngineerFinishRNG',
+    Name = 'T123EngineerFinishRNG',
     Plan = 'FinishStructureAIRNG',
     GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
+        { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
     },
 }
 
@@ -65,6 +65,14 @@ PlatoonTemplate {
 PlatoonTemplate {
     Name = 'CommanderBuilderRNG',
     Plan = 'EngineerBuildAIRNG',
+    GlobalSquads = {
+        { categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'CommanderInitializeRNG',
+    Plan = 'CommanderInitializeAIRNG',
     GlobalSquads = {
         { categories.COMMAND, 1, 1, 'support', 'None' }
     },

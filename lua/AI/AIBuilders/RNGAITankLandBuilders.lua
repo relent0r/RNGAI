@@ -5,7 +5,8 @@
         Land Builders
 ]]
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-LOG('* AI-RNG: BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+RNGLOG('* AI-RNG: BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
@@ -15,7 +16,7 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
-        --LOG('Enable Land Heavy Attack Queue')
+        --RNGLOG('Enable Land Heavy Attack Queue')
         if builderData.TechLevel == 1 then
             return 780
         elseif builderData.TechLevel == 2 then
@@ -25,7 +26,7 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
         end
         return 790
     else
-        --LOG('Disable Land Heavy Attack Queue')
+        --RNGLOG('Disable Land Heavy Attack Queue')
         return 0
     end
 end
@@ -34,7 +35,7 @@ local LandAttackMode = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
-        --LOG('Enable Land Attack Queue')
+        --RNGLOG('Enable Land Attack Queue')
         if builderData.TechLevel == 1 then
             return 780
         elseif builderData.TechLevel == 2 then
@@ -44,7 +45,7 @@ local LandAttackMode = function(self, aiBrain, builderManager, builderData)
         end
         return 790
     else
-        --LOG('Disable Land Attack Queue')
+        --RNGLOG('Disable Land Attack Queue')
         return 0
     end
 end
@@ -55,7 +56,7 @@ local LandEngMode = function(self, aiBrain, builderManager, builderData)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 4 then
-        --LOG('Setting T1 Queue to Eng')
+        --RNGLOG('Setting T1 Queue to Eng')
         if builderData.TechLevel == 1 then
             return 745
         elseif builderData.TechLevel == 2 then
@@ -75,7 +76,7 @@ local LandNoEngMode = function(self, aiBrain, builderManager, builderData)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits > 4 then
-        --LOG('Setting T1 Queue to NoEng')
+        --RNGLOG('Setting T1 Queue to NoEng')
         if builderData.TechLevel == 1 then
             return 745
         elseif builderData.TechLevel == 2 then
@@ -91,12 +92,12 @@ end
 
 local AmphibSiegeMode = function(self, aiBrain, builderManager)
     local locationType = builderManager.LocationType
-    --LOG('Builder Mananger location type is '..locationType)
+    --RNGLOG('Builder Mananger location type is '..locationType)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.INDIRECTFIRE, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 3 then
-        --LOG('Setting Amphib Siege Mode')
+        --RNGLOG('Setting Amphib Siege Mode')
         return 550
     else
         return 0
@@ -109,7 +110,7 @@ local AmphibNoSiegeMode = function(self, aiBrain, builderManager)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.INDIRECTFIRE, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits >= 3 then
-        --LOG('Setting Amphib Non Siege Mode')
+        --RNGLOG('Setting Amphib Non Siege Mode')
         return 550
     else
         return 0
@@ -160,96 +161,13 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Factory Land Attack Small',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
-        Priority = 750, -- After Second Engie Group
-        PriorityFunction = LandEngMode,
-        Restriction = 'TECH1',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND *  (categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Land Attack NoEng Small',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueueNoEng',
-        Priority = 0, -- After Second Engie Group
-        PriorityFunction = LandNoEngMode,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },]]
-    Builder {
-        BuilderName = 'RNGAI Factory Arty Sera Small', -- Sera cause floaty
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 60, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Tank Aeon Small', -- Aeon cause floaty
-        PlatoonTemplate = 'T1LandDFTank',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    --[[Builder {
-        BuilderName = 'RNGAI T2 Attack Small',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 760,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
         Priority = 500, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.70}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -277,36 +195,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Large',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory Arty Sera Large', -- Sera cause floaty
-        PlatoonTemplate = 'T1LandArtillery',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Tank Aeon Large', -- Aeon cause floaty
-        PlatoonTemplate = 'T1LandDFTank',
-        Priority = 500, -- After First Engie Group and scout
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 100, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory Initial Queue 20km',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
         Priority = 820, -- After Second Engie Group
@@ -330,7 +218,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Factory Land Attack Large',
         PlatoonTemplate = 'RNGAIT1LandAttackQueue',
         Priority = 750, -- After Second Engie Group
@@ -356,7 +244,6 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -378,7 +265,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -459,7 +346,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1LandResponse',
         Priority = 880,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
@@ -472,7 +360,8 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 890,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -484,7 +373,8 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT3LandResponse',
         Priority = 900,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -501,7 +391,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
@@ -515,7 +406,8 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandAA',
         Priority = 900,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH3 }},
@@ -530,7 +422,8 @@ BuilderGroup {
         PlatoonTemplate = 'T3LandAA',
         Priority = 920,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR * (categories.GROUNDATTACK + categories.BOMBER) - categories.SCOUT }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
@@ -595,7 +488,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Large',
     BuildersType = 'FactoryBuilder',
-    Builder {
+    --[[Builder {
         BuilderName = 'RNGAI Attack T3 Large',
         PlatoonTemplate = 'RNGAIT3LandAttackQueue',
         Priority = 770,
@@ -624,7 +517,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Large',
         PlatoonTemplate = 'T3LandArtillery',
@@ -684,7 +577,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Land Expansion',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -715,7 +608,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Land Expansion Sml',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
+        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
         Priority = 700,
         BuilderType = 'Land',
         BuilderConditions = {
@@ -739,8 +632,8 @@ BuilderGroup {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
             { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -753,9 +646,10 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI T1 Zone Raiders Small',                          -- Template Name.
         Priority = 600,                                                          -- Priority. 1000 is normal.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -768,8 +662,8 @@ BuilderGroup {
             LocationType = 'LocationType',
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
-            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MaxThreatThreshold = 650,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
@@ -778,6 +672,7 @@ BuilderGroup {
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
             },
+            SetWeaponPriorities = true,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL,
                 categories.ENGINEER,
@@ -787,8 +682,12 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
+                categories.ALLUNITS - categories.INSIGNIFICANTUNIT,
             },
-            },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion Small',                              -- Random Builder Name.
@@ -805,10 +704,9 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
-            DistressRange = 180,
             UseFormation = 'None',
             AggressiveMove = true,
-            ThreatSupport = 5,
+            ThreatSupport = 0,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
@@ -830,6 +728,54 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Spam Common Expansion Quick Small',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        Priority = 600,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
+            UseFormation = 'None',
+            AggressiveMove = true,
+            ThreatSupport = 0,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.FACTORY,
+                categories.MASSEXTRACTION,
+                categories.MASSFABRICATION,
+                categories.ALLUNITS,
+            },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.STRUCTURE * categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MASSEXTRACTION,
+                categories.ALLUNITS,
+            },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
@@ -843,9 +789,37 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            UseFormation = 'None',
+            SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
+            UseFormation = 'None',
+            AggressiveMove = true,
+            ThreatSupport = 0,
+            PlatoonLimit = 18,
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.FACTORY,
+                categories.MASSEXTRACTION,
+                categories.MASSFABRICATION,
+                categories.ALLUNITS,
             },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.STRUCTURE * categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MASSEXTRACTION,
+                categories.ALLUNITS,
+            },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        },
     },
 }
 
@@ -885,8 +859,9 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name.
+        PlatoonTemplate = 'RNGAI T1 Zone Raiders Small',                          -- Template Name.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -899,8 +874,8 @@ BuilderGroup {
             LocationType = 'LocationType',
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MaxThreatThreshold = 6000,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
@@ -909,16 +884,22 @@ BuilderGroup {
             TargetSearchPriorities = { 
                 categories.MOBILE * categories.LAND
             },
+            SetWeaponPriorities = true,
             PrioritizedCategories = {  
                 categories.ENGINEER,
                 categories.MASSEXTRACTION,
+                categories.SCOUT,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE, 
                 categories.MOBILE * categories.LAND,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
+                categories.ALLUNITS - categories.INSIGNIFICANTUNIT,
             },
-            },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion Large',                              -- Random Builder Name.
@@ -935,10 +916,8 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
-            DistressRange = 120,
             UseFormation = 'None',
             AggressiveMove = true,
-            ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
@@ -959,6 +938,9 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
@@ -976,7 +958,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
-            ThreatSupport = 5,
+            ThreatSupport = 0,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
@@ -1007,12 +989,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE - categories.SCOUT }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER } },
         },
         BuilderData = {
@@ -1054,7 +1037,8 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.AIR * (categories.ANTIAIR + categories.BOMBER + categories.GROUNDATTACK) - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.AIR * (categories.ANTIAIR + categories.BOMBER + categories.GROUNDATTACK) - categories.SCOUT }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
         },
         BuilderData = {
@@ -1096,7 +1080,6 @@ BuilderGroup {
             },
         BuilderData = {
             MarkerType = 'Start Location',            
-            DistressRange = 100,
             SafeZone = true,
             MoveFirst = 'Threat',
             LocationType = 'LocationType',
@@ -1113,7 +1096,6 @@ BuilderGroup {
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
             ThreatType = 'Structures',
-            ThreatSupport = 5,
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.MASSEXTRACTION,
@@ -1122,22 +1104,45 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
             },
-        },    
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        }, 
     },
     Builder {
-        BuilderName = 'RNGAI Spam Early',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Early',                          -- Template Name. 
+        BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
+        PlatoonTemplate = 'RNGAI Zone Control',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
+            --{ UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
+            },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.ALLUNITS,
+            },
             },
     },
 
@@ -1145,6 +1150,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1171,11 +1177,9 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
-            DistressRange = 100,
             UseFormation = 'None',
             PlatoonLimit = 18,
             AggressiveMove = true,
-            ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
@@ -1196,6 +1200,9 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
@@ -1216,7 +1223,6 @@ BuilderGroup {
             UseFormation = 'None',
             PlatoonLimit = 18,
             AggressiveMove = true,
-            ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
@@ -1235,6 +1241,9 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
@@ -1243,6 +1252,7 @@ BuilderGroup {
         Priority = 500,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'PlatoonRetreat' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1252,21 +1262,31 @@ BuilderGroup {
         },
         BuilderData = {
             UseFormation = 'None',
-            DistressRange = 100,
-            ThreatSupport = 2,
             LocationType = 'LocationType',
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
+            },
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
                 categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
                 categories.ALLUNITS,
-            }, 
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        },
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon',                              -- Random Builder Name.
@@ -1282,8 +1302,10 @@ BuilderGroup {
         },
         BuilderData = {
             UseFormation = 'None',
-            ThreatSupport = 2,
             LocationType = 'LocationType',
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
             },
     }, 
     Builder {
@@ -1298,6 +1320,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            RangedAttack = true,
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
@@ -1321,40 +1344,10 @@ BuilderGroup {
                 categories.ALLUNITS,
             },
             UseFormation = 'GrowthFormation',
+            DistressRange = 120,
+            DistressReactionTime = 6,
             ThreatSupport = 5,
         },
-    },
-    Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T1',
-        PlatoonTemplate = 'RNGAI LandAttack Medium',
-        Priority = 500,
-        InstanceCount = 12,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-        },
-        BuilderData = {
-            NeverGuardBases = true,
-            NeverGuardEngineers = false,
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsIfWeakerThan = 10, -- If the platoon is weaker than this threat level
-                IgnoreStrongerTargetsRatio = 5, -- If platoon is weaker than the above threat then ignore stronger threats if stronger by this ratio. (so if they are 100?) 
-                PrimaryThreatTargetType = 'StructuresNotMex', -- Primary type of threat to find targets
-                SecondaryThreatTargetType = 'Land', -- Secondary type of threat to find targets
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 2, -- If the platoon is weaker than the target threat then decrease by this factor
-                StrongAttackThreatWeight = 5, -- If the platoon is stronger than the target threat then increase by this factor
-                VeryNearThreatWeight = 20, -- If the target is very close increase by this factor, default radius is 25
-                NearThreatWeight = 10, -- If the target is close increase by this factor, default radius is 75
-                MidThreatWeight = 5, -- If the target is mid range increase by this factor, default radius is 150
-                FarThreatWeight = 1, -- if the target is far awat increase by this factor default radius is 300. There is also a VeryFar which is -1
-                TargetCurrentEnemy = false, -- Take the current enemy into account when finding targets
-                IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
-            },
-        },         
     },
 }
 
@@ -1390,7 +1383,7 @@ BuilderGroup {
             AvoidClosestRadius = 50,
             GuardTimer = 10,              
             UseFormation = 'AttackFormation',
-            ThreatSupport = 5,
+            ThreatSupport = 0,
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.MASSEXTRACTION,
@@ -1399,12 +1392,16 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },    
     },
     Builder {
         BuilderName = 'RNGAI Trueplatoon Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
         Priority = 690,                                                          -- Priority. 1000 is normal.
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1433,7 +1430,6 @@ BuilderGroup {
             UseFormation = 'None',
             PlatoonLimit = 18,
             AggressiveMove = true,
-            ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
@@ -1453,6 +1449,9 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
@@ -1465,7 +1464,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL}},
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -1473,7 +1472,6 @@ BuilderGroup {
             UseFormation = 'None',
             AggressiveMove = true,
             PlatoonLimit = 15,
-            ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.ENERGYPRODUCTION,
@@ -1494,6 +1492,9 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 2,
         },
     },
     Builder {
@@ -1511,8 +1512,10 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
-            ThreatSupport = 2,
-            },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
+        },
     }, 
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2 Large',                              -- Random Builder Name.
@@ -1526,6 +1529,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            RangedAttack = true,
             SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
             LocationType = 'LocationType',
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
@@ -1549,6 +1553,8 @@ BuilderGroup {
                 categories.ALLUNITS,
             },
             UseFormation = 'GrowthFormation',
+            DistressRange = 120,
+            DistressReactionTime = 6,
             ThreatSupport = 5,
         },
     },
@@ -1606,7 +1612,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
-            ThreatSupport = 5,
+            ThreatSupport = 0,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
@@ -1627,6 +1633,9 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
@@ -1647,7 +1656,6 @@ BuilderGroup {
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
-            ThreatSupport = 5,
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
@@ -1668,6 +1676,9 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.ALLUNITS,
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
 }
@@ -1676,8 +1687,10 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI T1 Mass Raiders Small',                          -- Template Name. 
+        PlatoonTemplate = 'RNGAI T1 Zone Raiders Small',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         PriorityFunction = NoSmallFrys,
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1692,8 +1705,8 @@ BuilderGroup {
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 4900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,		    -- If threat is lower than this, do not attack
+            MaxThreatThreshold = 650,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 150,
             AggressiveMove = false,      
@@ -1703,24 +1716,28 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.MOBILE * categories.LAND
             },
+            SetWeaponPriorities = true,
             PrioritizedCategories = {   
                 categories.ENGINEER,
                 categories.MASSEXTRACTION,
+                categories.SCOUT,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MOBILE * categories.LAND,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
+                categories.ALLUNITS - categories.INSIGNIFICANTUNIT,
             },
             },
-            DistressRange = 100,
-            DistressReactionTime = 8,
-            ThreatSupport = 10,
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Medium',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
-        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        PlatoonTemplate = 'RNGAI Zone Raiders Medium',                          -- Template Name.
+        PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 610,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1736,7 +1753,7 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 120,
             AggressiveMove = false,      
@@ -1746,22 +1763,28 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.MOBILE * categories.LAND
             },
+            SetWeaponPriorities = true,
             PrioritizedCategories = {   
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.ENGINEER,
                 categories.MASSEXTRACTION,
+                categories.SCOUT,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MOBILE * categories.LAND,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
+                categories.ALLUNITS - categories.INSIGNIFICANTUNIT,
             },
             },
+            DistressRange = 120,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
     },
     Builder {
         BuilderName = 'RNGAI Mass Raid Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI Mass Raiders Medium',                          -- Template Name.
-        --PlatoonAddBehaviors = { 'PlatoonRetreat' },
+        PlatoonTemplate = 'RNGAI Zone Raiders Medium',                          -- Template Name.
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1776,7 +1799,7 @@ BuilderGroup {
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 9900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 2000,		    -- If threat is lower than this, do not attack
+            MinThreatThreshold = 100,		    -- If threat is lower than this, do not attack
             AvoidBases = false,
             AvoidBasesRadius = 150,
             AggressiveMove = true,      
@@ -1786,15 +1809,18 @@ BuilderGroup {
                 categories.MASSEXTRACTION,
                 categories.MOBILE * categories.LAND,
             },
+            SetWeaponPriorities = true,
             PrioritizedCategories = {   
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.ENGINEER,
                 categories.MASSEXTRACTION,
+                categories.SCOUT,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MOBILE * categories.LAND,
                 categories.STRUCTURE * categories.DEFENSE,
                 categories.STRUCTURE,
+                categories.ALLUNITS - categories.INSIGNIFICANTUNIT,
             },
             },
     },

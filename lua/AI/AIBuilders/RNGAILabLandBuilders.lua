@@ -7,6 +7,7 @@
 
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 --[[BuilderGroup {
     BuilderGroupName = 'RNGAI LabLandBuilder',
@@ -33,10 +34,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Lab Early Game',
         PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
+        PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,
-        InstanceCount = 4,
+        InstanceCount = 3,
         BuilderConditions = {  
-                { MIBC, 'LessThanGameTime', { 320 } },
+                { MIBC, 'LessThanGameTime', { 280 } },
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },      	
             },
         BuilderType = 'Any',
@@ -44,6 +46,7 @@ BuilderGroup {
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',
+            Avoid        = true,
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 3900,			-- If threat is higher than this, do not attack

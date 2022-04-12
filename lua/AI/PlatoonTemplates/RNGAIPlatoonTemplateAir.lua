@@ -38,7 +38,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI ResponseAttack',
-    Plan = 'StrikeForceAIRNG',
+    Plan = 'GunshipStrikeAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR *(categories.BOMBER + categories.GROUNDATTACK) - categories.daa0206 - categories.EXPERIMENTAL - categories.TRANSPORTFOCUS, 1, 100, 'Attack', 'NoFormation' },
     }
@@ -46,7 +46,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI BomberAttack T1',
-    Plan = 'StrikeForceAIRNG',
+    Plan = 'BomberStrikeAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1, 1, 1, 'Attack', 'GrowthFormation' },
     }
@@ -54,28 +54,31 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
-    Plan = 'StrikeForceAIRNG',
+    Plan = 'BomberStrikeAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY - categories.daa0206, 1, 100, 'Attack', 'GrowthFormation' },
-        #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
+        --Add an escort fighter squad?
+        --{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Artillery', 'GrowthFormation' },
     }
 }
 
 PlatoonTemplate {
     Name = 'RNGAI GunShipAttack',
-    Plan = 'StrikeForceAIRNG',
+    Plan = 'GunshipStrikeAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.GROUNDATTACK - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'GrowthFormation' },
-        #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
+        --Add an escort fighter squad?
+        --{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Artillery', 'GrowthFormation' },
     }
 }
 
 PlatoonTemplate {
     Name = 'RNGAI BomberEnergyAttack',
-    Plan = 'StrikeForceAIRNG',
+    Plan = 'BomberStrikeAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY - categories.daa0206, 1, 5, 'Attack', 'GrowthFormation' },
-        #{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Attack', 'GrowthFormation' },
+        --Add an escort fighter squad?
+        --{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Artillery', 'GrowthFormation' },
     }
 }
 
@@ -115,19 +118,27 @@ PlatoonTemplate {
     Name = 'RNGAIFighterGroup',
     FactionSquads = {
         UEF = {
-            { 'uea0102', 1, 3, 'Attack', 'None' },
+            { 'uea0102', 1, 2, 'Attack', 'None' },
+            { 'uea0101', 1, 1, 'scout', 'None' },
+            { 'uea0102', 1, 1, 'Attack', 'None' },
             { 'uea0101', 1, 1, 'scout', 'None' }
         },
         Aeon = {
-            { 'uaa0102', 1, 3, 'Attack', 'None' },
+            { 'uaa0102', 1, 2, 'Attack', 'None' },
+            { 'uaa0101', 1, 1, 'scout', 'None' },
+            { 'uaa0102', 1, 1, 'Attack', 'None' },
             { 'uaa0101', 1, 1, 'scout', 'None' }
         },
         Cybran = {
-            { 'ura0102', 1, 3, 'Attack', 'None' },
+            { 'ura0102', 1, 2, 'Attack', 'None' },
+            { 'ura0101', 1, 1, 'scout', 'None' },
+            { 'ura0102', 1, 1, 'Attack', 'None' },
             { 'ura0101', 1, 1, 'scout', 'None' }
         },
         Seraphim = {
-            { 'xsa0102', 1, 3, 'Attack', 'None' },
+            { 'xsa0102', 1, 2, 'Attack', 'None' },
+            { 'xsa0101', 1, 1, 'scout', 'None' },
+            { 'xsa0102', 1, 1, 'Attack', 'None' },
             { 'xsa0101', 1, 1, 'scout', 'None' }
         },
     }
