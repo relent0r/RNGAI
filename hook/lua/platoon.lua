@@ -2885,7 +2885,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('Target Air Threat is '..targetExpThreat)
                         --RNGLOG('My Air Threat is '..self.CurrentPlatoonThreat)
                         if self.CurrentPlatoonThreat > targetExpThreat then
-                            local closestBlockingShield, shieldHealth = RUtils.GetClosestShieldProtectingTargetRNG(newtarget, retUnit)
+                            local closestBlockingShield, shieldHealth = RUtils.GetClosestShieldProtectingTargetRNG(platoonUnits[1], newtarget)
                             if closestBlockingShield and shieldHealth and (shieldHealth / 2) > self.PlatoonStrikeDamage then
                                 LOG('Shield too strong to penetrate (we should really merge)')
                             else
@@ -3241,7 +3241,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if self.MaxPlatoonDPS then
                         LOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' max dps is '..self.MaxPlatoonDPS)
                     else
-                        LOG('This gunship platoon has not MaxPlatoonDPS, why not? buildername is '..self.PlanName)
+                        if self.PlanName then
+                            LOG('This gunship platoon has not MaxPlatoonDPS, why not? buildername is '..self.PlanName)
+                        else
+                            LOG('This gunship platoon has not MaxPlatoonDPS or buildername, what IS this platoon?')
+                            for k, v in GetPlatoonUnits(self) do
+                                if v and not v.Dead then
+                                    LOG('Platoon consist of '..v.UnitId)
+                                end
+                            end
+                        end
                     end
                     target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, data.UnitType, nil, self.MaxPlatoonDPS)
                     if target then

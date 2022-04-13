@@ -63,7 +63,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.60 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.70 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

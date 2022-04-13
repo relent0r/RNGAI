@@ -2717,7 +2717,8 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(150,200))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
-                self:TacticalThreatAnalysisRNG(ALLBPS)
+                LOG('Run TacticalThreatAnalysisRNG')
+                self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0
@@ -2791,7 +2792,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGINSERT(enemyBrains, brain)
             end
         end
-        if RNGGETN(enemyBrains) > 0 then
+        if next(enemyBrains) then
             for k, enemy in enemyBrains do
 
                 local gunBool = false
@@ -2987,7 +2988,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyLandThreat = 0
         --RNGLOG('Number of Allies '..RNGGETN(allyBrains))
         coroutine.yield(1)
-        if RNGGETN(allyBrains) > 0 then
+        if next(allyBrains) then
             for k, ally in allyBrains do
                 local allyExtractorList = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in allyExtractorList do
@@ -3180,7 +3181,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Also set if the threat is on water or not
         -- Set the time the threat was identified so we can flush out old entries
         -- If you want the full map thats what EnemyThreatRaw is for.
-        if RNGGETN(potentialThreats) > 0 then
+        if next(potentialThreats) then
             local threatLocation = {}
             for _, threat in potentialThreats do
                 --RNGLOG('* AI-RNG: Threat is'..repr(threat))
@@ -3240,7 +3241,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local landThreatAroundBase = 0
         --RNGLOG(repr(self.EnemyIntel.EnemyThreatLocations))
-        if RNGGETN(self.EnemyIntel.EnemyThreatLocations) > 0 then
+        if next(self.EnemyIntel.EnemyThreatLocations) then
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if threat.ThreatType == 'Land' then
                     local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
@@ -3293,246 +3294,6 @@ AIBrain = Class(RNGAIBrainClass) {
         RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         coroutine.yield(2)
-    end,
-
-    TacticalThreatAnalysisRNG = function(self, ALLBPS)
-
-        self.EnemyIntel.DirectorData = {
-            DefenseCluster = {},
-            Strategic = {},
-            Energy = {},
-            Intel = {},
-            Defense = {},
-            Factory = {},
-            Mass = {},
-            Combat = {},
-        }
-        local energyUnits = {}
-        local strategicUnits = {}
-        local defensiveUnits = {}
-        local intelUnits = {}
-        local factoryUnits = {}
-        local gameTime = GetGameTimeSeconds()
-        local scanRadius = 0
-        local IMAPSize = 0
-        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        self.EnemyIntel.EnemyFireBaseDetected = false
-        self.EnemyIntel.EnemyAirFireBaseDetected = false
-        self.EnemyIntel.EnemyFireBaseTable = {}
-
-        if maxmapdimension == 256 then
-            scanRadius = 11.5
-            IMAPSize = 16
-        elseif maxmapdimension == 512 then
-            scanRadius = 22.5
-            IMAPSize = 32
-        elseif maxmapdimension == 1024 then
-            scanRadius = 45.0
-            IMAPSize = 64
-        elseif maxmapdimension == 2048 then
-            scanRadius = 89.5
-            IMAPSize = 128
-        else
-            scanRadius = 180.0
-            IMAPSize = 256
-        end
-        
-        if RNGGETN(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
-                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, scanRadius, 'Enemy')
-                    for s, unit in unitsAtLocation do
-                        local unitIndex = unit:GetAIBrain():GetArmyIndex()
-                        if not ArmyIsCivilian(unitIndex) then
-                            if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                --RNGLOG('Inserting Enemy Energy Structure '..unit.UnitId)
-                                RNGINSERT(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
-                                --RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
-                                RNGINSERT(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
-                                RNGINSERT(strategicUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                                RNGINSERT(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER, unit) then
-                                --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                                RNGINSERT(factoryUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            end
-                        end
-                    end
-                    coroutine.yield(1)
-                end
-            end
-        end
-        if RNGGETN(energyUnits) > 0 then
-            for k, unit in energyUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-                --RNGLOG('Unit has an economic value of '..unit.Value)
-            end
-            self.EnemyIntel.DirectorData.Energy = energyUnits
-        end
-        coroutine.yield(1)
-        if RNGGETN(defensiveUnits) > 0 then
-            for k, unit in defensiveUnits do
-                for q, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if not self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount then
-                        self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = 0
-                    end
-                    if not self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount then
-                        self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = 0
-                    end
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
-                        if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + 1
-                        elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
-                        end
-                        if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
-                            self.EnemyIntel.EnemyFireBaseDetected = true
-                        end
-                        if self.EnemyIntel.EnemyFireBaseDetected then
-                            if not self.EnemyIntel.EnemyFireBaseTable[q] then
-                                self.EnemyIntel.EnemyFireBaseTable[q] = {}
-                                self.EnemyIntel.EnemyFireBaseTable[q] = { EnemyIndex = unit.EnemyIndex, Location = {unit.IMAP[1], 0, unit.IMAP[2]}, Shielded = unit.Shielded, Air = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'), Land = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') }
-                            end
-                        end
-                    end
-                    --LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
-                    --LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)
-                end
-                --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-            end
-            local firebaseTable = {}
-            for q, threat in self.EnemyIntel.EnemyThreatLocations do
-                local tableEntry = { Position = threat.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, validated = false}
-                if threat.LandDefStructureCount > 0 then
-                    --LOG('Enemy Threat Location with ID '..q..' has '..threat.LandDefStructureCount..' at imap position '..repr(threat.Position))
-                    tableEntry.Land = { Count = threat.LandDefStructureCount }
-                end
-                if threat.AirDefStructureCount > 0 then
-                    --LOG('Enemy Threat Location with ID '..q..' has '..threat.AirDefStructureCount..' at imap position '..repr(threat.Position))
-                    tableEntry.Air = { Count = threat.AirDefStructureCount }
-                end
-                RNGINSERT(firebaseTable, tableEntry)
-            end
-            local firebaseaggregation = 0
-            firebaseaggregationTable = {}
-            local complete = RNGGETN(firebaseTable) == 0
-            LOG('Firebase table '..repr(firebaseTable))
-            while not complete do
-                complete = true
-                LOG('firebase aggregation loop number '..firebaseaggregation)
-                for _, v1 in firebaseTable do
-                    v1.weight = 1
-                    v1.aggX = v1.Position[1]
-                    v1.aggZ = v1.Position[2]
-                end
-                for _, v1 in firebaseTable do
-                    if not v1.validated then
-                        for _, v2 in firebaseTable do
-                            if not v2.validated and VDist2Sq(v1.Position[1], v1.Position[2], v2.Position[1], v2.Position[2]) < 3600 then
-                                v1.weight = v1.weight + 1
-                                v1.aggX = v1.aggX + v2.Position[1]
-                                v1.aggZ = v1.aggZ + v2.Position[2]
-                            end
-                        end
-                    end
-                end
-                local best = nil
-                for _, v in firebaseTable do
-                    if (not v.validated) and ((not best) or best.weight < v.weight) then
-                        best = v
-                    end
-                end
-                local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count}
-                best.validated = true
-                local x = best.aggX/best.weight
-                local z = best.aggZ/best.weight
-                for _, v in firebaseTable do
-                    if (not v.validated) and VDist2Sq(v.Position[1], v.Position[2], best.Position[1], best.Position[2]) < 3600 then
-                        defenseGroup.Land = defenseGroup.Land + v.Land.Count
-                        defenseGroup.Air = defenseGroup.Air + v.Air.Count
-                        v.validated = true
-                    elseif not v.validated then
-                        complete = false
-                    end
-                end
-                coroutine.yield(1)
-                firebaseaggregation = firebaseaggregation + 1
-                RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air})
-            end
-            LOG('firebaseTable '..repr(firebaseTable))
-            for k, v in firebaseaggregationTable do
-                if v.DefensiveCount > 5 then
-                    self.EnemyIntel.EnemyFireBaseDetected = true
-                    break
-                else
-                    self.EnemyIntel.EnemyFireBaseDetected = false
-                end
-            end
-            LOG('firebaseaggregationTable '..repr(firebaseaggregationTable))
-            if self.EnemyIntel.EnemyFireBaseDetected then
-                LOG('Firebase Detected')
-                LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
-            end
-            self.EnemyIntel.DirectorData.Defense = defensiveUnits
-        end
-        coroutine.yield(1)
-        if RNGGETN(strategicUnits) > 0 then
-            for k, unit in strategicUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Strategic Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-            end
-            self.EnemyIntel.DirectorData.Strategic = strategicUnits
-        end
-        coroutine.yield(1)
-        if RNGGETN(intelUnits) > 0 then
-            for k, unit in intelUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Intel Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex.. ' Unit ID is '..unit.Object.UnitId)
-            end
-            self.EnemyIntel.DirectorData.Intel = intelUnits
-        end
-        if RNGGETN(factoryUnits) > 0 then
-            for k, unit in factoryUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Factory HQ Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-                --RNGLOG('Unit has an economic value of '..unit.Value)
-            end
-            self.EnemyIntel.DirectorData.Factory = factoryUnits
-        end
-        coroutine.yield(1)
     end,
 
     CheckDirectorTargetAvailable = function(self, threatType, platoonThreat, platoonType, strikeDamage, platoonDPS, platoonPosition)
@@ -3602,7 +3363,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
 
-        if RNGGETN(enemyACUIndexes) > 0 then
+        if next(enemyACUIndexes) then
             for k, v in enemyACUIndexes do
                 local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
                 for c, b in acuUnits do
@@ -3617,7 +3378,7 @@ AIBrain = Class(RNGAIBrainClass) {
         
 
         if not potentialTarget then
-            if self.EnemyIntel.DirectorData.Intel and RNGGETN(self.EnemyIntel.DirectorData.Intel) > 0 then
+            if self.EnemyIntel.DirectorData.Intel and next(self.EnemyIntel.DirectorData.Intel) then
                 for k, v in self.EnemyIntel.DirectorData.Intel do
                     --RNGLOG('Intel Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3645,7 +3406,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Energy and RNGGETN(self.EnemyIntel.DirectorData.Energy) > 0 then
+            if self.EnemyIntel.DirectorData.Energy and next(self.EnemyIntel.DirectorData.Energy) then
                 for k, v in self.EnemyIntel.DirectorData.Energy do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3673,7 +3434,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Factory and RNGGETN(self.EnemyIntel.DirectorData.Factory) > 0 then
+            if self.EnemyIntel.DirectorData.Factory and next(self.EnemyIntel.DirectorData.Factory) then
                 for k, v in self.EnemyIntel.DirectorData.Factory do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3702,7 +3463,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Strategic and RNGGETN(self.EnemyIntel.DirectorData.Strategic) > 0 then
+            if self.EnemyIntel.DirectorData.Strategic and next(self.EnemyIntel.DirectorData.Strategic) then
                 for k, v in self.EnemyIntel.DirectorData.Strategic do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)

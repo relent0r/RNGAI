@@ -32,6 +32,9 @@ local RNGCAT = table.cat
 local RNGCOPY = table.copy
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
+-- Cached categories
+local CategoriesShield = categories.SHIELD * categories.STRUCTURE
+
 --[[
 Valid Threat Options:
             Overall
@@ -2552,7 +2555,7 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit)
 
     -- If targetUnit is within the radius of any shields return true
     local tPos = targetUnit:GetPosition()
-    local shields = GetUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
+    local shields = GetUnitsAroundPoint(aiBrain, CategoriesShield, targetUnit:GetPosition(), 50, 'Enemy')
     for _, shield in shields do
         if not shield.Dead then
             local shieldPos = shield:GetPosition()
@@ -3930,16 +3933,24 @@ function GetAngleFromAToB(tLocA, tLocB)
     end
 end
 
-function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit)
+function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit, attackingPosition)
     if not targetUnit or not attackingUnit then
         return false
     end
     local blockingList = {}
 
     -- If targetUnit is within the radius of any shields, the shields need to be destroyed.
-    local aiBrain = attackingUnit:GetAIBrain()
-    local tPos = targetUnit:GetPosition()
+    local aiBrain
     local aPos = attackingUnit:GetPosition()
+    if attackingUnit then
+        aiBrain = attackingUnit:GetAIBrain()
+        aPos = attackingUnit:GetPosition()
+    elseif attackingPosition then
+        aPos = attackingPosition
+    end
+
+    local tPos = targetUnit:GetPosition()
+    
     local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD * categories.STRUCTURE, targetUnit:GetPosition(), 50, 'Enemy')
     for _, shield in shields do
         if not shield.Dead then

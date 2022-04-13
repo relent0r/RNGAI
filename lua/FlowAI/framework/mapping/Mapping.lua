@@ -894,7 +894,6 @@ function SetMarkerInformation(aiBrain)
         end
         if node and not marker.RNGArea then
             aiBrain.RNGAreas[k]={}
-            LOG('Marker type is '..marker.type)
             InfectMarkersRNG(aiBrain,marker,k)
         end
         if expand then
@@ -971,7 +970,6 @@ function SetMarkerInformation(aiBrain)
     ScenarioInfo.MarkersInfectedRNG = true
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
-    LOG('Marker '..repr(marker))
     if marker then
         marker.RNGArea=graphname
         table.insert(aiBrain.RNGAreas[graphname],marker)
@@ -1115,7 +1113,7 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
         --RNGLOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
     if not AdaptiveResourceMarkerTableRNG[masspoint].zoneid then
-        if RUtils.PositionInWater(marker.position) then
+        if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
             local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
             if zone then
                 AdaptiveResourceMarkerTableRNG[masspoint].zoneid = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Naval.index)

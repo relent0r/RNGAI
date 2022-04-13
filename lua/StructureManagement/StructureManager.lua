@@ -801,7 +801,7 @@ StructureManager = Class {
                 self.Brain.EngineerAssistManagerFocusAirUpgrade = true
                 self.Brain.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
             end
-            while unit and not unit.Dead and not unit:BeenDestroyed() and fractionComplete < 1 do
+            while upgradedFactory and not upgradedFactory.Dead and not upgradedFactory:BeenDestroyed() and fractionComplete < 1 do
                 fractionComplete = upgradedFactory:GetFractionComplete()
                 coroutine.yield(20)
             end
