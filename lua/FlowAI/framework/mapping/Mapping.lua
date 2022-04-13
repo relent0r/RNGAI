@@ -1114,18 +1114,18 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
         AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = marker.RNGArea
         --RNGLOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
-    if not AdaptiveResourceMarkerTableRNG[masspoint].Zone then
-        if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
+    if not AdaptiveResourceMarkerTableRNG[masspoint].zoneid then
+        if RUtils.PositionInWater(marker.position) then
             local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
             if zone then
-                AdaptiveResourceMarkerTableRNG[masspoint].Zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval.index)
+                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Naval.index)
             else
                 WARN('No zone returned for mass point marker during initial infection, this should have been a naval zone')
             end
         else
             local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
             if zone then
-                AdaptiveResourceMarkerTableRNG[masspoint].Zone = map:GetZoneID(marker.position,aiBrain.Zones.Land.index)
+                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Land.index)
             else
                 WARN('No zone returned for mass point marker during initial infection, this should have been a land zone')
                 LOG('Marker name is '..masspoint)
