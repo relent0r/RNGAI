@@ -108,7 +108,6 @@ IntelManager = Class {
         while not self.Brain.ZonesInitialized do
             RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
-            continue
         end
     end,
 

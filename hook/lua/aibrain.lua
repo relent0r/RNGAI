@@ -1085,7 +1085,6 @@ AIBrain = Class(RNGAIBrainClass) {
         while not self.ZonesInitialized do
             RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
-            continue
         end
     end,
 
