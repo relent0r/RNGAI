@@ -53,6 +53,7 @@ end
 
 local AntiSpamList = {}
 function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     -- If the c-engine can't decide what to build, then search the build template manually.
@@ -221,8 +222,8 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
         -- Need to update this to playable_area as it turns out that its 8 from that not the scenarioinfo size. See regor_highlands.
-        if relativeLoc[1] <= 8 or relativeLoc[1] >= ScenarioInfo.size[1] - 8 or relativeLoc[3] <= 8 or relativeLoc[3] >= ScenarioInfo.size[2] - 8 then
-            --LOG('BorderWarning is true, location is '..repr(relativeLoc))
+        if relativeLoc[1] <= 8 or relativeLoc[1] >= playableArea[1] - 8 or relativeLoc[3] <= 8 or relativeLoc[3] >= playableArea[2] - 8 then
+            LOG('BorderWarning is true, location is '..repr(relativeLoc))
             borderWarning = true
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
