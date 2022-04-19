@@ -21,13 +21,14 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 21.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 40.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 100, 0.8 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -65,6 +66,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -105,6 +107,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -144,6 +147,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 15,
             Construction = {
@@ -182,6 +186,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
@@ -214,6 +219,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 15,
             Construction = {
@@ -251,6 +257,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 12,
             Construction = {
@@ -290,6 +297,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -318,6 +326,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD, categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)},
                 AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
@@ -344,6 +353,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
@@ -365,6 +375,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -392,6 +403,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 BuildStructures = {
@@ -412,6 +424,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
                 --ForceAvoidCategory = true,
@@ -430,12 +443,13 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.3 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENERGYSTORAGE }},
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
                 --ForceAvoidCategory = true,

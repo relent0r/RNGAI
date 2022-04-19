@@ -14,9 +14,6 @@ BaseBuilderTemplate {
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
-        --'RNGAI Test PD',
-        --'RNGAI ACU Enhancements Gun',
-        --'RNGAI ACU Enhancements Tier',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
@@ -28,7 +25,6 @@ BaseBuilderTemplate {
         'RNGAI Mass Builder',
         'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
-        --'RNGAI ExtractorUpgrades',
         'RNGAI Mass Fab',
         --'RNGEXP Crazyrush Builder',
 
@@ -39,17 +35,28 @@ BaseBuilderTemplate {
         'RNGAI Assist Builders',
         'RNGEXP Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
+        'RNGAI Assist Manager BuilderGroup',
 
         -- Land Factory Builders --
         'RNGEXP Factory Builder Land',
+
+        -- Land Unit Builders
+        'RNGAI LandBuilder T1',
+        'RNGAI LandBuilder T2',
+        'RNGAI LandBuilder T3',
+        'RNGAI LandBuilder T1 Islands',
+
+        -- Land Formers
+        'RNGAI ScoutLandFormer',
+        'RNGAI Land Mass Raid',
+        'RNGAI Land FormBuilders',
+        'RNGAI Mass Hunter Labs FormBuilders',
+        'RNGAI Land Response Formers',
 
         -- Air Factory Builders --
         'RNGEXP Factory Builder Air',
         'RNGAI Air Staging Platform',
         
-        -- Air Factory Formers --
-        'RNGEXP Air Upgrade Builders',
-
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
         'RNGAI Air Builder T1',

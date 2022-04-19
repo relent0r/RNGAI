@@ -867,7 +867,11 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-   --RNGLOG('Display Marker Adjacency Running')
+    RNGLOG('Display Marker Adjacency Running')
+    while not aiBrain.ZonesInitialized do
+        LOG('Waiting for Zones to Initialize')
+        coroutine.yield(20)
+    end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local VDist3Sq = VDist3Sq
     aiBrain.RNGAreas={}
@@ -966,12 +970,16 @@ function SetMarkerInformation(aiBrain)
     ScenarioInfo.MarkersInfectedRNG = true
 end
 function InfectMarkersRNG(aiBrain,marker,graphname)
-    marker.RNGArea=graphname
-    table.insert(aiBrain.RNGAreas[graphname],marker)
-    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-        if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
-            InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+    if marker then
+        marker.RNGArea=graphname
+        table.insert(aiBrain.RNGAreas[graphname],marker)
+        for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
+            if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
+                InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+            end
         end
+    else
+        WARN('Marker provided for infection is nil')
     end
 end
 function DoArmySpotDistanceInfect(aiBrain,marker,army)
@@ -1104,6 +1112,26 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
         AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = marker.RNGArea
         --RNGLOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
     end
+    if not AdaptiveResourceMarkerTableRNG[masspoint].zoneid then
+        if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
+            local zone = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Naval.index)
+            if zone then
+                --LOG('Zone found, adding zone to naval mass marker '..zone)
+                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = zone
+            else
+                WARN('No zone returned for mass point marker during initial infection, this should have been a naval zone')
+            end
+        else
+            local zone = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Land.index)
+            if zone then
+                --LOG('Zone found, adding zone to land mass marker '..zone)
+                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = zone
+            else
+                WARN('No zone returned for mass point marker during initial infection, this should have been a land zone')
+            end
+        end
+    end
+
     coroutine.yield(1)
     if aiBrain.renderthreadtracker==CurrentThread() then
         aiBrain.renderthreadtracker=nil

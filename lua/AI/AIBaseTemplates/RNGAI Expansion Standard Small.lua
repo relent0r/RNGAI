@@ -50,9 +50,9 @@ BaseBuilderTemplate {
     NonCheatBuilders = { },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 8,
-            Tech2 = 4,
-            Tech3 = 2,
+            Tech1 = 15,
+            Tech2 = 8,
+            Tech3 = 3,
             SCU = 0,
         },
         

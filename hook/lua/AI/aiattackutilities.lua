@@ -635,7 +635,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                             for c, b in reclaimRect do
                                 if reclaimCount > 15 then break end
                                 if not IsProp(b) then continue end
-                                local rpos = b:GetCachePosition()
+                                local rpos = b.CachePosition
                                 -- Start Blacklisted Props
                                 if (b.MaxMassReclaim and b.MaxMassReclaim > 0) or (b.MaxEnergyReclaim and b.MaxEnergyReclaim > 10) then
                                     reclaimCount = reclaimCount + 1
@@ -712,7 +712,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
             --RNGLOG('Transport Location minThreat is '..minThreat)
             if (minThreat > 0) or safeZone then
-                if platoon.MovementLayer == 'Amphibious' then
+                if platoon.MovementLayer == 'Amphibious' or platoon.MovementLayer == 'Land' then
                     --RNGLOG('Find Safe Drop Amphib')
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 else

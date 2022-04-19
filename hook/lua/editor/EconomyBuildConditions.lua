@@ -323,6 +323,7 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
         --RNGLOG('Factory massTotal : '..massTotal)
         return false
     end
+
     --RNGLOG('MassToFactoryRatio true')
     --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
     --RNGLOG('Factory massTotal : '..massTotal)

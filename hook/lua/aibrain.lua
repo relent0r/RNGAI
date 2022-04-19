@@ -127,20 +127,38 @@ AIBrain = Class(RNGAIBrainClass) {
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
         if  mapSizeX > 1000 and mapSizeZ > 1000 then
-            self.DefaultLandRatio = 0.5
-            self.DefaultAirRatio = 0.4
-            self.DefaultNavalRatio = 0.4
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.5
+                self.DefaultAirRatio = 0.4
+                self.DefaultNavalRatio = 0.4
+            end
             self.MapSize = 20
         elseif mapSizeX > 500 and mapSizeZ > 500 then
-            self.DefaultLandRatio = 0.6
-            self.DefaultAirRatio = 0.4
-            self.DefaultNavalRatio = 0.4
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.6
+                self.DefaultAirRatio = 0.4
+                self.DefaultNavalRatio = 0.4
+            end
             --RNGLOG('10 KM Map Check true')
             self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
-            self.DefaultLandRatio = 0.7
-            self.DefaultAirRatio = 0.3
-            self.DefaultNavalRatio = 0.3
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.7
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.3
+            end
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
@@ -155,9 +173,17 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
-        if self.MapSize <= 10 then
+        if self.MapSize <= 10 and self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.35
+            self.EconomyUpgradeSpend = 0.35
+        elseif self.MapSize <= 10 then
+            self.EconomyUpgradeSpendDefault = 0.25
             self.EconomyUpgradeSpend = 0.25
+        elseif self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.35
+            self.EconomyUpgradeSpend = 0.35
         else
+            self.EconomyUpgradeSpendDefault = 0.30
             self.EconomyUpgradeSpend = 0.30
         end
         self.EconomyTicksMonitor = 80
@@ -175,6 +201,17 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerFocusAirUpgrade = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
+        self.EngineerDistributionTable = {
+            BuildPower = 0,
+            BuildStructure = 0,
+            Assist = 0,
+            Reclaim = 0,
+            ReclaimStructure = 0,
+            Expansion = 0,
+            Repair = 0,
+            Mass = 0,
+            Total = 0
+        }
         self.ProductionRatios = {
             Land = self.DefaultLandRatio,
             Air = self.DefaultAirRatio,
@@ -909,6 +946,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
         self.StartReclaimTotal = 0
+        self.StartReclaimCurrent = 0
         self.StartReclaimTaken = false
         self.MapReclaimTable = {}
         self.Zones = { }
@@ -966,7 +1004,6 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
-        self:ForkThread(self.EcoExtractorUpgradeCheckRNG)
         self:ForkThread(self.CivilianPDCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)
@@ -1039,6 +1076,7 @@ AIBrain = Class(RNGAIBrainClass) {
     ZoneSetup = function(self)
         WaitTicks(1)
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
+        self.Zones.Naval = MAP:GetZoneSet('RNGNavalResourceSet',2)
         self.ZonesInitialized = true
         --self:ForkThread(import('/mods/RNGAI/lua/AI/RNGDebug.lua').DrawReclaimGrid)
     end,
@@ -1047,7 +1085,6 @@ AIBrain = Class(RNGAIBrainClass) {
         while not self.ZonesInitialized do
            --RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
-            continue
         end
     end,
 
@@ -1172,6 +1209,7 @@ AIBrain = Class(RNGAIBrainClass) {
 			baseLayer = 'Water'
         end
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
+        self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
 
         self.BuilderManagers[baseName] = {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
@@ -1212,6 +1250,34 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Graph Area not set yet')
                 coroutine.yield(30)
             end
+        end
+    end,
+
+    GetBaseZone = function(self, position, baseName, baseLayer)
+        -- This will set the zone of the factory manager so we don't need to look it up every time
+        -- Needs to wait a while for the RNGArea properties to be populated
+        local zone
+        local zoneSet = false
+        while not zoneSet do
+            if baseLayer then
+                if baseLayer == 'Water' then
+                    zone = MAP:GetZoneID(position,self.Zones.Naval.index)
+                else
+                    zone = MAP:GetZoneID(position,self.Zones.Land.index)
+                end
+            end
+            if not zone then
+                WARN('Missing zone for builder manager land node or no path markers')
+            end
+            if zone then
+                LOG('Zone set for builder manager')
+                self.BuilderManagers[baseName].Zone = zone
+                LOG('Zone is '..self.BuilderManagers[baseName].Zone)
+                zoneSet = true
+            else
+                LOG('No zone for builder manager')
+            end
+            coroutine.yield(30)
         end
     end,
 
@@ -1258,7 +1324,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if graphCheck then
             self.GraphZones.HasRun = true
             self.EcoManager.CoreMassMarkerCount = coreMassMarkers
-            self.BrainIntel.MassSharePerPlayer = markerCount / self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount
+            self.BrainIntel.MassSharePerPlayer = markerCount / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount)
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
@@ -2561,8 +2627,13 @@ AIBrain = Class(RNGAIBrainClass) {
                            --LOG('There is an engineer in the army pool with Active set '..v.UnitId)
                         end
                     end
-                   --LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
-                   --LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
+                    LOG('DistributionTable '..repr(self.EngineerDistributionTable))
+                    local reclaimRatio = self.EngineerDistributionTable.Reclaim / self.EngineerDistributionTable.Total
+                    LOG('Engineer Reclaim Ratio '..reclaimRatio)
+                    local assistRatio = self.EngineerDistributionTable.Assist / self.EngineerDistributionTable.Total
+                    LOG('Engineer Assist Ratio '..reclaimRatio)
+                    LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
+                    LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
@@ -2646,7 +2717,8 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(150,200))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
-                self:TacticalThreatAnalysisRNG(ALLBPS)
+                LOG('Run TacticalThreatAnalysisRNG')
+                self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0
@@ -2655,23 +2727,42 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) then
                 --RNGLOG('Land Threat Higher, shift ratio to 0.5')
-                self.ProductionRatios.Land = 0.5
+                if not self.RNGEXP then
+                    self.ProductionRatios.Land = 0.5
+                end
             elseif not self.EnemyIntel.ChokeFlag then
                 --RNGLOG('Land Threat Lower, shift ratio to 0.6')
                 self.ProductionRatios.Land = self.DefaultLandRatio
             end
             if self.BrainIntel.SelfThreat.AirNow > (self.EnemyIntel.EnemyThreatCurrent.Air / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
                 --RNGLOG('Air Threat Higher, shift ratio to 0.4')
-                self.ProductionRatios.Air = 0.4
+                if not self.RNGEXP then
+                    self.ProductionRatios.Air = 0.4
+                end
             elseif not self.EnemyIntel.ChokeFlag then
                 --RNGLOG('Air Threat lower, shift ratio to 0.5')
                 self.ProductionRatios.Air = self.DefaultAirRatio
             end
             if self.BrainIntel.SelfThreat.NavalNow > (self.EnemyIntel.EnemyThreatCurrent.Naval / enemyCount) and (not self.EnemyIntel.ChokeFlag) then
-                self.ProductionRatios.Naval = 0.4
+                if not self.RNGEXP then
+                    self.ProductionRatios.Naval = 0.4
+                end
             elseif not self.EnemyIntel.ChokeFlag then
                 self.ProductionRatios.Naval = self.DefaultNavalRatio
             end
+            LOG('aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount'..self.EnemyIntel.EnemyCount..' '..self.BrainIntel.AllyCount)
+            LOG('Mass Marker Count '..self.BrainIntel.SelfThreat.MassMarker)
+            LOG('self.BrainIntel.SelfThreat.ExtractorCount '..self.BrainIntel.SelfThreat.ExtractorCount)
+            LOG('self.BrainIntel.MassSharePerPlayer '..self.BrainIntel.MassSharePerPlayer)
+            if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.MassSharePerPlayer then
+                if self.EconomyUpgradeSpend < 0.35 then
+                    LOG('Increasing EconomyUpgradeSpend to 0.36')
+                    self.EconomyUpgradeSpend = 0.36
+                end
+            elseif self.EconomyUpgradeSpend > 0.35 then
+                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
+            end
+
             --RNGLOG('(self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount) / self.BrainIntel.SelfThreat.MassMarkerBuildable'..self.BrainIntel.SelfThreat.MassMarkerBuildable / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
             --RNGLOG('self.EnemyIntel.EnemyCount '..self.EnemyIntel.EnemyCount)
             --RNGLOG('self.BrainIntel.AllyCount '..self.BrainIntel.AllyCount)
@@ -2701,7 +2792,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGINSERT(enemyBrains, brain)
             end
         end
-        if RNGGETN(enemyBrains) > 0 then
+        if next(enemyBrains) then
             for k, enemy in enemyBrains do
 
                 local gunBool = false
@@ -2897,7 +2988,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyLandThreat = 0
         --RNGLOG('Number of Allies '..RNGGETN(allyBrains))
         coroutine.yield(1)
-        if RNGGETN(allyBrains) > 0 then
+        if next(allyBrains) then
             for k, ally in allyBrains do
                 local allyExtractorList = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in allyExtractorList do
@@ -2967,7 +3058,7 @@ AIBrain = Class(RNGAIBrainClass) {
         ]]
     end,
 
-    IMAPConfigurationRNG = function(self, ALLBPS)
+    IMAPConfigurationRNG = function(self)
         -- Used to configure imap values, used for setting threat ring sizes depending on map size to try and get a somewhat decent radius
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
 
@@ -3090,7 +3181,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Also set if the threat is on water or not
         -- Set the time the threat was identified so we can flush out old entries
         -- If you want the full map thats what EnemyThreatRaw is for.
-        if RNGGETN(potentialThreats) > 0 then
+        if next(potentialThreats) then
             local threatLocation = {}
             for _, threat in potentialThreats do
                 --RNGLOG('* AI-RNG: Threat is'..repr(threat))
@@ -3150,7 +3241,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local landThreatAroundBase = 0
         --RNGLOG(repr(self.EnemyIntel.EnemyThreatLocations))
-        if RNGGETN(self.EnemyIntel.EnemyThreatLocations) > 0 then
+        if next(self.EnemyIntel.EnemyThreatLocations) then
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if threat.ThreatType == 'Land' then
                     local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
@@ -3203,246 +3294,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
         --RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         coroutine.yield(2)
-    end,
-
-    TacticalThreatAnalysisRNG = function(self, ALLBPS)
-
-        self.EnemyIntel.DirectorData = {
-            DefenseCluster = {},
-            Strategic = {},
-            Energy = {},
-            Intel = {},
-            Defense = {},
-            Factory = {},
-            Mass = {},
-            Combat = {},
-        }
-        local energyUnits = {}
-        local strategicUnits = {}
-        local defensiveUnits = {}
-        local intelUnits = {}
-        local factoryUnits = {}
-        local gameTime = GetGameTimeSeconds()
-        local scanRadius = 0
-        local IMAPSize = 0
-        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        self.EnemyIntel.EnemyFireBaseDetected = false
-        self.EnemyIntel.EnemyAirFireBaseDetected = false
-        self.EnemyIntel.EnemyFireBaseTable = {}
-
-        if maxmapdimension == 256 then
-            scanRadius = 11.5
-            IMAPSize = 16
-        elseif maxmapdimension == 512 then
-            scanRadius = 22.5
-            IMAPSize = 32
-        elseif maxmapdimension == 1024 then
-            scanRadius = 45.0
-            IMAPSize = 64
-        elseif maxmapdimension == 2048 then
-            scanRadius = 89.5
-            IMAPSize = 128
-        else
-            scanRadius = 180.0
-            IMAPSize = 256
-        end
-        
-        if RNGGETN(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
-                    local unitsAtLocation = GetUnitsAroundPoint(self, categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION, {threat.Position[1], 0, threat.Position[2]}, scanRadius, 'Enemy')
-                    for s, unit in unitsAtLocation do
-                        local unitIndex = unit:GetAIBrain():GetArmyIndex()
-                        if not ArmyIsCivilian(unitIndex) then
-                            if EntityCategoryContains( categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                --RNGLOG('Inserting Enemy Energy Structure '..unit.UnitId)
-                                RNGINSERT(energyUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.DEFENSE * (categories.TECH2 + categories.TECH3), unit) then
-                                --RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
-                                RNGINSERT(defensiveUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
-                                RNGINSERT(strategicUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), unit) then
-                                --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                                RNGINSERT(intelUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            elseif EntityCategoryContains( categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER, unit) then
-                                --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
-                                RNGINSERT(factoryUnits, {EnemyIndex = unitIndex, Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, HP = unit:GetHealth(), Object = unit, Shielded = RUtils.ShieldProtectingTargetRNG(self, unit), IMAP = threat.Position, Air = 0, Land = 0 })
-                            end
-                        end
-                    end
-                    coroutine.yield(1)
-                end
-            end
-        end
-        if RNGGETN(energyUnits) > 0 then
-            for k, unit in energyUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Energy Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-                --RNGLOG('Unit has an economic value of '..unit.Value)
-            end
-            self.EnemyIntel.DirectorData.Energy = energyUnits
-        end
-        coroutine.yield(1)
-        if RNGGETN(defensiveUnits) > 0 then
-            for k, unit in defensiveUnits do
-                for q, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if not self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount then
-                        self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = 0
-                    end
-                    if not self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount then
-                        self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = 0
-                    end
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
-                        if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + 1
-                        elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
-                            self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount = self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount + 1
-                        end
-                        if self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount + self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount > 5 then
-                            self.EnemyIntel.EnemyFireBaseDetected = true
-                        end
-                        if self.EnemyIntel.EnemyFireBaseDetected then
-                            if not self.EnemyIntel.EnemyFireBaseTable[q] then
-                                self.EnemyIntel.EnemyFireBaseTable[q] = {}
-                                self.EnemyIntel.EnemyFireBaseTable[q] = { EnemyIndex = unit.EnemyIndex, Location = {unit.IMAP[1], 0, unit.IMAP[2]}, Shielded = unit.Shielded, Air = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'), Land = GetThreatAtPosition(self, { unit.IMAP[1], 0, unit.IMAP[2] }, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') }
-                            end
-                        end
-                    end
-                    --LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
-                    --LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..self.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)
-                end
-                --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-            end
-            local firebaseTable = {}
-            for q, threat in self.EnemyIntel.EnemyThreatLocations do
-                local tableEntry = { Position = threat.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, validated = false}
-                if threat.LandDefStructureCount > 0 then
-                    --LOG('Enemy Threat Location with ID '..q..' has '..threat.LandDefStructureCount..' at imap position '..repr(threat.Position))
-                    tableEntry.Land = { Count = threat.LandDefStructureCount }
-                end
-                if threat.AirDefStructureCount > 0 then
-                    --LOG('Enemy Threat Location with ID '..q..' has '..threat.AirDefStructureCount..' at imap position '..repr(threat.Position))
-                    tableEntry.Air = { Count = threat.AirDefStructureCount }
-                end
-                RNGINSERT(firebaseTable, tableEntry)
-            end
-            local firebaseaggregation = 0
-            firebaseaggregationTable = {}
-            local complete = RNGGETN(firebaseTable) == 0
-           --LOG('Firebase table '..repr(firebaseTable))
-            while not complete do
-                complete = true
-               --LOG('firebase aggregation loop number '..firebaseaggregation)
-                for _, v1 in firebaseTable do
-                    v1.weight = 1
-                    v1.aggX = v1.Position[1]
-                    v1.aggZ = v1.Position[2]
-                end
-                for _, v1 in firebaseTable do
-                    if not v1.validated then
-                        for _, v2 in firebaseTable do
-                            if not v2.validated and VDist2Sq(v1.Position[1], v1.Position[2], v2.Position[1], v2.Position[2]) < 3600 then
-                                v1.weight = v1.weight + 1
-                                v1.aggX = v1.aggX + v2.Position[1]
-                                v1.aggZ = v1.aggZ + v2.Position[2]
-                            end
-                        end
-                    end
-                end
-                local best = nil
-                for _, v in firebaseTable do
-                    if (not v.validated) and ((not best) or best.weight < v.weight) then
-                        best = v
-                    end
-                end
-                local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count}
-                best.validated = true
-                local x = best.aggX/best.weight
-                local z = best.aggZ/best.weight
-                for _, v in firebaseTable do
-                    if (not v.validated) and VDist2Sq(v.Position[1], v.Position[2], best.Position[1], best.Position[2]) < 3600 then
-                        defenseGroup.Land = defenseGroup.Land + v.Land.Count
-                        defenseGroup.Air = defenseGroup.Air + v.Air.Count
-                        v.validated = true
-                    elseif not v.validated then
-                        complete = false
-                    end
-                end
-                coroutine.yield(1)
-                firebaseaggregation = firebaseaggregation + 1
-                RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air})
-            end
-           --LOG('firebaseTable '..repr(firebaseTable))
-            for k, v in firebaseaggregationTable do
-                if v.DefensiveCount > 5 then
-                    self.EnemyIntel.EnemyFireBaseDetected = true
-                    break
-                else
-                    self.EnemyIntel.EnemyFireBaseDetected = false
-                end
-            end
-           --LOG('firebaseaggregationTable '..repr(firebaseaggregationTable))
-            if self.EnemyIntel.EnemyFireBaseDetected then
-                --LOG('Firebase Detected')
-                --LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
-            end
-            self.EnemyIntel.DirectorData.Defense = defensiveUnits
-        end
-        coroutine.yield(1)
-        if RNGGETN(strategicUnits) > 0 then
-            for k, unit in strategicUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Strategic Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-            end
-            self.EnemyIntel.DirectorData.Strategic = strategicUnits
-        end
-        coroutine.yield(1)
-        if RNGGETN(intelUnits) > 0 then
-            for k, unit in intelUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Intel Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex.. ' Unit ID is '..unit.Object.UnitId)
-            end
-            self.EnemyIntel.DirectorData.Intel = intelUnits
-        end
-        if RNGGETN(factoryUnits) > 0 then
-            for k, unit in factoryUnits do
-                for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                    if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then
-                        unit.Air = threat.Threat
-                    elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
-                        unit.Land = threat.Threat
-                    end
-                end
-                --RNGLOG('Enemy Factory HQ Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
-                --RNGLOG('Unit has an economic value of '..unit.Value)
-            end
-            self.EnemyIntel.DirectorData.Factory = factoryUnits
-        end
-        coroutine.yield(1)
     end,
 
     CheckDirectorTargetAvailable = function(self, threatType, platoonThreat, platoonType, strikeDamage, platoonDPS, platoonPosition)
@@ -3512,7 +3363,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
 
-        if RNGGETN(enemyACUIndexes) > 0 then
+        if next(enemyACUIndexes) then
             for k, v in enemyACUIndexes do
                 local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
                 for c, b in acuUnits do
@@ -3527,7 +3378,7 @@ AIBrain = Class(RNGAIBrainClass) {
         
 
         if not potentialTarget then
-            if self.EnemyIntel.DirectorData.Intel and RNGGETN(self.EnemyIntel.DirectorData.Intel) > 0 then
+            if self.EnemyIntel.DirectorData.Intel and next(self.EnemyIntel.DirectorData.Intel) then
                 for k, v in self.EnemyIntel.DirectorData.Intel do
                     --RNGLOG('Intel Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3555,7 +3406,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Energy and RNGGETN(self.EnemyIntel.DirectorData.Energy) > 0 then
+            if self.EnemyIntel.DirectorData.Energy and next(self.EnemyIntel.DirectorData.Energy) then
                 for k, v in self.EnemyIntel.DirectorData.Energy do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3583,7 +3434,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Factory and RNGGETN(self.EnemyIntel.DirectorData.Factory) > 0 then
+            if self.EnemyIntel.DirectorData.Factory and next(self.EnemyIntel.DirectorData.Factory) then
                 for k, v in self.EnemyIntel.DirectorData.Factory do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3612,7 +3463,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Strategic and RNGGETN(self.EnemyIntel.DirectorData.Strategic) > 0 then
+            if self.EnemyIntel.DirectorData.Strategic and next(self.EnemyIntel.DirectorData.Strategic) then
                 for k, v in self.EnemyIntel.DirectorData.Strategic do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3675,290 +3526,6 @@ AIBrain = Class(RNGAIBrainClass) {
             return potentialTarget
         end
         return false
-    end,
-    
-    EcoExtractorUpgradeCheckRNG = function(self)
-    -- Keep track of how many extractors are currently upgrading
-    -- Right now this is less about making the best decision to upgrade and more about managing the economy while that upgrade is happening.
-        coroutine.yield(Random(5,20))
-        local ALLBPS = __blueprints
-        while true do
-            local upgradeSpend = self.cmanager.income.r.m*self.EconomyUpgradeSpend
-            local extractorsDetail, extractorTable, totalSpend = RUtils.ExtractorsBeingUpgraded(self, ALLBPS)
-            self.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
-            self.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-           --LOG('Core Extractor T3 Count needs to be less than 3 '..self.EcoManager.CoreExtractorT3Count)
-           --LOG('Total Core Extractors needs to be greater than 2 '..self.EcoManager.TotalCoreExtractors)
-           --LOG('Mex Income '..self.cmanager.income.r.m..' needs to be greater than '..(140 * self.EcoManager.EcoMultiplier))
-           --LOG('T3 Land Factory Count needs to be greater than 1 '..self.smanager.fact.Land.T3)
-           --LOG('or T3 Air Factory Count needs to be greater than 1 '..self.smanager.fact.Air.T3)
-           --LOG('Efficiency over time needs to be greater than 1.0 '..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-
-            if self.EcoManager.CoreExtractorT3Count < 3 and self.EcoManager.TotalCoreExtractors > 2 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) and (self.smanager.fact.Land.T3 > 0 or self.smanager.fact.Air.T3 > 0) and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                self.EcoManager.CoreMassPush = true
-                self.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
-            else
-                self.EcoManager.CoreMassPush = false
-                self.EngineerAssistManagerFocusCategory = false
-            end
-            --LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
-            local massStorage = GetEconomyStored( self, 'MASS')
-            local energyStorage = GetEconomyStored( self, 'ENERGY')
-            if self.EcoManager.CoreExtractorT3Count then
-               --LOG('CoreExtractorT3Count '..self.EcoManager.CoreExtractorT3Count)
-            end
-            if extractorsDetail.TECH2Upgrading < 1 and self.cmanager.income.r.m > (140 * self.EcoManager.EcoMultiplier) then
-                --LOG('Trigger all tiers true')
-                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-            end
-            coroutine.yield(30)
-            if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 then
-                if upgradeSpend > 4 then
-                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                        --LOG('We Could upgrade an extractor now with over time')
-                            --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                            if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                                --LOG('Trigger all tiers false')
-                                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
-                            else
-                                --LOG('Trigger all tiers true')
-                                self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-                            end
-                            coroutine.yield(30)
-                        --end
-                        coroutine.yield(30)
-                    end
-                end
-                coroutine.yield(30)
-            elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
-                if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                   --LOG('We Could upgrade an extractor now with over time')
-                    local massIncome = GetEconomyIncome(self, 'MASS')
-                    local massRequested = GetEconomyRequested(self, 'MASS')
-                    local energyIncome = GetEconomyIncome(self, 'ENERGY')
-                    local energyRequested = GetEconomyRequested(self, 'ENERGY')
-                    local massEfficiency = math.min(massIncome / massRequested, 2)
-                    local energyEfficiency = math.min(energyIncome / energyRequested, 2)
-                    if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                       --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7 or upgradeSpend < 15 then
-                            --LOG('Trigger all tiers false')
-                            self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
-                        else
-                            --LOG('Trigger all tiers true')
-                            self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-                        end
-                        coroutine.yield(30)
-                    end
-                    coroutine.yield(30)
-                end
-            elseif extractorsDetail.TECH1Upgrading < 2 then
-                if upgradeSpend > 5 then
-                    if totalSpend < upgradeSpend and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                       --LOG('We Could upgrade an extractor now with over time')
-                        self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, false)
-                        coroutine.yield(60)
-                    end
-                end
-            elseif massStorage > 3000 and energyStorage > 8000 then
-                if self.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                   --LOG('We Could upgrade an extractor now with over time')
-                    local massIncome = GetEconomyIncome(self, 'MASS')
-                    local massRequested = GetEconomyRequested(self, 'MASS')
-                    local energyIncome = GetEconomyIncome(self, 'ENERGY')
-                    local energyRequested = GetEconomyRequested(self, 'ENERGY')
-                    local massEfficiency = math.min(massIncome / massRequested, 2)
-                    local energyEfficiency = math.min(energyIncome / energyRequested, 2)
-                    if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                       --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                       --LOG('Trigger all tiers true')
-                        self:ValidateExtractorUpgradeRNG(ALLBPS, extractorTable, true)
-                        coroutine.yield(30)
-                    end
-                    coroutine.yield(30)
-                end
-            end
-            coroutine.yield(30)
-        end
-    end,
-
-    ValidateExtractorUpgradeRNG = function(self, ALLBPS, extractorTable, allTiers)
-      --LOG('ValidateExtractorUpgrade Stuff')
-       local UnitPos
-       local DistanceToBase
-       local LowestDistanceToBase
-       local lowestUnit = false
-       local BasePosition = self.BuilderManagers['MAIN'].Position
-       if extractorTable then
-           --LOG('extractorTable present in upgrade validation')
-            if extractorTable then
-               --LOG('extractorTable has '..table.getn(extractorTable.TECH1)..' T1 units in it')
-               --LOG('extractorTable has '..table.getn(extractorTable.TECH2)..' T2 units in it')
-            else
-               --LOG('extractorTable is nil')
-            end
-            for _, v in extractorTable do
-                if not allTiers and RNGGETN(extractorTable.TECH1) > 0 then
-                    for _, c in extractorTable.TECH1 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                   --LOG('T1 lowestUnit added alltiers false')
-                                end
-                            end
-                        end
-                    end
-                else
-                    for _, c in extractorTable.TECH1 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                   --LOG('T1 lowestUnit added alltiers true')
-                                end
-                            end
-                        end
-                    end
-                    for _, c in extractorTable.TECH2 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                   --LOG('T2 lowestUnit added alltiers true')
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            if lowestUnit then
-                lowestUnit.CentralBrainExtractorUpgrade = true
-                lowestUnit.DistanceToBase = LowestDistanceToBase
-                if not self.CentralBrainExtractorUnitUpgradeClosest then
-                    self.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
-                end
-               --LOG('Closest Extractor')
-                self:ForkThread(self.UpgradeExtractorRNG, ALLBPS, lowestUnit, LowestDistanceToBase)
-            else
-               --LOG('There is no lowestUnit')
-            end
-        end
-    end,
-
-    UpgradeExtractorRNG = function(self, ALLBPS, extractorUnit, distanceToBase)
-        --LOG('Upgrading Extractor from central brain thread')
-        local upgradeBp
-        local upgradeID = ALLBPS[extractorUnit.UnitId].General.UpgradesTo or false
-        if upgradeID then
-            upgradeBp = ALLBPS[upgradeID]
-            IssueUpgrade({extractorUnit}, upgradeID)
-            coroutine.yield(2)
-            local upgradeTimeStamp = GetGameTimeSeconds()
-            local bypassEcoManager = false
-            local upgradedExtractor = extractorUnit.UnitBeingBuilt
-            local fractionComplete = upgradedExtractor:GetFractionComplete()
-            while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
-                --LOG('Upgrading Extractor Loop')
-                --LOG('Unit is '..fractionComplete..' fraction complete')
-                if not self.CentralBrainExtractorUnitUpgradeClosest or self.CentralBrainExtractorUnitUpgradeClosest.Dead then
-                    self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                elseif self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase > distanceToBase then
-                    self.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                    --LOG('This is a new closest extractor upgrading at '..distanceToBase)
-                end
-                if fractionComplete < 0.65 and not bypassEcoManager then
-                    if (GetEconomyTrend(self, 'MASS') <= 0.0 and (GetEconomyStored(self, 'MASS') <= 200) or GetEconomyStored( self, 'ENERGY') < 1000) then
-                        if not extractorUnit:IsPaused() then
-                            extractorUnit:SetPaused(true)
-                            coroutine.yield(10)
-                        end
-                    else
-                        if extractorUnit:IsPaused() then
-                            if self.EcoManager.ExtractorsUpgrading.TECH1 > 1 or self.EcoManager.ExtractorsUpgrading.TECH2 > 0 then
-                                if self.CentralBrainExtractorUnitUpgradeClosest and not self.CentralBrainExtractorUnitUpgradeClosest.Dead 
-                                and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
-                                    extractorUnit:SetPaused(false)
-                                    coroutine.yield(30)
-                                elseif self.EcoManager.ExtractorsUpgrading.TECH2 > 0 and EntityCategoryContains(categories.TECH1, extractorUnit) then
-                                    extractorUnit:SetPaused(false)
-                                    coroutine.yield(30)
-                                end
-                            else
-                                extractorUnit:SetPaused(false)
-                                coroutine.yield(20)
-                            end
-                        end
-                    end
-                end
-                coroutine.yield(30)
-                if extractorUnit and not extractorUnit.Dead then
-                    fractionComplete = upgradedExtractor:GetFractionComplete()
-                end
-                if not bypassEcoManager and self.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase and GetGameTimeSeconds() - upgradeTimeStamp > self.EcoManager.EcoMassUpgradeTimeout then
-                    bypassEcoManager = true
-                    if extractorUnit:IsPaused() then
-                        extractorUnit:SetPaused(false)
-                    end
-                end
-            end
-            if upgradedExtractor and not upgradedExtractor.Dead then
-                if EntityCategoryContains(categories.TECH3, upgradedExtractor) then
-                    if VDist3Sq(upgradedExtractor:GetPosition(), self.BuilderManagers['MAIN'].Position) < 2500 then
-                        upgradedExtractor.MAINBASE = true
-                    end
-                end
-                --self:ForkThread(self:ExtractorInitialDelay(upgradedExtractor))
-            end
-        else
-            WARN('No upgrade id provided to upgradeextractorrng')
-        end
-        coroutine.yield(80)
-    end,
-
-    ExtractorInitialDelay = function(self, unit)
-        local initial_delay = 0
-        local multiplier = 1
-        local ecoStartTime = GetGameTimeSeconds()
-        local ecoTimeOut = 420
-        unit.InitialDelayCompleted = false
-        unit.InitialDelayStarted = true
-        if self.CheatEnabled then
-            multiplier = self.EcoManager.EcoMultiplier
-        else
-            multiplier = 1
-        end
-       --LOG('Initial Delay loop starting')
-        while initial_delay < (70 / multiplier) do
-            if not unit.Dead and GetEconomyStored( self, 'MASS') >= 50 and GetEconomyStored( self, 'ENERGY') >= 900 and unit:GetFractionComplete() == 1 then
-                initial_delay = initial_delay + 10
-                if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-                    initial_delay = 70
-                end
-            end
-            --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
-            coroutine.yield(100)
-        end
-       --LOG('Initial Delay loop completing')
-        unit.InitialDelayCompleted = true
     end,
 
     EcoMassManagerRNG = function(self)
@@ -5121,7 +4688,13 @@ AIBrain = Class(RNGAIBrainClass) {
            --LOG('EngineerAssistManager State is '..state)
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if massStorage > 150 and energyStorage > 150 then
+            if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 then
+                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                end
+                --RNGLOG('EngineerAssistManager is Active')
+                self.EngineerAssistManagerActive = true
+            elseif massStorage > 150 and energyStorage > 150 then
                 if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
@@ -5219,6 +4792,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
         local tspend = {m=0,e=0}
         local mainBaseExtractors = {T1=0,T2=0,T3=0}
+        local engineerDistribution = { BuildPower = 0, BuildStructure = 0, Assist = 0, Reclaim = 0, Expansion = 0, Mass = 0, Repair = 0, ReclaimStructure = 0, Total = 0 }
         local totalLandThreat = 0
         local totalAirThreat = 0
         local totalAntiAirThreat = 0
@@ -5298,6 +4872,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         fabs.T3=fabs.T3+1
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.ENGINEER then
+                    if unit.JobType then
+                        --LOG('Engineer Job Type '..unit.JobType)
+                        engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
+                        engineerDistribution.Total = engineerDistribution.Total + 1
+                    end
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         engspend.T1=engspend.T1+spendm
                     elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
@@ -5313,9 +4892,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                             factories.Land.T2=factories.Land.T2+1
                         elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
-                           --LOG('T3 Land Factory Detecting incrementing land by 1')
                             factories.Land.T3=factories.Land.T3+1
-                           --LOG('factories.Land.T3 '..factories.Land.T3)
                         end
                     elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
                         facspend.Air=facspend.Air+spendm
@@ -5576,6 +5153,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.NavalSubNow = totalNavalSubThreat
         self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
         self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
+        self.EngineerDistributionTable = engineerDistribution
         self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then

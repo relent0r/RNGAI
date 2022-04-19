@@ -6,7 +6,20 @@ local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.l
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
+
+
+-- pre-compute categories for performance
+local CategoriesStructuresNotMex = categories.STRUCTURE - categories.TECH1 - categories.WALL - categories.MASSEXTRACTION
+local CategoriesEnergy = categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
+local CategoriesDefense = categories.DEFENSE * (categories.TECH2 + categories.TECH3)
+local CategoriesStrategic = categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
+local CategoriesIntelligence = categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
+local CategoriesFactory = categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER
+local CategoriesShield = categories.SHIELD * categories.STRUCTURE
+
+local RNGMAX = math.max
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
 local RNGGETN = table.getn
@@ -108,7 +121,6 @@ IntelManager = Class {
         while not self.Brain.ZonesInitialized do
            --RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
-            continue
         end
     end,
 
@@ -577,6 +589,7 @@ IntelManager = Class {
        --LOG('Zone Intel Assignment Complete')
        --LOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
+
 }
 
 local im 
@@ -1003,7 +1016,7 @@ MapReclaimAnalysis = function(aiBrain)
                 if reclaimRaw and table.getn(reclaimRaw) > 0 then
                     for k,v in reclaimRaw do
                         if not IsProp(v) then continue end
-                        if v.MaxMassReclaim and v.MaxMassReclaim > 8 then
+                        if v.MaxMassReclaim and v.MaxMassReclaim > 0 then
                             reclaimTotal = reclaimTotal + v.MaxMassReclaim
                         end
                     end
@@ -1012,7 +1025,336 @@ MapReclaimAnalysis = function(aiBrain)
                 square.LastUpdate = currentGameTime
                 coroutine.yield(1)
             end
+            local startReclaim = 0
+            for k, square in aiBrain.MapReclaimTable do
+                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], square.Position[1], square.Position[3]) < 14400 then
+                    startReclaim = startReclaim + square.TotalReclaim
+                end
+            end
+            aiBrain.StartReclaimCurrent = startReclaim
+            LOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
         end
         coroutine.yield(300)
     end
+end
+
+local LookupAirThreat = { }
+local LookupLandThreat = { }
+
+local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+    local BP = shield:GetBlueprint().Defense.Shield
+    local width = BP.ShieldSize
+    local height = BP.ShieldVerticalOffset
+
+    return width * width - height * height
+end
+
+local function ShieldProtectingTargetRNG(aiBrain, targetUnit, shields)
+
+    -- if no target unit, then we can skip
+    if not targetUnit then
+        return false
+    end
+
+    -- defensive programming
+    shields = shields or GetUnitsAroundPoint(aiBrain, CategoriesShield, targetUnit:GetPosition(), 50, 'Enemy')
+
+    -- determine if target unit is part of some shield
+    local tPos = targetUnit:GetPosition()
+    for _, shield in shields do
+        if not shield.Dead then
+            local shieldPos = shield:GetPosition()
+            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
+            if VDist2Sq(tPos[1], tPos[3], shieldPos[1], shieldPos[3]) < shieldSizeSq then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+TacticalThreatAnalysisRNG = function(aiBrain)
+    local ALLBPS = __blueprints
+
+    LOG("Started analysis for: " .. aiBrain.Nickname)
+    local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
+
+    aiBrain.EnemyIntel.DirectorData = {
+        DefenseCluster = {},
+        Strategic = {},
+        Energy = {},
+        Intel = {},
+        Defense = {},
+        Factory = {},
+        Mass = {},
+        Combat = {},
+    }
+
+    local energyUnits = {}
+    local strategicUnits = {}
+    local defensiveUnits = {}
+    local intelUnits = {}
+    local factoryUnits = {}
+    local gameTime = GetGameTimeSeconds()
+    local scanRadius = 0
+    local IMAPSize = 0
+    local maxmapdimension = RNGMAX(ScenarioInfo.size[1],ScenarioInfo.size[2])
+    aiBrain.EnemyIntel.EnemyFireBaseDetected = false
+    aiBrain.EnemyIntel.EnemyAirFireBaseDetected = false
+    aiBrain.EnemyIntel.EnemyFireBaseTable = {}
+
+    if maxmapdimension == 256 then
+        scanRadius = 11.5
+        IMAPSize = 16
+    elseif maxmapdimension == 512 then
+        scanRadius = 22.5
+        IMAPSize = 32
+    elseif maxmapdimension == 1024 then
+        scanRadius = 45.0
+        IMAPSize = 64
+    elseif maxmapdimension == 2048 then
+        scanRadius = 89.5
+        IMAPSize = 128
+    else
+        scanRadius = 180.0
+        IMAPSize = 256
+    end
+
+    local v = Vector(0, 0, 0)
+
+    if next(aiBrain.EnemyIntel.EnemyThreatLocations) then
+
+        local LookupAirThreat = { }
+        local LookupLandThreat = { }
+
+        -- pre-process all threat to populate lookup tables for anti air and land
+        for k, threat in aiBrain.EnemyIntel.EnemyThreatLocations do
+            if threat.ThreatType == "AntiAir" then 
+                LookupAirThreat[threat.Position[1]] = LookupAirThreat[threat.Position[1]] or { }
+                LookupAirThreat[threat.Position[1]][threat.Position[2]] = threat.Threat
+            elseif threat.ThreatType == "Land" then 
+                LookupLandThreat[threat.Position[1]] = LookupLandThreat[threat.Position[1]] or { }
+                LookupLandThreat[threat.Position[1]][threat.Position[2]] = threat.Threat
+            end
+        end
+
+        for k, threat in aiBrain.EnemyIntel.EnemyThreatLocations do
+
+            -- INFO: threat = { table: 22C1FF50 
+            -- INFO:   EnemyBaseRadius=true,
+            -- INFO:   InsertTime=676.10003662109,
+            -- INFO:   Position={ table: 22C1F168  400, 400 },
+            -- INFO:   PositionOnWater=false,
+            -- INFO:   Threat=159,
+            -- INFO:   ThreatType="StructuresNotMex"
+            -- INFO: }
+
+            if (gameTime - threat.InsertTime) < 25 and threat.ThreatType == 'StructuresNotMex' then
+
+                -- position format as used by the engine
+                v[1] = threat.Position[1]
+                v[2] = 0 
+                v[3] = threat.Position[2]
+
+                -- retrieve units and shields that are in or overlap with the iMAP cell
+                local unitsAtLocation = GetUnitsAroundPoint(aiBrain, CategoriesStructuresNotMex, v, scanRadius, 'Enemy')
+                local shieldsAtLocation = GetUnitsAroundPoint(aiBrain, CategoriesShield, v, 50 + scanRadius, 'Enemy')
+
+                for s, unit in unitsAtLocation do
+                    local unitIndex = unit:GetAIBrain():GetArmyIndex()
+                    if not ArmyIsCivilian(unitIndex) then
+                        if EntityCategoryContains( CategoriesEnergy, unit) then
+                            --RNGLOG('Inserting Enemy Energy Structure '..unit.UnitId)
+                            RNGINSERT(energyUnits, {
+                                EnemyIndex = unitIndex, 
+                                Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, 
+                                HP = unit:GetHealth(), 
+                                Object = unit, 
+                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                IMAP = threat.Position, 
+                                Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
+                            })
+                        elseif EntityCategoryContains( CategoriesDefense, unit) then
+                            --RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
+                            RNGINSERT(
+                                defensiveUnits, { 
+                                EnemyIndex = unitIndex, 
+                                Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                HP = unit:GetHealth(), 
+                                Object = unit, 
+                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                IMAP = threat.Position, 
+                                Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
+                            })
+                        elseif EntityCategoryContains( CategoriesStrategic, unit) then
+                            --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
+                            RNGINSERT(strategicUnits, {
+                                EnemyIndex = unitIndex, 
+                                Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                HP = unit:GetHealth(), 
+                                Object = unit, 
+                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                IMAP = threat.Position, 
+                                Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
+                            })
+                        elseif EntityCategoryContains( CategoriesIntelligence, unit) then
+                            --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
+                            RNGINSERT(intelUnits, {
+                                EnemyIndex = unitIndex, 
+                                Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                HP = unit:GetHealth(), 
+                                Object = unit, 
+                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                IMAP = threat.Position, 
+                                Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
+                            })
+                        elseif EntityCategoryContains( CategoriesFactory, unit) then
+                            --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
+                            RNGINSERT(factoryUnits, {
+                                EnemyIndex = unitIndex, 
+                                Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                HP = unit:GetHealth(), 
+                                Object = unit, 
+                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                IMAP = threat.Position, 
+                                Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if next(defensiveUnits) then
+        for k, unit in defensiveUnits do
+            for q, threat in aiBrain.EnemyIntel.EnemyThreatLocations do
+                if not threat.LandDefStructureCount then
+                    threat.LandDefStructureCount = 0
+                end
+                if not threat.AirDefStructureCount then
+                    threat.AirDefStructureCount = 0
+                end
+                if table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiAir' then 
+                    unit.Air = threat.Threat
+                elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
+                    unit.Land = threat.Threat
+                elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
+                    if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
+                        threat.LandDefStructureCount = threat.LandDefStructureCount + 1
+                    elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
+                        threat.AirDefStructureCount = threat.AirDefStructureCount + 1
+                    end
+                    if threat.LandDefStructureCount + threat.AirDefStructureCount > 5 then
+                        aiBrain.EnemyIntel.EnemyFireBaseDetected = true
+                    end
+                    if aiBrain.EnemyIntel.EnemyFireBaseDetected then
+                        if not aiBrain.EnemyIntel.EnemyFireBaseTable[q] then
+                            aiBrain.EnemyIntel.EnemyFireBaseTable[q] = {}
+                            aiBrain.EnemyIntel.EnemyFireBaseTable[q] = { 
+                                EnemyIndex = unit.EnemyIndex, 
+                                Location = {unit.IMAP[1], 0, unit.IMAP[2]}, 
+                                Shielded = unit.Shielded, 
+                                Air = GetThreatAtPosition(aiBrain, { unit.IMAP[1], 0, unit.IMAP[2] }, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'), 
+                                Land = GetThreatAtPosition(aiBrain, { unit.IMAP[1], 0, unit.IMAP[2] }, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                                }
+                        end
+                    end
+                end
+                --LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
+                --LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)
+            end
+            --RNGLOG('Enemy Defense Structure has '..unit.Air..' air threat and '..unit.Land..' land threat'..' belonging to energy index '..unit.EnemyIndex)
+        end
+
+        local firebaseTable = {}
+        for q, threat in aiBrain.EnemyIntel.EnemyThreatLocations do
+            local tableEntry = { Position = threat.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, validated = false}
+            if threat.LandDefStructureCount > 0 then
+                --LOG('Enemy Threat Location with ID '..q..' has '..threat.LandDefStructureCount..' at imap position '..repr(threat.Position))
+                tableEntry.Land = { Count = threat.LandDefStructureCount }
+            end
+            if threat.AirDefStructureCount > 0 then
+                --LOG('Enemy Threat Location with ID '..q..' has '..threat.AirDefStructureCount..' at imap position '..repr(threat.Position))
+                tableEntry.Air = { Count = threat.AirDefStructureCount }
+            end
+            RNGINSERT(firebaseTable, tableEntry)
+        end
+        local firebaseaggregation = 0
+        firebaseaggregationTable = {}
+        local complete = RNGGETN(firebaseTable) == 0
+        --LOG('Firebase table '..repr(firebaseTable))
+        while not complete do
+            complete = true
+            --LOG('firebase aggregation loop number '..firebaseaggregation)
+            for _, v1 in firebaseTable do
+                v1.weight = 1
+                v1.aggX = v1.Position[1]
+                v1.aggZ = v1.Position[2]
+            end
+            for _, v1 in firebaseTable do
+                if not v1.validated then
+                    for _, v2 in firebaseTable do
+                        if not v2.validated and VDist2Sq(v1.Position[1], v1.Position[2], v2.Position[1], v2.Position[2]) < 3600 then
+                            v1.weight = v1.weight + 1
+                            v1.aggX = v1.aggX + v2.Position[1]
+                            v1.aggZ = v1.aggZ + v2.Position[2]
+                        end
+                    end
+                end
+            end
+            local best = nil
+            for _, v in firebaseTable do
+                if (not v.validated) and ((not best) or best.weight < v.weight) then
+                    best = v
+                end
+            end
+            local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count}
+            best.validated = true
+            local x = best.aggX/best.weight
+            local z = best.aggZ/best.weight
+            for _, v in firebaseTable do
+                if (not v.validated) and VDist2Sq(v.Position[1], v.Position[2], best.Position[1], best.Position[2]) < 3600 then
+                    defenseGroup.Land = defenseGroup.Land + v.Land.Count
+                    defenseGroup.Air = defenseGroup.Air + v.Air.Count
+                    v.validated = true
+                elseif not v.validated then
+                    complete = false
+                end
+            end
+            firebaseaggregation = firebaseaggregation + 1
+            RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air})
+        end
+
+        --LOG('firebaseTable '..repr(firebaseTable))
+        for k, v in firebaseaggregationTable do
+            if v.DefensiveCount > 5 then
+                aiBrain.EnemyIntel.EnemyFireBaseDetected = true
+                break
+            else
+                aiBrain.EnemyIntel.EnemyFireBaseDetected = false
+            end
+        end
+        --LOG('firebaseaggregationTable '..repr(firebaseaggregationTable))
+        if aiBrain.EnemyIntel.EnemyFireBaseDetected then
+            --LOG('Firebase Detected')
+            --LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
+        end
+        aiBrain.EnemyIntel.DirectorData.Defense = defensiveUnits
+    end
+
+    -- populate the director
+    aiBrain.EnemyIntel.DirectorData.Strategic = strategicUnits
+    aiBrain.EnemyIntel.DirectorData.Intel = intelUnits
+    aiBrain.EnemyIntel.DirectorData.Factory = factoryUnits
+    aiBrain.EnemyIntel.DirectorData.Energy = energyUnits
+
+    LOG("Finished analysis for: " .. aiBrain.Nickname)
+    local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
+    LOG("Time of analysis: " .. (finishedAnalysisAt - startedAnalysisAt))
 end

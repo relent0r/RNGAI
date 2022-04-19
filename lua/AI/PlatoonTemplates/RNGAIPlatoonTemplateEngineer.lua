@@ -10,7 +10,7 @@ PlatoonTemplate {
     Name = 'EngineerAssistManagerRNG',
     Plan = 'PlatoonMergeRNG',
     GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
+        { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
     },
 }
 

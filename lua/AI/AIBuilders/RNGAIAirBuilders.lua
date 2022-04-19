@@ -103,7 +103,7 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
 end
 
 local InitialBomberResponse = function(self, aiBrain, builderManager, builderData)
-    if aiBrain.EnemyIntel.LandPhase > 1 or aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir > aiBrain.BrainIntel.SelfThreat.AntiAirNow then
+    if aiBrain.EnemyIntel.LandPhase > 1 or aiBrain.EnemyIntel.EnemyThreatCurrent.Air > aiBrain.BrainIntel.SelfThreat.AirNow then
         return 0
     end
     return 890
@@ -170,7 +170,8 @@ BuilderGroup {
         PriorityFunction = InitialBomberResponse,
         BuilderConditions = {	
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},	
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
             { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
         },	
         BuilderType = 'Air',	
@@ -477,8 +478,8 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            --{ UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
     },
     Builder {
@@ -735,7 +736,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH1 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 0.90 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -748,7 +749,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -760,7 +761,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.05 }},
         },
         BuilderType = 'Air',
     },
@@ -773,7 +774,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -804,7 +805,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -816,7 +817,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.05 }},
         },
         BuilderType = 'Air',
     },
@@ -830,7 +831,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
         },
         BuilderType = 'Air',
     },

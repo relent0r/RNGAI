@@ -67,6 +67,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -129,6 +130,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -160,6 +162,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -194,6 +197,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -227,6 +231,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -290,6 +295,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -322,6 +328,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -360,6 +367,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -395,6 +403,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -431,6 +440,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -466,6 +476,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -496,6 +507,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -531,6 +543,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -564,6 +577,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -595,6 +609,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -626,6 +641,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -657,6 +673,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -688,6 +705,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -719,6 +737,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,

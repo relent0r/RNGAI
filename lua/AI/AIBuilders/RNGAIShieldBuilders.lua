@@ -33,6 +33,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
@@ -65,6 +66,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
@@ -106,6 +108,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
@@ -148,6 +151,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,

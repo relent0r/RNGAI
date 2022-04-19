@@ -24,10 +24,12 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 30,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 5,
                 ThreatType = 'AntiSurface',
@@ -41,16 +43,18 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 60',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
-        InstanceCount = 4,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, nil, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 60,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
@@ -67,9 +71,11 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -77,6 +83,7 @@ BuilderGroup {
                 BuildClose = true,
                 Type = 'Mass',
                 MaxDistance = 120,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
@@ -96,6 +103,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -121,11 +129,12 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 MaxDistance = 120,
-                MinDistance = 1,
+                MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
@@ -142,9 +151,11 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 240, nil, nil, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -175,6 +186,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -206,6 +218,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -247,6 +260,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 4,
@@ -277,6 +291,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -301,6 +316,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -325,6 +341,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -359,6 +376,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
@@ -388,6 +406,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
@@ -417,6 +436,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 500,
@@ -451,6 +471,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             Construction = {
                 AdjacencyCategory = categories.MASSEXTRACTION,
                 AdjacencyDistance = 100,
@@ -479,6 +500,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Mass',
             Construction = {
                 AdjacencyPriority = categories.MASSEXTRACTION,
                 AdjacencyDistance = 500,

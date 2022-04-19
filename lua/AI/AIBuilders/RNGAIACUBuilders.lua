@@ -274,7 +274,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } }, -- If our energy is trending into negatives
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2 }},
@@ -722,9 +721,9 @@ BuilderGroup {
         BuilderData = {
             Assist = {
                 AssisteeType = categories.ENGINEER,
-                AssistRange = 30,
+                AssistRange = 35,
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},
+                BeingBuiltCategories = {categories.ENERGYPRODUCTION, categories.MASSEXTRACTION, categories.FACTORY, categories.STRUCTURE * categories.DEFENSE},
                 Time = 45,
             },
         }
