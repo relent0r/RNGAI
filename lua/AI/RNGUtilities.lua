@@ -197,11 +197,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
                                 self:SetCustomName('Engineer in reclaim loop')
                                 if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                    RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                    RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                    --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                    --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
                                     idleCounter = idleCounter + 1
                                     if idleCounter > 15 then
-                                        RNGLOG('idleCounter hit, breaking loop')
+                                        --RNGLOG('idleCounter hit, breaking loop')
                                         break
                                     end
                                 end

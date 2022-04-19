@@ -223,9 +223,9 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
         -- Need to update this to playable_area as it turns out that its 8 from that not the scenarioinfo size. See regor_highlands.
         if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[3] - playableArea[2] <= 8 or relativeLoc[3] >= playableArea[4] - 8 then
-            LOG('Playable Area 1, 3 '..repr(playableArea))
-            LOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
-            LOG('BorderWarning is true, location is '..repr(relativeLoc))
+            --LOG('Playable Area 1, 3 '..repr(playableArea))
+            --LOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
+            --LOG('BorderWarning is true, location is '..repr(relativeLoc))
             borderWarning = true
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build

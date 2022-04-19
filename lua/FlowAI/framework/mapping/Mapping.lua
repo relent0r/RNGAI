@@ -867,9 +867,9 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-    RNGLOG('Display Marker Adjacency Running')
+    --RNGLOG('Display Marker Adjacency Running')
     while not aiBrain.ZonesInitialized do
-        LOG('Waiting for Zones to Initialize')
+        --LOG('Waiting for Zones to Initialize')
         coroutine.yield(20)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers

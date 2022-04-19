@@ -1032,7 +1032,7 @@ MapReclaimAnalysis = function(aiBrain)
                 end
             end
             aiBrain.StartReclaimCurrent = startReclaim
-            LOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
+            --LOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
         end
         coroutine.yield(300)
     end
@@ -1076,7 +1076,7 @@ end
 TacticalThreatAnalysisRNG = function(aiBrain)
     local ALLBPS = __blueprints
 
-    LOG("Started analysis for: " .. aiBrain.Nickname)
+    --LOG("Started analysis for: " .. aiBrain.Nickname)
     local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
 
     aiBrain.EnemyIntel.DirectorData = {
@@ -1354,7 +1354,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     aiBrain.EnemyIntel.DirectorData.Factory = factoryUnits
     aiBrain.EnemyIntel.DirectorData.Energy = energyUnits
 
-    LOG("Finished analysis for: " .. aiBrain.Nickname)
+    --LOG("Finished analysis for: " .. aiBrain.Nickname)
     local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
-    LOG("Time of analysis: " .. (finishedAnalysisAt - startedAnalysisAt))
+    --LOG("Time of analysis: " .. (finishedAnalysisAt - startedAnalysisAt))
 end

@@ -740,10 +740,10 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             end
         end
         if retUnit then
-            LOG('Satellite has target')
+            --LOG('Satellite has target')
             return retUnit
         else
-            LOG('Satellite did not get target')
+            --LOG('Satellite did not get target')
         end
     end
 

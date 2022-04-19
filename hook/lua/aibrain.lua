@@ -1270,12 +1270,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 WARN('Missing zone for builder manager land node or no path markers')
             end
             if zone then
-                LOG('Zone set for builder manager')
+                --LOG('Zone set for builder manager')
                 self.BuilderManagers[baseName].Zone = zone
-                LOG('Zone is '..self.BuilderManagers[baseName].Zone)
+                --LOG('Zone is '..self.BuilderManagers[baseName].Zone)
                 zoneSet = true
             else
-                LOG('No zone for builder manager')
+                --LOG('No zone for builder manager')
             end
             coroutine.yield(30)
         end
@@ -2627,13 +2627,13 @@ AIBrain = Class(RNGAIBrainClass) {
                            --LOG('There is an engineer in the army pool with Active set '..v.UnitId)
                         end
                     end
-                    LOG('DistributionTable '..repr(self.EngineerDistributionTable))
+                    --LOG('DistributionTable '..repr(self.EngineerDistributionTable))
                     local reclaimRatio = self.EngineerDistributionTable.Reclaim / self.EngineerDistributionTable.Total
-                    LOG('Engineer Reclaim Ratio '..reclaimRatio)
+                    --LOG('Engineer Reclaim Ratio '..reclaimRatio)
                     local assistRatio = self.EngineerDistributionTable.Assist / self.EngineerDistributionTable.Total
-                    LOG('Engineer Assist Ratio '..reclaimRatio)
-                    LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
-                    LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
+                    --LOG('Engineer Assist Ratio '..reclaimRatio)
+                    --LOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
+                    --LOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
@@ -2717,7 +2717,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(150,200))
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
-                LOG('Run TacticalThreatAnalysisRNG')
+                --LOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
             end
             self:CalculateMassMarkersRNG()
@@ -2750,13 +2750,13 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not self.EnemyIntel.ChokeFlag then
                 self.ProductionRatios.Naval = self.DefaultNavalRatio
             end
-            LOG('aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount'..self.EnemyIntel.EnemyCount..' '..self.BrainIntel.AllyCount)
-            LOG('Mass Marker Count '..self.BrainIntel.SelfThreat.MassMarker)
-            LOG('self.BrainIntel.SelfThreat.ExtractorCount '..self.BrainIntel.SelfThreat.ExtractorCount)
-            LOG('self.BrainIntel.MassSharePerPlayer '..self.BrainIntel.MassSharePerPlayer)
+            --LOG('aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount'..self.EnemyIntel.EnemyCount..' '..self.BrainIntel.AllyCount)
+            --LOG('Mass Marker Count '..self.BrainIntel.SelfThreat.MassMarker)
+            --LOG('self.BrainIntel.SelfThreat.ExtractorCount '..self.BrainIntel.SelfThreat.ExtractorCount)
+            --LOG('self.BrainIntel.MassSharePerPlayer '..self.BrainIntel.MassSharePerPlayer)
             if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.MassSharePerPlayer then
                 if self.EconomyUpgradeSpend < 0.35 then
-                    LOG('Increasing EconomyUpgradeSpend to 0.36')
+                    --LOG('Increasing EconomyUpgradeSpend to 0.36')
                     self.EconomyUpgradeSpend = 0.36
                 end
             elseif self.EconomyUpgradeSpend > 0.35 then
