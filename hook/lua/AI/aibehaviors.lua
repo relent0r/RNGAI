@@ -3305,12 +3305,14 @@ GetStartingReclaim = function(aiBrain)
                 end
             end
             if not IsProp(v) then continue end
-            if v.MaxMassReclaim and v.MaxMassReclaim > minRec or v.MaxEnergyReclaim and v.MaxEnergyReclaim > minRec then
-                --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
-                local rpos = v.CachePosition
-                --RNGINSERT(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
-                RNGINSERT(reclaimTable, { Reclaim = v })
-                --RNGLOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
+            if v.MaxMassReclaim or v.MaxEnergyReclaim  then
+                if v.MaxMassReclaim > minRec or v.MaxEnergyReclaim > minRec then
+                    --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
+                    local rpos = v.CachePosition
+                    --RNGINSERT(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
+                    RNGINSERT(reclaimTable, { Reclaim = v })
+                    --RNGLOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
+                end
                 reclaimTotal = reclaimTotal + v.MaxMassReclaim
             end
         end

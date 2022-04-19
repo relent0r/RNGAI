@@ -1114,20 +1114,20 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
     end
     if not AdaptiveResourceMarkerTableRNG[masspoint].zoneid then
         if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
-            local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
+            local zone = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Naval.index)
             if zone then
-                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Naval.index)
+                --LOG('Zone found, adding zone to naval mass marker '..zone)
+                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = zone
             else
                 WARN('No zone returned for mass point marker during initial infection, this should have been a naval zone')
             end
         else
-            local zone = map:GetZoneID(marker.position,aiBrain.Zones.Naval)
+            local zone = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Land.index)
             if zone then
-                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Land.index)
+                --LOG('Zone found, adding zone to land mass marker '..zone)
+                AdaptiveResourceMarkerTableRNG[masspoint].zoneid = zone
             else
                 WARN('No zone returned for mass point marker during initial infection, this should have been a land zone')
-                LOG('Marker name is '..masspoint)
-                LOG('Resource Marker Table entry '..repr(AdaptiveResourceMarkerTableRNG[masspoint]))
             end
         end
     end

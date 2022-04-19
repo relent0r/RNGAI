@@ -25,6 +25,9 @@ Unit = Class(RNGUnitClass) {
                 if v == 'HeatSink' then
                     threatReturn = threatReturn + 5
                 end
+                if v == 'Shield' then
+                    threatReturn = threatReturn + 10
+                end
             end
         end
         return threatReturn

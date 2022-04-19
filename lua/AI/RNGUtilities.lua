@@ -4023,8 +4023,8 @@ function CalculatedDPSRNG(weapon)
     local MathMax = math.max
     local MathFloor = math.floor
     local ProjectileCount
-    LOG('Running Calculated DPS')
-    LOG('Weapon '..repr(weapon))
+    --LOG('Running Calculated DPS')
+    --LOG('Weapon '..repr(weapon))
     if weapon.MuzzleSalvoDelay == 0 then
         ProjectileCount = MathMax(1, RNGGETN(weapon.RackBones[1].MuzzleBones or {'nehh'} ) )
     else

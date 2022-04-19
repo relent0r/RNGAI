@@ -494,7 +494,7 @@ StructureManager = Class {
                 end
             end
         end
-        if (self.Brain.RNGEXP or factionIndex == 2) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
+        if (self.Brain.RNGEXP or (factionIndex == 2 and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             LOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
             if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 28.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 then
                 LOG('RNGEXP Factory Upgrade efficiency over time check passed')
@@ -926,21 +926,15 @@ StructureManager = Class {
     end,
     
     ValidateExtractorUpgradeRNG = function(self, aiBrain, ALLBPS, extractorTable, allTiers)
-        LOG('ValidateExtractorUpgrade Stuff')
+        --LOG('ValidateExtractorUpgrade Stuff')
         local UnitPos
         local DistanceToBase
         local LowestDistanceToBase
         local lowestUnit = false
         local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
-        LOG('BasePosition is '..repr(BasePosition))
+        --LOG('BasePosition is '..repr(BasePosition))
         if extractorTable then
-            LOG('extractorTable present in upgrade validation')
-            if extractorTable then
-                LOG('extractorTable has '..table.getn(extractorTable.TECH1)..' T1 units in it')
-                LOG('extractorTable has '..table.getn(extractorTable.TECH2)..' T2 units in it')
-            else
-                LOG('extractorTable is nil')
-            end
+            --LOG('extractorTable present in upgrade validation')
             for _, v in extractorTable do
                 if not allTiers and RNGGETN(extractorTable.TECH1) > 0 then
                     for _, c in extractorTable.TECH1 do
@@ -1065,10 +1059,8 @@ StructureManager = Class {
                 end
             end
             if upgradedExtractor and not upgradedExtractor.Dead then
-                if EntityCategoryContains(categories.TECH3, upgradedExtractor) then
-                    if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 2500 then
-                        upgradedExtractor.MAINBASE = true
-                    end
+                if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 2500 then
+                    upgradedExtractor.MAINBASE = true
                 end
             end
         else
@@ -1089,7 +1081,7 @@ StructureManager = Class {
         else
             multiplier = 1
         end
-        LOG('Initial Delay loop starting')
+        --LOG('Initial Delay loop starting')
         while initial_delay < (60 / multiplier) do
             if not unit.Dead and GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 500 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
@@ -1100,7 +1092,7 @@ StructureManager = Class {
             --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
             coroutine.yield(100)
         end
-        LOG('Initial Delay loop completing')
+        --LOG('Initial Delay loop completing')
         unit.InitialDelayCompleted = true
     end,
 
