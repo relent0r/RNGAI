@@ -415,7 +415,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=70,
+                            bomber=30,
                             gunship=30,
                             torpedo=0,
                             total=0
@@ -546,7 +546,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=85,
+                            bomber=45,
                             gunship=15,
                             torpedo=0,
                             total=0
@@ -609,7 +609,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=75,
+                            bomber=50,
                             gunship=15,
                             torpedo=0,
                             total=0
@@ -2175,6 +2175,8 @@ AIBrain = Class(RNGAIBrainClass) {
         ]]
         coroutine.yield(Random(5,20))
         local ALLBPS = __blueprints
+        local LandCatUnits = categories.LAND + categories.AMPHIBIOUS + categories.COMMAND
+        local AirSurfaceCatUnits = categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER)
         self.BasePerimeterMonitor = {}
         while true do
             for k, v in self.BuilderManagers do
@@ -2193,12 +2195,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     for _, unit in enemyUnits do
                         if unit and not unit.Dead then
                             if ALLBPS[unit.UnitId].CategoriesHash.MOBILE then
-                                if ALLBPS[unit.UnitId].CategoriesHash.LAND then
+                                if EntityCategoryContains(LandCatUnits, unit) then
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
                                     continue
                                 end
-                                if EntityCategoryContains( categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER), unit) then
+                                if EntityCategoryContains(AirSurfaceCatUnits, unit) then
                                     antiSurfaceAir = antiSurfaceAir + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                                     continue
@@ -2917,63 +2919,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfIndex = self:GetArmyIndex()
         local GetPosition = moho.entity_methods.GetPosition
         local bp
-        --[[
-        local brainAirUnits = GetListOfUnits( self, (categories.AIR * categories.MOBILE) - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.EXPERIMENTAL, false, false)
-        local airthreat = 0
-        local antiAirThreat = 0
-        
-
-		-- calculate my present airvalue			
-		for _,v in brainAirUnits do
-            -- previous method of getting unit ID before the property was added.
-            --local unitbpId = v:GetUnitId()
-            --RNGLOG('Unit blueprint id test only on dev branch:'..v.UnitId)
-			bp = ALLBPS[v.UnitId].Defense
-
-            airthreat = airthreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-            antiAirThreat = antiAirThreat + bp.AirThreatLevel
-        end
-        --RNGLOG('My Air Threat is'..airthreat)
-        self.BrainIntel.SelfThreat.AirNow = airthreat
-        self.BrainIntel.SelfThreat.AntiAirNow = antiAirThreat
-        ]]
-        --[[if airthreat > 0 then
-            local airSelfThreat = {Threat = airthreat, InsertTime = GetGameTimeSeconds()}
-            RNGINSERT(self.BrainIntel.SelfThreat.Air, airSelfThreat)
-            --RNGLOG('Total Air Unit Threat :'..airthreat)
-            --RNGLOG('Current Self Air Threat Table :'..repr(self.BrainIntel.SelfThreat.Air))
-            local averageSelfThreat = 0
-            for k, v in self.BrainIntel.SelfThreat.Air do
-                averageSelfThreat = averageSelfThreat + v.Threat
-            end
-            self.BrainIntel.Average.Air = averageSelfThreat / RNGGETN(self.BrainIntel.SelfThreat.Air)
-            --RNGLOG('Current Self Average Air Threat Table :'..repr(self.BrainIntel.Average.Air))
-        end]]
         coroutine.yield(1)
-        --[[
-        local brainExtractors = GetListOfUnits( self, categories.STRUCTURE * categories.MASSEXTRACTION, false, true)
-        local selfExtractorCount = 0
-        local selfExtractorThreat = 0
-
-        for _,v in brainExtractors do
-            selfExtractorThreat = selfExtractorThreat + ALLBPS[v.UnitId].Defense.EconomyThreatLevel
-            selfExtractorCount = selfExtractorCount + 1
-            -- This bit is important. This is so that if the AI is given or captures any extractors it will start an upgrade thread and distress thread on them.
-            if (not v.Dead) and (not v.PlatoonHandle) then
-                if v:GetFractionComplete() == 1 then
-                    --RNGLOG('This extractor has no platoon handle')
-                    if not self.StructurePool then
-                        RUtils.CheckCustomPlatoons(self)
-                    end
-                    local StructurePool = self.StructurePool
-                    --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
-                    self:AssignUnitsToPlatoon(StructurePool, {v}, 'Support', 'none' )
-                end
-            end
-        end
-        self.BrainIntel.SelfThreat.Extractor = selfExtractorThreat
-        self.BrainIntel.SelfThreat.ExtractorCount = selfExtractorCount
-        ]]
         local allyBrains = {}
         for index, brain in ArmyBrains do
             if index ~= self:GetArmyIndex() then
@@ -3034,28 +2980,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
         --RNGLOG('SelfExtractorThreat is '..self.BrainIntel.SelfThreat.Extractor)
         coroutine.yield(1)
-        --[[
-        local brainNavalUnits = GetListOfUnits( self, (categories.MOBILE * categories.NAVAL) + (categories.NAVAL * categories.FACTORY) + (categories.NAVAL * categories.DEFENSE), false, false)
-        local navalThreat = 0
-        local navalSubThreat = 0
-        for _,v in brainNavalUnits do
-            bp = ALLBPS[v.UnitId].Defense
-            navalThreat = navalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-            navalSubThreat = navalSubThreat + bp.SubThreatLevel
-        end
-        self.BrainIntel.SelfThreat.NavalNow = navalThreat
-        self.BrainIntel.SelfThreat.NavalSubNow = navalSubThreat
-
-        coroutine.yield(1)
-        local brainLandUnits = GetListOfUnits( self, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
-        local landThreat = 0
-        for _,v in brainLandUnits do
-            bp = ALLBPS[v.UnitId].Defense
-            landThreat = landThreat + bp.SurfaceThreatLevel
-        end
-        self.BrainIntel.SelfThreat.LandNow = landThreat
-        --RNGLOG('Self LandThreat is '..self.BrainIntel.SelfThreat.LandNow)
-        ]]
     end,
 
     IMAPConfigurationRNG = function(self)
@@ -4996,7 +4920,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
                     totalAirThreat = totalAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
-                    
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyAirTiers.T1=armyAirTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then

@@ -120,26 +120,18 @@ PlatoonTemplate {
         UEF = {
             { 'uea0102', 1, 2, 'Attack', 'None' },
             { 'uea0101', 1, 1, 'scout', 'None' },
-            { 'uea0102', 1, 1, 'Attack', 'None' },
-            { 'uea0101', 1, 2, 'scout', 'None' }
         },
         Aeon = {
             { 'uaa0102', 1, 2, 'Attack', 'None' },
             { 'uaa0101', 1, 1, 'scout', 'None' },
-            { 'uaa0102', 1, 1, 'Attack', 'None' },
-            { 'uaa0101', 1, 2, 'scout', 'None' }
         },
         Cybran = {
             { 'ura0102', 1, 2, 'Attack', 'None' },
             { 'ura0101', 1, 1, 'scout', 'None' },
-            { 'ura0102', 1, 1, 'Attack', 'None' },
-            { 'ura0101', 1, 2, 'scout', 'None' }
         },
         Seraphim = {
             { 'xsa0102', 1, 2, 'Attack', 'None' },
             { 'xsa0101', 1, 1, 'scout', 'None' },
-            { 'xsa0102', 1, 1, 'Attack', 'None' },
-            { 'xsa0101', 1, 2, 'scout', 'None' }
         },
     }
 }

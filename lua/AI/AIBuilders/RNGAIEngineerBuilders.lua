@@ -220,7 +220,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 600, -- Top factory priority
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 0.7 }},
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
         },
@@ -243,9 +243,9 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 850, -- Top factory priority
         BuilderConditions = {
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
         },
         BuilderType = 'All',
     },
@@ -254,9 +254,9 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8} },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 10, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8} },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
         },
         BuilderType = 'All',
     },
@@ -450,7 +450,7 @@ BuilderGroup {
         PriorityFunction = AirDefenseScramble,
         InstanceCount = 10,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
         },
         BuilderData = {
             JobType = 'Assist',
@@ -760,7 +760,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, categories.TECH3 * categories.ENERGYPRODUCTION}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },

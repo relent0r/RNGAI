@@ -170,7 +170,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             coroutine.yield(20)
                         end
                         engPos = self:GetPosition()
-                        local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
+                        local rectDef = Rect(engPos[1] - 8, engPos[3] - 8, engPos[1] + 8, engPos[3] + 8)
                         local reclaimRect = GetReclaimablesInRect(rectDef)
                         local engReclaiming = false
                         if reclaimRect then
@@ -224,42 +224,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
                     tableSize = RNGGETN(aiBrain.StartReclaimTable)
                 end
-
-                --[[for k, r in aiBrain.StartReclaimTable do
-                    if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                        reclaimCount = reclaimCount + 1
-                        --RNGLOG('Reclaim Function - Issuing reclaim')
-                        --RNGLOG('Reclaim distance is '..r.Distance)
-                        IssueReclaim({self}, r.Reclaim)
-                        coroutine.yield(20)
-                        local reclaimTimeout = 0
-                        local massOverflow = false
-                        while aiBrain:PlatoonExists(platoon) and r.Reclaim and (not IsDestroyed(r.Reclaim)) and (reclaimTimeout < 20) do
-                            reclaimTimeout = reclaimTimeout + 1
-                            --RNGLOG('Waiting for reclaim to no longer exist')
-                            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
-                                -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
-                                -- watch out for thrashing as I don't have a minimum storage check on this builder
-                                LOG('We are overflowing mass return from early reclaim thread')
-                                IssueClearCommands({self})
-                                return
-                            end
-                            coroutine.yield(20)
-                        end
-                        --RNGLOG('Reclaim Count is '..reclaimCount)
-                        if reclaimCount > 10 then
-                            break
-                        end
-                    else
-                        --RNGLOG('Reclaim is no longer valid')
-                    end
-                    --RNGLOG('Set key to nil')
-                    aiBrain.StartReclaimTable[k] = nil
-                end
-                ]]
-                --RNGLOG('Pre Rebuild Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
-                --aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
-                --RNGLOG('Reclaim table has '..RNGGETN(aiBrain.StartReclaimTable)..' reclaim left')
                 
                 if RNGGETN(aiBrain.StartReclaimTable) == 0 then
                     --RNGLOG('Start Reclaim Taken set to true')
@@ -392,12 +356,12 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
-                                if square[1] - 10 <= 3 or square[1] + 10 >= ScenarioInfo.size[1] - 3 or square[3] - 10 <= 3 or square[3] + 10 >= ScenarioInfo.size[1] - 3 then
+                                if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
                                     --LOG('Grid square position outside of map border')
                                     continue
                                 end
                                 --LOG('reclaimGrid square table is '..repr(square))
-                                local rectDef = Rect(square[1] - 10, square[3] - 10, square[1] + 10, square[3] + 10)
+                                local rectDef = Rect(square[1] - 8, square[3] - 8, square[1] + 8, square[3] + 8)
                                 local reclaimRect = GetReclaimablesInRect(rectDef)
                                 local engReclaiming = false
                                 if reclaimRect then
@@ -412,7 +376,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                             end
                                         end
                                         if blacklisted then continue end
-                                        if b.MaxMassReclaim and b.MaxMassReclaim > 8 then
+                                        if b.MaxMassReclaim and b.MaxMassReclaim > 5 then
                                             engReclaiming = true
                                             reclaimCount = reclaimCount + 1
                                             IssueReclaim({self}, b)
@@ -1770,12 +1734,12 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
         enemyIndex = enemyBrain:GetArmyIndex()
     end
     local totalThreat = 0
+    local unitThreatTable = {}
     local acuPresent = false
     local acuUnit = false
     local RangeList = {
-        [1] = 10,
-        [2] = maxRange,
-        [3] = maxRange + 30,
+        [1] = maxRange,
+        [2] = maxRange + 30,
     }
     local TargetUnit = false
     local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
@@ -1802,9 +1766,12 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
             distance = maxRange * maxRange
             --RNGLOG('* AIFindNearestCategoryTargetInRange: numTargets '..RNGGETN(TargetsInRange)..'  ')
             for num, Target in TargetsInRange do
-                totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
+                end
+                if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
+                    totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                    unitThreatTable[Target.Sync.id] = true
                 end
                 TargetPosition = Target:GetPosition()
                 EnemyStrength = 0
