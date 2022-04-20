@@ -6605,7 +6605,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                             coroutine.yield(15)
                             if retreatTimeout > 3 then
-                                LOG('platoon stopped chasing unit')
+                                --LOG('platoon stopped chasing unit')
                                 break
                             end
                             if self.PlatoonData.Avoid then

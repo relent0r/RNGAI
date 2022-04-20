@@ -846,7 +846,7 @@ function PerformACUReclaim(aiBrain, cdr)
     local reclaimRect = GetReclaimablesInRect(rectDef)
     local reclaiming = false
     local maxReclaimCount = 0
-    aiBrain:ForkThread(drawRect, cdr)
+    --aiBrain:ForkThread(drawRect, cdr)
     if reclaimRect then
         local reclaimed = false
         local closeReclaim = {}
@@ -1556,7 +1556,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if continueFighting == true then
                 if cdr.Caution and not cdr.SnipeMode and not cdr.SuicideMode then
-                    RNGLOG('cdr.Caution has gone true, continueFighting is false, caution reason '..cdr.CautionReason)
+                    --RNGLOG('cdr.Caution has gone true, continueFighting is false, caution reason '..cdr.CautionReason)
                     continueFighting = false
                     if target and not target.Dead then
                         local targetPos = target:GetPosition()
