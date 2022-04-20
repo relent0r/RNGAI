@@ -188,6 +188,7 @@ function CDRBrainThread(cdr)
         if cdr.Health < 5000 and cdr.DistanceToHome > 900 then
             --LOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
+            cdr.CautionReason = 'lowhealth'
         end
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
@@ -748,8 +749,10 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         if totalThreat > cdr.ThreatLimit then
                             --LOG('cdr caution is true due to total threat around acu higher than threat limit total threat is '..totalThreat..' threat limit is '..cdr.ThreatLimit)
                             cdr.Caution = true
+                            cdr.CautionReason = 'acuMovementHighThreat'
                         else
                             cdr.Caution = false
+                            cdr.CautionReason = 'none'
                         end
                         if acuInRange then
                            --RNGLOG('Enemy ACU in range of ACU')
@@ -1127,6 +1130,7 @@ function CDRThreatAssessmentRNG(cdr)
                 end
             end
             friendlyUnitThreat = friendlyUnitThreat + friendlyUnitThreatInner
+            local enemyACUHealthModifier = 1.0
             for k,v in enemyUnits do
                 if v and not v.Dead then
                     if VDist3Sq(v:GetPosition(), cdr.Position) < 1225 then
@@ -1136,6 +1140,7 @@ function CDRThreatAssessmentRNG(cdr)
                         if EntityCategoryContains(categories.COMMAND, v) then
                             enemyACUPresent = true
                             enemyUnitThreatInner = enemyUnitThreatInner + v:EnhancementThreatReturn()
+                            enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
                         else
                             enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
@@ -1155,6 +1160,7 @@ function CDRThreatAssessmentRNG(cdr)
             enemyUnitThreat = enemyUnitThreat + enemyUnitThreatInner
             if enemyACUPresent then
                 cdr.EnemyCDRPresent = true
+                cdr.EnemyACUModifiedThreat = enemyUnitThreatInner * enemyACUHealthModifier
             else
                 cdr.EnemyCDRPresent = false
             end
@@ -1172,18 +1178,23 @@ function CDRThreatAssessmentRNG(cdr)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
+                cdr.CautionReason = 'enemyUnitThreatInnerACU'
             elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
                 cdr.Caution = true
+                cdr.CautionReason = 'enemyUnitThreatACU'
             elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
                 cdr.Caution = true
+                cdr.CautionReason = 'enemyUnitThreatInner'
             elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
+                cdr.CautionReason = 'enemyUnitThreat'
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
+                cdr.CautionReason = 'none'
             end
             if aiBrain.BrainIntel.SelfThreat.LandNow > 0 then
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + aiBrain.BrainIntel.SelfThreat.LandNow
@@ -1399,6 +1410,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                --RNGLOG('Enemy Threat number '..realEnemyThreat)
                                --RNGLOG('Friendly threat was '..friendlyUnitThreat)
                                 cdr.Caution = true
+                                cdr.CautionReason = 'acuOverChargeTargetCheck'
                                 if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.6 then
                                     --RNGLOG('retreat towards home')
                                     cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
@@ -1457,7 +1469,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 plat.BuilderName = 'CDR Combat'
                                 aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
                             end
-                            local checkPoints = DrawCirclePoints(6, 10, movePos)
+                            local checkPoints = DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
                                --RNGLOG('Check points for alternative fire position '..repr(v))
@@ -1544,7 +1556,7 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if continueFighting == true then
                 if cdr.Caution and not cdr.SnipeMode and not cdr.SuicideMode then
-                    --RNGLOG('cdr.Caution has gone true, continueFighting is false')
+                    RNGLOG('cdr.Caution has gone true, continueFighting is false, caution reason '..cdr.CautionReason)
                     continueFighting = false
                     if target and not target.Dead then
                         local targetPos = target:GetPosition()
@@ -1612,6 +1624,7 @@ function CDRDistressMonitorRNG(aiBrain, cdr)
             if (enemyThreat - (enemyCdrThreat / 1.4)) >= (friendlyThreat + (cdrThreat * 0.3)) then
                 --LOG('cdr caution set true from CDRDistressMonitorRNG')
                 cdr.Caution = true
+                cdr.CautionReason = 'distressMonitor'
             end
             if distressLoc and (VDist2(distressLoc[1], distressLoc[3], cdrPos[1], cdrPos[3]) < distressRange) then
                 IssueClearCommands({cdr})

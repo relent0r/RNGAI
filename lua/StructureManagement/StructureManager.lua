@@ -1073,7 +1073,7 @@ StructureManager = Class {
         local initial_delay = 0
         local multiplier = 1
         local ecoStartTime = GetGameTimeSeconds()
-        local ecoTimeOut = 420
+        local ecoTimeOut = 300
         unit.InitialDelayCompleted = false
         unit.InitialDelayStarted = true
         if aiBrain.CheatEnabled then

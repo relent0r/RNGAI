@@ -77,7 +77,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 FighterBomber',
         PlatoonTemplate = 'T2FighterBomber',
-        Priority = 750,
+        Priority = 749,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
