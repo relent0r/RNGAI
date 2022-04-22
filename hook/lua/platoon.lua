@@ -4515,8 +4515,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                        if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 45, 'Enemy') > 0 then
-                            local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), PlatoonPos, 45, 'Enemy')
+                        if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
+                            local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy')
                             for _, unit in enemyUnits do
                                 enemyUnitPos = unit:GetPosition()
                                 if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
@@ -4532,9 +4532,20 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     end
                                 elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
                                     LOG('MexBuild found enemy unit, try avoid it')
-                                    IssueClearCommands({eng})
-                                    IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, PlatoonPos, 50))
-                                    coroutine.yield(60)
+                                    if VDist3Sq(enemyUnitPos, PlatoonPos) < 81 then
+                                        LOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                        if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                            if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyUnitPos[1], enemyUnitPos[3]) < 100 then
+                                                IssueClearCommands({eng})
+                                                IssueReclaim({eng}, unit)
+                                                break
+                                            end
+                                        end
+                                    else
+                                        IssueClearCommands({eng})
+                                        IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, PlatoonPos, 50))
+                                        coroutine.yield(60)
+                                    end
                                 end
                             end
                         end
@@ -6835,20 +6846,22 @@ Platoon = Class(RNGAIPlatoonClass) {
                             else
                                 RNGLOG('Current zone is '..self.Zone)
                             end
-                            if aiBrain.Zones.Land.zones[self.Zone].edges then
-                                for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
-                                    RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
-                                    if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]) > 0.6 then
-                                        alternateZone = v.zone.id
-                                        alternatePos = v.zone.pos
+                            if self.Zone and aiBrain.BuilderManagers['Main'].Zone and self.Zone ~= aiBrain.BuilderManagers['Main'].Zone then
+                                if aiBrain.Zones.Land.zones[self.Zone].edges then
+                                    for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
+                                        RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
+                                        if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]) > 0.6 then
+                                            alternateZone = v.zone.id
+                                            alternatePos = v.zone.pos
+                                        end
                                     end
-                                end
-                            else
-                                RNGLOG('aiBrain.Zones.Land.zones[self.Zone].edges is nil ')
-                                if self.Zone then
-                                    RNGLOG('We are in zone '..self.Zone)
                                 else
-                                    RNGLOG('Platoons Zone is false or nil for some reason')
+                                    RNGLOG('aiBrain.Zones.Land.zones[self.Zone].edges is nil ')
+                                    if self.Zone then
+                                        RNGLOG('We are in zone '..self.Zone)
+                                    else
+                                        RNGLOG('Platoons Zone is false or nil for some reason')
+                                    end
                                 end
                             end
                             if not alternatePos then

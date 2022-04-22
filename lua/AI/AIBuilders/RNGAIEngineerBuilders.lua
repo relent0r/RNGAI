@@ -103,7 +103,7 @@ BuilderGroup {
         Priority = 893,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
@@ -149,7 +149,7 @@ BuilderGroup {
         Priority = 894,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH2 } },
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
         },
@@ -173,7 +173,7 @@ BuilderGroup {
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH3 } },
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
         },
