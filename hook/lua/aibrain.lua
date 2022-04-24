@@ -1073,6 +1073,13 @@ AIBrain = Class(RNGAIBrainClass) {
 
     end,
 
+    drawMainRestricted = function(self)
+        while true do
+            DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
+            WaitTicks(2)
+        end
+    end,
+
     ZoneSetup = function(self)
         WaitTicks(1)
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
@@ -2178,6 +2185,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local LandCatUnits = categories.LAND + categories.AMPHIBIOUS + categories.COMMAND
         local AirSurfaceCatUnits = categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER)
         self.BasePerimeterMonitor = {}
+        self:ForkThread(self.drawMainRestricted)
         while true do
             for k, v in self.BuilderManagers do
                 local landUnits = 0

@@ -28,6 +28,20 @@ local LandThreat = function(self, aiBrain)
     end
 end
 
+local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
+    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+    local enemyCount = 1
+    if aiBrain.EnemyIntel.EnemyCount > 0 then
+        enemyCount = aiBrain.EnemyIntel.EnemyCount
+    end
+    if myAirThreat * 1.3 < (enemyAirThreat / enemyCount) then
+        return 1015
+    else
+        return 0
+    end
+end
+
 local ActiveExpansion = function(self, aiBrain, builderManager)
     --RNGLOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
@@ -236,7 +250,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -253,12 +267,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Path Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 1000,
+        Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.70 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
@@ -318,6 +332,33 @@ BuilderGroup {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildClose = false,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T1 Main Response',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 0,
+        PriorityFunction = AirDefenseScramble,
+        DelayEqualBuildPlattons = {'Factories', 15},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -440,6 +481,33 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 Location = 'LocationType',
+                BuildClose = false,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T1 Main Response Large',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 0,
+        PriorityFunction = AirDefenseScramble,
+        DelayEqualBuildPlattons = {'Factories', 15},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',

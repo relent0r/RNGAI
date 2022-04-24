@@ -54,7 +54,6 @@ BuilderGroup {
         Priority = 840,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},
-            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.NAVAL }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
@@ -67,7 +66,6 @@ BuilderGroup {
         Priority = 840,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
-            --{ UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.MOBILE * categories.AIR * ( categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY ) }}, -- radius, LocationType, unitCount, categoryEnemy
             { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},

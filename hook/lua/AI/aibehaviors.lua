@@ -814,7 +814,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     end
                 end
                 if cdr.Health > 6000 and cdr.Active and (not retreat or cdr.CurrentEnemyThreat < 10) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.50 then
-                    PerformACUReclaim(aiBrain, cdr)
+                    PerformACUReclaim(aiBrain, cdr, 25)
                 end
                 coroutine.yield(15)
             end
@@ -840,7 +840,7 @@ function drawRect(aiBrain, cdr)
     end
 end
 
-function PerformACUReclaim(aiBrain, cdr)
+function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
     local cdrPos = cdr:GetPosition()
     local rectDef = Rect(cdrPos[1] - 12, cdrPos[3] - 12, cdrPos[1] + 12, cdrPos[3] + 12)
     local reclaimRect = GetReclaimablesInRect(rectDef)
@@ -852,7 +852,7 @@ function PerformACUReclaim(aiBrain, cdr)
         local closeReclaim = {}
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
-            if b.MaxMassReclaim and b.MaxMassReclaim > 25 then
+            if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
                 if VDist2Sq(cdrPos[1], cdrPos[3], b.CachePosition[1], b.CachePosition[3]) <= 100 then
                     RNGINSERT(closeReclaim, b)
                     maxReclaimCount = maxReclaimCount + 1
@@ -1338,31 +1338,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 counter = 0
                 local searchRadius = 35
                 cdr:SetCustomName('CDR searching for target')
-                repeat
-                    for k, v in cdr.atkPri do
-                        target = plat:FindClosestUnit('Attack', 'Enemy', true, v)
-                        if target and VDist3Sq(cdr.Position, target:GetPosition()) <= searchRadius * searchRadius then
-                            if not aiBrain.ACUSupport.Supported then
-                                aiBrain.ACUSupport.Supported = true
-                                --RNGLOG('* AI-RNG: ACUSupport.Supported set to true')
-                                aiBrain.ACUSupport.TargetPosition = target:GetPosition()
-                            end
-                            local cdrLayer = cdr:GetCurrentLayer()
-                            local targetLayer = target:GetCurrentLayer()
-                            if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
-                               not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                                if AIAttackUtils.CanGraphToRNG(target:GetPosition(), cdr.Position, 'Amphibious') then
-                                    break
-                                end
-                            end
-                        end
-                        target = false
-                    end
-                    searchRadius = searchRadius + 35
-                    coroutine.yield(1)
-                    --RNGLOG('No target found in sweep increasing search radius of '..searchRadius)
-                until target or searchRadius >= maxRadius or not aiBrain:PlatoonExists(plat)
-
+                target = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
                 if target then
                     cdr.Target = target
                     --RNGLOG('ACU OverCharge Target Found')
@@ -1452,7 +1428,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         IssueClearCommands({cdr})
                         --RNGLOG('Target is '..target.UnitId)
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
-                        cdr:SetCustomName('CDR standard pew pew logic')
+                        cdr:SetCustomName('CDR standard target pew pew logic')
                         local movePos
                         if snipeAttempt then
                            --LOG('Lets try snipe the target')
@@ -1590,10 +1566,10 @@ function CDROverChargeRNG(aiBrain, cdr)
             if cdr.Health > 6000 and not cdr.Caution and cdr.CurrentEnemyInnerCircle < 10 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.50 then
                 if target and not target.Dead then
                     if VDist3Sq(cdr.Position, target:GetPosition()) > 1225 then
-                        PerformACUReclaim(aiBrain, cdr)
+                        PerformACUReclaim(aiBrain, cdr, 25)
                     end
                 else
-                    PerformACUReclaim(aiBrain, cdr)
+                    PerformACUReclaim(aiBrain, cdr, 25)
                 end
             end
             if not aiBrain:PlatoonExists(plat) then
@@ -1741,7 +1717,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 if RNGGETN(base.FactoryManager.FactoryList) > 0 then
                     --LOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                     local baseDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3])
-                    if baseDistance > 1600 or baseName == 'MAIN' then
+                    if baseDistance > 1600 or (cdr.GunUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
                         if baseDistance < closestDistance then
                             closestBase = baseName
                             closestDistance = baseDistance
@@ -1790,6 +1766,7 @@ function CDRHideBehaviorRNG(aiBrain, cdr)
         cdr.GoingHome = false
         cdr.Active = false
         cdr.Upgrading = false
+        PerformACUReclaim(aiBrain, cdr, 0)
 
         local category = false
         local runShield = false

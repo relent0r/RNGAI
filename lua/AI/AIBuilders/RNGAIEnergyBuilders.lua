@@ -292,7 +292,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',

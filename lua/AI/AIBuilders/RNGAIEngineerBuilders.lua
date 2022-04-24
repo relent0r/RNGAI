@@ -103,7 +103,7 @@ BuilderGroup {
         Priority = 893,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
@@ -149,7 +149,7 @@ BuilderGroup {
         Priority = 894,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH2 } },
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
         },
@@ -173,7 +173,7 @@ BuilderGroup {
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH3 } },
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
         },
@@ -234,6 +234,20 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Excess',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 840, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.50}},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
@@ -840,6 +854,7 @@ BuilderGroup {
                 AssisteeType = categories.FACTORY,
                 PermanentAssist = true,
                 AssistClosestUnit = false,                                       
+                AssistHighestTier = true,
                 AssistUntilFinished = false,
                 Time = 180,
             },
@@ -961,11 +976,11 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
-        PlatoonTemplate = 'RNGAI T12EngineerReclaimer',
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         Priority = 900,
         InstanceCount = 8,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * (categories.TECH1 + categories.TECH2) }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },

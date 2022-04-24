@@ -126,6 +126,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -213,7 +214,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
             
         },
         BuilderType = 'Any',
