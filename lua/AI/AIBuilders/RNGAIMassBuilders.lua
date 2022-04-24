@@ -214,7 +214,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
             
         },
         BuilderType = 'Any',

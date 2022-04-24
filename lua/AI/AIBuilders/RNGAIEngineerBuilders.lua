@@ -239,6 +239,20 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Excess',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 840, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.50}},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Small',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 850, -- Top factory priority
@@ -840,6 +854,7 @@ BuilderGroup {
                 AssisteeType = categories.FACTORY,
                 PermanentAssist = true,
                 AssistClosestUnit = false,                                       
+                AssistHighestTier = true,
                 AssistUntilFinished = false,
                 Time = 180,
             },
@@ -961,11 +976,11 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
-        PlatoonTemplate = 'RNGAI T12EngineerReclaimer',
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         Priority = 900,
         InstanceCount = 8,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * (categories.TECH1 + categories.TECH2) }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
