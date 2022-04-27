@@ -56,7 +56,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend Instant',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 1010,
+        Priority = 1015,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
@@ -394,7 +394,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T1 Energy Storage Builder OverCharge',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 950,
+        Priority = 1000,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },

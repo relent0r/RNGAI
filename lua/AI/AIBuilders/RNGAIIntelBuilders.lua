@@ -29,7 +29,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Radar T1',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 950,
+        Priority = 1000,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },

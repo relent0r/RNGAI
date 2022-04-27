@@ -900,12 +900,8 @@ end
 function EngineerAssistManagerNeedsEngineers(aiBrain)
 
     if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
-        --RNGLOG('EngineerAssist condition is true')
-        --RNGLOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
         return true
     end
-    --RNGLOG('Condition aiBrain.EngineerAssistManagerBuildPower '..aiBrain.EngineerAssistManagerBuildPower)
-    --RNGLOG('EngineerAssist condition is false')
     return false
 end
 

@@ -238,13 +238,14 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if platoon.PlatoonData.ReclaimTable then
            --RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
             if aiBrain.MapReclaimTable then
-               --LOG('aiBrain MapReclaimTable exist')
+                --LOG('aiBrain MapReclaimTable exist')
+                local currentGameTime = GetGameTimeSeconds()
                 local reclaimOptions = {}
                 local maxReclaimCount = 30
                 local validLocation = false
-                for _, v in aiBrain.MapReclaimTable do
+                for k, v in aiBrain.MapReclaimTable do
                     if v.TotalReclaim > 100 then
-                        RNGINSERT(reclaimOptions, {Position = v.Position, TotalReclaim = v.TotalReclaim, Distance=VDist2Sq(engPos[1], engPos[3], v.Position[1], v.Position[3])})
+                        RNGINSERT(reclaimOptions, {Key = k, Position = v.Position, TotalReclaim = v.TotalReclaim, Distance=VDist2Sq(engPos[1], engPos[3], v.Position[1], v.Position[3])})
                     end
                 end
                 table.sort(reclaimOptions, function(a,b) return a.Distance < b.Distance end)
@@ -254,16 +255,19 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                        --RNGLOG('Early reclaim and its too far away lets go for something closer')
                         break
                     end
-                    if GetThreatAtPosition( aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 2 then
+                    if (aiBrain.MapReclaimTable[v.Key].LastAssignment < currentGameTime - 5) and GetThreatAtPosition( aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 2 then
                         if AIAttackUtils.CanGraphToRNG(engPos, v.Position, 'Amphibious') then
                            --RNGLOG('Lets go to reclaim at '..repr(v))
                             validLocation = v.Position
+                            aiBrain.MapReclaimTable[v.Key].LastAssignment = currentGameTime
                             break
                         elseif not platoon.PlatoonData.Early then
                            --RNGLOG('We want to go to this reclaim but cant graph to it, transport time? '..repr(v))
                             validLocation = v.Position
                             break
                         end
+                    else
+                        --LOG('Reclaim threat too high or recent assignment')
                     end
                 end
                 if validLocation then
@@ -1433,7 +1437,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             --LOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in mobileTargets do
                 if not v.unit.Dead and not v.unit:BeenDestroyed() then
-                    if v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
+                    if v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < math.max(55, cdrThreat) or acuDistanceToBase < 3600 or v.distance < 400 then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -1876,7 +1880,6 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     end
     local acuPresent = false
     local acuUnit = false
-    local defenseRange = 0
     local unitThreatTable = {}
     local totalThreat = 0
     local RangeList = {
@@ -1919,9 +1922,6 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                         totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                     end
                     unitThreatTable[Target.Sync.id] = true
-                    if ALLBPS[Target.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' and ALLBPS[Target.UnitId].Weapon[1].MaxRadius > defenseRange then
-                        defenseRange = ALLBPS[Target.UnitId].Weapon[1].MaxRadius
-                    end
                 end
                 TargetPosition = Target:GetPosition()
                 -- check if we have a special player as enemy
@@ -1952,13 +1952,13 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --RNGLOG('Target Found in target aquisition function')
-                return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange, TargetsInRange
+                return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange
             end
         end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat, defenseRange, TargetsInRange
+    return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
@@ -3770,98 +3770,11 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     end
     return false
 end
---[[
-function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
-    -- A small note that caught me out.
-    -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
-    -- and you wont understand why. I think the 3rd param is actually rotation not height.
-    --RNGLOG('GetBuildLocationRNG Function')
-    local buildLocation = false
-    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
-    local engPos = eng:GetPosition()
-    if adjacent then
-        --RNGLOG('Request for Adjacency')
-        local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, radius, 'Ally')
-        --RNGLOG('Test units have '..RNGGETN(testUnits)..' number of units')
-        local index = aiBrain:GetArmyIndex()
-        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
-        local template = {}
-        table.insert(template, {})
-        table.insert(template[1], { buildUnit })
-        local closeUnits = {}
-        for _, v in testUnits do
-            if not v.Dead and not v:IsBeingBuilt() and v:GetAIBrain():GetArmyIndex() == index then
-                table.insert(closeUnits, v)
-            end
-        end
-        if RNGGETN(closeUnits) > 0 then
-            for k,v in closeUnits do
-                if not v.Dead then
-                    local targetSize = v:GetBlueprint().Physics
-                    local targetPos = v:GetPosition()
-                    targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
-                    targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)
-                    -- Top/bottom of unit
-                    for i=0,((targetSize.SkirtSizeX/2)-1) do
-                        local testPos = { targetPos[1] + 1 + (i * 2), targetPos[3]-(unitSize.SkirtSizeZ/2), 0 }
-                        local testPos2 = { targetPos[1] + 1 + (i * 2), targetPos[3]+targetSize.SkirtSizeZ+(unitSize.SkirtSizeZ/2), 0 }
-                        -- check if the buildplace is to close to the border or inside buildable area
-                        if VDist2Sq(testPos[1],testPos[2],engPos[1],engPos[3])>3 and testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos)
-                        end
-                        if VDist2Sq(testPos2[1],testPos2[2],engPos[1],engPos[3])>3 and testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos2)
-                        end
-                    end
-                    -- Sides of unit
-                    for i=0,((targetSize.SkirtSizeZ/2)-1) do
-                        local testPos = { targetPos[1]+targetSize.SkirtSizeX + (unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i * 2), 0 }
-                        local testPos2 = { targetPos[1]-(unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i*2), 0 }
-                        if VDist2Sq(testPos[1],testPos[2],engPos[1],engPos[3])>3 and testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos)
-                        end
-                        if VDist2Sq(testPos2[1],testPos2[2],engPos[1],engPos[3])>3 and testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos2)
-                        end
-                    end
-                end
-            end
-            --RNGLOG('template contents '..repr(template))
-            local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, template, false, eng, nil, engPos[1], engPos[3])
-            --if location and relative then
-            --    local relativeLoc = {location[1], 0, location[2]}
-            --    buildLocation = {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}
-            --else
-            if location then
-                buildLocation = location
-            end
-        end
-    else
-        --RNGLOG('Request for Non Adjacency')
-        --RNGLOG('buildUnit '..buildUnit)
-        --RNGLOG('whatToBuild '..whatToBuild)
-        local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
-        if location and relative then
-            local relativeLoc = {location[1], 0, location[2]}
-            buildLocation = {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}
-        else
-            buildLocation = location
-        end
-    end
-    if buildLocation then
-       --RNGLOG('Build Location returned '..repr(buildLocation))
-       --RNGLOG('What to build returned '..repr(whatToBuild))
-        return buildLocation, whatToBuild
-    end
-   --LOG('GetBuildLocationRNG is false')
-    return false
-end]]
 
 function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
     -- and you wont understand why. I think the 3rd param is actually rotation not height.
-    --RNGLOG('GetBuildLocationRNG Function')
     local buildLocation = false
     local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
     local engPos = eng:GetPosition()
@@ -3902,15 +3815,11 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
                 local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
                 -- check if the buildplace is to close to the border or inside buildable area
                 if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                    --table.insert(template[1], testPos)
                     if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                         return heightbuildpos(testPos), whatToBuild
                     end
                 end
                 if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                    --table.insert(template[1], testPos2)
                     if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
                         if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                             return heightbuildpos(testPos), whatToBuild
@@ -3923,17 +3832,11 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
                 local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
                 local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
                 if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                    --table.insert(template[1], testPos)
                     if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
-                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
-                            return heightbuildpos(testPos), whatToBuild
-                        end
+                        return heightbuildpos(testPos), whatToBuild
                     end
                 end
                 if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                    --table.insert(template[1], testPos2)
                     if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
                         if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                             return heightbuildpos(testPos), whatToBuild
@@ -3943,10 +3846,6 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             end
         end
     else
-        -- build near the base the engineer is part of, rather than the engineer location
-        --RNGLOG('Request for Non Adjacency')
-        --RNGLOG('buildUnit '..buildUnit)
-        --RNGLOG('whatToBuild '..whatToBuild)
         local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
         if location and relative then
             local relativeLoc = {location[1], 0, location[2]}

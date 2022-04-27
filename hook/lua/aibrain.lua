@@ -126,6 +126,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
+        self.MapDimension = math.max(mapSizeX, mapSizeZ)
         if  mapSizeX > 1000 and mapSizeZ > 1000 then
             if self.RNGEXP then
                 self.DefaultLandRatio = 0.2
@@ -4582,7 +4583,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local CoreMassNumberAchieved = false
-            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 0.0 then
+            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 then
                 state = 'Energy'
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -4617,7 +4618,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
                 }
             end
-           --LOG('EngineerAssistManager State is '..state)
+            --LOG('EngineerAssistManager State is '..state)
+            --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 then
@@ -4638,16 +4640,20 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
                 CoreMassNumberAchieved = true
                 self.EngineerAssistManagerBuildPowerRequired = 16
+            elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.6 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
+                --LOG('EngineerAssistManagerBuildPower being set to 5')
+                self.EngineerAssistManagerActive = true
+                self.EngineerAssistManagerBuildPowerRequired = 5
             elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 1.0 then
                --LOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                 coroutine.yield(30)
             else
-                if self.EngineerAssistManagerBuildPowerRequired > 0 then
-                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 3
+                if self.EngineerAssistManagerBuildPowerRequired > 5 then
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 1
                 end
                 --self.EngineerAssistManagerActive = false
             end
-            coroutine.yield(30)
+            coroutine.yield(10)
         end
     end,
 
