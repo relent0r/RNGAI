@@ -464,7 +464,7 @@ BuilderGroup {
         PriorityFunction = AirDefenseScramble,
         InstanceCount = 10,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
         },
         BuilderData = {
             JobType = 'Assist',
@@ -506,7 +506,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1EngineerAssistRNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
-        InstanceCount = 3,
+        InstanceCount = 4,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.5 } },
@@ -790,7 +790,6 @@ BuilderGroup {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Land Mass Stall',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         PlatoonAIPlan = 'ReclaimStructuresRNG',
-        DelayEqualBuildPlattons = {'Reclaim', 12},
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -812,7 +811,6 @@ BuilderGroup {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Land Mass Stall',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         PlatoonAIPlan = 'ReclaimStructuresRNG',
-        DelayEqualBuildPlattons = {'Reclaim', 12},
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
@@ -838,10 +836,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Assist Factory Naval',
         PlatoonTemplate = 'T12EconAssistRNG',
+        DelayEqualBuildPlattons = {'Assist', 3},
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.025, 1.025 }},
+            { UCBC, 'CheckBuildPlattonDelay', { 'Assist' }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
         },
         BuilderType = 'Any',

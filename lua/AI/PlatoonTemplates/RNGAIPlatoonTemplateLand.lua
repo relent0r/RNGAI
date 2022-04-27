@@ -723,17 +723,17 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueNoEng',
 PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
+            { 'uel0203', 1, 1, 'Attack', 'none' },       -- Amphib Tank
          },
         Aeon = {
-            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xal0203', 1, 1, 'Attack', 'none' },      -- Amphib Tank
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
         },
         Cybran = {
-            { 'url0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'url0203', 1, 1, 'Attack', 'none' },      -- Amphib Tank
         },
         Seraphim = {
-            { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xsl0203', 1, 1, 'Attack', 'none' },      -- Amphib Tank
         },
     }
 }
@@ -741,20 +741,20 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueueSiege',
     FactionSquads = {
         UEF = {
-            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
+            { 'uel0203', 2, 3, 'Attack', 'none' },       -- Amphib Tank
             { 'uel0111', 1, 1, 'Artillery', 'none' },   -- MML
          },
         Aeon = {
-            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xal0203', 2, 3, 'Attack', 'none' },      -- Amphib Tank
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
         Cybran = {
-            { 'url0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'url0203', 2, 3, 'Attack', 'none' },      -- Amphib Tank
             { 'url0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
         Seraphim = {
-            { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xsl0203', 2, 3, 'Attack', 'none' },      -- Amphib Tank
             { 'xsl0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
     }
@@ -887,17 +887,17 @@ PlatoonTemplate { Name = 'RNGAIT3LandResponse',
 PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueue',
     FactionSquads = {
         UEF = {
-            { 'xel0305', 2, 4, 'Attack', 'none' },       -- Armoured Assault Bot
+            { 'xel0305', 1, 1, 'Attack', 'none' },       -- Armoured Assault Bot
          },
         Aeon = {
-            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xal0203', 1, 1, 'Attack', 'none' },      -- Amphib Tank
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
         },
         Cybran = {
-            { 'xrl0305', 2, 4, 'Attack', 'none' },      -- Armoured Assault Bot
+            { 'xrl0305', 1, 1, 'Attack', 'none' },      -- Armoured Assault Bot
         },
         Seraphim = {
-            { 'xsl0303', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+            { 'xsl0303', 1, 1, 'Attack', 'none' },      -- Heavy Tank
         },
     }
 }
@@ -905,20 +905,20 @@ PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueue',
 PlatoonTemplate { Name = 'RNGAIT3AmphibAttackQueueSiege',
     FactionSquads = {
         UEF = {
-            { 'xel0305', 2, 4, 'Attack', 'none' },       -- Armoured Assault Bot
+            { 'xel0305', 1, 3, 'Attack', 'none' },       -- Armoured Assault Bot
             { 'uel0304', 1, 1, 'Artillery', 'none' },   -- Artillery
          },
         Aeon = {
-            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xal0203', 1, 3, 'Attack', 'none' },      -- Amphib Tank
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0304', 1, 1, 'Artillery', 'none' },   -- Artillery
         },
         Cybran = {
-            { 'xrl0305', 2, 4, 'Attack', 'none' },      -- Armoured Assault Bot
+            { 'xrl0305', 1, 3, 'Attack', 'none' },      -- Armoured Assault Bot
             { 'url0304', 1, 1, 'Artillery', 'none' },   -- Artillery
         },
         Seraphim = {
-            { 'xsl0303', 2, 4, 'Attack', 'none' },      -- Heavy Tank
+            { 'xsl0303', 1, 3, 'Attack', 'none' },      -- Heavy Tank
             { 'xsl0304', 1, 1, 'Artillery', 'none' },   -- Artillery
         },
     }

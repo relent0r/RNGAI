@@ -529,7 +529,7 @@ function CanGraphToRNG(startPos, destPos, layer)
     return false
 end
 
-function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
+function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1EngOnly, bRequired, bSkipLastMove, safeZone)
 
     GetMostRestrictiveLayerRNG(platoon)
 
@@ -558,7 +558,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
         -- if we don't *need* transports, then just call GetTransports...
         if not bRequired then
             --  if it doesn't work, tell the aiBrain we want transports and bail
-            if AIUtils.GetTransports(platoon) == false then
+            if AIUtils.GetTransportsRNG(platoon, false, t1EngOnly) == false then
                 aiBrain.WantTransports = true
                 --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
@@ -577,7 +577,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                 aiBrain.NeedTransports = 10
             end
             
-            local bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransports(platoon)
+            local bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransportsRNG(platoon, false, t1EngOnly)
             while not bUsedTransports and counter < 7 do --Set to 7, default is 6, 9 was previous.
                 -- if we have overflow, dump the overflow and just send what we can
                 if not bUsedTransports and overflowSm+overflowMd+overflowLg > 0 then
@@ -594,7 +594,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bReq
                         units = goodunits
                     end
                 end
-                bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransports(platoon)
+                bUsedTransports, overflowSm, overflowMd, overflowLg = AIUtils.GetTransportsRNG(platoon, false, t1EngOnly)
                 if bUsedTransports then
                     break
                 end
@@ -1094,13 +1094,13 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         local usedTransports = false
         local position = platoon:GetPlatoonPosition()
         if (not path and reason == 'NoPath') or bNeedTransports then
-            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false, true)
         -- Require transports over 500 away
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then
-            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false, true)
         -- use if possible at 250
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 256*256 then
-            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false, false)
         end
 
         if not usedTransports then

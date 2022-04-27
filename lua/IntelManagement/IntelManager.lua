@@ -985,7 +985,7 @@ CreateReclaimGrid = function(aiBrain)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
                 continue
             end
-            table.insert(reclaimGrid, { Position = {cx, GetTerrainHeight(cx, cz), cz}, Size = { sx = fx, sz = fz}, TotalReclaim = 0, AirThreat = 0, SurfaceThreat = 0, NavalThreat = 0, LastUpdate = 0 })
+            table.insert(reclaimGrid, { Position = {cx, GetTerrainHeight(cx, cz), cz}, Size = { sx = fx, sz = fz}, TotalReclaim = 0, AirThreat = 0, SurfaceThreat = 0, NavalThreat = 0, LastUpdate = 0, LastAssignment = 0, })
         end
     end
     aiBrain.MapReclaimTable = reclaimGrid

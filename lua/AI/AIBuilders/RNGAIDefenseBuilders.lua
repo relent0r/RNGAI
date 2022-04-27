@@ -267,7 +267,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1}},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .9 } },

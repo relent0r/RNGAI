@@ -948,7 +948,7 @@ StructureManager = Class {
                                 if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                     LowestDistanceToBase = DistanceToBase
                                     lowestUnit = c
-                                    LOG('T1 lowestUnit added alltiers false')
+                                    --LOG('T1 lowestUnit added alltiers false')
                                 end
                             end
                         end
@@ -965,7 +965,7 @@ StructureManager = Class {
                                 if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                     LowestDistanceToBase = DistanceToBase
                                     lowestUnit = c
-                                    LOG('T1 lowestUnit added alltiers true')
+                                    --LOG('T1 lowestUnit added alltiers true')
                                 end
                             end
                         end
@@ -981,7 +981,7 @@ StructureManager = Class {
                                 if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                     LowestDistanceToBase = DistanceToBase
                                     lowestUnit = c
-                                    LOG('T2 lowestUnit added alltiers true')
+                                    --LOG('T2 lowestUnit added alltiers true')
                                 end
                             end
                         end
@@ -1083,7 +1083,7 @@ StructureManager = Class {
         end
         --LOG('Initial Delay loop starting')
         while initial_delay < (60 / multiplier) do
-            if not unit.Dead and GetEconomyStored( aiBrain, 'MASS') >= 50 and GetEconomyStored( aiBrain, 'ENERGY') >= 500 and unit:GetFractionComplete() == 1 then
+            if not unit.Dead and GetEconomyStored( aiBrain, 'ENERGY') >= 500 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
                 if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
                     initial_delay = 60

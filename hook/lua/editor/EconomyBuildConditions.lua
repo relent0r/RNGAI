@@ -378,11 +378,11 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
         elseif noStorageCheck then
             return true
         elseif uType == 'Air' then
-            if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
+            if (GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
                 return true
             end
         else
-            if (GetEconomyStored(aiBrain, 'MASS') >= 20 and GetEconomyStored(aiBrain, 'ENERGY') >= 20) then
+            if (GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 20) then
                 return true
             end
         end

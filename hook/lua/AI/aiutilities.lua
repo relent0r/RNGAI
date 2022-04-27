@@ -42,6 +42,10 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
         return false
     end
     local pos = unit:GetPosition()
+    local T1EngOnly = false
+    if EntityCategoryContains(categories.ENGINEER * categories.TECH1, unit) then
+        T1EngOnly = true
+    end
     -- don't check a path if we are in build range
     if VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
         return true
@@ -79,7 +83,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
         -- Skip the last move... we want to return and do a build
         --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         unit.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, needTransports, true, false)
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         unit.WaitingForTransport = false
         --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
@@ -118,6 +122,10 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         return false
     end
     local pos = eng:GetPosition()
+    local T1EngOnly = false
+    if EntityCategoryContains(categories.ENGINEER * categories.TECH1, eng) then
+        T1EngOnly = true
+    end
     -- don't check a path if we are in build range
     if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 144 then
         return true
@@ -159,7 +167,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         -- Skip the last move... we want to return and do a build
         --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         eng.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, needTransports, true, false)
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         eng.WaitingForTransport = false
         --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
@@ -224,6 +232,125 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         return true
     end
     return false
+end
+
+function GetTransportsRNG(platoon, units, t1EngOnly)
+    if not units then
+        units = platoon:GetPlatoonUnits()
+    end
+    
+    -- Check for empty platoon
+    if table.empty(units) then
+        return 0
+    end
+
+    local neededTable = GetNumTransports(units)
+    local transportsNeeded = false
+    if neededTable.Small > 0 or neededTable.Medium > 0 or neededTable.Large > 0 then
+        transportsNeeded = true
+    end
+
+
+    local aiBrain = platoon:GetBrain()
+    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+
+    -- Make sure more are needed
+    local tempNeeded = {}
+    tempNeeded.Small = neededTable.Small
+    tempNeeded.Medium = neededTable.Medium
+    tempNeeded.Large = neededTable.Large
+
+    local location = platoon:GetPlatoonPosition()
+    if not location then
+        -- We can assume we have at least one unit here
+        location = units[1]:GetPosition()
+    end
+
+    if not location then
+        return 0
+    end
+
+    -- Determine distance of transports from platoon
+    local transports = {}
+    for _, unit in pool:GetPlatoonUnits() do
+        if not unit.Dead and EntityCategoryContains(categories.TRANSPORTATION - categories.uea0203, unit) and not unit:IsUnitState('Busy') and not unit:IsUnitState('TransportLoading') and table.empty(unit:GetCargo()) and unit:GetFractionComplete() == 1 then
+            if t1EngOnly then
+                if EntityCategoryContains(categories.TECH1, unit) then
+                    local unitPos = unit:GetPosition()
+                    local curr = {Unit = unit, Distance = VDist2(unitPos[1], unitPos[3], location[1], location[3]), Id = unit.UnitId}
+                    table.insert(transports, curr)
+                end
+            else
+                local unitPos = unit:GetPosition()
+                local curr = {Unit = unit, Distance = VDist2(unitPos[1], unitPos[3], location[1], location[3]), Id = unit.UnitId}
+                table.insert(transports, curr)
+            end
+        end
+    end
+
+    local numTransports = 0
+    local transSlotTable = {}
+    if not table.empty(transports) then
+        local sortedList = {}
+        -- Sort distances
+        for k = 1, table.getn(transports) do
+            local lowest = -1
+            local key, value
+            for j, u in transports do
+                if lowest == -1 or u.Distance < lowest then
+                    lowest = u.Distance
+                    value = u
+                    key = j
+                end
+            end
+            sortedList[k] = value
+            -- Remove from unsorted table
+            table.remove(transports, key)
+        end
+
+        -- Take transports as needed
+        for i = 1, table.getn(sortedList) do
+            if transportsNeeded and table.empty(sortedList[i].Unit:GetCargo()) and not sortedList[i].Unit:IsUnitState('TransportLoading') then
+                local id = sortedList[i].Id
+                aiBrain:AssignUnitsToPlatoon(platoon, {sortedList[i].Unit}, 'Scout', 'GrowthFormation')
+                numTransports = numTransports + 1
+                if not transSlotTable[id] then
+                    transSlotTable[id] = GetNumTransportSlots(sortedList[i].Unit)
+                end
+                local tempSlots = {}
+                tempSlots.Small = transSlotTable[id].Small
+                tempSlots.Medium = transSlotTable[id].Medium
+                tempSlots.Large = transSlotTable[id].Large
+                -- Update number of slots needed
+                while tempNeeded.Large > 0 and tempSlots.Large > 0 do
+                    tempNeeded.Large = tempNeeded.Large - 1
+                    tempSlots.Large = tempSlots.Large - 1
+                    tempSlots.Medium = tempSlots.Medium - 2
+                    tempSlots.Small = tempSlots.Small - 4
+                end
+                while tempNeeded.Medium > 0 and tempSlots.Medium > 0 do
+                    tempNeeded.Medium = tempNeeded.Medium - 1
+                    tempSlots.Medium = tempSlots.Medium - 1
+                    tempSlots.Small = tempSlots.Small - 2
+                end
+                while tempNeeded.Small > 0 and tempSlots.Small > 0 do
+                    tempNeeded.Small = tempNeeded.Small - 1
+                    tempSlots.Small = tempSlots.Small - 1
+                end
+                if tempNeeded.Small <= 0 and tempNeeded.Medium <= 0 and tempNeeded.Large <= 0 then
+                    transportsNeeded = false
+                end
+            end
+        end
+    end
+
+    if transportsNeeded then
+        ReturnTransportsToPool(platoon:GetSquadUnits('Scout'), false)
+        return false, tempNeeded.Small, tempNeeded.Medium, tempNeeded.Large
+    else
+        platoon.UsingTransport = true
+        return numTransports, 0, 0, 0
+    end
 end
 
 -- not in use
