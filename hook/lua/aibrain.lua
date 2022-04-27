@@ -2186,7 +2186,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local LandCatUnits = categories.LAND + categories.AMPHIBIOUS + categories.COMMAND
         local AirSurfaceCatUnits = categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER)
         self.BasePerimeterMonitor = {}
-        self:ForkThread(self.drawMainRestricted)
+        --self:ForkThread(self.drawMainRestricted)
         while true do
             for k, v in self.BuilderManagers do
                 local landUnits = 0
