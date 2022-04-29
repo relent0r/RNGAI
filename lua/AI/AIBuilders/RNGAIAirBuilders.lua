@@ -104,13 +104,13 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
 end
 
 local BomberResponse = function(self, aiBrain, builderManager, builderData)
-    LOG('BomberResponse location is '..builderManager.LocationType)
-    if aiBrain.EnemyIntel.LandPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AirNow then
-        LOG('Bomber Response for land phase < 2 and enemy air threat low')
+    RNGLOG('BomberResponse location is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.AirPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AirNow then
+        RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end
     if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 1 then
-        LOG('Bomber Response for Perimeter Monitor is true')
+        RNGLOG('Bomber Response for Perimeter Monitor is true')
         return 890
     end
     return 0
@@ -513,7 +513,10 @@ BuilderGroup {
             PrioritizedCategories = {
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER - categories.COMMAND,
-                categories.MASSEXTRACTION,
+                categories.MASSEXTRACTION * categories.TECH1,
+                categories.STRUCTURE * categories.RADAR,
+                categories.STRUCTURE * categories.ENERGYSTORAGE,
+                categories.STRUCTURE,
             },
         },
     },

@@ -26,9 +26,9 @@ function UnitToThreatRatio(aiBrain, ratio, category, threatType, compareType)
     if threatType == 'Land' then
         threat = aiBrain.BrainIntel.SelfThreat.LandNow
     end
-    LOG('UnitToThreatRatio numUnits '..numUnits)
-    LOG('Threat '..threat)
-    LOG('Ratio is '..(numUnits/threat))
+    RNGLOG('UnitToThreatRatio numUnits '..numUnits)
+    RNGLOG('Threat '..threat)
+    RNGLOG('Ratio is '..(numUnits/threat))
 
     return CompareBody(numUnits / threat, ratio, compareType)
 

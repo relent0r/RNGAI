@@ -603,14 +603,14 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
                 --RNGLOG('Eng Build Queue is '..table.getn(units[1].EngineerBuildQueue))
                 coroutine.yield(30)
                 if not units[1].Dead and EntityCategoryContains(categories.ENGINEER - categories.COMMAND, units[1]) then
-                    LOG('Run engineer wait during transport wait')
+                    RNGLOG('Run engineer wait during transport wait')
                     local eng = units[1]
                     local engPos = eng:GetPosition()
                     local reclaiming = false
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                         local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
                         if enemyEngineer then
-                            LOG('Enemy engineer found during transport wait')
+                            RNGLOG('Enemy engineer found during transport wait')
                             local enemyEngPos
                             for _, unit in enemyEngineer do
                                 if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
@@ -630,7 +630,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
                         reclaimRect = GetReclaimablesInRect(rect)
                         if reclaimRect and RNGGETN(reclaimRect) > 0 then
                             IssueClearCommands({eng})
-                            LOG('Reclaim found during transport wait')
+                            RNGLOG('Reclaim found during transport wait')
                             local reclaimCount = 0
                             for c, b in reclaimRect do
                                 if reclaimCount > 15 then break end
@@ -735,7 +735,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
             if not v.Dead and not EntityCategoryContains(categories.TRANSPORTFOCUS, v) then
                 IssueStop({v})
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
-                LOG('Non transport in transport squad, assignined to armypool')
+                RNGLOG('Non transport in transport squad, assignined to armypool')
             end
         end
         AIUtils.UseTransportsRNG(units, platoon:GetSquadUnits('Scout'), transportLocation, platoon)

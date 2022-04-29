@@ -45,7 +45,7 @@ IntelManager = Class {
     end,
 
     Run = function(self)
-        RNGLOG('RNGAI : IntelManager Starting')
+        LOG('RNGAI : IntelManager Starting')
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
@@ -55,6 +55,7 @@ IntelManager = Class {
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
+        LOG('RNGAI : IntelManager Started')
         self.Initialized = true
     end,
 
@@ -226,7 +227,7 @@ IntelManager = Class {
                 end
 
                 if type == 'raid' then
-                    LOG('RNGAI : Zone Raid Selection Query Processing')
+                    RNGLOG('RNGAI : Zone Raid Selection Query Processing')
                     local startPosZones = {}
                     local platoonPosition = platoon:GetPlatoonPosition()
                     for k, v in aiBrain.Zones.Land.zones do
@@ -237,13 +238,13 @@ IntelManager = Class {
                                 local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
                                 local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemythreat
                                 if not zoneSet[v.id].control then
-                                    LOG('control is nil, here is the table '..repr(zoneSet[v.id]))
+                                    RNGLOG('control is nil, here is the table '..repr(zoneSet[v.id]))
                                 end
                                 if enemyModifier > 0 then
                                     enemyModifier = enemyModifier * 10
                                 end
-                                LOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
-                                LOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
+                                RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                                RNGLOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
                                 if zoneSet[v.id].control > 0.5 and zoneSet[v.id].friendlythreat < 10 then
                                     compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control - enemyModifier
                                 end
@@ -254,8 +255,8 @@ IntelManager = Class {
                                     if not selection or compare > selection then
                                         selection = compare
                                         zoneSelection = v.id
-                                        LOG('Zone Query Select priority 1st pass'..selection)
-                                        LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                        RNGLOG('Zone Query Select priority 1st pass'..selection)
+                                        RNGLOG('Zone target location is '..repr(zoneSet[v.id].pos))
                                     end
                                 end
                             end
@@ -271,7 +272,7 @@ IntelManager = Class {
                                 local compare
                                 local enemyDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
                                 local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
-                                LOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
+                                RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
                                 if zoneSet[v.zone.id].control <= 0 then
                                     compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier )
                                 else
@@ -285,7 +286,7 @@ IntelManager = Class {
                                         selection = compare
                                         zoneSelection = v.id
                                         RNGLOG('Zone Query Select priority 2nd pass start locations'..selection)
-                                        LOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                        RNGLOG('Zone target location is '..repr(zoneSet[v.id].pos))
                                     end
                                 end
                             end
@@ -322,7 +323,7 @@ IntelManager = Class {
                             RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemythreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
                             RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                         else
-                            LOG('No resource against zone '..v.zone.id)
+                            RNGLOG('No resource against zone '..v.zone.id)
                         end
                         compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                         RNGLOG('Compare variable '..compare)
@@ -438,7 +439,7 @@ IntelManager = Class {
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     if not v1.startpositionclose and v1.control < 1 and v1.enemythreat > 0 then
-                        LOG('Try create zone alert for threat')
+                        RNGLOG('Try create zone alert for threat')
                         self.Brain:BaseMonitorZoneThreatRNG(v1.id, v1.enemythreat)
                     end
                     coroutine.yield(5)
@@ -534,12 +535,12 @@ IntelManager = Class {
         local intelRadius = ALLBPS[unit.UnitId].Intel.RadarRadius * ALLBPS[unit.UnitId].Intel.RadarRadius
         local radarPosition = unit:GetPosition()
         if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
-            LOG('Zone set for radar that has been built '..unit.UnitId)
+            RNGLOG('Zone set for radar that has been built '..unit.UnitId)
             unit.zoneid = MAP:GetZoneID(radarPosition,self.Brain.Zones.Land.index)
             if unit.zoneid then
                 for k, v in self.ZoneIntel.Assignment do
                     if VDist2Sq(radarPosition[1], radarPosition[3], v.Position[1], v.Position[3]) < intelRadius then
-                        LOG('Radar coverage has been set true for zone '..unit.zoneid)
+                        RNGLOG('Radar coverage has been set true for zone '..unit.zoneid)
                         RNGINSERT(v.RadarUnits, unit)
                         v.RadarCoverage = true
                     end
@@ -553,16 +554,16 @@ IntelManager = Class {
     UnassignIntelUnit = function(self, unit)
         local ALLBPS = __blueprints
         if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
-            LOG('Unassigning Radar Unit')
+            RNGLOG('Unassigning Radar Unit')
             for k, v in self.ZoneIntel.Assignment do
                 for c, b in v.RadarUnits do
                     if b == unit then
-                        LOG('Found Radar that was covering zone '..k..' removing')
+                        RNGLOG('Found Radar that was covering zone '..k..' removing')
                         RNGREMOVE(v.RadarUnits, c)
                     end
                 end
                 if v.RadarCoverage and RNGGETN(v.RadarUnits) == 0 then
-                    LOG('No Radars in range for zone '..k..' setting radar coverage to false')
+                    RNGLOG('No Radars in range for zone '..k..' setting radar coverage to false')
                     v.RadarCoverage = false
                 end
             end
@@ -586,8 +587,8 @@ IntelManager = Class {
                 RNGINSERT(self.ZoneIntel.Assignment, { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = v1.startpositionclose})
             end
         end
-        LOG('Zone Intel Assignment Complete')
-        LOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
+        RNGLOG('Zone Intel Assignment Complete')
+        RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
 
 }
@@ -740,7 +741,7 @@ ExpansionIntelScanRNG = function(aiBrain)
             end
             if aiBrain.BuilderManagers[v.Name].EngineerManager then
                 if aiBrain.BuilderManagers[v.Name].EngineerManager.ConsumptionUnits.Intel.Count > 0 then
-                    LOG('Radar Present')
+                    RNGLOG('Radar Present')
                     v.Radar = true
                 else
                     v.Radar = false
@@ -866,7 +867,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             if expansion.Zone == positionNode.RNGArea then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
                 RNGLOG('Distance to expansion '..expansionDistance)
-                LOG('Expansion position is '..repr(expansion.Position))
+                RNGLOG('Expansion position is '..repr(expansion.Position))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
                 --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
@@ -941,7 +942,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                     end
                 end
             end
-            if secondBestOption and bestOption then
+            if aiBrain.BrainIntel.AllyCount < 2 and secondBestOption and bestOption then
                 local acuOptions = { bestOption, secondBestOption }
                 RNGLOG('ACU is having a random expansion returned')
                 return acuOptions[Random(1,2)]
@@ -1032,7 +1033,7 @@ MapReclaimAnalysis = function(aiBrain)
                 end
             end
             aiBrain.StartReclaimCurrent = startReclaim
-            LOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
+            RNGLOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
         end
         coroutine.yield(300)
     end
@@ -1041,42 +1042,10 @@ end
 local LookupAirThreat = { }
 local LookupLandThreat = { }
 
-local function GetShieldRadiusAboveGroundSquaredRNG(shield)
-    local BP = shield:GetBlueprint().Defense.Shield
-    local width = BP.ShieldSize
-    local height = BP.ShieldVerticalOffset
-
-    return width * width - height * height
-end
-
-local function ShieldProtectingTargetRNG(aiBrain, targetUnit, shields)
-
-    -- if no target unit, then we can skip
-    if not targetUnit then
-        return false
-    end
-
-    -- defensive programming
-    shields = shields or GetUnitsAroundPoint(aiBrain, CategoriesShield, targetUnit:GetPosition(), 50, 'Enemy')
-
-    -- determine if target unit is part of some shield
-    local tPos = targetUnit:GetPosition()
-    for _, shield in shields do
-        if not shield.Dead then
-            local shieldPos = shield:GetPosition()
-            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
-            if VDist2Sq(tPos[1], tPos[3], shieldPos[1], shieldPos[3]) < shieldSizeSq then
-                return true
-            end
-        end
-    end
-    return false
-end
-
 TacticalThreatAnalysisRNG = function(aiBrain)
     local ALLBPS = __blueprints
 
-    LOG("Started analysis for: " .. aiBrain.Nickname)
+    RNGLOG("Started analysis for: " .. aiBrain.Nickname)
     local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
 
     aiBrain.EnemyIntel.DirectorData = {
@@ -1170,7 +1139,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, 
                                 HP = unit:GetHealth(), 
                                 Object = unit, 
-                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
                                 Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
@@ -1183,7 +1152,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
                                 HP = unit:GetHealth(), 
                                 Object = unit, 
-                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
                                 Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
@@ -1195,7 +1164,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
                                 HP = unit:GetHealth(), 
                                 Object = unit, 
-                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
                                 Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
@@ -1207,7 +1176,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
                                 HP = unit:GetHealth(), 
                                 Object = unit, 
-                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
                                 Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
@@ -1219,7 +1188,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
                                 HP = unit:GetHealth(), 
                                 Object = unit, 
-                                Shielded = ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
+                                Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[2]] or 0, 
                                 Land = LookupLandThreat[threat.Position[1]][threat.Position[2]] or 0 
@@ -1354,7 +1323,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     aiBrain.EnemyIntel.DirectorData.Factory = factoryUnits
     aiBrain.EnemyIntel.DirectorData.Energy = energyUnits
 
-    LOG("Finished analysis for: " .. aiBrain.Nickname)
+    RNGLOG("Finished analysis for: " .. aiBrain.Nickname)
     local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
-    LOG("Time of analysis: " .. (finishedAnalysisAt - startedAnalysisAt))
+    RNGLOG("Time of analysis: " .. (finishedAnalysisAt - startedAnalysisAt))
 end

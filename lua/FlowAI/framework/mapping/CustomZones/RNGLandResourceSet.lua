@@ -60,7 +60,7 @@ RNGLandResourceSet = Class(ZoneSet){
         if maxmapdimension < 512 then
             zoneRadius = 35 * 35
         end
-        LOG('Zone Radius is '..zoneRadius)
+        RNGLOG('Zone Radius is '..zoneRadius)
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
             local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position

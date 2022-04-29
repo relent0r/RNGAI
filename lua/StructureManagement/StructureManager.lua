@@ -1,5 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
@@ -368,7 +368,7 @@ StructureManager = Class {
     GetClosestFactory = function(self, base, type, tech, hqFlag)
         local ALLBPS = __blueprints
         local basePosition = self.Brain.BuilderManagers[base].Position
-        LOG('GetClosestFactory Base position is '..repr(basePosition))
+        RNGLOG('GetClosestFactory Base position is '..repr(basePosition))
         local factoryList = self.Brain.BuilderManagers[base].FactoryManager.FactoryList
         local unitPos
         local DistanceToBase
@@ -384,7 +384,7 @@ StructureManager = Class {
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                 LowestDistanceToBase = DistanceToBase
                                 lowestUnit = fact
-                                LOG('Lowest Distance Factory added')
+                                RNGLOG('Lowest Distance Factory added')
                             end
                         end
                     end
@@ -395,7 +395,7 @@ StructureManager = Class {
                         if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                             LowestDistanceToBase = DistanceToBase
                             lowestUnit = fact
-                            LOG('Lowest Distance Factory added')
+                            RNGLOG('Lowest Distance Factory added')
                         end
                     end
                 end
@@ -437,22 +437,22 @@ StructureManager = Class {
         -- HQ Upgrades
         local mexSpend = self.Brain.EcoManager.TotalMexSpend or 0
         local actualMexIncome = self.Brain.cmanager.income.r.m - mexSpend
-        LOG('Actual Mex Income '..actualMexIncome)
+        RNGLOG('Actual Mex Income '..actualMexIncome)
 
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
-            LOG('Factory T1 Upgrade HQ Check passed')
+            RNGLOG('Factory T1 Upgrade HQ Check passed')
             if actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
-                LOG('Factory Upgrade actual mex income is '..actualMexIncome)
+                RNGLOG('Factory Upgrade actual mex income is '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                    LOG('Factory Upgrade efficiency over time check passed')
+                    RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
-                        LOG('Factory Upgrade efficiency check passed, get closest factory')
+                        RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                            RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                             t2LandPass = true
                             coroutine.yield(30)
@@ -463,10 +463,10 @@ StructureManager = Class {
         end
         if not t2LandPass and totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
-                LOG('Factory T2 Upgrade HQ Excess Check passed')
+                RNGLOG('Factory T2 Upgrade HQ Excess Check passed')
                 local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                 if factoryToUpgrade and not factoryToUpgrade.Dead then
-                    LOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                    RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                     t2LandPass = true
                     coroutine.yield(30)
@@ -475,17 +475,17 @@ StructureManager = Class {
         end
         local t2AirPass = false
         if (not self.Brain.RNGEXP) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 and self.Factories.AIR[1].Total > 0 then
-            LOG('Factory T1 Air Upgrade HQ Check passed')
+            RNGLOG('Factory T1 Air Upgrade HQ Check passed')
             if self.Factories.LAND[2].Total > 0 then
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                    LOG('Factory Upgrade efficiency over time check passed')
+                    RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
-                        LOG('Factory Upgrade efficiency check passed, get closest factory')
+                        RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T2 Air HQ Upgrade')
+                            RNGLOG('Structure Manager Triggering T2 Air HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                             t2AirPass = true
                             coroutine.yield(30)
@@ -495,16 +495,16 @@ StructureManager = Class {
             end
         end
         if (self.Brain.RNGEXP or (factionIndex == 2 and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
-            LOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
+            RNGLOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
             if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 28.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 then
-                LOG('RNGEXP Factory Upgrade efficiency over time check passed')
+                RNGLOG('RNGEXP Factory Upgrade efficiency over time check passed')
                 local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                 local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                 if MassEfficiency >= 0.9 and EnergyEfficiency >= 0.9 then
-                    LOG('RNGEXP Factory Upgrade efficiency check passed, get closest factory')
+                    RNGLOG('RNGEXP Factory Upgrade efficiency check passed, get closest factory')
                     local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                     if factoryToUpgrade and not factoryToUpgrade.Dead then
-                        LOG('RNGEXP Structure Manager Triggering T2 Air HQ Upgrade')
+                        RNGLOG('RNGEXP Structure Manager Triggering T2 Air HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                         t2AirPass = true
                         coroutine.yield(30)
@@ -513,18 +513,18 @@ StructureManager = Class {
             end
         end
         if not t2LandPass and (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
-            LOG('Factory T1 Upgrade Support Check passed')
+            RNGLOG('Factory T1 Upgrade Support Check passed')
             if self.Factories.LAND[1].UpgradingCount < 1 then
-                LOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                    LOG('Factory Upgrade efficiency over time check passed')
+                    RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
-                        LOG('Factory Upgrade efficiency check passed, get closest factory')
+                        RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T2 Land Support Upgrade')
+                            RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t2LandPass = true
                             coroutine.yield(30)
@@ -533,11 +533,11 @@ StructureManager = Class {
                 end
             end
             if self.Factories.LAND[1].UpgradingCount < 2 then
-                LOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
                 if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
                     local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                     if factoryToUpgrade and not factoryToUpgrade.Dead then
-                        LOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                        RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                         t2LandPass = true
                         coroutine.yield(30)
@@ -546,18 +546,18 @@ StructureManager = Class {
             end
         end
         if not t2AirPass and (totalAirT2HQCount > 0 or totalAirT3HQCount > 0) and self.Factories.AIR[1].Total > 0 and self.Factories.AIR[2].Total < 8 then
-            LOG('Factory Air T2 Upgrade Support Check passed')
+            RNGLOG('Factory Air T2 Upgrade Support Check passed')
             if self.Factories.AIR[2].UpgradingCount < 1 then
-                LOG('Factory Air T2 Upgrade Less than 1 Factory Upgrading')
+                RNGLOG('Factory Air T2 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
-                    LOG('Factory Upgrade efficiency over time check passed')
+                    RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.2 then
-                        LOG('Factory Upgrade efficiency check passed, get closest factory')
+                        RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T2 Air Support Upgrade')
+                            RNGLOG('Structure Manager Triggering T2 Air Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3LandPass = true
                             coroutine.yield(30)
@@ -568,18 +568,18 @@ StructureManager = Class {
         end
         local t3LandPass = false
         if totalLandT3HQCount < 1 and totalLandT2HQCount > 0 and self.Factories.LAND[2].UpgradingCount < 1 and self.Factories.LAND[2].Total > 0 then
-            LOG('Factory T1 Upgrade HQ Check passed')
+            RNGLOG('Factory T1 Upgrade HQ Check passed')
             if actualMexIncome > (50 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
-                LOG('Factory Upgrade actual mex income passed '..actualMexIncome)
+                RNGLOG('Factory Upgrade actual mex income passed '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                    LOG('Factory Upgrade efficiency over time check passed')
+                    RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
-                        LOG('Factory Upgrade efficiency check passed, get closest factory')
+                        RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH2', true)
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T3 Land HQ Upgrade')
+                            RNGLOG('Structure Manager Triggering T3 Land HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                             t3LandPass = true
                             coroutine.yield(30)
@@ -589,12 +589,12 @@ StructureManager = Class {
             end
         end
         if not t3LandPass and totalLandT3HQCount < 1 and totalLandT2HQCount > 0 and self.Factories.LAND[2].UpgradingCount < 1 and self.Factories.LAND[2].Total > 0 then
-            LOG('Factory T2 Upgrade HQ Check passed')
+            RNGLOG('Factory T2 Upgrade HQ Check passed')
             if GetEconomyStored(self.Brain, 'MASS') >= 1800 and GetEconomyStored(self.Brain, 'ENERGY') >= 9000 then
-                LOG('Factory T2 HQ Upgrade Excess Storage Check Passed')
+                RNGLOG('Factory T2 HQ Upgrade Excess Storage Check Passed')
                 local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH2', true)
                 if factoryToUpgrade and not factoryToUpgrade.Dead then
-                    LOG('Structure Manager Triggering T3 Land HQ Upgrade')
+                    RNGLOG('Structure Manager Triggering T3 Land HQ Upgrade')
                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                     t3LandPass = true
                     coroutine.yield(30)
@@ -603,20 +603,20 @@ StructureManager = Class {
         end
         local t3AirPass = false
         if totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
-            LOG('Factory T2 Air Upgrade HQ Check passed')
+            RNGLOG('Factory T2 Air Upgrade HQ Check passed')
             if self.Brain.EconomyOverTimeCurrent.MassIncome > (5.0 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 150.0 then
-                LOG('Factory Upgrade Income Over time check passed')
+                RNGLOG('Factory Upgrade Income Over time check passed')
                 if GetEconomyIncome(self.Brain,'MASS') >= (5.0 * self.Brain.EcoManager.EcoMultiplier) and GetEconomyIncome(self.Brain,'ENERGY') >= 150.0 then
-                    LOG('Factory Upgrade Income check passed')
+                    RNGLOG('Factory Upgrade Income check passed')
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        LOG('Factory Upgrade efficiency over time check passed')
+                        RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                         if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.00 then
-                            LOG('Factory Upgrade efficiency check passed, get closest factory')
+                            RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2', true)
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                LOG('Structure Manager Triggering T3 Air HQ Upgrade')
+                                RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                                 t3AirPass = true
                                 coroutine.yield(30)
@@ -627,13 +627,13 @@ StructureManager = Class {
             end
         end
         if not t3AirPass and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
-            LOG('Factory T2 Upgrade HQ Check passed')
+            RNGLOG('Factory T2 Upgrade HQ Check passed')
             if GetGameTimeSeconds() > (600 / self.Brain.EcoManager.EcoMultiplier) then
                 if GetEconomyStored(self.Brain, 'MASS') >= 1800 and GetEconomyStored(self.Brain, 'ENERGY') >= 14000 then
-                    LOG('Factory T2 HQ Upgrade Excess Storage Check Passed')
+                    RNGLOG('Factory T2 HQ Upgrade Excess Storage Check Passed')
                     local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2', true)
                     if factoryToUpgrade and not factoryToUpgrade.Dead then
-                        LOG('Structure Manager Triggering T3 Air HQ Upgrade')
+                        RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                         t3AirPass = true
                         coroutine.yield(30)
@@ -642,19 +642,19 @@ StructureManager = Class {
             end
         end
         if not t3LandPass and totalLandT3HQCount > 0 and self.Factories.LAND[2].Total > 0 and self.Factories.LAND[3].Total < 11 then
-            LOG('Factory T2 Upgrade Support Check passed')
+            RNGLOG('Factory T2 Upgrade Support Check passed')
             if self.Factories.LAND[2].UpgradingCount < 1 then
-                LOG('Factory T2 Upgrade Less than 1 Factory Upgrading')
+                RNGLOG('Factory T2 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        LOG('Factory Upgrade efficiency over time check passed')
+                        RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                         if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
-                            LOG('Factory Upgrade efficiency check passed, get closest factory')
+                            RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH2')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                LOG('Structure Manager Triggering T3 Land Support Upgrade')
+                                RNGLOG('Structure Manager Triggering T3 Land Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t3LandPass = true
                                 coroutine.yield(30)
@@ -665,11 +665,11 @@ StructureManager = Class {
             end
             if self.Factories.LAND[2].UpgradingCount < 2 then
                 if GetGameTimeSeconds() > (600 / self.Brain.EcoManager.EcoMultiplier) then
-                    LOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                    RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
                     if GetEconomyStored(self.Brain, 'MASS') >= 1800 and GetEconomyStored(self.Brain, 'ENERGY') >= 9000 then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH2')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T3 Land Support Upgrade')
+                            RNGLOG('Structure Manager Triggering T3 Land Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3LandPass = true
                             coroutine.yield(30)
@@ -680,19 +680,19 @@ StructureManager = Class {
         end
         
         if not t3AirPass and totalAirT3HQCount > 0 and self.Factories.AIR[2].Total > 0 and self.Factories.AIR[3].Total < 11 then
-            LOG('Factory T2 Upgrade Support Check passed')
+            RNGLOG('Factory T2 Upgrade Support Check passed')
             if self.Factories.AIR[2].UpgradingCount < 1 then
-                LOG('Factory T2 Upgrade Less than 1 Factory Upgrading')
+                RNGLOG('Factory T2 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
-                        LOG('Factory Upgrade efficiency over time check passed')
+                        RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                         if MassEfficiency >= 1.05 and EnergyEfficiency >= 1.2 then
-                            LOG('Factory Upgrade efficiency check passed, get closest factory')
+                            RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                LOG('Structure Manager Triggering T3 Air Support Upgrade')
+                                RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t3LandPass = true
                                 coroutine.yield(30)
@@ -703,11 +703,11 @@ StructureManager = Class {
             end
             if self.Factories.AIR[2].UpgradingCount < 2 then
                 if GetGameTimeSeconds() > (600 / self.Brain.EcoManager.EcoMultiplier) then
-                    LOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                    RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
                     if GetEconomyStored(self.Brain, 'MASS') >= 1800 and GetEconomyStoredRatio(self.Brain, 'ENERGY') > 0.95 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.3 then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T3 Air Support Upgrade')
+                            RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3AirPass = true
                             coroutine.yield(30)
@@ -720,13 +720,13 @@ StructureManager = Class {
     end,
 
     UpgradeFactoryRNG = function(self, unit, hq)
-        LOG('UpgradeFactory Fork started')
+        RNGLOG('UpgradeFactory Fork started')
         local ALLBPS = __blueprints
         local supportUpgradeID
         local followupUpgradeID = false
-        LOG('Factory to upgrade unit id is '..unit.UnitId)
+        RNGLOG('Factory to upgrade unit id is '..unit.UnitId)
         local upgradeID = ALLBPS[unit.UnitId].General.UpgradesTo
-        LOG('Upgrade ID for unit is '..ALLBPS[unit.UnitId].General.UpgradesTo)
+        RNGLOG('Upgrade ID for unit is '..ALLBPS[unit.UnitId].General.UpgradesTo)
         if upgradeID then
             if ALLBPS[upgradeID].General.UpgradesTo then
                 followupUpgradeID = ALLBPS[upgradeID].General.UpgradesTo
@@ -738,8 +738,8 @@ StructureManager = Class {
             coroutine.yield(20)
             return
         end
-        LOG('Upgrade Factory has triggered ')
-        LOG('Default upgrade bp is '..upgradeID..' checking for support upgrade replacement')
+        RNGLOG('Upgrade Factory has triggered ')
+        RNGLOG('Default upgrade bp is '..upgradeID..' checking for support upgrade replacement')
         if upgradeID then
             if ALLBPS[unit.UnitId].CategoriesHash.LAND then
                 if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
@@ -779,12 +779,12 @@ StructureManager = Class {
                 end
             end
             if supportUpgradeID then
-                LOG('Support Upgrade ID found '..supportUpgradeID)
+                RNGLOG('Support Upgrade ID found '..supportUpgradeID)
                 upgradeID = supportUpgradeID
             end
         end
         if upgradeID then
-            LOG('Issuing Upgrade Command for factory')
+            RNGLOG('Issuing Upgrade Command for factory')
             IssueClearCommands({unit})
             coroutine.yield(2)
             IssueUpgrade({unit}, upgradeID)
@@ -827,12 +827,12 @@ StructureManager = Class {
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
             aiBrain.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             aiBrain.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            LOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
-            LOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
-            LOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
-            LOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
-            LOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
-            LOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
+            RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
+            RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
+            RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
+            RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
+            RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
@@ -841,11 +841,11 @@ StructureManager = Class {
                 aiBrain.EcoManager.CoreMassPush = false
                 aiBrain.EngineerAssistManagerFocusCategory = false
             end
-            LOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
+            RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             local massStorage = GetEconomyStored( aiBrain, 'MASS')
             local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
             if aiBrain.EcoManager.CoreExtractorT3Count then
-                LOG('CoreExtractorT3Count '..aiBrain.EcoManager.CoreExtractorT3Count)
+                RNGLOG('CoreExtractorT3Count '..aiBrain.EcoManager.CoreExtractorT3Count)
             end
             if aiBrain.EcoManager.CoreMassPush and extractorsDetail.TECH2Upgrading < 1 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) then
                 --LOG('Trigger all tiers true')
@@ -877,13 +877,13 @@ StructureManager = Class {
                 coroutine.yield(30)
             elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 500 and upgradeSpend > 5 then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                    LOG('We Could upgrade an extractor now with over time')
+                    RNGLOG('We Could upgrade an extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                     coroutine.yield(60)
                 end
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                    LOG('We Could upgrade an extractor now with over time')
+                    RNGLOG('We Could upgrade an extractor now with over time')
                     local massIncome = GetEconomyIncome(aiBrain, 'MASS')
                     local massRequested = GetEconomyRequested(aiBrain, 'MASS')
                     local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
@@ -891,7 +891,7 @@ StructureManager = Class {
                     local massEfficiency = math.min(massIncome / massRequested, 2)
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                        LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
+                        RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5 or upgradeSpend < 15 then
                             --LOG('Trigger all tiers false')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
@@ -905,7 +905,7 @@ StructureManager = Class {
                 end
             elseif massStorage > 2500 and energyStorage > 8000 then
                 if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.8 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                    LOG('We Could upgrade an extractor now with over time')
+                    RNGLOG('We Could upgrade an extractor now with over time')
                     local massIncome = GetEconomyIncome(aiBrain, 'MASS')
                     local massRequested = GetEconomyRequested(aiBrain, 'MASS')
                     local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
@@ -913,8 +913,8 @@ StructureManager = Class {
                     local massEfficiency = math.min(massIncome / massRequested, 2)
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 0.8 and massEfficiency >= 0.8 then
-                        LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        LOG('Trigger all tiers true')
+                        RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
+                        RNGLOG('Trigger all tiers true')
                         self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
                         coroutine.yield(30)
                     end
@@ -994,10 +994,10 @@ StructureManager = Class {
                 if not aiBrain.CentralBrainExtractorUnitUpgradeClosest then
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
                 end
-                LOG('Closest Extractor')
+                RNGLOG('Closest Extractor')
                 self:ForkThread(self.UpgradeExtractorRNG, aiBrain, ALLBPS, lowestUnit, LowestDistanceToBase)
             else
-                LOG('There is no lowestUnit')
+                RNGLOG('There is no lowestUnit')
             end
         end
     end,

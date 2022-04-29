@@ -72,7 +72,6 @@ BaseBuilderTemplate {
         'RNGAI Null Response Formers',
 
         -- Land Unit Builders --
-        --'RNGAI Null TankLandBuilder',
         -- Land Unit Formers --
         --'RNGAI Null Land FormBuilders',
         
