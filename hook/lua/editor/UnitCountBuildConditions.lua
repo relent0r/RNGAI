@@ -172,10 +172,10 @@ function EnemyLandPhaseRNG(aiBrain, phase)
     local selfIndex = aiBrain:GetArmyIndex()
 
     --RNGLOG('Starting Threat Check at'..GetGameTick())
-    if phase == 2 and aiBrain.EnemyIntel.LandPhase == 2 then
+    if phase == 2 and aiBrain.EnemyIntel.Phase == 2 then
         --RNGLOG('EnemyLandPhase Condition for 2 is true')
         return true
-    elseif phase == 3 and aiBrain.EnemyIntel.LandPhase == 3 then
+    elseif phase == 3 and aiBrain.EnemyIntel.Phase == 3 then
         --RNGLOG('EnemyLandPhase Condition for 3 is true')
         return true
     end

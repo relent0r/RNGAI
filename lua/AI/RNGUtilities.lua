@@ -33,7 +33,7 @@ local RNGCOPY = table.copy
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 -- Cached categories
-local CategoriesShield = categories.SHIELD * categories.STRUCTURE
+local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
 
 --[[
 Valid Threat Options:
@@ -1340,6 +1340,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     local structureTargets = { }
     local structureThreat = 0
     local enemyACUTargets = {}
+    local returnAcu = false
     local returnTarget = false
     local acuDistanceToBase = VDist3Sq(cdrPos, basePosition)
     if aiBrain.BasePerimeterMonitor['MAIN'].LandThreat > 15 then
@@ -1350,7 +1351,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
     for _, range in RangeList do
         if maxRange > range then
-            targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.SCOUT, cdrPos, range, 'Enemy')
+            targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.AIR - categories.SCOUT, cdrPos, range, 'Enemy')
             for _, target in targetUnits do
                 if not target.Dead then
                     local targetPos = target:GetPosition()
@@ -1381,6 +1382,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         RNGLOG('ACUTARGETTING : ACU Targets are within range')
         for k, v in enemyACUTargets do
             if not v.unit.Dead and not v.unit:BeenDestroyed() then
+                LOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
+                LOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
                 if VDist3Sq(v.position, basePosition) < acuDistanceToBase then
                     local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                     local targetLayer = v.unit:GetCurrentLayer()
@@ -1389,6 +1392,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
                             RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                             returnTarget = v.unit
+                            returnAcu = true
                             break
                         end
                     end
@@ -1401,11 +1405,12 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
                             RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                             returnTarget = v.unit
+                            returnAcu = true
                             break
                         end
                     end
                 elseif v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') > 0 then
-                    local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), v.position, 50, 'Enemy')
+                    local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE - categories.SCOUT), v.position, 50, 'Enemy')
                     local enemyUnitThreat = 0
                     for _,c in enemyUnits do
                         if c and not c.Dead then
@@ -1417,6 +1422,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             end
                         end
                     end
+                    RNGLOG('Enemy CDR Threat present real threat is '..enemyUnitThreat)
                     if enemyUnitThreat < math.max(55, cdrThreat) then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                         local targetLayer = v.unit:GetCurrentLayer()
@@ -1425,6 +1431,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
                                 RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                                 returnTarget = v.unit
+                                returnAcu = true
                                 break
                             end
                         end
@@ -1540,9 +1547,9 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
         RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget
+        return returnTarget, returnAcu
     end
-    return false
+    return returnTarget, returnAcu
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)
@@ -1620,7 +1627,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                         continue
                                     end
                                 end
-                                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                                local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                                 if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                                     retUnit = unit
                                     distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
@@ -1655,7 +1662,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 continue
                             end
                         end
-                        local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                        local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                         if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
                             distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
@@ -1818,7 +1825,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                                 continue
                             end
                         end
-                        local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                        local numShields = GetNumUnitsAroundPoint(aiBrain, CategoriesShield, unitPos, 46, 'Enemy')
                         if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                             retUnit = unit
                             distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
@@ -1842,7 +1849,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                         continue
                     end
                 end
-                local numShields = GetNumUnitsAroundPoint(aiBrain, categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                local numShields = GetNumUnitsAroundPoint(aiBrain, CategoriesShield, unitPos, 46, 'Enemy')
                 if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     retUnit = unit
                     distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])

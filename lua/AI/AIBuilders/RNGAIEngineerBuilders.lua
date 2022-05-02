@@ -92,7 +92,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
-            { EBC, 'NegativeEcoPowerCheck', { 5.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
         },
         BuilderType = 'All',
@@ -221,7 +221,7 @@ BuilderGroup {
         Priority = 600, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 6 of them.
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 0.7 }},
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
         },
         BuilderType = 'All',
@@ -233,7 +233,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 0.8} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
@@ -269,7 +269,7 @@ BuilderGroup {
         Priority = 500, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 0.8} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
         },
         BuilderType = 'All',

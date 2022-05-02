@@ -172,7 +172,7 @@ function CDRBrainThread(cdr)
                 cdr.GunUpgradeRequired = false
             end
         end
-        if aiBrain.EnemyIntel.LandPhase == 2 then
+        if aiBrain.EnemyIntel.Phase == 2 then
             cdr.Phase = 2
             if (not cdr.GunUpgradePresent) then
                 if CDRGunCheck(aiBrain, cdr) then
@@ -183,7 +183,7 @@ function CDRBrainThread(cdr)
                     cdr.GunUpgradeRequired = false
                 end
             end
-        elseif aiBrain.EnemyIntel.LandPhase == 3 then
+        elseif aiBrain.EnemyIntel.Phase == 3 then
             --RNGLOG('Enemy is phase 3')
             cdr.Phase = 3
         end
@@ -220,10 +220,11 @@ function CDRBrainThread(cdr)
                         end
                     end
                     local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2])
+                    v.DistanceToBase = enemyAcuDistance
                     if enemyAcuDistance < (aiBrain.BrainIntel.MilitaryRange * aiBrain.BrainIntel.MilitaryRange) then
-                        aiBrain.EnemyIntel.ACU[k].OnField = true
+                        v.OnField = true
                     else
-                        aiBrain.EnemyIntel.ACU[k].OnField = false
+                        v.OnField = false
                     end
                     if enemyAcuDistance < 19600 then
                         aiBrain.EnemyIntel.ACUEnemyClose = true
@@ -231,9 +232,9 @@ function CDRBrainThread(cdr)
                         aiBrain.EnemyIntel.ACUEnemyClose = false
                     end
                     if VDist2Sq(v.Position[1], v.Position[3], cdr.Position[1], cdr.Position[2]) < 6400 then
-                        aiBrain.EnemyIntel.ACU[k].CloseCombat = true
+                        v.CloseCombat = true
                     else
-                        aiBrain.EnemyIntel.ACU[k].CloseCombat = false
+                        v.CloseCombat = false
                     end
                 end
             end
@@ -398,7 +399,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
         RNGLOG('ACU Looping through markers')
         local adaptiveResourceMarkers = GetMarkersRNG()
-        MassMarker = {}
+        local MassMarker = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, acuPos ) })
@@ -567,7 +568,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
         RNGLOG('ACU Looping through markers')
         local adaptiveResourceMarkers = GetMarkersRNG()
-        MassMarker = {}
+        local MassMarker = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, acuPos ) })
@@ -1436,7 +1437,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         plat.BuilderName = 'CDR Combat'
         --RNGLOG('Assign ACU to attack platoon')
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-        local target
+        local target, acuTarget
         local continueFighting = true
         local counter = 0
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
@@ -1447,13 +1448,24 @@ function CDROverChargeRNG(aiBrain, cdr)
         
         repeat
             overCharging = false
-            if not cdr.SuicideMode and VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building')) then
+            local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
+            if not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building')) then
                 RNGLOG('OverCharge running but ACU is beyond its MaxBaseRange property')
                 cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                 coroutine.yield(40)
                 RNGLOG('cdr retreating due to beyond max range and not building')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
+            --[[
+            if not target or target.Dead then
+                for k, v in aiBrain.EnemyIntel.ACU do
+                    if not v.Ally then
+                        if v.DistanceToBase ~= 0 and v.DistanceToBase < acuDistanceToBase then
+                            LOG('Enemy ACU is closer to our base than we are')
+                        end
+                    end
+                end
+            end]]
             if cdr.SuicideMode or counter >= 5 or not target or target.Dead or VDist3Sq(cdr.Position, target:GetPosition()) > maxRadius * maxRadius then
                 counter = 0
                 local searchRadius = 35
@@ -1461,7 +1473,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     cdr:SetCustomName('CDR searching for target')
                 end
                 if not cdr.SuicideMode then
-                    target = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
+                    target, acuTarget = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
                 else
                     RNGLOG('We are in suicide mode so dont look for a new target')
                 end
@@ -1471,6 +1483,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local cdrNewPos = {}
+                    local acuAdvantage = false
                     cdr.TargetPosition = targetPos
                     --RNGLOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
@@ -1523,6 +1536,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if EntityCategoryContains(categories.COMMAND, target) then
                         local enemyACUHealth = target:GetHealth()
+                        if enemyACUHealth < cdr.Health then
+                            acuAdvantage = true
+                        end
                         RNGLOG('Enemy ACU Detected , our health is '..cdr.Health..' enemy is '..enemyACUHealth)
                         if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 then
                             if not cdr.SnipeMode then
@@ -1561,26 +1577,28 @@ function CDROverChargeRNG(aiBrain, cdr)
                             RNGLOG('Lets try snipe the target')
                             movePos = targetPos
                         elseif cdr.CurrentEnemyInnerCircle < 20 then
+                            RNGLOG('cdr pew pew low enemy threat move pos')
                             movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - 14})
+                        elseif acuAdvantage then
+                            RNGLOG('cdr pew pew acuAdvantage move pos')
+                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 10)})
                         else
-                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
+                            RNGLOG('cdr pew pew standard move pos')
+                            movePos = lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
                         if not snipeAttempt and aiBrain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
                             RNGLOG('Blocking terrain for acu')
-                            if not PlatoonExists(aiBrain, plat) then
-                                local plat = aiBrain:MakePlatoon('CDRAttack', 'none')
-                                plat.BuilderName = 'CDR Combat'
-                                aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-                            end
                             local checkPoints = DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
-                                RNGLOG('Check points for alternative fire position '..repr(v))
-                                if not aiBrain:CheckBlockingTerrain(v, targetPos, 'none') then
+                                RNGLOG('Check points for alternative fire position '..repr({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}))
+                                if not aiBrain:CheckBlockingTerrain({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
                                     RNGLOG('Found alternate position due to terrain blocking, attempting move')
                                     movePos = v
                                     alternateFirePos = true
                                     break
+                                else
+                                    RNGLOG('Terrain is still blocked according to the checkblockingterrain')
                                 end
                             end
                             if alternateFirePos then
@@ -1636,12 +1654,15 @@ function CDROverChargeRNG(aiBrain, cdr)
                             coroutine.yield(30)
                         end
                     end
+                    if aiBrain.RNGDEBUG then
+                        cdr:SetCustomName('CDR pew pew complete there is a 3 second yield after this')
+                    end
                 else
                     CDRCheckForCloseMassPoints(aiBrain, cdr)
                 end
             end
 
-            coroutine.yield(30)
+            coroutine.yield(25)
             counter = counter + 5
 
             if cdr.Dead then

@@ -833,7 +833,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
-        self.EnemyIntel.LandPhase = 1
+        self.EnemyIntel.Phase = 1
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},
@@ -870,6 +870,7 @@ AIBrain = Class(RNGAIBrainClass) {
         for _, v in ArmyBrains do
             self.EnemyIntel.ACU[v:GetArmyIndex()] = {
                 Position = {},
+                DistanceToBase = 0,
                 LastSpotted = 0,
                 Threat = 0,
                 Hp = 0,
@@ -2638,18 +2639,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGLOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
                     local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
                     RNGLOG('ArmyPool Engineer count is '..poolPlatoon:PlatoonCategoryCount(categories.ENGINEER))
-                    for k, v in poolPlatoon:GetPlatoonUnits() do
-                        if not v.CDRHome and v.Active then
-                            RNGLOG('There is an engineer in the army pool with Active set '..v.UnitId)
-                        end
-                    end
                     RNGLOG('DistributionTable '..repr(self.EngineerDistributionTable))
                     local reclaimRatio = self.EngineerDistributionTable.Reclaim / self.EngineerDistributionTable.Total
                     RNGLOG('Engineer Reclaim Ratio '..reclaimRatio)
                     local assistRatio = self.EngineerDistributionTable.Assist / self.EngineerDistributionTable.Total
                     RNGLOG('Engineer Assist Ratio '..reclaimRatio)
-                    RNGLOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired)
-                    RNGLOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower)
+                    RNGLOG('Current Engineer Assist Build Power Required '..self.EngineerAssistManagerBuildPowerRequired..' for '..self.Nickname)
+                    RNGLOG('Current Engineer Assist Builder Power '..self.EngineerAssistManagerBuildPower..' for '..self.Nickname)
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
@@ -2890,15 +2886,15 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
                     end
                     coroutine.yield(1)
-                    if self.EnemyIntel.LandPhase < 2 then
-                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.LAND) > 0 then
+                    if self.EnemyIntel.Phase < 2 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2) > 0 then
                             RNGLOG('Enemy has moved to T2')
-                            self.EnemyIntel.LandPhase = 2
+                            self.EnemyIntel.Phase = 2
                         end
-                    elseif self.EnemyIntel.LandPhase < 3 then
-                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * categories.LAND) > 0 then
+                    elseif self.EnemyIntel.Phase < 3 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3) > 0 then
                             RNGLOG('Enemy has moved to T3')
-                            self.EnemyIntel.LandPhase = 3
+                            self.EnemyIntel.Phase = 3
                         end
                     end
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
@@ -3078,6 +3074,17 @@ AIBrain = Class(RNGAIBrainClass) {
             self.amanager.Ratios[factionIndex].Land.T1.aa = 12
             self.earlyFlag = false
         end
+        if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
+            LOG('Less than enemy air threat, increase mobile aa numbers')
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 20
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 20
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 20
+        else
+            LOG('More than enemy air threat, decrease mobile aa numbers')
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 10
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 10
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 10
+        end
 
         if self.EnemyIntel.EnemyCount < 2 and gameTime < (240 / multiplier) then
             self.UpgradeMode = 'Caution'
@@ -3090,33 +3097,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.EnemyIntel.EnemyThreatLocations = {}
 
-
-        --RNGLOG('Current Threat Location Table'..repr(self.EnemyIntel.EnemyThreatLocations))
-        --[[if RNGGETN(self.EnemyIntel.EnemyThreatLocations) > 0 then
-            for k, v in self.EnemyIntel.EnemyThreatLocations do
-                --RNGLOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
-                    self.EnemyIntel.EnemyThreatLocations[k] = nil
-                end
-            end
-            if self.EnemyIntel.EnemyThreatLocations then
-                self.EnemyIntel.EnemyThreatLocations = self:RebuildTable(self.EnemyIntel.EnemyThreatLocations)
-            end
-        end]]
-        -- Rebuild the self threat tables
-        --RNGLOG('SelfThreat Table count:'..RNGGETN(self.BrainIntel.SelfThreat))
-        --RNGLOG('SelfThreat Table present:'..repr(self.BrainIntel.SelfThreat))
-        --[[if self.BrainIntel.SelfThreat then
-            for k, v in self.BrainIntel.SelfThreat.Air do
-                --RNGLOG('Game time : Insert Time : Timeout'..gameTime..':'..v.InsertTime..':'..timeout)
-                if (gameTime - v.InsertTime) > self.TacticalMonitor.TacticalTimeout then
-                    self.BrainIntel.SelfThreat.Air[k] = nil
-                end
-            end
-            if self.BrainIntel.SelfThreat.Air then
-                self.BrainIntel.SelfThreat.Air = self:RebuildTable(self.BrainIntel.SelfThreat.Air)
-            end
-        end]]
         -- debug, remove later on
         if enemyStarts then
             --RNGLOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
@@ -4669,8 +4649,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
@@ -4678,7 +4660,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'} 
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
@@ -4686,7 +4670,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
             else
                 state = 'Mass'
@@ -4694,8 +4680,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'} 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
             end
             RNGLOG('EngineerAssistManager State is '..state)
@@ -4724,7 +4712,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGLOG('EngineerAssistManagerBuildPower being set to 5')
                 self.EngineerAssistManagerActive = true
                 self.EngineerAssistManagerBuildPowerRequired = 5
-            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 1.0 then
+            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 then
                 RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                 coroutine.yield(30)
             else
