@@ -1382,8 +1382,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         RNGLOG('ACUTARGETTING : ACU Targets are within range')
         for k, v in enemyACUTargets do
             if not v.unit.Dead and not v.unit:BeenDestroyed() then
-                LOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
-                LOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
+                RNGLOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
+                RNGLOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
                 if VDist3Sq(v.position, basePosition) < acuDistanceToBase then
                     local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                     local targetLayer = v.unit:GetCurrentLayer()

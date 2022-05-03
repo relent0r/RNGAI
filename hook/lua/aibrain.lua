@@ -3075,12 +3075,12 @@ AIBrain = Class(RNGAIBrainClass) {
             self.earlyFlag = false
         end
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
-            LOG('Less than enemy air threat, increase mobile aa numbers')
+            RNGLOG('Less than enemy air threat, increase mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 20
             self.amanager.Ratios[factionIndex].Land.T2.aa = 20
             self.amanager.Ratios[factionIndex].Land.T2.aa = 20
         else
-            LOG('More than enemy air threat, decrease mobile aa numbers')
+            RNGLOG('More than enemy air threat, decrease mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 10
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
