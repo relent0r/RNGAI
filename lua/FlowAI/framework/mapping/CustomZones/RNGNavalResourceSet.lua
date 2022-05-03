@@ -63,7 +63,7 @@ RNGNavalResourceSet = Class(ZoneSet){
             zoneRadius = 180 * 180
         end
 
-       --LOG('Zone Radius is '..zoneRadius)
+        RNGLOG('Zone Radius is '..zoneRadius)
 
         local markers = {}
         for _, marker in ScenarioUtils.GetMarkers() do
@@ -80,7 +80,7 @@ RNGNavalResourceSet = Class(ZoneSet){
                 end
             end
         end
-       --LOG('Marker table size is '..RNGGETN(markers))
+        RNGLOG('Marker table size is '..RNGGETN(markers))
 
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]

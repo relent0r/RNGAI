@@ -6,7 +6,6 @@
 ]]
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
-RNGLOG('* AI-RNG: BaseRestricted :'..BaseRestrictedArea..' BaseMilitary :'..BaseMilitaryArea..' BaseDMZArea :'..BaseDMZArea..' BaseEnemy :'..BaseEnemyArea)
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
@@ -144,7 +143,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 1000 } },
             { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -156,7 +154,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 500 } },
             { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -200,8 +197,7 @@ BuilderGroup {
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 2000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 240 } }, 
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, 
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -212,60 +208,11 @@ BuilderGroup {
         Priority = 820, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'MapSizeLessThan', { 4000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 270 } }, 
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 16, categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ENGINEER }},
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, 
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Factory Land Attack Large',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
-        Priority = 750, -- After Second Engie Group
-        PriorityFunction = LandEngMode,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Land Attack NoEng Large',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueueNoEng',
-        Priority = 0, -- After Second Engie Group
-        PriorityFunction = LandNoEngMode,
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 7, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Attack Large',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 760,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 6, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -431,40 +378,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Small',
     BuildersType = 'FactoryBuilder',
-    --[[Builder {
-        BuilderName = 'RNGAI Attack T3 Small',
-        PlatoonTemplate = 'RNGAIT3LandAttackQueue',
-        Priority = 790,
-        PriorityFunction = LandAttackMode,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Attack Heavy T3 Small',
-        PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
-        Priority = 0,
-        PriorityFunction = LandAttackHeavyMode,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.1}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Small',
         PlatoonTemplate = 'T3LandArtillery',
@@ -482,36 +395,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI T3 AttackLandBuilder Large',
     BuildersType = 'FactoryBuilder',
-    --[[Builder {
-        BuilderName = 'RNGAI Attack T3 Large',
-        PlatoonTemplate = 'RNGAIT3LandAttackQueue',
-        Priority = 770,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Attack Heavy T3 Large',
-        PlatoonTemplate = 'RNGAIT3LandAttackQueueHeavy',
-        Priority = 0,
-        PriorityFunction = LandAttackHeavyMode,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI T3 Mobile Arty ACUClose Large',
         PlatoonTemplate = 'T3LandArtillery',

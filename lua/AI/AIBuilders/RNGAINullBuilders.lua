@@ -6,52 +6,6 @@ local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Null TankLandBuilder',
-    BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI Null Factory Land Attack',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueue',
-        Priority = 750, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.1}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, 'FACTORY LAND TECH2' }}, -- stop building after we decent reach tech2 capability
-
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Null T2 Attack - Tech 2',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueue',
-        Priority = 760,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, 'FACTORY LAND TECH3' }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Null T3 Attack - Tech 3',
-        PlatoonTemplate = 'RNGAIT3LandAttackQueue',
-        Priority = 770,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.80 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-}
-
-BuilderGroup {
     BuilderGroupName = 'RNGAI Null Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',
     Builder {

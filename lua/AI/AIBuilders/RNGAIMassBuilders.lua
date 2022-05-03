@@ -126,7 +126,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND }},
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -364,7 +364,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 800,
+        Priority = 850,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
@@ -394,7 +394,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T2 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 850,
+        Priority = 860,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
         BuilderConditions = {

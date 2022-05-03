@@ -817,6 +817,7 @@ end
 
 function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri)
     local position = platoon:GetPlatoonPosition()
+    local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
     if not aiBrain or not position or not maxRange then
         return false
     end
@@ -830,9 +831,9 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
         for num, unit in targetUnits do
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
-                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                 if numShields > 0 and (not retUnit) and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
-                    local shieldUnits = aiBrain:GetUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
+                    local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
                         if not sUnit.Dead and sUnit.MyShield then
@@ -867,10 +868,10 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             end
         end
         if retUnit then
-            --LOG('Satellite has target')
+            RNGLOG('Satellite has target')
             return retUnit
         else
-            --LOG('Satellite did not get target')
+            RNGLOG('Satellite did not get target')
         end
     end
 
