@@ -264,6 +264,17 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Small AirOnly',
+        PlatoonTemplate = 'T3BuildEngineer',
+        Priority = 910, -- Top factory priority
+        BuilderConditions = {
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Medium',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority

@@ -2002,9 +2002,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('* AI-RNG: * HuntAIPATH: Path found')
                     platoonPos = GetPlatoonPosition(self)
                     if not success or VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 512 then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true)
+                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                     elseif VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 256 then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false)
+                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
                     end
                     if not usedTransports then
                         RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
@@ -2013,7 +2013,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 elseif (not path and reason == 'NoPath') then
                     --RNGLOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --RNGLOG('Guardmarker requesting transports')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true)
+                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not usedTransports then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: not used transports')
