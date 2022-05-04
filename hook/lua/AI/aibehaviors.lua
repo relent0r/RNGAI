@@ -86,6 +86,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.Retreating = false
     cdr.SnipeMode = false
     cdr.SuicideMode = false
+    cdr.AirScout = false
     cdr.Scout = false
     cdr.CurrentEnemyThreat = false
     cdr.CurrentFriendlyThreat = false
@@ -188,7 +189,7 @@ function CDRBrainThread(cdr)
             cdr.Phase = 3
         end
         cdr.DistanceToHome = VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.CDRHome[1], cdr.CDRHome[3])
-        if cdr.Health < 5000 and cdr.DistanceToHome > 900 then
+        if cdr.Health < 5500 and cdr.DistanceToHome > 900 then
             RNGLOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth'
@@ -205,6 +206,8 @@ function CDRBrainThread(cdr)
                     RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
+                elseif cdr.Health < 6000 and (gameTime - 15) > lastPlatoonCall then
+                    CDRCallPlatoon(cdr, 20)
                 end
             end
         end

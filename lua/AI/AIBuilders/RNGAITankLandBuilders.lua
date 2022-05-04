@@ -845,7 +845,6 @@ BuilderGroup {
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
                 categories.MASSFABRICATION,
-                categories.ALLUNITS,
             },
             PrioritizedCategories = {
                 categories.COMMAND,
