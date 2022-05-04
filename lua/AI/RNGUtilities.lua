@@ -302,6 +302,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     break
                                 end
                             end
+                            PerformEngReclaim(aiBrain, self, 25)
                             if self:IsUnitState("Moving") then
                                 if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                                     local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
@@ -321,7 +322,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     end
                                 end
                             end
-                            coroutine.yield(30)
+                            coroutine.yield(25)
                         end
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             coroutine.yield(1)
@@ -559,12 +560,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             MexBuild(platoon, self, aiBrain)
             --self:SetCustomName('reclaim loop end')
         end
-        local basePosition = aiBrain.BuilderManagers['MAIN'].Position
-        local location = AIUtils.RandomLocation(basePosition[1],basePosition[3])
         --RNGLOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})
-        StartMoveDestination(self, location)
-        coroutine.yield(30)
         --self:SetCustomName('moving back to base')
         reclaimLoop = reclaimLoop + 1
         if reclaimLoop == 5 then
@@ -4126,6 +4123,49 @@ function CalculatedDPSRNG(weapon)
     end
 
     return Damage * (1 / DamageInterval) or 0
+end
+
+function PerformEngReclaim(aiBrain, eng, minimumReclaim)
+    local engPos = eng:GetPosition()
+    local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
+    local reclaimRect = GetReclaimablesInRect(rectDef)
+    local reclaiming = false
+    local maxReclaimCount = 0
+    if reclaimRect then
+        local reclaimed = false
+        local closeReclaim = {}
+        for c, b in reclaimRect do
+            if not IsProp(b) then continue end
+            if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
+                if VDist2Sq(engPos[1], engPos[3], b.CachePosition[1], b.CachePosition[3]) <= 100 then
+                    RNGINSERT(closeReclaim, b)
+                    maxReclaimCount = maxReclaimCount + 1
+                end
+            end
+            if maxReclaimCount > 10 then
+                break
+            end
+        end
+        if RNGGETN(closeReclaim) > 0 then
+            reclaiming = true
+            IssueClearCommands({eng})
+            for _, rec in closeReclaim do
+                IssueReclaim({eng}, rec)
+            end
+            reclaimed = true
+        end
+        if reclaiming then
+            coroutine.yield(3)
+            local counter = 0
+            while reclaiming and counter < 10 do
+                coroutine.yield(10)
+                if cdr:IsIdleState() then
+                    reclaiming = false
+                end
+                counter = counter + 1
+            end
+        end
+    end
 end
 
 --[[

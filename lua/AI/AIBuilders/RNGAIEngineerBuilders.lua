@@ -500,14 +500,14 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 3,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION) }},
+                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION) }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
             JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION),
+                BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION),
             },
         },
         BuilderType = 'Any',

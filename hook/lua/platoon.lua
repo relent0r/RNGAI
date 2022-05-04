@@ -4509,6 +4509,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                 end
+                if ALLBPS[whatToBuild].CategoriesHash.HYDROCARBON then
+                    if aiBrain:GetCurrentUnits(categories.AIR * categories.FACTORY) < 1 then
+                        RNGLOG('We should build an air factory adjacent to this hydro')
+                    end
+                end
                 if not eng.NotBuildingThread then
                     eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
