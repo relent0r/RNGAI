@@ -1663,6 +1663,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                 else
                     CDRCheckForCloseMassPoints(aiBrain, cdr)
                 end
+                if cdr.SuicideMode and target.Dead then
+                    cdr.SuicideMode = false
+                end
             end
 
             coroutine.yield(25)

@@ -1002,6 +1002,35 @@ function PositionOnWater(positionX, positionZ)
     return false
 end
 
+function ManualBuildQueueItem(aiBrain, eng, structureToBuild, adjacent, category)
+    --[[
+        Example
+            
+        local buildLocation, whatToBuild = RUtils.ManualBuildQueueItem(aiBrain, eng, 'T1AirFactory', true, categories.HYDROCARBON)
+        if buildLocation and whatToBuild then
+            local newEntry = {whatToBuild, buildLocation, true, BorderWarning=false}
+            RNGINSERT(eng.EngineerBuildQueue, newEntry)
+        end
+
+    ]]
+
+    if not eng or eng.Dead or not structureToBuild then
+        return
+    end
+    local factionIndex = aiBrain:GetFactionIndex()
+    local baseTmplFile = import('/lua/BaseTemplates.lua')
+    local buildingTmplFile = import('/lua/BuildingTemplates.lua')
+    local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+    local buildLocation, whatToBuild = GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['BaseTemplates'][factionIndex], structureToBuild, eng, adjacent, category, 15, true)
+    LOG('Build Location '..repr(buildLocation).. ' WhatToBuild '..repr(whatToBuild))
+    if buildLocation and whatToBuild then
+        return buildLocation, whatToBuild
+    end
+    LOG('ManualBuildQueue returning false ')
+    return false
+end
+
+--[[
 function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
     -- Usage ManualBuildStructure(aiBrain, engineerunit, 'AntiSurface', 'TECH2', {123:20:123})
     local factionIndex = aiBrain:GetFactionIndex()
@@ -1082,7 +1111,7 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
         IssueClearCommands({eng})
         aiBrain:BuildStructure(eng, blueprintID, position, false)
     end
-end
+end]]
 
 function TacticalMassLocations(aiBrain)
     -- Scans the map and trys to figure out tactical locations with multiple mass markers
@@ -4159,7 +4188,7 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
             local counter = 0
             while reclaiming and counter < 10 do
                 coroutine.yield(10)
-                if cdr:IsIdleState() then
+                if eng:IsIdleState() then
                     reclaiming = false
                 end
                 counter = counter + 1

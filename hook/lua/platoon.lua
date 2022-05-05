@@ -4306,6 +4306,15 @@ Platoon = Class(RNGAIPlatoonClass) {
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
+                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if buildLocation and whatToBuild then
+                            RNGLOG('CommanderInitializeAIRNG : Execute Build Structure adjacent Land Factory')
+                            RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
+                            RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
                     end
                     while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
                         coroutine.yield(5)
@@ -4357,6 +4366,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         -- it wasn't a failed build, so we just finished something
         if removeLastBuild then
+
             table.remove(eng.EngineerBuildQueue, 1)
         end
 
@@ -4509,11 +4519,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                 end
-                if ALLBPS[whatToBuild].CategoriesHash.HYDROCARBON then
-                    if aiBrain:GetCurrentUnits(categories.AIR * categories.FACTORY) < 1 then
-                        RNGLOG('We should build an air factory adjacent to this hydro')
-                    end
-                end
                 if not eng.NotBuildingThread then
                     eng.NotBuildingThread = eng:ForkThread(eng.PlatoonHandle.WatchForNotBuildingRNG)
                 end
@@ -4526,6 +4531,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(2)
         end
         --RNGLOG('EnginerBuildQueue : '..RNGGETN(eng.EngineerBuildQueue)..' Contents '..repr(eng.EngineerBuildQueue))
+
         if not eng.Dead and RNGGETN(eng.EngineerBuildQueue) <= 0 and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
             --RNGLOG('Starting RepeatBuild')
             local engpos = eng:GetPosition()
