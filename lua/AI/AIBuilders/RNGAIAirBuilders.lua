@@ -163,7 +163,7 @@ BuilderGroup {
         Priority = 890,	
         PriorityFunction = BomberResponse,
         BuilderConditions = {	
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.9 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
         },	
         BuilderType = 'Air',	
@@ -171,21 +171,6 @@ BuilderGroup {
             LocationType = 'LocationType',
         },
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Air Attack Queue T1',
-        PlatoonTemplate = 'RNGAIT1AirQueue',
-        Priority = 0,
-        PriorityFunction = AirAttackMode,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 1
-        },
-    },]]
 }
 
 BuilderGroup {
@@ -313,22 +298,6 @@ BuilderGroup {
             TechLevel = 3
         },
     },
-    --[[Builder {
-        BuilderName = 'RNGAI T3 Air Queue',
-        PlatoonTemplate = 'RNGAIT3AirQueue',
-        Priority = 850,
-        PriorityFunction = AirDefenseMode,
-        BuilderType = 'Air',
-        BuilderConditions = {
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-        },
-        BuilderData = {
-            TechLevel = 3
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI T3 Air Attack Queue',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
@@ -497,7 +466,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI BomberAttack T1',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 910,
-        InstanceCount = 2,
+        InstanceCount = 10,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},

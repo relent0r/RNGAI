@@ -2917,6 +2917,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             if target and not target.Dead then
                 local targetPosition = target:GetPosition()
                 platoonPosition = GetPlatoonPosition(self)
+                if not platoonPosition then
+                    return
+                end
                 platoonCount = RNGGETN(platoonUnits)
                 local targetDistance = VDist2Sq(platoonPosition[1], platoonPosition[3], targetPosition[1], targetPosition[3])
                 local path = false
@@ -6592,6 +6595,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             WARN('No path passed to PlatoonMoveWithMicro')
             return false
         end
+        local ALLBPS = __blueprints
 
         local function VariableKite(platoon,unit,target)
             local function KiteDist(pos1,pos2,distance)
@@ -6649,6 +6653,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             local Lastdist
             local dist
             local Stuck = 0
+            local closestTurret, closestTurrentRange
+            local closestTurretDistance = 0
             while PlatoonExists(aiBrain, self) do
                 PlatoonPosition = GetPlatoonPosition(self) or nil
                 if not PlatoonPosition then break end
@@ -6679,7 +6685,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, PlatoonPosition, self.EnemyRadius, 'Enemy')
                 if enemyUnitCount > 0 then
                     local attackSquad = self:GetSquadUnits('Attack')
-                    local target, acuInRange, acuUnit, totalThreat, targetTable = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
+                    local target, acuInRange, acuUnit, totalThreat, targetTable, defensiveStructureTable = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
                     if acuInRange then
                         target = false
                         if self.CurrentPlatoonThreat < 30 then
@@ -6832,6 +6838,25 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                     end
+                    
+                    if next(defensiveStructureTable) then
+                        LOG('defensiveStructureTable has units')
+                        for _, turret in defensiveStructureTable do
+                            if not turret.Dead then
+                                local turretDistance = VDist3Sq(PlatoonPosition, turret:GetPosition())
+                                if closestTurretDistance < 1 or turretDistance < closestTurretDistance then
+                                    closestTurretDistance = turretDistance
+                                    closestTurret = turret
+                                end
+                            end
+                        end
+                    end
+                    if closestTurret and not closestTurret.Dead then
+                        if ALLBPS[closestTurret.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' then
+                            closestTurretDistance = ALLBPS[closestTurret.UnitId].Weapon[1].MaxRadius
+                            RNGLOG('Turret Found at a distance of '..closestTurretDistance)
+                        end
+                    end
                     self:Stop()
                     local retreatTrigger = 0
                     local retreatTimeout = 0
@@ -6847,8 +6872,18 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if not unit.MaxWeaponRange then
                                     continue
                                 end
-                                IssueClearCommands({unit})
-                                retreatTrigger = VariableKite(self,unit,target)
+                                if closestTurret and not closestTurret.Dead and ALLBPS[unit.UnitId].CategoriesHash.INDIRECTFIRE then
+                                    if closestTurretDistance < unit.MaxWeaponRange + 5 then
+                                        RNGLOG('INDIRECTFIRE UNIT Being request to fire at turret')
+                                        IssueAttack({unit}, closestTurret)
+                                    else
+                                        IssueClearCommands({unit})
+                                        retreatTrigger = VariableKite(self,unit,target)
+                                    end
+                                else
+                                    IssueClearCommands({unit})
+                                    retreatTrigger = VariableKite(self,unit,target)
+                                end
                             end
                         else
                             for _, unit in targetTable do

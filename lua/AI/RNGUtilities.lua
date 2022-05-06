@@ -34,6 +34,7 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 -- Cached categories
 local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
+local CategoriesLandDefense = categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE
 
 --[[
 Valid Threat Options:
@@ -1918,6 +1919,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     local acuPresent = false
     local acuUnit = false
     local unitThreatTable = {}
+    local defensiveStructureTable = {}
     local totalThreat = 0
     local RangeList = {
         [1] = 10,
@@ -1958,6 +1960,9 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                     else
                         totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                     end
+                    if EntityCategoryContains(CategoriesLandDefense, Target) then
+                        RNGINSERT(defensiveStructureTable, Target)
+                    end
                     unitThreatTable[Target.Sync.id] = true
                 end
                 TargetPosition = Target:GetPosition()
@@ -1989,13 +1994,13 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --RNGLOG('Target Found in target aquisition function')
-                return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange
+                return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange, defensiveStructureTable
             end
         end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange
+    return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange, defensiveStructureTable
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)

@@ -864,16 +864,22 @@ StructureManager = Class {
                 coroutine.yield(60)
                 continue
             end
-            coroutine.yield(30)
+            LOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
+            if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
+                RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
+            end
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('We Could upgrade an extractor now with over time')
                         --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5 or upgradeSpend < 15 then
-                            --LOG('Trigger all tiers false')
+                        if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.1) and aiBrain.cmanager.income.r.m > (70 * aiBrain.EcoManager.EcoMultiplier) then
+                            RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and aiBrain.cmanager.income.r.m is greater than 70')
+                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                        elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5) or upgradeSpend < 15 then
+                            RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                         else
-                            --LOG('Trigger all tiers true')
+                            RNGLOG('Else all tiers upgrade')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
                         end
                         coroutine.yield(30)

@@ -770,6 +770,7 @@ AIBrain = Class(RNGAIBrainClass) {
             CoreMassMarkerCount = 0,
             TotalCoreExtractors = 0,
             CoreExtractorT3Percentage = 0,
+            CoreExtractorT2Count = 0,
             CoreExtractorT3Count = 0,
             EcoMultiplier = 1,
             EcoMassUpgradeTimeout = 300,
@@ -2189,6 +2190,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local ALLBPS = __blueprints
         local LandCatUnits = categories.LAND + categories.AMPHIBIOUS + categories.COMMAND
         local AirSurfaceCatUnits = categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER)
+        local perimeterMonitorRadius = BaseRestrictedArea * 1.2
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
             self:ForkThread(self.drawMainRestricted)
@@ -2206,7 +2208,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
                     end
-                    local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, BaseRestrictedArea , 'Enemy')
+                    local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
                     for _, unit in enemyUnits do
                         if unit and not unit.Dead then
                             if ALLBPS[unit.UnitId].CategoriesHash.MOBILE then
@@ -5166,6 +5168,7 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Mainbase T2 Extractors '..mainBaseExtractors.T2)
             RNGLOG('Mainbase T3 Extractors '..mainBaseExtractors.T3)
             self.EcoManager.CoreExtractorT3Percentage = mainBaseExtractors.T3 / totalCoreExtractors
+            self.EcoManager.CoreExtractorT2Count = mainBaseExtractors.T2 or 0
             self.EcoManager.CoreExtractorT3Count = mainBaseExtractors.T3 or 0
             self.EcoManager.TotalCoreExtractors = totalCoreExtractors or 0
         end
