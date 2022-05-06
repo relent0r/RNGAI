@@ -18,7 +18,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 900,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.01, 0.60}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.60}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
@@ -30,8 +30,8 @@ BuilderGroup {
         Priority = 760,
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.SCOUT * categories.AIR}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'UnitToThreatRatio', { 0.2, categories.SCOUT * categories.AIR, 'Air', '<'}},
         },
         BuilderType = 'Air',
     },
@@ -42,7 +42,18 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.SCOUT * categories.AIR}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory AirScout T3 Excess',
+        PlatoonTemplate = 'T3AirScout',
+        Priority = 900,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
+            { UCBC, 'UnitToThreatRatio', { 0.1, categories.SCOUT * categories.AIR, 'Air', '<'}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
         BuilderType = 'Air',
     },
@@ -69,10 +80,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout Air Excess',
         PlatoonTemplate = 'RNGAI AirScoutForm',
-        InstanceCount = 20,
+        InstanceCount = 30,
         Priority = 890,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
             ExpansionPatrol = true,

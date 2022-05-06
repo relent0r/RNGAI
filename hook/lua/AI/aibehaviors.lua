@@ -679,7 +679,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     local path, reason
     plat.BuilderName = 'CDR Active Movement'
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-    RNGLOG('Moving ACU to position')
+    RNGLOG('CDR : Moving ACU to position')
     cdr.movetopos = position
     if retreat then
         IssueClearCommands({cdr})
@@ -691,20 +691,20 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
         path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
     end
     if path then
-        RNGLOG('We have a path')
-        RNGLOG('Distance to position is '..VDist3(cdr.Position, position))
+        RNGLOG('CDR : We have a path')
+        RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
         if retreat or platoonRetreat then
-            RNGLOG('We are retreating')
+            RNGLOG('CDR : We are retreating')
         end
         if cdr.Caution then
-            RNGLOG('CDR is in caution mode')
+            RNGLOG('CDR : CDR is in caution mode')
         end
         if retreat and not cdr.Dead then
             cdr:SetAutoOvercharge(true)
         end
         for i=1, RNGGETN(path) do
             if cdr.Retreat and cdr.Caution then
-                RNGLOG('ACU Retreat flag while moving')
+                RNGLOG('CDR : ACU Retreat flag while moving')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
             IssueClearCommands({cdr})
@@ -720,18 +720,18 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         if platoonPosition then
                             local platoonDistance = VDist2Sq(cdrPosition[1], cdrPosition[3], platoonPosition[1], platoonPosition[3])
                             if platoonDistance < 225 then
-                                RNGLOG('Close to platoon position clear and return')
+                                RNGLOG('CDR : Close to platoon position clear and return')
                                 IssueClearCommands({cdr})
                                 cdr.movetopos = false
                                 return
                             end
                             if platoonDistance < 22500 then
-                                RNGLOG('Retarget movement to platoon position')
+                                RNGLOG('CDR : Retarget movement to platoon position')
                                 IssueClearCommands({cdr})
                                 IssueMove({cdr}, platoonPosition)
                             end
                             if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 2500 then
-                                RNGLOG('EnemyThreat low, cancel retreat')
+                                RNGLOG('CDR : EnemyThreat low, cancel retreat')
                                 IssueClearCommands({cdr})
                                 cdr.movetopos = false
                                 return
@@ -741,7 +741,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             continue
                         end
                     else
-                        RNGLOG('ACU Retreat platoon doesnt exist anymore')
+                        RNGLOG('CDR : ACU Retreat platoon doesnt exist anymore')
                         local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
                         if supportPlatoonAvailable then
                             local supportPlatoonPos = GetPlatoonPosition(supportPlatoonAvailable)
@@ -758,6 +758,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     break
                 end
                 if not cdr:IsUnitState("Moving") then
+                    RNGLOG('ACU isnt moving, reset movecommand')
                     IssueClearCommands({cdr})
                     IssueMove({cdr}, path[i])
                 end
@@ -767,7 +768,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetACURNG(aiBrain, cdr.PlatoonHandle, cdrPosition, 'Attack', 30, (categories.LAND + categories.STRUCTURE), cdr.atkPri, false)
                         cdr.EnemyThreat = totalThreat
                         if totalThreat > cdr.ThreatLimit then
-                            RNGLOG('cdr caution is true due to total threat around acu higher than threat limit total threat is '..totalThreat..' threat limit is '..cdr.ThreatLimit)
+                            RNGLOG('CDR : cdr caution is true due to total threat around acu higher than threat limit total threat is '..totalThreat..' threat limit is '..cdr.ThreatLimit)
                             cdr.Caution = true
                             cdr.CautionReason = 'acuMovementHighThreat'
                         else
@@ -775,23 +776,23 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             cdr.CautionReason = 'none'
                         end
                         if acuInRange then
-                            RNGLOG('Enemy ACU in range of ACU')
+                            RNGLOG('CDR : Enemy ACU in range of ACU')
                             cdr.EnemyCDRPresent = true
                             return CDROverChargeRNG(aiBrain, cdr)
                         else
                             cdr.EnemyCDRPresent = false
                         end
                         if acuUnit and acuUnit:GetHealth() < 5000 then
-                            RNGLOG('Enable Snipe Mode')
+                            RNGLOG('CDR : Enable Snipe Mode')
                             SetAcuSnipeMode(cdr, true)
                             cdr.SnipeMode = true
                         elseif cdr.SnipeMode then
-                            RNGLOG('Disable Snipe Mode')
+                            RNGLOG('CDR : Disable Snipe Mode')
                             SetAcuSnipeMode(cdr, false)
                             cdr.SnipeMode = false
                         end
                         if aiBrain.RNGDEBUG then
-                            cdr:SetCustomName('ACU Starting movement loop')
+                            cdr:SetCustomName('CDR : ACU Starting movement loop')
                         end
                         while not cdr.Dead do
                             local targetRetreat
@@ -803,7 +804,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                                     cdrPosition = cdr:GetPosition()
                                     local result, newTarget = CDRGetUnitClump(aiBrain, cdrPosition, cdr.WeaponRange - 5)
                                     if result then
-                                        RNGLOG('Overcharge issued from within acu move command')
+                                        RNGLOG('CDR : Overcharge issued from within acu move command')
                                         IssueClearCommands({cdr})
                                         IssueOverCharge({cdr}, newTarget)
                                         coroutine.yield(10)
@@ -823,10 +824,10 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     end
                 elseif cdr.Health > 6000 and retreat or platoonRetreat then
                     if not cdr.GunUpgradeRequired then
-                        RNGLOG('We are retreating or platoonRetreating')
-                        RNGLOG('EnemyThreat inner is '..(cdr.CurrentEnemyInnerCircle * 1.2)..' friendly inner is '..cdr.CurrentFriendlyInnerCircle)
+                        RNGLOG('CDR : We are retreating or platoonRetreating')
+                        RNGLOG('CDR : EnemyThreat inner is '..(cdr.CurrentEnemyInnerCircle * 1.2)..' friendly inner is '..cdr.CurrentFriendlyInnerCircle)
                         if aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon') and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle then
-                            RNGLOG('EnemyThreat low and acusupport present, cancel retreat')
+                            RNGLOG('CDR : EnemyThreat low and acusupport present, cancel retreat')
                             IssueClearCommands({cdr})
                             cdr.movetopos = false
                             coroutine.yield(2)
@@ -847,7 +848,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
             return CDREnhancementsRNG(aiBrain, cdr)
         end
     else
-        RNGLOG('No path to retreat position')
+        RNGLOG('CDR : No path to retreat position')
     end
     cdr.movetopos = false
 end
@@ -1862,7 +1863,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 RNGLOG('Platoon distance from us is '..closestDistance)
             end
             cdr.Retreat = false
-            CDRMoveToPosition(aiBrain, cdr, closestAPlatPos, 225, true, true, closestPlatoon)
+            CDRMoveToPosition(aiBrain, cdr, closestAPlatPos, 400, true, true, closestPlatoon)
         end
     else
         RNGLOG('No platoon found, trying for base')
@@ -1890,7 +1891,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                     RNGLOG('Retreating to base')
                     cdr.Retreat = false
                     cdr.BaseLocation = true
-                    CDRMoveToPosition(aiBrain, cdr, aiBrain.BuilderManagers[closestBase].Position, 225, true)
+                    CDRMoveToPosition(aiBrain, cdr, aiBrain.BuilderManagers[closestBase].Position, 625, true)
                 end
             else
                 RNGLOG('No base to retreat to')
