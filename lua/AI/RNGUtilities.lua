@@ -108,6 +108,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local engPos = self:GetPosition()
         local minRec = platoon.PlatoonData.MinimumReclaim
+        if aiBrain.RNGDEBUG then
+            self:SetCustomName('Engineer in main reclaim loop')
+        end
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
             RNGLOG('Reclaim Function - Starting reclaim is false')
@@ -148,16 +151,19 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         end
                     end
                     if closestReclaim then
-                        RNGLOG('Closest Reclaim is true we are going to try reclaim it')
+                        --RNGLOG('Closest Reclaim is true we are going to try reclaim it')
                         reclaimCount = reclaimCount + 1
-                        RNGLOG('Reclaim Function - Issuing reclaim')
+                        --RNGLOG('Reclaim Function - Issuing reclaim')
                         IssueReclaim({self}, closestReclaim)
                         coroutine.yield(20)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
+                            if aiBrain.RNGDEBUG then
+                                self:SetCustomName('Engineer in early reclaim loop')
+                            end
                             reclaimTimeout = reclaimTimeout + 1
-                            RNGLOG('Waiting for reclaim to no longer exist')
+                            --RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
                                 -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
                                 -- watch out for thrashing as I don't have a minimum storage check on this builder
@@ -197,7 +203,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             local idleCounter = 0
                             while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
                                 if aiBrain.RNGDEBUG then
-                                    self:SetCustomName('Engineer in reclaim loop')
+                                    self:SetCustomName('Engineer in start reclaim loop')
                                 end
                                 if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
                                     RNGLOG('We are not reclaiming or moving in the reclaim loop')
@@ -285,10 +291,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local Lastdist
                         local dist
                         while not self.Dead and aiBrain:PlatoonExists(platoon) do
+                            if aiBrain.RNGDEBUG then
+                                self:SetCustomName('Engineer moving in reclaim table loop')
+                            end
                             engPos = self:GetPosition()
                             dist = VDist2Sq(engPos[1], engPos[3], validLocation[1], validLocation[3])
                             if dist < 144 then
-                                RNGLOG('We are at the grid square location, dist is '..dist)
+                                --RNGLOG('We are at the grid square location, dist is '..dist)
                                 IssueClearCommands({self})
                                 break
                             end
@@ -395,14 +404,14 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     local idleCounter = 0
                                     while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
                                         if aiBrain.RNGDEBUG then
-                                            self:SetCustomName('Engineer in reclaim loop')
+                                            self:SetCustomName('Engineer in reclaim table loop')
                                         end
                                         if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                            RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                            RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                            --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                            --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
                                             idleCounter = idleCounter + 1
                                             if idleCounter > 15 then
-                                                RNGLOG('idleCounter hit, breaking loop')
+                                                --RNGLOG('idleCounter hit, breaking loop')
                                                 break
                                             end
                                         end
@@ -412,8 +421,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 end
                                 MexBuild(platoon, self, aiBrain)
                             end
-                            RNGLOG('reclaim grid loop has finished')
-                            RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
+                            --RNGLOG('reclaim grid loop has finished')
+                            --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
                         end
                     end
                 else
@@ -546,7 +555,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local idleCount = 0
         while reclaiming do
             --RNGLOG('* AI-RNG: Engineer is reclaiming')
-            --self:SetCustomName('reclaim loop start')
+            if aiBrain.RNGDEBUG then
+                self:SetCustomName('Engineer in attack reclaim loop')
+            end
             coroutine.yield(100)
             currentTime = currentTime + 10
             if currentTime > max_time then
@@ -560,6 +571,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             end
             MexBuild(platoon, self, aiBrain)
             --self:SetCustomName('reclaim loop end')
+        end
+        if aiBrain.RNGDEBUG then
+            self:SetCustomName('Engineer at end of reclaim loop')
         end
         --RNGLOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})

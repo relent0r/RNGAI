@@ -63,7 +63,7 @@ BuilderGroup {
             { UCBC, 'ExpansionAreaNeedsEngineerRNG', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -539,7 +539,7 @@ BuilderGroup {
             { UCBC, 'ExpansionAreaNeedsEngineerRNG', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -573,7 +573,7 @@ BuilderGroup {
             { UCBC, 'ExpansionAreaNeedsEngineerRNG', { 'LocationType', 1000, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {

@@ -144,8 +144,8 @@ BaseBuilderTemplate {
         },
         MassToFactoryValues = {
             T1Value = 5,
-            T2Value = 14,
-            T3Value = 21,
+            T2Value = 15,
+            T3Value = 28,
         },
 
     },
