@@ -869,7 +869,7 @@ StructureManager = Class {
                 coroutine.yield(60)
                 continue
             end
-            LOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
+            RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
             if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
                 RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
             end
