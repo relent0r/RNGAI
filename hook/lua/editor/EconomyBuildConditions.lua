@@ -295,7 +295,7 @@ function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
     return false
 end
 
-function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
+function MassIncomeToFactoryRNG(aiBrain, compareType, t1Drain, t2Drain, t3Drain)
 
     # T1 Test
     local testCat = categories.TECH1 * categories.FACTORY
@@ -308,24 +308,32 @@ function GreaterThanMassIncomeToFactoryRNG(aiBrain, t1Drain, t2Drain, t3Drain)
     # T2 Test
     testCat = categories.TECH2 * categories.FACTORY
     unitCount = aiBrain:GetCurrentUnits(testCat)
-
     massTotal = massTotal + (unitCount * t2Drain)
 
     # T3 Test
     testCat = categories.TECH3 * categories.FACTORY
     unitCount = aiBrain:GetCurrentUnits(testCat)
-
     massTotal = massTotal + (unitCount * t3Drain)
 
-    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, '>') then
+    # T4 Test
+    unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL * categories.MOBILE)
+    massTotal = massTotal + (unitCount * 40)
+
+    -- aiBrain.EconomyOverTimeCurrent.MassIncome * 10
+    -- (aiBrain.cmanager.income.r.m - mexSpend)
+    --local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3)
+    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
         --RNGLOG('MassToFactoryRatio false')
         --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        --RNGLOG('Actual Mex Income is '..aiBrain.cmanager.income.r.m)
+        --RNGLOG('Mex Income minus mex spend '..(aiBrain.cmanager.income.r.m - mexSpend))
         --RNGLOG('Factory massTotal : '..massTotal)
         return false
     end
 
     --RNGLOG('MassToFactoryRatio true')
     --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+    --RNGLOG('Actual Mex Income is '..aiBrain.cmanager.income.r.m)
     --RNGLOG('Factory massTotal : '..massTotal)
     return true
 end
@@ -344,7 +352,7 @@ function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
     return false
 end
 
-function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if not factoryManager then
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
@@ -364,7 +372,30 @@ function MassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
         t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
     end
 
-    return GreaterThanMassIncomeToFactoryRNG(aiBrain, t1, t2, t3)
+    return MassIncomeToFactoryRNG(aiBrain,'>', t1, t2, t3)
+end
+
+function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
+        return false
+    end
+
+    local t1
+    local t2
+    local t3
+    if aiBrain.CheatEnabled then
+        t1 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8) * aiBrain.EcoManager.EcoMultiplier
+        t2 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20) * aiBrain.EcoManager.EcoMultiplier
+        t3 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30) * aiBrain.EcoManager.EcoMultiplier
+    else
+        t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
+        t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
+        t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+    end
+
+    return MassIncomeToFactoryRNG(aiBrain,'<', t1, t2, t3)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)

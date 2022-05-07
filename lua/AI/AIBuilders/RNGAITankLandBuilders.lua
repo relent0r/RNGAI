@@ -11,8 +11,22 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 
+local DefensivePosture = function(self, aiBrain, builderManager, builderData)
+    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtractorCount
+    local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
+    if myExtractorCount and totalMassMarkers then
+        RNGLOG('My Extractor Count '..myExtractorCount.. ' totalMassMarkers '..totalMassMarkers)
+    end
+    if myExtractorCount > (totalMassMarkers / 2) then
+        RNGLOG('Defensive : More than half the mass markers switch to defensive mode for '..aiBrain.Nickname)
+        return 0
+    end
+    RNGLOG('Defensive : return '..builderData.Priority)
+    return builderData.Priority
+end
+
 local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
-    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
+    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
         --RNGLOG('Enable Land Heavy Attack Queue')
@@ -31,7 +45,7 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
 end
 
 local LandAttackMode = function(self, aiBrain, builderManager, builderData)
-    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtratorCount
+    local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
         --RNGLOG('Enable Land Attack Queue')
@@ -946,6 +960,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Start Location Attack',
         PlatoonTemplate = 'RNGAI Guard Marker Small',
         Priority = 700,
+        PriorityFunction = DefensivePosture,
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 2,
@@ -1615,6 +1630,7 @@ BuilderGroup {
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 610,                                                          -- Priority. 1000 is normal.
+        PriorityFunction = DefensivePosture,
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -1662,6 +1678,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI Zone Raiders Medium',                          -- Template Name.
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
+        PriorityFunction = DefensivePosture,
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     

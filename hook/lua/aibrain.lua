@@ -773,6 +773,8 @@ AIBrain = Class(RNGAIBrainClass) {
             CoreExtractorT2Count = 0,
             CoreExtractorT3Count = 0,
             EcoMultiplier = 1,
+            T3ExtractorSpend = false,
+            T2ExtractorSpend = false,
             EcoMassUpgradeTimeout = 300,
             EcoPowerPreemptive = false,
         }
@@ -2687,8 +2689,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end]]
                     local mexSpend = (self.cmanager.categoryspend.mex.T1 + self.cmanager.categoryspend.mex.T2 + self.cmanager.categoryspend.mex.T3) or 0
+                    RNGLOG('Total Mex Income is '..self.cmanager.income.r.m)
                     RNGLOG('Current Mex Upgrade Spend is '..mexSpend)
-                    RNGLOG('Current Amount we could be spending '..self.cmanager.income.r.m*0.35)
+                    RNGLOG('Current Amount we could be spending '..self.cmanager.income.r.m*self.EconomyUpgradeSpend)
                     --LOG('Spend - Mex Upgrades '..self.cmanager.categoryspend.fact['Land'] / (self.cmanager.income.r.m - mexSpend)..' Should be less than'..self.ProductionRatios['Land'])
                     --RNGLOG('ARMY '..self.Nickname..' eco numbers:'..repr(self.cmanager))
                     --RNGLOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
@@ -2739,10 +2742,11 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EnemyIntel.EnemyCount > 0 then
                 enemyCount = self.EnemyIntel.EnemyCount
             end
-            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) then
-                --RNGLOG('Land Threat Higher, shift ratio to 0.5')
+            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) and self.BrainIntel.SelfThreat.AllyExtractorCount > (self.BrainIntel.SelfThreat.MassMarker / 2) then
+                RNGLOG('Land Threat Higher, shift ratio to 0.4')
+
                 if not self.RNGEXP then
-                    self.ProductionRatios.Land = 0.5
+                    self.ProductionRatios.Land = 0.4
                 end
             elseif not self.EnemyIntel.ChokeFlag then
                 --RNGLOG('Land Threat Lower, shift ratio to 0.6')
@@ -4676,11 +4680,22 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
+            elseif self.EngineerAssistManagerFocusExperimental then
+                state = 'Experimental'
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                }
             else
                 state = 'Mass'
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 

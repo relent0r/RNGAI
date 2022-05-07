@@ -837,6 +837,11 @@ StructureManager = Class {
             RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
             RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
             RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
+            if aiBrain.EcoManager.T3ExtractorSpend then
+                RNGLOG('aiBrain.EcoManager.T3ExtractorSpend '..aiBrain.EcoManager.T3ExtractorSpend)
+                RNGLOG('Is upgradeSpend minus total spend greater than T3ExtractorSpend?')
+            end
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
@@ -872,10 +877,10 @@ StructureManager = Class {
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('We Could upgrade an extractor now with over time')
                         --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.1) and aiBrain.cmanager.income.r.m > (70 * aiBrain.EcoManager.EcoMultiplier) then
-                            RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and aiBrain.cmanager.income.r.m is greater than 70')
+                        if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
+                            RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
-                        elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5) or upgradeSpend < 15 then
+                        elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15 then
                             RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                         else
@@ -887,9 +892,9 @@ StructureManager = Class {
                     coroutine.yield(30)
                 end
                 coroutine.yield(30)
-            elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 250 and upgradeTrigger then
+            elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                    RNGLOG('We Could upgrade an extractor now with over time')
+                    RNGLOG('We Could upgrade a non t2 extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                     coroutine.yield(60)
                 end
@@ -1147,9 +1152,13 @@ StructureManager = Class {
                 end
                 if EntityCategoryContains( categories.TECH1, extractor) then
                     tech1Total = tech1Total + 1
+                    if not aiBrain.EcoManager.T2ExtractorSpend then
+                        local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
+                        aiBrain.EcoManager.T2ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                    end
                     if extractor:IsUnitState('Upgrading') then
                         local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                        totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        totalSpend = totalSpend +  (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
                         extractor.Upgrading = true
                         tech1ExtNumBuilding = tech1ExtNumBuilding + 1
                     else
@@ -1158,6 +1167,10 @@ StructureManager = Class {
                     end
                 elseif EntityCategoryContains( categories.TECH2, extractor) then
                     tech2Total = tech2Total + 1
+                    if not aiBrain.EcoManager.T3ExtractorSpend then
+                        local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
+                        aiBrain.EcoManager.T3ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                    end
                     if extractor:IsUnitState('Upgrading') then
                         local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
                         totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
