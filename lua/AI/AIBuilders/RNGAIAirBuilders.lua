@@ -24,11 +24,11 @@ local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
     if myAirThreat < (enemyAirThreat * 1.2 / enemyCount) then
         --RNGLOG('Enable Air Intie Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 880
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 885
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 890
         end
         return 890
@@ -49,11 +49,11 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
     if myAirThreat < (enemyAirThreat / enemyCount) then
         --RNGLOG('Enable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 860
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 865
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 870
         end
         return 870
@@ -74,11 +74,11 @@ local AirAttackMode = function(self, aiBrain, builderManager, builderData)
     if myAirThreat / 1.3 > (enemyAirThreat / enemyCount) then
         --RNGLOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 870
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 875
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 880
         end
         return 880

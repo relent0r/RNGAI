@@ -4,11 +4,11 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local AirMode = function(self, aiBrain, builderManager, builderData)
     --RNGLOG('Setting T1 Queue to Eng')
-    if builderData.TechLevel == 1 then
+    if builderData.BuilderData.TechLevel == 1 then
         return 745
-    elseif builderData.TechLevel == 2 then
+    elseif builderData.BuilderData.TechLevel == 2 then
         return 750
-    elseif builderData.TechLevel == 3 then
+    elseif builderData.BuilderData.TechLevel == 3 then
         return 755
     end
     return 0

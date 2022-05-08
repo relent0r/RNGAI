@@ -30,11 +30,11 @@ local LandAttackHeavyMode = function(self, aiBrain, builderManager, builderData)
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount > totalMassMarkers / 2 then
         --RNGLOG('Enable Land Heavy Attack Queue')
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 780
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 785
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 790
         end
         return 790
@@ -49,11 +49,11 @@ local LandAttackMode = function(self, aiBrain, builderManager, builderData)
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount < totalMassMarkers / 2 then
         --RNGLOG('Enable Land Attack Queue')
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 780
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 785
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 790
         end
         return 790
@@ -70,11 +70,11 @@ local LandEngMode = function(self, aiBrain, builderManager, builderData)
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits <= 4 then
         --RNGLOG('Setting T1 Queue to Eng')
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 745
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 750
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 755
         end
         return 750
@@ -90,11 +90,11 @@ local LandNoEngMode = function(self, aiBrain, builderManager, builderData)
     local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD, engineerManager:GetLocationCoords(), engineerManager.Radius)
     if numUnits > 4 then
         --RNGLOG('Setting T1 Queue to NoEng')
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 745
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 750
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 755
         end
         return 750
