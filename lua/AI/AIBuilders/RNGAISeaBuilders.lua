@@ -89,13 +89,10 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Frigate',
         PlatoonTemplate = 'T1SeaFrigate',
         Priority = 749,
-        --PriorityFunction = LandMode,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
             { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T1', 'frigate'} },
-            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'LAND'}},
-            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
@@ -108,10 +105,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaFrigate',
         Priority = 500,
         BuilderConditions = {
-            -- Have we the eco to build it ?
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.30 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.30 } },
         },
         BuilderType = 'Sea',
     },
@@ -122,7 +118,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.30 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.30 } },             -- Ratio from 0 to 1. (1=100%)
         },
         BuilderType = 'Sea',
     },

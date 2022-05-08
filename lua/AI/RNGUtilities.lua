@@ -307,12 +307,15 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             else
                                 engStuckCount = engStuckCount + 1
                                 --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
-                                if engStuckCount > 40 and not self:IsUnitState('Reclaiming') then
+                                if engStuckCount > 30 and not self:IsUnitState('Reclaiming') then
                                     --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
                                     break
                                 end
                             end
                             PerformEngReclaim(aiBrain, self, 25)
+                            if self:IsIdleState() then
+                                IssueMove({self}, validLocation)
+                            end
                             if self:IsUnitState("Moving") then
                                 if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                                     local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
