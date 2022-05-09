@@ -3432,7 +3432,7 @@ GetStartingReclaim = function(aiBrain)
     local reclaimTable = {}
     local reclaimScanArea = math.max(ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40) / 4
     local reclaimTotal = 0
-    --RNGLOG('Reclaim Scan Area is '..reclaimScanArea)
+    RNGLOG('Reclaim Scan Area is '..reclaimScanArea)
     reclaimScanArea = math.max(50, reclaimScanArea)
     reclaimScanArea = math.min(120, reclaimScanArea)
     --Wait 10 seconds for the wrecks to become reclaim
@@ -3442,20 +3442,15 @@ GetStartingReclaim = function(aiBrain)
     --RNGLOG('Initial Reclaim Table size is '..table.getn(startReclaim))
     if startReclaim and RNGGETN(startReclaim) > 0 then
         for k,v in startReclaim do
-            if v.IsWreckage then
-                RNGLOG('IsWreckage is true ')
-            else
-                if v.MaxMassReclaim and v.MaxMassReclaim > 10 then
-                    RNGLOG('IsWreckage is false but we have a maxmassreclaim value of '..v.MaxMassReclaim)
-                end
-            end
             if not IsProp(v) then continue end
             if v.MaxMassReclaim or v.MaxEnergyReclaim  then
                 if v.MaxMassReclaim > minRec or v.MaxEnergyReclaim > minRec then
                     --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
                     local rpos = v.CachePosition
-                    --RNGINSERT(reclaimTable, { Reclaim = v, Distance = VDist2( rpos[1], rpos[3], posX, posZ ) })
-                    RNGINSERT(reclaimTable, { Reclaim = v })
+                    if VDist2( rpos[1], rpos[3], posX, posZ ) < reclaimScanArea then
+                        RNGLOG('Reclaim distance is '..VDist2( rpos[1], rpos[3], posX, posZ ))
+                        RNGINSERT(reclaimTable, { Reclaim = v })
+                    end
                     --RNGLOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
                 end
                 reclaimTotal = reclaimTotal + v.MaxMassReclaim

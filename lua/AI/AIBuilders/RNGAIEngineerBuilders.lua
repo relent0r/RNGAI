@@ -41,16 +41,18 @@ end
 
 local StartingReclaimPresent = function(self, aiBrain, builderManager)
     if aiBrain.StartReclaimTotal > 500 then
-        return 995
+        return 1002
     end
     return 950
 end
 
 local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
-    if aiBrain.StartReclaimCurrent > 1000 then
+    if aiBrain.StartReclaimCurrent > 500 then
+        RNGLOG('Priority Function More than 500 reclaim')
         return 740
     end
-    if GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 and aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < 5 then
+    if aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < 5 then
+        RNGLOG('Priority Function less than 5 reclaim engineers')
         return 740
     end
     return 0

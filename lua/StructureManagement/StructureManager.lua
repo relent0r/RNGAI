@@ -1042,7 +1042,7 @@ StructureManager = Class {
                     --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
                 if not bypassEcoManager and fractionComplete < 0.65 then
-                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and (GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 500) then
+                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and (GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 100) then
                         if not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
                             coroutine.yield(10)
@@ -1059,6 +1059,9 @@ StructureManager = Class {
                                     if extractorUpgradeTimeoutReached then
                                         coroutine.yield(30)
                                     end
+                                    coroutine.yield(30)
+                                elseif GetEconomyStored(aiBrain, 'MASS') > 250 then
+                                    extractorUnit:SetPaused(false)
                                     coroutine.yield(30)
                                 end
                             else
@@ -1108,11 +1111,11 @@ StructureManager = Class {
             multiplier = 1
         end
         --LOG('Initial Delay loop starting')
-        while initial_delay < (60 / multiplier) do
-            if not unit.Dead and GetEconomyStored( aiBrain, 'ENERGY') >= 500 and unit:GetFractionComplete() == 1 then
+        while initial_delay < (50 / multiplier) do
+            if not unit.Dead and GetEconomyStored( aiBrain, 'ENERGY') >= 150 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
                 if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-                    initial_delay = 60
+                    initial_delay = 50
                 end
             end
             --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
