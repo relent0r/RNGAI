@@ -70,6 +70,13 @@ function GreaterThanEconTrendRNG(aiBrain, MassTrend, EnergyTrend)
     return false
 end
 
+GreaterThanEnergyStorageRatioRNG(aiBrain, eStorageRatio)
+    if GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorage then
+        return true
+    end
+    return false
+end
+
 function GreaterThanEnergyTrendRNG(aiBrain, eTrend)
 
     if GetEconomyTrend(aiBrain, 'ENERGY') > eTrend then

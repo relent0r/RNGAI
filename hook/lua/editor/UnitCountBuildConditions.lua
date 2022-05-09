@@ -496,6 +496,38 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
     return false
 end
 
+function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, type)
+    if aiBrain.BasePerimeterMonitor[locationType] then
+        if type == 'LAND' then
+            if aiBrain.BasePerimeterMonitor[locationType].LandUnits < number then
+                --RNGLOG('Land units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'AIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AirUnits < number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTISURFACEAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits < number then
+                --RNGLOG('AntiSurfaceAir units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'NAVAL' then
+            if aiBrain.BasePerimeterMonitor[locationType].NavalUnits < number then
+                --RNGLOG('Naval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'LANDNAVAL' then
+            if aiBrain.BasePerimeterMonitor[locationType].NavalUnits < number or aiBrain.BasePerimeterMonitor[locationType].LandUnits < number then
+                --RNGLOG('LandNaval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 --            { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
 function EnemyUnitsLessAtLocationRadiusRNG(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
