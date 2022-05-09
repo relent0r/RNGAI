@@ -1180,26 +1180,6 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Spam Aeon',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        Priority = 550,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-        BuilderData = {
-            UseFormation = 'None',
-            LocationType = 'LocationType',
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-            },
-    }, 
-    Builder {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
@@ -1388,26 +1368,6 @@ BuilderGroup {
             ThreatSupport = 2,
         },
     },
-    Builder {
-        BuilderName = 'RNGAI Spam Aeon Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        Priority = 550,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-        BuilderData = {
-            UseFormation = 'None',
-            LocationType = 'LocationType',
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-        },
-    }, 
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2 Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
