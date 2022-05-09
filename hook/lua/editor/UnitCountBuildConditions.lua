@@ -953,12 +953,12 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         return false 
     end
     --[[if tier == 'T3' then
-        RNGLOG('T3 query')
-        RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
-        RNGLOG('Ratio for '..unit)
-        RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
-        RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
-        RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+       --RNGLOG('T3 query')
+       --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+       --RNGLOG('Ratio for '..unit)
+       --RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
+       --RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
+       --RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     end]]
     --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
@@ -1015,7 +1015,7 @@ function DynamicExpansionAvailableRNG(aiBrain)
             if aiBrain.BuilderManagers[v.Zone] then
                 continue
             end
-            RNGLOG('DynamicExpansionAvailableRNG is true')
+           --RNGLOG('DynamicExpansionAvailableRNG is true')
             return true
         end
     end

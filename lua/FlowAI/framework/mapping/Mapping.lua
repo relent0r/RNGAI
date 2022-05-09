@@ -829,7 +829,7 @@ function BeginSession()
         map:AddZoneSet(LayerZoneSet)
     end
     local END = GetSystemTimeSecondsOnlyForProfileUse()
-    RNGLOG(string.format('FlowAI framework: Default zone generation finished, runtime: %.2f seconds.', END - START ))
+   --RNGLOG(string.format('FlowAI framework: Default zone generation finished, runtime: %.2f seconds.', END - START ))
     -- Now to attempt to load any custom zone set classes
     START = GetSystemTimeSecondsOnlyForProfileUse()
     local customZoneSets = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Zones.lua').LoadCustomZoneSets()
@@ -837,14 +837,14 @@ function BeginSession()
         -- First randomise the table order.
         -- This forces people to check the ZoneSet data rather than relying on the index being forever the same (which it might not be if more mods get loaded).
         table.sort(customZoneSets,function(a,b) return Random(0,1) == 1 end)
-        RNGLOG(repr(customZoneSets))
+       --RNGLOG(repr(customZoneSets))
         for _, ZoneSetClass in customZoneSets do
             map:AddZoneSet(ZoneSetClass)
         end
         END = GetSystemTimeSecondsOnlyForProfileUse()
-        RNGLOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
+       --RNGLOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
     else
-        RNGLOG("FlowAI framework: No custom zoning classes found.")
+       --RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
 end
 
@@ -867,7 +867,7 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-    RNGLOG('Display Marker Adjacency Running')
+    --RNGLOG('Display Marker Adjacency Running')
     while not aiBrain.ZonesInitialized do
         RNGLOG('Waiting for Zones to Initialize')
         coroutine.yield(20)
@@ -934,19 +934,19 @@ function SetMarkerInformation(aiBrain)
     end
     if expands then
         --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
-        RNGLOG('Running Expansion spot checks for rngarea')
+       --RNGLOG('Running Expansion spot checks for rngarea')
         for _,expand in aiBrain.expandspots do
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
             --RNGLOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
         end
     end
-    RNGLOG('renderthreadtracker for expansions')
+   --RNGLOG('renderthreadtracker for expansions')
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
     local massPointCount = 0
-    RNGLOG('Running mass spot checks for rngarea')
+   --RNGLOG('Running mass spot checks for rngarea')
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
             massPointCount = massPointCount + 1
@@ -960,7 +960,7 @@ function SetMarkerInformation(aiBrain)
     end
     --RNGLOG('RNGAreas:')
     --for k,v in aiBrain.RNGAreas do
-    --    RNGLOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
+    --  --LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
@@ -986,7 +986,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
     coroutine.yield(1)
     --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
-    if not marker then RNGLOG('No Marker sent to army distance check') return end
+    if not marker then return end
     if not marker.armydists then
         marker.armydists={}
     end
@@ -1090,7 +1090,7 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     for k,v in marker.expanddists do
         if not marker.bestexpand or marker.expanddists[marker.bestexpand]>v then
             marker.bestexpand=k
-            -- Important. Extension to chps logic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
+            -- Important. Extension to chps--LOGic to add RNGArea to expansion markers so we can tell if we own expansions on islands etc
             if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea then
                 Scenario.MasterChain._MASTERCHAIN_.Markers[k].RNGArea = marker.RNGArea
                 --RNGLOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))

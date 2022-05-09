@@ -62,7 +62,7 @@ end
 ]]
 
 function SetCDRDefaults(aiBrain, cdr)
-    RNGLOG('* AI-RNG: CDR Defaults running ')
+   --RNGLOG('* AI-RNG: CDR Defaults running ')
     cdr.CDRHome = table.copy(cdr:GetPosition())
     aiBrain.ACUSupport.ACUMaxSearchRadius = 80
     cdr.Initialized = false
@@ -377,13 +377,13 @@ function CDRBuildFunction(aiBrain, cdr, object)
     -- Getting the CDR to build while away from base.
     -- the object param being passed is just a way of being able send a chunk of data so I can work from there.
     -- e.g for an object.type of expansion we will also have the expansion marker so we can query against it
-    RNGLOG('ACU is trying to build mexes')
+   --RNGLOG('ACU is trying to build mexes')
     if cdr:IsUnitState('Attached') then
-        RNGLOG('ACU on transport')
+       --RNGLOG('ACU on transport')
         return false
     end
     if RUtils.GrabPosDangerRNG(aiBrain,cdr.Position, 40).enemy > 20 then
-        RNGLOG('Build Position too dangerous')
+       --RNGLOG('Build Position too dangerous')
         return false
     end
     local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
@@ -394,13 +394,13 @@ function CDRBuildFunction(aiBrain, cdr, object)
     buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
     baseTmplDefault = import('/lua/BaseTemplates.lua')
     if object.type == 'expansion' then
-        RNGLOG('ACU Object type is expansion')
-        RNGLOG('Marker type is '..object.dataobject.Type)
-        RNGLOG('Marker name is '..object.dataobject.Name)
-        RNGLOG('Number of mass points at location is '..object.dataobject.MassPoints)
+       --RNGLOG('ACU Object type is expansion')
+       --RNGLOG('Marker type is '..object.dataobject.Type)
+       --RNGLOG('Marker name is '..object.dataobject.Name)
+       --RNGLOG('Number of mass points at location is '..object.dataobject.MassPoints)
         -- Lets build the mass points first so we can pay for the factory should we decide we need it.
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
-        RNGLOG('ACU Looping through markers')
+       --RNGLOG('ACU Looping through markers')
         local adaptiveResourceMarkers = GetMarkersRNG()
         local MassMarker = {}
         for _, v in adaptiveResourceMarkers do
@@ -409,21 +409,21 @@ function CDRBuildFunction(aiBrain, cdr, object)
             end
         end
         RNGSORT(MassMarker, function(a,b) return a.Distance < b.Distance end)
-        RNGLOG('ACU MassMarker table sorted, looking for markers to build')
+       --RNGLOG('ACU MassMarker table sorted, looking for markers to build')
         for _, v in MassMarker do
             if v.Distance > 900 then
                 break
             end
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-                RNGLOG('ACU Adding entry to BuildQueue')
+               --RNGLOG('ACU Adding entry to BuildQueue')
                 local newEntry = {whatToBuild, {v.Position[1], v.Position[3], 0}, false, Position=v.Position}
                 RNGINSERT(cdr.EngineerBuildQueue, newEntry)
             end
         end
-        RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+       --RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
             for k,v in cdr.EngineerBuildQueue do
-                RNGLOG('Attempt to build queue item of '..repr(v))
+               --RNGLOG('Attempt to build queue item of '..repr(v))
                 while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
                     IssueClearCommands({cdr})
                     IssueMove({cdr},v.Position)
@@ -439,11 +439,11 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                 break
                             end
                         end
-                        RNGLOG('Build Queue item should be finished '..k)
+                       --RNGLOG('Build Queue item should be finished '..k)
                         cdr.EngineerBuildQueue[k] = nil
                         break
                     end
-                    RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
+                   --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                     coroutine.yield(10)
                 end
             end
@@ -453,22 +453,22 @@ function CDRBuildFunction(aiBrain, cdr, object)
             RNGLOG('Too dangerous after building extractors, returning')
             return
         end
-        RNGLOG('Mass markers should be built unless they are already taken')
+        --RNGLOG('Mass markers should be built unless they are already taken')
         cdr.EngineerBuildQueue={}
         if object.dataobject.MassPoints > 1 then
             RNGLOG('ACU Object has more than 1 mass points and is called '..object.dataobject.Name)
             local alreadyHaveExpansion = false
             for k, manager in aiBrain.BuilderManagers do
-                RNGLOG('Checking through expansion '..k)
+               --RNGLOG('Checking through expansion '..k)
                 if RNGGETN(manager.FactoryManager.FactoryList) > 0 and k ~= 'MAIN' then
-                    RNGLOG('We already have an expansion with a factory')
+                   --RNGLOG('We already have an expansion with a factory')
                     alreadyHaveExpansion = true
                     break
                 end
             end
             if not alreadyHaveExpansion then
                 if not aiBrain.BuilderManagers[object.dataobject.Name] then
-                    RNGLOG('There is no manager at this expansion, creating builder manager')
+                   --RNGLOG('There is no manager at this expansion, creating builder manager')
                     aiBrain:AddBuilderManagers(object.dataobject.Position, 60, object.dataobject.Name, true)
                     local baseValues = {}
                     local highPri = false
@@ -500,16 +500,16 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     
                     # Error if no pick
                     if not pick then
-                        RNGLOG('Pick has failed for base values, debug time')
+                       --RNGLOG('Pick has failed for base values, debug time')
                     end
 
                     # Setup base
                     -- We have to add the engineer to the base so that the factory will get picked up by the factory manager 
                     -- due to a factoryfinished callback that looks at the engineers buildermanager
-                    RNGLOG('We are going to setup a base for '..pick)
-                    RNGLOG('Removing CDR from Current manager')
+                    --RNGLOG('We are going to setup a base for '..pick)
+                    --RNGLOG('Removing CDR from Current manager')
                     cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                    RNGLOG('Adding CDR to expansion manager')
+                    --RNGLOG('Adding CDR to expansion manager')
                     aiBrain.BuilderManagers[object.dataobject.Name].EngineerManager:AddUnitRNG(cdr, true)
                     --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
                     import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, object.dataobject.Name, pick)
@@ -528,10 +528,10 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         relativeLoc = {relativeLoc[1] + cdr.Position[1], relativeLoc[2] + cdr.Position[2], relativeLoc[3] + cdr.Position[3]}
                         local newEntry = {whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, Position=relativeLoc}
                         RNGINSERT(cdr.EngineerBuildQueue, newEntry)
-                        RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                       --RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
                         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
                             for k,v in cdr.EngineerBuildQueue do
-                                RNGLOG('Attempt to build queue item of '..repr(v))
+                               --RNGLOG('Attempt to build queue item of '..repr(v))
                                 while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
                                     IssueClearCommands({cdr})
                                     IssueMove({cdr},v.Position)
@@ -547,11 +547,11 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                                 break
                                             end
                                         end
-                                        RNGLOG('Build Queue item should be finished '..k)
+                                       --RNGLOG('Build Queue item should be finished '..k)
                                         cdr.EngineerBuildQueue[k] = nil
                                         break
                                     end
-                                    RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
+                                   --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                                     coroutine.yield(10)
                                 end
                             end
@@ -559,17 +559,17 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     end
                     -- We now put the engineer back into the main base engineer manager so he'll pick up jobs when he returns to base at some point
                     cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                    RNGLOG('Adding CDR back to MAIN manager')
+                    --RNGLOG('Adding CDR back to MAIN manager')
                     aiBrain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
                     cdr.EngineerBuildQueue={}
                 elseif aiBrain.BuilderManagers[object.dataobject.Name].FactoryManager:GetNumFactories() == 0 then
-                    RNGLOG('There is a manager here but no factories')
+                   --RNGLOG('There is a manager here but no factories')
                 end
             end
         end
     elseif object.type == 'mass' then
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
-        RNGLOG('ACU Looping through markers')
+       --RNGLOG('ACU Looping through markers')
         local adaptiveResourceMarkers = GetMarkersRNG()
         local MassMarker = {}
         for _, v in adaptiveResourceMarkers do
@@ -578,21 +578,21 @@ function CDRBuildFunction(aiBrain, cdr, object)
             end
         end
         RNGSORT(MassMarker, function(a,b) return a.Distance < b.Distance end)
-        RNGLOG('ACU MassMarker table sorted, looking for markers to build')
+       --RNGLOG('ACU MassMarker table sorted, looking for markers to build')
         for _, v in MassMarker do
             if v.Distance > 900 then
                 break
             end
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-                RNGLOG('ACU Adding entry to BuildQueue')
+               --RNGLOG('ACU Adding entry to BuildQueue')
                 local newEntry = {whatToBuild, {v.Position[1], v.Position[3], 0}, false, Position=v.Position}
                 RNGINSERT(cdr.EngineerBuildQueue, newEntry)
             end
         end
-        RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+       --RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
             for k,v in cdr.EngineerBuildQueue do
-                RNGLOG('Attempt to build queue item of '..repr(v))
+               --RNGLOG('Attempt to build queue item of '..repr(v))
                 while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
                     IssueClearCommands({cdr})
                     IssueMove({cdr},v.Position)
@@ -605,11 +605,11 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
                             coroutine.yield(10)
                         end
-                        RNGLOG('Build Queue item should be finished '..k)
+                       --RNGLOG('Build Queue item should be finished '..k)
                         cdr.EngineerBuildQueue[k] = nil
                         break
                     end
-                    RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
+                   --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                     coroutine.yield(10)
                 end
             end
@@ -959,16 +959,16 @@ function CDRExpansionRNG(aiBrain, cdr)
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
             end
         end
-        RNGLOG('ACU Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
+       --RNGLOG('ACU Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
         CDRMoveToPosition(aiBrain, cdr, stageExpansion.Expansion.Position, 100)
         if VDist3Sq(cdr:GetPosition(),stageExpansion.Expansion.Position) < 900 then
-            RNGLOG('ACU ExpFunc building at expansion')
+           --RNGLOG('ACU ExpFunc building at expansion')
             CDRBuildFunction(aiBrain, cdr, { type = 'expansion', dataobject = stageExpansion.Expansion } )
         else
-            RNGLOG('CDR not close enough to expansion to build, current distance is '..VDist3Sq(cdr:GetPosition(),stageExpansion.Expansion.Position))
+           --RNGLOG('CDR not close enough to expansion to build, current distance is '..VDist3Sq(cdr:GetPosition(),stageExpansion.Expansion.Position))
         end
     else
-        RNGLOG('No Expansion returned for acu')
+       --RNGLOG('No Expansion returned for acu')
     end
 end
 
@@ -997,11 +997,11 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
         end
     end
     if cdr:IsUnitState('Attached') then
-        RNGLOG('ACU on transport')
+        --RNGLOG('ACU on transport')
         return false
     end
     if RUtils.GrabPosDangerRNG(aiBrain,cdr.Position, 40).enemy > 20 then
-        RNGLOG('Build Position too dangerous')
+        --RNGLOG('Build Position too dangerous')
         return false
     end
     if cdr.Active and not cdr.Caution and not cdr.Retreat and VDist3Sq(cdr.Position, cdr.CDRHome ) > 6400 then
@@ -1282,29 +1282,29 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
-            RNGLOG('Current Enemy Inner Threat '..enemyUnitThreatInner)
-            RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-            RNGLOG('Current Friendly Inner Threat '..friendlyUnitThreatInner)
-            RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
-            RNGLOG('Current CDR Confidence '..cdr.Confidence)
+           --RNGLOG('Current Enemy Inner Threat '..enemyUnitThreatInner)
+           --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+           --RNGLOG('Current Friendly Inner Threat '..friendlyUnitThreatInner)
+           --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
+           --RNGLOG('Current CDR Confidence '..cdr.Confidence)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInnerACU'
             elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatACU'
             elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInner'
             elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
-                RNGLOG('ACU threat low and health up past 6000')
+                --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
                 cdr.CautionReason = 'none'
             end
@@ -1324,8 +1324,8 @@ function CDRThreatAssessmentRNG(cdr)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + 0.1
             end
             friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + friendlyUnitThreat
-            RNGLOG('Total Friendly Threat '..friendlyThreatConfidenceModifier)
-            RNGLOG('Total Enemy Threat '..enemyThreatConfidenceModifier)
+            --RNGLOG('Total Friendly Threat '..friendlyThreatConfidenceModifier)
+            --RNGLOG('Total Enemy Threat '..enemyThreatConfidenceModifier)
             if cdr.Health > 7000 and aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * 1.2
                 RNGLOG('ACU Health is above 6000, modified friendly threat '..friendlyThreatConfidenceModifier)
@@ -1337,7 +1337,7 @@ function CDRThreatAssessmentRNG(cdr)
             else
                 cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
             end
-            RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
+           --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
     end
@@ -1386,7 +1386,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     local maxRadius
     -- Increase attack range for a few mins on small maps
     if not cdr.WeaponRange then
-        RNGLOG('No range on cdr.WeaponRange')
+       --RNGLOG('No range on cdr.WeaponRange')
     end
     maxRadius = cdr.HealthPercent * 100
     
@@ -1416,12 +1416,12 @@ function CDROverChargeRNG(aiBrain, cdr)
         return
     end
     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxRadius * maxRadius then
-        RNGLOG('ACU is beyond maxRadius of '..maxRadius)
+        --RNGLOG('ACU is beyond maxRadius of '..maxRadius)
         return CDRRetreatRNG(aiBrain, cdr, true)
     end
 
     if numUnits > 1 then
-        RNGLOG('ACU OverCharge Num of units greater than zero or base distress')
+       --RNGLOG('ACU OverCharge Num of units greater than zero or base distress')
         cdr.Active = true
         if cdr.UnitBeingBuilt then
             --RNGLOG('Unit being built is true, assign to cdr.UnitBeingBuiltBehavior')
@@ -1447,7 +1447,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
         local enemyThreat
         local snipeAttempt = false
-        RNGLOG('CDR max range is '..maxRadius)
+        --RNGLOG('CDR max range is '..maxRadius)
 
         
         repeat
@@ -1491,18 +1491,18 @@ function CDROverChargeRNG(aiBrain, cdr)
                     cdr.TargetPosition = targetPos
                     --RNGLOG('CDR Position in Brain :'..repr(aiBrain.ACUSupport.Position))
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
-                    RNGLOG('Target Distance is '..targetDistance..' from acu to target')
+                   --RNGLOG('Target Distance is '..targetDistance..' from acu to target')
                     -- If inside base dont check threat, just shoot!
                     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 2025 then
                         enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
-                        RNGLOG('ACU OverCharge Enemy Threat is '..enemyThreat)
+                       --RNGLOG('ACU OverCharge Enemy Threat is '..enemyThreat)
                         local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
                         if enemyCdrThreat > 0 then
                             realEnemyThreat = enemyThreat - (enemyCdrThreat - 5)
                         else
                             realEnemyThreat = enemyThreat
                         end
-                        RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
+                       --RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
                         local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 70, 'Ally')
                         local friendlyUnitThreat = 0
                         for k,v in friendlyUnits do
@@ -1520,17 +1520,17 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 end
                             end
                         end
-                        RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
+                       --RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
                         if realEnemyThreat >= friendlyUnitThreat and not cdr.SuicideMode then
                             --RNGLOG('Enemy Threat too high')
                             if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 1600 then
-                                RNGLOG('Threat high and cdr close, retreat')
-                                RNGLOG('Enemy Threat number '..realEnemyThreat)
-                                RNGLOG('Friendly threat was '..friendlyUnitThreat)
+                               --RNGLOG('Threat high and cdr close, retreat')
+                               --RNGLOG('Enemy Threat number '..realEnemyThreat)
+                               --RNGLOG('Friendly threat was '..friendlyUnitThreat)
                                 cdr.Caution = true
                                 cdr.CautionReason = 'acuOverChargeTargetCheck'
                                 if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.6 then
-                                    RNGLOG('retreat towards home')
+                                    --RNGLOG('retreat towards home')
                                     cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                                     coroutine.yield(40)
                                 end
@@ -1687,12 +1687,12 @@ function CDROverChargeRNG(aiBrain, cdr)
 
             if continueFighting == true then
                 if (cdr.Caution and not cdr.SnipeMode and not cdr.SuicideMode) or (cdr.Phase == 3 and not cdr.SuicideMode) then
-                    RNGLOG('cdr.Caution has gone true, continueFighting is false, caution reason '..cdr.CautionReason)
+                    --RNGLOG('cdr.Caution has gone true, continueFighting is false, caution reason '..cdr.CautionReason)
                     continueFighting = false
                     if target and not target.Dead then
                         local targetPos = target:GetPosition()
                         if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.6 then
-                            RNGLOG('retreat towards home')
+                            --RNGLOG('retreat towards home')
                             IssueClearCommands({cdr})
                             cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                             coroutine.yield(40)
@@ -1721,7 +1721,7 @@ function CDROverChargeRNG(aiBrain, cdr)
             end
             if cdr.GunUpgradeRequired and cdr.Active and not cdr.SuicideMode then
                 --RNGLOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
-                RNGLOG('Gun Upgrade Required, continueFighting is false')
+               --RNGLOG('Gun Upgrade Required, continueFighting is false')
                 continueFighting = false
                 return CDRRetreatRNG(aiBrain, cdr, true)
             end
@@ -1786,7 +1786,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
         --RNGLOG('CDR further than distSqAway')
         cdr.GoingHome = true
         CDRMoveToPosition(aiBrain, cdr, loc, 2025)
-        RNGLOG('We should be at home')
+       --RNGLOG('We should be at home')
         cdr.Active = false
         cdr.GoingHome = false
         IssueClearCommands({cdr})
@@ -1803,7 +1803,7 @@ end
 
 function CDRRetreatRNG(aiBrain, cdr, base)
     if cdr:IsUnitState('Attached') then
-        RNGLOG('ACU on transport')
+       --RNGLOG('ACU on transport')
         return false
     end
     RNGLOG('CDRRetreatRNG has fired')
@@ -1856,24 +1856,24 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         end
     end
     if closestPlatoon then
-        RNGLOG('Found platoon checking if can graph')
+        --RNGLOG('Found platoon checking if can graph')
         if closestAPlatPos and AIAttackUtils.CanGraphToRNG(cdr.Position,closestAPlatPos,'Amphibious') then
-            RNGLOG('Can graph to platoon, try retreat to them')
+            --RNGLOG('Can graph to platoon, try retreat to them')
             if closestDistance then
-                RNGLOG('Platoon distance from us is '..closestDistance)
+                --RNGLOG('Platoon distance from us is '..closestDistance)
             end
             cdr.Retreat = false
             CDRMoveToPosition(aiBrain, cdr, closestAPlatPos, 400, true, true, closestPlatoon)
         end
     else
-        RNGLOG('No platoon found, trying for base')
+       --RNGLOG('No platoon found, trying for base')
         closestDistance = 1048576
         local closestBase = false
         if aiBrain.BuilderManagers then
             for baseName, base in aiBrain.BuilderManagers do
-                RNGLOG('Base Name '..baseName)
-                RNGLOG('Base Position '..repr(base.Position))
-                RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
+               --RNGLOG('Base Name '..baseName)
+               --RNGLOG('Base Position '..repr(base.Position))
+               --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
                 if RNGGETN(base.FactoryManager.FactoryList) > 0 then
                     RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                     local baseDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3])
@@ -1886,15 +1886,15 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 end
             end
             if closestBase then
-                RNGLOG('Closest base is '..closestBase)
+               --RNGLOG('Closest base is '..closestBase)
                 if AIAttackUtils.CanGraphToRNG(cdr.Position, aiBrain.BuilderManagers[closestBase].Position, 'Amphibious') then
-                    RNGLOG('Retreating to base')
+                   --RNGLOG('Retreating to base')
                     cdr.Retreat = false
                     cdr.BaseLocation = true
                     CDRMoveToPosition(aiBrain, cdr, aiBrain.BuilderManagers[closestBase].Position, 625, true)
                 end
             else
-                RNGLOG('No base to retreat to')
+               --RNGLOG('No base to retreat to')
             end
         end
     end
@@ -2409,11 +2409,11 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
     for k, v in priorityUpgrades do
         if enhancement == v then
             if not CDRGunCheck(aiBrain, cdr) then
-                RNGLOG('We have both gun upgrades, set gun upgrade required to false')
+               --RNGLOG('We have both gun upgrades, set gun upgrade required to false')
                 cdr.GunUpgradeRequired = false
                 cdr.GunUpgradePresent = true
             else
-                RNGLOG('We dont have both gun upgrades yet')
+               --RNGLOG('We dont have both gun upgrades yet')
             end
             break
         end
@@ -3407,11 +3407,11 @@ function AirStagingThreadRNG(unit)
                         --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
                         plat = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
                     else
-                        RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
+                       --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
                         plat = aiBrain:MakePlatoon('', v.PlanName)
                     end
                     if v.PlatoonData then
-                        RNGLOG('Air Refuel unit has platoon data, reassigning ')
+                       --RNGLOG('Air Refuel unit has platoon data, reassigning ')
                         plat.PlatoonData = {}
                         plat.PlatoonData = v.PlatoonData
                     end
@@ -3459,7 +3459,7 @@ GetStartingReclaim = function(aiBrain)
         --RNGLOG('Sorting Reclaim table by distance ')
         --It feels pointless to sort this table, its the engineer itself that wants the closest not the base.
         --RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
-        RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
+        --RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable
         aiBrain.StartReclaimTotal = reclaimTotal
     end

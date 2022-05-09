@@ -41,12 +41,12 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
         end
         if string.find(per, 'RNGStandardExperimental') then
             --RNGLOG('* AI-RNG: This is RNGEXP')
             self.RNGEXP = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
         end
     end,
 
@@ -946,7 +946,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
         end
-        LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
+       --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
         LOG('Water Ratio is '..self.MapWaterRatio)
@@ -1098,7 +1098,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     WaitForZoneInitialization = function(self)
         while not self.ZonesInitialized do
-            RNGLOG('Zones table is empty, waiting')
+           --RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
         end
     end,
@@ -1488,43 +1488,43 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Base monitor raised for '..location..' of type '..type)
         repeat
             WaitSeconds(timeout)
-            RNGLOG('BaseMonitorAlert Timeout Reached')
+           --RNGLOG('BaseMonitorAlert Timeout Reached')
             if type == 'Land' then
                 if self.BasePerimeterMonitor[location].LandUnits and self.BasePerimeterMonitor[location].LandUnits > 0 and self.BasePerimeterMonitor[location].LandThreat > threshold then
-                    RNGLOG('Land Units at base '..self.BasePerimeterMonitor[location].LandUnits)
-                    RNGLOG('Land Threats at base '..self.BasePerimeterMonitor[location].LandThreat)
+                   --RNGLOG('Land Units at base '..self.BasePerimeterMonitor[location].LandUnits)
+                   --RNGLOG('Land Threats at base '..self.BasePerimeterMonitor[location].LandThreat)
                     threat = self.BasePerimeterMonitor[location].LandThreat
                     self.BaseMonitor.AlertsTable[location]['Land'].Threat = self.BasePerimeterMonitor[location].LandThreat
-                    RNGLOG('Still land units present, restart AlertTimeout')
+                   --RNGLOG('Still land units present, restart AlertTimeout')
                     continue
                 else
-                    RNGLOG('No Longer alert threat, cancel base alert')
+                   --RNGLOG('No Longer alert threat, cancel base alert')
                     self.BaseMonitor.AlertsTable[location]['Land'] = nil
                     alertBreak = true
                 end
             elseif type == 'Air' then
                 if self.BasePerimeterMonitor[location].AirUnits and self.BasePerimeterMonitor[location].AirUnits > 0 and self.BasePerimeterMonitor[location].AirThreat > threshold then
-                    RNGLOG('Air Units at base '..self.BasePerimeterMonitor[location].AirUnits)
-                    RNGLOG('Air Threats at base '..self.BasePerimeterMonitor[location].AirThreat)
+                   --RNGLOG('Air Units at base '..self.BasePerimeterMonitor[location].AirUnits)
+                   --RNGLOG('Air Threats at base '..self.BasePerimeterMonitor[location].AirThreat)
                     threat = self.BasePerimeterMonitor[location].AirThreat
                     self.BaseMonitor.AlertsTable[location]['Air'].Threat = self.BasePerimeterMonitor[location].AirThreat
-                    RNGLOG('Still air units present, restart AlertTimeout')
+                   --RNGLOG('Still air units present, restart AlertTimeout')
                     continue
                 else
-                    RNGLOG('No Longer alert threat, cancel base alert')
+                   --RNGLOG('No Longer alert threat, cancel base alert')
                     self.BaseMonitor.AlertsTable[location]['Air'] = nil
                     alertBreak = true
                 end
             elseif type == 'Naval' then
                 if self.BasePerimeterMonitor[location].NavalUnits and self.BasePerimeterMonitor[location].NavalUnits > 0 and self.BasePerimeterMonitor[location].NavalThreat > threshold then
-                    RNGLOG('Naval Units at base '..self.BasePerimeterMonitor[location].NavalUnits)
-                    RNGLOG('Naval Threats at base '..self.BasePerimeterMonitor[location].NavalThreat)
+                   --RNGLOG('Naval Units at base '..self.BasePerimeterMonitor[location].NavalUnits)
+                   --RNGLOG('Naval Threats at base '..self.BasePerimeterMonitor[location].NavalThreat)
                     threat = self.BasePerimeterMonitor[location].NavalThreat
                     self.BaseMonitor.AlertsTable[location]['Naval'].Threat = self.BasePerimeterMonitor[location].NavalThreat
-                    RNGLOG('Still naval units present, restart AlertTimeout')
+                   --RNGLOG('Still naval units present, restart AlertTimeout')
                     continue
                 else
-                    RNGLOG('No Longer alert threat, cancel base alert')
+                   --RNGLOG('No Longer alert threat, cancel base alert')
                     self.BaseMonitor.AlertsTable[location]['Naval'] = nil
                     alertBreak = true
                 end
@@ -2083,11 +2083,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
                     if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 19600 then
-                        RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
+                       --RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     elseif self.EnemyIntel.ACU[k].Threat and self.EnemyIntel.ACU[k].Threat < 20 and self.EnemyIntel.ACU[k].OnField then
-                        RNGLOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
+                       --RNGLOG('* AI-RNG: Enemy ACU has low threat switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
                     end
@@ -2131,13 +2131,13 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BaseMonitor.ZoneAlertTable do
                 -- If already calling for help, don't add another distress call
                 if k == zoneid and v.Threat > 0 then
-                    RNGLOG('Zone ID '..zoneid..'already exist as '..k..' skipping')
+                   --RNGLOG('Zone ID '..zoneid..'already exist as '..k..' skipping')
                     found = true
                     break
                 end
             end
             if not found then
-                RNGLOG('Alert doesnt already exist, adding')
+               --RNGLOG('Alert doesnt already exist, adding')
                 self.BaseMonitor.ZoneAlertTable[zoneid].Threat = threat
             end
         end
@@ -2303,7 +2303,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                     if threat and threat > (myThreat * 1.3) then
-                        RNGLOG('* AI-RNG: Created Threat Alert')
+                       --RNGLOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numAlerts = numAlerts + 1
                     -- Platoon not threatened
@@ -2370,7 +2370,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
                     -- Platoons still threatened
                     if threat and threat > (myThreat * 1.3) then
-                        RNGLOG('* AI-RNG: Created Threat Alert')
+                       --RNGLOG('* AI-RNG: Created Threat Alert')
                         v.Threat = threat
                         numPlatoons = numPlatoons + 1
                     -- Platoon not threatened
@@ -2585,7 +2585,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         c.HP = unit:GetHealth()
                         RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.HP..' health')
                         acuThreat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                        RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
+                       --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                         c.Threat = acuThreat
                         c.LastSpotted = currentGameTime
                         --LOG('Enemy ACU Position is set')
@@ -2632,15 +2632,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     local MassRequested = GetEconomyRequested(self,'MASS')
                     local EnergyEfficiency = math.min(EnergyIncome / EnergyRequested, 2)
                     local MassEfficiency = math.min(MassIncome / MassRequested, 2)
-                    RNGLOG('Eco Stats for :'..self.Nickname)
-                    RNGLOG('Game Time '..GetGameTimeSeconds())
-                    RNGLOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
-                    RNGLOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
-                    RNGLOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-                    RNGLOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
-                    RNGLOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                    RNGLOG('Mass Income :'..MassIncome..' Energy Income :'..EnergyIncome)
-                    RNGLOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
+                   --RNGLOG('Eco Stats for :'..self.Nickname)
+                   --RNGLOG('Game Time '..GetGameTimeSeconds())
+                   --RNGLOG('MassStorage :'..GetEconomyStoredRatio(self, 'MASS')..' Energy Storage :'..GetEconomyStoredRatio(self, 'ENERGY'))
+                   --RNGLOG('Mass Efficiency :'..MassEfficiency..'Energy Efficiency :'..EnergyEfficiency)
+                   --RNGLOG('Mass Efficiency OverTime :'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime..' Energy Efficiency Overtime:'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+                   --RNGLOG('MassTrend :'..GetEconomyTrend(self, 'MASS')..' Energy Trend :'..GetEconomyTrend(self, 'ENERGY'))
+                   --RNGLOG('Mass Trend OverTime :'..self.EconomyOverTimeCurrent.MassTrendOverTime..' Energy Trend Overtime:'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                   --RNGLOG('Mass Income :'..MassIncome..' Energy Income :'..EnergyIncome)
+                   --RNGLOG('Mass Income OverTime :'..self.EconomyOverTimeCurrent.MassIncome..' Energy Income Overtime:'..self.EconomyOverTimeCurrent.EnergyIncome)
                     local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
                     RNGLOG('ArmyPool Engineer count is '..poolPlatoon:PlatoonCategoryCount(categories.ENGINEER))
                     RNGLOG('DistributionTable '..repr(self.EngineerDistributionTable))
@@ -2653,7 +2653,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('BasePerimeterMonitor table')
                     --RNGLOG(repr(self.BasePerimeterMonitor))
                     if self.BaseMonitor.AlertSounded then
-                        RNGLOG('Base Monitor Alert is on')
+                       --RNGLOG('Base Monitor Alert is on')
                     end
                     RNGLOG('ACU Table '..repr(self.EnemyIntel.ACU))
                     RNGLOG('Core Mass Marker Count '..self.EcoManager.CoreMassMarkerCount)
@@ -2661,17 +2661,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGLOG('SManager Dump '..repr(self.smanager))
                     --[[for k, v in self.Zones.Land.zones do
                         for k1,v2 in v.edges do
-                            RNGLOG('Zone Edge '..v2.zone.id..' is '..v2.distance..' from '..v.id)
+                           --RNGLOG('Zone Edge '..v2.zone.id..' is '..v2.distance..' from '..v.id)
                         end
                         if v.friendlythreat > 0 then
-                            RNGLOG('Friend Threat at zone '..v.id)
-                            RNGLOG('Key for zone is '..k)
-                            RNGLOG('Friendly Threat is '..v.friendlythreat)
+                           --RNGLOG('Friend Threat at zone '..v.id)
+                           --RNGLOG('Key for zone is '..k)
+                           --RNGLOG('Friendly Threat is '..v.friendlythreat)
                         end
                         if v.enemythreat > 0 then
-                            RNGLOG('Enemy Threat at zone '..v.id)
-                            RNGLOG('Key for zone is '..k)
-                            RNGLOG('Enemy Threat is '..v.enemythreat)
+                           --RNGLOG('Enemy Threat at zone '..v.id)
+                           --RNGLOG('Key for zone is '..k)
+                           --RNGLOG('Enemy Threat is '..v.enemythreat)
                         end
                     end]]
                     --RNGLOG('Friendly Mex Table '..repr(self.smanager.mex))
@@ -2679,12 +2679,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Ally Extractor Table '..repr(self.BrainIntel.SelfThreat.AllyExtractorTable))
                     --RNGLOG('Enemy Mex Table '..repr(self.emanager.mex))
                     --[[if self.GraphZones.HasRun then
-                        RNGLOG('We should have graph zones now')
+                       --RNGLOG('We should have graph zones now')
                         for k, v in self.BuilderManagers do
                             if v.GraphArea then
-                                RNGLOG('Graph Area for '..k.. ' is '..v.GraphArea)
+                               --RNGLOG('Graph Area for '..k.. ' is '..v.GraphArea)
                             else
-                                RNGLOG('No Graph Area for base '..k)
+                               --RNGLOG('No Graph Area for base '..k)
                             end
                         end
                     end]]
@@ -2697,15 +2697,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('ARMY '..self.Nickname..' Current Army numbers:'..repr(self.amanager.Current))
                     --RNGLOG('ARMY '..self.Nickname..' Total Army numbers:'..repr(self.amanager.Total))
                     --RNGLOG('ARMY '..self.Nickname..' Type Army numbers:'..repr(self.amanager.Type))
-                    RNGLOG('Current Land Ratio is '..self.ProductionRatios['Land'])
-                    RNGLOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
-                    RNGLOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                    RNGLOG('Current Air Ratio is '..self.ProductionRatios['Air'])
-                    RNGLOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
-                    RNGLOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
-                    RNGLOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
-                    RNGLOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
-                    RNGLOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
+                   --RNGLOG('Current Land Ratio is '..self.ProductionRatios['Land'])
+                   --RNGLOG('I am spending approx land '..repr(self.cmanager.categoryspend.fact.Land))
+                   --RNGLOG('I should be spending approx land '..self.cmanager.income.r.m * self.ProductionRatios['Land'])
+                   --RNGLOG('Current Air Ratio is '..self.ProductionRatios['Air'])
+                   --RNGLOG('I am spending approx air '..repr(self.cmanager.categoryspend.fact.Air))
+                   --RNGLOG('I should be spending approx air '..self.cmanager.income.r.m * self.ProductionRatios['Air'])
+                   --RNGLOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
+                   --RNGLOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
+                   --RNGLOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
                     --RNGLOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
                     --RNGLOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
                     --RNGLOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
@@ -2716,9 +2716,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Air Current Ratio T1 Bomber: '..(self.amanager.Current['Air']['T1']['bomber'] / self.amanager.Total['Air']['T1']))
                     --RNGLOG('Air Current Production Ratio Desired T1 Bomber : '..(self.amanager.Ratios[factionIndex]['Air']['T1']['bomber']/self.amanager.Ratios[factionIndex]['Air']['T1'].total))
                     if self.EnemyIntel.ChokeFlag then
-                        RNGLOG('Choke Flag is true')
+                       --RNGLOG('Choke Flag is true')
                     else
-                        RNGLOG('Choke Flag is false')
+                       --RNGLOG('Choke Flag is false')
                     end
                     --RNGLOG('Graph Zone Table '..repr(self.GraphZones))
                     --RNGLOG('Total Mass Markers according to infect'..self.BrainIntel.MassMarker)
@@ -3227,26 +3227,26 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
         
-        RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
-        RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
-        RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
-        RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
-        RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
-        RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
-        RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
-        RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
-        RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-        RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
-        RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-        RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
-        RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
+        --RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
+        --RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+        --RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
+        --RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+        --RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
+        --RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
+        --RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+        --RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+        --RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+        --RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+        --RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+        --RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+        --RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+        --RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+        --RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+        --RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+        --RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
+        --RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+        --RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
+        --RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         coroutine.yield(2)
     end,
 
@@ -3516,11 +3516,11 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         if potentialTarget and not potentialTarget.Dead then
-            RNGLOG('Target being returned is '..potentialTarget.UnitId)
+           --RNGLOG('Target being returned is '..potentialTarget.UnitId)
             if strikeDamage then
-                RNGLOG('Strike Damage for target is '..strikeDamage)
+               --RNGLOG('Strike Damage for target is '..strikeDamage)
             else
-                RNGLOG('No Strike Damage was passed for this target strike')
+               --RNGLOG('No Strike Damage was passed for this target strike')
             end
             return potentialTarget
         end
@@ -4391,8 +4391,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            RNGLOG('Offline Factory Count '..offlineFactoryCount)
-            RNGLOG('Online Factory Count '..onlineFactoryCount)]]
+           --RNGLOG('Offline Factory Count '..offlineFactoryCount)
+           --RNGLOG('Online Factory Count '..onlineFactoryCount)]]
 
             coroutine.yield(20)
         end
@@ -4593,22 +4593,22 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not v.NoPath then
                         local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1, nil, nil, true)
                         if path then
-                            RNGLOG('Choke point test Total Threat for path is '..totalThreat)
+                           --RNGLOG('Choke point test Total Threat for path is '..totalThreat)
                             self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / RNGGETN(path))
-                            RNGLOG('We have a path to the enemy start position with an average of '..(totalThreat / RNGGETN(path)..' threat'))
+                           --RNGLOG('We have a path to the enemy start position with an average of '..(totalThreat / RNGGETN(path)..' threat'))
 
                             if self.EnemyIntel.EnemyCount > 0 then
                                 --RNGLOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
                                 --RNGLOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                                RNGLOG('EnemyThreatCurrent for Land is '..self.EnemyIntel.EnemyThreatCurrent.Land)
-                                RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
-                                RNGLOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
-                                RNGLOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
-                                RNGLOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                               --RNGLOG('EnemyThreatCurrent for Land is '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                               --RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+                               --RNGLOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
+                               --RNGLOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
+                               --RNGLOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
                                 if self.EnemyIntel.EnemyFireBaseDetected then
-                                    RNGLOG('Firebase flag is true')
+                                   --RNGLOG('Firebase flag is true')
                                 else
-                                    RNGLOG('Firebase flag is false')
+                                   --RNGLOG('Firebase flag is false')
                                 end
                                 if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
                                 and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
@@ -4618,9 +4618,9 @@ AIBrain = Class(RNGAIBrainClass) {
                                     self.ProductionRatios.Land = 0.2
                                     self.ProductionRatios.Air = 0.2
                                     self.ProductionRatios.Naval = 0.2
-                                    RNGLOG('ChokeFlag is true')
+                                   --RNGLOG('ChokeFlag is true')
                                 elseif self.EnemyIntel.ChokeFlag then
-                                    RNGLOG('ChokeFlag is false')
+                                   --RNGLOG('ChokeFlag is false')
                                     self.EnemyIntel.ChokeFlag = false
                                     self.ProductionRatios.Land = self.DefaultLandRatio
                                 end
@@ -5197,7 +5197,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local count = 0
         for k, v in self.BuilderManagers do
             if type then
-                RNGLOG('BuilderManager Type is '..k)
+               --RNGLOG('BuilderManager Type is '..k)
                 if type == 'Start Location' and not (string.find(k, 'ARMY_') or string.find(k, 'Large Expansion')) then
                     continue
                 elseif type == 'Naval Area' and not (string.find(k, 'Naval Area')) then
@@ -5213,7 +5213,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
             count = count + 1
         end
-        RNGLOG('Type is '..type..' Count is '..count)
+       --RNGLOG('Type is '..type..' Count is '..count)
         return count
     end,]]
 
@@ -5285,8 +5285,8 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in potentialExpansionZones do
                 if v.Expansions then
                     for c, b in v.Expansions do
-                        RNGLOG('Position for expansion is ')
-                        RNGLOG(repr(b.Position))
+                       --RNGLOG('Position for expansion is ')
+                       --RNGLOG(repr(b.Position))
                         local distance, highest
                         for n, m in self.GraphZones[k].MassMarkers do
                             distance = VDist2Sq(b.Position[1], b.Position[3], m.position[1], m.position[3])
@@ -5296,19 +5296,19 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                         if loc then
-                            RNGLOG('Mass Marker Found')
+                           --RNGLOG('Mass Marker Found')
                             foundMarker = true
                             break
                         else
-                            RNGLOG('No marker found for expansion in zone '..k)
+                           --RNGLOG('No marker found for expansion in zone '..k)
                         end
                     end
                 end
                 table.insert(self.BrainIntel.DynamicExpansionPositions, {Zone = k, Position = loc})
             end
             if foundMarker then
-                RNGLOG('Marker we could have a dynamic expansion on the following positions')
-                RNGLOG(repr(self.BrainIntel.DynamicExpansionPositions))
+               --RNGLOG('Marker we could have a dynamic expansion on the following positions')
+               --RNGLOG(repr(self.BrainIntel.DynamicExpansionPositions))
             end
             coroutine.yield(100)
         end

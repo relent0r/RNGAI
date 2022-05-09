@@ -214,7 +214,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                             RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                             EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
                             if massMarker.BorderWarning then
-                                RNGLOG('Border Warning on mass point marker')
+                               --RNGLOG('Border Warning on mass point marker')
                                 IssueBuildMobile({eng}, massMarker.Position, whatToBuildM, {})
                             else
                                 aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)

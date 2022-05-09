@@ -53,7 +53,7 @@ RNGNavalResourceSet = Class(ZoneSet){
     end,
     GenerateZoneList = function(self)
         -- Step 1: Get a set of markers that are in the layer we're currently interested in.
-        RNGLOG('GenerateZoneList for custom Zone')
+       --RNGLOG('GenerateZoneList for custom Zone')
         local navalStartPositions = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
         local zoneRadius = 250 * 250
@@ -104,7 +104,7 @@ RNGNavalResourceSet = Class(ZoneSet){
         end
       
         local complete = (RNGGETN(markers) == 0)
-        RNGLOG('Starting GenerateZoneList Loop')
+       --RNGLOG('Starting GenerateZoneList Loop')
         local count = 0
         while not complete do
             complete = true

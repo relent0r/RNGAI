@@ -154,14 +154,14 @@ StructureManager = Class {
     end,
 
     Run = function(self)
-        LOG('RNGAI : StructureManager Starting')
+       --LOG('RNGAI : StructureManager Starting')
         self:ForkThread(self.FactoryDataCaptureRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end
         self.Initialized = true
-        LOG('RNGAI : StructureManager Started')
+       --LOG('RNGAI : StructureManager Started')
     end,
 
     ForkThread = function(self, fn, ...)
@@ -869,7 +869,7 @@ StructureManager = Class {
                 coroutine.yield(60)
                 continue
             end
-            LOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
+            RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
             if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
                 RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
             end
