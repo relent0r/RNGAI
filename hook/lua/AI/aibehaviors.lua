@@ -3431,7 +3431,8 @@ GetStartingReclaim = function(aiBrain)
     local minRec = 70
     local reclaimTable = {}
     local reclaimScanArea = math.max(ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40) / 4
-    local reclaimTotal = 0
+    local reclaimMassTotal = 0
+    local reclaimEnergyTotal = 0
     RNGLOG('Reclaim Scan Area is '..reclaimScanArea)
     reclaimScanArea = math.max(50, reclaimScanArea)
     reclaimScanArea = math.min(120, reclaimScanArea)
@@ -3453,7 +3454,8 @@ GetStartingReclaim = function(aiBrain)
                     end
                     --RNGLOG('Distance to reclaim from main pos is '..VDist2( rpos[1], rpos[3], posX, posZ ))
                 end
-                reclaimTotal = reclaimTotal + v.MaxMassReclaim
+                reclaimMassTotal = reclaimMassTotal + v.MaxMassReclaim
+                reclaimEnergyTotal = reclaimEnergyTotal + v.MaxEnergyReclaim
             end
         end
         --RNGLOG('Sorting Reclaim table by distance ')
@@ -3461,8 +3463,10 @@ GetStartingReclaim = function(aiBrain)
         --RNGSORT(reclaimTable, function(a,b) return a.Distance < b.Distance end)
         --RNGLOG('Final Reclaim Table size is '..table.getn(reclaimTable))
         aiBrain.StartReclaimTable = reclaimTable
-        aiBrain.StartReclaimTotal = reclaimTotal
+        aiBrain.StartMassReclaimTotal = reclaimMassTotal
+        aiBrain.StartEnergyReclaimTotal = reclaimEnergyTotal
     end
-    RNGLOG('Total Starting Reclaim is '..aiBrain.StartReclaimTotal)
+    RNGLOG('Total Starting Mass Reclaim is '..aiBrain.StartMassReclaimTotal)
+    RNGLOG('Total Starting Energy Reclaim is '..aiBrain.StartEnergyReclaimTotal)
     --RNGLOG('Complete Get Starting Reclaim')
 end

@@ -262,9 +262,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 4,
             Construction = {
                 DesiresAssist = true,
-                NumAssistees = 4,
                 AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3},
                 AdjacencyDistance = 80,
                 AvoidCategory = categories.MASSFABRICATION,

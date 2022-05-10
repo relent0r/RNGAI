@@ -67,9 +67,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
-                NumAssistees = 4,
                 BuildClose = false,
                 --AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
                 --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
@@ -109,9 +109,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
-                NumAssistees = 4,
                 BuildClose = false,
                 --AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
                 --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
@@ -152,9 +152,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
-                NumAssistees = 4,
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.SHIELD,

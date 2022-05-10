@@ -24,9 +24,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 25,
             Construction = {
                 DesiresAssist = true,
-                NumAssistees = 15,
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.NUKE,
@@ -57,6 +57,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 10,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
@@ -93,10 +94,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 30,
             Construction = {
                 BuildClose = true,
                 DesiresAssist = true,
-                NumAssistees = 15,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
@@ -126,10 +127,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 15,
             Construction = {
                 BuildClose = true,
                 DesiresAssist = true,
-                NumAssistees = 15,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
@@ -162,8 +163,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 35,
             Construction = {
-                NumAssistees = 15,
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
@@ -194,8 +195,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 35,
             Construction = {
-                NumAssistees = 15,
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
@@ -226,8 +227,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 35,
             Construction = {
-                NumAssistees = 15,
                 BuildClose = true,
                 AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
                 BuildStructures = {
@@ -261,10 +262,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 25,
             Construction = {
                 BuildClose = true,
                 DesiresAssist = true,
-                NumAssistees = 15,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
@@ -294,10 +295,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 15,
             Construction = {
                 BuildClose = true,
                 DesiresAssist = true,
-                NumAssistees = 15,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
                 maxUnits = 1,
@@ -331,8 +332,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 35,
             Construction = {
-                NumAssistees = 15,
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
@@ -364,8 +365,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 35,
             Construction = {
-                NumAssistees = 15,
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 BuildStructures = {
@@ -397,8 +398,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            NumAssistees = 35,
             Construction = {
-                NumAssistees = 15,
                 BuildClose = true,
                 AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
                 BuildStructures = {

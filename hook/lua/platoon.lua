@@ -4017,16 +4017,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(5)
             end
         end
-        local energyCount = 2
+        local energyCount = 3
         --RNGLOG('CommanderInitializeAIRNG : Energy Production stage 2')
         if not hydroPresent then
             IssueClearCommands({eng})
             --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
-                    energyCount = 3
-                else
                     energyCount = 4
+                else
+                    energyCount = 5
                 end
             end
             for i=1, energyCount do

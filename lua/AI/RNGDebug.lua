@@ -1,5 +1,5 @@
 RNGLOG = function(data)
-    --LOG(data)
+    LOG(data)
 end
 
 DrawReclaimGrid = function()

@@ -221,7 +221,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildPower',
             DesiresAssist = true,
-            NumAssistees = 15,
+            NumAssistees = 20,
             Construction = {
                 --AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
                 --AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
@@ -259,7 +259,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildPower',
             DesiresAssist = true,
-            NumAssistees = 12,
+            NumAssistees = 10,
             Construction = {
                 AdjacencyPriority = {
                     categories.SHIELD * categories.STRUCTURE,

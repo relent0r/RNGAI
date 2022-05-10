@@ -41,12 +41,12 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
         end
         if string.find(per, 'RNGStandardExperimental') then
             --RNGLOG('* AI-RNG: This is RNGEXP')
             self.RNGEXP = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
         end
     end,
 
@@ -953,7 +953,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
-        self.StartReclaimTotal = 0
+        self.StartMassReclaimTotal = 0
         self.StartReclaimCurrent = 0
         self.StartReclaimTaken = false
         self.MapReclaimTable = {}

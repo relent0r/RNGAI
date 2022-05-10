@@ -40,7 +40,7 @@ local MexChokeFlag = function(self, aiBrain, builderManager)
 end
 
 local StartingReclaimPresent = function(self, aiBrain, builderManager)
-    if aiBrain.StartReclaimTotal > 500 then
+    if aiBrain.StartMassReclaimTotal > 500 then
         return 1002
     end
     return 950
