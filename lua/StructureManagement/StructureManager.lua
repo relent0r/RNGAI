@@ -368,7 +368,7 @@ StructureManager = Class {
     GetClosestFactory = function(self, base, type, tech, hqFlag)
         local ALLBPS = __blueprints
         local basePosition = self.Brain.BuilderManagers[base].Position
-        RNGLOG('GetClosestFactory Base position is '..repr(basePosition))
+        --RNGLOG('GetClosestFactory Base position is '..repr(basePosition))
         local factoryList = self.Brain.BuilderManagers[base].FactoryManager.FactoryList
         local unitPos
         local DistanceToBase
@@ -384,7 +384,7 @@ StructureManager = Class {
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                 LowestDistanceToBase = DistanceToBase
                                 lowestUnit = fact
-                                RNGLOG('Lowest Distance Factory added')
+                                --RNGLOG('Lowest Distance Factory added')
                             end
                         end
                     end
@@ -395,7 +395,7 @@ StructureManager = Class {
                         if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                             LowestDistanceToBase = DistanceToBase
                             lowestUnit = fact
-                            RNGLOG('Lowest Distance Factory added')
+                            --RNGLOG('Lowest Distance Factory added')
                         end
                     end
                 end
@@ -437,7 +437,7 @@ StructureManager = Class {
         -- HQ Upgrades
         local mexSpend = self.Brain.EcoManager.TotalMexSpend or 0
         local actualMexIncome = self.Brain.cmanager.income.r.m - mexSpend
-        RNGLOG('Actual Mex Income '..actualMexIncome)
+        --RNGLOG('Actual Mex Income '..actualMexIncome)
 
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
@@ -720,13 +720,13 @@ StructureManager = Class {
     end,
 
     UpgradeFactoryRNG = function(self, unit, hq)
-        RNGLOG('UpgradeFactory Fork started')
+        --RNGLOG('UpgradeFactory Fork started')
         local ALLBPS = __blueprints
         local supportUpgradeID
         local followupUpgradeID = false
-        RNGLOG('Factory to upgrade unit id is '..unit.UnitId)
+        --RNGLOG('Factory to upgrade unit id is '..unit.UnitId)
         local upgradeID = ALLBPS[unit.UnitId].General.UpgradesTo
-        RNGLOG('Upgrade ID for unit is '..ALLBPS[unit.UnitId].General.UpgradesTo)
+        --RNGLOG('Upgrade ID for unit is '..ALLBPS[unit.UnitId].General.UpgradesTo)
         if upgradeID then
             if ALLBPS[upgradeID].General.UpgradesTo then
                 followupUpgradeID = ALLBPS[upgradeID].General.UpgradesTo
@@ -738,8 +738,8 @@ StructureManager = Class {
             coroutine.yield(20)
             return
         end
-        RNGLOG('Upgrade Factory has triggered ')
-        RNGLOG('Default upgrade bp is '..upgradeID..' checking for support upgrade replacement')
+        --RNGLOG('Upgrade Factory has triggered ')
+        --RNGLOG('Default upgrade bp is '..upgradeID..' checking for support upgrade replacement')
         if upgradeID then
             if ALLBPS[unit.UnitId].CategoriesHash.LAND then
                 if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
@@ -779,12 +779,12 @@ StructureManager = Class {
                 end
             end
             if supportUpgradeID then
-                RNGLOG('Support Upgrade ID found '..supportUpgradeID)
+                --RNGLOG('Support Upgrade ID found '..supportUpgradeID)
                 upgradeID = supportUpgradeID
             end
         end
         if upgradeID then
-            RNGLOG('Issuing Upgrade Command for factory')
+            --RNGLOG('Issuing Upgrade Command for factory')
             IssueClearCommands({unit})
             coroutine.yield(2)
             IssueUpgrade({unit}, upgradeID)
@@ -831,16 +831,16 @@ StructureManager = Class {
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
             aiBrain.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             aiBrain.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
-            RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
-            RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
-            RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
-            RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
-            RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-            RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
+            --RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
+            --RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
+            --RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
+            --RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
+            --RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
+            --RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            --RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
             if aiBrain.EcoManager.T3ExtractorSpend then
-                RNGLOG('aiBrain.EcoManager.T3ExtractorSpend '..aiBrain.EcoManager.T3ExtractorSpend)
-                RNGLOG('Is upgradeSpend minus total spend greater than T3ExtractorSpend?')
+                --RNGLOG('aiBrain.EcoManager.T3ExtractorSpend '..aiBrain.EcoManager.T3ExtractorSpend)
+                --RNGLOG('Is upgradeSpend minus total spend greater than T3ExtractorSpend?')
             end
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
@@ -850,13 +850,13 @@ StructureManager = Class {
                 aiBrain.EcoManager.CoreMassPush = false
                 aiBrain.EngineerAssistManagerFocusCategory = false
             end
-            RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
-            RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
-            RNGLOG('Current number of T2 mexes upgrading '..extractorsDetail.TECH2Upgrading)
+            --RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
+            --RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
+            --RNGLOG('Current number of T2 mexes upgrading '..extractorsDetail.TECH2Upgrading)
             local massStorage = GetEconomyStored( aiBrain, 'MASS')
             local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
             if aiBrain.EcoManager.CoreExtractorT3Count then
-                RNGLOG('CoreExtractorT3Count '..aiBrain.EcoManager.CoreExtractorT3Count)
+                --RNGLOG('CoreExtractorT3Count '..aiBrain.EcoManager.CoreExtractorT3Count)
             end
             if aiBrain.EcoManager.CoreMassPush and extractorsDetail.TECH2Upgrading < 1 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) then
                 --LOG('Trigger all tiers true')
@@ -869,22 +869,22 @@ StructureManager = Class {
                 coroutine.yield(60)
                 continue
             end
-            RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
+            --RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
             if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
-                RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
+                --RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
             end
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('We Could upgrade an extractor now with over time')
                         --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
-                            RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
+                            --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
                         elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15 then
-                            RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
+                            --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                         else
-                            RNGLOG('Else all tiers upgrade')
+                            --RNGLOG('Else all tiers upgrade')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
                         end
                         coroutine.yield(30)
@@ -894,13 +894,13 @@ StructureManager = Class {
                 coroutine.yield(30)
             elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                    RNGLOG('We Could upgrade a non t2 extractor now with over time')
+                    --RNGLOG('We Could upgrade a non t2 extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
                     coroutine.yield(60)
                 end
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                    RNGLOG('We Could upgrade an extractor now with over time')
+                    --RNGLOG('We Could upgrade an extractor now with over time')
                     local massIncome = GetEconomyIncome(aiBrain, 'MASS')
                     local massRequested = GetEconomyRequested(aiBrain, 'MASS')
                     local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
@@ -908,7 +908,7 @@ StructureManager = Class {
                     local massEfficiency = math.min(massIncome / massRequested, 2)
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 1.05 and massEfficiency >= 1.05 then
-                        RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
+                        --RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5 or upgradeSpend < 15 then
                             --LOG('Trigger all tiers false')
                             self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
@@ -922,7 +922,7 @@ StructureManager = Class {
                 end
             elseif massStorage > 2500 and energyStorage > 8000 then
                 if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.8 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                    RNGLOG('We Could upgrade an extractor now with over time')
+                    --RNGLOG('We Could upgrade an extractor now with over time')
                     local massIncome = GetEconomyIncome(aiBrain, 'MASS')
                     local massRequested = GetEconomyRequested(aiBrain, 'MASS')
                     local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
@@ -930,8 +930,8 @@ StructureManager = Class {
                     local massEfficiency = math.min(massIncome / massRequested, 2)
                     local energyEfficiency = math.min(energyIncome / energyRequested, 2)
                     if energyEfficiency >= 0.8 and massEfficiency >= 0.8 then
-                        RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        RNGLOG('Trigger all tiers true')
+                        --RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
+                        --RNGLOG('Trigger all tiers true')
                         self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
                         coroutine.yield(30)
                     end
@@ -1011,10 +1011,10 @@ StructureManager = Class {
                 if not aiBrain.CentralBrainExtractorUnitUpgradeClosest then
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
                 end
-                RNGLOG('Closest Extractor')
+                --RNGLOG('Closest Extractor')
                 self:ForkThread(self.UpgradeExtractorRNG, aiBrain, ALLBPS, lowestUnit, LowestDistanceToBase)
             else
-                RNGLOG('There is no lowestUnit')
+                --RNGLOG('There is no lowestUnit')
             end
         end
     end,

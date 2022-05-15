@@ -201,13 +201,13 @@ end
 
 GameMap = Class({
     InitMap = function(self)
-        RNGLOG('FlowAI framework: CreateMapMarkers() started!')
+        --RNGLOG('FlowAI framework: CreateMapMarkers() started!')
         local START = GetSystemTimeSecondsOnlyForProfileUse()
         self:CreateMapMarkers()
         self.zoneSets = {}
         self.numZoneSets = 0
         local END = GetSystemTimeSecondsOnlyForProfileUse()
-        RNGLOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
+        --RNGLOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
         local drawStuffz = false
         if drawStuffz then
             ForkThread(
@@ -451,11 +451,11 @@ GameMap = Class({
         local i1 = self:GetI(pos1[1])
         local j1 = self:GetJ(pos1[3])
         --[[if (self.components[i0][j0][layer] > 0) and (self.components[i0][j0][layer] == self.components[i1][j1][layer]) then
-            RNGLOG('CanPathTo is true for layer '..layer)
+            --RNGLOG('CanPathTo is true for layer '..layer)
         else
-            RNGLOG('CanPathTo is false for layer '..layer)
-            RNGLOG(' pos0 '..repr(pos0))
-            RNGLOG(' pos1 '..repr(pos1))
+            --RNGLOG('CanPathTo is false for layer '..layer)
+            --RNGLOG(' pos0 '..repr(pos0))
+            --RNGLOG(' pos1 '..repr(pos1))
         end]]
         return (self.components[i0][j0][layer] > 0) and (self.components[i0][j0][layer] == self.components[i1][j1][layer])
     end,
@@ -491,9 +491,9 @@ GameMap = Class({
                 end
             end
         end
-        RNGLOG('CanPathTo is false for layer '..layer)
-        RNGLOG(' pos0 '..repr(pos0))
-        RNGLOG(' pos1 '..repr(pos1))
+        --RNGLOG('CanPathTo is false for layer '..layer)
+        --RNGLOG(' pos0 '..repr(pos0))
+        --RNGLOG(' pos1 '..repr(pos1))
         return false
     end,
     UnitCanPathTo = function(self,unit,pos)
@@ -869,7 +869,7 @@ end
 function SetMarkerInformation(aiBrain)
     --RNGLOG('Display Marker Adjacency Running')
     while not aiBrain.ZonesInitialized do
-        RNGLOG('Waiting for Zones to Initialize')
+        --RNGLOG('Waiting for Zones to Initialize')
         coroutine.yield(20)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers

@@ -55,7 +55,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
     local result, bestPos
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
     if unit.PlatoonHandle.BuilderName then
-        RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
+        --RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
     end
     --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
@@ -74,9 +74,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         end 
     end
     if result then
-        RNGLOG('result is true, reason is '..reason)
+        --RNGLOG('result is true, reason is '..reason)
     else
-        RNGLOG('result is false, reason is '..reason)
+        --RNGLOG('result is false, reason is '..reason)
     end
     local bUsedTransports = false
     -- Increase check to 300 for transports
@@ -876,10 +876,10 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             end
         end
         if retUnit then
-            RNGLOG('Satellite has target')
+            --RNGLOG('Satellite has target')
             return retUnit
         else
-            RNGLOG('Satellite did not get target')
+            --RNGLOG('Satellite did not get target')
         end
     end
 

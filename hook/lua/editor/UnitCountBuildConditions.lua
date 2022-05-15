@@ -28,10 +28,10 @@ function UnitToThreatRatio(aiBrain, ratio, category, threatType, compareType)
     elseif threatType == 'AntiAir' then
         threat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     end
-    RNGLOG('UnitToThreatRatio numUnits '..numUnits)
+    --RNGLOG('UnitToThreatRatio numUnits '..numUnits)
     if threat then
-        RNGLOG('Threat '..threat)
-        RNGLOG('Ratio is '..(numUnits/threat))
+        --RNGLOG('Threat '..threat)
+        --RNGLOG('Ratio is '..(numUnits/threat))
     end
     if threat then
         return CompareBody(numUnits / threat, ratio, compareType)

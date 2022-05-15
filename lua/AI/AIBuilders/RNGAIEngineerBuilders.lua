@@ -48,11 +48,11 @@ end
 
 local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
     if aiBrain.StartReclaimCurrent > 500 then
-        RNGLOG('Priority Function More than 500 reclaim')
+        --RNGLOG('Priority Function More than 500 reclaim')
         return 740
     end
     if aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < 5 then
-        RNGLOG('Priority Function less than 5 reclaim engineers')
+        --RNGLOG('Priority Function less than 5 reclaim engineers')
         return 740
     end
     return 0

@@ -15,13 +15,13 @@ local DefensivePosture = function(self, aiBrain, builderManager, builderData)
     local myExtractorCount = aiBrain.BrainIntel.SelfThreat.AllyExtractorCount
     local totalMassMarkers = aiBrain.BrainIntel.SelfThreat.MassMarker
     if myExtractorCount and totalMassMarkers then
-        RNGLOG('My Extractor Count '..myExtractorCount.. ' totalMassMarkers '..totalMassMarkers)
+        --RNGLOG('My Extractor Count '..myExtractorCount.. ' totalMassMarkers '..totalMassMarkers)
     end
     if myExtractorCount > (totalMassMarkers / 2) then
-        RNGLOG('Defensive : More than half the mass markers switch to defensive mode for '..aiBrain.Nickname)
+        --RNGLOG('Defensive : More than half the mass markers switch to defensive mode for '..aiBrain.Nickname)
         return 0
     end
-    RNGLOG('Defensive : return '..builderData.Priority)
+    --RNGLOG('Defensive : return '..builderData.Priority)
     return builderData.Priority
 end
 

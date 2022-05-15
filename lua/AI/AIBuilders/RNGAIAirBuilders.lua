@@ -9,7 +9,7 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
-local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local --RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local AntiAirUnits = categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
@@ -106,11 +106,11 @@ end
 local BomberResponse = function(self, aiBrain, builderManager, builderData)
     RNGLOG('BomberResponse location is '..builderManager.LocationType)
     if aiBrain.BrainIntel.AirPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AirNow then
-        RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
+        --RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end
     if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 1 then
-        RNGLOG('Bomber Response for Perimeter Monitor is true')
+        --RNGLOG('Bomber Response for Perimeter Monitor is true')
         return 890
     end
     return 0
