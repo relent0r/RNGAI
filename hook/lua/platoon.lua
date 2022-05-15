@@ -1753,6 +1753,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         self.MaxPlatoonWeaponRange = false        
         self.CurrentPlatoonThreat = false
+        if aiBrain.EnemyIntel.Phase > 1 then
+            self.EnemyRadius = 70
+        else
+            self.EnemyRadius = 55
+        end
         self:ConfigurePlatoon()
         --RNGLOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
 
@@ -4686,6 +4691,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 return mod
             end
         end
+        if aiBrain.EnemyIntel.Phase > 1 then
+            self.EnemyRadius = 70
+        else
+            self.EnemyRadius = 55
+        end
         self:ConfigurePlatoon()
         RNGLOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
         local stageExpansion = false
@@ -5057,6 +5067,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         self.ScoutUnit = false
         self.atkPri = {}
         self.CurrentPlatoonThreat = false
+        if aiBrain.EnemyIntel.Phase > 1 then
+            self.EnemyRadius = 70
+        else
+            self.EnemyRadius = 55
+        end
         local categoryList = {}
         self:ConfigurePlatoon()
         RNGLOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
@@ -5492,7 +5507,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:ConfigurePlatoon()
         RNGLOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
         self:SetPlatoonFormationOverride(PlatoonFormation)
-        RNGLOG('Squad '..repro(self:GetSquadUnits('Attack'), true))
         local stageExpansion = false
         
         if self.PlatoonData.TargetSearchPriorities then
@@ -9859,7 +9873,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         UnitInitialize(self)
         self:Stop()
-        self.EnemyRadius = math.max(self.MaxWeaponRange+35, 55)
+        if aiBrain.EnemyIntel.Phase > 1 then
+            self.EnemyRadius = math.max(self.MaxWeaponRange+35, 70)
+        else
+            self.EnemyRadius = math.max(self.MaxWeaponRange+35, 55)
+        end
+        
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local targetmex

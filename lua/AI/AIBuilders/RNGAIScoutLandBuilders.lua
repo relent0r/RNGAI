@@ -20,7 +20,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.LAND * categories.SCOUT } },
+            { UCBC, 'UnitToThreatRatio', { 0.2, categories.SCOUT * categories.LAND, 'Land', '<'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.3, 0.5 }},
         },
         BuilderType = 'Land',
