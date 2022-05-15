@@ -2,19 +2,25 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
-RNGAddToBuildQueue = AddToBuildQueue
-function AddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
-    if not aiBrain.RNG then
-        return RNGAddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
-    end
+--RNGAddToBuildQueue = AddToBuildQueue
+function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relative, borderWarning)
+    --if not aiBrain.RNG then
+    --    return RNGAddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
+    --end
     if not builder.EngineerBuildQueue then
         builder.EngineerBuildQueue = {}
     end
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
-    RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, BuildToNormalLocation(buildLocation)) 
-    aiBrain:BuildStructure(builder, whatToBuild, buildLocation, false)
-    local newEntry = {whatToBuild, buildLocation, relative}
+    --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
+    if borderWarning then
+        --LOG('BorderWarning build')
+        IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
+    else
+        aiBrain:BuildStructure(builder, whatToBuild, buildLocation, false)
+    end
+    local newEntry = {whatToBuild, buildLocation, relative, borderWarning}
     table.insert(builder.EngineerBuildQueue, newEntry)
 end
 
@@ -30,7 +36,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                     if bString == buildingType then
                         for n,position in bType do
                             if n > 1 and aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
-                                 AddToBuildQueue(aiBrain, builder, whatToBuild, position, false)
+                                AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                  table.remove(bType,n)
                                  return DoHackyLogic(buildingType, builder)
                             end # if n > 1 and can build structure at
@@ -47,6 +53,7 @@ end
 
 local AntiSpamList = {}
 function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     -- If the c-engine can't decide what to build, then search the build template manually.
@@ -145,8 +152,8 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     local location = false
     if IsResource(buildingType) then
-        if buildingType != 'T1HydroCarbon' and constructionData.MexThreat then
-            --LOG('MexThreat Builder Type')
+        if buildingType ~= 'T1HydroCarbon' and constructionData.MexThreat then
+            --RNGLOG('MexThreat Builder Type')
             local threatMin = -9999
             local threatMax = 9999
             local threatRings = 0
@@ -156,16 +163,16 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             for _,v in markerTable do
                 if VDist3( v.Position, relativeTo ) <= constructionData.MaxDistance and VDist3( v.Position, relativeTo ) >= constructionData.MinDistance then
                     if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-                        --LOG('MassPoint found for engineer')
+                        --RNGLOG('MassPoint found for engineer')
                         location = table.copy(markerTable[Random(1,table.getn(markerTable))])
                         location = {location.Position[1], location.Position[3], location.Position[2]}
-                        --LOG('Location is '..repr(location))
+                        --RNGLOG('Location is '..repr(location))
                         break
                     end
                 end
             end
             if not location and EntityCategoryContains(categories.COMMAND,builder) then
-                --LOG('Location Returned by marker table is '..repr(location))
+                --RNGLOG('Location Returned by marker table is '..repr(location))
                 return false
             end
         else
@@ -185,44 +192,119 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
     end
     -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
     if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
-        --LOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
+        --RNGLOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
         relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
             location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then
-                --LOG('*AIExecuteBuildStructure: Yes! Found a place near base to Build! - buildingType '..repr(buildingType))
+                --RNGLOG('*AIExecuteBuildStructure: Yes! Found a place near base to Build! - buildingType '..repr(buildingType))
                 break
             end
         end
     end
     -- if we still have no place to build, then maybe we have really no place near the base to build. Lets search near engineer position
     if not location and not IsResource(buildingType) then
-        --LOG('*AIExecuteBuildStructure: Find still no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near Engineer...')
+        --RNGLOG('*AIExecuteBuildStructure: Find still no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near Engineer...')
         relativeTo = builder:GetPosition()
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
             location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
             if location then
-                --LOG('*AIExecuteBuildStructure: Yes! Found a place near engineer to Build! - buildingType '..repr(buildingType))
+                --RNGLOG('*AIExecuteBuildStructure: Yes! Found a place near engineer to Build! - buildingType '..repr(buildingType))
                 break
             end
         end
     end
     -- if we have a location, build!
-    if location then
+    if location and IsResource(buildingType) then
+        local borderWarning = false
+        local relativeLoc = BuildToNormalLocation(location)
+        if relative then
+            relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
+        end
+        -- Need to update this to playable_area as it turns out that its 8 from that not the scenarioinfo size. See regor_highlands.
+        if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[3] - playableArea[2] <= 8 or relativeLoc[3] >= playableArea[4] - 8 then
+            RNGLOG('Playable Area 1, 3 '..repr(playableArea))
+            RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
+            RNGLOG('BorderWarning is true, location is '..repr(relativeLoc))
+            borderWarning = true
+        end
+        -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
+        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
+        return true
+    elseif location then
         local relativeLoc = BuildToNormalLocation(location)
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
-        AddToBuildQueue(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false)
+        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false)
         return true
     end
     -- At this point we're out of options, so move on to the next thing
     return false
 end
 
+function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
+    --LOG('AIBuildAvoidRNG Started')
+    local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
+    local VDist3Sq = VDist3Sq
+    local relativeTo
+    local factionIndex = aiBrain:GetFactionIndex()
+
+    local function normalposition(vec)
+        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+    end
+    local function heightbuildpos(vec)
+        return {vec[1],vec[2],GetSurfaceHeight(vec[1],vec[2])}
+    end
+    --LOG('AIBuildAvoidRNG Checking if close to builder')
+    if closeToBuilder then
+        relativeTo = builder:GetPosition()
+    elseif builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
+        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
+    else
+        local startPosX, startPosZ = aiBrain:GetArmyStartPos()
+        relativeTo = {startPosX, 0, startPosZ}
+    end
+    --LOG('AIBuildAvoidRNG Checking if cons.AvoidCategory')
+    if cons.AvoidCategory then
+        --LOG('AIBuildAvoidRNG Attempting to find position')
+        local radius = cons.Radius or 10
+        local unitList = aiBrain:GetUnitsAroundPoint(cons.AvoidCategory,  relativeTo, 60, 'Ally')
+        local location = false
+        local locationFound = false
+        local unitCount = 0
+        if whatToBuild then
+            for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
+                location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+                if location then
+                    for _, v in unitList do
+                        if VDist3Sq({location[1], location[3], location[2]}, v:GetPosition()) < radius * radius then
+                            unitCount = unitCount + 1
+                        end
+                    end
+                    if unitCount < 1 then
+                        --LOG('AIBuildAvoidRNG I think we found a position at '..repr(location))
+                        break
+                    end
+                end
+            end
+        end
+        if location then
+            --LOG('AIBuildAvoidRNG Placing into build queue')
+            --LOG('Build queue is as follows')
+            --LOG('whatToBuild '..whatToBuild)
+            --LOG('Builder Location '..repr({location[1], location[3], location[2]})..' that last number should be a zero')
+            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, location, false)
+            return true
+        end
+    end
+    --LOG('AIBuildAvoidRNG is returning false')
+    return false
+end
+
 function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
-    --LOG('beginning adjacencypriority')
+    --RNGLOG('beginning adjacencypriority')
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     local VDist3Sq = VDist3Sq
     local Centered=cons.Centered
@@ -257,7 +339,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         local template = {}
         table.insert(template, {})
         table.insert(template[1], { buildingType })
-        --LOG('reference contains '..repr(table.getn(reference))..' items')
+        --RNGLOG('reference contains '..repr(table.getn(reference))..' items')
         for _,x in reference do
             for k,v in x do
                 if not Centered then
@@ -282,10 +364,10 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                                 --table.insert(template[1], testPos)
                                 if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
                                         return true
                                     elseif not cons.AvoidCategory then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
                                         return true
                                     end
                                 end
@@ -295,10 +377,10 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                                 --table.insert(template[1], testPos2)
                                 if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
                                         return true
                                     elseif not cons.AvoidCategory then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
                                         return true
                                     end
                                 end
@@ -313,10 +395,10 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                                 --table.insert(template[1], testPos)
                                 if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
                                         return true
                                     elseif not cons.AvoidCategory then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
                                         return true
                                     end
                                 end
@@ -326,10 +408,10 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                                 --table.insert(template[1], testPos2)
                                 if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
                                     if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
                                         return true
                                     elseif not cons.AvoidCategory then
-                                        AddToBuildQueue(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
                                         return true
                                     end
                                 end
@@ -373,8 +455,8 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
             local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, false, builder, baseLocation[1], baseLocation[3])
             if location then
                 if location[1] > 8 and location[1] < ScenarioInfo.size[1] - 8 and location[2] > 8 and location[2] < ScenarioInfo.size[2] - 8 then
-                    --LOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
-                    AddToBuildQueue(aiBrain, builder, whatToBuild, location, false)
+                    --RNGLOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
+                    AddToBuildQueueRNG(aiBrain, builder, whatToBuild, location, false)
                     return true
                 end
             end
@@ -387,4 +469,106 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         end
     end
     return false
+end
+
+function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructionData)
+    local radius = constructionData.ExpansionRadius or 100
+    # PBM Style expansion bases here
+    if aiBrain.HasPlatoonList then
+    # Figure out what type of builders to import
+        local expansionTypes = constructionData.ExpansionTypes
+    if not expansionTypes then
+        expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
+    end
+
+    # Check if it already exists
+        for k,v in aiBrain.PBM.Locations do
+            if v.LocationType == baseName then
+                return
+            end
+        end
+        aiBrain:PBMAddBuildLocation(position, radius, baseName, true)
+
+        for num, typeString in expansionTypes do
+            for bNum, builder in aiBrain.PBM.Platoons[typeString] do
+                if builder.LocationType == 'MAIN' and CheckExpansionType(typeString, ScenarioInfo.BuilderTable[typeString][builder.BuilderName].ExpansionExclude)  then
+                    local pltnTable = {}
+                    for dField, data in builder do
+                        if dField == 'LocationType' then
+                            pltnTable[dField] = baseName
+                        elseif dField == 'PlatoonHandle' then
+                            pltnTable[dField] = false
+                        elseif dField == 'PlatoonTimeOutThread' then
+                            pltnTable[dField] = nil
+                        else
+                            pltnTable[dField] = data
+                        end
+                    end
+                    table.insert(aiBrain.PBM.Platoons[typeString], pltnTable)
+                    aiBrain.PBM.NeedSort[typeString] = true
+                end
+            end
+        end
+
+    else
+        if not aiBrain.BuilderManagers or aiBrain.BuilderManagers[baseName] or not builder.BuilderManagerData then
+            #LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
+            builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
+            aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
+            return
+        end
+
+        aiBrain:AddBuilderManagers(position, radius, baseName, true)
+
+        # Move the engineer to the new base managers
+        builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
+        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
+
+        # Iterate through bases finding the value of each expansion
+        local baseValues = {}
+        local highPri = false
+        for templateName, baseData in BaseBuilderTemplates do
+            local baseValue = baseData.ExpansionFunction(aiBrain, position, constructionData.NearMarkerType)
+            table.insert(baseValues, { Base = templateName, Value = baseValue })
+            --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+            if not highPri or baseValue > highPri then
+                --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+                highPri = baseValue
+            end
+        end
+
+        # Random to get any picks of same value
+        local validNames = {}
+        for k,v in baseValues do
+            if v.Value == highPri then
+                table.insert(validNames, v.Base)
+            end
+        end
+        --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
+        local pick = validNames[ Random(1, table.getn(validNames)) ]
+
+        # Error if no pick
+        if not pick then
+            RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
+        end
+
+        # Setup base
+        --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
+        import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, baseName, pick)
+
+        # If air base switch to building an air factory rather than land
+        if (string.find(pick, 'Air') or string.find(pick, 'Water')) then
+            #if constructionData.BuildStructures[1] == 'T1LandFactory' then
+            #    constructionData.BuildStructures[1] = 'T1AirFactory'
+            #end
+            local numToChange = BaseBuilderTemplates[pick].BaseSettings.FactoryCount.Land
+            for k,v in constructionData.BuildStructures do
+                if constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange <= 0 then
+                    constructionData.BuildStructures[k] = 'T1AirFactory'
+                elseif constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange > 0 then
+                    numToChange = numToChange - 1
+                end
+            end
+        end
+    end
 end

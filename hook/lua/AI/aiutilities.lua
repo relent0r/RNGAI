@@ -2,10 +2,10 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
-    --LOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
+    --RNGLOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
     if markerType == 'Start Location' then
         local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Blank Marker')
         for k, v in tempMarkers do
@@ -16,7 +16,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
                 for _, v in ecoStructures do
                     local bp = v:GetBlueprint()
                     local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                    --LOG('* AI-RNG: Eco Structure'..ecoStructThreat)
+                    --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
                     ecoThreat = ecoThreat + ecoStructThreat
                 end
                 if ecoThreat < 10 then
@@ -37,20 +37,27 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     return markerList
 end
 
-function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath)
     if not destination then
         return false
     end
     local pos = unit:GetPosition()
+    local T1EngOnly = false
+    if EntityCategoryContains(categories.ENGINEER * categories.TECH1, unit) then
+        T1EngOnly = true
+    end
     -- don't check a path if we are in build range
-    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
+    if not alwaysCheckPath and VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
         return true
     end
 
     -- first try to find a path with markers. 
     local result, bestPos
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
-    --LOG('EngineerGenerateSafePathToRNG reason is'..reason)
+    if unit.PlatoonHandle.BuilderName then
+        RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
+    end
+    --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
@@ -66,6 +73,11 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
             result, bestPos = unit:CanPathTo(destination)
         end 
     end
+    if result then
+        RNGLOG('result is true, reason is '..reason)
+    else
+        RNGLOG('result is false, reason is '..reason)
+    end
     local bUsedTransports = false
     -- Increase check to 300 for transports
     if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250
@@ -77,11 +89,11 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
         end
 
         -- Skip the last move... we want to return and do a build
-        --LOG('run SendPlatoonWithTransportsNoCheck')
+        --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         unit.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, needTransports, true, false)
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         unit.WaitingForTransport = false
-        --LOG('finish SendPlatoonWithTransportsNoCheck')
+        --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
         if bUsedTransports then
             return true
@@ -93,12 +105,12 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
 
     -- If we're here, we haven't used transports and we can path to the destination
     if result or reason == 'PathOK' then
-        --LOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
+        --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
         if reason ~= 'PathOK' then
             path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
         end
         if path then
-            --LOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
+            --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
             local pathSize = table.getn(path)
             -- Move to way points (but not to destination... leave that for the final command)
             for widx, waypointPath in path do
@@ -118,15 +130,22 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         return false
     end
     local pos = eng:GetPosition()
+    local T1EngOnly = false
+    if EntityCategoryContains(categories.ENGINEER * categories.TECH1, eng) then
+        T1EngOnly = true
+    end
     -- don't check a path if we are in build range
     if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 144 then
         return true
+    end
+    if not AIAttackUtils.CanGraphToRNG(pos, destination, 'Amphibious') then
+        return false
     end
 
     -- first try to find a path with markers. 
     local result, bestPos
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination, nil, 300)
-    --LOG('EngineerGenerateSafePathToRNG reason is'..reason)
+    --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
@@ -142,7 +161,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             result, bestPos = eng:CanPathTo(destination)
         end 
     end
-    --LOG('EngineerGenerateSafePathToRNG move to next bit')
+    --RNGLOG('EngineerGenerateSafePathToRNG move to next bit')
     local bUsedTransports = false
     -- Increase check to 300 for transports
     if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300
@@ -154,11 +173,11 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         end
 
         -- Skip the last move... we want to return and do a build
-        --LOG('run SendPlatoonWithTransportsNoCheck')
+        --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         eng.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, needTransports, true, false)
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         eng.WaitingForTransport = false
-        --LOG('finish SendPlatoonWithTransportsNoCheck')
+        --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
         if bUsedTransports then
             return true
@@ -170,12 +189,12 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
 
     -- If we're here, we haven't used transports and we can path to the destination
     if result or reason == 'PathOK' then
-        --LOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
+        --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
         if reason ~= 'PathOK' then
             path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
         end
         if path then
-            --LOG('We have a path')
+            --RNGLOG('We have a path')
             if not whatToBuildM then
                 local cons = eng.PlatoonHandle.PlatoonData.Construction
                 local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
@@ -187,24 +206,27 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                 baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
                 whatToBuildM = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             end
-            --LOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
+            --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
             local pathSize = table.getn(path)
             -- Move to way points (but not to destination... leave that for the final command)
-            --LOG('We are issuing move commands for the path')
+            --RNGLOG('We are issuing move commands for the path')
             for widx, waypointPath in path do
                 if widx>=3 then
-                    local bool,markers=MABC.CanBuildOnMassEng2(aiBrain, waypointPath, 30)
+                    local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, waypointPath, 25)
                     if bool then
-                        --LOG('We can build on a mass marker within 30')
+                        --RNGLOG('We can build on a mass marker within 30')
                         --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
-                        --LOG('Mass Marker'..repr(massMarker))
-                        --LOG('Attempting second mass marker')
+                        --RNGLOG('Mass Marker'..repr(massMarker))
+                        --RNGLOG('Attempting second mass marker')
                         for _,massMarker in markers do
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position)
-                        EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
-                        aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false}
-                        table.insert(eng.EngineerBuildQueue, newEntry)
+                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
+                            EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
+                            if massMarker.BorderWarning then
+                               --RNGLOG('Border Warning on mass point marker')
+                                IssueBuildMobile({eng}, massMarker.Position, whatToBuildM, {})
+                            else
+                                aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                            end
                         end
                     end
                 end
@@ -218,6 +240,125 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         return true
     end
     return false
+end
+
+function GetTransportsRNG(platoon, units, t1EngOnly)
+    if not units then
+        units = platoon:GetPlatoonUnits()
+    end
+    
+    -- Check for empty platoon
+    if table.empty(units) then
+        return 0
+    end
+
+    local neededTable = GetNumTransports(units)
+    local transportsNeeded = false
+    if neededTable.Small > 0 or neededTable.Medium > 0 or neededTable.Large > 0 then
+        transportsNeeded = true
+    end
+
+
+    local aiBrain = platoon:GetBrain()
+    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+
+    -- Make sure more are needed
+    local tempNeeded = {}
+    tempNeeded.Small = neededTable.Small
+    tempNeeded.Medium = neededTable.Medium
+    tempNeeded.Large = neededTable.Large
+
+    local location = platoon:GetPlatoonPosition()
+    if not location then
+        -- We can assume we have at least one unit here
+        location = units[1]:GetPosition()
+    end
+
+    if not location then
+        return 0
+    end
+
+    -- Determine distance of transports from platoon
+    local transports = {}
+    for _, unit in pool:GetPlatoonUnits() do
+        if not unit.Dead and EntityCategoryContains(categories.TRANSPORTATION - categories.uea0203, unit) and not unit:IsUnitState('Busy') and not unit:IsUnitState('TransportLoading') and table.empty(unit:GetCargo()) and unit:GetFractionComplete() == 1 then
+            if t1EngOnly then
+                if EntityCategoryContains(categories.TECH1, unit) then
+                    local unitPos = unit:GetPosition()
+                    local curr = {Unit = unit, Distance = VDist2(unitPos[1], unitPos[3], location[1], location[3]), Id = unit.UnitId}
+                    table.insert(transports, curr)
+                end
+            else
+                local unitPos = unit:GetPosition()
+                local curr = {Unit = unit, Distance = VDist2(unitPos[1], unitPos[3], location[1], location[3]), Id = unit.UnitId}
+                table.insert(transports, curr)
+            end
+        end
+    end
+
+    local numTransports = 0
+    local transSlotTable = {}
+    if not table.empty(transports) then
+        local sortedList = {}
+        -- Sort distances
+        for k = 1, table.getn(transports) do
+            local lowest = -1
+            local key, value
+            for j, u in transports do
+                if lowest == -1 or u.Distance < lowest then
+                    lowest = u.Distance
+                    value = u
+                    key = j
+                end
+            end
+            sortedList[k] = value
+            -- Remove from unsorted table
+            table.remove(transports, key)
+        end
+
+        -- Take transports as needed
+        for i = 1, table.getn(sortedList) do
+            if transportsNeeded and table.empty(sortedList[i].Unit:GetCargo()) and not sortedList[i].Unit:IsUnitState('TransportLoading') then
+                local id = sortedList[i].Id
+                aiBrain:AssignUnitsToPlatoon(platoon, {sortedList[i].Unit}, 'Scout', 'GrowthFormation')
+                numTransports = numTransports + 1
+                if not transSlotTable[id] then
+                    transSlotTable[id] = GetNumTransportSlots(sortedList[i].Unit)
+                end
+                local tempSlots = {}
+                tempSlots.Small = transSlotTable[id].Small
+                tempSlots.Medium = transSlotTable[id].Medium
+                tempSlots.Large = transSlotTable[id].Large
+                -- Update number of slots needed
+                while tempNeeded.Large > 0 and tempSlots.Large > 0 do
+                    tempNeeded.Large = tempNeeded.Large - 1
+                    tempSlots.Large = tempSlots.Large - 1
+                    tempSlots.Medium = tempSlots.Medium - 2
+                    tempSlots.Small = tempSlots.Small - 4
+                end
+                while tempNeeded.Medium > 0 and tempSlots.Medium > 0 do
+                    tempNeeded.Medium = tempNeeded.Medium - 1
+                    tempSlots.Medium = tempSlots.Medium - 1
+                    tempSlots.Small = tempSlots.Small - 2
+                end
+                while tempNeeded.Small > 0 and tempSlots.Small > 0 do
+                    tempNeeded.Small = tempNeeded.Small - 1
+                    tempSlots.Small = tempSlots.Small - 1
+                end
+                if tempNeeded.Small <= 0 and tempNeeded.Medium <= 0 and tempNeeded.Large <= 0 then
+                    transportsNeeded = false
+                end
+            end
+        end
+    end
+
+    if transportsNeeded then
+        ReturnTransportsToPool(platoon:GetSquadUnits('Scout'), false)
+        return false, tempNeeded.Small, tempNeeded.Medium, tempNeeded.Large
+    else
+        platoon.UsingTransport = true
+        return numTransports, 0, 0, 0
+    end
 end
 
 -- not in use
@@ -322,7 +463,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
 
     local attached = true
     repeat
-        WaitTicks(20)
+        coroutine.yield(20)
         local allDead = true
         local transDead = true
         for k, v in units do
@@ -395,7 +536,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
     IssueTransportUnload(transports, location)
     local attached = true
     while attached do
-        WaitSeconds(2)
+        coroutine.yield(20)
         local allDead = true
         for _, v in transports do
             if not v.Dead then
@@ -452,7 +593,7 @@ function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatM
     for _, v in markers do
         if markerType == 'Blank Marker' then
             if VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3]) < 10000 then
-                --LOG('Start Location too close to main base skip, location is '..VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3])..' from main base pos')
+                --RNGLOG('Start Location too close to main base skip, location is '..VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3])..' from main base pos')
                 continue
             end
         end
@@ -504,12 +645,12 @@ function AIFilterAlliedBasesRNG(aiBrain, positions)
             if brain.BrainType == 'AI' and IsAlly(brain:GetArmyIndex(), armyIndex) then
                 if brain.BuilderManagers[v.Name]  or ( v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] ) then
                     if brain.BuilderManagers[v.Name] then
-                        --LOG('Ally AI already has expansion '..v.Name)
+                        --RNGLOG('Ally AI already has expansion '..v.Name)
                         if brain.BuilderManagers[v.Name].Active then
-                            --LOG('BuilderManager is active')
+                            --RNGLOG('BuilderManager is active')
                         end
                     elseif v.Position[1] == brain.BuilderManagers['MAIN'].Position[1] and v.Position[3] == brain.BuilderManagers['MAIN'].Position[3] then
-                        --LOG('Ally AI already has Main Position')
+                        --RNGLOG('Ally AI already has Main Position')
                     end
                     allyPosition = true
                     break
@@ -517,7 +658,7 @@ function AIFilterAlliedBasesRNG(aiBrain, positions)
             end
         end
         if not allyPosition then
-            --LOG('No AI ally at this expansion position, perform structure threat')
+            --RNGLOG('No AI ally at this expansion position, perform structure threat')
             local threat = GetAlliesThreat(aiBrain, v, 2, 'StructuresNotMex')
             if threat == 0 then
                 table.insert(retPositions, v)
@@ -532,11 +673,11 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     local markerCount = false
     local retPos, retName
     local positions = AIFilterAlliedBasesRNG(aiBrain, positions)
-    --LOG('Pontetial Marker Locations '..repr(positions))
+    --RNGLOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
-            if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                closest = VDist3(pos, v.Position)
+            if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                closest = VDist3Sq(pos, v.Position)
                 retPos = v.Position
                 retName = v.Name
                 markerCount = v.MassSpotsInRange
@@ -544,8 +685,8 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
         else
             local managers = aiBrain.BuilderManagers[v.Name]
             if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
+                if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3Sq(pos, v.Position)
                     retPos = v.Position
                     retName = v.Name
                     markerCount = v.MassSpotsInRange
@@ -556,7 +697,7 @@ function AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, 
     if not markerCount then 
         markerCount = 0
     end
-    --LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
+    --RNGLOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
     return retPos, retName
 end
 
@@ -565,12 +706,12 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
     local markerCount = false
     local retPos, retName
     local positions = AIFilterAlliedBasesRNG(aiBrain, positions)
-    --LOG('Pontetial Marker Locations '..repr(positions))
+    --RNGLOG('Pontetial Marker Locations '..repr(positions))
     for _, v in positions do
         if not aiBrain.BuilderManagers[v.Name] then
             if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) <= tMax then
-                if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                    closest = VDist3(pos, v.Position)
+                if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                    closest = VDist3Sq(pos, v.Position)
                     retPos = v.Position
                     retName = v.Name
                     markerCount = v.MassSpotsInRange
@@ -580,8 +721,8 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
             local managers = aiBrain.BuilderManagers[v.Name]
             if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
                 if GetThreatAtPosition(aiBrain, v.Position, tRings, true, tType) <= tMax then
-                    if (not closest or VDist3(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
-                        closest = VDist3(pos, v.Position)
+                    if (not closest or VDist3Sq(pos, v.Position) < closest) and (not markerCount or v.MassSpotsInRange < markerCount) then
+                        closest = VDist3Sq(pos, v.Position)
                         retPos = v.Position
                         retName = v.Name
                         markerCount = v.MassSpotsInRange
@@ -593,7 +734,7 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
     if not markerCount then 
         markerCount = 0
     end
-    --LOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
+    --RNGLOG('Returning '..repr(retPos)..' with '..markerCount..' Mass Markers')
     return retPos, retName
 end
 
@@ -684,13 +825,13 @@ end
 
 function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri)
     local position = platoon:GetPlatoonPosition()
+    local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
     if not aiBrain or not position or not maxRange then
         return false
     end
 
     local numUnits = table.getn(platoon:GetPlatoonUnits())
-    local maxShields = math.ceil(numUnits / 7)
-    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS, position, maxRange, 'Enemy')
+    local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, v in atkPri do
         local retUnit = false
         local distance = false
@@ -698,10 +839,25 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
         for num, unit in targetUnits do
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
-                local numShields = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.SHIELD * categories.STRUCTURE, unitPos, 46, 'Enemy')
-                if numShields < maxShields and (not retUnit or numShields < targetShields or (numShields == targetShields and VDist2(position[1], position[3], unitPos[1], unitPos[3]) < distance)) then
+                local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
+                if numShields > 0 and (not retUnit) and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                    local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
+                    local totalShieldHealth = 0
+                    for _, sUnit in shieldUnits do
+                        if not sUnit.Dead and sUnit.MyShield then
+                            totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
+                        end
+                    end
+                    if totalShieldHealth > 0 then
+                        if (platoon.MaxPlatoonDPS / totalShieldHealth) < 15 then
+                            retUnit = unit
+                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                            targetShields = numShields
+                        end
+                    end
+                elseif (not retUnit) or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                     retUnit = unit
-                    distance = VDist2(position[1], position[3], unitPos[1], unitPos[3])
+                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = numShields
                 end
             end
@@ -714,13 +870,16 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                     break
                 end
             end
-            local closestBlockingShield = AIBehaviors.GetClosestShieldProtectingTargetSorian(unit, retUnit)
+            local closestBlockingShield, shieldHealth = RUtils.GetClosestShieldProtectingTargetRNG(unit, retUnit)
             if closestBlockingShield then
-                return closestBlockingShield
+                return closestBlockingShield, shieldHealth
             end
         end
         if retUnit then
+            RNGLOG('Satellite has target')
             return retUnit
+        else
+            RNGLOG('Satellite did not get target')
         end
     end
 

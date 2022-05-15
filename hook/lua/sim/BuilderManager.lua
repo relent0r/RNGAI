@@ -1,13 +1,28 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGBuilderManager = BuilderManager
 BuilderManager = Class(RNGBuilderManager) {
+
+    Create = function(self, brain)
+        self.Trash = TrashBag()
+        self.Brain = brain
+        self.BuilderData = {}
+        self.BuilderCheckInterval = 13
+        self.BuilderList = false
+        self.Active = false
+        self.NumBuilders = 0
+        self:SetEnabled(true)
+
+        self.NumGet = 0
+    end,
+    
     ManagerLoopBody = function(self,builder,bType)
         if not self.Brain.RNG then
             return RNGBuilderManager.ManagerLoopBody(self,builder,bType)
         end
         if builder:CalculatePriority(self) then
-            --LOG('CalculatePriority run on '..builder.BuilderName..'Priority is now '..builder.Priority)
+            --RNGLOG('CalculatePriority run on '..builder.BuilderName..'Priority is now '..builder.Priority)
             self.BuilderData[bType].NeedSort = true
         end
         #builder:CheckBuilderConditions(self.Brain)
@@ -40,9 +55,9 @@ BuilderManager = Class(RNGBuilderManager) {
                 for bNum,bData in bTypeData.Builders do
                     numTested = numTested + 1
                     if numTested >= numPerTick then
-                        WaitTicks(1)
+                        coroutine.yield(1)
                         if self.NumGet > 1 then
-                            #LOG('*AI STAT: NumGet = ' .. self.NumGet)
+                            #RNGLOG('*AI STAT: NumGet = ' .. self.NumGet)
                         end
                         self.NumGet = 0
                         numTicks = numTicks + 1
@@ -52,7 +67,7 @@ BuilderManager = Class(RNGBuilderManager) {
                 end
             end
             if numTicks <= (self.BuilderCheckInterval * 10) then
-                WaitTicks((self.BuilderCheckInterval * 10) - numTicks)
+                coroutine.yield((self.BuilderCheckInterval * 10) - numTicks)
             end
         end
     end,

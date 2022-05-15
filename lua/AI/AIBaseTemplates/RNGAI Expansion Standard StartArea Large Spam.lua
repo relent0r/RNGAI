@@ -26,7 +26,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder Small',
+                'RNGAI TankLandBuilder Small Expansions',
                 'RNGAI Reaction Tanks',
                 'RNGAI Land AA 2',
         
@@ -85,12 +85,12 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
-        --LOG('Expansion Function for Start Location')
+        --RNGLOG('Expansion Function for Start Location')
         if not aiBrain.RNG then
             return -1
         end
         if markerType ~= 'Start Location' then
-            --LOG('* AI-RNG: Expansion MarkerType is', markerType)
+            --RNGLOG('* AI-RNG: Expansion MarkerType is', markerType)
             return -1
         end
         local spamBaseCheck
@@ -102,22 +102,22 @@ BaseBuilderTemplate {
         else
             spamBaseCheck = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').ExpansionSpamBaseLocationCheck(aiBrain, location)
         end
-        --LOG('* AI-RNG: Distance is ', distance)
-        --LOG('* AI-RNG: Position is ', repr(location))
+        --RNGLOG('* AI-RNG: Distance is ', distance)
+        --RNGLOG('* AI-RNG: Position is ', repr(location))
         if (not distance or distance > 1000) and spamBaseCheck then
-            --LOG('* AI-RNG: Start Area Spam Expansion return is 10')
+            --RNGLOG('* AI-RNG: Start Area Spam Expansion return is 10')
             return 100
         elseif distance > 500 and spamBaseCheck then
-            --LOG('* AI-RNG: Start Area Spam Expansion return is 25')
+            --RNGLOG('* AI-RNG: Start Area Spam Expansion return is 25')
             return 25
         elseif distance > 250 and spamBaseCheck then
-            --LOG('* AI-RNG: Start Area Spam Expansion return is 50')
+            --RNGLOG('* AI-RNG: Start Area Spam Expansion return is 50')
             return 50
         elseif spamBaseCheck then
-            --LOG('* AI-RNG: Start Area Spam Expansion return is 100')
+            --RNGLOG('* AI-RNG: Start Area Spam Expansion return is 100')
             return 100
         end
-        --LOG('* AI-RNG: Expansion return default 0')
+        --RNGLOG('* AI-RNG: Expansion return default 0')
         return -1
     end,
 }

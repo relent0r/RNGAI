@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGFactoryBuilderManager = FactoryBuilderManager
 FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
@@ -46,7 +47,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         -- Use factory location if no other rally or if rally point is far away
         if not rally or VDist2(rally[1], rally[3], position[1], position[3]) > 75 then
             -- DUNCAN - added to try and vary the rally points.
-            --LOG('No Rally Point Found. Setting Point between me and enemy Location')
+            --RNGLOG('No Rally Point Found. Setting Point between me and enemy Location')
             local position = false
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
                 -- Spawn locations were fixed. We know exactly where our opponents are.
@@ -65,22 +66,22 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             local opponentStart = startPos
                             
                             local factoryPos = self.Brain.BuilderManagers[locationType].Position
-                            --LOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
+                            --RNGLOG('Start Locations :Opponent'..repr(opponentStart)..' Myself :'..repr(factoryPos))
                             local startDistance = VDist2(opponentStart[1], opponentStart[3], factoryPos[1], factoryPos[3])
                             if EntityCategoryContains(categories.AIR, factory) then
                                 position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 60})
-                                --LOG('Air Rally Position is :'..repr(position))
+                                --RNGLOG('Air Rally Position is :'..repr(position))
                                 break
                             else
                                 position = RUtils.lerpy(opponentStart, factoryPos, {startDistance, startDistance - 30})
-                                --LOG('Rally Position is :'..repr(position))
+                                --RNGLOG('Rally Position is :'..repr(position))
                                 break
                             end
                         end
                     end
                 end
             else
-                --LOG('No Rally Point Found. Setting Random Location')
+                --RNGLOG('No Rally Point Found. Setting Random Location')
                 position = AIUtils.RandomLocation(position[1],position[3])
             end
             rally = position
@@ -99,7 +100,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         local guards = factory:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
+                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
                     v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
@@ -110,12 +111,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             return
         end
         factory.DelayThread = true
-        WaitTicks(math.random(20,50))
+        coroutine.yield(math.random(10,30))
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
-                --LOG('Factory is offline, wait inside delaybuildorder')
-                WaitTicks(50)
+                --RNGLOG('Factory is offline, wait inside delaybuildorder')
+                coroutine.yield(25)
             end
             self:AssignBuildOrder(factory,bType)
         else
@@ -123,20 +124,40 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
     end,
 
+    AddFactory = function(self,unit)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.AddFactory(self,unit)
+        end
+        if not self:FactoryAlreadyExists(unit) and unit:GetFractionComplete() == 1 then
+            table.insert(self.FactoryList, unit)
+            unit.DesiresAssist = true
+            if EntityCategoryContains(categories.LAND, unit) then
+                self:SetupNewFactory(unit, 'Land')
+            elseif EntityCategoryContains(categories.AIR, unit) then
+                self:SetupNewFactory(unit, 'Air')
+            elseif EntityCategoryContains(categories.NAVAL, unit) then
+                self:SetupNewFactory(unit, 'Sea')
+            else
+                self:SetupNewFactory(unit, 'Gate')
+            end
+            self.LocationActive = true
+        end
+    end,
+
     FactoryFinishBuilding = function(self,factory,finishedUnit)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
         end
-        --LOG('RNG FactorFinishedbuilding')
+        --RNGLOG('RNG FactorFinishedbuilding')
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
-            self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
+            self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnitRNG(finishedUnit)
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
-            --LOG('Factory Built by factory, attempting to kill factory.')
+            --RNGLOG('Factory Built by factory, attempting to kill factory.')
 			if finishedUnit:GetFractionComplete() == 1 then
 				self:AddFactory(finishedUnit )			
 				factory.Dead = true
                 factory.Trash:Destroy()
-                --LOG('Destroy Factory')
+                --RNGLOG('Destroy Factory')
 				return self:FactoryDestroyed(factory)
 			end
 		end
@@ -148,8 +169,8 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
         end
-        --LOG('Factory Destroyed '..factory.UnitId)
-        --LOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
+        --RNGLOG('Factory Destroyed '..factory.UnitId)
+        --RNGLOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
         local guards = factory:GetGuards()
         local factoryDestroyed = false
         for k,v in guards do
@@ -163,16 +184,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         for k,v in self.FactoryList do
             if (not v.Sync.id) or v.Dead then
-                --LOG('Removing factory from FactoryList'..v.UnitId)
+                --RNGLOG('Removing factory from FactoryList'..v.UnitId)
                 self.FactoryList[k] = nil
                 factoryDestroyed = true
             end
         end
         if factoryDestroyed then
-            --LOG('Performing table rebuild')
+            --RNGLOG('Performing table rebuild')
             self.FactoryList = self:RebuildTable(self.FactoryList)
         end
-        --LOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')
+        --RNGLOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')
         for k,v in self.FactoryList do
             if not v.Dead then
                 return
@@ -180,56 +201,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         self.LocationActive = false
         --self.Brain:RemoveConsumption(self.LocationType, factory)
-    end,
-
-    BuilderParamCheckOld = function(self,builder,params)
-        if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.BuilderParamCheck(self,builder,params)
-        end
-        local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), params[1])
-        if not template then
-            WARN('*Factory Builder Error: Could not find template named: ' .. builder:GetPlatoonTemplate())
-            return false
-        end
-        if not template[3][1] then
-            --WARN('*Factory Builder Error: no FactionSquad for Template ' .. repr(template))
-            return false
-        end
-        local FactoryLevel = params[1].techCategory
-        local TemplateLevel = __blueprints[template[3][1]].TechCategory
-        if FactoryLevel == TemplateLevel then
-            --LOG('Factory Tech Level: ['..FactoryLevel..'] - Template Tech Level: ['..TemplateLevel..'] -  Factory is equal to Template Level, we want to continue!')
-        elseif FactoryLevel > TemplateLevel then
-            --LOG('Factory Tech Level: ['..FactoryLevel..'] - Template Tech Level: ['..TemplateLevel..'] -  Factory is higher than Template Level, stop building low tech crap!')
-            local EngineerFound
-            -- search categories for ENGINEER
-            for _, cat in __blueprints[template[3][1]].Categories do
-                -- continue withthe next categorie if its not ENGINEER
-                if cat ~= 'ENGINEER' and cat ~= 'SCOUT' then continue end
-                -- found ENGINEER category
-                --WARN('found categorie engineer')
-                EngineerFound = true
-                break
-            end
-            -- template islower than factory level and its not an engineer, then return false
-            if not EngineerFound then
-                return false
-            end
-        elseif FactoryLevel < TemplateLevel then
-            --LOG('Factory Tech Level: ['..FactoryLevel..'] - Template Tech Level: ['..TemplateLevel..'] -  Factory is lower than Template Level, we can\'t built that!')
-            return false
-        else
-            --LOG('Factory Tech Level: ['..FactoryLevel..'] - Template Tech Level: ['..TemplateLevel..'] -  if you can read this then we have messed it up :D')
-        end
-
-        -- This faction doesn't have unit of this type
-        if table.getn(template) == 2 then
-            return false
-        end
-
-        -- This function takes a table of factories to determine if it can build
-        return self.Brain:CanBuildPlatoon(template, params)
-
     end,
 
 }

@@ -1,12 +1,12 @@
 --[[
-    File    :   /lua/AI/AIBaseTemplates/RNGAI MainBase Standard Air.lua
+    File    :   /lua/AI/AIBaseTemplates/RNGAI MainBase Standard Exp.lua
     Author  :   relentless
     Summary :
         Main Base template
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGStandardMainBaseTemplate Small Air Close',
+    BaseTemplateName = 'RNGStandardMainBaseTemplate Medium Exp Close',
     Builders = {
         -- ACU MainBase Initial Builder --
         'RNGAI Initial ACU Builder Small',
@@ -14,9 +14,6 @@ BaseBuilderTemplate {
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
-        --'RNGAI Test PD',
-        --'RNGAI ACU Enhancements Gun',
-        --'RNGAI ACU Enhancements Tier',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
@@ -28,24 +25,39 @@ BaseBuilderTemplate {
         'RNGAI Mass Builder',
         'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
-        --'RNGAI ExtractorUpgrades',
         'RNGAI Mass Fab',
-        --'RNGAIR Crazyrush Builder',
 
         -- Engineer Builders --
-        'RNGAIR Engineer Builder',
+        'RNGEXP Engineer Builder',
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Builders',
         'RNGAI Assist Builders',
-        'RNGAIR Hard Assist Builders',
+        'RNGEXP Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
+        'RNGAI Engineer Transfer To Active Expansion',
+        'RNGAI Assist Manager BuilderGroup',
+
+        -- Land Factory Builders --
+        'RNGEXP Factory Builder Land',
+
+        -- Land Unit Builders
+        'RNGAI LandBuilder T1',
+        'RNGAI LandBuilder T2',
+        'RNGAI LandBuilder T3',
+        'RNGAI LandBuilder T1 Islands',
+        -- Land Formers
+        'RNGAI ScoutLandFormer',
+        'RNGAI Land Mass Raid',
+        'RNGAI Land FormBuilders',
+        'RNGAI Mass Hunter Labs FormBuilders',
+        'RNGAI Land Response Formers',
 
         -- Air Factory Builders --
-        'RNGAIR Factory Builder Air',
+        'RNGEXP Factory Builder Air',
         'RNGAI Air Staging Platform',
         
         -- Air Factory Formers --
-        'RNGAIR Air Upgrade Builders',
+        'RNGEXP Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
@@ -59,7 +71,7 @@ BaseBuilderTemplate {
 
         -- Air Unit Formers --
         'RNGAI ScoutAirFormer',
-        'RNGAIR Air Platoon Builder',
+        'RNGEXP Air Platoon Builder',
         'RNGAI Air Response Formers',
 
         -- Sea Unit Builders
@@ -78,9 +90,12 @@ BaseBuilderTemplate {
         'RNGAI SMD Builders',
         'RNGAI Perimeter Defenses Expansions',
 
+        -- Expansions --
+        'RNGAI Engineer Expansion Builders Small',
+
         -- SACU Builders --
         'RNGAI Gate Builders',
-        'RNGAIR SACU Builder',
+        'RNGEXP SACU Builder',
 
         --Strategic Builders
         'RNGAI SML Builders',
@@ -88,21 +103,21 @@ BaseBuilderTemplate {
         'RNGAI Strategic Formers',
 
         --Experimentals --
-        'RNGAIR Experimental Builders',
+        'RNGEXP Experimental Builders',
         'RNGAI Experimental Formers',
     },
     NonCheatBuilders = {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 10,
+            Tech1 = 20,
             Tech2 = 15,
-            Tech3 = 12,
+            Tech3 = 22,
             SCU = 100,
         },
         FactoryCount = {
-            Land = 1,
-            Air = 3,
+            Land = 2,
+            Air = 6,
             Sea = 1,
             Gate = 1,
         },
@@ -119,10 +134,10 @@ BaseBuilderTemplate {
     FirstBaseFunction = function(aiBrain)
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
-        if personality == 'RNGStandardAir' and mapSizeX < 1000 and mapSizeZ < 1000 or personality == 'RNGStandardAircheat' and mapSizeX < 1000 and mapSizeZ < 1000 then
-            --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
-            --LOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
-            return 1000, 'RNGStandardAir'
+        if personality == 'RNGStandardExperimental' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardExperimentalcheat' and mapSizeX > 1000 and mapSizeZ > 1000 then
+            --RNGLOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
+            --RNGLOG('* AI-RNG: Map size is small', mapSizeX, mapSizeZ)
+            return 1000, 'RNGStandardExperimental'
         end
         return -1
     end,

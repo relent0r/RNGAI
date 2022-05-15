@@ -8,7 +8,6 @@ MobileUnit = Class(RNGAIMobileUnit) {
             return RNGAIMobileUnit.OnCreate(self)
         end
         Unit.OnCreate(self)
-        self:updateBuildRestrictions()
         self:SetFireState(FireState.RETURN_FIRE)
     end,
 

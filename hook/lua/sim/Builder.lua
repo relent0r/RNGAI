@@ -1,4 +1,4 @@
-
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGPlatoonBuilder = PlatoonBuilder
 PlatoonBuilder = Class(RNGPlatoonBuilder) {
@@ -10,14 +10,14 @@ PlatoonBuilder = Class(RNGPlatoonBuilder) {
         end
         self.PriorityAltered = false
         if Builders[self.BuilderName].PriorityFunction then
-            --LOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
-            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager)
-            if newPri != self.Priority then
-                --LOG('* AI-RNG: PlatoonBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
+            --RNGLOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
+            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager, Builders[self.BuilderName])
+            if newPri ~= self.Priority then
+                --RNGLOG('* AI-RNG: PlatoonBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
                 self.Priority = newPri
                 self.PriorityAltered = true
             end
-            --LOG('RNGPlatoonBuilder New Priority '..self.BuilderName..' - '..self.Priority)
+            --RNGLOG('RNGPlatoonBuilder New Priority '..self.BuilderName..' - '..self.Priority)
         end
         return self.PriorityAltered
     end,
@@ -36,14 +36,14 @@ FactoryBuilder = Class(RNGFactoryBuilder) {
         end
         self.PriorityAltered = false
         if Builders[self.BuilderName].PriorityFunction then
-            --LOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
-            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager, Builders[self.BuilderName].BuilderData)
-            if newPri != self.Priority then
-                --LOG('* AI-RNG: FactoryBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
+            --RNGLOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
+            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager, Builders[self.BuilderName])
+            if newPri ~= self.Priority then
+                --RNGLOG('* AI-RNG: FactoryBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
                 self.Priority = newPri
                 self.PriorityAltered = true
             end
-            --LOG('RNGFactoryBuilder New Priority '..self.BuilderName..' - '..self.Priority)
+            --RNGLOG('RNGFactoryBuilder New Priority '..self.BuilderName..' - '..self.Priority)
         end
         return self.PriorityAltered
     end,
@@ -61,14 +61,14 @@ EngineerBuilder = Class(RNGEngineerBuilder) {
         end
         self.PriorityAltered = false
         if Builders[self.BuilderName].PriorityFunction then
-            --LOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
-            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager)
-            if newPri != self.Priority then
-                --LOG('* AI-RNG: EngineerBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
+            --RNGLOG('Calculate new Priority '..self.BuilderName..' - '..self.Priority)
+            local newPri = Builders[self.BuilderName]:PriorityFunction(self.Brain, builderManager, Builders[self.BuilderName])
+            if newPri ~= self.Priority then
+                --RNGLOG('* AI-RNG: EngineerBuilder New Priority:  [[  '..self.Priority..' -> '..newPri..'  ]]  -  '..self.BuilderName..'.')
                 self.Priority = newPri
                 self.PriorityAltered = true
             end
-            --LOG('RNGEngineerBuilder New Priority '..self.BuilderName..' - '..self.Priority)
+            --RNGLOG('RNGEngineerBuilder New Priority '..self.BuilderName..' - '..self.Priority)
         end
         return self.PriorityAltered
     end,

@@ -9,41 +9,44 @@ local ExBaseTmpl = 'ExpansionBaseTemplates'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local AggressiveExpansion = function(self, aiBrain, builderManager)
     if aiBrain.coinFlip == 1 then
-        --LOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
+        --RNGLOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
         return 1000
     else
-        --LOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
+        --RNGLOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
         return 0
     end
 end
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
-        --LOG('NavalExpansionAdjust return 0')
+        --RNGLOG('NavalExpansionAdjust return 0')
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
-        --LOG('NavalExpansionAdjust return 200')
+        --RNGLOG('NavalExpansionAdjust return 200')
         return 200
     elseif aiBrain.MapWaterRatio < 0.40 then
-        --LOG('NavalExpansionAdjust return 400')
+        --RNGLOG('NavalExpansionAdjust return 400')
         return 400
     elseif aiBrain.MapWaterRatio < 0.60 then
-        --LOG('NavalExpansionAdjust return 650')
+        --RNGLOG('NavalExpansionAdjust return 650')
         return 675
     else
-        --LOG('NavalExpansionAdjust return 750')
-        return 875
+        --RNGLOG('NavalExpansionAdjust return 750')
+        return 910
     end
 end
 
 local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
     if aiBrain.EnemyIntel.FrigateRaid then
+        --RNGLOG('Frigate Raid priority function is 995')
         return 995
     end
+    --RNGLOG('Frigate Raid priority function is 0')
     return 0
 end
 
@@ -53,17 +56,18 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Expansion Area 350 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 600,
+        Priority = 740,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
+            { UCBC, 'ExpansionAreaNeedsEngineerRNG', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -126,6 +130,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -157,6 +162,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -179,7 +185,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 250 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 650,
+        Priority = 740,
         PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
         BuilderConditions = {
@@ -191,6 +197,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -218,12 +225,13 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -277,7 +285,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Large Expansion Area 1000 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 650,
+        Priority = 730,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
@@ -287,6 +295,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -309,7 +318,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant Starting Area 1000 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 600,
+        Priority = 730,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
@@ -319,6 +328,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -344,6 +354,40 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Expansion Builders Large',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid Large',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        Priority = 0,
+        PriorityFunction = FrigateRaid,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
+            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'Expansion',
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                NearMarkerType = 'Naval Area',
+                ExpansionRadius = 70,
+                LocationRadius = 250, -- radius from LocationType to build
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 1,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {                    
+                    'T1SeaFactory',
+                }
+            },
+            NeedGuard = false,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 650 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         PriorityFunction = NavalExpansionAdjust,
@@ -359,6 +403,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -380,40 +425,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 0,
-        PriorityFunction = FrigateRaid,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 650, -1000, 100, 1, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                ExpansionBase = true,
-                NearMarkerType = 'Naval Area',
-                ExpansionRadius = 70,
-                LocationRadius = 650, -- radius from LocationType to build
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 1,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {                    
-                    'T1SeaFactory',
-                }
-            },
-            NeedGuard = false,
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Aggressive Expansion 250 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 0,
@@ -422,13 +433,14 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanGameTimeSecondsRNG', { 600 } },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.FACTORY * categories.AIR}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.AIR}},
 
             { MIBC, 'CanBuildAggressivebaseRNG', { 'LocationType', 250, -1000, 5, 1, 'AntiSurface'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -453,9 +465,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Vacant StartArea Area 500 Large First',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
-        Priority = 900,
+        Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
+            --{ UCBC, 'DynamicExpansionRequiredRNG', { } }, -- test dont forget to delete this
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanOneLandExpansion', { } },
             { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 500, -1000, 0, 2, 'AntiSurface' } },
@@ -463,6 +476,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -483,19 +497,53 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Dynamic Expansion Large',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'DynamicExpansionAvailableRNG', { } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'Expansion',
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                DynamicExpansion = true,
+                NearMarkerType = 'Dynamic',
+                ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                LocationRadius = 1000,
+                LocationType = 'LocationType',
+                ThreatMin = -1000,
+                ThreatMax = 100,
+                ThreatRings = 2,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {                    
+                    'T1LandFactory',
+                    'T1LandFactory',
+                }
+            },
+            NeedGuard = true,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Vacant Expansion Area 350 Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
+            { UCBC, 'ExpansionAreaNeedsEngineerRNG', { 'LocationType', 350, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -522,13 +570,14 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ExpansionAreaNeedsEngineer', { 'LocationType', 1000, -1000, 0, 2, 'AntiSurface' } },
+            { UCBC, 'ExpansionAreaNeedsEngineerRNG', { 'LocationType', 1000, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
-            { EBC, 'MassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -560,6 +609,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -591,6 +641,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -622,6 +673,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -653,6 +705,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -684,6 +737,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,

@@ -1,4 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 RNGEngineerManager = EngineerManager
 EngineerManager = Class(RNGEngineerManager) {
@@ -7,7 +9,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
-        if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
+        if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
             self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
         end
         if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
@@ -16,24 +18,16 @@ EngineerManager = Class(RNGEngineerManager) {
             end
             local unitBp = finishedUnit:GetBlueprint()
             local StructurePool = self.Brain.StructurePool
-            --LOG('* AI-RNG: Assigning built extractor to StructurePool')
+            --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
             self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
-            --Debug log
-            local platoonUnits = StructurePool:GetPlatoonUnits()
-            --LOG('* AI-RNG: StructurePool now has :'..table.getn(platoonUnits))
-            local upgradeID = unitBp.General.UpgradesTo or false
-			if upgradeID and unitBp then
-				--LOG('* AI-RNG: UpgradeID')
-				RUtils.StructureUpgradeInitialize(finishedUnit, self.Brain)
-            end
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
-            self:AddUnit(finishedUnit)
+            self:AddUnitRNG(finishedUnit)
         end
         local guards = unit:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
+                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
                     v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
                 else
                     v.AssistPlatoon = nil
@@ -41,6 +35,67 @@ EngineerManager = Class(RNGEngineerManager) {
             end
         end
         --self.Brain:RemoveConsumption(self.LocationType, unit)
+    end,
+
+    AddUnitRNG = function(self, unit, dontAssign)
+        --LOG('+ AddUnit')
+        for k,v in self.ConsumptionUnits do
+            if EntityCategoryContains(v.Category, unit) then
+                table.insert(v.Units, { Unit = unit, Status = true })
+                table.insert(v.UnitsList, unit)
+                v.Count = v.Count + 1
+
+                if not unit.BuilderManagerData then
+                    unit.BuilderManagerData = {}
+                end
+                unit.BuilderManagerData.EngineerManager = self
+                unit.BuilderManagerData.LocationType = self.LocationType
+
+                if not unit.BuilderManagerData.CallbacksSetup then
+                    unit.BuilderManagerData.CallbacksSetup = true
+                    -- Callbacks here
+                    local deathFunction = function(unit)
+                        unit.BuilderManagerData.EngineerManager:RemoveUnitRNG(unit)
+                    end
+
+                    import('/lua/scenariotriggers.lua').CreateUnitDestroyedTrigger(deathFunction, unit)
+
+                    local newlyCapturedFunction = function(unit, captor)
+                        local aiBrain = captor:GetAIBrain()
+                        --LOG('*AI DEBUG: ENGINEER: I was Captured by '..aiBrain.Nickname..'!')
+                        if aiBrain.BuilderManagers then
+                            local engManager = aiBrain.BuilderManagers[captor.BuilderManagerData.LocationType].EngineerManager
+                            if engManager then
+                                engManager:AddUnitRNG(unit)
+                            end
+                        end
+                    end
+
+                    import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, newlyCapturedFunction, unit)
+
+                    if EntityCategoryContains(categories.ENGINEER - categories.STATIONASSISTPOD, unit) then
+                        local unitConstructionFinished = function(unit, finishedUnit)
+                                                    -- Call function on builder manager; let it handle the finish of work
+                                                    local aiBrain = unit:GetAIBrain()
+                                                    local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
+                                                    if engManager then
+                                                        engManager:UnitConstructionFinished(unit, finishedUnit)
+                                                    end
+                        end
+                        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(unitConstructionFinished, unit, categories.ALLUNITS)
+
+                    end
+                end
+
+                if not dontAssign then
+                    self:ForkEngineerTask(unit)
+                end
+                if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
+                    IntelManagerRNG.GetIntelManager():AssignIntelUnit(unit)
+                end
+                return
+            end
+        end
     end,
 
     ManagerLoopBody = function(self,builder,bType)
@@ -54,19 +109,18 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
-        if unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
-            if unit.Upgrading then
-                --LOG('Unit Is upgrading, applying 5 second delay')
-            end
-            --LOG('Unit Still in combat or going home, delay')
+        --LOG('Engineer trying to have task assigned '..unit.Sync.id)
+        if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
+            --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
-            --LOG('CDR Combat Delay')
+            --RNGLOG('CDR Combat Delay')
             self:DelayAssign(unit, 50)
             return
         end
+        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.Sync.id)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
-            --LOG('UnitBeingAssist Delay')
+            --RNGLOG('UnitBeingAssist Delay')
             self:DelayAssign(unit, 50)
             return
         end
@@ -76,7 +130,7 @@ EngineerManager = Class(RNGEngineerManager) {
         unit.MinNumAssistees = nil
 
         if self.AssigningTask then
-            --LOG('Assigning Task Delay')
+            --RNGLOG('Assigning Task Delay')
             self:DelayAssign(unit, 50)
             return
         else
@@ -85,7 +139,7 @@ EngineerManager = Class(RNGEngineerManager) {
 
         local builder = self:GetHighestBuilder('Any', {unit})
 
-        if builder and ((not unit.Combat) or (not unit.GoingHome) or (not unit.Upgrading)) then
+        if builder and ((not unit.Combat) or (not unit.GoingHome) or (not unit.Upgrading) or (not unit.Active)) then
             -- Fork off the platoon here
             local template = self:GetEngineerPlatoonTemplate(builder:GetPlatoonTemplate())
             local hndl = self.Brain:MakePlatoon(template[1], template[2])
@@ -93,10 +147,10 @@ EngineerManager = Class(RNGEngineerManager) {
             unit.PlatoonHandle = hndl
 
             --if EntityCategoryContains(categories.COMMAND, unit) then
-            --    LOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
+            --   --RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
             --end
 
-            --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
+            --RNGLOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
             hndl.PlanName = template[2]
 
             --If we have specific AI, fork that AI thread
@@ -147,20 +201,20 @@ EngineerManager = Class(RNGEngineerManager) {
             if hndl.PlatoonData.MinNumAssistees then
                 unit.MinNumAssistees = hndl.PlatoonData.MinNumAssistees
             end
+            if hndl.PlatoonData.JobType then
+                unit.JobType = hndl.PlatoonData.JobType
+            end
 
             builder:StoreHandle(hndl)
             self.AssigningTask = false
             return
         end
         self.AssigningTask = false
-        --LOG('End of AssignEngineerTask Delay')
+        --RNGLOG('End of AssignEngineerTask Delay')
         self:DelayAssign(unit, 50)
     end,
 
-    RemoveUnit = function(self, unit)
-        if not self.Brain.RNG then
-            return RNGEngineerManager.RemoveUnit(self, unit)
-        end
+    RemoveUnitRNG = function(self, unit)
         local guards = unit:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
@@ -185,12 +239,13 @@ EngineerManager = Class(RNGEngineerManager) {
                     end
                 end
             end
+            if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
+                IntelManagerRNG.GetIntelManager():UnassignIntelUnit(unit)
+            end
             if found then
                 break
             end
         end
-
-        --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
     LowMass = function(self)
@@ -198,7 +253,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.LowMass(self)
         end
-        --LOG('LowMass Condition detected by default eco manager')
+        --RNGLOG('LowMass Condition detected by default eco manager')
     end,
 
     LowEnergy = function(self)
@@ -206,7 +261,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.LowEnergy(self)
         end
-        --LOG('LowEnergy Condition detected by default eco manager')
+        --RNGLOG('LowEnergy Condition detected by default eco manager')
     end,
 
     RestoreEnergy = function(self)

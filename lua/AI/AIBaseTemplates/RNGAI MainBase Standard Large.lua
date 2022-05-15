@@ -25,6 +25,8 @@ BaseBuilderTemplate {
         'RNGAI T1 Reclaim Builders',
         'RNGAI Assist Builders',
         'RNGAI Energy Production Reclaim',
+        'RNGAI Land Factory Reclaim',
+        'RNGAI Air Factory Reclaim',
         'RNGAI Engineer Transfer To Active Expansion',
         'RNGAI Assist Manager BuilderGroup',
 
@@ -86,15 +88,19 @@ BaseBuilderTemplate {
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land Large',
+        'RNGAI LandBuilder T1',
+        'RNGAI LandBuilder T2',
+        'RNGAI LandBuilder T3',
+        'RNGAI LandBuilder T1 Islands',
 
         -- Air Factory Builders --
         'RNGAI Factory Builder Air Large',
 
         -- Land Upgrade Builders --
-        'RNGAI Land Upgrade Builders',
+        --'RNGAI Land Upgrade Builders',
 
         -- Air Upgrade Builders --
-        'RNGAI Air Upgrade Builders',
+        --'RNGAI Air Upgrade Builders',
 
         -- RNGAI Air Support Builders --
         'RNGAI Air Staging Platform',
@@ -127,10 +133,10 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 15,
-            Tech2 = 12,
-            Tech3 = 10,
-            SCU = 8,
+            Tech1 = 25,
+            Tech2 = 18,
+            Tech3 = 12,
+            SCU = 10,
         },
         FactoryCount = {
             Land = 12,
@@ -139,9 +145,9 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 6,
+            T1Value = 5,
             T2Value = 15,
-            T3Value = 22.5,
+            T3Value = 28,
         },
 
     },
@@ -152,8 +158,8 @@ BaseBuilderTemplate {
         local personality = ScenarioInfo.ArmySetup[aiBrain.Name].AIPersonality
         local mapSizeX, mapSizeZ = GetMapSize()
         if personality == 'RNGStandard' and mapSizeX > 1000 and mapSizeZ > 1000 or personality == 'RNGStandardcheat' and mapSizeX > 1000 and mapSizeZ > 1000 then
-            --LOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
-            --LOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
+            --RNGLOG('* AI-RNG: ### M-FirstBaseFunction '..personality)
+            --RNGLOG('* AI-RNG: Map size is large', mapSizeX, mapSizeZ)
             return 1000, 'RNGStandard'
         end
         return -1

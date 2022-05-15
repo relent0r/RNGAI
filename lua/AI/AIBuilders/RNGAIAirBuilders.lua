@@ -9,29 +9,32 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local AntiAirUnits = categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 
 local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+    local enemyCount = 1
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
-    if myAirThreat < (enemyAirThreat * 1.2 / enemyCount) then
-        --LOG('Enable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        if builderData.TechLevel == 1 then
+    if myAirThreat < (enemyAirThreat * 1.3 / enemyCount) then
+        --RNGLOG('Enable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        if builderData.BuilderData.TechLevel == 1 then
             return 880
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 885
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 890
         end
         return 890
     else
-        --LOG('Disable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
@@ -44,19 +47,19 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if myAirThreat < (enemyAirThreat / enemyCount) then
-        --LOG('Enable Air ASF Scramble Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        if builderData.TechLevel == 1 then
+        --RNGLOG('Enable Air ASF Scramble Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        if builderData.BuilderData.TechLevel == 1 then
             return 860
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 865
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 870
         end
         return 870
     else
-        --LOG('Disable Air ASF Scramble Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --RNGLOG('Disable Air ASF Scramble Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
@@ -64,22 +67,23 @@ end
 local AirAttackMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    local enemyCount = 1
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
-    if myAirThreat / 1.5 > (enemyAirThreat / enemyCount) then
-        --LOG('Enable Air Attack Queue')
+    if myAirThreat / 1.3 > (enemyAirThreat / enemyCount) then
+        --RNGLOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
-        if builderData.TechLevel == 1 then
+        if builderData.BuilderData.TechLevel == 1 then
             return 870
-        elseif builderData.TechLevel == 2 then
+        elseif builderData.BuilderData.TechLevel == 2 then
             return 875
-        elseif builderData.TechLevel == 3 then
+        elseif builderData.BuilderData.TechLevel == 3 then
             return 880
         end
         return 880
     else
-        --LOG('Disable Air Attack Queue')
+        --RNGLOG('Disable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = false
         return 0
     end
@@ -89,31 +93,32 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
     local myNavalThreat = aiBrain.BrainIntel.SelfThreat.NavalNow
     local enemyNavalThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
     if myNavalThreat < enemyNavalThreat then
-        --LOG('Enable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Enable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 870
     else
-        --LOG('Disable Sub Pool Builder')
-        --LOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
+        --RNGLOG('Disable Sub Pool Builder')
+        --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 0
     end
+end
+
+local BomberResponse = function(self, aiBrain, builderManager, builderData)
+    RNGLOG('BomberResponse location is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.AirPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AirNow then
+        RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
+        return 890
+    end
+    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 1 then
+        RNGLOG('Bomber Response for Perimeter Monitor is true')
+        return 890
+    end
+    return 0
 end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1',
     BuildersType = 'FactoryBuilder',
-    --[[Builder {
-        BuilderName = 'RNGAI Factory Intie T1',
-        PlatoonTemplate = 'RNGAIFighterGroup',
-        Priority = 700,
-        BuilderConditions = { 
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 10, categories.AIR * categories.ANTIAIR }},
-        },
-        BuilderType = 'Air',
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
         PlatoonTemplate = 'RNGAIFighterGroup',
@@ -121,7 +126,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
         },
         BuilderType = 'Air',
     },
@@ -136,6 +141,9 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     --[[Builder {
         BuilderName = 'RNGAI Factory Gunship T1',
@@ -153,29 +161,16 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Bomber T1 Response',	
         PlatoonTemplate = 'T1AirBomber',	
         Priority = 890,	
+        PriorityFunction = BomberResponse,
         BuilderConditions = {	
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},	
-            { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', { BaseEnemyArea, 'LocationType', 1, categories.ANTIAIR }},	
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
         },	
         BuilderType = 'Air',	
-    },
-    --[[Builder {
-        BuilderName = 'RNGAI Air Attack Queue T1',
-        PlatoonTemplate = 'RNGAIT1AirQueue',
-        Priority = 0,
-        PriorityFunction = AirAttackMode,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-        },
-        BuilderType = 'Air',
         BuilderData = {
-            TechLevel = 1
+            LocationType = 'LocationType',
         },
-    },]]
+    },
 }
 
 BuilderGroup {
@@ -188,7 +183,7 @@ BuilderGroup {
         PriorityFunction = AirAttackMode,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
         BuilderType = 'Air',
@@ -196,14 +191,14 @@ BuilderGroup {
             TechLevel = 2
         },
     },
-    --[[Builder {
+    Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
-        PlatoonTemplate = 'RNGAIFighterGroupT2',
+        PlatoonTemplate = 'RNGAIT2FighterAeon',
         Priority = 0,
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
+            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -211,7 +206,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
@@ -220,7 +215,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
         },
         BuilderType = 'Air',
     },
@@ -256,7 +251,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'ACUOnField', {false} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
         },
     },
@@ -285,7 +280,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseRestrictedArea, 'LocationType', 0, categories.AIR - categories.SCOUT }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
         },
         BuilderType = 'Air',
     },
@@ -303,22 +298,6 @@ BuilderGroup {
             TechLevel = 3
         },
     },
-    --[[Builder {
-        BuilderName = 'RNGAI T3 Air Queue',
-        PlatoonTemplate = 'RNGAIT3AirQueue',
-        Priority = 850,
-        PriorityFunction = AirDefenseMode,
-        BuilderType = 'Air',
-        BuilderConditions = {
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-        },
-        BuilderData = {
-            TechLevel = 3
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI T3 Air Attack Queue',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
@@ -329,7 +308,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
         },
         BuilderData = {
             TechLevel = 3
@@ -363,35 +342,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Air AntiSurface Response BaseMilitaryArea',
-        PlatoonTemplate = 'RNGAI ResponseAttack',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
-        Priority = 800,
-        InstanceCount = 1,
-        BuilderType = 'Any',
-        BuilderData = {
-            Defensive = true,
-            SearchRadius = BaseMilitaryArea,
-            LocationType = 'LocationType',
-            NeverGuardEngineers = true,
-            PlatoonLimit = 5,
-            PrioritizedCategories = {
-                categories.MOBILE * categories.EXPERIMENTAL,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.TRANSPORTFOCUS * categories.AIR,
-                categories.GROUNDATTACK * categories.AIR,
-                categories.LAND,
-                categories.STRUCTURE,
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR *(categories.BOMBER + categories.GROUNDATTACK) - categories.daa0206 - categories.EXPERIMENTAL - categories.TRANSPORTFOCUS } },
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseMilitaryArea, 'LocationType', 0, categories.MOBILE * categories.LAND - categories.SCOUT }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, AntiAirUnits } },
         },
     },
     Builder {
@@ -408,7 +359,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  BaseEnemyArea, 'LocationType', 0, categories.COMMAND - categories.EXPERIMENTAL }},
+            { UCBC, 'ACUOnField', {false} },
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.daa0206 } },
         },
     },
@@ -449,6 +400,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             AvoidBases = true,
+            SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -459,8 +412,8 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            --{ UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, AntiAirUnits } },
          },
     },
     Builder {
@@ -480,7 +433,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', AntiAirUnits } },
          },
     },
     Builder {
@@ -496,14 +449,43 @@ BuilderGroup {
         BuilderData = {
             StaticCategories = true,
             AvoidBases = true,
+            IgnoreCivilian = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
             PlatoonLimit = 3,
             PrioritizedCategories = {
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
-                categories.ENERGYPRODUCTION,
+                categories.ENERGYPRODUCTION - categories.COMMAND,
                 categories.STRUCTURE * categories.DEFENSE,
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI Bomber T1 Attack Defense',
+        PlatoonTemplate = 'RNGAI BomberAttack T1',
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
+        Priority = 910,
+        InstanceCount = 10,
+        BuilderType = 'Any',        
+        BuilderConditions = { 
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
+        },
+        BuilderData = {
+            StaticCategories = true,
+            AvoidBases = true,
+            IgnoreCivilian = true,
+            SearchRadius = BaseEnemyArea,
+            UnitType = 'BOMBER',
+            PlatoonLimit = 5,
+            PrioritizedCategories = {
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER - categories.COMMAND,
+                categories.MASSEXTRACTION * categories.TECH1,
+                categories.STRUCTURE * categories.RADAR,
+                categories.STRUCTURE * categories.ENERGYSTORAGE,
+                categories.STRUCTURE,
             },
         },
     },
@@ -519,8 +501,10 @@ BuilderGroup {
         },
         BuilderData = {
             AvoidBases = true,
+            Defensive = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            IgnoreCivilian = true,
             PlatoonLimit = 18,
             PrioritizedCategories = {
                 categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
@@ -577,7 +561,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -615,6 +599,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            IgnoreCivilian = true,
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -659,29 +644,9 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
                 categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
             },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Energy Attack',
-        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
-        Priority = 890,
-        InstanceCount = 3,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            UnitType = 'BOMBER',
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.ENERGYPRODUCTION * categories.TECH3,
-                categories.ENERGYPRODUCTION * categories.TECH2,
-                categories.ENERGYPRODUCTION * categories.TECH1,
-                categories.ALLUNITS - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
+            DistressRange = 130,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
 }
@@ -690,6 +655,19 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TransportFactoryBuilders Large',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Air Transport Large NoPath',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 950,
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 11.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.80, 0.80 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Air Transport Large',
         PlatoonTemplate = 'T1AirTransport',
         Priority = 900,
@@ -697,7 +675,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH1 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.80, 0.90 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -710,7 +688,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -722,7 +700,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.05 }},
         },
         BuilderType = 'Air',
     },
@@ -735,7 +713,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -766,7 +744,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
         },
         BuilderType = 'Air',
     },
@@ -778,7 +756,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.05 }},
         },
         BuilderType = 'Air',
     },
@@ -792,17 +770,17 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
         },
         BuilderType = 'Air',
     },
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAIR Air Platoon Builder',
+    BuilderGroupName = 'RNGEXP Air Platoon Builder',
     BuildersType = 'PlatoonFormBuilder', -- A PlatoonFormBuilder is for builder groups of units.
     Builder {
-        BuilderName = 'RNGAIR Air Intercept',
+        BuilderName = 'RNGEXP Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
@@ -820,13 +798,13 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', AntiAirUnits } },
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
             --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
          },
     },
     Builder {
-        BuilderName = 'RNGAIR Air Lockdown',
+        BuilderName = 'RNGEXP Air Lockdown',
         PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
@@ -842,12 +820,12 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', AntiAirUnits } },
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
          },
     },
     Builder {
-        BuilderName = 'RNGAIR Bomber Attack MassRaid',
+        BuilderName = 'RNGEXP Bomber Attack MassRaid',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 900,
@@ -877,7 +855,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Gunship Attack T1',
+        BuilderName = 'RNGEXP Gunship Attack T1',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 890,
         InstanceCount = 5,
@@ -885,7 +863,7 @@ BuilderGroup {
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * categories.TECH1 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -911,14 +889,14 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Gunship Attack T2T3',
+        BuilderName = 'RNGEXP Gunship Attack T2T3',
         PlatoonTemplate = 'RNGAI GunShipAttack',
         Priority = 890,
         InstanceCount = 5,
         BuilderType = 'Any',
         BuilderConditions = { 
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -946,7 +924,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Bomber Attack Enemy',
+        BuilderName = 'RNGEXP Bomber Attack Enemy',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 890,
         InstanceCount = 3,
@@ -956,6 +934,7 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            IgnoreCivilian = true,
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -972,7 +951,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Bomber Attack Excess',
+        BuilderName = 'RNGEXP Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
@@ -998,10 +977,13 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
                 categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
             },
+            DistressRange = 130,
+            DistressReactionTime = 6,
+            ThreatSupport = 0,
         },
     },
     Builder {
-        BuilderName = 'RNGAIR Energy Attack',
+        BuilderName = 'RNGEXP Energy Attack',
         PlatoonTemplate = 'RNGAI BomberEnergyAttack',
         Priority = 890,
         InstanceCount = 3,
