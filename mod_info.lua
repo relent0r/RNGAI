@@ -1,8 +1,8 @@
 name = "RNGAI"
 uid = "faf0863e-9577-ba0d-adc9-8d82b622f1c0"
 version = 112
-copyright = "2020 relentless"
-description = "RNG Standard AI. Requires Uveso AI to be installed and enabled. Not recommended to have any other sim mods enabled. For best experience all host game settings should be default. Recommended to set AI Map Marker Generator to Autogenerate Always in AI host game settings, recommend setting AI Naval Expansion Limit to zero on land maps and default on naval maps. Best played with OMNI cheat disabled. Updated often so check your versions when using in multiplayer to avoid desyncs."
+copyright = "2022 relentless"
+description = "RNG Standard AI. IMPORTANT! Requires Uveso AI to be installed and enabled and using auto generated path markers(sorry but there is no marker generator built into faf yet so if you dont do this the AI will perform very badly). Does not support other sim mods such as total mayhem, blackops. For best experience all host game settings should be default. Best played with OMNI cheat disabled. Version 112 is a major rewrite and will have some outstanding issues. For feedback please visit the FAF discord AI feedback channel."
 author = "relentless"
 url = ""
 icon = "/mods/RNGAI/icon.jpg"
@@ -15,10 +15,4 @@ requiresNames = { }
 conflicts = { }
 before = { }
 after = { 
-    "62e2j64a-AIUV-0910-89465-146as555a8u3",
-    "a13ac591-b2d9-4d94-0216-3d4b3cce6b97",
-    "62e2j64a-AIUV-0880-89465-146as555a8u3",
-    "a13ac591-b2d9-4d94-0217-3d4b3cce6b97",
-    "a13ac591-b2d9-4d94-0218-3d4b3cce6b97",
-    "a13ac591-b2d9-4d94-0230-3d4b3cce6b97"
 }
