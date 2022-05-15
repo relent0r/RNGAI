@@ -282,7 +282,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if validLocation then
                     --RNGLOG('We have a valid reclaim location')
                     IssueClearCommands({self})
-                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation) then
+                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation, true) then
                        --RNGLOG('We have issued move orders to get to the reclaim location')
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             return
@@ -307,12 +307,12 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             else
                                 engStuckCount = engStuckCount + 1
                                 --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
-                                if engStuckCount > 30 and not self:IsUnitState('Reclaiming') then
+                                if engStuckCount > 15 and not self:IsUnitState('Reclaiming') then
                                     --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
                                     break
                                 end
                             end
-                            PerformEngReclaim(aiBrain, self, 25)
+                            --PerformEngReclaim(aiBrain, self, 25)
                             if self:IsIdleState() then
                                 IssueMove({self}, validLocation)
                             end
@@ -337,6 +337,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             end
                             coroutine.yield(25)
                         end
+                        self:SetCustomName('Engineer into reclaimGridLoop')
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             coroutine.yield(1)
                             return
@@ -376,50 +377,58 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
-                                if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
-                                    --LOG('Grid square position outside of map border')
-                                    continue
-                                end
-                                --LOG('reclaimGrid square table is '..repr(square))
-                                local rectDef = Rect(square[1] - 8, square[3] - 8, square[1] + 8, square[3] + 8)
-                                local reclaimRect = GetReclaimablesInRect(rectDef)
-                                local engReclaiming = false
-                                if reclaimRect then
-                                    for c, b in reclaimRect do
-                                        if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                        -- Start Blacklisted Props
-                                        local blacklisted = false
-                                        for _, BlackPos in PropBlacklist do
-                                            if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                                blacklisted = true
-                                                break
+                                local squarePos = {square[1], GetSurfaceHeight(square[1], square[3]), square[3]}
+                                if AIAttackUtils.CanGraphToRNG(engPos, squarePos, 'Amphibious') then
+                                    if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
+                                        --LOG('Grid square position outside of map border')
+                                        continue
+                                    end
+                                    --LOG('reclaimGrid square table is '..repr(square))
+                                    local rectDef = Rect(square[1] - 8, square[3] - 8, square[1] + 8, square[3] + 8)
+                                    local reclaimRect = GetReclaimablesInRect(rectDef)
+                                    local engReclaiming = false
+                                    if reclaimRect then
+                                        for c, b in reclaimRect do
+                                            if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                            -- Start Blacklisted Props
+                                            local blacklisted = false
+                                            for _, BlackPos in PropBlacklist do
+                                                if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                                    blacklisted = true
+                                                    break
+                                                end
                                             end
-                                        end
-                                        if blacklisted then continue end
-                                        if b.MaxMassReclaim and b.MaxMassReclaim > 5 then
-                                            engReclaiming = true
-                                            reclaimCount = reclaimCount + 1
-                                            IssueReclaim({self}, b)
+                                            if blacklisted then continue end
+                                            if b.MaxMassReclaim and b.MaxMassReclaim > 5 then
+                                                engReclaiming = true
+                                                reclaimCount = reclaimCount + 1
+                                                IssueReclaim({self}, b)
+                                            end
                                         end
                                     end
-                                end
-                                if engReclaiming then
-                                    local idleCounter = 0
-                                    while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                        if aiBrain.RNGDEBUG then
-                                            self:SetCustomName('Engineer in reclaim table loop')
-                                        end
-                                        if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                            --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                            --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                            idleCounter = idleCounter + 1
-                                            if idleCounter > 15 then
-                                                --RNGLOG('idleCounter hit, breaking loop')
-                                                break
+                                    if engReclaiming then
+                                        local idleCounter = 0
+                                        while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                            if aiBrain.RNGDEBUG then
+                                                self:SetCustomName('Engineer in reclaim table loop')
                                             end
+                                            if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                                --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                                --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                                idleCounter = idleCounter + 1
+                                                if idleCounter > 10 then
+                                                    --RNGLOG('idleCounter hit, breaking loop')
+                                                    break
+                                                end
+                                            end
+                                            --RNGLOG('We are reclaiming stuff')
+                                            coroutine.yield(30)
                                         end
-                                        --RNGLOG('We are reclaiming stuff')
-                                        coroutine.yield(30)
+                                    end
+                                else
+                                    self:SetCustomName('Engineer reclaim no graph to square location')
+                                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, squarePos, true) then
+                                        self:SetCustomName('EngineerMoveWithSafePathRNG returned true')
                                     end
                                 end
                                 MexBuild(platoon, self, aiBrain)
@@ -1386,6 +1395,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     local enemyACUTargets = {}
     local returnAcu = false
     local returnTarget = false
+    local highThreat = 0
     local acuDistanceToBase = VDist3Sq(cdrPos, basePosition)
     if aiBrain.BasePerimeterMonitor['MAIN'].LandThreat > 15 then
         RNGLOG('High Threat at main base, get target from there')
@@ -1481,6 +1491,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         end
                     end
                 else
+                    highThreat = highThreat + 1
                     RNGLOG('ACUTARGETTING : ACU Threat too high at target location Mobile')
                 end
             end
@@ -1529,6 +1540,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             end
                         end
                     else
+                        highThreat = highThreat + 1
                         RNGLOG('ACUTARGETTING : Mobile Threat too high at target location Mobile')
                     end
                 end
@@ -1578,7 +1590,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             end
                         end
                     else
-                        RNGLOG('ACUTARGETTING : Mobile Threat too high at target location Mobile')
+                        highThreat = highThreat + 1
+                        RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
                     end
                 end
             end
@@ -1591,9 +1604,9 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
         RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget, returnAcu
+        return returnTarget, returnAcu, highThreat, closestDistance
     end
-    return returnTarget, returnAcu
+    return returnTarget, returnAcu, highThreat, closestDistance
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)

@@ -2706,9 +2706,9 @@ AIBrain = Class(RNGAIBrainClass) {
                    --RNGLOG('Current Naval Ratio is '..self.ProductionRatios['Naval'])
                    --RNGLOG('I am spending approx Naval '..repr(self.cmanager.categoryspend.fact.Naval))
                    --RNGLOG('I should be spending approx Naval '..self.cmanager.income.r.m * self.ProductionRatios['Naval'])
-                    --RNGLOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-                    --RNGLOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
-                    --RNGLOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                    RNGLOG('My AntiAir Threat : '..self.BrainIntel.SelfThreat.AntiAirNow..' Enemy AntiAir Threat : '..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+                    RNGLOG('My Air Threat : '..self.BrainIntel.SelfThreat.AirNow..' Enemy Air Threat : '..self.EnemyIntel.EnemyThreatCurrent.Air)
+                    RNGLOG('My Land Threat : '..(self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat)..' Enemy Land Threat : '..self.EnemyIntel.EnemyThreatCurrent.Land)
                     --RNGLOG(' My Naval Sub Threat : '..self.BrainIntel.SelfThreat.NavalSubNow..' Enemy Naval Sub Threat : '..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
                     --local factionIndex = self:GetFactionIndex()
                     --RNGLOG('Air Current Ratio T1 Fighter: '..(self.amanager.Current['Air']['T1']['interceptor'] / self.amanager.Total['Air']['T1']))
@@ -3082,9 +3082,9 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
             RNGLOG('Less than enemy air threat, increase mobile aa numbers')
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 20
-            self.amanager.Ratios[factionIndex].Land.T2.aa = 20
-            self.amanager.Ratios[factionIndex].Land.T2.aa = 20
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 30
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 30
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 30
         else
             RNGLOG('More than enemy air threat, decrease mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 10
@@ -3971,22 +3971,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         if v.UnitBeingBuilt then
                             if ALLBPS[v.UnitId].Economy.BuildRate > 100 then
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.6 then
-                                    RNGLOG('Nuke Launcher being built')
+                                    RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
                                     potentialPowerConsumption = potentialPowerConsumption + (4000 * multiplier)
                                     continue
                                 end
                                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    RNGLOG('Anti Nuke Launcher being built')
+                                    RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
                                     potentialPowerConsumption = potentialPowerConsumption + (1200 * multiplier)
                                     continue
                                 end
                                 if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    RNGLOG('Mass Fabricator being built')
+                                    RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
                                     potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
                                     continue
                                 end
                                 if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    RNGLOG('Shield being built')
+                                    RNGLOG('EcoPowerPreemptive : Shield being built')
                                     potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                                     continue
                                 end
@@ -3994,7 +3994,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
                             if v:GetFractionComplete() < 0.6 then
-                                RNGLOG('T3 Air Being Built')
+                                RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
                                 potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
                                 continue
                             else
@@ -4002,7 +4002,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                     elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
                         if v:GetFractionComplete() < 0.6 then
-                            RNGLOG('T2 Air Being Built')
+                            RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
                             potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                             continue
                         else
@@ -4010,7 +4010,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif ALLBPS[v.UnitId].CategoriesHash.MASSEXTRACTION then
                         if v:GetFractionComplete() < 0.6 then
-                            RNGLOG('Extractors being upgraded')
+                            RNGLOG('EcoPowerPreemptive : Extractors being upgraded')
                             potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
                             continue
                         else
@@ -4018,7 +4018,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif ALLBPS[v.UnitId].CategoriesHash.RADAR then
                         if v:GetFractionComplete() < 0.6 then
-                            RNGLOG('Radar being upgraded')
+                            RNGLOG('EcoPowerPreemptive : Radar being upgraded')
                             potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
                             continue
                         else

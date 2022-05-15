@@ -37,7 +37,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     return markerList
 end
 
-function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath)
     if not destination then
         return false
     end
@@ -47,13 +47,16 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
         T1EngOnly = true
     end
     -- don't check a path if we are in build range
-    if VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
+    if not alwaysCheckPath and VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
         return true
     end
 
     -- first try to find a path with markers. 
     local result, bestPos
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+    if unit.PlatoonHandle.BuilderName then
+        RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
+    end
     --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
@@ -69,6 +72,11 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination)
             end
             result, bestPos = unit:CanPathTo(destination)
         end 
+    end
+    if result then
+        RNGLOG('result is true, reason is '..reason)
+    else
+        RNGLOG('result is false, reason is '..reason)
     end
     local bUsedTransports = false
     -- Increase check to 300 for transports

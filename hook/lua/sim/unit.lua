@@ -26,7 +26,11 @@ Unit = Class(RNGUnitClass) {
                     threatReturn = threatReturn + 5
                 end
                 if v == 'Shield' then
+                    threatReturn = threatReturn + 15
+                elseif v == 'DamageStabilization' then
                     threatReturn = threatReturn + 10
+                elseif v == 'StealthGenerator' then
+                    threatReturn = threatReturn + 8
                 end
             end
         end

@@ -21,7 +21,7 @@ local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
-    if myAirThreat < (enemyAirThreat * 1.2 / enemyCount) then
+    if myAirThreat < (enemyAirThreat * 1.3 / enemyCount) then
         --RNGLOG('Enable Air Intie Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.BuilderData.TechLevel == 1 then

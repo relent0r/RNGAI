@@ -5,6 +5,7 @@ BaseBuilderTemplate {
         'RNGAI Engineer Builder Naval Expansion',
         --'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
+        'RNGAI Naval Factory Reclaim',
 
         -- Sea Builders --
         'RNGAI Factory Builder Sea',
@@ -37,8 +38,8 @@ BaseBuilderTemplate {
         },
         MassToFactoryValues = {
             T1Value = 7,
-            T2Value = 18,
-            T3Value = 28
+            T2Value = 25,
+            T3Value = 45
         },
     },
     ExpansionFunction = function(aiBrain, location, markerType)

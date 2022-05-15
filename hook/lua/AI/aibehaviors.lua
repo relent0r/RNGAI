@@ -703,7 +703,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
             cdr:SetAutoOvercharge(true)
         end
         for i=1, RNGGETN(path) do
-            if cdr.Retreat and cdr.Caution then
+            if not retreat and cdr.Retreat and cdr.Caution then
                 RNGLOG('CDR : ACU Retreat flag while moving')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
@@ -823,7 +823,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         end
                     end
                 elseif cdr.Health > 6000 and retreat or platoonRetreat then
-                    if not cdr.GunUpgradeRequired then
+                    if not cdr.GunUpgradeRequired and not cdr.HighThreatUpgradeRequired then
                         RNGLOG('CDR : We are retreating or platoonRetreating')
                         RNGLOG('CDR : EnemyThreat inner is '..(cdr.CurrentEnemyInnerCircle * 1.2)..' friendly inner is '..cdr.CurrentFriendlyInnerCircle)
                         if aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon') and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle then
@@ -835,7 +835,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         end
                     end
                 end
-                if not cdr.GunUpgradeRequired and cdr.Health > 6000 and cdr.Active and (not retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.50 then
+                if (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and cdr.Active and (not retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.50 then
                     PerformACUReclaim(aiBrain, cdr, 25)
                 end
                 coroutine.yield(20)
@@ -844,7 +844,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
         if retreat and not cdr.Dead then
             cdr:SetAutoOvercharge(false)
         end
-        if retreat and cdr.GunUpgradeRequired then
+        if retreat and (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired)then
             return CDREnhancementsRNG(aiBrain, cdr)
         end
     else
@@ -1063,6 +1063,28 @@ function CDRGunCheck(aiBrain, cdr)
         end
     elseif factionIndex == 4 then
         if not cdr:HasEnhancement('RateOfFire') then
+            return true
+        end
+    end
+    return false
+end
+
+function CDRHpUpgradeCheck(aiBrain, cdr)
+    local factionIndex = aiBrain:GetFactionIndex()
+    if factionIndex == 1 then
+        if not cdr:HasEnhancement('DamageStabilization') then
+            return true
+        end
+    elseif factionIndex == 2 then
+        if not cdr:HasEnhancement('Shield') then
+            return true
+        end
+    elseif factionIndex == 3 then
+        if not cdr:HasEnhancement('StealthGenerator') then
+            return true
+        end
+    elseif factionIndex == 4 then
+        if not cdr:HasEnhancement('DamageStabilization') then
             return true
         end
     end
@@ -1398,8 +1420,8 @@ function CDROverChargeRNG(aiBrain, cdr)
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     elseif cdr.Health > 5000 and GetGameTimeSeconds() > 260 and cdr.Initialized then
         maxRadius = 160 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
-        if maxRadius < 60 then 
-            maxRadius = 60 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
+        if maxRadius < 80 then 
+            maxRadius = 80 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
@@ -1441,7 +1463,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         plat.BuilderName = 'CDR Combat'
         --RNGLOG('Assign ACU to attack platoon')
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-        local target, acuTarget
+        local target, acuTarget, highThreatCount, closestThreatDistance
         local continueFighting = true
         local counter = 0
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
@@ -1477,7 +1499,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     cdr:SetCustomName('CDR searching for target')
                 end
                 if not cdr.SuicideMode then
-                    target, acuTarget = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
+                    target, acuTarget, highThreatCount, closestThreatDistance = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
                 else
                     RNGLOG('We are in suicide mode so dont look for a new target')
                 end
@@ -1662,7 +1684,20 @@ function CDROverChargeRNG(aiBrain, cdr)
                         cdr:SetCustomName('CDR pew pew complete there is a 3 second yield after this')
                     end
                 else
-                    CDRCheckForCloseMassPoints(aiBrain, cdr)
+                    RNGLOG('CDR : No target found')
+                    if not cdr.SuicideMode then
+                        RNGLOG('Number of high threats '..highThreatCount)
+                        if closestThreatDistance then
+                            RNGLOG('Distance of closest threat '..closestThreatDistance)
+                        end
+                        if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and highThreatCount > 30 then
+                            RNGLOG('HighThreatUpgrade is now required')
+                            cdr.HighThreatUpgradeRequired = true
+                        end
+                        if not cdr.HighThreatUpgradeRequired and not cdr.GunUpgradeRequired then
+                            CDRCheckForCloseMassPoints(aiBrain, cdr)
+                        end
+                    end
                 end
                 if cdr.SuicideMode and target.Dead then
                     cdr.SuicideMode = false
@@ -1719,7 +1754,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 end
                 return CDRRetreatRNG(aiBrain, cdr)
             end
-            if cdr.GunUpgradeRequired and cdr.Active and not cdr.SuicideMode then
+            if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired)and cdr.Active and not cdr.SuicideMode then
                 --RNGLOG('ACU Requires Gun set upgrade flag to true, continue fighting set to false')
                --RNGLOG('Gun Upgrade Required, continueFighting is false')
                 continueFighting = false
@@ -1877,7 +1912,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 if RNGGETN(base.FactoryManager.FactoryList) > 0 then
                     RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                     local baseDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3])
-                    if baseDistance > 1600 or (cdr.GunUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                    if baseDistance > 1600 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
                         if baseDistance < closestDistance then
                             closestBase = baseName
                             closestDistance = baseDistance
@@ -2210,9 +2245,9 @@ function CDREnhancementsRNG(aiBrain, cdr)
             end
         end
     end
-    if (cdr:IsIdleState() and inRange) or (cdr.GunUpgradeRequired and inRange)  then
+    if (cdr:IsIdleState() and inRange) or (cdr.GunUpgradeRequired and inRange) or (cdr.HighThreatUpgradeRequired and inRange)  then
         --RNGLOG('ACU within base range for enhancements')
-        if (GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired then
+        if (GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
             --RNGLOG('Economy good for ACU upgrade')
             cdr.GoingHome = false
             cdr.Combat = false
@@ -2295,7 +2330,10 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
         'HeatSink',
         'CrysalisBeam',
         'CoolingUpgrade',
-        'RateOfFire'
+        'RateOfFire',
+        'DamageStabilization',
+        'StealthGenerator',
+        'Shield'
     }
     if not enhancement.BuildTime then
         WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
@@ -2319,6 +2357,12 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
             --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
+    elseif priorityUpgrade and cdr.HighThreatUpgradeRequired and not aiBrain.RNGEXP then
+        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
+         and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
+            --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
+            return true
+        end
     elseif aiBrain.EconomyOverTimeCurrent.MassTrendOverTime*10 >= (drainMass * 1.2) and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime*10 >= (drainEnergy * 1.2)
     and aiBrain:GetEconomyStoredRatio('MASS') > 0.05 and aiBrain:GetEconomyStoredRatio('ENERGY') > 0.95 then
         return true
@@ -2334,7 +2378,10 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         'HeatSink',
         'CrysalisBeam',
         'CoolingUpgrade',
-        'RateOfFire'
+        'RateOfFire',
+        'DamageStabilization',
+        'StealthGenerator',
+        'Shield'
     }
     cdr.Upgrading = true
     if cdr.PlatoonHandle and cdr.PlatoonHandle ~= aiBrain.ArmyPool then
@@ -2392,7 +2439,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
             cdr.Upgrading = false
             return false
         end
-        if GetEconomyStoredRatio(aiBrain, 'ENERGY') < 0.2 and (not cdr.GunUpgradeRequired) then
+        if GetEconomyStoredRatio(aiBrain, 'ENERGY') < 0.2 and (not cdr.GunUpgradeRequired or not cdr.HighThreatUpgradeRequired) then
             if not enhancementPaused then
                 if cdr:IsUnitState('Enhancing') then
                     cdr:SetPaused(true)
@@ -2412,7 +2459,10 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
                --RNGLOG('We have both gun upgrades, set gun upgrade required to false')
                 cdr.GunUpgradeRequired = false
                 cdr.GunUpgradePresent = true
-            else
+            end
+            if not CDRHpUpgradeCheck(aiBrain, cdr) then
+                cdr.HighThreatUpgradeRequired = false
+                cdr.HighThreatUpgradePresent = true
                --RNGLOG('We dont have both gun upgrades yet')
             end
             break

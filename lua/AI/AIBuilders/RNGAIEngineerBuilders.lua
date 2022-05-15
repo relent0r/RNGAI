@@ -756,6 +756,146 @@ BuilderGroup {
         BuilderType = 'Any',
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Land Factory Reclaim',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Reclaim T1 Land',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1050,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
+                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+            },
+        BuilderData = {
+            JobType = 'ReclaimStructure',
+            Location = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Reclaim T2 Land',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1040,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
+                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.LAND }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+            },
+        BuilderData = {
+            JobType = 'ReclaimStructure',
+            Location = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
+        },
+        BuilderType = 'Any',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Air Factory Reclaim',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Reclaim T1 Air',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1050,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.AIR * categories.FACTORY }},
+                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.AIR}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+            },
+        BuilderData = {
+            JobType = 'ReclaimStructure',
+            Location = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.AIR * categories.FACTORY},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Reclaim T2 Air',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1040,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY }},
+                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.AIR }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+            },
+        BuilderData = {
+            JobType = 'ReclaimStructure',
+            Location = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY},
+        },
+        BuilderType = 'Any',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Naval Factory Reclaim',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Reclaim T1 Naval',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1050,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.NAVAL * categories.FACTORY }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.NAVAL}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+            },
+        BuilderData = {
+            JobType = 'ReclaimStructure',
+            Location = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.NAVAL * categories.FACTORY},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI T12 Engineer Reclaim T2 Naval',
+        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        Priority = 1040,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+            },
+        BuilderData = {
+            JobType = 'ReclaimStructure',
+            Location = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY},
+        },
+        BuilderType = 'Any',
+    },
+}
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Production Reclaim',
     BuildersType = 'EngineerBuilder',
@@ -799,48 +939,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
-    Builder {
-        BuilderName = 'RNGAI T12 Engineer Reclaim T1 Land Mass Stall',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
-        Priority = 1050,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
-                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 2, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
-            },
-        BuilderData = {
-            JobType = 'ReclaimStructure',
-            Location = 'LocationType',
-            ReclaimMax = 1,
-            Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T12 Engineer Reclaim T2 Land Mass Stall',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
-        Priority = 1040,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
-                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.LAND }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
-            },
-        BuilderData = {
-            JobType = 'ReclaimStructure',
-            Location = 'LocationType',
-            ReclaimMax = 1,
-            Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
-        },
-        BuilderType = 'Any',
-    },
+    
 }
 
 BuilderGroup {

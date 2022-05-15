@@ -29,6 +29,25 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 RNGAIPlatoonClass = Platoon
 Platoon = Class(RNGAIPlatoonClass) {
 
+    AirHuntDraw = function(self, aiBrain)
+        while PlatoonExists(aiBrain, self) do
+            local platPos = GetPlatoonPosition(self)
+            if platPos then
+                if self.MaxRadius then
+                    DrawCircle(platPos, self.MaxRadius, 'cc0000')
+                end
+                if self.Target and not self.Target.Dead then
+                    DrawCircle(self.Target:GetPosition(), 8, 'cc0000')
+                end
+                if self and not self.Dead and self.Target and not self.Target.Dead then
+                    DrawLine(platPos,self.Target:GetPosition(),'aa000000')
+                end
+            end
+            coroutine.yield(2)
+        end
+
+    end,
+
     AirHuntAIRNG = function(self)
         self:Stop()
         local aiBrain = self:GetBrain()
@@ -69,6 +88,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:SetPrioritizedTargetList('Attack', categoryList)
         local maxRadius = data.SearchRadius or 1000
         local threatCountLimit = 0
+        if aiBrain.RNGDEBUG then
+            self:ForkThread(self.AirHuntDraw, aiBrain)
+        end
         while PlatoonExists(aiBrain, self) do
             local currentPlatPos = GetPlatoonPosition(self)
             if not currentPlatPos then
@@ -91,6 +113,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
 
             RNGLOG('Max Radius of Interceptor is '..maxRadius)
+            if maxRadius then
+                self.MaxRadius = maxRadius
+            end
             if not target or target.Dead then
                 RNGLOG('Looking for target')
                 if defensive then
@@ -105,6 +130,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
             if target and not target.Dead then
                 RNGLOG('Target Found')
+                self.Target = target
                 local targetPos = target:GetPosition()
                 local platoonCount = RNGGETN(GetPlatoonUnits(self))
                 --RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
@@ -125,8 +151,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         continue
                     end
                     if threatCountLimit > 6 then
-                        --RNGLOG('threatCountLimit is above 5, threat details')
-                        --RNGLOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')..' platoon threat is '..self.CurrentPlatoonThreat)
+                        RNGLOG('threatCountLimit is above 5, threat details')
+                        RNGLOG ('Target has'..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')..' platoon threat is '..self.CurrentPlatoonThreat)
                     end
                     self:Stop()
                     --RNGLOG('* AI-RNG: Attacking Target')
@@ -4024,9 +4050,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
-                    energyCount = 4
+                    energyCount = 3
                 else
-                    energyCount = 5
+                    energyCount = 4
                 end
             end
             for i=1, energyCount do
@@ -4330,22 +4356,24 @@ Platoon = Class(RNGAIPlatoonClass) {
                 else
                     aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                 end
-                if ALLBPS[whatToBuild].CategoriesHash.MASSEXTRACTION and eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
-                    --RNGLOG('What to build was a mass extractor')
-                    if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
-                        local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassMexPlatoon(aiBrain, buildLocation, 30)
-                        if MexQueueBuild then
-                            --RNGLOG('We can build on a mass marker within 30')
-                            --RNGLOG(repr(MassMarkerTable))
-                            for _, v in MassMarkerTable do
-                                RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position, 5)
-                                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
-                                aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
-                                local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative, BorderWarning=v.BorderWarning}
-                                RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                if eng.PlatoonHandle.PlatoonData.Construction.RepeatBuild then
+                    if ALLBPS[whatToBuild].CategoriesHash.MASSEXTRACTION then
+                        --RNGLOG('What to build was a mass extractor')
+                        if EntityCategoryContains(categories.ENGINEER - categories.COMMAND, eng) then
+                            local MexQueueBuild, MassMarkerTable = MABC.CanBuildOnMassMexPlatoon(aiBrain, buildLocation, 30)
+                            if MexQueueBuild then
+                                --RNGLOG('We can build on a mass marker within 30')
+                                --RNGLOG(repr(MassMarkerTable))
+                                for _, v in MassMarkerTable do
+                                    RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position, 5)
+                                    AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
+                                    aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
+                                    local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative, BorderWarning=v.BorderWarning}
+                                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                                end
+                            else
+                                --RNGLOG('Cant find mass within distance')
                             end
-                        else
-                            --RNGLOG('Cant find mass within distance')
                         end
                     end
                 end
@@ -5012,6 +5040,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(2)
                 return mod
             else
+                IssueMove({unit},tpos)
                 coroutine.yield(2)
                 return mod
             end
@@ -5463,6 +5492,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:ConfigurePlatoon()
         RNGLOG('Current Platoon Threat on platoon '..self.CurrentPlatoonThreat)
         self:SetPlatoonFormationOverride(PlatoonFormation)
+        RNGLOG('Squad '..repro(self:GetSquadUnits('Attack'), true))
         local stageExpansion = false
         
         if self.PlatoonData.TargetSearchPriorities then

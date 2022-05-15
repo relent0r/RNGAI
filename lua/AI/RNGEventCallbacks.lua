@@ -1,6 +1,6 @@
 
 
-function OnBombFired(weapon, projectile)
+function OnBombReleased(weapon, projectile)
     -- Placeholder
 
 end
