@@ -106,10 +106,13 @@ function LessThanMassTrendRNG(aiBrain, mTrend)
     end
 end
 
---            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 50.0 } },
-function LessThanEnergyTrendRNG(aiBrain, eTrend)
-
-    if GetEconomyTrend(aiBrain, 'ENERGY') < eTrend then
+--            { EBC, 'LessThanEnergyTrendRNG', { 50.0 } },
+function LessThanEnergyTrendRNG(aiBrain, eTrend, DEBUG)
+    local EnergyTrend = GetEconomyTrend(aiBrain, 'ENERGY')
+    if DEBUG then
+        --LOG('Energy Trend is'..EnergyTrend)
+    end
+    if EnergyTrend < eTrend then
         return true
     else
         return false

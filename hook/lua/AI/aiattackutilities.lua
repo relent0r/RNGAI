@@ -5,7 +5,6 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
-local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
@@ -529,7 +528,7 @@ function CanGraphToRNG(startPos, destPos, layer)
     return false
 end
 
-function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1EngOnly, bRequired, bSkipLastMove, safeZone)
+function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, bRequired, bSkipLastMove, safeZone)
 
     GetMostRestrictiveLayerRNG(platoon)
 
@@ -560,7 +559,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
             --  if it doesn't work, tell the aiBrain we want transports and bail
             if AIUtils.GetTransportsRNG(platoon, false, t1EngOnly) == false then
                 aiBrain.WantTransports = true
-                --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
+                LOG('SendPlatoonWithTransportsNoCheckRNG returning false setting WantTransports')
                 return false
             end
         else
@@ -658,7 +657,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
                     if aiBrain.NeedTransports < 0 then
                         aiBrain.NeedTransports = 0
                     end
-                    --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
+                    LOG('SendPlatoonWithTransportsNoCheckRNG returning false no platoon exist')
                     return false
                 end
 
@@ -679,7 +678,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
 
             -- couldn't use transports...
             if bUsedTransports == false then
-                --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
+                LOG('SendPlatoonWithTransportsNoCheckRNG returning false bUsedTransports')
                 return false
             end
         end
@@ -708,23 +707,21 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
         end
 
         if transportLocation then
-            --RNGLOG('initial transport location is '..repr(transportLocation))
+            --LOG('initial transport location is '..repr(transportLocation))
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
-            --RNGLOG('Transport Location minThreat is '..minThreat)
-            if (minThreat > 0) or safeZone then
-                if platoon.MovementLayer == 'Amphibious' or platoon.MovementLayer == 'Land' then
-                    --RNGLOG('Find Safe Drop Amphib')
+            LOG('Transport Location minThreat is '..minThreat)
+            if minThreat > 0 or safeZone then
+                if platoon.MovementLayer == 'Amphibious' then
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 else
-                    --RNGLOG('Find Safe Drop Non Amphib')
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 end
             end
-            --RNGLOG('Decided transport location is '..repr(transportLocation))
+            LOG('Decided transport location is '..repr(transportLocation))
         end
 
         if not transportLocation then
-            --RNGLOG('No transport location or threat at location too high')
+            LOG('No transport location or threat at location too high')
             return false
         end
 
@@ -751,7 +748,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
 
         -- check to see we're still around
         if not platoon or not aiBrain:PlatoonExists(platoon) then
-            --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
+            LOG('SendPlatoonWithTransportsNoCheckRNG returning false platoon doesnt exist')
             return false
         end
 
@@ -780,144 +777,11 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
             end
         end
     else
-        --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
+        LOG('SendPlatoonWithTransportsNoCheckRNG returning false due to movement layer')
         return false
     end
-    --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning true')
+    LOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
-end
-
-function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
-    local threatWeight = 0
-    -- Check if we have this path already cached.
-    if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then
-        -- Path is not older then 30 seconds. Is it a bad path? (the path is too dangerous)
-        if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path == 'bad' then
-            -- We can't move this way at the moment. Too dangerous.
-            return false
-        else
-            -- The cached path is newer then 30 seconds and not bad. Sounds good :) use it.
-            return aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path
-        end
-    end
-    -- loop over all path's and remove any path from the cache table that is older then 30 seconds
-    if aiBrain.PathCache then
-        local GameTime = GetGameTimeSeconds()
-        -- loop over all cached paths
-        for StartNodeName, CachedPaths in aiBrain.PathCache do
-            -- loop over all paths starting from StartNode
-            for EndNodeName, ThreatWeightedPaths in CachedPaths do
-                -- loop over every path from StartNode to EndNode stored by ThreatWeight
-                for ThreatWeight, PathNodes in ThreatWeightedPaths do
-                    -- check if the path is older then 30 seconds.
-                    if GameTime - 30 > PathNodes.settime then
-                        -- delete the old path from the cache.
-                        aiBrain.PathCache[StartNodeName][EndNodeName][ThreatWeight] = nil
-                    end
-                end
-            end
-        end
-    end
-    -- We don't have a path that is newer then 30 seconds. Let's generate a new one.
-    --Create path cache table. Paths are stored in this table and saved for 30 seconds, so
-    --any other platoons needing to travel the same route can get the path without any extra work.
-    aiBrain.PathCache = aiBrain.PathCache or {}
-    aiBrain.PathCache[startNode.name] = aiBrain.PathCache[startNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name] = aiBrain.PathCache[startNode.name][endNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = {}
-    local fork = {}
-    -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
-    if startNode.name == endNode.name
-    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 50*50 then
-        -- store as path only our current destination.
-        fork.path = { { position = endPos } }
-        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-        -- return the destination position as path
-        return fork
-    end
-    -- Set up local variables for our path search
-    local AlreadyChecked = {}
-    local curPath = {}
-    local lastNode = {}
-    local newNode = {}
-    local dist = 0
-    local lowestpathkey = 1
-    local lowestcost
-    local tableindex = 0
-    local mapSizeX = ScenarioInfo.size[1]
-    local mapSizeZ = ScenarioInfo.size[2]
-    -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphs()[startNode.layer][startNode.graphName]
-    -- For the beginning we store the startNode here as first path node.
-    local queue = {
-        {
-        cost = 0,
-        path = {startNode},
-        }
-    }
-    -- Now loop over all path's that are stored in queue. If we start, only the startNode is inside the queue
-    -- (We are using here the "A*(Star) search algorithm". An extension of "Edsger Dijkstra's" pathfinding algorithm used by "Shakey the Robot" in 1959)
-    while true do
-        -- remove the table (shortest path) from the queue table and store the removed table in curPath
-        -- (We remove the path from the queue here because if we don't find a adjacent marker and we
-        --  have not reached the destination, then we no longer need this path. It's a dead end.)
-        curPath = table.remove(queue,lowestpathkey)
-        if not curPath then break end
-        -- get the last node from the path, so we can check adjacent waypoints
-        lastNode = curPath.path[table.getn(curPath.path)]
-        -- Have we already checked this node for adjacenties ? then continue to the next node.
-        if not AlreadyChecked[lastNode] then
-            -- Check every node (marker) inside lastNode.adjacent
-            for i, adjacentNode in lastNode.adjacent do
-                -- get the node data from the graph table
-                newNode = graph[adjacentNode]
-                -- check, if we have found a node.
-                if newNode then
-                    -- copy the path from the startNode to the lastNode inside fork,
-                    -- so we can add a new marker at the end and make a new path with it
-                    fork = {
-                        cost = curPath.cost,            -- cost from the startNode to the lastNode
-                        path = {unpack(curPath.path)}, -- copy full path from starnode to the lastNode
-                    }
-                    -- get distance from new node to destination node
-                    dist = VDist2(newNode.position[1], newNode.position[3], endNode.position[1], endNode.position[3])
-                    -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
-                    dist = 100 * dist / ( mapSizeX + mapSizeZ )
-                    -- add as cost for the path the distance to the overall cost from the whole path
-                    fork.cost = fork.cost + dist
-                    -- add the newNode at the end of the path
-                    RNGINSERT(fork.path, newNode)
-                    -- check if we have reached our destination
-                    if newNode.name == endNode.name then
-                        -- store the path inside the path cache
-                        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-                        fork.pathLength = table.getn(fork.path)
-                        -- return the path
-                        return fork
-                    end
-                    -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    RNGINSERT(queue,fork)
-                end
-            end
-            -- Mark this node as checked
-            AlreadyChecked[lastNode] = true
-        end
-        -- Search for the shortest / safest path and store the table key in lowestpathkey
-        lowestcost = 100000000
-        lowestpathkey = 1
-        tableindex = 1
-        while queue[tableindex].cost do
-            if lowestcost > queue[tableindex].cost then
-                lowestcost = queue[tableindex].cost
-                lowestpathkey = tableindex
-            end
-            tableindex = tableindex + 1
-        end
-    end
-    -- At this point we have not found any path to the destination.
-    -- We will check this again in 30 seconds.
-    return false
 end
 
 -- Sproutos work
@@ -926,8 +790,6 @@ function GetRealThreatAtPosition(aiBrain, position, range )
 
     local sfake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiSurface' )
     local afake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiAir' )
-    local bp
-    local ALLBPS = __blueprints
     
     airthreat = 0
     surthreat = 0
@@ -940,7 +802,7 @@ function GetRealThreatAtPosition(aiBrain, position, range )
     
             if not u.Dead then
         
-                bp = ALLBPS[u.UnitId].Defense
+                local bp = __blueprints[u.UnitId].Defense
             
                 airthreat = airthreat + bp.AirThreatLevel
                 surthreat = surthreat + bp.SurfaceThreatLevel
@@ -965,21 +827,19 @@ end
 function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
 
     local markerlist = {}
-    local VDist2Sq = VDist2Sq
 
     -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
     for _,v in markerTypes do
     
         markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
     end
-    --RNGLOG('Marker List is '..repr(markerlist))
+    LOG('Marker List is '..repr(markerlist))
     
     -- sort the markers by closest distance to final destination
     if not safeZone then
         RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) < VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
     else
         RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) > VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
-        --RNGLOG('SafeZone Sorted marker list '..repr(markerlist))
     end
    
     -- loop thru each marker -- see if you can form a safe path on the surface 
@@ -988,20 +848,28 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
 
         -- test the real values for that position
         local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        coroutine.yield(1)
-        --RNGLOG('stest is '..stest..'atest is '..atest)
+        LOG('stest is '..stest..'atest is '..atest)
 
         if stest <= threatMax and atest <= airthreatMax then
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
+        
+            LOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
+
             -- can the platoon path safely from this marker to the final destination 
-            if CanGraphToRNG(v.Position, destination, layer) then
+            local landpath, reason = PlatoonGenerateSafePathTo(aiBrain, layer, v.Position, destination, threatMax, 160 )
+            if not landpath then
+                --LOG('No path to transport location from selected position')
+            end
+
+            -- can the transports reach that marker ?
+            if landpath then
+                LOG('Selected Position')
                 return v.Position, v.Name
             end
         end
     end
-    --RNGLOG('Safe landing Location returning false')
+    --LOG('Safe landing Location returning false')
     return false, nil
 end
 
@@ -1094,13 +962,13 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
         local usedTransports = false
         local position = platoon:GetPlatoonPosition()
         if (not path and reason == 'NoPath') or bNeedTransports then
-            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
         -- Require transports over 500 away
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then
-            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false, true)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, true)
         -- use if possible at 250
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 256*256 then
-            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false, false)
+            usedTransports = SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, attackPos, false)
         end
 
         if not usedTransports then

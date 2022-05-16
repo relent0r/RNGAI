@@ -269,7 +269,7 @@ BuilderGroup {
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
-        Priority = 501,
+        Priority = 500,
         BuilderConditions = {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
