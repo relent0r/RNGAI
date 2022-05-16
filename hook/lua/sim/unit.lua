@@ -14,23 +14,23 @@ Unit = Class(RNGUnitClass) {
         if unitEnh then
             for k, v in unitEnh do
                 if v == 'HeavyAntiMatterCannon' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 20
                 elseif v == 'HeatSink' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 20
                 elseif v == 'CoolingUpgrade' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 20
                 elseif v == 'RateOfFire' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 20
                 end
                 if v == 'HeatSink' then
                     threatReturn = threatReturn + 5
                 end
                 if v == 'Shield' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 20
                 elseif v == 'DamageStabilization' then
-                    threatReturn = threatReturn + 10
+                    threatReturn = threatReturn + 15
                 elseif v == 'StealthGenerator' then
-                    threatReturn = threatReturn + 8
+                    threatReturn = threatReturn + 12
                 end
             end
         end

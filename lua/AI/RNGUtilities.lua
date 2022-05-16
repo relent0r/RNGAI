@@ -1402,6 +1402,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         cdrPos = aiBrain.BuilderManagers['MAIN'].Position
     end
     closestDistance = false
+    closestTarget = false
     --RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
     for _, range in RangeList do
         if maxRange > range then
@@ -1426,6 +1427,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     end
                     if not closestDistance or targetDistance < closestDistance then
                         closestDistance = targetDistance
+                        closestTarget = target
                     end
                 end
             end
@@ -1604,9 +1606,9 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
         --RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget, returnAcu, highThreat, closestDistance
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget
     end
-    return returnTarget, returnAcu, highThreat, closestDistance
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)

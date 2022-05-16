@@ -1463,12 +1463,13 @@ function CDROverChargeRNG(aiBrain, cdr)
         plat.BuilderName = 'CDR Combat'
         --RNGLOG('Assign ACU to attack platoon')
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-        local target, acuTarget, highThreatCount, closestThreatDistance
+        local target, acuTarget, highThreatCount, closestThreatDistance, closestTarget
         local continueFighting = true
         local counter = 0
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
         local enemyThreat
         local snipeAttempt = false
+        local threatFailures = 0
         --RNGLOG('CDR max range is '..maxRadius)
 
         
@@ -1499,7 +1500,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     cdr:SetCustomName('CDR searching for target')
                 end
                 if not cdr.SuicideMode then
-                    target, acuTarget, highThreatCount, closestThreatDistance = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
+                    target, acuTarget, highThreatCount, closestThreatDistance, closestTarget = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
                 else
                     --RNGLOG('We are in suicide mode so dont look for a new target')
                 end
@@ -1697,6 +1698,13 @@ function CDROverChargeRNG(aiBrain, cdr)
                         if not cdr.HighThreatUpgradeRequired and not cdr.GunUpgradeRequired then
                             CDRCheckForCloseMassPoints(aiBrain, cdr)
                         end
+                    end
+                    threatFailures = threatFailures + 1
+                    if threatFailures > 10 then
+                        continueFighting = false
+                    end
+                    if closestThreatDistance < 625 and closestTarget then
+                        target = closestTarget
                     end
                 end
                 if cdr.SuicideMode and target.Dead then
