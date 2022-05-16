@@ -104,13 +104,13 @@ local SeaTorpMode = function(self, aiBrain, builderManager, builderData)
 end
 
 local BomberResponse = function(self, aiBrain, builderManager, builderData)
-    RNGLOG('BomberResponse location is '..builderManager.LocationType)
+    --RNGLOG('BomberResponse location is '..builderManager.LocationType)
     if aiBrain.BrainIntel.AirPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AirNow then
-        RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
+        --RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end
-    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 1 then
-        RNGLOG('Bomber Response for Perimeter Monitor is true')
+    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 2 then
+        --RNGLOG('Bomber Response for Perimeter Monitor is true')
         return 890
     end
     return 0
