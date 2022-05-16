@@ -93,7 +93,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         return true
     end,
 
-    --[[FactoryDestroyed = function(self, factory)
+    DelayBuildOrder = function(self,factory,bType,time)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
         end
@@ -142,9 +142,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             end
             self.LocationActive = true
         end
-        self.LocationActive = false
-        self.Brain:RemoveConsumption(self.LocationType, factory)
-    end,]]
+    end,
 
     FactoryFinishBuilding = function(self,factory,finishedUnit)
         if not self.Brain.RNG then
@@ -184,106 +182,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 end
             end
         end
-        if factory.DelayThread then
-            return
-        end
-        factory.DelayThread = true
-        WaitSeconds(time)
-        factory.DelayThread = false
-        self:AssignBuildOrder(factory,bType)
-    end,
-
-    FactoryFinishBuilding = function(self,factory,finishedUnit)
-        if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.FactoryFinishBuilding(self,factory,finishedUnit)
-        end
-        LOG('RNG FactorFinishedbuilding')
-        if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
-            self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(finishedUnit)
-        elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
-            LOG('Factory Built by factory, attempting to kill factory.')
-			if finishedUnit:GetFractionComplete() == 1 then
-				self:AddFactory(finishedUnit )			
-				factory.Dead = true
-                factory.Trash:Destroy()
-                LOG('Destroy Factory')
-				return self:FactoryDestroyed(factory)
-			end
-		end
-        self.Brain:RemoveConsumption(self.LocationType, factory)
-        self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)
-    end,
-
-    FactoryDestroyed = function(self, factory)
-        if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
-        end
-        LOG('Factory Destroyed '..factory.UnitId)
-        --LOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
-        local guards = factory:GetGuards()
-        local factoryDestroyed = false
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBody)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
         for k,v in self.FactoryList do
             if (not v.Sync.id) or v.Dead then
-                LOG('Removing factory from FactoryList'..v.UnitId)
+                --RNGLOG('Removing factory from FactoryList'..v.UnitId)
                 self.FactoryList[k] = nil
                 factoryDestroyed = true
-            end
-        end
-        if factoryDestroyed then
-            LOG('Performing table rebuild')
-            self.FactoryList = self:RebuildTable(self.FactoryList)
-        end
-        --LOG('We have '..table.getn(self.FactoryList) ' at the end of the FactoryDestroyed function')
-        for k,v in self.FactoryList do
-            if not v.Dead then
-                return
-            end
-        end
-        self.LocationActive = false
-        self.Brain:RemoveConsumption(self.LocationType, factory)
-    end,
-
-    BuilderParamCheckOld = function(self,builder,params)
-        if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.BuilderParamCheck(self,builder,params)
-        end
-        local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), params[1])
-        if not template then
-            WARN('*Factory Builder Error: Could not find template named: ' .. builder:GetPlatoonTemplate())
-            return false
-        end
-        if not template[3][1] then
-            --WARN('*Factory Builder Error: no FactionSquad for Template ' .. repr(template))
-            return false
-        end
-        local FactoryLevel = params[1].techCategory
-        local TemplateLevel = __blueprints[template[3][1]].TechCategory
-        if FactoryLevel == TemplateLevel then
-            --LOG('Factory Tech Level: ['..FactoryLevel..'] - Template Tech Level: ['..TemplateLevel..'] -  Factory is equal to Template Level, we want to continue!')
-        elseif FactoryLevel > TemplateLevel then
-            --LOG('Factory Tech Level: ['..FactoryLevel..'] - Template Tech Level: ['..TemplateLevel..'] -  Factory is higher than Template Level, stop building low tech crap!')
-            local EngineerFound
-            -- search categories for ENGINEER
-            for _, cat in __blueprints[template[3][1]].Categories do
-                -- continue withthe next categorie if its not ENGINEER
-                if cat ~= 'ENGINEER' and cat ~= 'SCOUT' then continue end
-                -- found ENGINEER category
-                --WARN('found categorie engineer')
-                EngineerFound = true
-                break
-            end
-            -- template islower than factory level and its not an engineer, then return false
-            if not EngineerFound then
-                return false
             end
         end
         if factoryDestroyed then

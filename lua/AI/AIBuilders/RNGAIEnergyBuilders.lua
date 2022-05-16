@@ -21,8 +21,9 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 120.0 } }, -- If our energy is trending into negatives
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 100, 0.75 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
@@ -80,27 +81,7 @@ BuilderGroup {
                     categories.SHIELD * categories.STRUCTURE,
                     categories.ENERGYPRODUCTION * categories.STRUCTURE,
                 },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Power MassRatio',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 700,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { EBC, 'EnergyToMassRatioIncomeRNG', { 10.0, '<=' } },  -- True if we have less than 10 times more Energy then Mass income ( 100 <= 10 = true )
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.0 } },
-            { EBC, 'GreaterThanEconIncome',  { 0.6, 0.0}}, -- Absolut Base income
-            { UCBC, 'HaveUnitRatioVersusCap', { 0.12 , '<', categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE - categories.FACTORY } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-        },
-        InstanceCount = 1,
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                AdjacencyCategory = categories.STRUCTURE * categories.FACTORY * (categories.LAND + categories.AIR),
+                AvoidCategory = categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
                 maxUnits = 1,
                 maxRadius = 2.5,
@@ -117,9 +98,12 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
+            { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
+            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.4 } },
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 300, 1.05 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -153,44 +137,13 @@ BuilderGroup {
         PlatoonTemplate = 'T2EngineerBuilderRNG',
         Priority = 1005,
         InstanceCount = 1,
-        DelayEqualBuildPlattons = {'Energy', 9},
+        DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, 'ENERGYPRODUCTION TECH2, ENERGYPRODUCTION TECH3' }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 10,
-            DesiresAssist = true,
-            NumAssistees = 10,
-            Construction = {
-                BuildStructures = {
-                    'T2EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Power Engineer Scale',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
-        Priority = 700,
-        InstanceCount = 2,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 120.0 } },
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.00}},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
+            { EBC, 'NegativeEcoPowerCheck', { 5.0 } },
+            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -208,33 +161,9 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Power Engineer Scale Extra',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
-        Priority = 500,
-        InstanceCount = 2,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.20}},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
-            maxUnits = 1,
-            maxRadius = 10,
-            DesiresAssist = true,
-            NumAssistees = 3,
-            Construction = {
+                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 10,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -248,19 +177,28 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 120.0 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 15,
+            JobType = 'BuildPower',
             DesiresAssist = true,
-            NumAssistees = 10,
+            NumAssistees = 12,
             Construction = {
+                AdjacencyPriority = {
+                    categories.SHIELD * categories.STRUCTURE,
+                    categories.STRUCTURE * categories.FACTORY * categories.AIR,
+                    categories.RADAR * categories.STRUCTURE,
+                    categories.ENERGYPRODUCTION * categories.TECH2,
+                    categories.FACTORY * categories.STRUCTURE,
+                },
+                maxUnits = 1,
+                maxRadius = 4,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -310,12 +248,12 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 500.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.5 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT3' }},
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.10}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, 'ENERGYPRODUCTION TECH3' }},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -330,32 +268,8 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T3 Power Engineer Scale Extra',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 500,
-        InstanceCount = 2,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 800.0 } },
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.5 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.20}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, 'ENERGYPRODUCTION TECH3' }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-            AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH3,
-            maxUnits = 1,
-            maxRadius = 15,
-            DesiresAssist = true,
-            NumAssistees = 15,
-            Construction = {
+                maxUnits = 1,
+                maxRadius = 15,
                 BuildStructures = {
                     'T3EnergyProduction',
                 },
@@ -375,10 +289,10 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'CheckBuildPlatoonDelay', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { UCBC, 'GreaterThanMassTrend', { 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
+            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
@@ -406,7 +320,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 3, 'TECH3 ENGINEER' }},
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
         },

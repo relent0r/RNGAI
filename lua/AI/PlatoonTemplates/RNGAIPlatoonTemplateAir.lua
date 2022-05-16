@@ -12,18 +12,19 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI AirScoutForm',
-    Plan = 'ScoutingAIRNG',
+    Name = 'RNGAI AntiAirLockdown',
+    Plan = 'AirHuntAI',
     GlobalSquads = {
-        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 4, 'scout', 'None' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 100, 'Attack', 'none' },
+        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 0, 1, 'scout', 'None' },
     }
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI AntiAir BaseGuard',
-    Plan = 'GuardBaseRNG',
+    Name = 'RNGAI AirScoutForm',
+    Plan = 'ScoutingAIRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 2, 50, 'Attack', 'none' },
+        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 4, 'scout', 'None' },
     }
 }
 

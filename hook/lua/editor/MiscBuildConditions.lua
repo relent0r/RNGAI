@@ -159,7 +159,7 @@ function CanBuildAggressivebaseRNG( aiBrain, locationType, radius, tMin, tMax, t
     if not ref then
         return false
     end
-    --LOG('CanBuildAggressivebaseRNG is true')
+    --RNGLOG('CanBuildAggressivebaseRNG is true')
     return true
 end
 

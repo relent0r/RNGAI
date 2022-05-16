@@ -836,7 +836,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
-<<<<<<< HEAD
         self.EnemyIntel.Phase = 1
         self.EnemyIntel.DirectorData = {
             Strategic = {},
@@ -849,9 +848,6 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         --RNGLOG('Director Data'..repr(self.EnemyIntel.DirectorData))
         --RNGLOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
-=======
-        self.EnemyIntel.DirectorData = {}
->>>>>>> 5f681cd (r64 and balance)
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
         self.EnemyIntel.EnemyThreatRaw = {}
@@ -885,13 +881,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 CloseCombat = false,
                 Gun = false,
                 Ally = IsAlly(selfIndex, v:GetArmyIndex()),
-            }
-            self.EnemyIntel.DirectorData[v:GetArmyIndex()] = {
-                Strategic = {},
-                Energy = {},
-                Mass = {},
-                Factory = {},
-                Combat = {},
             }
         end
 
@@ -954,7 +943,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.UpgradeIssuedLimit = 2
             self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
         end
-<<<<<<< HEAD
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
         end
@@ -972,18 +960,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.Zones = { }
 
         self.UpgradeMode = 'Normal'
-=======
-
-        self.coinFlip = math.random(2)
-        if self.coinFlip == 1 then
-            self.UpgradeMode = 'Normal'
-        elseif self.coinFlip == 2 then
-            self.UpgradeMode = 'Caution'
-            self.UpgradeIssuedLimit = 1
-        end
-        --LOG('Upgrade mode at game start is '..self.UpgradeMode..'for '..self.Nickname..' Coin Flip is '..self.coinFlip)
-        
->>>>>>> 5f681cd (r64 and balance)
 
         -- ACU Support Data
         self.ACUSupport = {}
@@ -3081,13 +3057,8 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorRNG = function(self, ALLBPS)
         -- Tactical Monitor function. Keeps an eye on the battlefield and takes points of interest to investigate.
-<<<<<<< HEAD
         coroutine.yield(Random(1,7))
         --RNGLOG('* AI-RNG: Tactical Monitor Threat Pass')
-=======
-        WaitTicks(Random(1,7))
-        LOG('* AI-RNG: Tactical Monitor Threat Pass')
->>>>>>> 5f681cd (r64 and balance)
         local enemyBrains = {}
         local multiplier
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
@@ -3211,7 +3182,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-<<<<<<< HEAD
             end]]
             --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             local currentGameTime = GetGameTimeSeconds()
@@ -3220,16 +3190,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGINSERT(self.EnemyIntel.EnemyThreatLocations, threat)
             end
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
-=======
-            end
-            --LOG('* AI-RNG: second table pass :'..repr(potentialThreats))
-            local currentGameTime = GetGameTimeSeconds()
-            for _, threat in phaseTwoThreats do
-                threat.InsertTime = currentGameTime
-                table.insert(self.EnemyIntel.EnemyThreatLocations, threat)
-            end
-            LOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
->>>>>>> 5f681cd (r64 and balance)
         end
         coroutine.yield(2)
 

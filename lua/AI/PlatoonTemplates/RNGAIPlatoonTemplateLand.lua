@@ -651,29 +651,8 @@ PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueueSiege',
             { 'url0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
         Seraphim = {
-            { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
-            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
-            { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
-            { 'xsl0201', 1, 3, 'Attack', 'none' },		-- Medium Tank
-        },
-    }
-}
-
-PlatoonTemplate { Name = 'RNGAIT2AmphibAttackQueue',
-    FactionSquads = {
-        UEF = {
-            { 'uel0203', 2, 4, 'Attack', 'none' },       -- Amphib Tank
-         },
-        Aeon = {
-            { 'xal0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
-        },
-        Cybran = {
-            { 'url0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
-        },
-        Seraphim = {
-            { 'xsl0203', 2, 4, 'Attack', 'none' },      -- Amphib Tank
+            { 'xsl0203', 2, 3, 'Attack', 'none' },      -- Amphib Tank
+            { 'xsl0111', 1, 1, 'Artillery', 'none' },   -- MML
         },
     }
 }
