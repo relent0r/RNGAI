@@ -1611,10 +1611,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
         RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
     end
     RNGLOG('No target being returned,')
-    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)

@@ -25,6 +25,7 @@ local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GetMostRestrictiveLayerRNG = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayerRNG
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -1018,7 +1019,7 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
             RNGLOG('Number of masspoints in closeMassPoints table '..table.getn(closeMassPoints))
             local massPoint = false
             for k, v in closeMassPoints do
-                if aiBrain:GetThreatAtPosition(v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 and AIAttackUtils.CanGraphToRNG(cdr.Position,v.Position,'Amphibious') then
+                if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 and AIAttackUtils.CanGraphToRNG(cdr.Position,v.Position,'Amphibious') then
                     massPoint = v
                     RNGLOG('CDR has masspoint with low threat')
                     break
@@ -1331,7 +1332,7 @@ function CDRThreatAssessmentRNG(cdr)
                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
-            elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
+            elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and GetThreatAtPosition(aiBrain, cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
                 cdr.CautionReason = 'none'
@@ -1526,9 +1527,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                    --RNGLOG('Target Distance is '..targetDistance..' from acu to target')
                     -- If inside base dont check threat, just shoot!
                     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 2025 then
-                        enemyThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'AntiSurface')
+                        enemyThreat = GetThreatAtPosition(aiBrain, targetPos, 1, true, 'AntiSurface')
                        --RNGLOG('ACU OverCharge Enemy Threat is '..enemyThreat)
-                        local enemyCdrThreat = aiBrain:GetThreatAtPosition(targetPos, 1, true, 'Commander')
+                        local enemyCdrThreat = GetThreatAtPosition(aiBrain, targetPos, 1, true, 'Commander')
                         if enemyCdrThreat > 0 then
                             realEnemyThreat = enemyThreat - (enemyCdrThreat - 5)
                         else
@@ -1700,6 +1701,10 @@ function CDROverChargeRNG(aiBrain, cdr)
                         if closestThreatDistance then
                             RNGLOG('Distance of closest threat '..closestThreatDistance)
                         end
+                        if closestThreatUnit and closestUnitPosition then
+                            RNGLOG('We have a closestThreatUnit of '..closestThreatUnit.UnitId)
+                            RNGLOG('Threat at closestThreatUnit position is '..GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'))
+                        end
                         if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
                             if not closestThreatUnit.Dead then
                                 if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit then
@@ -1809,9 +1814,9 @@ function CDRDistressMonitorRNG(aiBrain, cdr)
     if not cdr.DistressCall and distressLoc and VDist2Sq(distressLoc[1], distressLoc[3], cdr.CDRHome[1], cdr.CDRHome[3]) < distressRange * distressRange then
         if distressLoc then
             RNGLOG('* AI-RNG: ACU Detected Distress Location')
-            enemyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface')
-            local enemyCdrThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'Commander')
-            local friendlyThreat = aiBrain:GetThreatAtPosition(distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
+            enemyThreat = GetThreatAtPosition(aiBrain, distressLoc, 1, true, 'AntiSurface')
+            local enemyCdrThreat = GetThreatAtPosition(aiBrain, distressLoc, 1, true, 'Commander')
+            local friendlyThreat = GetThreatAtPosition(aiBrain, distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())
             if (enemyThreat - (enemyCdrThreat / 1.4)) >= (friendlyThreat + (cdrThreat * 0.3)) then
                 RNGLOG('cdr caution set true from CDRDistressMonitorRNG')
                 cdr.Caution = true
@@ -2069,7 +2074,7 @@ function ACUDetection(platoon)
                             c.Position = v:GetPosition()
                             c.HP = v:GetHealth()
                             --RNGLOG('AIRSCOUTACUDETECTION Enemy ACU of index '..enemyIndex..'has '..c.HP..' health')
-                            acuThreat = aiBrain:GetThreatAtPosition(c.Position, 0, true, 'AntiAir')
+                            acuThreat = GetThreatAtPosition(aiBrain, c.Position, 0, true, 'AntiAir')
                             --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                             c.Threat = acuThreat
                             c.LastSpotted = currentGameTime
