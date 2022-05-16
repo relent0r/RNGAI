@@ -46,7 +46,7 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
-    if myAirThreat < (enemyAirThreat / enemyCount) then
+    if math.max(myAirThreat, 15) < (enemyAirThreat / enemyCount) then
         --RNGLOG('Enable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.BuilderData.TechLevel == 1 then
@@ -476,9 +476,9 @@ BuilderGroup {
             StaticCategories = true,
             AvoidBases = true,
             IgnoreCivilian = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = BaseMilitaryArea,
             UnitType = 'BOMBER',
-            PlatoonLimit = 5,
+            PlatoonLimit = 3,
             PrioritizedCategories = {
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER - categories.COMMAND,

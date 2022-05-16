@@ -9017,7 +9017,9 @@ Platoon = Class(RNGAIPlatoonClass) {
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         coroutine.yield(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
-            eng:SetCustomName('I should be assisting')
+            if aiBrain.RNGDEBUG then
+                eng:SetCustomName('I should be assisting')
+            end
             --RNGLOG('EngineerAssistLoop runing for '..aiBrain.Nickname)
             coroutine.yield(1)
             if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then

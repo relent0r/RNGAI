@@ -337,7 +337,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             end
                             coroutine.yield(25)
                         end
-                        self:SetCustomName('Engineer into reclaimGridLoop')
+                        if aiBrain.RNGDEBUG then
+                            self:SetCustomName('Engineer into reclaimGridLoop')
+                        end
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             coroutine.yield(1)
                             return
@@ -426,9 +428,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                         end
                                     end
                                 else
-                                    self:SetCustomName('Engineer reclaim no graph to square location')
-                                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, squarePos, true) then
-                                        self:SetCustomName('EngineerMoveWithSafePathRNG returned true')
+                                    if aiBrain.RNGDEBUG then
+                                        self:SetCustomName('Engineer reclaim no graph to square location')
                                     end
                                 end
                                 MexBuild(platoon, self, aiBrain)
