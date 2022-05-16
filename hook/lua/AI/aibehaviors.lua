@@ -1512,7 +1512,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --RNGLOG('We are in suicide mode so dont look for a new target')
                 end
                 if not target and closestThreatDistance < 1600 and closestThreatUnit and not closestThreatUnit.Dead then
-                    RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
+                    --RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
                     target = closestThreatUnit
                 end
                 if target and not target.Dead then
@@ -1698,18 +1698,18 @@ function CDROverChargeRNG(aiBrain, cdr)
                 else
                     --RNGLOG('CDR : No target found')
                     if not cdr.SuicideMode then
-                        RNGLOG('Total highThreatCount '..highThreatCount)
+                        --RNGLOG('Total highThreatCount '..highThreatCount)
                         if closestThreatDistance then
                             --RNGLOG('Distance of closest threat '..closestThreatDistance)
                         end
                         if closestThreatUnit and closestUnitPosition then
-                            RNGLOG('We have a closestThreatUnit of '..closestThreatUnit.UnitId)
-                            RNGLOG('Threat at closestThreatUnit position is '..GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'))
+                            --RNGLOG('We have a closestThreatUnit of '..closestThreatUnit.UnitId)
+                            --RNGLOG('Threat at closestThreatUnit position is '..GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'))
                         end
                         if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
                             if not closestThreatUnit.Dead then
                                 if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit then
-                                    RNGLOG('HighThreatUpgrade is now required')
+                                    --RNGLOG('HighThreatUpgrade is now required')
                                     cdr.HighThreatUpgradeRequired = true
                                 end
                             end
@@ -1721,9 +1721,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                     threatFailures = threatFailures + 1
                     if threatFailures > 10 then
                         continueFighting = false
-                    end
-                    if closestThreatDistance < 625 and closestTarget then
-                        target = closestTarget
                     end
                 end
                 if cdr.SuicideMode and target.Dead then
@@ -1821,7 +1818,7 @@ function CDRDistressMonitorRNG(aiBrain, cdr)
     local distressLoc = aiBrain:BaseMonitorDistressLocationRNG(cdr.CDRHome)
     if not cdr.DistressCall and distressLoc and VDist2Sq(distressLoc[1], distressLoc[3], cdr.CDRHome[1], cdr.CDRHome[3]) < distressRange * distressRange then
         if distressLoc then
-            RNGLOG('* AI-RNG: ACU Detected Distress Location')
+            --RNGLOG('* AI-RNG: ACU Detected Distress Location')
             enemyThreat = GetThreatAtPosition(aiBrain, distressLoc, 1, true, 'AntiSurface')
             local enemyCdrThreat = GetThreatAtPosition(aiBrain, distressLoc, 1, true, 'Commander')
             local friendlyThreat = GetThreatAtPosition(aiBrain, distressLoc, 1, true, 'AntiSurface', aiBrain:GetArmyIndex())

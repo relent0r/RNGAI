@@ -1404,7 +1404,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     closestDistance = false
     closestTarget = false
     closestTargetPosition = false
-    RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
+    --RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
     for _, range in RangeList do
         if maxRange > range then
             targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.AIR - categories.SCOUT, cdrPos, range, 'Enemy')
@@ -1441,8 +1441,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         for k, v in enemyACUTargets do
             if not v.unit.Dead and not v.unit:BeenDestroyed() then
                 local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                RNGLOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
-                RNGLOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
+                --RNGLOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
+                --RNGLOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
                 if VDist3Sq(v.position, basePosition) < acuDistanceToBase then
                     local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                     local targetLayer = v.unit:GetCurrentLayer()
@@ -1497,7 +1497,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     end
                 else
                     highThreat = highThreat + surfaceThreat
-                    RNGLOG('ACUTARGETTING : ACU Threat too high at target location Mobile')
+                    --RNGLOG('ACUTARGETTING : ACU Threat too high at target location Mobile')
                 end
             end
         end
@@ -1547,7 +1547,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         end
                     else
                         highThreat = highThreat + surfaceThreat
-                        RNGLOG('ACUTARGETTING : Mobile Threat too high at target location Mobile')
+                        --RNGLOG('ACUTARGETTING : Mobile Threat too high at target location Mobile')
                     end
                 end
             end
@@ -1598,7 +1598,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         end
                     else
                         highThreat = highThreat + surfaceThreat
-                        RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
+                        --RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
                     end
                 end
             end
@@ -1610,10 +1610,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             --RNGLOG('* AI-RNG: ACUSupport.Supported set to true')
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
-        RNGLOG('ACUTARGETTING : Returning Target')
+        --RNGLOG('ACUTARGETTING : Returning Target')
         return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
     end
-    RNGLOG('No target being returned,')
+    --RNGLOG('No target being returned,')
     return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
 end
 
