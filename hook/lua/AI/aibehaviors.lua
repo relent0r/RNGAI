@@ -2469,7 +2469,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
             cdr.Upgrading = false
             return false
         end
-        if GetEconomyStoredRatio(aiBrain, 'ENERGY') < 0.2 and (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) then
+        if GetEconomyStoredRatio(aiBrain, 'ENERGY') < 0.2 and (not cdr.GunUpgradeRequired or not cdr.HighThreatUpgradeRequired) then
             if not enhancementPaused then
                 if cdr:IsUnitState('Enhancing') then
                     cdr:SetPaused(true)
