@@ -193,6 +193,12 @@ function CDRBrainThread(cdr)
             RNGLOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth'
+            if (not cdr.GunUpgradePresent) then
+                cdr.GunUpgradeRequired = true
+            end
+            if (not cdr.HighThreatUpgradePresent) then
+                cdr.HighThreatUpgradeRequired = true
+            end
         end
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
@@ -813,7 +819,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             else
                                 break
                             end
-                            if cdr.Health <= 5000 or cdr.Caution then
+                            if cdr.Health <= 5500 or cdr.Caution then
                                 cdr.Retreat = true
                                 break
                             end
@@ -1204,29 +1210,29 @@ function CDRWeaponCheckRNG(aiBrain, cdr)
             if cdr:HasEnhancement('HeavyAntiMatterCannon') then
                 cdr.GunUpgradePresent = true
                 cdr.WeaponRange = 30 - 3
-                cdr.ThreatLimit = 37
+                cdr.ThreatLimit = 45
             end
         elseif factionIndex == 2 then
             if cdr:HasEnhancement('HeatSink') then
                 cdr.GunUpgradePresent = true
-                cdr.ThreatLimit = 32
+                cdr.ThreatLimit = 40
             end
             if cdr:HasEnhancement('CrysalisBeam') then
                 cdr.GunUpgradePresent = true
                 cdr.WeaponRange = 35 - 3
-                cdr.ThreatLimit = 37
+                cdr.ThreatLimit = 45
             end
         elseif factionIndex == 3 then
             if cdr:HasEnhancement('CoolingUpgrade') then
                 cdr.GunUpgradePresent = true
                 cdr.WeaponRange = 30 - 3
-                cdr.ThreatLimit = 37
+                cdr.ThreatLimit = 45
             end
         elseif factionIndex == 4 then
             if cdr:HasEnhancement('RateOfFire') then
                 cdr.GunUpgradePresent = true
                 cdr.WeaponRange = 30 - 3
-                cdr.ThreatLimit = 37
+                cdr.ThreatLimit = 45
             end
         end
     end
@@ -1463,7 +1469,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         plat.BuilderName = 'CDR Combat'
         --RNGLOG('Assign ACU to attack platoon')
         aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-        local target, acuTarget, highThreatCount, closestThreatDistance
+        local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
         local continueFighting = true
         local counter = 0
         local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
@@ -1499,9 +1505,13 @@ function CDROverChargeRNG(aiBrain, cdr)
                     cdr:SetCustomName('CDR searching for target')
                 end
                 if not cdr.SuicideMode then
-                    target, acuTarget, highThreatCount, closestThreatDistance = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
+                    target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition = RUtils.AIAdvancedFindACUTargetRNG(aiBrain)
                 else
                     RNGLOG('We are in suicide mode so dont look for a new target')
+                end
+                if not target and closestThreatDistance < 1600 and closestThreatUnit and not closestThreatUnit.Dead then
+                    RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
+                    target = closestThreatUnit
                 end
                 if target and not target.Dead then
                     cdr.Target = target
@@ -1686,13 +1696,17 @@ function CDROverChargeRNG(aiBrain, cdr)
                 else
                     RNGLOG('CDR : No target found')
                     if not cdr.SuicideMode then
-                        RNGLOG('Number of high threats '..highThreatCount)
+                        RNGLOG('Total highThreatCount '..highThreatCount)
                         if closestThreatDistance then
                             RNGLOG('Distance of closest threat '..closestThreatDistance)
                         end
-                        if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and highThreatCount > 30 then
-                            RNGLOG('HighThreatUpgrade is now required')
-                            cdr.HighThreatUpgradeRequired = true
+                        if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
+                            if not closestThreatUnit.Dead then
+                                if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit then
+                                    RNGLOG('HighThreatUpgrade is now required')
+                                    cdr.HighThreatUpgradeRequired = true
+                                end
+                            end
                         end
                         if not cdr.HighThreatUpgradeRequired and not cdr.GunUpgradeRequired then
                             CDRCheckForCloseMassPoints(aiBrain, cdr)
@@ -1740,17 +1754,23 @@ function CDROverChargeRNG(aiBrain, cdr)
             if cdr.HealthPercent < 0.6 and not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
                 RNGLOG('cdr.active is false, continueFighting is false')
                 continueFighting = false
-                if not cdr.GunUpgradePresent then
+                if (not cdr.GunUpgradePresent) then
                     --RNGLOG('ACU Low health and no gun upgrade, set required')
                     cdr.GunUpgradeRequired = true
+                end
+                if (not cdr.HighThreatUpgradePresent) then
+                    cdr.HighThreatUpgradeRequired = true
                 end
                 return CDRRetreatRNG(aiBrain, cdr)
             elseif cdr.HealthPercent < 0.4 and not cdr.SuicideMode then
                 RNGLOG('cdr.active is false, continueFighting is false')
                 continueFighting = false
-                if not cdr.GunUpgradePresent then
+                if (not cdr.GunUpgradePresent) then
                     --RNGLOG('ACU Low health and no gun upgrade, set required')
                     cdr.GunUpgradeRequired = true
+                end
+                if (not cdr.HighThreatUpgradePresent) then
+                    cdr.HighThreatUpgradeRequired = true
                 end
                 return CDRRetreatRNG(aiBrain, cdr)
             end

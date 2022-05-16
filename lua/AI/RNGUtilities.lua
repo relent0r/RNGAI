@@ -1402,6 +1402,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         cdrPos = aiBrain.BuilderManagers['MAIN'].Position
     end
     closestDistance = false
+    closestTarget = false
+    closestTargetPosition = false
     RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
     for _, range in RangeList do
         if maxRange > range then
@@ -1426,6 +1428,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     end
                     if not closestDistance or targetDistance < closestDistance then
                         closestDistance = targetDistance
+                        closestTarget = target
+                        closestTargetPosition = targetPos
                     end
                 end
             end
@@ -1436,6 +1440,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         RNGLOG('ACUTARGETTING : ACU Targets are within range')
         for k, v in enemyACUTargets do
             if not v.unit.Dead and not v.unit:BeenDestroyed() then
+                local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                 RNGLOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
                 RNGLOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
                 if VDist3Sq(v.position, basePosition) < acuDistanceToBase then
@@ -1451,7 +1456,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         end
                     end
                 end
-                if v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
+                if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
                     local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                     local targetLayer = v.unit:GetCurrentLayer()
                     if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -1491,7 +1496,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         end
                     end
                 else
-                    highThreat = highThreat + 1
+                    highThreat = highThreat + surfaceThreat
                     RNGLOG('ACUTARGETTING : ACU Threat too high at target location Mobile')
                 end
             end
@@ -1503,7 +1508,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in mobileTargets do
                 if not v.unit.Dead and not v.unit:BeenDestroyed() then
-                    if v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < math.max(55, cdrThreat) or acuDistanceToBase < 3600 or v.distance < 400 then
+                    local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 or v.distance < 400 then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -1540,7 +1546,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             end
                         end
                     else
-                        highThreat = highThreat + 1
+                        highThreat = highThreat + surfaceThreat
                         RNGLOG('ACUTARGETTING : Mobile Threat too high at target location Mobile')
                     end
                 end
@@ -1553,7 +1559,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in structureTargets do
                 if not v.unit.Dead and not v.unit:BeenDestroyed() then
-                    if v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
+                    local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -1590,7 +1597,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             end
                         end
                     else
-                        highThreat = highThreat + 1
+                        highThreat = highThreat + surfaceThreat
                         RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
                     end
                 end
@@ -1604,9 +1611,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
         RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget, returnAcu, highThreat, closestDistance
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget
     end
-    return returnTarget, returnAcu, highThreat, closestDistance
+    RNGLOG('No target being returned,')
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)
