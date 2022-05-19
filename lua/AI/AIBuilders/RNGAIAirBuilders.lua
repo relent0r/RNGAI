@@ -452,7 +452,7 @@ BuilderGroup {
             IgnoreCivilian = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
-            PlatoonLimit = 3,
+            PlatoonLimit = 2,
             PrioritizedCategories = {
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
@@ -505,7 +505,7 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
             IgnoreCivilian = true,
-            PlatoonLimit = 18,
+            PlatoonLimit = 5,
             PrioritizedCategories = {
                 categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 categories.MASSEXTRACTION,

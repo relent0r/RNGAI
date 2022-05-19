@@ -1060,6 +1060,56 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
     return true
 end
 
+function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
+    local currentIncome = aiBrain.cmanager.income.r.m
+    local currentBuildPower = 0
+    local engSpend = 0.4
+    local availableIncome = engSpend * currentIncome
+    local multiplier
+    if aiBrain.CheatEnabled then
+        multiplier = aiBrain.EcoManager.EcoMultiplier
+    else
+        multiplier = 1
+    end
+    for k, v in aiBrain.cmanager.buildpower.eng do
+        if ignoreT1 then
+            if k == 'T1' then continue end
+        end
+        currentBuildPower = currentBuildPower + v
+    end
+    currentBuildPower = currentBuildPower * 0.7
+    if type == 1 then
+        return false
+    elseif type == 2 then
+        if aiBrain.cmanager.buildpower.eng.T2 == 0 then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
+
+            return true
+        end
+        if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
+            return true
+        end
+    elseif type == 3 then
+        if aiBrain.cmanager.buildpower.eng.T3 == 0 then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > 110 and aiBrain.cmanager.buildpower.eng.T3 < 225 then
+            return true
+        end
+        if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
+            return true
+        end
+    elseif type == 4 then
+        if availableIncome - currentBuildPower > 0 then
+            return true
+        end
+    end
+    return false
+
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

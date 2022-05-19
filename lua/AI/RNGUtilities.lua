@@ -961,22 +961,22 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
     if maxRange > 512 then
         RangeList = {
             [1] = 30,
-            [1] = 64,
-            [2] = 128,
-            [2] = 192,
-            [3] = 256,
-            [3] = 384,
-            [4] = 512,
-            [5] = maxRange,
+            [2] = 64,
+            [3] = 128,
+            [4] = 192,
+            [5] = 256,
+            [6] = 384,
+            [7] = 512,
+            [8] = maxRange,
         }
     elseif maxRange > 256 then
         RangeList = {
             [1] = 30,
-            [1] = 64,
-            [2] = 128,
-            [2] = 192,
-            [3] = 256,
-            [4] = maxRange,
+            [2] = 64,
+            [3] = 128,
+            [4] = 192,
+            [5] = 256,
+            [6] = maxRange,
         }
     elseif maxRange > 64 then
         RangeList = {
@@ -1642,22 +1642,22 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
     if maxRange > 512 then
         RangeList = {
             [1] = 30,
-            [1] = 64,
-            [2] = 128,
-            [2] = 192,
-            [3] = 256,
-            [3] = 384,
-            [4] = 512,
-            [5] = maxRange,
+            [2] = 64,
+            [3] = 128,
+            [4] = 192,
+            [5] = 256,
+            [6] = 384,
+            [7] = 512,
+            [8] = maxRange,
         }
     elseif maxRange > 256 then
         RangeList = {
             [1] = 30,
-            [1] = 64,
-            [2] = 128,
-            [2] = 192,
-            [3] = 256,
-            [4] = maxRange,
+            [2] = 64,
+            [3] = 128,
+            [4] = 192,
+            [5] = 256,
+            [6] = maxRange,
         }
     elseif maxRange > 64 then
         RangeList = {
@@ -1776,22 +1776,22 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
     if maxRange > 512 then
         RangeList = {
             [1] = 30,
-            [1] = 64,
-            [2] = 128,
-            [2] = 192,
-            [3] = 256,
-            [3] = 384,
-            [4] = 512,
-            [5] = maxRange,
+            [2] = 64,
+            [3] = 128,
+            [4] = 192,
+            [5] = 256,
+            [6] = 384,
+            [7] = 512,
+            [8] = maxRange,
         }
     elseif maxRange > 256 then
         RangeList = {
             [1] = 30,
-            [1] = 64,
-            [2] = 128,
-            [2] = 192,
-            [3] = 256,
-            [4] = maxRange,
+            [2] = 64,
+            [3] = 128,
+            [4] = 192,
+            [5] = 256,
+            [6] = maxRange,
         }
     elseif maxRange > 64 then
         RangeList = {
@@ -4006,8 +4006,10 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     if setPointPos then
         setPointPos = {setPointPos[1], GetSurfaceHeight(setPointPos[1], setPointPos[3]), setPointPos[3]} 
         local movePoint = lerpy(platoonPosition, targetPosition, {targetDistance, targetDistance - (platoon.PlatoonStrikeRadiusDistance + 25)})
-        platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon.PlatoonStrikeRadius)
-        platoon:ForkThread(platoon.DrawTargetRadius, setPointPos, platoon.PlatoonStrikeRadius)
+        if aiBrain.RNGDEBUG then
+            platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon.PlatoonStrikeRadius)
+            platoon:ForkThread(platoon.DrawTargetRadius, setPointPos, platoon.PlatoonStrikeRadius)
+        end
         return setPointPos, movePoint
     end
     return false
@@ -4239,6 +4241,33 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
             end
         end
     end
+end
+
+function GetNumberUnitsBuilding(aiBrain, category)
+    local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+    local catNumBuilding = 0
+    for _, unit in unitsBuilding do
+        if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
+            if unit.UnitBeingBuilt and unit.UnitBeingBuilt ~= unit.UnitBeingAssist then
+                local buildingUnit = unit.UnitBeingBuilt
+                if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+                    catNumBuilding = catNumBuilding + 1
+                end
+            end
+        end
+        --DUNCAN - added to pick up engineers that havent started building yet... does it work?
+        if not unit:BeenDestroyed() and not unit:IsUnitState('Building') then
+            if unit.UnitBeingBuilt and unit.UnitBeingBuilt ~= unit.UnitBeingAssist then
+                local buildingUnit = unit.UnitBeingBuilt
+                if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+                    --RNGLOG('Engi building but not in building state...')
+                    catNumBuilding = catNumBuilding + 1
+                end
+            end
+        end
+    end
+    RNGLOG('Number of units building from GetNumberUnitsBuilding (which is experimentals right now) is '..catNumBuilding)
+    return catNumBuilding
 end
 
 --[[

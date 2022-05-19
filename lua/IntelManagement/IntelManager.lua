@@ -318,7 +318,7 @@ IntelManager = Class {
                         if controlValue <= 0 then
                             controlValue = 0.1
                         end
-                        local resourceValue = zoneSet[v.zone.id].resourcevalue
+                        local resourceValue = zoneSet[v.zone.id].resourcevalue or 1
                         if resourceValue then
                            --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemythreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
                            --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
@@ -358,7 +358,7 @@ IntelManager = Class {
                                 if controlValue <= 0 then
                                     controlValue = 0.1
                                 end
-                                local resourceValue = zoneSet[v1.zone.id].resourcevalue
+                                local resourceValue = zoneSet[v1.zone.id].resourcevalue or 1
                                --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v1.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                 if compare > 0 then
@@ -394,7 +394,7 @@ IntelManager = Class {
                                 if controlValue <= 0 then
                                     controlValue = 0.1
                                 end
-                                local resourceValue = zoneSet[v.id].resourcevalue
+                                local resourceValue = zoneSet[v.id].resourcevalue or 1
                                --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                --RNGLOG('Compare variable '..compare)
