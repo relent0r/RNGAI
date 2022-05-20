@@ -97,7 +97,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 400 MexBuild',
         PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 997,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 400, nil, nil, 0, 'AntiSurface', 1}},
         },

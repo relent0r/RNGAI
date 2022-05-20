@@ -473,6 +473,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
         },
         BuilderData = {
+            Defensive = true,
             StaticCategories = true,
             AvoidBases = true,
             IgnoreCivilian = true,
@@ -480,6 +481,7 @@ BuilderGroup {
             UnitType = 'BOMBER',
             PlatoonLimit = 3,
             PrioritizedCategories = {
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION * categories.TECH1,

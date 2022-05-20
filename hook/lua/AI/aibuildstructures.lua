@@ -572,3 +572,23 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
         end
     end
 end
+
+function AIBuildBaseTemplateFromDefensivePointRNG(baseTemplate, location)
+    local baseT = {}
+    if location and baseTemplate then
+        for templateNum, template in baseTemplate do
+            baseT[templateNum] = {}
+            for rowNum,rowData in template do # rowNum, rowData in template do
+                if type(rowData[1]) == 'number' then
+                    baseT[templateNum][rowNum] = {}
+                    baseT[templateNum][rowNum][1] = math.floor(rowData[1] + location[1]) + 0.5
+                    baseT[templateNum][rowNum][2] = math.floor(rowData[2] + location[3]) + 0.5
+                    baseT[templateNum][rowNum][3] = 0
+                else
+                    baseT[templateNum][rowNum] = template[rowNum]
+                end
+            end
+        end
+    end
+    return baseT
+end

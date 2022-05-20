@@ -770,6 +770,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.LowEnergyMode = false
         self.EcoManager = {
+            ApproxFactoryMassConsumption = 0,
             EcoManagerTime = 30,
             EcoManagerStatus = 'ACTIVE',
             ExtractorUpgradeLimit = {
@@ -1063,6 +1064,16 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(300)
         while true do
             local factionIndex = self:GetFactionIndex()
+            RNGLOG('-- Eco Stats --')
+            RNGLOG('EnergyIncome --'..self.EconomyOverTimeCurrent.EnergyIncome)
+            RNGLOG('MassIncome --'..self.EconomyOverTimeCurrent.MassIncome)
+            RNGLOG('EnergyRequested --'..self.EconomyOverTimeCurrent.EnergyRequested)
+            RNGLOG('MassRequested --'..self.EconomyOverTimeCurrent.MassRequested)
+            RNGLOG('EnergyEfficiencyOverTime --'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
+            RNGLOG('EnergyTrendOverTime --'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+            RNGLOG('MassTrendOverTime --'..self.EconomyOverTimeCurrent.MassTrendOverTime)
+            RNGLOG('---------------')
             RNGLOG('Current income from extractors '..self.cmanager.income.r.m)
             RNGLOG('self.cmanager.buildpower.eng '..repr(self.cmanager.buildpower.eng))
             if self.cmanager.income.r.m > 55 and self.cmanager.buildpower.eng.T2 < 75 then
@@ -1082,16 +1093,8 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current T2 Mobile AA ratio '..self.amanager.Current['Land']['T2']['aa'])
             RNGLOG('Current T3 Mobile AA ratio '..self.amanager.Current['Land']['T3']['aa'])
             RNGLOG('Current engineer assist build power required '..self.EngineerAssistManagerBuildPowerRequired)
-            RNGLOG('-- Eco Stats --')
-            RNGLOG('EnergyIncome --'..self.EconomyOverTimeCurrent.EnergyIncome)
-            RNGLOG('MassIncome --'..self.EconomyOverTimeCurrent.MassIncome)
-            RNGLOG('EnergyRequested --'..self.EconomyOverTimeCurrent.EnergyRequested)
-            RNGLOG('MassRequested --'..self.EconomyOverTimeCurrent.MassRequested)
-            RNGLOG('EnergyEfficiencyOverTime --'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
-            RNGLOG('EnergyTrendOverTime --'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
-            RNGLOG('MassTrendOverTime --'..self.EconomyOverTimeCurrent.MassTrendOverTime)
-
+            RNGLOG('Approx Factory Mass Consumption '..self.EcoManager.ApproxFactoryMassConsumption)
+            
             RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
             RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
             RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
@@ -1159,6 +1162,7 @@ AIBrain = Class(RNGAIBrainClass) {
     drawMainRestricted = function(self)
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
+            DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
             WaitTicks(2)
         end
     end,
@@ -1306,6 +1310,7 @@ AIBrain = Class(RNGAIBrainClass) {
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
             StrategyManager = StratManager.CreateStrategyManager(self, baseName, position, radius),
+            DefensivePoints = RUtils.GenerateDefensivePointTable(BaseRestrictedArea, position),
             BuilderHandles = {},
             Position = position,
             Layer = baseLayer,
@@ -1313,7 +1318,10 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
+        RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))
     end,
+
+    
 
     GetGraphArea = function(self, position, baseName, baseLayer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time
@@ -1771,7 +1779,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             --RNGLOG('Perimeter Points Pre '..repr(self.InterestList.PerimeterPoints))
             local perimeterMap = {
-                BaseRestrictedArea / 2,
                 BaseRestrictedArea, 
                 BaseMilitaryArea, 
                 BaseDMZArea
@@ -1784,12 +1791,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
                         if i == 1 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.RestrictedClose, {Position = v, Scout = false})
-                        elseif i == 2 then
                             RNGINSERT(self.InterestList.PerimeterPoints.Restricted, {Position = v, Scout = false})
-                        elseif i == 3 then
+                        elseif i == 2 then
                             RNGINSERT(self.InterestList.PerimeterPoints.Military, {Position = v, Scout = false})
-                        elseif i == 4 then
+                        elseif i == 3 then
                             RNGINSERT(self.InterestList.PerimeterPoints.DMZ, {Position = v, Scout = false})
                         end
                     end
@@ -2278,7 +2283,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 local landThreat = 0
                 local airThreat = 0
                 local navalThreat = 0
-                if self.BuilderManagers[k].FactoryManager and RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                local enemyLandAngle = false
+                local enemySurfaceAirAngle = false
+                local enemyAirAngle = false
+                local enemyNavalAngle = false
+                if self.BuilderManagers[k].FactoryManager and next(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
                     end
@@ -2289,30 +2298,55 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if EntityCategoryContains(LandCatUnits, unit) then
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                                    if landUnits == 1 then
+                                        enemyLandAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                    end
                                     continue
                                 end
                                 if EntityCategoryContains(AirSurfaceCatUnits, unit) then
                                     antiSurfaceAir = antiSurfaceAir + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    if antiSurfaceAir == 1 then
+                                        enemySurfaceAirAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                    end
                                     continue
                                 end
                                 if ALLBPS[unit.UnitId].CategoriesHash.AIR then
                                     airUnits = airUnits + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    if airUnits == 1 then
+                                        enemyAirAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                    end
                                     continue
                                 end
                                 if ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
                                     navalUnits = navalUnits + 1
                                     navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                                    if navalUnits == 1 then
+                                        enemyNavalAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                    end
                                     continue
                                 end
                             end
                         end
                     end
+                    
                     self.BasePerimeterMonitor[k].LandUnits = landUnits
+                    if enemyLandAngle then
+                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
+                    end
                     self.BasePerimeterMonitor[k].AirUnits = airUnits
+                    if enemySurfaceAirAngle then
+                        self.BasePerimeterMonitor[k].RecentSurfaceAirAngle = enemySurfaceAirAngle
+                    end
                     self.BasePerimeterMonitor[k].AntiSurfaceAirUnits = antiSurfaceAir
+                    if enemyAirAngle then
+                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyAirAngle
+                    end
                     self.BasePerimeterMonitor[k].NavalUnits = navalUnits
+                    if enemyNavalAngle then
+                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyNavalAngle
+                    end
                     self.BasePerimeterMonitor[k].NavalThreat = navalThreat
                     self.BasePerimeterMonitor[k].AirThreat = airThreat
                     self.BasePerimeterMonitor[k].LandThreat = landThreat

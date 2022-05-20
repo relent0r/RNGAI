@@ -154,6 +154,33 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNG Factory Builder Land T3 MainBase',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.95}},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 8, categories.FACTORY * categories.LAND * categories.TECH3 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildStructures = {
+                    'T3SupportLandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG Factory Builder Land T1',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 900,

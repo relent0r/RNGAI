@@ -4270,6 +4270,79 @@ function GetNumberUnitsBuilding(aiBrain, category)
     return catNumBuilding
 end
 
+GenerateDefensivePointTable = function (range, position)
+    local function DrawCirclePoints(points, radius, center)
+        local circlePoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(circlePoints, { newX, GetSurfaceHeight(newX, newY) , newY})
+        end
+        return circlePoints
+    end
+    local defensivePointTable = {
+        [1] = {},
+        [2] = {}
+    }
+    local defensivePointsT1 = DrawCirclePoints(8, range/3, position)
+    
+    for _, v in defensivePointsT1 do
+        if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
+            continue
+        end
+        if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
+            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+        else
+            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+        end
+    end
+    local defensivePointsT2 = DrawCirclePoints(8, range/2, position)
+    for _, v in defensivePointsT2 do
+        if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
+            continue
+        end
+        if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
+            RNGINSERT(defensivePointTable[2], {Position = v, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+        else
+            RNGINSERT(defensivePointTable[2], {Position = v, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+        end
+    end
+    return defensivePointTable
+end
+
+GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
+    -- Finds the best defensive point based on tier and angle of last seen enemy, requires base perimeter monitoring system
+    local defensivePoint = false
+    local basePosition = aiBrain.BuilderManagers[baseLocation].Position
+    if type == 'Land' then
+        local bestPoint = false
+        local bestIndex = false
+        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
+                for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local pointAngle = GetAngleFromAToB(basePosition, v.Position)
+                    if not bestPoint or math.abs(aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle - pointAngle) < bestPoint.Angle then
+                        if bestPoint then
+                            RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                        end
+                        bestPoint = { Position = v.Position, Angle = pointAngle}
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            defensivePoint = bestPoint.Position
+        end
+        RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
+    end
+    if defensivePoint then
+        return defensivePoint
+    end
+    return false
+end
+
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
 RNGLOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)

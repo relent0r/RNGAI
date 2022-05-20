@@ -70,7 +70,9 @@ BuilderGroup {
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
                 OrderedTemplate = true,
-                NearBasePatrolPoints = false,
+                NearDefensivePoints = true,
+                Type = 'Land',
+                Tier = 1,
                 BuildStructures = {
                     'T1GroundDefense',
                     'Wall',
@@ -132,9 +134,14 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                OrderedTemplate = true,
+                NearDefensivePoints = true,
+                Type = 'Land',
+                Tier = 2,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = true,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T2GroundDefense',
                 },
@@ -165,6 +172,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = true,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T2AADefense',
                 },
@@ -222,6 +230,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = true,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T3AADefense',
                 },
@@ -248,6 +257,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                NearDefensivePoints = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
                 maxUnits = 1,
@@ -277,6 +287,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
+                NearDefensivePoints = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,
@@ -307,6 +318,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
+                NearDefensivePoints = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,
@@ -336,6 +348,7 @@ BuilderGroup {
             NumAssistees = 1,
             Construction = {
                 BuildClose = true,
+                NearDefensivePoints = false,
                 maxUnits = 1,
                 AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY)},
                 BuildStructures = {
@@ -387,8 +400,8 @@ BuilderGroup {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = false,
+                NearDefensivePoints = false,
                 OrderedTemplate = true,
-                NearBasePatrolPoints = false,
                 BuildStructures = {
                     'T1GroundDefense',
                     'Wall',
@@ -422,6 +435,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T1AADefense',
                 },
@@ -447,6 +461,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
+                NearDefensivePoints = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 maxUnits = 1,
@@ -480,6 +495,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = false,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T2GroundDefense',
                 },
@@ -509,6 +525,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = false,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T2AADefense',
                 },
@@ -537,6 +554,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
@@ -562,6 +580,7 @@ BuilderGroup {
             NumAssistees = 2,
             Construction = {
                 BuildClose = true,
+                NearDefensivePoints = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
                 maxUnits = 1,

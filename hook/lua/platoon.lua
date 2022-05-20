@@ -2674,18 +2674,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
 
-                if not target and self.MovementLayer == 'Air' then
+                if not target or target.Dead then
                     --RNGLOG('Checking for possible acu snipe')
                     --RNGLOG('Checking for director target')
                     --RNGLOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' strike damage is '..self.PlatoonStrikeDamage)
                     target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, data.UnitType, self.PlatoonStrikeDamage)
-                    if target then
-                        --RNGLOG('CheckDirectorTargetAvailable : Target ID is '..target.UnitId)
-                    else
-                        --RNGLOG('CheckDirectorTargetAvailable : No director target found')
-                    end
                 end
-                
                 if not target or target.Dead then
                     --RNGLOG('Standard Target search for strikeforce platoon ')
                     if data.Defensive then
@@ -2745,7 +2739,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
 
-                if not target and platoonCount < platoonLimit then
+                if not target and platoonCount < platoonLimit and not data.Defensive then
                     --RNGLOG('StrikeForceAI mergeRequired set true')
                     mergeRequired = true
                 end
@@ -2860,8 +2854,31 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             elseif data.Defensive then 
-                coroutine.yield(30)
-                return self:SetAIPlanRNG('ReturnToBaseAIRNG', true)
+                self:MoveToLocation(mainBasePos, false)
+                local baseDist
+                --RNGLOG('StrikefoceAI Returning to base')
+                self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                while PlatoonExists(aiBrain, self) do
+                    platoonPosition = GetPlatoonPosition(self)
+                    if not platoonPosition then
+                        return
+                    end
+                    baseDist = VDist2Sq(platoonPosition[1], platoonPosition[3], mainBasePos[1], mainBasePos[3])
+                    if baseDist < 6400 then
+                        break
+                    end
+                    if not target and self.CurrentPlatoonThreat > 8 and data.UnitType ~= 'GUNSHIP' then
+                        --RNGLOG('Checking for director target')
+                        target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri)
+                        if target then
+                            break
+                        end
+                    end
+                    --RNGLOG('StrikeforceAI base distance is '..baseDist)
+                    coroutine.yield(30)
+                end
+                --RNGLOG('MergeRequired, performing merge')
+                self:Stop()
             elseif target.Dead then
                 --RNGLOG('Strikeforce Target Dead performing loop')
                 target = false
@@ -3274,6 +3291,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             relative = false
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+        elseif cons.NearDefensivePoints then
+            relative = false
+            reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
+            baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
+            -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
+            buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
         elseif cons.OrderedTemplate then
             local relativeTo = RNGCOPY(eng:GetPosition())
             --RNGLOG('relativeTo is'..repr(relativeTo))
@@ -3308,6 +3332,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
+        
         elseif cons.FireBase and cons.FireBaseRange then
             --DUNCAN - pulled out and uses alt finder
             reference, refName = AIUtils.AIFindFirebaseLocation(aiBrain, cons.LocationType, cons.FireBaseRange, cons.NearMarkerType,
@@ -8759,6 +8784,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                                     if not eng.UnitBeingAssist then
                                         eng.UnitBeingAssist = bestUnit
+                                        RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
+                                        IssueClearCommands({eng})
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         coroutine.yield(1)
                                         --RNGLOG('Forking Engineer Assist Thread for Upgrade')
@@ -8800,6 +8827,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     if not eng.UnitBeingAssist then
                                         eng.UnitBeingAssist = bestUnit
                                         --RNGLOG('Engineer Assist issuing guard')
+                                        IssueClearCommands({eng})
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
@@ -8844,6 +8872,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     if not eng.UnitBeingAssist then
                                         eng.UnitBeingAssist = bestUnit
                                         --RNGLOG('Engineer Assist issuing guard')
+                                        IssueClearCommands({eng})
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
@@ -9017,6 +9046,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if reclaimunit and not reclaimunit.ReclaimInProgress then
                         reclaimunit.ReclaimInProgress = true
+                    end
+                    if not reclaimunit.Dead and reclaimunit:IsUnitState('Upgrading') then
+                        break
                     end
                     allIdle = true
                     for k,v in self:GetPlatoonUnits() do
