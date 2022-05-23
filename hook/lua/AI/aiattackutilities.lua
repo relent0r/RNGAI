@@ -531,7 +531,9 @@ end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1EngOnly, bRequired, bSkipLastMove, safeZone)
 
-    GetMostRestrictiveLayerRNG(platoon)
+    if not platoon.MovementLayer then
+        GetMostRestrictiveLayerRNG(platoon)
+    end
 
     local units = platoon:GetPlatoonUnits()
     local transportplatoon = false

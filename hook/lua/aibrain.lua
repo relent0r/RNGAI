@@ -2295,7 +2295,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
                                     if landUnits == 1 then
-                                        enemyLandAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -2303,7 +2303,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     antiSurfaceAir = antiSurfaceAir + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                                     if antiSurfaceAir == 1 then
-                                        enemySurfaceAirAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        enemySurfaceAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -2311,7 +2311,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     airUnits = airUnits + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                                     if airUnits == 1 then
-                                        enemyAirAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -2319,7 +2319,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     navalUnits = navalUnits + 1
                                     navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
                                     if navalUnits == 1 then
-                                        enemyNavalAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end

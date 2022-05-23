@@ -4031,16 +4031,17 @@ function GetBomberRange(oUnit)
     return iRange
 end
 
-function GetAngleFromAToB(tLocA, tLocB)
-    --Returns an angle 0 = north, 90 = east, etc. based on direction of tLocB from tLocA
-    local iTheta = math.atan(math.abs(tLocA[3] - tLocB[3]) / math.abs(tLocA[1] - tLocB[1])) * 180 / math.pi
-    if tLocB[1] > tLocA[1] then
-        if tLocB[3] > tLocA[3] then
+function GetAngleToPosition(Pos1, Pos2)
+    -- Returns an angle 0 = north, 90 = east, etc. based on direction of Pos2 from Pos1
+    -- This is Maudlins function
+    local iTheta = math.atan(math.abs(Pos1[3] - Pos2[3]) / math.abs(Pos1[1] - Pos2[1])) * 180 / math.pi
+    if Pos2[1] > Pos1[1] then
+        if Pos2[3] > Pos1[3] then
             return 90 + iTheta
         else return 90 - iTheta
         end
     else
-        if tLocB[3] > tLocA[3] then
+        if Pos2[3] > Pos1[3] then
             return 270 - iTheta
         else return 270 + iTheta
         end
