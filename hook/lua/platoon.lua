@@ -66,16 +66,13 @@ Platoon = Class(RNGAIPlatoonClass) {
         if data.PrioritizedCategories then
             for k,v in data.PrioritizedCategories do
                 RNGINSERT(atkPri, v)
-                if type(v) == 'string' then
-                    RNGINSERT(categoryList, ParseEntityCategory(v))
-                else
-                    RNGINSERT(categoryList, v)
-                end
+                RNGINSERT(categoryList, v)
             end
         else
             RNGINSERT(atkPri, categories.MOBILE * categories.AIR)
             RNGINSERT(categoryList, categories.MOBILE * categories.AIR)
         end
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local platoonUnits = GetPlatoonUnits(self)
         for k, v in platoonUnits do
             if not v.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
@@ -88,6 +85,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:SetPrioritizedTargetList('Attack', categoryList)
         local maxRadius = data.SearchRadius or 1000
         local threatCountLimit = 0
+        local acuCheck = false
         if aiBrain.RNGDEBUG then
             self:ForkThread(self.AirHuntDraw, aiBrain)
         end
@@ -98,30 +96,28 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             if self.CurrentPlatoonThreat < 10 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-                maxRadius = BaseRestrictedArea
+                maxRadius = BaseRestrictedArea * 1.5
             elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                 maxRadius = BaseMilitaryArea
             else
                 maxRadius = BaseEnemyArea
             end
+            if maxRadius then
+                self.MaxRadius = maxRadius
+            end
             if aiBrain.CDRUnit.Active and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                 local acuDistance = VDist2(currentPlatPos[1], currentPlatPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
                 if acuDistance > maxRadius then
                     --RNGLOG('ACU is active and further than our max distance, lets increase it to cover him better')
-                    maxRadius = acuDistance + 30
+                    acuCheck = true
                 end
             end
-
-            --RNGLOG('Max Radius of Interceptor is '..maxRadius)
-            if maxRadius then
-                self.MaxRadius = maxRadius
-            end
             if not target or target.Dead then
-                --RNGLOG('Looking for target')
-                if aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir and not aiBrain.CDRUnit.Active then
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, homeBaseLocation, self, 'Attack', maxRadius, atkPri, avoidBases)
-                else
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', maxRadius, atkPri, avoidBases)
+                --RNGLOG('Looking for target at radius '..maxRadius)
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, homeBaseLocation, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat)
+                if (not target or target.Dead) and acuCheck then
+                    --RNGLOG('No target found at max radius, checking around acu as its active')
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, atkPri, false)
                 end
             end
             if not PlatoonExists(aiBrain, self) then
@@ -6964,6 +6960,34 @@ Platoon = Class(RNGAIPlatoonClass) {
         return false, false
     end,
 
+    CheckPlatoonCombatEffectiveness = function(self)
+        -- Check if a platoon is still useful
+        ALLPBS = __blueprints
+        local platoonUnits = GetPlatoonUnits(self)
+        local platoonCount = 0
+        local surfaceThreat = 0
+        local antiAirThreat = 0
+        for k, v in platoonUnits do
+            if not v.Dead then
+                if ALLBPS[v.Unitid].Defense.SurfaceThreatLevel then
+                    surfaceThreat = surfaceThreat + ALLBPS[v.Unitid].Defense.SurfaceThreatLevel
+                end
+                if ALLBPS[v.Unitid].Defense.AirThreatLevel then
+                    antiAirThreat = antiAirThreat + ALLBPS[v.Unitid].Defense.AirThreatLevel
+                end
+                platoonCount = platoonCount + 1
+            end
+        end
+        local airEffectiveness
+        if antiAirThreat > 0 then
+            airEffectiveness = antiAirThreat / platoonCount
+        end
+        local surfaceEffectiveness
+        if surfaceThreat > 0 then
+            surfaceEffectiveness = surfaceThreat / platoonCount
+        end
+    end,
+
     MergeWithNearbyPlatoonsRNG = function(self, planName, radius, maxMergeNumber, ignoreBase, restart)
         -- check to see we're not near an ally base
         -- ignoreBase is not worded well, if false then ignore if too close to base
@@ -8782,9 +8806,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                         if bestUnit then
                             for _, eng in GetPlatoonUnits(self) do
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                                    if not eng.UnitBeingAssist then
+                                    if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
                                         eng.UnitBeingAssist = bestUnit
-                                        RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
+                                        if aiBrain.RNGDEBUG then
+                                            RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
+                                        end
                                         IssueClearCommands({eng})
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         coroutine.yield(1)
@@ -8824,7 +8850,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                            --RNGLOG('Factory Assist Best unit is true looking through platoon units')
                             for _, eng in GetPlatoonUnits(self) do
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                                    if not eng.UnitBeingAssist then
+                                    if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
                                         eng.UnitBeingAssist = bestUnit
                                         --RNGLOG('Engineer Assist issuing guard')
                                         IssueClearCommands({eng})
@@ -8869,7 +8895,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
                             for _, eng in GetPlatoonUnits(self) do
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                                    if not eng.UnitBeingAssist then
+                                    if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
                                         eng.UnitBeingAssist = bestUnit
                                         --RNGLOG('Engineer Assist issuing guard')
                                         IssueClearCommands({eng})

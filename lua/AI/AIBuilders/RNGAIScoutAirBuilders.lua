@@ -67,7 +67,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Air',
         PlatoonTemplate = 'RNGAI AirScoutForm',
         InstanceCount = 1,
-        Priority = 900,
+        Priority = 910,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },

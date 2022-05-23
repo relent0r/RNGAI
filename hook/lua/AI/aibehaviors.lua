@@ -450,6 +450,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         cdr.EngineerBuildQueue[k] = nil
                         break
                     end
+                    if cdr.Caution then
+                        break
+                    end
                    --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                     coroutine.yield(10)
                 end
@@ -1312,29 +1315,29 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
-           RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
-           RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-           RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
-           RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
-           RNGLOG('Current CDR Confidence '..cdr.Confidence)
+           --RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
+           --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+           --RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
+           --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
+           --RNGLOG('Current CDR Confidence '..cdr.Confidence)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInnerACU'
             elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatACU'
             elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInner'
             elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
-               RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and GetThreatAtPosition(aiBrain, cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
-                RNGLOG('ACU threat low and health up past 6000')
+                --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
                 cdr.CautionReason = 'none'
             end

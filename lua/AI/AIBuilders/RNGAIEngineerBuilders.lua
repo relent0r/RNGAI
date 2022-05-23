@@ -769,7 +769,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
                 --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 2, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
@@ -808,7 +808,7 @@ BuilderGroup {
         Priority = 1030,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 2, categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 3, categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },

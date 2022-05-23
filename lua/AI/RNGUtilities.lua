@@ -4287,20 +4287,31 @@ GenerateDefensivePointTable = function (range, position)
         [2] = {}
     }
     local defensivePointsT1 = DrawCirclePoints(8, range/3, position)
+    --RNGLOG('DefensivePoints being generated')
     
     for _, v in defensivePointsT1 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
             continue
         end
+        --RNGLOG('Surface Height  '..GetSurfaceHeight(v[1], v[3])..' vs base pos height'..position[2])
+        if GetSurfaceHeight(v[1], v[3]) - 4 > position[2] then
+            --RNGLOG('SurfaceHeight of base position '..position[2]..'surface height of modified defensivepoint '..GetSurfaceHeight(v[1], v[3]))
+            continue
+        end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
         else
-            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
         end
     end
     local defensivePointsT2 = DrawCirclePoints(8, range/2, position)
     for _, v in defensivePointsT2 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
+            continue
+        end
+        --RNGLOG('Surface Height  '..GetSurfaceHeight(v[1], v[3])..' vs base pos height'..position[2])
+        if GetSurfaceHeight(v[1], v[3]) - 4 > position[2] then
+            --RNGLOG('SurfaceHeight of base position '..position[2]..'surface height of modified defensivepoint '..GetSurfaceHeight(v[1], v[3]))
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
@@ -4321,13 +4332,14 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         local bestIndex = false
         if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
+                local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
                     local pointAngle = GetAngleFromAToB(basePosition, v.Position)
-                    if not bestPoint or math.abs(aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle - pointAngle) < bestPoint.Angle then
+                    if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
                         if bestPoint then
-                            RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                            --RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
                         end
-                        bestPoint = { Position = v.Position, Angle = pointAngle}
+                        bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
                     end
                 end
             end
@@ -4335,13 +4347,105 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         if bestPoint then
             defensivePoint = bestPoint.Position
         end
-        RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
+        --RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
     end
     if defensivePoint then
+        if aiBrain.RNGDEBUG then
+            aiBrain:ForkThread(DrawCircleAtPosition, defensivePoint)
+        end
         return defensivePoint
     end
     return false
 end
+
+AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
+    -- Adding a defense unit to a base
+    local closestPoint = false
+    local closestDistance = false
+    if not finishedUnit.Dead then
+        --RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
+        local unitPos = finishedUnit:GetPosition()
+        if EntityCategoryContains(categories.TECH1, finishedUnit) then
+            for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                local distance = VDist3Sq(aiBrain.BuilderManagers[locationType].Position, unitPos)
+                if not closestPoint or closestDistance > distance then
+                    closestPoint = k
+                    closestDistance = distance
+                end
+            end
+            if closestPoint then
+                --RNGLOG('Adding T1 defensive unit to defensepoint table at key '..closestPoint)
+                if EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir, finishedUnit)
+                elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].DirectFire, finishedUnit)
+                end
+            end
+        elseif EntityCategoryContains(categories.TECH2, finishedUnit) then
+            for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                local distance = VDist3Sq(aiBrain.BuilderManagers[locationType].Position, unitPos)
+                if not closestPoint or closestDistance > distance then
+                    closestPoint = k
+                    closestDistance = distance
+                end
+            end
+            if closestPoint then
+                --RNGLOG('Adding T2 defensive unit to defensepoint table')
+                if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD, finishedUnit)
+                elseif EntityCategoryContains(categories.TACTICALMISSILEPLATFORM, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML, finishedUnit)
+                elseif EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir, finishedUnit)
+                elseif EntityCategoryContains(categories.INDIRECTFIRE, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire, finishedUnit)
+                elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire, finishedUnit)
+                end
+            end
+        end
+    end
+end
+
+AIWarningChecks = function(aiBrain)
+    --Pregame warning check
+    coroutine.yield( 70 )
+    local uveso_enabled = false
+    local marker_generator_enabled = false
+    local SUtils = import('/lua/AI/sorianutilities.lua')
+    for _, mod in __active_mods do
+        if mod.enabled and string.find( mod.name,'Uveso') then
+            RNGLOG(repr(mod))
+            RNGLOG('Uveso is enabled')
+            uveso_enabled = true
+            if ScenarioInfo.Options.AIMapMarker == 'all' then
+                RNGLOG('Path markers are being generated')
+                marker_generator_enabled = true
+            end
+        end
+    end
+    if not uveso_enabled then
+        SUtils.AISendChat('all', aiBrain.Nickname, 'Uveso AI mod is not enabled, it is required for correct AI pathing when using RNGAI')
+        coroutine.yield( 30 )
+    end
+    if uveso_enabled then
+        if not marker_generator_enabled then
+            SUtils.AISendChat('all', aiBrain.Nickname, 'Path marker generator is not enabled, this is required for correct AI pathing when using RNGAI')
+        end
+    end
+end
+
+DrawCircleAtPosition = function(aiBrain, position)
+    count = 0
+    while count < 60 do
+        DrawCircle(position,10,'FF6600')
+        coroutine.yield(2)
+        count = count + 1
+    end
+end
+
+
+
 
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))

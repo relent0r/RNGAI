@@ -9,19 +9,19 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
-        if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
-            self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
-        end
-        if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
-            if not self.Brain.StructurePool then
-                RUtils.CheckCustomPlatoons(self.Brain)
+        if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
+            if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
+                self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
-            local unitBp = finishedUnit:GetBlueprint()
-            local StructurePool = self.Brain.StructurePool
-            --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
-            self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
-        end
-        if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
+            if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then
+                if not self.Brain.StructurePool then
+                    RUtils.CheckCustomPlatoons(self.Brain)
+                end
+                local unitBp = finishedUnit:GetBlueprint()
+                local StructurePool = self.Brain.StructurePool
+                --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
+                self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
+            end
             self:AddUnitRNG(finishedUnit)
         end
         local guards = unit:GetGuards()
@@ -39,6 +39,9 @@ EngineerManager = Class(RNGEngineerManager) {
 
     AddUnitRNG = function(self, unit, dontAssign)
         --LOG('+ AddUnit')
+        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, unit) then
+            RUtils.AddDefenseUnit(self.Brain, self.LocationType, unit)
+        end
         for k,v in self.ConsumptionUnits do
             if EntityCategoryContains(v.Category, unit) then
                 table.insert(v.Units, { Unit = unit, Status = true })

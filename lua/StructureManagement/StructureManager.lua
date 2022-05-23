@@ -796,10 +796,9 @@ StructureManager = Class {
             unit.Offline = true
             if hq == 'LAND' then
                 self.Brain.EngineerAssistManagerFocusLandUpgrade = true
-                self.Brain.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
             elseif hq =='AIR' then
                 self.Brain.EngineerAssistManagerFocusAirUpgrade = true
-                self.Brain.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
+                
             end
             while upgradedFactory and not upgradedFactory.Dead and not upgradedFactory:BeenDestroyed() and fractionComplete < 1 do
                 fractionComplete = upgradedFactory:GetFractionComplete()

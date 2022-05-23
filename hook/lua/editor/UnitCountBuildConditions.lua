@@ -952,13 +952,13 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         --RNGLOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
     end
-    --[[if tier == 'T3' then
-       --RNGLOG('T3 query')
-       --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
-       --RNGLOG('Ratio for '..unit)
-       --RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
-       --RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
-       --RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+    --[[if unit == 'aa' then
+       RNGLOG('AA query')
+       RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+       RNGLOG('Ratio for '..unit)
+       RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
+       RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
+       RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     end]]
     --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then

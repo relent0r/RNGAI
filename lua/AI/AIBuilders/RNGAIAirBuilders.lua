@@ -320,32 +320,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Response Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNGAI Air Intercept BaseDMZArea',
-        PlatoonTemplate = 'RNGAI AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
-        Priority = 800,
-        InstanceCount = 3,
-        BuilderType = 'Any',
-        BuilderData = {
-            Defensive = true,
-            SearchRadius = BaseDMZArea,
-            LocationType = 'LocationType',
-            NeverGuardEngineers = true,
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
-                categories.BOMBER * categories.AIR,
-                categories.GROUNDATTACK * categories.AIR,
-                categories.TRANSPORTFOCUS * categories.AIR,
-                categories.ANTIAIR * categories.AIR,
-                categories.AIR,
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, AntiAirUnits } },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Air Mercy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI MercyAttack',
         Priority = 960,
@@ -396,7 +370,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
-        InstanceCount = 5,
+        InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
             AvoidBases = true,
@@ -421,7 +395,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
-        InstanceCount = 8,
+        InstanceCount = 3,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,

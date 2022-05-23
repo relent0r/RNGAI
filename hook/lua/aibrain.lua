@@ -41,12 +41,13 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
+            ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
             --RNGLOG('* AI-RNG: This is RNGEXP')
             self.RNGEXP = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
         end
     end,
 
@@ -773,10 +774,6 @@ AIBrain = Class(RNGAIBrainClass) {
             ApproxFactoryMassConsumption = 0,
             EcoManagerTime = 30,
             EcoManagerStatus = 'ACTIVE',
-            ExtractorUpgradeLimit = {
-                TECH1 = 1,
-                TECH2 = 1
-            },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
             CoreMassMarkerCount = 0,
             TotalCoreExtractors = 0,
@@ -954,20 +951,15 @@ AIBrain = Class(RNGAIBrainClass) {
         
         self.UpgradeIssuedPeriod = 100
 
-        if mapSizeX < 1000 and mapSizeZ < 1000  then
-            self.UpgradeIssuedLimit = 1
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
-        else
-            self.UpgradeIssuedLimit = 2
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
-        end
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
         end
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
-        LOG('Water Ratio is '..self.MapWaterRatio)
+        if self.RNGDEBUG then
+            LOG('Water Ratio is '..self.MapWaterRatio)
+        end
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
@@ -1089,9 +1081,9 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.CoreMassPush then
                 RNGLOG('We should be pushing for 3 core t3 extractors')
             end
-            RNGLOG('Current T1 Mobile AA ratio '..self.amanager.Current['Land']['T1']['aa'])
-            RNGLOG('Current T2 Mobile AA ratio '..self.amanager.Current['Land']['T2']['aa'])
-            RNGLOG('Current T3 Mobile AA ratio '..self.amanager.Current['Land']['T3']['aa'])
+            RNGLOG('Current T1 Mobile AA count '..self.amanager.Current['Land']['T1']['aa'])
+            RNGLOG('Current T2 Mobile AA count '..self.amanager.Current['Land']['T2']['aa'])
+            RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
             RNGLOG('Current engineer assist build power required '..self.EngineerAssistManagerBuildPowerRequired)
             RNGLOG('Approx Factory Mass Consumption '..self.EcoManager.ApproxFactoryMassConsumption)
             
@@ -1318,7 +1310,9 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
-        RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))
+        if self.RNGDEBUG then
+            RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))
+        end
     end,
 
     
@@ -1800,7 +1794,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            RNGLOG('Perimeter Points Post '..repr(self.InterestList.PerimeterPoints))
+            if self.RNGDEBUG then
+                RNGLOG('Perimeter Points Post '..repr(self.InterestList.PerimeterPoints))
+            end
             --RNGLOG('* AI-RNG: EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
             local massLocations = RUtils.AIGetMassMarkerLocations(self, true)
         
@@ -2299,7 +2295,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
                                     if landUnits == 1 then
-                                        enemyLandAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                        enemyLandAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -2307,7 +2303,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     antiSurfaceAir = antiSurfaceAir + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                                     if antiSurfaceAir == 1 then
-                                        enemySurfaceAirAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                        enemySurfaceAirAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -2315,7 +2311,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     airUnits = airUnits + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
                                     if airUnits == 1 then
-                                        enemyAirAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                        enemyAirAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -2323,7 +2319,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     navalUnits = navalUnits + 1
                                     navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
                                     if navalUnits == 1 then
-                                        enemyNavalAngle = RUtils.GetAngleFromAToB(unit:GetPosition(), self.BuilderManagers[k].Position)
+                                        enemyNavalAngle = RUtils.GetAngleFromAToB(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
@@ -3096,16 +3092,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
         end
-
-        if self.EnemyIntel.EnemyCount < 2 and gameTime < (240 / multiplier) then
-            self.UpgradeMode = 'Caution'
-        elseif gameTime > (240 / multiplier) and self.UpgradeMode == 'Caution' then
-            --RNGLOG('Setting UpgradeMode to Normal')
-            self.UpgradeMode = 'Normal'
-            self.UpgradeIssuedLimit = 1
-        elseif gameTime > (240 / multiplier) and self.UpgradeIssuedLimit == 1 and self.UpgradeMode == 'Aggresive' then
-            self.UpgradeIssuedLimit = self.UpgradeIssuedLimit + 1
-        end
         self.EnemyIntel.EnemyThreatLocations = {}
 
         -- debug, remove later on
@@ -3220,16 +3206,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('BaseThreatCaution False')
                 self.BrainIntel.SelfThreat.BaseThreatCaution = false
             end
-        end
-        
-        if (gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.5) or self.EnemyIntel.ChokeFlag then
-            --RNGLOG('Switch to agressive upgrade mode')
-            self.UpgradeMode = 'Aggressive'
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
-        elseif gameTime > 1200 then
-            --RNGLOG('Switch to normal upgrade mode')
-            self.UpgradeMode = 'Normal'
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
         end
         coroutine.yield(2)
     end,
@@ -3718,6 +3694,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 
                 if powerStateCaution then
                     --RNGLOG('Power State Caution is true')
+                    self.EngineerAssistManagerFocusPower = true
                     local powerCycle = 0
                     local unitTypePaused = {}
                     while powerStateCaution do
@@ -3909,6 +3886,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                     powerStateCaution = false
+                else
+                    self.EngineerAssistManagerFocusPower = false
                 end
             end
             coroutine.yield(20)
@@ -4607,8 +4586,9 @@ AIBrain = Class(RNGAIBrainClass) {
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local CoreMassNumberAchieved = false
-            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 then
+            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
+                self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
@@ -4620,6 +4600,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusExperimental then
                 state = 'Experimental'
+                self.EngineerAssistManagerFocusCategory = categories.MOBILE * categories.EXPERIMENTAL
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -4630,6 +4611,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
+                self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
@@ -4640,6 +4622,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
+                self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 

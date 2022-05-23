@@ -245,9 +245,8 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.80}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
