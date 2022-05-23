@@ -4300,9 +4300,9 @@ GenerateDefensivePointTable = function (range, position)
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 10, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
         else
-            RNGINSERT(defensivePointTable[1], {Position = v, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 10, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
         end
     end
     local defensivePointsT2 = DrawCirclePoints(8, range/2, position)
@@ -4316,9 +4316,9 @@ GenerateDefensivePointTable = function (range, position)
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[2], {Position = v, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
         else
-            RNGINSERT(defensivePointTable[2], {Position = v, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
         end
     end
     return defensivePointTable
@@ -4374,7 +4374,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     closestDistance = distance
                 end
             end
-            if closestPoint then
+            if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
                 --RNGLOG('Adding T1 defensive unit to defensepoint table at key '..closestPoint)
                 if EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
                     RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir, finishedUnit)
@@ -4390,7 +4390,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     closestDistance = distance
                 end
             end
-            if closestPoint then
+            if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
                 --RNGLOG('Adding T2 defensive unit to defensepoint table')
                 if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
                     RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD, finishedUnit)
