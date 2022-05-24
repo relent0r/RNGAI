@@ -740,7 +740,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                                 IssueClearCommands({cdr})
                                 IssueMove({cdr}, platoonPosition)
                             end
-                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 2500 then
+                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 900 then
                                 --RNGLOG('CDR : EnemyThreat low, cancel retreat')
                                 IssueClearCommands({cdr})
                                 cdr.movetopos = false
@@ -772,7 +772,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     IssueClearCommands({cdr})
                     IssueMove({cdr}, path[i])
                 end
-                if cdr.Health > 5000 and cdr.Active and not retreat then
+                if cdr.Health > 5500 and cdr.Active and not retreat then
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPosition, 30, 'Enemy')
                     if enemyUnitCount > 0 then
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetACURNG(aiBrain, cdr.PlatoonHandle, cdrPosition, 'Attack', 30, (categories.LAND + categories.STRUCTURE), cdr.atkPri, false)
@@ -832,7 +832,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             end
                         end
                     end
-                elseif cdr.Health > 6000 and retreat or platoonRetreat then
+                elseif cdr.Health > 6000 and (retreat or platoonRetreat) then
                     if not cdr.GunUpgradeRequired and not cdr.HighThreatUpgradeRequired then
                         --RNGLOG('CDR : We are retreating or platoonRetreating')
                         --RNGLOG('CDR : EnemyThreat inner is '..(cdr.CurrentEnemyInnerCircle * 1.2)..' friendly inner is '..cdr.CurrentFriendlyInnerCircle)
@@ -845,7 +845,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         end
                     end
                 end
-                if (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and cdr.Active and (not retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.50 then
+                if (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and cdr.Active and (not retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.70 then
                     PerformACUReclaim(aiBrain, cdr, 25)
                 end
                 coroutine.yield(20)

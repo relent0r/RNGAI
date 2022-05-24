@@ -3171,7 +3171,7 @@ LastKnownThread = function(aiBrain)
                     if not v.zoneid and aiBrain.ZonesInitialized then
                         if PositionOnWater(unitPosition[1], unitPosition[3]) then
                             -- tbd define water based zones
-                            v.zoneid = 'water'
+                            v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Naval.index)
                         else
                             v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
                         end
@@ -3226,6 +3226,7 @@ LastKnownThread = function(aiBrain)
         end
     end
 end
+
 ShowLastKnown = function(aiBrain)
     if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
         return
@@ -3255,6 +3256,7 @@ end
 
 TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
+    local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
     while not aiBrain.lastknown do coroutine.yield(20) end
     while aiBrain.Result ~= "defeat" do
         --RNGLOG('Check Expansion table in priority directo')
@@ -3308,8 +3310,15 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     priority=40
                 elseif v.type=='radar' then
                     priority=100
+                elseif v.type=='arty' then
+                    priority=30
+                elseif v.type=='tank' then
+                    priority=30
                 else
                     priority=20
+                end
+                if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, v.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
+                    priority = priority + 50
                 end
                 aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
             end
@@ -4335,7 +4344,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
-                    local pointAngle = GetAngleFromAToB(basePosition, v.Position)
+                    local pointAngle = GetAngleToPosition(basePosition, v.Position)
                     if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
                         if bestPoint then
                             --RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))

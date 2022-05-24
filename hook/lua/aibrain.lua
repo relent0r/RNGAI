@@ -41,7 +41,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -1086,7 +1086,7 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
             RNGLOG('Current engineer assist build power required '..self.EngineerAssistManagerBuildPowerRequired)
             RNGLOG('Approx Factory Mass Consumption '..self.EcoManager.ApproxFactoryMassConsumption)
-            
+            RNGLOG('Soon Mex Count '..table.getn(self.emanager.soonmexes))
             RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
             RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
             RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
@@ -1155,6 +1155,13 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
+            if self.InterestList.PerimeterPoints then
+                for k, v in self.InterestList.PerimeterPoints do
+                    for c, b in v do
+                        DrawCircle(b.Position, 10, 'FFFF00')
+                    end
+                end
+            end
             WaitTicks(2)
         end
     end,
