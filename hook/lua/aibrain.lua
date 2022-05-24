@@ -4587,7 +4587,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EngineerAssistManagerBrainRNG = function(self, type)
-        coroutine.yield(1800)
+        coroutine.yield(1200)
         local state
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
