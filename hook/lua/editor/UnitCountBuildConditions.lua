@@ -1110,6 +1110,57 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
 
 end
 
+function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
+    local ALLBPS = __blueprints
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: AdjacencyCheck - Invalid location - ' .. locationType)
+        return false
+    end
+
+    local testCat = category
+    if type(category) == 'string' then
+        testCat = ParseEntityCategory(category)
+    end
+
+    local reference  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, testCat, factoryManager:GetLocationCoords(), radius)
+    if not reference or table.empty(reference) then
+        return false
+    end
+
+    local template = {}
+    local unitSize = ALLBPS[testUnit.UnitId].Physics
+    for k,v in reference do
+        if not v.Dead then
+            local targetSize = ALLBPS[v.UnitId].Physics
+            local targetPos = v:GetPosition()
+            targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
+            targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)
+            # Top/bottom of unit
+            for i=0,((targetSize.SkirtSizeX/2)-1) do
+                local testPos = { targetPos[1] + 1 + (i * 2), targetPos[3]-(unitSize.SkirtSizeZ/2), 0 }
+                local testPos2 = { targetPos[1] + 1 + (i * 2), targetPos[3]+targetSize.SkirtSizeZ+(unitSize.SkirtSizeZ/2), 0 }
+                table.insert(template, testPos)
+                table.insert(template, testPos2)
+            end
+            # Sides of unit
+            for i=0,((targetSize.SkirtSizeZ/2)-1) do
+                local testPos = { targetPos[1]+targetSize.SkirtSizeX + (unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i * 2), 0 }
+                local testPos2 = { targetPos[1]-(unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i*2), 0 }
+                table.insert(template, testPos)
+                table.insert(template, testPos2)
+            end
+        end
+    end
+
+    for k,v in template do
+        if aiBrain:CanBuildStructureAt(testUnit, { v[1], 0, v[2] }) then
+            return true
+        end
+    end
+    return false
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.
