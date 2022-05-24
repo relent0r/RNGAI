@@ -17,6 +17,7 @@ local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GiveResource = moho.aibrain_methods.GiveResource
+local TakeResource = moho.aibrain_method.TakeResource
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -4700,6 +4701,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     AllyEconomyHelpThread = function(self)
         local selfIndex = self:GetArmyIndex()
+        local SUtils = import('/lua/AI/sorianutilities.lua')
         coroutine.yield(180)
         while true do
             if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
@@ -4708,9 +4710,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         if IsAlly(selfIndex, brain:GetArmyIndex()) then
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
                                 --RNGLOG('Transfer Energy to team mate')
+                                SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[brain:GetArmyIndex()].Nickname)
                                 local amount
                                 amount = GetEconomyStored( self, 'ENERGY') / 8
-                                GiveResource(self, 'ENERGY', amount)
+                                TakeResource(self, 'Energy', amount)
+                                GiveResource(brain, 'Energy', amount)
                             end
                         end
                     end
