@@ -1107,7 +1107,19 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
         end
     end
     return false
+end
 
+function CheckPerimeterPointsExpired(aiBrain, pointTable)
+    -- Checks if the perimeter points have been scouted recently
+    local gameTime = GetGameTimeSeconds()
+    if aiBrain.InterestList.PerimeterPoints[pointTable] then
+        for K, v in aiBrain.InterestList.PerimeterPoints[pointTable] do
+            if gameTime - v.LastScouted > 120 then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
@@ -1129,7 +1141,7 @@ function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
     end
 
     local template = {}
-    local unitSize = ALLBPS[testUnit.UnitId].Physics
+    local unitSize = ALLBPS[testUnit].Physics
     for k,v in reference do
         if not v.Dead then
             local targetSize = ALLBPS[v.UnitId].Physics

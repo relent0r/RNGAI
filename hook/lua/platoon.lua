@@ -837,6 +837,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         local estartZ = nil
         local startX = nil 
         local startZ = nil
+        local targetData = {}
+        local currentGameTime = GetGameTimeSeconds()
         if aiBrain.CDRUnit.Active and (not aiBrain.CDRUnit.AirScout or aiBrain.CDRUnit.AirScout.Dead) then
             aiBrain.CDRUnit.AirScout = scout
             while not scout.Dead and aiBrain.CDRUnit.Active do
@@ -900,6 +902,82 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('* AI-RNG: Scout Returning to base after patrol : {'..startX..', 0, '..startZ..'}')
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
+        
+        elseif self.PlatoonData.PerimeterPoints then
+            local targetArea = false
+            while not scout.Dead do
+                local targetLocationFound = false
+                if next(aiBrain.InterestList.PerimeterPoints.Restricted) then
+                    RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Restricted)
+                    for k, point in aiBrain.InterestList.PerimeterPoints.Restricted do
+                        if currentGameTime - point.LastScouted > 30 then
+                            targetData = aiBrain.InterestList.PerimeterPoints.Restricted[k]
+                            targetData.LastScouted = currentGameTime
+                            targetArea = targetData.Position
+                            targetLocationFound = true
+                            break
+                        end
+                    end
+                end
+                if not targetLocationFound then
+                    if next(aiBrain.InterestList.PerimeterPoints.Military) then
+                        RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Military)
+                        for k, point in aiBrain.InterestList.PerimeterPoints.Military do
+                            if currentGameTime - point.LastScouted > 30 then
+                                targetData = aiBrain.InterestList.PerimeterPoints.Military[k]
+                                targetData.LastScouted = currentGameTime
+                                targetArea = targetData.Position
+                                targetLocationFound = true
+                                break
+                            end
+                        end
+                    end
+                end
+                if not targetLocationFound then
+                    if next(aiBrain.InterestList.PerimeterPoints.DMZ) then
+                        RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.DMZ)
+                        for k, point in aiBrain.InterestList.PerimeterPoints.DMZ do
+                            if currentGameTime - point.LastScouted > 30 then
+                                targetData = aiBrain.InterestList.PerimeterPoints.DMZ[k]
+                                targetData.LastScouted = currentGameTime
+                                targetArea = targetData.Position
+                                targetLocationFound = true
+                                break
+                            end
+                        end
+                    end
+                end
+                if targetArea then
+                    self:Stop()
+
+                    local vec = self:DoAirScoutVecs(scout, targetArea)
+
+                    while not scout.Dead and not scout:IsIdleState() do
+
+                        --If we're close enough...
+                        if VDist3Sq(vec, scout:GetPosition()) < 15625 then
+                            --Break within 125 ogrids of destination so we don't decelerate trying to stop on the waypoint.
+                            break
+                        end
+                        -- 
+                        if VDist3Sq(scout:GetPosition(), targetArea) < 625 then
+                            break
+                        end
+
+                        coroutine.yield(50)
+                        --RNGLOG('* AI-RNG: Scout looping position < 25 to targetArea')
+                    end
+                else
+                    --RNGLOG('No targetArea found')
+                    --RNGLOG('No target area, number of high pri scouts is '..aiBrain.IntelData.AirHiPriScouts)
+                    --RNGLOG('Num opponents is '..aiBrain.NumOpponents)
+                    --RNGLOG('Low pri scouts '..aiBrain.IntelData.AirLowPriScouts)
+                    --RNGLOG('HighPri Interest table scout is '..RNGGETN(aiBrain.InterestList.HighPriority))
+                    coroutine.yield(10)
+                end
+                coroutine.yield(10)
+                --RNGLOG('* AI-RNG: Scout looping end of scouting interest table')
+            end
         elseif self.PlatoonData.ExpansionPatrol and not self.ExpansionsValidated then
             --RNGLOG('Excess scout looking for expansion')
             local scoutPos = GetPlatoonPosition(self)
@@ -960,9 +1038,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
                     highPri = true
                     targetData = aiBrain.InterestList.HighPriority[1]
-                    targetData.LastScouted = GetGameTimeSeconds()
+                    targetData.LastScouted = currentGameTime
                     targetArea = targetData.Position
-                    aiBrain:SortScoutingAreas(aiBrain.InterestList.HighPriority)
+                    RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
 
                 --3) Every time we scout NumOpponents number of high priority locations, scout a low priority location
                 elseif aiBrain.IntelData.AirLowPriScouts < 1 and RNGGETN(aiBrain.InterestList.LowPriority) > 0 then
@@ -972,7 +1050,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     targetData = aiBrain.InterestList.LowPriority[1]
                     targetData.LastScouted = GetGameTimeSeconds()
                     targetArea = targetData.Position
-                    aiBrain:SortScoutingAreas(aiBrain.InterestList.LowPriority)
+                    RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
 
                 --4) Scout "unknown threat" areas with a threat higher than 25
                 elseif next(unknownThreats) and unknownThreats[1][3] > 25 and unknownLoop < 3 then
@@ -996,7 +1074,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     while not scout.Dead and not scout:IsIdleState() do
 
                         --If we're close enough...
-                        if VDist2Sq(vec[1], vec[3], scout:GetPosition()[1], scout:GetPosition()[3]) < 15625 then
+                        if VDist3Sq(vec, scout:GetPosition()) < 15625 then
                            if mustScoutArea then
                             --Untag and remove
                                 for idx,loc in aiBrain.InterestList.MustScout do
@@ -1070,14 +1148,14 @@ Platoon = Class(RNGAIPlatoonClass) {
                 aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
                 targetData.LastScouted = GetGameTimeSeconds()
 
-                aiBrain:SortScoutingAreas(aiBrain.InterestList.HighPriority)
+                RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
 
             elseif next(aiBrain.InterestList.LowPriority) then
                 targetData = aiBrain.InterestList.LowPriority[1]
                 aiBrain.IntelData.HiPriScouts = 0
                 targetData.LastScouted = GetGameTimeSeconds()
 
-                aiBrain:SortScoutingAreas(aiBrain.InterestList.LowPriority)
+                RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
             else
                 --Reset number of scoutings and start over
                 aiBrain.IntelData.HiPriScouts = 0

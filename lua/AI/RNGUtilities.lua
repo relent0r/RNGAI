@@ -4475,6 +4475,20 @@ GetShieldCoverAroundUnit = function(aiBrain, unit)
     return false, false
 end
 
+SortScoutingAreasRNG = function(aiBrain, list)
+    table.sort(list, function(a, b)
+        if a.LastScouted == b.LastScouted then
+            local MainPos = aiBrain.BuilderManagers.MAIN.Position
+            local distA = VDist2Sq(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
+            local distB = VDist2Sq(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
+
+            return distA < distB
+        else
+            return a.LastScouted < b.LastScouted
+        end
+    end)
+end
+
 DrawCircleAtPosition = function(aiBrain, position)
     count = 0
     while count < 60 do

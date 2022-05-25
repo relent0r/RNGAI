@@ -1108,6 +1108,10 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
             RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
+            RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
+            RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
+            RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
+            RNGLOG('Current Interest List PeimeterPoints'..reprs(self.InterestList.PerimeterPoints))
             coroutine.yield(100)
         end
     end,
@@ -1160,6 +1164,27 @@ AIBrain = Class(RNGAIBrainClass) {
                 for k, v in self.InterestList.PerimeterPoints do
                     for c, b in v do
                         DrawCircle(b.Position, 10, 'FFFF00')
+                    end
+                end
+            end
+            if self.InterestList.HighPriority then
+                for k, v in self.InterestList.HighPriority do
+                    for c, b in v do
+                        DrawCircle(b.Position, 10, 'FFFF00')
+                    end
+                end
+            end
+            if self.InterestList.LowPriority then
+                for k, v in self.InterestList.LowPriority do
+                    for c, b in v do
+                        DrawCircle(b.Position, 10, 'FFFF00')
+                    end
+                end
+            end
+            if self.InterestList.MustScout then
+                for k, v in self.InterestList.MustScout do
+                    for c, b in v do
+                        DrawCircle(b.Position, 10, 'FFA500')
                     end
                 end
             end
@@ -1791,14 +1816,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
                         continue
                     end
-                    if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-                        if i == 1 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.Restricted, {Position = v, Scout = false})
-                        elseif i == 2 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.Military, {Position = v, Scout = false})
-                        elseif i == 3 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.DMZ, {Position = v, Scout = false})
-                        end
+                    local belowWater = false
+                    if GetTerrainHeight(v[1], v[3]) < GetSurfaceHeight(v[1], v[3]) then
+                        belowWater = true
+                    end
+                    if i == 1 then
+                        RNGINSERT(self.InterestList.PerimeterPoints.Restricted, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
+                    elseif i == 2 then
+                        RNGINSERT(self.InterestList.PerimeterPoints.Military, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
+                    elseif i == 3 then
+                        RNGINSERT(self.InterestList.PerimeterPoints.DMZ, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
                     end
                 end
             end

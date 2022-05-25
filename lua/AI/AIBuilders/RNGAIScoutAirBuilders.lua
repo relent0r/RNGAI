@@ -36,6 +36,19 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
+        BuilderName = 'RNGAI Factory AirScout T1 Burst',
+        PlatoonTemplate = 'RNGAIT1ScoutBurst',
+        Priority = 895,
+        BuilderConditions = {
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { UCBC, 'UnitToThreatRatio', { 0.3, categories.SCOUT * categories.AIR, 'Air', '<'}},
+        },
+        BuilderType = 'Air',
+    },
+    
+    Builder {
         BuilderName = 'RNGAI Factory AirScout T3',
         PlatoonTemplate = 'T3AirScout',
         Priority = 900,
@@ -54,6 +67,17 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
             { UCBC, 'UnitToThreatRatio', { 0.1, categories.SCOUT * categories.AIR, 'Air', '<'}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory AirScout T3 Burst',
+        PlatoonTemplate = 'T3AirScout',
+        Priority = 897,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { UCBC, 'UnitToThreatRatio', { 0.1, categories.SCOUT * categories.AIR, 'Air', '<'}},
         },
         BuilderType = 'Air',
     },
