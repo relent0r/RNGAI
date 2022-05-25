@@ -1578,6 +1578,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if EntityCategoryContains(categories.COMMAND, target) then
                         local enemyACUHealth = target:GetHealth()
+                        local shieldHealth, shieldNumber = RUtils.GetShieldCoverAroundUnit(aiBrain, target)
+                        if shieldHealth > 0 then
+                            enemyACUHealth = enemyACUHealth + shieldHealth
+                        end
+
                         if enemyACUHealth < cdr.Health then
                             acuAdvantage = true
                         end

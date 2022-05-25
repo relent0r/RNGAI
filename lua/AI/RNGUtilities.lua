@@ -4445,6 +4445,36 @@ AIWarningChecks = function(aiBrain)
     end
 end
 
+GetShieldCoverAroundUnit = function(aiBrain, unit)
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield,ALLBPS)
+        local width = ALLBPS[shield.UnitId].Defense.Shield.ShieldSize
+        local height = ALLBPS[shield.UnitId].Defense.Shield.ShieldVerticalOffset
+    
+        return width * width - height * height
+    end
+
+    local totalShieldHealth = 0
+    local totalShields = 0
+    if not unit.Dead then
+        local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD, unit:GetPosition(), 30, 'Enemy')
+        for _, shield in shields do
+            if not shield.Dead and shield.MyShield then
+                local shieldPos = shield:GetPosition()
+                local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield, ALLBPS)
+                if VDist3Sq(tPos, shieldPos) < shieldSizeSq then
+                    totalShieldHealth = totalShieldHealth + shield.MyShield:GetHealth()
+                    totalShields = totalShields + 1
+                end
+            end
+        end
+    end
+
+    if totalShieldHealth > 0 then
+        return totalShieldHealth, totalShields
+    end
+    return false, false
+end
+
 DrawCircleAtPosition = function(aiBrain, position)
     count = 0
     while count < 60 do
