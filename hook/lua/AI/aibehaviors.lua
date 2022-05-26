@@ -229,7 +229,7 @@ function CDRBrainThread(cdr)
                             enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[c].Position
                         end
                     end
-                    local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2])
+                    local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3])
                     v.DistanceToBase = enemyAcuDistance
                     if enemyAcuDistance < (aiBrain.BrainIntel.MilitaryRange * aiBrain.BrainIntel.MilitaryRange) then
                         v.OnField = true
@@ -948,7 +948,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
                 --RNGLOG('Non Ally and OnField')
-                if (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
+                if (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], v.Position[1], v.Position[3]) < 22500 then
                     --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
                     return
                 end

@@ -902,7 +902,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BrainIntel = {}
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
-        self.BrainIntel.StartPos = { selfStartPosX, selfStartPosY }
+        self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
@@ -1055,6 +1055,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     LogDataThreadRNG = function(self)
         coroutine.yield(300)
+        RNGLOG('Current Interest List PeimeterPoints'..reprs(self.InterestList.PerimeterPoints))
         while true do
             local factionIndex = self:GetFactionIndex()
             RNGLOG('-- Eco Stats --')
@@ -1108,10 +1109,9 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
             RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
-            RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
-            RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
-            RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
-            RNGLOG('Current Interest List PeimeterPoints'..reprs(self.InterestList.PerimeterPoints))
+            --RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
+            --RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
+            --RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
             coroutine.yield(100)
         end
     end,
@@ -1157,6 +1157,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     drawMainRestricted = function(self)
+        coroutine.yield(100)
+        RNGLOG('Starting drawMainRestricted')
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
@@ -1427,7 +1429,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     RNGINSERT(self.GraphZones[v.RNGArea].MassMarkers, v)
                     self.GraphZones[v.RNGArea].MassMarkersInZone = self.GraphZones[v.RNGArea].MassMarkersInZone + 1
-                    if VDist2Sq(v.position[1], v.position[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 2500 then
+                    if VDist2Sq(v.position[1], v.position[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3]) < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
                     end
                 end
@@ -1811,7 +1813,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 BaseDMZArea
             }
             for i=1, 3 do
-                local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[2]})
+                local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[3]})
                 for _, v in tempPoints do
                     if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
                         continue
@@ -2190,7 +2192,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('EnemyStrength Tables :'..repr(v))
                 --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
-                    if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 19600 then
+                    if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3]) < 19600 then
                        --RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy

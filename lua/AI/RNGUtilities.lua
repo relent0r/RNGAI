@@ -4452,11 +4452,11 @@ GetShieldCoverAroundUnit = function(aiBrain, unit)
     
         return width * width - height * height
     end
-
+    local tPos = unit:GetPosition()
     local totalShieldHealth = 0
     local totalShields = 0
     if not unit.Dead then
-        local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD, unit:GetPosition(), 30, 'Enemy')
+        local shields = aiBrain:GetUnitsAroundPoint(categories.SHIELD, tPos, 30, 'Enemy')
         for _, shield in shields do
             if not shield.Dead and shield.MyShield then
                 local shieldPos = shield:GetPosition()

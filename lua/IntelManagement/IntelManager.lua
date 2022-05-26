@@ -1028,7 +1028,7 @@ MapReclaimAnalysis = function(aiBrain)
             end
             local startReclaim = 0
             for k, square in aiBrain.MapReclaimTable do
-                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], square.Position[1], square.Position[3]) < 14400 then
+                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], square.Position[1], square.Position[3]) < 14400 then
                     startReclaim = startReclaim + square.TotalReclaim
                 end
             end

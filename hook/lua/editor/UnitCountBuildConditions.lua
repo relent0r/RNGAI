@@ -20,6 +20,17 @@ function LessThanGameTimeSecondsRNG(aiBrain, num)
     return false
 end
 
+function GreaterThanArmyThreat(aiBrain, type, number)
+    RNGLOG('Type '..type)
+    
+    if aiBrain.BrainIntel.SelfThreat[type] then
+        if aiBrain.BrainIntel.SelfThreat[type] > number then
+            return true
+        end
+    end
+
+end
+
 function UnitToThreatRatio(aiBrain, ratio, category, threatType, compareType)
     local numUnits = aiBrain:GetCurrentUnits(category)
     local threat
@@ -1115,10 +1126,12 @@ function CheckPerimeterPointsExpired(aiBrain, pointTable)
     if aiBrain.InterestList.PerimeterPoints[pointTable] then
         for K, v in aiBrain.InterestList.PerimeterPoints[pointTable] do
             if gameTime - v.LastScouted > 120 then
+                RNGLOG('Perimeter points are expired')
                 return true
             end
         end
     end
+    RNGLOG('Perimeter points are not expired')
     return false
 end
 
