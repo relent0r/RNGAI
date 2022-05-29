@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -3963,37 +3963,40 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.Dead and not v.BuildCompleted then
                     if EntityCategoryContains(categories.ENGINEER, v) then
                         if v.UnitBeingBuilt then
-                            if ALLBPS[v.UnitId].Economy.BuildRate > 100 then
-                                if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
-                                    continue
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
+                                potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
+                                continue
+                            end
+                            if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
+                                potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
+                                continue
+                            end
+                            if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
+                                if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                    --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
+                                    potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
-                                if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
-                                    continue
+                                continue
+                            end
+                            if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                    --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
+                                    potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
-                                if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
-                                    if ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy then
-                                        --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
-                                        potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy
-                                    end
-                                    continue
-                                end
-                                if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                    if ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy then
-                                        --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
-                                        potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy
-                                    end
-                                    continue
-                                end
+                                continue
+                            end
+                            if EntityCategoryContains(categories.STRUCTURE * categories.FACTORY * categories.AIR, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                potentialPowerConsumption = potentialPowerConsumption + (100 * multiplier)
+                                continue
                             end
                         end
                     elseif EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
-                            if v:GetFractionComplete() < 0.6 then
+                            if v:GetFractionComplete() < 0.7 then
                                 --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
                                 potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
                                 continue
@@ -4001,7 +4004,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 v.BuildCompleted = true
                             end
                     elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
-                        if v:GetFractionComplete() < 0.6 then
+                        if v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
                             potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                             continue
@@ -4009,15 +4012,15 @@ AIBrain = Class(RNGAIBrainClass) {
                             v.BuildCompleted = true
                         end
                     elseif ALLBPS[v.UnitId].CategoriesHash.MASSEXTRACTION then
-                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.6 then
+                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Extractors being upgraded')
                             potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
                             continue
                         else
                             v.BuildCompleted = true
                         end
-                    elseif ALLBPS[v.UnitId].CategoriesHash.RADAR then
-                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.6 then
+                    elseif EntityCategoryContains(categories.STRUCTURE * (categories.RADAR + categories.SONAR), v) then
+                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
                             continue
