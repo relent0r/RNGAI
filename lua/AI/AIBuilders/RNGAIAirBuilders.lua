@@ -111,7 +111,7 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
     end
     if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 2 then
         --RNGLOG('Bomber Response for Perimeter Monitor is true')
-        return 890
+        return 895
     end
     return 0
 end
@@ -121,7 +121,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
-        PlatoonTemplate = 'RNGAIFighterGroup',
+        PlatoonTemplate = 'T1AirFighter',
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},

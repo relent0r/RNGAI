@@ -887,7 +887,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     patrolPositionZ = (estartZ + startPos[3]) / 2
                 end
                 --RNGLOG('* AI-RNG: Patrol Location X, Z :'..patrolPositionX..' '..patrolPositionZ)
-                patrolLocations = RUtils.SetArcPoints({startPos},{patrolPositionX,0,patrolPositionZ},40,5,50)
+                patrolLocations = RUtils.SetArcPoints(startPos,{patrolPositionX,0,patrolPositionZ},40,5,50)
                 --RNGLOG('Patrol Locations :'..repr(patrolLocations))
                 --RNGLOG('* AI-RNG: Moving to Patrol Location'..patrolPositionX..' '..patrolPositionZ)
                 self:MoveToLocation({patrolPositionX, 0, patrolPositionZ}, false)
@@ -905,21 +905,21 @@ Platoon = Class(RNGAIPlatoonClass) {
             local targetArea = false
             while not scout.Dead do
                 currentGameTime = GetGameTimeSeconds()
-                RNGLOG('Air Scout loop start for Perimeterpoints'..scout.Sync.id)
+                --RNGLOG('Air Scout loop start for Perimeterpoints'..scout.Sync.id)
                 local targetLocationFound = false
                 if next(aiBrain.InterestList.PerimeterPoints.Restricted) then
                     RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Restricted)
                     for k, point in aiBrain.InterestList.PerimeterPoints.Restricted do
-                        RNGLOG('LastScouted Restricted '..aiBrain.InterestList.PerimeterPoints.Restricted[k].LastScouted)
-                        if currentGameTime - point.LastScouted > 90 then
-                            RNGLOG('LastScoutedRestricted > 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                        --RNGLOG('LastScouted Restricted '..aiBrain.InterestList.PerimeterPoints.Restricted[k].LastScouted)
+                        if currentGameTime - point.LastScouted > 120 then
+                            --RNGLOG('LastScoutedRestricted > 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
                             targetData = aiBrain.InterestList.PerimeterPoints.Restricted[k]
                             point.LastScouted = currentGameTime
                             targetArea = targetData.Position
                             targetLocationFound = true
                             break
                         else
-                            RNGLOG('LastScoutedRestricted < 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                            --RNGLOG('LastScoutedRestricted < 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
                         end
                     end
                 end
@@ -927,16 +927,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if next(aiBrain.InterestList.PerimeterPoints.Military) then
                         RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Military)
                         for k, point in aiBrain.InterestList.PerimeterPoints.Military do
-                            RNGLOG('LastScouted Military '..aiBrain.InterestList.PerimeterPoints.Military[k].LastScouted)
-                            if currentGameTime - point.LastScouted > 130 then
-                                RNGLOG('LastScoutedMilitary > 120 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                            --RNGLOG('LastScouted Military '..aiBrain.InterestList.PerimeterPoints.Military[k].LastScouted)
+                            if currentGameTime - point.LastScouted > 180 then
+                                --RNGLOG('LastScoutedMilitary > 120 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
                                 targetData = aiBrain.InterestList.PerimeterPoints.Military[k]
                                 point.LastScouted = currentGameTime
                                 targetArea = targetData.Position
                                 targetLocationFound = true
                                 break
                             else
-                                RNGLOG('LastScoutedMilitary < 120 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                                --RNGLOG('LastScoutedMilitary < 120 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
                             end
                         end
                     end
@@ -945,16 +945,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if next(aiBrain.InterestList.PerimeterPoints.DMZ) then
                         RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.DMZ)
                         for k, point in aiBrain.InterestList.PerimeterPoints.DMZ do
-                            RNGLOG('LastScouted DMZ'..aiBrain.InterestList.PerimeterPoints.DMZ[k].LastScouted)
-                            if currentGameTime - point.LastScouted > 180 then
-                                RNGLOG('LastScoutedDMZ > 180 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                            --RNGLOG('LastScouted DMZ'..aiBrain.InterestList.PerimeterPoints.DMZ[k].LastScouted)
+                            if currentGameTime - point.LastScouted > 240 then
+                                --RNGLOG('LastScoutedDMZ > 180 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
                                 targetData = aiBrain.InterestList.PerimeterPoints.DMZ[k]
                                 point.LastScouted = currentGameTime
                                 targetArea = targetData.Position
                                 targetLocationFound = true
                                 break
                             else
-                                RNGLOG('LastScoutedDMZ < 180 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                                --RNGLOG('LastScoutedDMZ < 180 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
                             end
                         end
                     end
@@ -980,7 +980,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('* AI-RNG: Scout looping position < 25 to targetArea')
                     end
                 else
-                    RNGLOG('PerimeterPoints no target area setting scout to bypass '..scout.Sync.id)
+                    --RNGLOG('PerimeterPoints no target area setting scout to bypass '..scout.Sync.id)
                     scout.bypassperimeter = true
                     --RNGLOG('No targetArea found')
                     --RNGLOG('No target area, number of high pri scouts is '..aiBrain.IntelData.AirHiPriScouts)
@@ -995,7 +995,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         elseif self.PlatoonData.ExpansionPatrol and not self.ExpansionsValidated then
             --RNGLOG('Excess scout looking for expansion')
-            RNGLOG('Air Scout loop start for ExpansionPatrol'..scout.Sync.id)
+            --RNGLOG('Air Scout loop start for ExpansionPatrol'..scout.Sync.id)
             local scoutPos = GetPlatoonPosition(self)
             local scoutMarker
             if next(aiBrain.BrainIntel.ExpansionWatchTable) then
@@ -1037,7 +1037,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         else
             while not scout.Dead do
                 currentGameTime = GetGameTimeSeconds()
-                RNGLOG('Air Scout loop start for InterestList'..scout.Sync.id)
+                --RNGLOG('Air Scout loop start for InterestList'..scout.Sync.id)
                 local targetArea = false
                 local highPri = false
 
@@ -3393,7 +3393,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         elseif cons.NearDefensivePoints then
             relative = false
             reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
-            baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
+            --RNGLOG('reference for defensivepoint is '..repr(reference))
+            --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
@@ -8539,7 +8540,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if EntityCategoryContains(categories.MOBILE, target) then
                     local firePos = RUtils.LeadTargetRNG(self.CenterPosition, target, 15, 256)
                     if firePos then
-                        IssueTactical(inRangeTmlLaunchers, firePos)
+                        for k, v in inRangeTmlLaunchers do
+                            if not v.TargetBlackList[target.Sync.id].Terrain then
+                                IssueTactical({v}, firePos)
+                            else
+                                --RNGLOG('Terrain is blocking target')
+                            end
+                        end
                     else
                         --RNGLOG('LeadTarget Returned False')
                     end
@@ -9646,7 +9653,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             local unitPos = unit:GetPosition()
                             if target and not target.Dead and RUtils.GetAngleRNG(self.Pos[1], self.Pos[3], unitPos[1], unitPos[3], targetPos[1], targetPos[3]) > 0.6 then
                                 if AIAttackUtils.CanGraphToRNG(self.Pos,unitPos,self.MovementLayer) then
-                                    RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
+                                    --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                     location = unitPos
                                     --RNGLOG('Retreat Position found for mex or engineer')
                                     break
@@ -9760,10 +9767,10 @@ Platoon = Class(RNGAIPlatoonClass) {
             if not self.LocationType or not self.Zone then
                 WARN('No LocationType or Zone for trueplatoon')
                 if self.LocationType then
-                    RNGLOG('Location type is '..self.LocationType)
+                    --RNGLOG('Location type is '..self.LocationType)
                 end
                 if self.Zone then
-                    RNGLOG('Zone is '..self.Zone)
+                    --RNGLOG('Zone is '..self.Zone)
                 end
                 return false
             end
@@ -9942,7 +9949,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         platoon.threats = {}
         local pathTimeout = 0
         if not self.Zone then
-            RNGLOG('Starting zone update thread in trueplatoon')
+            --RNGLOG('Starting zone update thread in trueplatoon')
             self.ZoneUpdateThread = self:ForkThread(import('/lua/ai/AIBehaviors.lua')['ZoneUpdate'])
         end
         while PlatoonExists(aiBrain, self) do

@@ -8,12 +8,15 @@ Unit = Class(RNGUnitClass) {
         end
     end,
 
+    --[[
+    -- These callbacks are for a later faf release
     OnMissileIntercepted = function(self, target, defense, position) 
-        RNGUnitClass.OnMissileIntercepted(self, target, defense, position)
+        --RNGUnitClass.OnMissileIntercepted(self, target, defense, position)
         if not self.TargetBlackList then
             self.TargetBlackList = {}
         end
-        self.TargetBlackList[target.Sync.id] = position
+        LOG('Tactical Missile hit intercepted by '..defense.UnitId)
+        self.TargetBlackList[target.Sync.id] = { Target = target, Defense = defense, Terrain = false, Shield = false }
 
         LOG(repr(target))
         DrawCircle(self:GetPosition(), 5, 'ffffff')         -- white
@@ -23,6 +26,11 @@ Unit = Class(RNGUnitClass) {
     end,
 
     OnMissileImpactShield = function(self, target, shield, position)
+        if not self.TargetBlackList then
+            self.TargetBlackList = {}
+        end
+        LOG('Tactical Missile hit shield '..shield.UnitId)
+        self.TargetBlackList[target.Sync.id] = { Target = target, Defense = false, Terrain = false, Shield = shield }
         LOG(repr(target))
         DrawCircle(self:GetPosition(), 5, 'ffffff')         -- white
         DrawCircle(shield:GetPosition(), 5, '00ff00')       -- green
@@ -31,11 +39,16 @@ Unit = Class(RNGUnitClass) {
     end,
 
     OnMissileImpactTerrain = function(self, target, position)
+        if not self.TargetBlackList then
+            self.TargetBlackList = {}
+        end
+        LOG('Tactical Missile hit terrain ')
+        self.TargetBlackList[target.Sync.id] = { Target = target, Defense = false, Terrain = true, Shield = false }
         LOG(repr(target))
         DrawCircle(self:GetPosition(), 5, 'ffffff')         -- white
         DrawCircle(target:GetPosition(), 5, '0000ff')       -- blue
         DrawCircle(position, 5, 'ff0000')                   -- red
-    end,
+    end,]]
 
     EnhancementThreatReturn = function(self)
         local unitEnh = SimUnitEnhancements[self.EntityId]

@@ -1694,7 +1694,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     end
                     if target and not target.Dead and cdr.TargetPosition then
-                        if RUtils.PositionInWater(cdr.Position) and VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.TargetPosition[1], cdr.TargetPosition[3]) < 100 then
+                        if RUtils.PositionInWater(cdr.Position) and VDist3Sq(cdr.Position, cdr.TargetPosition) < 100 then
                             --RNGLOG('ACU is in water, going to try reclaim')
                             IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)

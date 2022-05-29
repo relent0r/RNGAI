@@ -97,7 +97,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -123,7 +123,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.6 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.6 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -141,7 +141,6 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = true,
-                NearDefensivePoints = false,
                 BuildStructures = {
                     'T2GroundDefense',
                 },
@@ -158,7 +157,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -261,6 +260,33 @@ BuilderGroup {
                 AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
+                BuildStructures = {
+                    'T2MissileDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Reactive TMD',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 825,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
+                NearDefensivePoints = true,
+                Type = 'TML',
+                Tier = 1,
                 BuildStructures = {
                     'T2MissileDefense',
                 },

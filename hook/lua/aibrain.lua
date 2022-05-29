@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -846,6 +846,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
+        self.EnemyIntel.TML = {}
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},
@@ -1111,7 +1112,7 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
             --RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
             --RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
-            --RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
+            RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
             coroutine.yield(100)
         end
     end,
@@ -1158,35 +1159,45 @@ AIBrain = Class(RNGAIBrainClass) {
 
     drawMainRestricted = function(self)
         coroutine.yield(100)
-        RNGLOG('Starting drawMainRestricted')
+        --RNGLOG('Starting drawMainRestricted')
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
             if self.InterestList.PerimeterPoints then
                 for k, v in self.InterestList.PerimeterPoints do
                     for c, b in v do
-                        DrawCircle(b.Position, 10, 'FFFF00')
+                        if b.Position then
+                            --RNGLOG('PerimeterPoints pos '..repr(b.Position))
+                            DrawCircle(b.Position, 10, 'FFFF00')
+                        end
                     end
                 end
             end
             if self.InterestList.HighPriority then
                 for k, v in self.InterestList.HighPriority do
                     for c, b in v do
-                        DrawCircle(b.Position, 10, 'FFFF00')
+                        if b.Position then
+                            --RNGLOG('HighPriority pos '..repr(b.Position))
+                            DrawCircle(b.Position, 10, 'FFFF00')
+                        end
                     end
                 end
             end
             if self.InterestList.LowPriority then
                 for k, v in self.InterestList.LowPriority do
                     for c, b in v do
-                        DrawCircle(b.Position, 10, 'FFFF00')
+                        if b.Position then
+                            DrawCircle(b.Position, 10, 'FFFF00')
+                        end
                     end
                 end
             end
             if self.InterestList.MustScout then
                 for k, v in self.InterestList.MustScout do
                     for c, b in v do
-                        DrawCircle(b.Position, 10, 'FFA500')
+                        if b.Position then
+                            DrawCircle(b.Position, 10, 'FFA500')
+                        end
                     end
                 end
             end
@@ -2847,7 +2858,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --Lets ponder this one some more
             if self.BrainIntel.LandPhase > 2 then
                 if self.cmanager.income.r.m > (120 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
-                    RNGLOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
+                    --RNGLOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
                     self.EngineerAssistManagerFocusExperimental = true
                 else
                     self.EngineerAssistManagerFocusExperimental = false
@@ -3932,6 +3943,15 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoPowerPreemptiveRNG = function(self)
+        local function GetMissileConsumption(ALLBPS, unitId, buildMultiplier)
+            if ALLBPS[unitId].Weapon[1].ProjectileId then
+                local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+                --RNGLOG('EcoPowerPreemptive return consumption number is '..(ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)))
+                return ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)
+            end
+            return false
+
+        end
         local ALLBPS = __blueprints
         local multiplier = self.EcoManager.EcoMultiplier
         coroutine.yield(Random(1,7))
@@ -3946,22 +3966,28 @@ AIBrain = Class(RNGAIBrainClass) {
                             if ALLBPS[v.UnitId].Economy.BuildRate > 100 then
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.6 then
                                     --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (4000 * multiplier)
+                                    potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                     continue
                                 end
                                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
                                     --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1200 * multiplier)
+                                    potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                     continue
                                 end
                                 if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
                                     --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
+                                    if ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                        --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
+                                        potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy
+                                    end
                                     continue
                                 end
                                 if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
                                     --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
+                                    if ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                        --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
+                                        potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy
+                                    end
                                     continue
                                 end
                             end
@@ -3983,17 +4009,17 @@ AIBrain = Class(RNGAIBrainClass) {
                             v.BuildCompleted = true
                         end
                     elseif ALLBPS[v.UnitId].CategoriesHash.MASSEXTRACTION then
-                        if v:GetFractionComplete() < 0.6 then
+                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.6 then
                             --RNGLOG('EcoPowerPreemptive : Extractors being upgraded')
-                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
                             continue
                         else
                             v.BuildCompleted = true
                         end
                     elseif ALLBPS[v.UnitId].CategoriesHash.RADAR then
-                        if v:GetFractionComplete() < 0.6 then
-                            --RNGLOG('EcoPowerPreemptive : Radar being upgraded')
-                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.6 then
+                            --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
+                            potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
                             continue
                         else
                             v.BuildCompleted = true
@@ -4695,7 +4721,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('CoreMassPush is true')
                 self.EngineerAssistManagerBuildPowerRequired = 75
             elseif self.EngineerAssistManagerFocusExperimental and self.EngineerAssistManagerBuildPower <= 150 then
-                RNGLOG('EngineerAssistManagerFocusExperimental is true')
+                --RNGLOG('EngineerAssistManagerFocusExperimental is true')
                 self.EngineerAssistManagerBuildPowerRequired = 150
             elseif massStorage > 150 and energyStorage > 150 then
                 if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then

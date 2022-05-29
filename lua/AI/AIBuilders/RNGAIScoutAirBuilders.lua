@@ -44,7 +44,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
-            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 10}},
+            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
         },
         BuilderType = 'Air',
     },
@@ -79,7 +79,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
-            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 30}},
+            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 120}},
         },
         BuilderType = 'Air',
     },
