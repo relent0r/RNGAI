@@ -603,30 +603,31 @@ PlatoonTemplate { Name = 'RNGAIT1LandAttackQueueExp',
         UEF = {
             { 'uel0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
-            { 'uel0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+            { 'uel0103', 1, 2, 'Artillery', 'none' },	-- Artillery
             { 'uel0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'uel0201', 1, 2, 'Attack', 'none' },		-- Striker Medium Tank
+            { 'uel0201', 1, 1, 'Attack', 'none' },		-- Striker Medium Tank
          },
         Aeon = {
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0103', 1, 2, 'Artillery', 'none' },	-- Artillery
             { 'ual0104', 1, 1, 'Guard', 'none' },		-- AA
             { 'ual0101', 1, 1, 'Scout', 'none' },		-- Land Scout
-            { 'ual0201', 1, 2, 'Attack', 'none' },		-- Light Hover tank
+            { 'ual0201', 1, 1, 'Attack', 'none' },		-- Light Hover tank
         },
         Cybran = {
             { 'url0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
-            { 'url0103', 1, 1, 'Artillery', 'none' },	-- arty
+            { 'url0103', 1, 2, 'Artillery', 'none' },	-- arty
             { 'url0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'url0107', 1, 2, 'Attack', 'none' },		-- Mantis
+            { 'url0107', 1, 1, 'Attack', 'none' },		-- Mantis
         },
         Seraphim = {
             { 'xsl0101', 1, 1, 'Scout', 'none' },		-- Land Scout
             { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
-            { 'xsl0103', 1, 1, 'Artillery', 'none' },	-- Artillery
+            { 'xsl0103', 1, 2, 'Artillery', 'none' },	-- Artillery
             { 'xsl0104', 1, 1, 'Guard', 'none' },		-- AA
-            { 'xsl0201', 1, 2, 'Attack', 'none' },		-- Medium Tank
+            { 'xsl0201', 1, 1, 'Attack', 'none' },		-- Medium Tank
         },
     }
 }

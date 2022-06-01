@@ -146,6 +146,13 @@ local NoSmallFrys = function (self, aiBrain)
     end
 end
 
+local ActiveExpansion = function(self, aiBrain, builderManager)
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
+        return 700
+    else
+        return 0
+    end
+end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',

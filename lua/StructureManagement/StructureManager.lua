@@ -416,6 +416,7 @@ StructureManager = Class {
         local totalNavalT3HQCount = 0
         local factoryToUpgrade
         local factionIndex = self.Brain:GetFactionIndex()
+        local activeExpansion = false
         for _, v in self.Factories.LAND[2].HQCount do
             totalLandT2HQCount = totalLandT2HQCount + v
         end
@@ -434,6 +435,14 @@ StructureManager = Class {
         for _, v in self.Factories.NAVAL[3].HQCount do
             totalNavalT3HQCount = totalNavalT3HQCount + v
         end
+        for _, v in self.Brain.BuilderManagers do
+            if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion then
+                RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
+                activeExpansion = v.FactoryManager.LocationType
+                break
+            end
+        end
+
         -- HQ Upgrades
         local mexSpend = self.Brain.EcoManager.TotalMexSpend or 0
         local actualMexIncome = self.Brain.cmanager.income.r.m - mexSpend
@@ -710,6 +719,43 @@ StructureManager = Class {
                             --RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3AirPass = true
+                            coroutine.yield(30)
+                        end
+                    end
+                end
+            end
+        end
+        if activeExpansion then
+            RNGLOG('Active Expansion is '..activeExpansion)
+            if (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
+                --RNGLOG('Factory T1 Upgrade Support Check passed')
+                RNGLOG('Performing Upgrade Check '..activeExpansion)
+                if self.Factories.LAND[1].UpgradingCount < 2 then
+                    --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                        --RNGLOG('Factory Upgrade efficiency over time check passed')
+                        local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                        local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
+                            --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                            local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
+                            if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                t2LandPass = true
+                                coroutine.yield(30)
+                            end
+                        end
+                    end
+                end
+                if self.Factories.LAND[1].UpgradingCount < 2 then
+                    --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                    if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
+                        local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
+                        if factoryToUpgrade and not factoryToUpgrade.Dead then
+                            --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                            self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                            t2LandPass = true
                             coroutine.yield(30)
                         end
                     end

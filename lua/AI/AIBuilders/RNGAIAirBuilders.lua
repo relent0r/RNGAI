@@ -163,7 +163,7 @@ BuilderGroup {
         Priority = 890,	
         PriorityFunction = BomberResponse,
         BuilderConditions = {	
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.7 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
         },	
         BuilderType = 'Air',	

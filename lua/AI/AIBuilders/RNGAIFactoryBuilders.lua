@@ -76,8 +76,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.70 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -1236,6 +1235,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support Expansions Active',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
@@ -1254,7 +1254,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             },
         BuilderType = 'Any',
-    },
+    },]]
 }
 
 BuilderGroup {
