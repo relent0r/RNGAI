@@ -4528,7 +4528,96 @@ DrawCircleAtPosition = function(aiBrain, position)
     end
 end
 
+CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run as a thread and validate land vs amphib vs nopath
+    -- Validate Pathing to enemies based on map pathing markers
+    -- Removed from build conditions so it can run on a slower loop
+    -- added amphib vs nopath results so we can tell when we are trapped on a plateu
+    coroutine.yield(Random(5,20))
+    while true do
+        --We are getting the current base position rather than the start position so we can use this for expansions.
+        for k, v in aiBrain.BuilderManagers do
+            local locPos = v.Position 
+            -- added this incase the position came back nil
+            local enemyX, enemyZ
+            if aiBrain:GetCurrentEnemy() then
+                enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+                -- if we don't have an enemy position then we can't search for a path. Return until we have an enemy position
+                if not enemyX then
+                    coroutine.yield(30)
+                    break
+                end
+            else
+                coroutine.yield(30)
+                break
+            end
 
+            -- Get the armyindex from the enemy
+            local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
+            local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+            -- create a table for the enemy index in case it's nil
+            aiBrain.CanPathToEnemyRNG[OwnIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex] or {}
+            aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] or {}
+            -- Check if we have already done a path search to the current enemy
+            if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'LAND' then
+                coroutine.yield(100)
+                break
+            elseif aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'WATER' then
+                return false == bool
+            end
+            -- path wit AI markers from our base to the enemy base
+            --RNGLOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
+            local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
+            -- if we have a path generated with AI path markers then....
+            if path then
+                --RNGLOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
+                CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
+            -- if we not have a path
+            else
+                -- "NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
+                if reason == 'NoPath' then
+                    --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! Testing Amphib map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
+                    local amphibPath, amphibReason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', locPos, {enemyX,0,enemyZ}, 1000)
+                    if amphibPath then
+                        aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'AMPHIBIOUS'
+                    else
+                        if amphibReason == 'NoPath' then
+                            -- No land or amphib path, we are likely on a plateu and cant go anywhere without transports.
+                            aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'NOPATH'
+                        elseif amPhibReason == 'NoGraph' then
+                            --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
+                            -- Check if we have less then 50% water on the map
+                            if aiBrain:GetMapWaterRatio() < 0.50 then
+                                --lets asume we can move on land to the enemy
+                                --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                                aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
+                            else
+                                -- we have more then 50% water on this map. Ity maybe a water map..
+                                --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                                aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'NOPATH'
+                            end
+                        end
+                    end
+                -- "NoGraph" means we have no AI markers and cant graph to the enemy. We can't search for a path - No markers
+                elseif reason == 'NoGraph' then
+                    --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
+                    -- Check if we have less then 50% water on the map
+                    if aiBrain:GetMapWaterRatio() < 0.50 then
+                        --lets asume we can move on land to the enemy
+                        --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                        aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
+                    else
+                        -- we have more then 50% water on this map. Ity maybe a water map..
+                        --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
+                        aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'NOPATH'
+                    end
+                end
+            end
+            coroutine.yield(10)
+        end
+        coroutine.yield(100)
+    end
+end
 
 
 --[[

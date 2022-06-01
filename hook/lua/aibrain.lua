@@ -222,6 +222,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Naval = self.DefaultNavalRatio,
         }
         self.earlyFlag = true
+        self.CanPathToEnemyRNG = {}
         self.cmanager = {
             income = {
                 r  = {
