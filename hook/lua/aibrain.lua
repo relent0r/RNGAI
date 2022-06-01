@@ -17,6 +17,7 @@ local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local GiveResource = moho.aibrain_methods.GiveResource
+local TakeResource = moho.aibrain_method.TakeResource
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -41,7 +42,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
+            ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
             --RNGLOG('* AI-RNG: This is RNGEXP')
@@ -200,6 +202,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerFocusAirUpgrade = false
+        self.EngineerAssistManagerFocusExperimental = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
         self.EngineerDistributionTable = {
@@ -219,6 +222,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Naval = self.DefaultNavalRatio,
         }
         self.earlyFlag = true
+        self.CanPathToEnemyRNG = {}
         self.cmanager = {
             income = {
                 r  = {
@@ -233,6 +237,15 @@ AIBrain = Class(RNGAIBrainClass) {
             spend = {
                 m = 0,
                 e = 0,
+            },
+            buildpower = {
+                eng = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                    com = 0,
+                    sacu = 0
+                }
             },
             categoryspend = {
                 eng = 0,
@@ -416,8 +429,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=30,
-                            gunship=30,
+                            bomber=10,
+                            gunship=10,
                             torpedo=0,
                             total=0
                         },
@@ -547,8 +560,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=45,
-                            gunship=15,
+                            bomber=15,
+                            gunship=10,
                             torpedo=0,
                             total=0
                         },
@@ -610,8 +623,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=50,
-                            gunship=15,
+                            bomber=30,
+                            gunship=10,
                             torpedo=0,
                             total=0
                         },
@@ -675,8 +688,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=75,
-                            gunship=15,
+                            bomber=30,
+                            gunship=10,
                             torpedo=0,
                             total=0
                         },
@@ -760,12 +773,9 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.LowEnergyMode = false
         self.EcoManager = {
+            ApproxFactoryMassConsumption = 0,
             EcoManagerTime = 30,
             EcoManagerStatus = 'ACTIVE',
-            ExtractorUpgradeLimit = {
-                TECH1 = 1,
-                TECH2 = 1
-            },
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
             CoreMassMarkerCount = 0,
             TotalCoreExtractors = 0,
@@ -837,6 +847,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
+        self.EnemyIntel.TML = {}
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},
@@ -893,7 +904,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BrainIntel = {}
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
-        self.BrainIntel.StartPos = { selfStartPosX, selfStartPosY }
+        self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
@@ -943,20 +954,15 @@ AIBrain = Class(RNGAIBrainClass) {
         
         self.UpgradeIssuedPeriod = 100
 
-        if mapSizeX < 1000 and mapSizeZ < 1000  then
-            self.UpgradeIssuedLimit = 1
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
-        else
-            self.UpgradeIssuedLimit = 2
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
-        end
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
         end
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
-        LOG('Water Ratio is '..self.MapWaterRatio)
+        if self.RNGDEBUG then
+            LOG('Water Ratio is '..self.MapWaterRatio)
+        end
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
@@ -1044,9 +1050,73 @@ AIBrain = Class(RNGAIBrainClass) {
         self.IntelManager:Run()
         self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
         self.StructureManager:Run()
-        
+        if self.RNGDEBUG then
+            self:ForkThread(self.LogDataThreadRNG)
+        end
     end,
 
+    LogDataThreadRNG = function(self)
+        coroutine.yield(300)
+        RNGLOG('Current Interest List PeimeterPoints'..reprs(self.InterestList.PerimeterPoints))
+        while true do
+            local factionIndex = self:GetFactionIndex()
+            RNGLOG('-- Eco Stats --')
+            RNGLOG('EnergyIncome --'..self.EconomyOverTimeCurrent.EnergyIncome)
+            RNGLOG('MassIncome --'..self.EconomyOverTimeCurrent.MassIncome)
+            RNGLOG('EnergyRequested --'..self.EconomyOverTimeCurrent.EnergyRequested)
+            RNGLOG('MassRequested --'..self.EconomyOverTimeCurrent.MassRequested)
+            RNGLOG('EnergyEfficiencyOverTime --'..self.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
+            RNGLOG('EnergyTrendOverTime --'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
+            RNGLOG('MassTrendOverTime --'..self.EconomyOverTimeCurrent.MassTrendOverTime)
+            RNGLOG('---------------')
+            RNGLOG('Current income from extractors '..self.cmanager.income.r.m)
+            RNGLOG('self.cmanager.buildpower.eng '..repr(self.cmanager.buildpower.eng))
+            if self.cmanager.income.r.m > 55 and self.cmanager.buildpower.eng.T2 < 75 then
+                RNGLOG('Dynamic T2 Engineer builder should be activated for T3 extractor push')
+            end
+            if self.cmanager.income.r.m > 110 and self.cmanager.buildpower.eng.T3 < 225 then
+                RNGLOG('Dynamic T3 Engineer builder should be activated for experimental extractor push')
+            end
+            if self.EngineerAssistManagerFocusExperimental then
+                RNGLOG('We should be pushing for an experimental and we only have one in progress')
+            end
+            RNGLOG('Core T3 Extractor Count '..self.EcoManager.CoreExtractorT3Count)
+            if self.EcoManager.CoreMassPush then
+                RNGLOG('We should be pushing for 3 core t3 extractors')
+            end
+            RNGLOG('Current T1 Mobile AA count '..self.amanager.Current['Land']['T1']['aa'])
+            RNGLOG('Current T2 Mobile AA count '..self.amanager.Current['Land']['T2']['aa'])
+            RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
+            RNGLOG('Current engineer assist build power required '..self.EngineerAssistManagerBuildPowerRequired)
+            RNGLOG('Approx Factory Mass Consumption '..self.EcoManager.ApproxFactoryMassConsumption)
+            RNGLOG('Soon Mex Count '..table.getn(self.emanager.soonmexes))
+            RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
+            RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+            RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
+            RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+            RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
+            RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
+            RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+            RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+            RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
+            RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
+            RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
+            RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
+            RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
+            RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
+            RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+            RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+            RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
+            RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
+            RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
+            RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
+            --RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
+            --RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
+            RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
+            coroutine.yield(100)
+        end
+    end,
 
     TestThread = function(self)
         -- just a test for visually seeing grids
@@ -1089,8 +1159,49 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     drawMainRestricted = function(self)
+        coroutine.yield(100)
+        --RNGLOG('Starting drawMainRestricted')
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
+            DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
+            if self.InterestList.PerimeterPoints then
+                for k, v in self.InterestList.PerimeterPoints do
+                    for c, b in v do
+                        if b.Position then
+                            --RNGLOG('PerimeterPoints pos '..repr(b.Position))
+                            DrawCircle(b.Position, 10, 'FFFF00')
+                        end
+                    end
+                end
+            end
+            if self.InterestList.HighPriority then
+                for k, v in self.InterestList.HighPriority do
+                    for c, b in v do
+                        if b.Position then
+                            --RNGLOG('HighPriority pos '..repr(b.Position))
+                            DrawCircle(b.Position, 10, 'FFFF00')
+                        end
+                    end
+                end
+            end
+            if self.InterestList.LowPriority then
+                for k, v in self.InterestList.LowPriority do
+                    for c, b in v do
+                        if b.Position then
+                            DrawCircle(b.Position, 10, 'FFFF00')
+                        end
+                    end
+                end
+            end
+            if self.InterestList.MustScout then
+                for k, v in self.InterestList.MustScout do
+                    for c, b in v do
+                        if b.Position then
+                            DrawCircle(b.Position, 10, 'FFA500')
+                        end
+                    end
+                end
+            end
             WaitTicks(2)
         end
     end,
@@ -1238,6 +1349,7 @@ AIBrain = Class(RNGAIBrainClass) {
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
             StrategyManager = StratManager.CreateStrategyManager(self, baseName, position, radius),
+            DefensivePoints = RUtils.GenerateDefensivePointTable(BaseRestrictedArea, position),
             BuilderHandles = {},
             Position = position,
             Layer = baseLayer,
@@ -1245,7 +1357,12 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
+        if self.RNGDEBUG then
+            RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))
+        end
     end,
+
+    
 
     GetGraphArea = function(self, position, baseName, baseLayer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time
@@ -1324,7 +1441,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     RNGINSERT(self.GraphZones[v.RNGArea].MassMarkers, v)
                     self.GraphZones[v.RNGArea].MassMarkersInZone = self.GraphZones[v.RNGArea].MassMarkersInZone + 1
-                    if VDist2Sq(v.position[1], v.position[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 2500 then
+                    if VDist2Sq(v.position[1], v.position[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3]) < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
                     end
                 end
@@ -1580,6 +1697,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.InterestList.LowPriority = {}
             self.InterestList.MustScout = {}
             self.InterestList.PerimeterPoints = {
+                RestrictedClose = {},
                 Restricted = {},
                 Military = {},
                 DMZ = {}
@@ -1707,23 +1825,27 @@ AIBrain = Class(RNGAIBrainClass) {
                 BaseDMZArea
             }
             for i=1, 3 do
-                local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[2]})
+                local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[3]})
                 for _, v in tempPoints do
                     if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
                         continue
                     end
-                    if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-                        if i == 1 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.Restricted, {Position = v, Scout = false})
-                        elseif i == 2 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.Military, {Position = v, Scout = false})
-                        elseif i == 3 then
-                            RNGINSERT(self.InterestList.PerimeterPoints.DMZ, {Position = v, Scout = false})
-                        end
+                    local belowWater = false
+                    if GetTerrainHeight(v[1], v[3]) < GetSurfaceHeight(v[1], v[3]) then
+                        belowWater = true
+                    end
+                    if i == 1 then
+                        RNGINSERT(self.InterestList.PerimeterPoints.Restricted, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
+                    elseif i == 2 then
+                        RNGINSERT(self.InterestList.PerimeterPoints.Military, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
+                    elseif i == 3 then
+                        RNGINSERT(self.InterestList.PerimeterPoints.DMZ, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
                     end
                 end
             end
-            --RNGLOG('Perimeter Points Post '..repr(self.InterestList.PerimeterPoints))
+            if self.RNGDEBUG then
+                RNGLOG('Perimeter Points Post '..repr(self.InterestList.PerimeterPoints))
+            end
             --RNGLOG('* AI-RNG: EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
             local massLocations = RUtils.AIGetMassMarkerLocations(self, true)
         
@@ -2082,7 +2204,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('EnemyStrength Tables :'..repr(v))
                 --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
-                    if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[2]) < 19600 then
+                    if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3]) < 19600 then
                        --RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
@@ -2206,7 +2328,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 local landThreat = 0
                 local airThreat = 0
                 local navalThreat = 0
-                if self.BuilderManagers[k].FactoryManager and RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                local enemyLandAngle = false
+                local enemySurfaceAirAngle = false
+                local enemyAirAngle = false
+                local enemyNavalAngle = false
+                if self.BuilderManagers[k].FactoryManager and next(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
                     end
@@ -2217,30 +2343,55 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if EntityCategoryContains(LandCatUnits, unit) then
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                                    if landUnits == 1 then
+                                        enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                    end
                                     continue
                                 end
                                 if EntityCategoryContains(AirSurfaceCatUnits, unit) then
                                     antiSurfaceAir = antiSurfaceAir + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    if antiSurfaceAir == 1 then
+                                        enemySurfaceAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                    end
                                     continue
                                 end
                                 if ALLBPS[unit.UnitId].CategoriesHash.AIR then
                                     airUnits = airUnits + 1
                                     airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    if airUnits == 1 then
+                                        enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                    end
                                     continue
                                 end
                                 if ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
                                     navalUnits = navalUnits + 1
                                     navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                                    if navalUnits == 1 then
+                                        enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                    end
                                     continue
                                 end
                             end
                         end
                     end
+                    
                     self.BasePerimeterMonitor[k].LandUnits = landUnits
+                    if enemyLandAngle then
+                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
+                    end
                     self.BasePerimeterMonitor[k].AirUnits = airUnits
+                    if enemySurfaceAirAngle then
+                        self.BasePerimeterMonitor[k].RecentSurfaceAirAngle = enemySurfaceAirAngle
+                    end
                     self.BasePerimeterMonitor[k].AntiSurfaceAirUnits = antiSurfaceAir
+                    if enemyAirAngle then
+                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyAirAngle
+                    end
                     self.BasePerimeterMonitor[k].NavalUnits = navalUnits
+                    if enemyNavalAngle then
+                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyNavalAngle
+                    end
                     self.BasePerimeterMonitor[k].NavalThreat = navalThreat
                     self.BasePerimeterMonitor[k].AirThreat = airThreat
                     self.BasePerimeterMonitor[k].LandThreat = landThreat
@@ -2704,6 +2855,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.BrainIntel.NavalPhase = 3
                 end
             end
+            
+            --Lets ponder this one some more
+            if self.BrainIntel.LandPhase > 2 then
+                if self.cmanager.income.r.m > (120 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
+                    --RNGLOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
+                    self.EngineerAssistManagerFocusExperimental = true
+                else
+                    self.EngineerAssistManagerFocusExperimental = false
+                end
+            end
             coroutine.yield(600)
         end
     end,
@@ -2980,16 +3141,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
         end
-
-        if self.EnemyIntel.EnemyCount < 2 and gameTime < (240 / multiplier) then
-            self.UpgradeMode = 'Caution'
-        elseif gameTime > (240 / multiplier) and self.UpgradeMode == 'Caution' then
-            --RNGLOG('Setting UpgradeMode to Normal')
-            self.UpgradeMode = 'Normal'
-            self.UpgradeIssuedLimit = 1
-        elseif gameTime > (240 / multiplier) and self.UpgradeIssuedLimit == 1 and self.UpgradeMode == 'Aggresive' then
-            self.UpgradeIssuedLimit = self.UpgradeIssuedLimit + 1
-        end
         self.EnemyIntel.EnemyThreatLocations = {}
 
         -- debug, remove later on
@@ -3105,37 +3256,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.BrainIntel.SelfThreat.BaseThreatCaution = false
             end
         end
-        
-        if (gameTime > 1200 and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.SelfThreat.MassMarker / 1.5) or self.EnemyIntel.ChokeFlag then
-            --RNGLOG('Switch to agressive upgrade mode')
-            self.UpgradeMode = 'Aggressive'
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 2
-        elseif gameTime > 1200 then
-            --RNGLOG('Switch to normal upgrade mode')
-            self.UpgradeMode = 'Normal'
-            self.EcoManager.ExtractorUpgradeLimit.TECH1 = 1
-        end
-        
-        --RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
-        --RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
-        --RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
-        --RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
-        --RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
-        --RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
-        --RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
-        --RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
-        --RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
-        --RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
-        --RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
-        --RNGLOG('Current Enemy Extractor Threat :'..self.EnemyIntel.EnemyThreatCurrent.Extractor)
-        --RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
-        --RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
-        --RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
-        --RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
-        --RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
-        --RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-        --RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
-        --RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
         coroutine.yield(2)
     end,
 
@@ -3623,6 +3743,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 
                 if powerStateCaution then
                     --RNGLOG('Power State Caution is true')
+                    self.EngineerAssistManagerFocusPower = true
                     local powerCycle = 0
                     local unitTypePaused = {}
                     while powerStateCaution do
@@ -3814,6 +3935,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                     powerStateCaution = false
+                else
+                    self.EngineerAssistManagerFocusPower = false
                 end
             end
             coroutine.yield(20)
@@ -3821,6 +3944,15 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoPowerPreemptiveRNG = function(self)
+        local function GetMissileConsumption(ALLBPS, unitId, buildMultiplier)
+            if ALLBPS[unitId].Weapon[1].ProjectileId then
+                local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+                --RNGLOG('EcoPowerPreemptive return consumption number is '..(ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)))
+                return ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)
+            end
+            return false
+
+        end
         local ALLBPS = __blueprints
         local multiplier = self.EcoManager.EcoMultiplier
         coroutine.yield(Random(1,7))
@@ -3832,31 +3964,40 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.Dead and not v.BuildCompleted then
                     if EntityCategoryContains(categories.ENGINEER, v) then
                         if v.UnitBeingBuilt then
-                            if ALLBPS[v.UnitId].Economy.BuildRate > 100 then
-                                if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (4000 * multiplier)
-                                    continue
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
+                                potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
+                                continue
+                            end
+                            if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
+                                potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
+                                continue
+                            end
+                            if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
+                                if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                    --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
+                                    potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
-                                if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1200 * multiplier)
-                                    continue
+                                continue
+                            end
+                            if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                    --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
+                                    potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
-                                if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
-                                    continue
-                                end
-                                if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.6 then
-                                    --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
-                                    continue
-                                end
+                                continue
+                            end
+                            if EntityCategoryContains(categories.STRUCTURE * categories.FACTORY * categories.AIR, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                potentialPowerConsumption = potentialPowerConsumption + (100 * multiplier)
+                                continue
                             end
                         end
                     elseif EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
-                            if v:GetFractionComplete() < 0.6 then
+                            if v:GetFractionComplete() < 0.7 then
                                 --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
                                 potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
                                 continue
@@ -3864,7 +4005,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 v.BuildCompleted = true
                             end
                     elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
-                        if v:GetFractionComplete() < 0.6 then
+                        if v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
                             potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                             continue
@@ -3872,17 +4013,17 @@ AIBrain = Class(RNGAIBrainClass) {
                             v.BuildCompleted = true
                         end
                     elseif ALLBPS[v.UnitId].CategoriesHash.MASSEXTRACTION then
-                        if v:GetFractionComplete() < 0.6 then
+                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Extractors being upgraded')
-                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
                             continue
                         else
                             v.BuildCompleted = true
                         end
-                    elseif ALLBPS[v.UnitId].CategoriesHash.RADAR then
-                        if v:GetFractionComplete() < 0.6 then
-                            --RNGLOG('EcoPowerPreemptive : Radar being upgraded')
-                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId].Economy.BuildCostEnergy / ALLBPS[v.UnitId].Economy.BuildTime * ALLBPS[v.UnitId].Economy.BuildRate)
+                    elseif EntityCategoryContains(categories.STRUCTURE * (categories.RADAR + categories.SONAR), v) then
+                        if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
+                            --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
+                            potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
                             continue
                         else
                             v.BuildCompleted = true
@@ -4506,14 +4647,15 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EngineerAssistManagerBrainRNG = function(self, type)
-        coroutine.yield(1800)
+        coroutine.yield(1200)
         local state
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local CoreMassNumberAchieved = false
-            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 then
+            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
+                self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
@@ -4523,8 +4665,20 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
+            elseif self.EngineerAssistManagerFocusExperimental then
+                state = 'Experimental'
+                self.EngineerAssistManagerFocusCategory = categories.MOBILE * categories.EXPERIMENTAL
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
+                self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
@@ -4535,22 +4689,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
+                self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
-                }
-            elseif self.EngineerAssistManagerFocusExperimental then
-                state = 'Experimental'
-                self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
             else
@@ -4570,29 +4715,31 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 then
-                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
+            if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 and self.EngineerAssistManagerBuildPower <= 30 then
+                if self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
                 --RNGLOG('EngineerAssistManager is Active')
                 self.EngineerAssistManagerActive = true
-            elseif massStorage > 150 and energyStorage > 150 then
-                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
-                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
-                end
-                --RNGLOG('EngineerAssistManager is Active')
-                self.EngineerAssistManagerActive = true
-            elseif self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 60 then
+            elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 75 then
                 --RNGLOG('CoreMassPush is true')
-                self.EngineerAssistManagerBuildPowerRequired = 60
-            elseif not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
-                CoreMassNumberAchieved = true
-                self.EngineerAssistManagerBuildPowerRequired = 16
+                self.EngineerAssistManagerBuildPowerRequired = 75
+            elseif self.EngineerAssistManagerFocusExperimental and self.EngineerAssistManagerBuildPower <= 150 then
+                --RNGLOG('EngineerAssistManagerFocusExperimental is true')
+                self.EngineerAssistManagerBuildPowerRequired = 150
+            elseif massStorage > 150 and energyStorage > 150 then
+                if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then
+                    if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
+                        self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                    end
+                end
+                --RNGLOG('EngineerAssistManager is Active')
+                self.EngineerAssistManagerActive = true
             elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.6 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
                 --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
                 self.EngineerAssistManagerActive = true
                 self.EngineerAssistManagerBuildPowerRequired = 5
-            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 then
+            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 then
                 --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                 coroutine.yield(30)
             else
@@ -4601,12 +4748,19 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 --self.EngineerAssistManagerActive = false
             end
+            if not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
+                CoreMassNumberAchieved = true
+                if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then
+                    self.EngineerAssistManagerBuildPowerRequired = 16
+                end
+            end
             coroutine.yield(10)
         end
     end,
 
     AllyEconomyHelpThread = function(self)
         local selfIndex = self:GetArmyIndex()
+        local SUtils = import('/lua/AI/sorianutilities.lua')
         coroutine.yield(180)
         while true do
             if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
@@ -4615,9 +4769,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         if IsAlly(selfIndex, brain:GetArmyIndex()) then
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
                                 --RNGLOG('Transfer Energy to team mate')
+                                SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[brain:GetArmyIndex()].Nickname)
                                 local amount
                                 amount = GetEconomyStored( self, 'ENERGY') / 8
-                                GiveResource(self, 'ENERGY', amount)
+                                TakeResource(self, 'Energy', amount)
+                                GiveResource(brain, 'Energy', amount)
                             end
                         end
                     end
@@ -4673,6 +4829,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local facspend = {Land=0,Air=0,Naval=0}
         local mexspend = {T1=0,T2=0,T3=0}
         local engspend = {T1=0,T2=0,T3=0,com=0}
+        local engbuildpower = {T1=0,T2=0,T3=0,com=0,sacu=0}
         local rincome = {m=0,e=0}
         local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
@@ -4745,11 +4902,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif EntityCategoryContains(categories.COMMAND+categories.SUBCOMMANDER,unit) then
                     if ALLBPS[unit.UnitId].CategoriesHash.COMMAND then
-                        coms.acu=coms.acu+1
-                        engspend.com=engspend.com+spendm
+                        coms.acu = coms.acu + 1
+                        engspend.com = engspend.com + spendm
+                        engbuildpower.com = engbuildpower.com + ALLBPS[unit.UnitId].Economy.BuildRate
                     elseif ALLBPS[unit.UnitId].CategoriesHash.SUBCOMMANDER then
-                        coms.sacu=coms.sacu+1
-                        engspend.com=engspend.com+spendm
+                        coms.sacu = coms.sacu + 1
+                        engspend.com = engspend.com + spendm
+                        engbuildpower.sacu = engbuildpower.sacu + ALLBPS[unit.UnitId].Economy.BuildRate
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.MASSFABRICATION then
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
@@ -4765,10 +4924,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         engspend.T1=engspend.T1+spendm
+                        engbuildpower.T1 = engbuildpower.T1 + ALLBPS[unit.UnitId].Economy.BuildRate
                     elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
                         engspend.T2=engspend.T2+spendm
+                        engbuildpower.T2 = engbuildpower.T2 + ALLBPS[unit.UnitId].Economy.BuildRate
                     elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
                         engspend.T3=engspend.T3+spendm
+                        engbuildpower.T3 = engbuildpower.T3 + ALLBPS[unit.UnitId].Economy.BuildRate
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.FACTORY then
                     if ALLBPS[unit.UnitId].CategoriesHash.LAND then
@@ -5012,6 +5174,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.cmanager.income.t.e=tincome.e
         self.cmanager.spend.m=tspend.m
         self.cmanager.spend.e=tspend.e
+        self.cmanager.buildpower.eng=engbuildpower
         self.cmanager.categoryspend.eng=engspend
         self.cmanager.categoryspend.fact=facspend
         self.cmanager.categoryspend.silo=launcherspend

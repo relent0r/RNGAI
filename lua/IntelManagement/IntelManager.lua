@@ -318,7 +318,7 @@ IntelManager = Class {
                         if controlValue <= 0 then
                             controlValue = 0.1
                         end
-                        local resourceValue = zoneSet[v.zone.id].resourcevalue
+                        local resourceValue = zoneSet[v.zone.id].resourcevalue or 1
                         if resourceValue then
                            --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemythreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
                            --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
@@ -358,7 +358,7 @@ IntelManager = Class {
                                 if controlValue <= 0 then
                                     controlValue = 0.1
                                 end
-                                local resourceValue = zoneSet[v1.zone.id].resourcevalue
+                                local resourceValue = zoneSet[v1.zone.id].resourcevalue or 1
                                --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v1.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                 if compare > 0 then
@@ -394,7 +394,7 @@ IntelManager = Class {
                                 if controlValue <= 0 then
                                     controlValue = 0.1
                                 end
-                                local resourceValue = zoneSet[v.id].resourcevalue
+                                local resourceValue = zoneSet[v.id].resourcevalue or 1
                                --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                --RNGLOG('Compare variable '..compare)
@@ -1028,7 +1028,7 @@ MapReclaimAnalysis = function(aiBrain)
             end
             local startReclaim = 0
             for k, square in aiBrain.MapReclaimTable do
-                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], square.Position[1], square.Position[3]) < 14400 then
+                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], square.Position[1], square.Position[3]) < 14400 then
                     startReclaim = startReclaim + square.TotalReclaim
                 end
             end

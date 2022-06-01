@@ -35,18 +35,24 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                 for m,bString in bType[1] do
                     if bString == buildingType then
                         for n,position in bType do
-                            if n > 1 and aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
+                            if n > 1 then
                                 AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
-                                 table.remove(bType,n)
-                                 return DoHackyLogic(buildingType, builder)
-                            end # if n > 1 and can build structure at
-                        end # for loop
+                                table.remove(bType,n)
+                                return DoHackyLogic(buildingType, builder)
+                            else
+                                
+                                if n > 1 and not aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
+                                    RNGLOG('CanBuildStructureAt failed within Ordered Template Build')
+                                end
+                                
+                            end
+                        end 
                         break
-                    end # if bString == builderType
-                end # for loop
-            end # for loop
-        end # end else
-    end # if what to build
+                    end 
+                end 
+            end 
+        end 
+    end 
     return # unsuccessful build
 end
 
@@ -571,4 +577,24 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
             end
         end
     end
+end
+
+function AIBuildBaseTemplateFromDefensivePointRNG(baseTemplate, location)
+    local baseT = {}
+    if location and baseTemplate then
+        for templateNum, template in baseTemplate do
+            baseT[templateNum] = {}
+            for rowNum,rowData in template do # rowNum, rowData in template do
+                if type(rowData[1]) == 'number' then
+                    baseT[templateNum][rowNum] = {}
+                    baseT[templateNum][rowNum][1] = math.floor(rowData[1] + location[1]) + 0.5
+                    baseT[templateNum][rowNum][2] = math.floor(rowData[2] + location[3]) + 0.5
+                    baseT[templateNum][rowNum][3] = 0
+                else
+                    baseT[templateNum][rowNum] = template[rowNum]
+                end
+            end
+        end
+    end
+    return baseT
 end

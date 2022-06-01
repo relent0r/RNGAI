@@ -111,7 +111,7 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
     end
     if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 2 then
         --RNGLOG('Bomber Response for Perimeter Monitor is true')
-        return 890
+        return 895
     end
     return 0
 end
@@ -121,7 +121,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory Intie Response',
-        PlatoonTemplate = 'RNGAIFighterGroup',
+        PlatoonTemplate = 'T1AirFighter',
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
@@ -163,7 +163,7 @@ BuilderGroup {
         Priority = 890,	
         PriorityFunction = BomberResponse,
         BuilderConditions = {	
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.7 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
         },	
         BuilderType = 'Air',	
@@ -320,32 +320,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Response Formers',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
-        BuilderName = 'RNGAI Air Intercept BaseDMZArea',
-        PlatoonTemplate = 'RNGAI AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
-        Priority = 800,
-        InstanceCount = 3,
-        BuilderType = 'Any',
-        BuilderData = {
-            Defensive = true,
-            SearchRadius = BaseDMZArea,
-            LocationType = 'LocationType',
-            NeverGuardEngineers = true,
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
-                categories.BOMBER * categories.AIR,
-                categories.GROUNDATTACK * categories.AIR,
-                categories.TRANSPORTFOCUS * categories.AIR,
-                categories.ANTIAIR * categories.AIR,
-                categories.AIR,
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, AntiAirUnits } },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI Air Mercy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI MercyAttack',
         Priority = 960,
@@ -396,7 +370,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
-        InstanceCount = 5,
+        InstanceCount = 8,
         BuilderType = 'Any',
         BuilderData = {
             AvoidBases = true,
@@ -421,7 +395,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
-        InstanceCount = 8,
+        InstanceCount = 3,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,
@@ -452,7 +426,7 @@ BuilderGroup {
             IgnoreCivilian = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
-            PlatoonLimit = 3,
+            PlatoonLimit = 2,
             PrioritizedCategories = {
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION,
@@ -473,6 +447,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
         },
         BuilderData = {
+            Defensive = true,
             StaticCategories = true,
             AvoidBases = true,
             IgnoreCivilian = true,
@@ -480,6 +455,7 @@ BuilderGroup {
             UnitType = 'BOMBER',
             PlatoonLimit = 3,
             PrioritizedCategories = {
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER - categories.COMMAND,
                 categories.MASSEXTRACTION * categories.TECH1,
@@ -505,7 +481,7 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
             IgnoreCivilian = true,
-            PlatoonLimit = 18,
+            PlatoonLimit = 5,
             PrioritizedCategories = {
                 categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 categories.MASSEXTRACTION,

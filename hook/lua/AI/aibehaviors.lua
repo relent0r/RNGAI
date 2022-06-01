@@ -229,7 +229,7 @@ function CDRBrainThread(cdr)
                             enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[c].Position
                         end
                     end
-                    local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2])
+                    local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3])
                     v.DistanceToBase = enemyAcuDistance
                     if enemyAcuDistance < (aiBrain.BrainIntel.MilitaryRange * aiBrain.BrainIntel.MilitaryRange) then
                         v.OnField = true
@@ -448,6 +448,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         end
                        --RNGLOG('Build Queue item should be finished '..k)
                         cdr.EngineerBuildQueue[k] = nil
+                        break
+                    end
+                    if cdr.Caution then
                         break
                     end
                    --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
@@ -737,7 +740,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                                 IssueClearCommands({cdr})
                                 IssueMove({cdr}, platoonPosition)
                             end
-                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 2500 then
+                            if cdr.CurrentEnemyThreat * 1.2 < cdr.CurrentFriendlyThreat and platoonDistance < 900 then
                                 --RNGLOG('CDR : EnemyThreat low, cancel retreat')
                                 IssueClearCommands({cdr})
                                 cdr.movetopos = false
@@ -769,7 +772,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     IssueClearCommands({cdr})
                     IssueMove({cdr}, path[i])
                 end
-                if cdr.Health > 5000 and cdr.Active and not retreat then
+                if cdr.Health > 5500 and cdr.Active and not retreat then
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPosition, 30, 'Enemy')
                     if enemyUnitCount > 0 then
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetACURNG(aiBrain, cdr.PlatoonHandle, cdrPosition, 'Attack', 30, (categories.LAND + categories.STRUCTURE), cdr.atkPri, false)
@@ -829,7 +832,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                             end
                         end
                     end
-                elseif cdr.Health > 6000 and retreat or platoonRetreat then
+                elseif cdr.Health > 6000 and (retreat or platoonRetreat) then
                     if not cdr.GunUpgradeRequired and not cdr.HighThreatUpgradeRequired then
                         --RNGLOG('CDR : We are retreating or platoonRetreating')
                         --RNGLOG('CDR : EnemyThreat inner is '..(cdr.CurrentEnemyInnerCircle * 1.2)..' friendly inner is '..cdr.CurrentFriendlyInnerCircle)
@@ -842,7 +845,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                         end
                     end
                 end
-                if (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and cdr.Active and (not retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.50 then
+                if (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and cdr.Active and (not retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.70 then
                     PerformACUReclaim(aiBrain, cdr, 25)
                 end
                 coroutine.yield(20)
@@ -945,7 +948,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
                 --RNGLOG('Non Ally and OnField')
-                if (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[2], v.Position[1], v.Position[3]) < 22500 then
+                if (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], v.Position[1], v.Position[3]) < 22500 then
                     --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
                     return
                 end
@@ -1242,11 +1245,12 @@ end
 function CDRThreatAssessmentRNG(cdr)
     local aiBrain = cdr:GetAIBrain()
     local innerCircle = 1225
+    local UnitCategories = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT )
     while not cdr.Dead do
         if cdr.Active then
             local enemyACUPresent = false
-            local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 80, 'Enemy')
-            local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), cdr:GetPosition(), 70, 'Ally')
+            local enemyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 80, 'Enemy')
+            local friendlyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 70, 'Ally')
             local enemyUnitThreat = 0
             local enemyUnitThreatInner = 0
             local friendlyUnitThreat = 0
@@ -1311,9 +1315,9 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
-           --RNGLOG('Current Enemy Inner Threat '..enemyUnitThreatInner)
+           --RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
            --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-           --RNGLOG('Current Friendly Inner Threat '..friendlyUnitThreatInner)
+           --RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
            --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
            --RNGLOG('Current CDR Confidence '..cdr.Confidence)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
@@ -1574,6 +1578,11 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if EntityCategoryContains(categories.COMMAND, target) then
                         local enemyACUHealth = target:GetHealth()
+                        local shieldHealth, shieldNumber = RUtils.GetShieldCoverAroundUnit(aiBrain, target)
+                        if shieldHealth > 0 then
+                            enemyACUHealth = enemyACUHealth + shieldHealth
+                        end
+
                         if enemyACUHealth < cdr.Health then
                             acuAdvantage = true
                         end
@@ -1685,7 +1694,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                     end
                     if target and not target.Dead and cdr.TargetPosition then
-                        if RUtils.PositionInWater(cdr.Position) and VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.TargetPosition[1], cdr.TargetPosition[3]) < 100 then
+                        if RUtils.PositionInWater(cdr.Position) and VDist3Sq(cdr.Position, cdr.TargetPosition) < 100 then
                             --RNGLOG('ACU is in water, going to try reclaim')
                             IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)

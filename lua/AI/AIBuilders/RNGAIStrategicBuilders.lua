@@ -11,8 +11,9 @@ BuilderGroup {
         BuilderName = 'RNGAI SML Hi Pri',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -43,8 +44,9 @@ BuilderGroup {
         BuilderName = 'RNGAI SML Low Pri',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -80,14 +82,13 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Hi Pri Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 }},
         },
@@ -113,12 +114,12 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Lo Pri Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
@@ -145,13 +146,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Mavor Exp Nuke Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -177,13 +178,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 RapidFire Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -209,13 +210,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Scathis Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -248,14 +249,13 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Hi Pri Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.95 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 }},
         },
@@ -281,11 +281,11 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Lo Pri Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
@@ -313,13 +313,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Mavor Exp Nuke Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
@@ -346,13 +346,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 RapidFire Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
@@ -379,13 +379,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Scathis Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'Artillery', 20},
+        DelayEqualBuildPlattons = {'HighValue', 10},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Artillery' }},
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},

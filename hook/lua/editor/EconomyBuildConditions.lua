@@ -323,12 +323,13 @@ function MassIncomeToFactoryRNG(aiBrain, compareType, t1Drain, t2Drain, t3Drain)
     massTotal = massTotal + (unitCount * t3Drain)
 
     # T4 Test
-    unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL * categories.MOBILE)
+    unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3))
     massTotal = massTotal + (unitCount * 40)
 
     -- aiBrain.EconomyOverTimeCurrent.MassIncome * 10
     -- (aiBrain.cmanager.income.r.m - mexSpend)
     --local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3)
+    aiBrain.EcoManager.ApproxFactoryMassConsumption = massTotal
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
         --RNGLOG('MassToFactoryRatio false')
         --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
@@ -419,8 +420,12 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
             if (GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
                 return true
             end
+        elseif uType == 'Land' then
+            if  GetEconomyStored(aiBrain, 'MASS') >= 10 and (aiBrain.EnemyIntel.EnemyThreatCurrent.Land > aiBrain.BrainIntel.SelfThreat.LandNow or GetEconomyStored(aiBrain, 'ENERGY') >= 200) then
+                return true
+            end
         else
-            if (GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 20) then
+            if GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 200 then
                 return true
             end
         end

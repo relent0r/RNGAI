@@ -146,6 +146,13 @@ local NoSmallFrys = function (self, aiBrain)
     end
 end
 
+local ActiveExpansion = function(self, aiBrain, builderManager)
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
+        return 700
+    else
+        return 0
+    end
+end
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
@@ -881,7 +888,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
-        PlatoonAddBehaviors = { 'ZoneUpdate' },
+        --PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1041,7 +1048,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'ZoneUpdate' },
+        --PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1272,7 +1279,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Trueplatoon Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
         Priority = 690,                                                          -- Priority. 1000 is normal.
-        PlatoonAddBehaviors = { 'ZoneUpdate' },
+        --PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
