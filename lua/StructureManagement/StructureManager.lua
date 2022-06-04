@@ -437,7 +437,7 @@ StructureManager = Class {
         end
         for _, v in self.Brain.BuilderManagers do
             if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion then
-                RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
+                --RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
                 activeExpansion = v.FactoryManager.LocationType
                 break
             end
@@ -726,10 +726,11 @@ StructureManager = Class {
             end
         end
         if activeExpansion then
-            RNGLOG('Active Expansion is '..activeExpansion)
+            --RNGLOG('Active Expansion is '..activeExpansion)
+            local activeExpansionPass = false
             if (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
                 --RNGLOG('Factory T1 Upgrade Support Check passed')
-                RNGLOG('Performing Upgrade Check '..activeExpansion)
+                --RNGLOG('Performing Upgrade Check '..activeExpansion)
                 if self.Factories.LAND[1].UpgradingCount < 2 then
                     --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
@@ -742,7 +743,7 @@ StructureManager = Class {
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
-                                t2LandPass = true
+                                activeExpansionPass = true
                                 coroutine.yield(30)
                             end
                         end
@@ -755,7 +756,7 @@ StructureManager = Class {
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
                             --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
-                            t2LandPass = true
+                            activeExpansionPass = true
                             coroutine.yield(30)
                         end
                     end

@@ -1239,9 +1239,9 @@ function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factio
     for num, unit in targetUnits do
         if not unit.Dead then
             local unitPos = unit:GetPosition()
-            if not retUnit or VDist3Sq(position, unitPos) < distance then
+            if not retUnit or VDist3Sq(basePosition, unitPos) < distance then
                 retUnit = unit
-                distance = VDist3Sq(position, unitPos)
+                distance = VDist3Sq(basePosition, unitPos)
             end
         end
     end

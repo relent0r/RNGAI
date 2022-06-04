@@ -1541,7 +1541,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             realEnemyThreat = enemyThreat
                         end
                        --RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
-                        local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 70, 'Ally')
+                        local friendlyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 45, 'Ally')
                         local friendlyUnitThreat = 0
                         for k,v in friendlyUnits do
                             if v and not v.Dead then
@@ -1561,7 +1561,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                        --RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
                         if realEnemyThreat >= friendlyUnitThreat and not cdr.SuicideMode then
                             --RNGLOG('Enemy Threat too high')
-                            if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 1600 then
+                            if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
                                --RNGLOG('Threat high and cdr close, retreat')
                                --RNGLOG('Enemy Threat number '..realEnemyThreat)
                                --RNGLOG('Friendly threat was '..friendlyUnitThreat)
@@ -1679,7 +1679,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     end
                     if aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                         local overChargeFired = false
-                        local innerCircleEnemies = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
+                        local innerCircleEnemies = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
                         if innerCircleEnemies > 0 then
                             local result, newTarget = CDRGetUnitClump(aiBrain, cdr.Position, cdr.WeaponRange - 3)
                             if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < cdr.WeaponRange - 3 then

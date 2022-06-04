@@ -5064,7 +5064,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         if self.TargetZone then
             --RNGLOG('Target Zone Selected is '..self.TargetZone..' at '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
             zoneControlPosition = aiBrain.Zones.Land.zones[self.TargetZone].pos
-            --self:ForkThread(self.DrawZoneTarget, aiBrain)
+            if aiBrain.RNGDEBUG then
+                self:ForkThread(self.DrawZoneTarget, aiBrain)
+            end
         end
         
         if not self.TargetZone then
@@ -8447,6 +8449,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     continue
                 end
                 -- TML range is 256, try 230 to account for TML placement around CenterPosition
+                -- Once we have the callbacks for missiles hitting terrain i'll increase this
                 local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, self.CenterPosition, 235, 'Enemy')
                 for _, v in atkPri do
                     for num, unit in targetUnits do

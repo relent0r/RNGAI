@@ -24,15 +24,8 @@ function ReclaimablesInArea(aiBrain, locType)
     
     return false
 end
-local CanPathToEnemyRNG = {}
-function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's function modified to work with expansions
-    
-    --We are getting the current base position rather than the start position so we can use this for expansions.
-    local locPos = aiBrain.BuilderManagers[locationType].Position 
-    -- added this incase the position came back nil
-    if not locPos then
-        locPos = aiBrain.BuilderManagers['MAIN'].Position
-    end
+
+function PathCheckToCurrentEnemyRNG(aiBrain, locationType, pathType, notCheck)
     local enemyX, enemyZ
     if aiBrain:GetCurrentEnemy() then
         enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
@@ -49,51 +42,17 @@ function CanPathToCurrentEnemyRNG(aiBrain, locationType, bool) -- Uveso's functi
     local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
     local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
 
-    -- create a table for the enemy index in case it's nil
-    CanPathToEnemyRNG[OwnIndex] = CanPathToEnemyRNG[OwnIndex] or {}
-    CanPathToEnemyRNG[OwnIndex][EnemyIndex] = CanPathToEnemyRNG[OwnIndex][EnemyIndex] or {}
     -- Check if we have already done a path search to the current enemy
-    if CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'LAND' then
-        return true == bool
-    elseif CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'WATER' then
-        return false == bool
-    end
-    -- path wit AI markers from our base to the enemy base
-    --RNGLOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
-    local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 1000)
-    -- if we have a path generated with AI path markers then....
-    if path then
-        --RNGLOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
-        CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
-    -- if we not have a path
-    else
-        -- "NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
-        if reason == 'NoPath' then
-            --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType)
-            CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
-        -- "NoGraph" means we have no AI markers and cant graph to the enemy. We can't search for a path - No markers
-        elseif reason == 'NoGraph' then
-            --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
-            -- Check if we have less then 50% water on the map
-            if aiBrain:GetMapWaterRatio() < 0.50 then
-                --lets asume we can move on land to the enemy
-                --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
-                CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'LAND'
-            else
-                -- we have more then 50% water on this map. Ity maybe a water map..
-                --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..locationType ,aiBrain:GetMapWaterRatio()*100 ))
-                CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
-            end
+    if notCheck then
+        if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType then
+            return true
         end
+        return false
     end
-    if CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'LAND' then
-        return true == bool
-    elseif CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == 'WATER' then
-        return false == bool
+    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] == pathType then
+        return true
     end
-    CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] = 'WATER'
-    return false == bool
+    return false
 end
 
 function DamagedStructuresInAreaRNG(aiBrain, locationtype)

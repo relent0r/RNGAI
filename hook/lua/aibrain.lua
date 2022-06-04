@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -939,6 +939,7 @@ AIBrain = Class(RNGAIBrainClass) {
             AllyExtractorCount = 0,
             AllyExtractor = 0,
             AllyLandThreat = 0,
+            AllyAirThreat = 0,
             BaseThreatCaution = false,
             AntiAirNow = 0,
             AirNow = 0,
@@ -1037,6 +1038,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(RUtils.CountSoonMassSpotsRNG)
         self:ForkThread(RUtils.LastKnownThread)
+        self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)
         self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
         self:CalculateMassMarkersRNG()
@@ -3028,6 +3030,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyExtractorCount = 0
         local allyExtractorthreat = 0
         local allyLandThreat = 0
+        local allyAirThreat = 0
         --RNGLOG('Number of Allies '..RNGGETN(allyBrains))
         coroutine.yield(1)
         if next(allyBrains) then
@@ -3060,10 +3063,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     allyExtractorthreat = allyExtractorthreat + ALLBPS[v.UnitId].Defense.EconomyThreatLevel
                     allyExtractorCount = allyExtractorCount + 1
                 end
-                local allylandThreat = GetListOfUnits( ally, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
+                local allyLandList = GetListOfUnits( ally, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
                 
-                for _,v in allylandThreat do
+                for _,v in allyLandList do
                     allyLandThreat = allyLandThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                end
+
+                local allyAirList = GetListOfUnits( ally, categories.MOBILE * categories.AIR , false, false)
+                
+                for _,v in allyAirList do
+                    allyAirThreat = allyAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
                 end
             end
         end
@@ -3071,6 +3080,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + self.BrainIntel.SelfThreat.ExtractorCount
         self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + self.BrainIntel.SelfThreat.Extractor
         self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
+        self.BrainIntel.SelfThreat.AllyAirThreat = allyAirThreat
         --RNGLOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
         --RNGLOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --RNGLOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
@@ -3530,7 +3540,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         local priorityNum = 0
                         local priorityUnit = false
                         --RNGLOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
-                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) then
+                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) and (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.3) then
                             massPriorityTable = self.EcoManager.MassPriorityTable.Advantage
                             --RNGLOG('Land threat advantage mass priority table')
                         else
