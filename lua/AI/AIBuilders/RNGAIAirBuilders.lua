@@ -275,7 +275,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory ASF Response',
-        PlatoonTemplate = 'RNGAIT3AirResponse',
+        PlatoonTemplate = 'T3AirFighter',
         Priority = 900,
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
@@ -415,7 +415,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI BomberAttack T1',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 905,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
@@ -473,7 +473,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             AvoidBases = true,

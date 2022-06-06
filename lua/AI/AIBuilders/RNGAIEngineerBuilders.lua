@@ -58,6 +58,15 @@ local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
     return 0
 end
 
+local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData)
+    local myAntiAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
+    if myAntiAirThreat > 5 then
+        return 893
+    end
+    return 0
+
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
@@ -101,6 +110,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Factory Engineer T1 Power AirOnly',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 893,
+        PriorityFunction = MinimumAntiAirThreat,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },

@@ -52,6 +52,7 @@ IntelManager = Class {
         self:ForkThread(self.ConfigureResourcePointZoneID)
         self:ForkThread(self.ZoneControlMonitorRNG)
         self:ForkThread(self.ZoneIntelAssignment)
+        self:ForkThread(self.EnemyPositionAngleAssignment)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
@@ -589,6 +590,25 @@ IntelManager = Class {
         end
         --RNGLOG('Zone Intel Assignment Complete')
         --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
+    end,
+
+    EnemyPositionAngleAssignment = function(self)
+        self:WaitForZoneInitialization()
+        WaitTicks(100)
+        if next(self.Brain.EnemyIntel.EnemyStartLocations) then
+            for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
+                for c, b in self.Brain.Zones.Land.zones do
+                    local angle = RUtils.GetAngleToPosition(v.Position, b.pos)
+                    b.baseangles[v.Index] = angle
+                end
+            end
+        end
+        for c, b in self.Brain.Zones.Land.zones do
+            RNGLOG('-- Zone Angle Loop --')
+            RNGLOG('Zone Position : '..repr(b.pos))
+            RNGLOG('Angles : '..repr(b.baseangles))
+            RNGLOG('---------------------')
+        end
     end,
 
 }

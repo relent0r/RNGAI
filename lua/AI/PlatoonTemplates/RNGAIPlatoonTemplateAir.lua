@@ -261,19 +261,19 @@ PlatoonTemplate {
 PlatoonTemplate { Name = 'RNGAIT3AirResponse',
     FactionSquads = {
         UEF = {
-            { 'uea0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'uea0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'uea0302', 1, 1, 'Attack', 'none' },      -- Scout
          },
         Aeon = {
-            { 'uaa0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'uaa0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'uaa0302', 1, 1, 'Attack', 'none' },      -- Scout
         },
         Cybran = {
-            { 'ura0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'ura0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'ura0302', 1, 1, 'Attack', 'none' },      -- Scout
         },
         Seraphim = {
-            { 'xsa0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'xsa0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
         },
     }

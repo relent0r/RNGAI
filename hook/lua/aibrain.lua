@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -1796,6 +1796,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             allyStarts['ARMY_' .. i] = startPos
                         else
                             numOpponents = numOpponents + 1
+                            RNGINSERT(startLocations, {Position = startPos, Index = army.ArmyIndex})
                         end
                     end
                 end
@@ -1813,7 +1814,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 LastScouted = 0,
                             }
                         )
-                        RNGINSERT(startLocations, loc.Position)
+                        
                     end
                 end
                 -- Set Start Locations for brain to reference

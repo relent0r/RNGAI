@@ -4449,6 +4449,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         local maxPlatoonDPS = 0
         local maxPlatoonStrikeRadius = 20
         local maxPlatoonStrikeRadiusDistance = 0
+        self.UnitRatios = {
+            DIRECTFIRE = 0,
+            INDIRECTFIRE = 0,
+            ANTIAIR = 0,
+        }
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
@@ -8280,6 +8285,36 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:ForkAIThread(self[plan])
     end,
 
+    GetPlatoonRatios = function(self)
+        ALLPBS = __blueprints
+        local directFire = 0
+        local indirectFire = 0
+        local antiAir = 0
+        local total = 0
+
+        for k, v in GetPlatoonUnits(self) do
+            if not v.Dead then
+                if ALLBPS[v.UnitId].CategoriesHash.DIRECTFIRE then
+                    directFire = directFire + 1
+                elseif ALLBPS[v.UnitId].CategoriesHash.INDIRECTFIRE then
+                    indirectFire = indirectFire + 1
+                elseif ALLBPS[v.UnitId].CategoriesHash.ANTIAIR then
+                    antiAir = antiAir + 1
+                end
+                total = total + 1
+            end
+        end
+        if directFire > 0 then
+            self.UnitRatios.DIRECTFIRE = directFire / total * 100
+        end
+        if indirectFire > 0 then
+            self.UnitRatios.INDIRECTFIRE = indirectFire / total * 100
+        end
+        if antiAir > 0 then
+            self.UnitRatios.ANTIAIR = antiAir / total * 100
+        end
+
+    end,
     -- For Debugging
 
     PlatoonDisband = function(self)
@@ -9425,6 +9460,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 categories.STRUCTURE,
                 categories.ALLUNITS,
             }
+            self.UnitRatios = {
+                DIRECTFIRE = 0,
+                INDIRECTFIRE = 0,
+                ANTIAIR = 0,
+            }
             self:SetPrioritizedTargetList('Attack', categoryList)
             if not self.LocationType then
                 self.LocationType = self.PlatoonData.LocationType or 'MAIN'
@@ -9960,6 +10000,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                --RNGLOG('Trueplatoon Platoon Zone is currently '..self.Zone)
             else
                --RNGLOG('Trueplatoon Zone is currently false')
+            end
+            self:GetPlatoonRatios()
+            if aiBrain.RNGDEBUG then
+                RNGLOG('Trueplatoon Unit Ratios '..repr(self.UnitRatios))
             end
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
